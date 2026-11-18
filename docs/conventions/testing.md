@@ -1670,8 +1670,9 @@ analytics-key check), then every `scripts/**/*.test.sh` and
 `scripts/release/check-*.sh` it finds, sorted, so a new check or
 self-test joins in the commit that adds it (`--list` prints them all) —
 each gate's log redacted by `scripts/gates/redact.sh` into the work
-folder, its exit code recorded, with a summary table; exit 0 only when
-every gate passed. Before any gate it points `DOCKER_CONFIG` at a folder
+folder, its exit code recorded, with a summary table, then each failed
+gate's FAIL lines and the end of its redacted log (so a runner's job
+output says why); exit 0 only when every gate passed. Before any gate it points `DOCKER_CONFIG` at a folder
 of the work folder holding no login and puts refusing credential-helper
 stand-ins first on `PATH`: a call to one fails the run. Every
 `scripts/release/check-*.sh` runs offline from the repository's root with

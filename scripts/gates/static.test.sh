@@ -89,7 +89,7 @@ head -c 24 /dev/urandom | base64 | tr -d '\n=+/' >"$tmp/value"
 cp "$tmp/value" "$tmp/run-value"
 run_tree=$(fixture run \
   scripts/a-first.test.sh 'echo first >>"$STATIC_TEST_ORDER"' \
-  scripts/b-fails.test.sh 'echo second >>"$STATIC_TEST_ORDER"; exit 3' \
+  scripts/b-fails.test.sh 'echo second >>"$STATIC_TEST_ORDER"; echo "FAIL - b'"'"'s case"; echo "b'"'"'s last line"; exit 3' \
   scripts/c-prints.test.sh "echo third >>\"\$STATIC_TEST_ORDER\"; printf 'token tf_%s\n' \"\$(cat \"$tmp/run-value\")\"" \
   scripts/d-config.test.sh 'echo fourth >>"$STATIC_TEST_ORDER"; case "$DOCKER_CONFIG" in "$HOME"/.docker*|"") exit 1 ;; esac; grep -q "telflo-gates.invalid" "$DOCKER_CONFIG/config.json" && [ "$(command -v docker-credential-osxkeychain)" = "$(dirname "$DOCKER_CONFIG")/bin/docker-credential-osxkeychain" ]' \
   scripts/release/check-e.sh 'echo fifth >>"$STATIC_TEST_ORDER"')
@@ -108,7 +108,14 @@ redacted() {
     grep -Eq '^c-prints\.test +0 +[0-9]+ +1$' "$tmp/work1/summary.txt"
 }
 run_case "a gate's output is redacted in its log, the summary counts it" redacted
-run_case "the summary table ends the run" grep -Eq '^gate +exit +seconds +redacted$' "$tmp/run1.out"
+run_case "the summary table follows the gates" grep -Eq '^gate +exit +seconds +redacted$' "$tmp/run1.out"
+failed_output() {
+  grep -q "^--- b-fails.test: its FAIL lines" "$tmp/run1.out" &&
+    grep -qxF "  | FAIL - b's case" "$tmp/run1.out" && grep -qxF "  | b's last line" "$tmp/run1.out" &&
+    ! grep -q '^--- c-prints.test' "$tmp/run1.out" &&
+    [ "$(tail -n 1 "$tmp/run1.out" | cut -c1-19)" = "static.sh: FAILED: " ]
+}
+run_case "a failing gate's FAIL lines and last lines follow the table, the passing ones' don't; FAILED ends the run" failed_output
 
 all_pass_tree=$(fixture pass scripts/a.test.sh 'exit 0' scripts/release/check-b.sh 'exit 0')
 all_pass() {

@@ -20,7 +20,13 @@ shell="${BASH:-bash}"
 
 failures=0
 skips=0
-check() { if eval "$2"; then echo "ok   - $1"; else echo "FAIL - $1"; failures=$((failures + 1)); fi; }
+# A failing case also prints up to 12 of the step's lines that say why (static.sh redacts the gate's log).
+check() {
+  if eval "$2"; then echo "ok   - $1"; else
+    echo "FAIL - $1"; failures=$((failures + 1))
+    printf '%s\n' "${out:-}" | grep -E 'FAIL|fail|rror|refus|denied|not ' | head -n 12 | sed 's/^/    | /'
+  fi
+}
 skip() { echo "SKIP - $1 ($2)"; skips=$((skips + 1)); }
 
 tmp="$(mktemp -d "${TMPDIR:-/tmp}/steps-test.XXXXXX")" || exit 1
