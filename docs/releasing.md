@@ -489,8 +489,9 @@ step if one isn't there.
    jobs").
 
 4. **Follow the run** (`gh run watch -R telflo/telflo`). Its first job
-   refuses, with nothing built, a lightweight tag (the hint: `git tag
-   -a`), a tag that isn't `v` plus `Chart.yaml`'s version, a commit that
+   refuses, with nothing built, a tree in which gitleaks finds a secret
+   `.gitleaksignore` doesn't list (`scripts/release/check-secrets.sh`), a
+   lightweight tag (the hint: `git tag -a`), a tag that isn't `v` plus `Chart.yaml`'s version, a commit that
    isn't on `main`, and a version of which any image or the chart is
    already on GHCR (`scripts/release/verify-tag.sh`); and it fails when a
    collector image or the supervisor-collector chart it needs is missing.

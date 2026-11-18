@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # tools.sh: the release pipeline's private tools (D36-2 decision 110; Q281,
-# Ruling 383). kind, crane and a newer buildx as pinned release binaries,
+# Ruling 383). kind, crane, gitleaks and a newer buildx as pinned release binaries,
 # each checked against the sha256 in tools.lock, in the git-ignored .tools/
 # at the repository's root; the images the local runs need, by digest only.
 # Nothing system-wide, no Homebrew, never ~/.docker or Docker Desktop's

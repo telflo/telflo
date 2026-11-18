@@ -588,6 +588,7 @@ scripts/check-naming.sh  Repository-wide naming guard (bash; scans every file)
 scripts/check-licenses.mjs  License guard: shipped npm deps must be redistributable (ADR 0019)
 scripts/check-opamp-server-pin.sh  The opamp-server's drift check: the PIN, vendor/opamp-server/ and compose's image lines agree (D26)
 scripts/check-no-analytics-key.sh  Fails on a PostHog key in a tracked file (D36-1, Q250)
+scripts/release/check-secrets.sh  The secret scan: gitleaks on every file git would commit; .gitleaksignore lists the reviewed fakes
 charts/telflo/           The platform's Helm chart, with the opamp-server's vendored (D33-1; its README.md)
 charts/supervisor-collector/  The chart a Kubernetes fleet's collectors install with (D18)
 deploy/compose/          The Compose install: compose.yaml, setup.sh and their files, released as an archive (D36-2; docs/compose.md)

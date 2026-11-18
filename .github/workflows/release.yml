@@ -36,7 +36,8 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  # Refused before anything builds (decision 76): a tag that isn't v<x.y.z>,
+  # Refused before anything builds (decision 76): a tree in which gitleaks
+  # finds a secret .gitleaksignore doesn't list; a tag that isn't v<x.y.z>,
   # isn't annotated, doesn't match charts/telflo/Chart.yaml at its commit,
   # isn't on main, or whose version is already published; then the collector
   # artefacts the release points at must exist (decision 86), and the default
@@ -60,6 +61,10 @@ jobs:
           ref: ${{ github.sha }}
           fetch-depth: 0
           persist-credentials: false
+      - name: gitleaks (tools.lock's, sha256-checked)
+        run: bash scripts/release/tools.sh fetch gitleaks
+      - name: The secret scan (gitleaks; .gitleaksignore lists the reviewed fakes)
+        run: bash scripts/release/check-secrets.sh
       - name: crane (tools.lock's, sha256-checked)
         run: bash scripts/release/tools.sh fetch crane
       - name: Log in to GHCR (read; the private packages)
@@ -123,6 +128,7 @@ jobs:
       - run: npm ci
         working-directory: telflo-core
       - run: bash scripts/release/tools.sh fetch crane
+      - run: bash scripts/release/tools.sh fetch gitleaks
       - run: bash scripts/release/steps.sh pull-images
       - run: git clone --branch v0.3.0 https://github.com/telflo/opamp-server.git ../opamp-server
       - run: bash scripts/gates/static.sh --work "$RUNNER_TEMP/static"

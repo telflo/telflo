@@ -1548,6 +1548,30 @@ and digits) fail, each found by a boolean `grep -q` on the output and never
 printed; an untracked file is ignored; a key inside a cookie's name is
 found; outside a checkout the script exits 2. Both are static gates.
 
+## The secret scan
+
+`bash scripts/release/check-secrets.sh` runs gitleaks, at
+`scripts/release/tools.lock`'s version and sha256 (fetch it once with
+`bash scripts/release/tools.sh fetch gitleaks`; the check never downloads),
+over every file git would commit: tracked, and untracked but not ignored. It
+uses gitleaks' default rules (a `.gitleaks.toml` in the tree,
+`GITLEAKS_CONFIG` and `GITLEAKS_CONFIG_TOML` are never read) and `--redact`,
+so a value it finds is never printed. Each finding is a fingerprint,
+`<path>:<rule>:<line>`, and must be listed in `.gitleaksignore` at the
+root; a listed fingerprint gitleaks no longer finds fails too, so the file
+holds exactly today's reviewed findings. A test that adds a fake value lists
+its fingerprint in the same commit, after review; an edit that moves a
+listed line updates its line number. A real credential is never listed: it
+is removed, and rotated.
+
+Its self-test, `bash scripts/release/check-secrets.test.sh`, runs in
+throwaway git checkouts with a Stripe-shaped key made at run time and
+checked with boolean `grep -q` only: a tracked or untracked key fails and
+is never printed, a git-ignored file isn't scanned, a listed finding
+passes, a moved or stale entry fails, and neither a `.gitleaks.toml` in the
+tree nor `GITLEAKS_CONFIG` can allow a finding. Both are static gates, and
+the release workflow's first job runs the check before anything builds.
+
 ## CI gates
 
 A deliverable is not complete until all of these pass:
