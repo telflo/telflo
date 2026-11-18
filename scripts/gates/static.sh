@@ -27,8 +27,11 @@
 # Each gate's output goes through redact.sh (with --redact-literals' file,
 # when given) into <work>/logs/<gate>.log, its exit code into
 # <work>/static.codes; a summary table (gate, exit, seconds, REDACTED lines)
-# ends the run and is kept in <work>/summary.txt. Exit 0 only if every gate
-# passed; 1 otherwise; 2 usage.
+# follows the gates and is kept in <work>/summary.txt. Then, for each gate
+# that failed, its FAIL and `not ok` lines (the first 40) and its log's last
+# 40 lines, from that redacted log, so a runner's job output says why (the
+# logs stay in <work>/logs). Exit 0 only if every gate passed; 1 otherwise;
+# 2 usage.
 #
 # The settings the gates read come from the caller's environment (e.g.
 # OPAMP_SERVER_SRC for the pin check, CHECK_GATEWAY_LOGS_CONTAINER and
@@ -200,6 +203,13 @@ status=0
 cat "$work/summary.txt"
 failed=$(awk '$2 != 0 { print $1 }' "$codes" | tr '\n' ' ')
 if [ -n "$failed" ]; then
+  for name in $failed; do
+    [ -f "$work/logs/$name.log" ] || continue
+    echo "--- $name: its FAIL lines (the first 40), then its log's last 40 lines (redacted)"
+    grep -E '^(FAIL|not ok)([^A-Za-z]|$)' "$work/logs/$name.log" | head -n 40 | sed 's/^/  | /'
+    echo "  | ..."
+    tail -n 40 "$work/logs/$name.log" | sed 's/^/  | /'
+  done
   echo "static.sh: FAILED: $failed(logs in $work/logs)"
   status=1
 else
