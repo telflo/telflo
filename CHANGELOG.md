@@ -21,3 +21,11 @@ The first public release of Telflo.
   either, `telflo login` at a terminal asks for the server's URL; every
   other command stops with a usage error (exit 2) that says how to name
   one.
+
+### Added
+
+- A secret scan: `scripts/release/check-secrets.sh` runs gitleaks (pinned in
+  `scripts/release/tools.lock`, sha256-checked) on every file the repository
+  holds, as a static gate and in every release's first job.
+  `.gitleaksignore` lists the findings reviewed as test fixtures or
+  development-only values.

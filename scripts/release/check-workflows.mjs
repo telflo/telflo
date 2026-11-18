@@ -230,6 +230,7 @@ const SPECS = {
         },
         ids: { tag: VERIFY_TAG, collector: COLLECTOR_ARCHIVE },
         required: [
+          { run: "bash scripts/release/check-secrets.sh" },
           { run: VERIFY_TAG, env: { TAG: "${{ github.ref_name }}", EXPECT: SHA, GH_TOKEN: TOKEN } },
           { run: "bash scripts/release/verify-collector-artifacts.sh" },
           { run: COLLECTOR_ARCHIVE },

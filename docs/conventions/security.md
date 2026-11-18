@@ -4563,6 +4563,18 @@ checkout. Its self-test makes a key at run time and never prints it. The
 chart's, compose's and `.env.example`'s PostHog values stay empty. The
 full history is D36-3's to scan before the repository goes public.
 
+### The secret scan
+
+`scripts/release/check-secrets.sh`, a static gate and the release
+workflow's first check, runs gitleaks (pinned and sha256-checked in
+`scripts/release/tools.lock`) with its default rules over every file git
+would commit, printing fingerprints only (`--redact`). `.gitleaksignore`
+lists the findings reviewed as test fixtures or development-only values,
+and nothing else: a finding it doesn't list fails, and so does a listed one
+gitleaks no longer finds. A real credential found is removed and rotated,
+never listed. `docs/conventions/testing.md`, "The secret scan", has the
+details.
+
 ## Kubernetes
 
 **Source:** D33-1's spec (decisions 7, 8, 13–20, 26, 33 and 36–38), its plan's Preflight rulings 1, 3, 4, 10, 15

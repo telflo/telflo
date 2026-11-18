@@ -15,13 +15,17 @@
 #   kind: each asset's own .sha256sum; crane: the release's checksums.txt
 #   (crane only, from go-containerregistry's archive); buildx: checksums.txt
 #   for Linux, checksums-signed.txt for macOS (its macOS binaries are signed
-#   after the build, so checksums.txt's macOS lines don't match them).
+#   after the build, so checksums.txt's macOS lines don't match them);
+#   gitleaks: the release's gitleaks_<version>_checksums.txt (gitleaks only,
+#   from its archive; scripts/release/check-secrets.sh runs it).
 tool kind v0.33.0 darwin-arm64 https://github.com/kubernetes-sigs/kind/releases/download/v0.33.0/kind-darwin-arm64 0c8c7dbe5e23594a198b786c4bc13dacc101fa6196b0cb0b23a1ca44e61f4b4f kind-darwin-arm64.sha256sum - -
 tool kind v0.33.0 linux-amd64 https://github.com/kubernetes-sigs/kind/releases/download/v0.33.0/kind-linux-amd64 aee6151561422756b764a4ae28e7f44cda5af5a9eead3cc9985112b1de8d8e0d kind-linux-amd64.sha256sum - -
 tool crane v0.22.1 darwin-arm64 https://github.com/google/go-containerregistry/releases/download/v0.22.1/go-containerregistry_Darwin_arm64.tar.gz 2231fc8df8806d20d680ff1225db44e095a55dd6ac1ae8eced4faf4b278b78fb checksums.txt crane 712be73700414edb792c9d7dd07315ff6ef1200decd6b2363e4ab834babb302d
 tool crane v0.22.1 linux-amd64 https://github.com/google/go-containerregistry/releases/download/v0.22.1/go-containerregistry_Linux_x86_64.tar.gz 0ab7a1d6932a213aed964ce97666c3077fe691c8606413674a8b3e0b9ec4cda0 checksums.txt crane 8e75c326adb43b053cfd78b9b987663f8f4fe4557f4d3915905643f25c730992
 tool buildx v0.38.1 darwin-arm64 https://github.com/docker/buildx/releases/download/v0.38.1/buildx-v0.38.1.darwin-arm64 6f20ba2437865311ef99015bf5d1039c3c8e4d2177c1c64aa41b134b5ecd3012 checksums-signed.txt - -
 tool buildx v0.38.1 linux-amd64 https://github.com/docker/buildx/releases/download/v0.38.1/buildx-v0.38.1.linux-amd64 e25d5cd675092bb5d1d03632fdc46cdf3fede7b514dc5f023a105e00d3ce5ad4 checksums.txt - -
+tool gitleaks v8.30.1 darwin-arm64 https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_darwin_arm64.tar.gz b40ab0ae55c505963e365f271a8d3846efbc170aa17f2607f13df610a9aeb6a5 gitleaks_8.30.1_checksums.txt gitleaks ba52fb1bfabbcde42f032afad3d6e0b19dff8ed105229a16e7caa338bbc0e84f
+tool gitleaks v8.30.1 linux-amd64 https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb gitleaks_8.30.1_checksums.txt gitleaks 88f91962aa2f93ac6ab281d553b9e125f5197bbbce38f9f2437f7299c32e5509
 #
 # image <key> <repository> <tag> <digest> <after>
 #   pulled by `tools.sh pull <key>` as <repository>@<digest> only (the tag is
