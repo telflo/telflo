@@ -62,7 +62,7 @@ run -- ; check "no step: usage (exit 2)" "[ $rc -eq 2 ] && has 'usage: scripts/r
 run -- bogus; check "an unknown step: usage (exit 2)" "[ $rc -eq 2 ]"
 
 # --- free-disk -----------------------------------------------------------------------------
-for bad in "" 0 100 x 1.5; do
+for bad in "" 0 10000 x 1.5; do
   run -- free-disk $bad
   check "free-disk '$bad' refused (exit 2)" "[ $rc -eq 2 ]"
 done
@@ -72,8 +72,10 @@ run "${ACTIONS[@]}" -- free-disk 1
 if [ "$(uname -s)" != Linux ]; then
   check "free-disk with a runner's variables but not on Linux: still nothing removed" "[ $rc -eq 0 ] && has 'nothing removed, only checked' && ! has removed\ /"
 fi
-run -- free-disk 99
-check "free-disk 99: under the need, exit 1 with a plain message" "[ $rc -eq 1 ] && has 'this job needs 99 GB free'"
+# A need no machine meets (a public repository's runner has well over 99 GB free once the
+# toolchains are removed, as the runner-variables case above does on Linux).
+run -- free-disk 9999
+check "free-disk 9999: under the need, exit 1 with a plain message" "[ $rc -eq 1 ] && has 'this job needs 9999 GB free'"
 
 # --- pull-images, helm-login, github-release: runner only ------------------------------------
 run -- pull-images

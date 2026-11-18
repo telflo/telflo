@@ -165,7 +165,7 @@ github_output() { # <line>
 
 # ---- free-disk -----------------------------------------------------------------------------
 free_disk() {
-  [ $# -eq 1 ] && [[ "$1" =~ ^[1-9][0-9]?$ ]] || refuse "free-disk takes the GB a job needs (1-99)"
+  [ $# -eq 1 ] && [[ "$1" =~ ^[1-9][0-9]{0,3}$ ]] || refuse "free-disk takes the GB a job needs (1-9999)"
   local need_kb=$(($1 * 1024 * 1024)) path free low=""
   if on_hosted_runner; then
     for path in $UNUSED_TOOLCHAINS; do
