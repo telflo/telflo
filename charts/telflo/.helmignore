@@ -1,0 +1,13 @@
+# Files `helm package` leaves out of the chart's .tgz (it packages
+# everything not listed here). The render tests and their profiles live
+# beside the chart but never ship inside it, nor do the vendored
+# opamp-server chart's own (its .helmignore applies only when it is
+# packaged alone).
+tests/
+charts/opamp-server/tests/
+.DS_Store
+*.swp
+*.bak
+*.tmp
+*.orig
+*~

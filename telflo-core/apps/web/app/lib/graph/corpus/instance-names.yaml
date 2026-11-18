@@ -1,0 +1,18 @@
+# Instance names, split at the first slash as the collector splits them.
+receivers:
+  otlp/team/eu: {}
+  filelog/app.v2:
+    include: [/var/log/app.log]
+processors:
+  attributes/enricher:
+    actions: []
+  transform/k8s.cleanup: {}
+exporters:
+  otlphttp/primary:
+    endpoint: https://primary:4318
+service:
+  pipelines:
+    logs/app:
+      receivers: [otlp/team/eu, filelog/app.v2]
+      processors: [attributes/enricher, transform/k8s.cleanup]
+      exporters: [otlphttp/primary]

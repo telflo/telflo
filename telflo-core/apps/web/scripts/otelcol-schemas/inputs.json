@@ -1,0 +1,42 @@
+{
+  "$comment": "What generate-otelcol-schemas.ts builds each collector schema from (D13c Preflight ruling 2): per distribution, the release manifest's path, the components it builds from outside contrib and core, and per offered version the tags of contrib, core and releases, each pinned to its commit. A checkout whose HEAD isn't the pinned commit stops the run. Adding an offered version to the catalogue means adding it here and running the generator (catalog/README.md).",
+  "distributions": {
+    "otelcol-contrib": {
+      "manifest": "distributions/otelcol-contrib/manifest.yaml",
+      "modules": {
+        "contrib": "github.com/open-telemetry/opentelemetry-collector-contrib",
+        "core": "go.opentelemetry.io/collector"
+      },
+      "external": [
+        {
+          "module": "go.opentelemetry.io/obi/collector",
+          "kind": "receiver",
+          "type": "obi",
+          "repository": "open-telemetry/opentelemetry-ebpf-instrumentation"
+        }
+      ],
+      "versions": {
+        "0.159.0": {
+          "contrib": { "repository": "open-telemetry/opentelemetry-collector-contrib", "tag": "v0.159.0", "commit": "1120cc0714bf4d14600105e5673c3b00fe87467a" },
+          "core": { "repository": "open-telemetry/opentelemetry-collector", "tag": "v0.159.0", "commit": "69c0873044e80fe1f0647a0bc5afec6244bcad76" },
+          "releases": { "repository": "open-telemetry/opentelemetry-collector-releases", "tag": "v0.159.0", "commit": "f817832365a9a2b829bc7c25feffcf8834585dea" }
+        },
+        "0.160.0": {
+          "contrib": { "repository": "open-telemetry/opentelemetry-collector-contrib", "tag": "v0.160.0", "commit": "982f20b8a8e8a2569fab3e27cf8b008e8a5080c1" },
+          "core": { "repository": "open-telemetry/opentelemetry-collector", "tag": "v0.160.0", "commit": "cd3455cf3a7f672208140b1ebb1581c542b2b0ed" },
+          "releases": { "repository": "open-telemetry/opentelemetry-collector-releases", "tag": "v0.160.0", "commit": "5c31bfdc7e8a68aed5e173673c6946299a694ee6" }
+        },
+        "0.161.0": {
+          "contrib": { "repository": "open-telemetry/opentelemetry-collector-contrib", "tag": "v0.161.0", "commit": "3f8455d8038a985398861171e5310bc9b4e988b2" },
+          "core": { "repository": "open-telemetry/opentelemetry-collector", "tag": "v0.161.0", "commit": "0bf928af5487d3c4e0b4174eabb7ba075c322517" },
+          "releases": { "repository": "open-telemetry/opentelemetry-collector-releases", "tag": "v0.161.0", "commit": "619d1d0d06e9488a4a38e993f09605bbc13db592" }
+        },
+        "0.162.0": {
+          "contrib": { "repository": "open-telemetry/opentelemetry-collector-contrib", "tag": "v0.162.0", "commit": "ae8c507510f48f433ab47dd1c6b01a59d6c388b5" },
+          "core": { "repository": "open-telemetry/opentelemetry-collector", "tag": "v0.162.0", "commit": "62cdad2ea133239380b44d20d84eb26e114779b6" },
+          "releases": { "repository": "open-telemetry/opentelemetry-collector-releases", "tag": "v0.162.0", "commit": "f6159a775dad1e21433c49bd8450673dd13ed4d3" }
+        }
+      }
+    }
+  }
+}

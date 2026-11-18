@@ -1,0 +1,8 @@
+# Breaks one rule: the version job's commit output taken from github.sha instead of the verified tag's step (the reviewer's form).
+file: release.yml
+rule: job-outputs
+<<<
+      commit: ${{ steps.tag.outputs.commit }}
+===
+      commit: ${{ github.sha }}
+>>>

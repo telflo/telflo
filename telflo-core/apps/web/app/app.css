@@ -1,0 +1,1779 @@
+@import "tailwindcss";
+/* Every font is self-hosted via Fontsource and bundled with the app — none is
+   fetched from a font CDN, so the page renders identically when air-gapped
+   (ADR 0018). */
+/* Base and marketing body text. */
+@import "@fontsource-variable/inter";
+/* App surfaces (.tf-app, below): auth screens and, later, the product. */
+@import "@fontsource/ibm-plex-sans/400.css";
+@import "@fontsource/ibm-plex-sans/400-italic.css";
+@import "@fontsource/ibm-plex-sans/500.css";
+@import "@fontsource/ibm-plex-sans/600.css";
+/* Marketing display and technical faces. */
+@import "@fontsource-variable/schibsted-grotesk";
+@import "@fontsource/ibm-plex-mono/400.css";
+@import "@fontsource/ibm-plex-mono/500.css";
+@import "@fontsource/ibm-plex-mono/600.css";
+@plugin "@tailwindcss/typography";
+
+/* Enable class-based dark mode (using .dark class on html element) */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: "Inter Variable", "Inter", ui-sans-serif, system-ui, sans-serif,
+    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+
+  /* Border radius */
+  --radius: 0.5rem;
+
+  /* Colors - Light mode (default) */
+  --color-background: #ffffff;
+  --color-foreground: #09090b;
+
+  --color-card: #ffffff;
+  --color-card-foreground: #09090b;
+
+  --color-popover: #ffffff;
+  --color-popover-foreground: #09090b;
+
+  --color-primary: #18181b;
+  --color-primary-foreground: #fafafa;
+
+  --color-secondary: #f4f4f5;
+  --color-secondary-foreground: #18181b;
+
+  --color-muted: #f4f4f5;
+  --color-muted-foreground: #71717a;
+
+  --color-accent: #f4f4f5;
+  --color-accent-foreground: #18181b;
+
+  --color-destructive: #ef4444;
+  --color-destructive-foreground: #fafafa;
+
+  --color-border: #e4e4e7;
+  --color-input: #e4e4e7;
+  --color-ring: #18181b;
+
+  /* ------------------------------------------------------------------ */
+  /* Telflo app design system — status + brand tokens.                   */
+  /* Registered globally so bg-ok / text-warn / border-fail utilities     */
+  /* exist; values are tuned per-theme below. Marketing pages don't use   */
+  /* these names, so registration is collision-free.                      */
+  /* ------------------------------------------------------------------ */
+  --color-brand: #2364d2;
+  --color-brand-foreground: #ffffff;
+  --color-brand-soft: #e9f0fc;
+
+  --color-ok: #1e7f4f;
+  --color-ok-soft: #e3f2ea;
+  --color-warn: #96660a;
+  --color-warn-soft: #faf0da;
+  --color-fail: #c53a30;
+  --color-fail-soft: #fbeae8;
+
+  /* Pipeline component type colors (receiver / processor / exporter /
+     connector-extension) used by canvas nodes, palette and legends. */
+  --color-node-receiver: #2364d2;
+  --color-node-processor: #7a4fd2;
+  --color-node-exporter: #1e7f4f;
+  --color-node-extension: #96660a;
+  --color-node-connector: #b95d20;
+
+  /* ---- Marketing design system ("engineering paper") ----
+     Used only by pages wrapped in `.mkt` (landing, use-cases, pricing, blog,
+     changelog, demo, legal). The app never references these tokens. */
+  --font-display: "Schibsted Grotesk Variable", "Schibsted Grotesk",
+    ui-sans-serif, system-ui, sans-serif;
+  --font-tech: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* Theme-variant tokens point at runtime --mkt-* vars (defined below), so
+     the marketing light/dark switch works even though utilities inline the
+     token value. Navy + brand tokens are theme-invariant and stay literal. */
+  --color-paper: var(--mkt-paper); /* warm paper canvas */
+  --color-paper-2: var(--mkt-paper-2); /* deeper paper for alternating bands */
+  --color-ink: var(--mkt-ink); /* near-black, never #000 */
+  --color-ink-2: var(--mkt-ink-2); /* secondary text, high contrast on paper */
+  --color-ink-3: var(--mkt-ink-3); /* captions/labels, AA on paper */
+  --color-line: var(--mkt-line); /* warm hairline */
+  --color-line-2: var(--mkt-line-2); /* hover/darker hairline */
+  --color-azure: var(--mkt-azure); /* interactive accent, AA on paper */
+  --color-azure-2: var(--mkt-azure-2); /* accent hover */
+  --color-brand-cyan: #60a5fa; /* logo blue on navy (CTA, footer, registers) */
+  --color-brand-cyan-2: #93c5fd; /* logo blue hover on navy */
+  --color-navy: #0c1220; /* dark "product frame" floor */
+  --color-navy-2: #121b2e; /* raised surface on navy */
+  --color-navy-line: #26314a; /* hairline on navy */
+  --color-navy-ink: #e9edf5; /* text on navy */
+  --color-navy-ink-2: #a6b2c8; /* secondary text on navy */
+  --color-pass: var(--mkt-pass); /* pass/check green ink */
+  --color-fail: var(--mkt-fail); /* fail/error red ink */
+  --color-pass-bright: #4ade80; /* pass green on navy */
+  --color-amber-ink: var(--mkt-amber-ink); /* "coming soon" */
+  --color-amber-bright: #fbbf24; /* amber on navy */
+}
+
+/* Marketing theme axis: light "engineering paper" by default, re-inked for
+   dark under data-mkt-theme (set by the ThemeToggle / MarketingShell init). */
+:root {
+  --mkt-paper: #faf9f6;
+  --mkt-paper-2: #f2f0ea;
+  --mkt-ink: #171a1f;
+  --mkt-ink-2: #3d4652;
+  --mkt-ink-3: #5d6673;
+  --mkt-line: #e5e1d8;
+  --mkt-line-2: #cbc5b8;
+  /* Interactive accent = the Telflo logo blue. The logo mark is a
+     cyan→sky→blue→indigo gradient centered on #3B82F6 (blue-500); we use a
+     shade that clears AA on paper here, and a brighter one in dark mode. */
+  --mkt-azure: #2563eb; /* blue-600, AA on paper */
+  --mkt-azure-2: #1d4ed8; /* blue-700 hover */
+  --mkt-pass: #177245;
+  --mkt-fail: #b91c1c;
+  --mkt-amber-ink: #92610c;
+  --brand-datadog: #632ca6; /* Datadog purple, official on paper */
+}
+
+html[data-mkt-theme="dark"] {
+  --mkt-paper: #10151e;
+  --mkt-paper-2: #161c28;
+  --mkt-ink: #e9edf5;
+  --mkt-ink-2: #a6b2c8;
+  --mkt-ink-3: #7e8aa1;
+  --mkt-line: #232c3f;
+  --mkt-line-2: #37435e;
+  /* Brighter logo blue — reads great on the dark canvas. */
+  --mkt-azure: #60a5fa; /* blue-400 */
+  --mkt-azure-2: #93c5fd; /* blue-300 hover */
+  --mkt-pass: #4ade80;
+  --mkt-fail: #f87171;
+  --mkt-amber-ink: #fbbf24;
+  --brand-datadog: #a78bfa; /* brighter Datadog purple for the dark canvas */
+}
+
+/* Blog architecture diagrams (inline SVGs in posts/*.mdx, class-driven so
+   they re-ink with the marketing theme axis). Soft fills stay ~1 step off
+   the panel so shapes read as surfaces, not stickers; accents clear AA for
+   text on the panel in both themes. */
+:root {
+  --dg-panel: #f4f2ec; /* diagram panel, one step deeper than paper-2 */
+  --dg-node: #fffefb; /* neutral node card */
+  --dg-line: #ddd8cc; /* panel border + neutral node strokes */
+  --dg-grid: #e9e5da; /* internal hairlines (cell dividers) */
+  --dg-ink: #171a1f;
+  --dg-ink-2: #3d4652;
+  --dg-ink-3: #69717f;
+  --dg-blue: #2563eb;
+  --dg-blue-soft: #e7eefb;
+  --dg-violet: #7c3aed;
+  --dg-violet-soft: #f0ebfc;
+  --dg-green: #157347;
+  --dg-green-soft: #e1f0e8;
+  --dg-amber: #b45309;
+  --dg-amber-soft: #fcf0dc;
+  --dg-red: #b91c1c;
+  --dg-red-soft: #fbe9e7;
+
+  /* Component-type accents for the public Flows library. Mirror the editor
+     canvas palette (--color-node-*) so marketing chips match the product,
+     but on their own axis: marketing pages always carry html.dark for app
+     compatibility, so they can't read the app tokens directly. */
+  --mkt-node-receiver: #2364d2;
+  --mkt-node-processor: #7a4fd2;
+  --mkt-node-exporter: #1e7f4f;
+  --mkt-node-extension: #96660a;
+  --mkt-node-connector: #b95d20;
+
+  /* Brand colors for the Flow tile marks (official hex per project). */
+  --mkt-logo-otel: #f5a800;
+  --mkt-logo-kubernetes: #326ce5;
+  --mkt-logo-clickhouse: #ffcc01;
+  --mkt-logo-datadog: #632ca6;
+  --mkt-logo-prometheus: #e6522c;
+}
+
+html[data-mkt-theme="dark"] {
+  --dg-panel: #131a27;
+  --dg-node: #1b2434;
+  --dg-line: #2b3650;
+  --dg-grid: #222c42;
+  --dg-ink: #e9edf5;
+  --dg-ink-2: #b4bed2;
+  --dg-ink-3: #8794ab;
+  --dg-blue: #60a5fa;
+  --dg-blue-soft: #182843;
+  --dg-violet: #a78bfa;
+  --dg-violet-soft: #271f40;
+  --dg-green: #4ade80;
+  --dg-green-soft: #12301f;
+  --dg-amber: #fbbf24;
+  --dg-amber-soft: #322508;
+  --dg-red: #f87171;
+  --dg-red-soft: #391717;
+
+  /* Flows library component-type accents, dark (matches the app's dark
+     canvas palette). */
+  --mkt-node-receiver: #5f95ef;
+  --mkt-node-processor: #a685ea;
+  --mkt-node-exporter: #45b477;
+  --mkt-node-extension: #d6a03f;
+  --mkt-node-connector: #de9468;
+
+  /* Tile marks: lighten the darker brand hues for the dark canvas. */
+  --mkt-logo-kubernetes: #5b8def;
+  --mkt-logo-datadog: #a47fe0;
+}
+
+/* App components inside marketing chrome. The public /flows pages render the
+   same FlowPicker/FlowCard/Badge/Input the app uses, but marketing pages keep
+   `html.dark` permanently for app-route compatibility, which would paint those
+   app-token components dark on the light paper canvas. Re-mapping the semantic
+   app tokens onto the marketing palette makes them follow the data-mkt-theme
+   axis instead. The `html.dark .mkt` variant outranks the global `html.dark`
+   block below by specificity. */
+.mkt,
+html.dark .mkt {
+  --color-background: var(--mkt-paper);
+  --color-foreground: var(--mkt-ink);
+
+  --color-card: var(--mkt-paper-2);
+  --color-card-foreground: var(--mkt-ink);
+
+  --color-popover: var(--mkt-paper);
+  --color-popover-foreground: var(--mkt-ink);
+
+  --color-primary: var(--mkt-ink);
+  --color-primary-foreground: var(--mkt-paper);
+
+  --color-secondary: var(--mkt-paper-2);
+  --color-secondary-foreground: var(--mkt-ink);
+
+  --color-muted: var(--mkt-paper-2);
+  --color-muted-foreground: var(--mkt-ink-2);
+
+  --color-accent: color-mix(in srgb, var(--mkt-ink) 7%, transparent);
+  --color-accent-foreground: var(--mkt-ink);
+
+  --color-destructive: var(--mkt-fail);
+  --color-destructive-foreground: var(--mkt-paper);
+
+  --color-border: var(--mkt-line);
+  --color-input: var(--mkt-line-2);
+  --color-ring: var(--mkt-azure);
+
+  --color-brand: var(--mkt-azure);
+  --color-brand-foreground: var(--mkt-paper);
+  --color-brand-soft: color-mix(in srgb, var(--mkt-azure) 12%, transparent);
+
+  --color-ok: var(--mkt-pass);
+  --color-ok-soft: color-mix(in srgb, var(--mkt-pass) 12%, transparent);
+  --color-warn: var(--mkt-amber-ink);
+  --color-warn-soft: color-mix(in srgb, var(--mkt-amber-ink) 12%, transparent);
+  --color-fail: var(--mkt-fail);
+  --color-fail-soft: color-mix(in srgb, var(--mkt-fail) 12%, transparent);
+}
+
+/* Dark mode theme colors - override CSS variables */
+html.dark {
+  --color-background: #111827;
+  --color-foreground: #f9fafb;
+
+  --color-card: #1f2937;
+  --color-card-foreground: #f9fafb;
+
+  --color-popover: #1f2937;
+  --color-popover-foreground: #f9fafb;
+
+  --color-primary: #f9fafb;
+  --color-primary-foreground: #18181b;
+
+  --color-secondary: #374151;
+  --color-secondary-foreground: #f9fafb;
+
+  --color-muted: #374151;
+  --color-muted-foreground: #9ca3af;
+
+  --color-accent: #374151;
+  --color-accent-foreground: #f9fafb;
+
+  --color-destructive: #ef4444;
+  --color-destructive-foreground: #fafafa;
+
+  --color-border: #374151;
+  --color-input: #374151;
+  --color-ring: #6b7280;
+
+  --color-brand: #5f95ef;
+  --color-brand-foreground: #0c1016;
+  --color-brand-soft: rgba(95, 149, 239, 0.14);
+
+  --color-ok: #45b477;
+  --color-ok-soft: rgba(69, 180, 119, 0.13);
+  --color-warn: #d6a03f;
+  --color-warn-soft: rgba(214, 160, 63, 0.13);
+  --color-fail: #e2635a;
+  --color-fail-soft: rgba(226, 99, 90, 0.13);
+
+  --color-node-receiver: #5f95ef;
+  --color-node-processor: #a685ea;
+  --color-node-exporter: #45b477;
+  --color-node-extension: #d6a03f;
+  --color-node-connector: #de9468;
+}
+
+/* ==================================================================== */
+/* Telflo app surface — the authenticated product (and the embedded      */
+/* editor surfaces: playground, public editor, auth screens).            */
+/*                                                                       */
+/* The `tf-app` class re-maps the token layer for everything inside it:  */
+/*   - typography: IBM Plex Sans for UI, IBM Plex Mono for data          */
+/*   - the gray-* ramp → carbon neutrals (cool, not Tailwind blue-gray)  */
+/*   - the blue-* ramp → the Telflo signal-blue accent ramp              */
+/*   - shadcn semantic tokens → app surfaces                             */
+/*   - radius scale → tighter, instrument-grade corners                  */
+/* Marketing pages never carry the class and keep their own design.      */
+/* Applied to <body> for app pages (so Radix portals inherit it) and to  */
+/* page roots for standalone screens like auth.                          */
+/* ==================================================================== */
+
+.tf-app {
+  --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: var(--font-sans);
+  font-feature-settings: "cv05", "ss01";
+  /* Native form controls (selects, radios, checkboxes, date pickers)
+     follow the app theme instead of rendering OS-light chrome in dark. */
+  color-scheme: light;
+
+  /* Radius scale: controls 4-5px, containers 6px, overlays 8px. */
+  --radius-sm: 0.1875rem;
+  --radius-md: 0.3125rem;
+  --radius-lg: 0.375rem;
+  --radius-xl: 0.5rem;
+  --radius-2xl: 0.625rem;
+
+  /* Carbon neutral ramp (replaces Tailwind gray inside the app). */
+  --color-gray-50: #f5f6f8;
+  --color-gray-100: #edeff2;
+  --color-gray-200: #e2e5ea;
+  --color-gray-300: #d2d6dc;
+  --color-gray-400: #98a1ac;
+  --color-gray-500: #6e7883;
+  --color-gray-600: #525c68;
+  --color-gray-700: #2a3038;
+  --color-gray-800: #171b21;
+  --color-gray-900: #101317;
+  --color-gray-950: #0b0d10;
+
+  /* Signal blue ramp (replaces Tailwind blue inside the app). */
+  --color-blue-50: #eef4fd;
+  --color-blue-100: #dce9fc;
+  --color-blue-200: #b9d2f9;
+  --color-blue-300: #8fb5f4;
+  --color-blue-400: #6296ee;
+  --color-blue-500: #3b78e3;
+  --color-blue-600: #2364d2;
+  --color-blue-700: #1c50a8;
+  --color-blue-800: #183f83;
+  --color-blue-900: #142f5f;
+  --color-blue-950: #0d1d3a;
+
+  /* Semantic surface tokens — light. */
+  --color-background: #ffffff;
+  --color-foreground: #14181d;
+
+  --color-card: #ffffff;
+  --color-card-foreground: #14181d;
+
+  --color-popover: #ffffff;
+  --color-popover-foreground: #14181d;
+
+  --color-primary: #171b21;
+  --color-primary-foreground: #f6f7f9;
+
+  --color-secondary: #edeff2;
+  --color-secondary-foreground: #171b21;
+
+  --color-muted: #f0f2f5;
+  --color-muted-foreground: #6e7883;
+
+  --color-accent: #eef0f3;
+  --color-accent-foreground: #171b21;
+
+  --color-destructive: #c53a30;
+  --color-destructive-foreground: #ffffff;
+
+  --color-border: #e2e5ea;
+  --color-input: #d5dae0;
+  --color-ring: #3b78e3;
+
+  color: var(--color-foreground);
+}
+
+html.dark .tf-app {
+  color-scheme: dark;
+  /* Semantic surface tokens — dark carbon. */
+  --color-background: #101317;
+  --color-foreground: #e9ebee;
+
+  --color-card: #171b21;
+  --color-card-foreground: #e9ebee;
+
+  --color-popover: #1b2027;
+  --color-popover-foreground: #e9ebee;
+
+  --color-primary: #e9ebee;
+  --color-primary-foreground: #14181d;
+
+  --color-secondary: #232932;
+  --color-secondary-foreground: #e9ebee;
+
+  --color-muted: #1d232a;
+  --color-muted-foreground: #98a1ac;
+
+  --color-accent: #222831;
+  --color-accent-foreground: #e9ebee;
+
+  --color-destructive: #e2635a;
+  --color-destructive-foreground: #14181d;
+
+  --color-border: #262c34;
+  --color-input: #333a44;
+  --color-ring: #6296ee;
+}
+
+/* ------------------------------------------------------------------ */
+/* Navy theme — the third app theme (Settings-only). A dark-family theme */
+/* on deep navy surfaces with the signal-blue accent. Applied via BOTH   */
+/* `html.dark` and `html.navy`, so every `dark:` utility fires while the  */
+/* `html.navy .tf-app` block below re-maps the surface tokens to navy.    */
+/* These rules follow the `html.dark .tf-app` block, so they win by       */
+/* source order at equal specificity.                                     */
+/* ------------------------------------------------------------------ */
+html.navy .tf-app {
+  /* Navy-tinted neutral ramp (replaces the cool carbon remap). Only the
+     dark end is exercised in a dark-family theme, but the whole ramp is
+     remapped so `bg-gray-900`/`border-gray-700`-style utilities land on
+     navy rather than carbon. */
+  --color-gray-50: #f2f5f9;
+  --color-gray-100: #e6ebf3;
+  --color-gray-200: #d3dbe8;
+  --color-gray-300: #b2becf;
+  --color-gray-400: #8b98ae;
+  --color-gray-500: #5f6d86;
+  --color-gray-600: #3f4d67;
+  --color-gray-700: #283652;
+  --color-gray-800: #172438;
+  --color-gray-900: #0c1524;
+  --color-gray-950: #070d18;
+
+  /* Semantic surfaces — deep navy. */
+  --color-background: #0c1524;
+  --color-foreground: #e5eaf2;
+
+  --color-card: #121d31;
+  --color-card-foreground: #e5eaf2;
+
+  --color-popover: #16233a;
+  --color-popover-foreground: #e5eaf2;
+
+  --color-primary: #e5eaf2;
+  --color-primary-foreground: #0c1524;
+
+  --color-secondary: #1b2942;
+  --color-secondary-foreground: #e5eaf2;
+
+  --color-muted: #152135;
+  /* Brighter secondary text for readability on the deep-navy surfaces — the
+     theme's own "secondary text on navy" ink (--color-navy-ink-2). The prior
+     #8b98ae was dimmer than even the carbon dark theme's muted-foreground. */
+  --color-muted-foreground: #a6b2c8;
+
+  --color-accent: #1a2740;
+  --color-accent-foreground: #e5eaf2;
+
+  --color-destructive: #e2635a;
+  --color-destructive-foreground: #0c1524;
+
+  --color-border: #23324c;
+  --color-input: #2b3c58;
+  --color-ring: #6296ee;
+
+  /* Signal-blue accent + status/node colors inherit from `html.dark`. */
+}
+
+html.navy body.tf-app {
+  background-color: #0a1220;
+  color: var(--color-foreground);
+}
+
+/* Navy's default border colour is set further down, after `html.dark`'s
+   base rule, which it ties on specificity. */
+
+/* Navy canvas (react-flow) overrides live after the dark rules further
+   down, so they win at equal specificity. */
+html.navy .tf-app ::selection {
+  background: color-mix(in srgb, #6296ee 26%, transparent);
+}
+html.navy .tf-app * {
+  scrollbar-color: #2b3c58 transparent;
+}
+html.navy .tf-app ::-webkit-scrollbar-thumb {
+  background: #2b3c58;
+  border: 3px solid transparent;
+  border-radius: 8px;
+  background-clip: content-box;
+}
+
+/* Default border color inside the app follows the token (overrides the
+   global literal rules further down; specificity notes: `html.dark *`
+   would beat `.tf-app *`, hence the explicit dark variant).
+   IMPORTANT: these resets (and the global ones near the bottom) must live
+   in @layer base — un-layered author CSS outranks every layered Tailwind
+   utility, which silently killed all border-color utilities (tinted Badge
+   borders, border-input, focus border accents, border-transparent on
+   Switch, the spinner's border-t). In @layer base they still provide the
+   default hairline but lose to explicit utilities. */
+@layer base {
+  .tf-app *,
+  .tf-app *::before,
+  .tf-app *::after {
+    border-color: var(--color-border);
+  }
+  html.dark .tf-app *,
+  html.dark .tf-app *::before,
+  html.dark .tf-app *::after {
+    border-color: var(--color-border);
+  }
+}
+
+/* Text selection carries the signal accent. */
+.tf-app ::selection {
+  background: color-mix(in srgb, var(--color-brand) 25%, transparent);
+}
+
+/* Instrument-grade scrollbars. */
+.tf-app * {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-gray-300) transparent;
+}
+html.dark .tf-app * {
+  scrollbar-color: var(--color-gray-700) transparent;
+}
+.tf-app ::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+.tf-app ::-webkit-scrollbar-thumb {
+  background: var(--color-gray-300);
+  border: 3px solid transparent;
+  border-radius: 8px;
+  background-clip: content-box;
+}
+html.dark .tf-app ::-webkit-scrollbar-thumb {
+  background: var(--color-gray-700);
+  border: 3px solid transparent;
+  border-radius: 8px;
+  background-clip: content-box;
+}
+.tf-app ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Micro-label: the app's signature section label treatment. */
+.tf-label {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-muted-foreground);
+}
+
+/* Status dot — functional color only, sized for 13px rows. */
+.tf-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 9999px;
+  flex-shrink: 0;
+  display: inline-block;
+}
+
+/* Light mode base styles */
+html {
+  scroll-behavior: smooth;
+}
+
+html,
+body {
+  background-color: #ffffff;
+  color: #09090b;
+  margin: 0;
+  padding: 0;
+}
+
+body.tf-app {
+  background-color: var(--color-gray-50);
+  color: var(--color-foreground);
+}
+html.dark body.tf-app {
+  background-color: var(--color-background);
+}
+
+/* Hide overflow for app pages (editor, etc.) but not landing */
+body.app-layout {
+  overflow: hidden;
+}
+
+/* Layered so Tailwind utilities always win, and still skipped inside .mkt,
+   which manages its own border colors (see the marketing block at the bottom
+   of this file). */
+@layer base {
+  *:not(.mkt, .mkt *) {
+    border-color: #e4e4e7;
+  }
+}
+
+button,
+[role="button"] {
+  cursor: pointer;
+}
+
+/* Dark mode base styles */
+html.dark,
+html.dark body {
+  background-color: #111827;
+  color: #f9fafb;
+}
+
+/* Navy's floor outside `.tf-app` (the page behind a short screen, an
+   overscroll): its own background, not Dark's slate (D21 Preflight ruling
+   22, B6). Navy carries `dark` too; this follows the rule above, so it wins
+   at equal specificity. */
+html.navy,
+html.navy body {
+  background-color: #0c1524;
+}
+
+html.dark body.tf-app {
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+}
+
+@layer base {
+  html.dark *:not(.mkt, .mkt *) {
+    border-color: #374151;
+  }
+}
+
+/* Navy's default border colour. It must follow the `html.dark` rule above,
+   which it ties on specificity; earlier, Navy's borders were Dark's slate
+   (D21 Preflight ruling 22, B2). Dark keeps its own. */
+@layer base {
+  html.navy .tf-app *,
+  html.navy .tf-app *::before,
+  html.navy .tf-app *::after {
+    border-color: var(--color-border);
+  }
+}
+
+#root {
+  height: 100vh;
+}
+
+/* Hide scrollbar but keep scrollable */
+.scrollbar-hidden {
+  scrollbar-width: none; /* Firefox */
+}
+.scrollbar-hidden::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Edge */
+}
+
+/* React Flow cursor: default pointer, grab only while actively panning */
+.react-flow__pane {
+  cursor: default !important;
+}
+
+.react-flow__pane:active {
+  cursor: grabbing !important;
+}
+
+/* Connection handle styles */
+.react-flow__handle {
+  cursor: crosshair !important;
+}
+
+/* ------------------------------------------------------------------ */
+/* React Flow — Telflo app canvas chrome (light)                        */
+/* ------------------------------------------------------------------ */
+.tf-app .react-flow__background {
+  background-color: #f2f4f6;
+}
+.tf-app .react-flow__background pattern circle {
+  fill: #aeb6c1;
+}
+.tf-app .react-flow__edge-path {
+  stroke: #aab2bc;
+  stroke-width: 1.5;
+}
+.tf-app .react-flow__edge.selected .react-flow__edge-path,
+.tf-app .react-flow__edge:focus .react-flow__edge-path {
+  stroke: var(--color-brand);
+}
+
+/* Directional flow on pipeline edges: fine dashes marching toward the
+   target (data flows this way) at ~15px/s — felt more than seen. The
+   offset cycle equals the dash period (6+4) so the loop is seamless.
+   Under reduced motion the dash freezes; the arrowhead keeps direction. */
+.tf-edge-flow {
+  stroke-dasharray: 6 4;
+  animation: tf-edge-flow 0.65s linear infinite;
+}
+@keyframes tf-edge-flow {
+  to {
+    stroke-dashoffset: -10;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tf-edge-flow {
+    animation: none;
+  }
+}
+
+/* The in-progress connection line matches the edge language. */
+.tf-app .react-flow__connection-path {
+  stroke: var(--color-gray-400);
+  stroke-width: 1.5;
+  stroke-dasharray: 6 4;
+}
+.tf-app .react-flow__controls {
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(16, 19, 23, 0.06);
+}
+.tf-app .react-flow__controls button {
+  background-color: var(--color-card);
+  border-bottom: 1px solid var(--color-border);
+  fill: var(--color-muted-foreground);
+  width: 26px;
+  height: 26px;
+}
+.tf-app .react-flow__controls button:hover {
+  background-color: var(--color-accent);
+}
+.tf-app .react-flow__minimap {
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  overflow: hidden;
+  background-color: var(--color-card);
+}
+.tf-app .react-flow__attribution {
+  background: transparent;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--color-gray-400);
+}
+/* Its link, in Light as Dark's below: the theme's muted text, not xyflow's
+   #999 (D21 Preflight ruling 22, B7). */
+.tf-app .react-flow__attribution a {
+  color: var(--color-muted-foreground);
+}
+
+/* React Flow dark mode overrides */
+html.dark .tf-app .react-flow__background,
+html.dark .react-flow__background {
+  background-color: #0d1014;
+}
+
+html.dark .tf-app .react-flow__background pattern circle {
+  fill: #454f5e;
+}
+
+html.dark .react-flow__background pattern line {
+  stroke: #454f5e;
+}
+
+/* React Flow navy overrides — placed after the dark rules so they win at
+   equal specificity (navy carries the `dark` class too). */
+html.navy .tf-app .react-flow__background,
+html.navy .react-flow__background {
+  background-color: #0a1120;
+}
+html.navy .tf-app .react-flow__background pattern circle {
+  fill: #3a4d70;
+}
+html.navy .react-flow__background pattern line {
+  stroke: #3a4d70;
+}
+
+/* The Controls and the MiniMap take the theme's tokens: Dark's values
+   (#171b21, #262c34, #98a1ac, #222831), and Navy's own rather than Dark's
+   carbon (D21 Preflight ruling 22, B1). */
+html.dark .react-flow__controls {
+  background-color: var(--color-card);
+  border-color: var(--color-border);
+}
+
+html.dark .react-flow__controls button {
+  background-color: var(--color-card);
+  border-color: var(--color-border);
+  fill: var(--color-muted-foreground);
+}
+
+html.dark .react-flow__controls button:hover {
+  background-color: var(--color-accent);
+}
+
+html.dark .react-flow__minimap {
+  background-color: var(--color-card);
+}
+
+html.dark .react-flow__minimap-mask {
+  fill: rgba(0, 0, 0, 0.35);
+}
+
+html.dark .tf-app .react-flow__edge-path,
+html.dark .react-flow__edge-path {
+  stroke: #525c68;
+}
+html.dark .tf-app .react-flow__edge.selected .react-flow__edge-path,
+html.dark .tf-app .react-flow__edge:focus .react-flow__edge-path {
+  stroke: var(--color-brand);
+}
+
+html.dark .react-flow__attribution {
+  background: color-mix(in srgb, var(--color-card) 75%, transparent);
+}
+
+html.dark .react-flow__attribution a {
+  color: var(--color-muted-foreground);
+}
+
+/* Dark mode for config form info boxes */
+/* These override specific color patterns used in info/warning boxes */
+
+/* Gray boxes. The guard must exclude ANY authored dark background (not
+   just 800/900) — this rule is deliberately un-layered so it beats the
+   light bg-gray-50 utility, which means it would also beat an authored
+   dark:bg-gray-700/40 and render those chips invisible. */
+html.dark .bg-gray-50:not([class*="dark:bg-"]) {
+  background-color: #171b21;
+}
+
+/* Blue info boxes */
+html.dark .bg-blue-50:not([class*="dark:"]) {
+  background-color: rgba(95, 149, 239, 0.12);
+}
+
+html.dark .border-blue-200:not([class*="dark:"]) {
+  border-color: rgba(95, 149, 239, 0.35);
+}
+
+html.dark .text-blue-900:not([class*="dark:"]) {
+  color: #8fb5f4;
+}
+
+html.dark .text-blue-700:not([class*="dark:"]) {
+  color: #6296ee;
+}
+
+html.dark .text-blue-600:not([class*="dark:"]) {
+  color: #5f95ef;
+}
+
+/* Amber/Yellow warning boxes */
+html.dark .bg-amber-50:not([class*="dark:"]) {
+  background-color: rgba(214, 160, 63, 0.12);
+}
+
+html.dark .border-amber-200:not([class*="dark:"]) {
+  border-color: rgba(214, 160, 63, 0.35);
+}
+
+html.dark .text-amber-900:not([class*="dark:"]) {
+  color: #e6c283;
+}
+
+html.dark .text-amber-700:not([class*="dark:"]) {
+  color: #d6a03f;
+}
+
+html.dark .text-amber-600:not([class*="dark:"]) {
+  color: #c99427;
+}
+
+/* Red error boxes */
+html.dark .bg-red-50:not([class*="dark:"]) {
+  background-color: rgba(226, 99, 90, 0.12);
+}
+
+html.dark .border-red-200:not([class*="dark:"]) {
+  border-color: rgba(226, 99, 90, 0.35);
+}
+
+html.dark .text-red-900:not([class*="dark:"]) {
+  color: #f0a49e;
+}
+
+html.dark .text-red-700:not([class*="dark:"]) {
+  color: #e88780;
+}
+
+html.dark .text-red-600:not([class*="dark:"]) {
+  color: #e2635a;
+}
+
+/* Purple boxes */
+html.dark .bg-purple-50:not([class*="dark:"]) {
+  background-color: rgba(166, 133, 234, 0.12);
+}
+
+html.dark .border-purple-200:not([class*="dark:"]) {
+  border-color: rgba(166, 133, 234, 0.35);
+}
+
+html.dark .text-purple-900:not([class*="dark:"]) {
+  color: #c9b4f2;
+}
+
+html.dark .text-purple-700:not([class*="dark:"]) {
+  color: #a685ea;
+}
+
+html.dark .text-purple-600:not([class*="dark:"]) {
+  color: #9a75e6;
+}
+
+/* Green boxes */
+html.dark .bg-green-50:not([class*="dark:"]) {
+  background-color: rgba(69, 180, 119, 0.12);
+}
+
+html.dark .border-green-200:not([class*="dark:"]) {
+  border-color: rgba(69, 180, 119, 0.35);
+}
+
+html.dark .text-green-900:not([class*="dark:"]) {
+  color: #8ed4ae;
+}
+
+html.dark .text-green-700:not([class*="dark:"]) {
+  color: #5fc08c;
+}
+
+html.dark .text-green-600:not([class*="dark:"]) {
+  color: #45b477;
+}
+
+/* Common text colors in forms */
+html.dark .text-gray-700:not([class*="dark:"]) {
+  color: #d2d6dc;
+}
+
+html.dark .text-gray-600:not([class*="dark:"]) {
+  color: #98a1ac;
+}
+
+html.dark .text-gray-500:not([class*="dark:"]) {
+  color: #98a1ac;
+}
+
+/* Spinner animation */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Landing page animations */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.6s ease-out forwards;
+}
+
+.animate-delay-100 {
+  animation-delay: 100ms;
+}
+
+.animate-delay-200 {
+  animation-delay: 200ms;
+}
+
+.animate-delay-300 {
+  animation-delay: 300ms;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-stage-fade-in {
+  animation: fadeIn 400ms ease-out forwards;
+}
+
+/* App-surface entrance: one subtle rise on page content, no scatter. */
+@keyframes tf-rise {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.tf-rise {
+  animation: tf-rise 240ms cubic-bezier(0.2, 0.6, 0.2, 1) both;
+}
+
+/* /cli-auth swaps between its two approval views (session vs CI token). Only
+   the incoming pane animates — the outgoing one unmounts at once, so the card
+   never has to animate its height between two views of very different length.
+   The card clips these with overflow-hidden. */
+@keyframes tf-slide-from-right {
+  from {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes tf-slide-from-left {
+  from {
+    opacity: 0;
+    transform: translateX(-16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.tf-cli-slide-from-right {
+  animation: tf-slide-from-right 200ms cubic-bezier(0.2, 0.6, 0.2, 1) both;
+}
+.tf-cli-slide-from-left {
+  animation: tf-slide-from-left 200ms cubic-bezier(0.2, 0.6, 0.2, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in-up,
+  .animate-stage-fade-in,
+  .tf-rise,
+  .tf-cli-slide-from-right,
+  .tf-cli-slide-from-left {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* =====================================================================
+   Marketing site ("engineering paper") — scoped under .mkt
+   The marketing pages force `html.dark` for app-consistency reasons, so
+   everything here is self-contained and ignores the app theme entirely.
+   ===================================================================== */
+
+.mkt {
+  font-family: var(--font-display);
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+  font-feature-settings: "ss01" on;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Marketing dark theme ("night paper"): token values flip via the --mkt-*
+   vars on <html> (see the theme block near @theme). Navy sections (CTA,
+   footer) are theme-invariant and read identically in both themes. */
+html[data-mkt-theme="dark"] .mkt {
+  color-scheme: dark;
+}
+
+/* Text in the exact Telflo logo gradient (the mark's cyan→sky→blue→indigo
+   sweep). Display-size text only — small text can't carry a gradient. */
+.mkt-logo-gradient {
+  background-image: linear-gradient(
+    90deg,
+    #06b6d4,
+    #0ea5e9,
+    #3b82f6,
+    #6366f1
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Theme-conditional rendering (e.g. the navbar logo variants). */
+html[data-mkt-theme="dark"] .mkt-light-only {
+  display: none;
+}
+html:not([data-mkt-theme="dark"]) .mkt-dark-only {
+  display: none;
+}
+
+/* Default hairline for .mkt content. Lives in the base layer so Tailwind
+   border-color utilities (layer: utilities) can override it. The global
+   dark-mode border rule excludes .mkt (see above). */
+@layer base {
+  .mkt *,
+  .mkt *::before,
+  .mkt *::after {
+    border-color: var(--color-line);
+  }
+}
+
+.mkt ::selection {
+  background: rgba(46, 201, 232, 0.3);
+  color: var(--color-ink);
+}
+
+.mkt :focus-visible {
+  outline: 2px solid var(--color-azure);
+  outline-offset: 2px;
+}
+
+.mkt h1,
+.mkt h2,
+.mkt h3 {
+  text-wrap: balance;
+}
+
+.mkt p {
+  text-wrap: pretty;
+}
+
+/* Mono "register" label — the section annotation that sits on hairlines.
+   Lives in the components layer so color utilities can override it. */
+@layer components {
+  .mkt-register {
+    font-family: var(--font-tech);
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-ink-3);
+  }
+}
+
+/* Scroll reveal: the hidden state is only ever applied from JS after
+   hydration (never in SSR markup), so no-JS visitors and reduced-motion
+   users always see content. */
+.mkt-pre {
+  opacity: 0;
+  transform: translateY(14px);
+}
+
+.mkt-in {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 0.55s ease-out,
+    transform 0.55s ease-out;
+  transition-delay: var(--reveal-delay, 0ms);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mkt-pre,
+  .mkt-in {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+/* =====================================================================
+   Cost-flow diagram (hero use-case card): telemetry ticks stream toward
+   the filter line; noise drops out of its lane and fades, signal passes
+   through. Dots start invisible so staggered delays don't flash, and the
+   static plotted points carry the diagram under reduced motion.
+   ===================================================================== */
+
+@keyframes mkt-flow-keep {
+  0% {
+    left: 3%;
+    opacity: 0;
+  }
+  8% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    left: 94%;
+    opacity: 0;
+  }
+}
+
+/* Dies at the filter (54%): leaves the lane, sinks, fades. */
+@keyframes mkt-flow-drop {
+  0% {
+    left: 3%;
+    opacity: 0;
+    transform: none;
+  }
+  10% {
+    opacity: 1;
+  }
+  52% {
+    left: 52.5%;
+    opacity: 1;
+    transform: none;
+  }
+  74%,
+  100% {
+    left: 55.5%;
+    opacity: 0;
+    transform: translateY(16px);
+  }
+}
+
+@keyframes mkt-flow-filter {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.mkt-flow-keep {
+  opacity: 0;
+  animation-name: mkt-flow-keep;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+.mkt-flow-drop {
+  opacity: 0;
+  animation-name: mkt-flow-drop;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+.mkt-flow-filter {
+  animation: mkt-flow-filter 3.6s ease-in-out infinite;
+}
+
+/* Reduced motion: the plotted points and filter line tell the story. */
+@media (prefers-reduced-motion: reduce) {
+  .mkt-flow-keep,
+  .mkt-flow-drop {
+    display: none;
+  }
+  .mkt-flow-filter {
+    animation: none;
+  }
+}
+
+/* =====================================================================
+   Feature demo 01 — build visually, then switch to YAML. One 12s loop:
+   nodes pop onto the canvas (0–25%), connectors draw between them, the
+   panel switches tabs (44–50%) and holds on the YAML view (50–92%), then
+   returns. Resting styles are the finished canvas, so reduced motion
+   shows a complete diagram with the canvas tab active.
+   ===================================================================== */
+
+@keyframes mkt-bd-canvas {
+  0%,
+  44% {
+    opacity: 1;
+  }
+  50%,
+  92% {
+    opacity: 0;
+  }
+  98%,
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes mkt-bd-yaml {
+  0%,
+  44% {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  50%,
+  92% {
+    opacity: 1;
+    transform: none;
+  }
+  98%,
+  100% {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+@keyframes mkt-bd-n1 {
+  0%,
+  2% {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  6%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes mkt-bd-n2 {
+  0%,
+  11% {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  15%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes mkt-bd-n3 {
+  0%,
+  20% {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  24%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes mkt-bd-l1 {
+  0%,
+  7% {
+    transform: scaleX(0);
+  }
+  11%,
+  100% {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes mkt-bd-l2 {
+  0%,
+  16% {
+    transform: scaleX(0);
+  }
+  20%,
+  100% {
+    transform: scaleX(1);
+  }
+}
+
+.mkt-bd-canvas {
+  animation: mkt-bd-canvas 12s ease-in-out infinite;
+}
+.mkt-bd-yaml {
+  opacity: 0;
+  animation: mkt-bd-yaml 12s ease-in-out infinite;
+}
+.mkt-bd-n1 {
+  animation: mkt-bd-n1 12s ease-out infinite;
+}
+.mkt-bd-n2 {
+  animation: mkt-bd-n2 12s ease-out infinite;
+}
+.mkt-bd-n3 {
+  animation: mkt-bd-n3 12s ease-out infinite;
+}
+.mkt-bd-l1 {
+  animation: mkt-bd-l1 12s ease-out infinite;
+}
+.mkt-bd-l2 {
+  animation: mkt-bd-l2 12s ease-out infinite;
+}
+/* Tab underlines ride the same layer timelines. */
+.mkt-bd-tab-canvas {
+  animation: mkt-bd-canvas 12s ease-in-out infinite;
+}
+.mkt-bd-tab-yaml {
+  opacity: 0;
+  animation: mkt-bd-yaml 12s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mkt-bd-canvas,
+  .mkt-bd-yaml,
+  .mkt-bd-n1,
+  .mkt-bd-n2,
+  .mkt-bd-n3,
+  .mkt-bd-l1,
+  .mkt-bd-l2,
+  .mkt-bd-tab-canvas,
+  .mkt-bd-tab-yaml {
+    animation: none;
+  }
+}
+
+/* =====================================================================
+   Feature demo 02 — canary rollout. One 12s loop: eu-west flips to
+   "updating" (24–46%) and lands v13 healthy, then the drifted ap-south
+   converges (52–72%), while the canary bar fills; hold, then reset.
+   Resting styles are the pre-rollout table for reduced motion.
+   ===================================================================== */
+
+/* Status/version labels are stacked overlays; they swap with instant
+   hard-cuts (a 0.1% ramp, sub-frame) so two labels are never visible at
+   once — a crossfade would let the longer word ("updating") bleed past
+   the shorter one ("healthy"). eu-west swaps at 25% and 45%. */
+
+@keyframes mkt-fl-r2-pre {
+  0%,
+  24.9% {
+    opacity: 1;
+  }
+  25%,
+  95.9% {
+    opacity: 0;
+  }
+  96%,
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes mkt-fl-r2-upd {
+  0%,
+  24.9% {
+    opacity: 0;
+  }
+  25%,
+  44.9% {
+    opacity: 1;
+  }
+  45%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes mkt-fl-r2-post {
+  0%,
+  44.9% {
+    opacity: 0;
+  }
+  45%,
+  95.9% {
+    opacity: 1;
+  }
+  96%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes mkt-fl-r2-cfg-pre {
+  0%,
+  44.9% {
+    opacity: 1;
+  }
+  45%,
+  95.9% {
+    opacity: 0;
+  }
+  96%,
+  100% {
+    opacity: 1;
+  }
+}
+
+/* ap-south swaps at 50% and 70%. */
+
+@keyframes mkt-fl-r3-pre {
+  0%,
+  49.9% {
+    opacity: 1;
+  }
+  50%,
+  95.9% {
+    opacity: 0;
+  }
+  96%,
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes mkt-fl-r3-upd {
+  0%,
+  49.9% {
+    opacity: 0;
+  }
+  50%,
+  69.9% {
+    opacity: 1;
+  }
+  70%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes mkt-fl-r3-post {
+  0%,
+  69.9% {
+    opacity: 0;
+  }
+  70%,
+  95.9% {
+    opacity: 1;
+  }
+  96%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes mkt-fl-r3-cfg-pre {
+  0%,
+  69.9% {
+    opacity: 1;
+  }
+  70%,
+  95.9% {
+    opacity: 0;
+  }
+  96%,
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes mkt-fl-bar {
+  0%,
+  23% {
+    width: 25%;
+  }
+  46%,
+  49% {
+    width: 60%;
+  }
+  72%,
+  95% {
+    width: 100%;
+  }
+  98%,
+  100% {
+    width: 25%;
+  }
+}
+
+.mkt-fl-r2-pre {
+  animation: mkt-fl-r2-pre 12s ease-in-out infinite;
+}
+.mkt-fl-r2-upd {
+  opacity: 0;
+  animation: mkt-fl-r2-upd 12s ease-in-out infinite;
+}
+.mkt-fl-r2-post {
+  opacity: 0;
+  animation: mkt-fl-r2-post 12s ease-in-out infinite;
+}
+.mkt-fl-r2-cfg-pre {
+  animation: mkt-fl-r2-cfg-pre 12s ease-in-out infinite;
+}
+.mkt-fl-r3-pre {
+  animation: mkt-fl-r3-pre 12s ease-in-out infinite;
+}
+.mkt-fl-r3-upd {
+  opacity: 0;
+  animation: mkt-fl-r3-upd 12s ease-in-out infinite;
+}
+.mkt-fl-r3-post {
+  opacity: 0;
+  animation: mkt-fl-r3-post 12s ease-in-out infinite;
+}
+.mkt-fl-r3-cfg-pre {
+  animation: mkt-fl-r3-cfg-pre 12s ease-in-out infinite;
+}
+.mkt-fl-bar {
+  width: 25%;
+  animation: mkt-fl-bar 12s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mkt-fl-r2-pre,
+  .mkt-fl-r2-upd,
+  .mkt-fl-r2-post,
+  .mkt-fl-r2-cfg-pre,
+  .mkt-fl-r3-pre,
+  .mkt-fl-r3-upd,
+  .mkt-fl-r3-post,
+  .mkt-fl-r3-cfg-pre,
+  .mkt-fl-bar {
+    animation: none;
+  }
+}
+
+/* Legal pages render DB-stored plain text through the shared auth
+   TermsAndConditions component (`prose dark:prose-invert`). Marketing pages
+   keep html.dark, so re-pin the prose palette to paper/ink here. */
+/* Long unbreakable tokens in inline code (metric/attribute names) must wrap,
+   or list items overflow the page on mobile. */
+.mkt .prose :where(code):not(:where(pre code)) {
+  overflow-wrap: anywhere;
+}
+
+.mkt .prose {
+  --tw-prose-body: var(--color-ink-2);
+  --tw-prose-headings: var(--color-ink);
+  --tw-prose-lead: var(--color-ink-2);
+  --tw-prose-links: var(--color-azure);
+  --tw-prose-bold: var(--color-ink);
+  --tw-prose-counters: var(--color-ink-3);
+  --tw-prose-bullets: var(--color-line-2);
+  --tw-prose-hr: var(--color-line);
+  --tw-prose-quotes: var(--color-ink);
+  --tw-prose-quote-borders: var(--color-line-2);
+  --tw-prose-captions: var(--color-ink-3);
+  --tw-prose-code: var(--color-ink);
+  --tw-prose-th-borders: var(--color-line-2);
+  --tw-prose-td-borders: var(--color-line);
+}
+
+/* Shape + text classes for the blog diagram SVGs (tokens defined next to the
+   --mkt-* theme axis). Markers can't inherit stroke reliably cross-browser,
+   so each accent gets its own marker class. */
+.mkt .dg text {
+  font-family: "Inter Variable", Inter, ui-sans-serif, system-ui, sans-serif;
+}
+.mkt .dg .dg-mono {
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+.mkt .dg-panel {
+  fill: var(--dg-panel);
+  stroke: var(--dg-line);
+}
+.mkt .dg-node {
+  fill: var(--dg-node);
+  stroke: var(--dg-line);
+}
+.mkt .dg-node-blue {
+  fill: var(--dg-blue-soft);
+  stroke: var(--dg-blue);
+}
+.mkt .dg-node-violet {
+  fill: var(--dg-violet-soft);
+  stroke: var(--dg-violet);
+}
+.mkt .dg-node-green {
+  fill: var(--dg-green-soft);
+  stroke: var(--dg-green);
+}
+.mkt .dg-node-amber {
+  fill: var(--dg-amber-soft);
+  stroke: var(--dg-amber);
+}
+.mkt .dg-node-red {
+  fill: var(--dg-red-soft);
+  stroke: var(--dg-red);
+}
+.mkt .dg-cell {
+  fill: var(--dg-node);
+  stroke: var(--dg-grid);
+}
+.mkt .dg-grid {
+  stroke: var(--dg-grid);
+}
+.mkt .dg-flow {
+  stroke: var(--dg-ink-3);
+  fill: none;
+}
+.mkt .dg-flow-blue {
+  stroke: var(--dg-blue);
+  fill: none;
+}
+.mkt .dg-flow-violet {
+  stroke: var(--dg-violet);
+  fill: none;
+}
+.mkt .dg-flow-green {
+  stroke: var(--dg-green);
+  fill: none;
+}
+.mkt .dg-flow-amber {
+  stroke: var(--dg-amber);
+  fill: none;
+}
+.mkt .dg-flow-red {
+  stroke: var(--dg-red);
+  fill: none;
+}
+.mkt .dg-mk {
+  fill: var(--dg-ink-3);
+}
+.mkt .dg-mk-blue {
+  fill: var(--dg-blue);
+}
+.mkt .dg-mk-violet {
+  fill: var(--dg-violet);
+}
+.mkt .dg-mk-green {
+  fill: var(--dg-green);
+}
+.mkt .dg-mk-amber {
+  fill: var(--dg-amber);
+}
+.mkt .dg-mk-red {
+  fill: var(--dg-red);
+}
+.mkt .dg-t1 {
+  fill: var(--dg-ink);
+  font-weight: 600;
+}
+.mkt .dg-t2 {
+  fill: var(--dg-ink-2);
+}
+.mkt .dg-t3 {
+  fill: var(--dg-ink-3);
+}
+.mkt .dg-label {
+  fill: var(--dg-ink-3);
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.mkt .dg-tblue {
+  fill: var(--dg-blue);
+}
+.mkt .dg-tviolet {
+  fill: var(--dg-violet);
+}
+.mkt .dg-tgreen {
+  fill: var(--dg-green);
+}
+.mkt .dg-tamber {
+  fill: var(--dg-amber);
+}
+.mkt .dg-tred {
+  fill: var(--dg-red);
+}

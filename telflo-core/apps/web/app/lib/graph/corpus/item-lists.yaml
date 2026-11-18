@@ -1,0 +1,53 @@
+# Lists of mappings and scalars that forms edit by item (D9b decision 2).
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+processors:
+  attributes:
+    actions:
+      # about the first
+      - key: environment # keep me
+        value: production
+        action: insert
+      - key: mode
+        value: 0750 # octal to the collector
+        action: upsert
+      - key: c
+        value: "x"
+        action: insert
+      - only: one
+  resource:
+    attributes:
+    # indentless, about the first
+    - key: service.name # the name
+      value: checkout
+      action: upsert
+    - key: mode
+      value: 0750 # octal
+      action: insert
+    - only: one
+  filter:
+    error_mode: ignore
+    traces:
+      span:
+        - 'attributes["a"] == "b"' # quoted
+        - >-
+          attributes["folded"] ==
+          "one line"
+        - |
+          literal line
+        - plain
+  transform:
+    error_mode: ignore
+    trace_statements: [set(a), 'set(b)', 0750] # flow
+    conditions: [{key: a, value: 0750}, {key: b}]
+exporters:
+  debug:
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [attributes, resource, filter, transform]
+      exporters: [debug]

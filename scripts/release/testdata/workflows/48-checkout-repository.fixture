@@ -1,0 +1,27 @@
+# Breaks one rule: a checkout of another repository (with: repository).
+file: release.yml
+rule: with-keys
+<<<
+  static:
+    needs: version
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.version.outputs.commit }}
+===
+  static:
+    needs: version
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: someone-else/telflo
+          ref: ${{ needs.version.outputs.commit }}
+>>>

@@ -1,0 +1,17 @@
+# The smoke collectors' own local file: what a collector runs before a
+# configuration is assigned to it, and keeps running while nothing is (D16c:
+# the opamp-server stores none of its configuration and sends it no
+# configuration). Every smoke collector runs these same bytes.
+receivers:
+  otlp:
+    protocols:
+      http:
+        endpoint: 127.0.0.1:4318
+exporters:
+  debug:
+    verbosity: basic
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      exporters: [debug]

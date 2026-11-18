@@ -1,0 +1,8 @@
+# Breaks one rule: the pin check against another opamp-server tag.
+file: release.yml
+rule: opamp-clone
+<<<
+--branch v0.3.0 
+===
+--branch v0.2.4 
+>>>

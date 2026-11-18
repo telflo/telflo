@@ -1,0 +1,16 @@
+# Breaks one rule: an artifact downloaded over the checkout's scripts.
+file: release.yml
+rule: artifacts
+<<<
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: release-files
+          path: ${{ runner.temp }}/release
+      - name: Log in to GHCR (Docker and crane)
+===
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: release-files
+          path: ${{ github.workspace }}/scripts
+      - name: Log in to GHCR (Docker and crane)
+>>>

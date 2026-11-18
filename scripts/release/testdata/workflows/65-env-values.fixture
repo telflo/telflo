@@ -1,0 +1,12 @@
+# Breaks one rule: a DOCKER_CONFIG that isn't the job's temporary one (the runner's home).
+file: release.yml
+rule: env-values
+<<<
+      - name: The collector images and chart exist
+        env:
+          DOCKER_CONFIG: ${{ runner.temp }}/docker
+===
+      - name: The collector images and chart exist
+        env:
+          DOCKER_CONFIG: /home/runner/.docker
+>>>

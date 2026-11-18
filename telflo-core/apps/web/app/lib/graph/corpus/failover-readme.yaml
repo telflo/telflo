@@ -1,0 +1,30 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+exporters:
+  otlp_grpc/first:
+    endpoint: first:4317
+  otlp_grpc/second:
+    endpoint: second:4317
+connectors:
+  failover:
+    priority_levels:
+      - [traces/first, traces/also_first]
+      - [traces/second]
+    retry_interval: 10s
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      exporters: [failover]
+    traces/first:
+      receivers: [failover]
+      exporters: [otlp_grpc/first]
+    traces/also_first:
+      receivers: [failover]
+      exporters: [otlp_grpc/first]
+    traces/second:
+      receivers: [failover]
+      exporters: [otlp_grpc/second]

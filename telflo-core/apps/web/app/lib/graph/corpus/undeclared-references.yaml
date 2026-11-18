@@ -1,0 +1,16 @@
+# Decision 3: a component a pipeline names but nobody declares is shown,
+# and never declared.
+receivers:
+  otlp: {}
+exporters:
+  otlphttp:
+    endpoint: https://backend:4318
+service:
+  pipelines:
+    traces:
+      receivers: [otlp, zipkin]
+      processors: [batch, memory_limiter]
+      exporters: [otlphttp, debug]
+    metrics:
+      receivers: [otlp]
+      exporters: [spanmetrics]

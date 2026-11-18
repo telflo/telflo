@@ -1,0 +1,8 @@
+# Breaks one rule: ${{ }} inside a run:.
+file: release.yml
+rule: expression-in-run
+<<<
+        run: bash scripts/release/verify-tag.sh "$TAG" --expect "$EXPECT"
+===
+        run: bash scripts/release/verify-tag.sh "${{ github.ref_name }}" --expect "$EXPECT"
+>>>

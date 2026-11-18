@@ -1,0 +1,5 @@
+# Built only by the test that wants its alias to clash with a type.
+type: clash
+deprecated_type: otlp
+status:
+  class: receiver

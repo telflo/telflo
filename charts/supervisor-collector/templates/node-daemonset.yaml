@@ -1,0 +1,74 @@
+{{- if eq .Values.role "node" -}}
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ include "tsc.fullname" . | quote }}
+spec:
+  selector:
+    matchLabels: { app: {{ include "tsc.fullname" . | quote }} }
+  template:
+    metadata:
+      labels: { app: {{ include "tsc.fullname" . | quote }} }
+{{- include "tsc.podChecksums" . }}
+    spec:
+      serviceAccountName: {{ include "tsc.serviceAccountName" . | quote }}
+{{- include "tsc.podSecurityContext" . }}
+{{- if .Values.clickhouse.endpoint }}
+      initContainers:
+        # fsGroup (see tsc.podSecurityContext) does NOT reliably apply to
+        # hostPath volumes the way it does to PVCs, so the node role's hostPath
+        # volumes need an explicit chown before the ClickStack (uid 10001)
+        # supervisor container can write to them:
+        #   /app/opamp        supervisor state (instance_uid)
+        #   collectorDataDir  collector file_storage (exporter sending_queue) —
+        #                     see values.yaml collectorDataDir for the full why.
+        # PENDING: verified only via `helm template`; needs a real-cluster
+        # (minikube) smoke test to confirm hostPath ownership actually
+        # persists across pod restarts on a real kubelet.
+        - name: fix-storage-ownership
+          image: {{ include "tsc.image" . }}
+          command: ["sh", "-c", "chown -R 10001:10001 /app/opamp {{ .Values.collectorDataDir }}"]
+          securityContext:
+            runAsUser: 0
+          volumeMounts:
+            - { name: storage, mountPath: /app/opamp }
+            - { name: collector-data, mountPath: {{ .Values.collectorDataDir | quote }} }
+{{- end }}
+      containers:
+        - name: supervisor
+          image: {{ include "tsc.image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+{{- include "tsc.collectorEnv" . }}
+{{- include "tsc.collectorEnvFrom" . }}
+          volumeMounts:
+            - { name: varlogpods, mountPath: /var/log/pods, readOnly: true }
+            - { name: storage, mountPath: /app/opamp }
+{{- if .Values.clickhouse.endpoint }}
+            # Durable, uid-10001-writable home for the collector's file_storage
+            # (clickhouse exporter sending_queue). ClickStack-only — see
+            # values.yaml collectorDataDir.
+            - { name: collector-data, mountPath: {{ .Values.collectorDataDir | quote }} }
+{{- end }}
+{{- if .Values.volumes }}
+{{- include "tsc.extraVolumeMounts" . }}
+{{- end }}
+          resources: {{ toYaml .Values.resources | nindent 12 }}
+      nodeSelector: {{ toYaml .Values.nodeSelector | nindent 8 }}
+      tolerations: {{ toYaml .Values.tolerations | nindent 8 }}
+      volumes:
+        - name: varlogpods
+          hostPath: { path: {{ .Values.nodeLogHostPath }}, type: Directory }
+        - name: storage
+          hostPath: { path: {{ printf "/var/lib/telflo/supervisor/%s" (include "tsc.fullname" .) | quote }}, type: DirectoryOrCreate }
+{{- if .Values.clickhouse.endpoint }}
+        # Node role has no PVC (DaemonSets can't use volumeClaimTemplates), so
+        # collector file_storage is a per-node hostPath — durable across pod
+        # restarts on the same node. Chown'd to 10001 by the init container above.
+        - name: collector-data
+          hostPath: { path: {{ printf "/var/lib/telflo/collector/%s" (include "tsc.fullname" .) | quote }}, type: DirectoryOrCreate }
+{{- end }}
+{{- if .Values.volumes }}
+{{- include "tsc.extraVolumes" . }}
+{{- end }}
+{{- end -}}

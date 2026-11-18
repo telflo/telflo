@@ -1,0 +1,7 @@
+# A file whose root is its settings: `/pkg/rootonly.config` names it.
+$schema: https://json-schema.org/draft/2020-12/schema
+title: A title that's dropped
+type: object
+properties:
+  path:
+    type: string

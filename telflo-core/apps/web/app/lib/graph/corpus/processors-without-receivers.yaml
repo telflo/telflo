@@ -1,0 +1,14 @@
+# A pipeline being built: processors, but no receivers yet.
+processors:
+  batch: {}
+  memory_limiter:
+    limit_mib: 512
+exporters:
+  debug: {}
+service:
+  pipelines:
+    traces:
+      processors: [memory_limiter, batch]
+      exporters: [debug]
+    logs:
+      processors: [batch]

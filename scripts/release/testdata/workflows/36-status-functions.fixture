@@ -1,0 +1,13 @@
+# Breaks one rule: publish run whatever the tests did.
+file: release.yml
+rule: status-functions
+<<<
+    timeout-minutes: 60
+    environment: release
+
+===
+    timeout-minutes: 60
+    if: always()
+    environment: release
+
+>>>

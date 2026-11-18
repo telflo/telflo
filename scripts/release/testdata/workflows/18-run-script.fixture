@@ -1,0 +1,8 @@
+# Breaks one rule: a run: naming a script that doesn't exist.
+file: release.yml
+rule: run-script
+<<<
+      - run: bash scripts/release/build-compose-archive.sh --out "$RUNNER_TEMP/release"
+===
+      - run: bash scripts/release/build-compose-archives.sh --out "$RUNNER_TEMP/release"
+>>>

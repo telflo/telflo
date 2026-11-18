@@ -1,0 +1,8 @@
+# Breaks one rule: the chart job's if: with always() in place of the allow-listed !cancelled() (it would run after a failed test).
+file: collector.yml
+rule: status-functions
+<<<
+    if: ${{ !cancelled() && inputs.publish && needs.check.result == 'success' && (needs.publish.result == 'success' || (needs.publish.result == 'skipped' && needs.check.outputs.has == 'false')) }}
+===
+    if: ${{ always() && inputs.publish && needs.check.result == 'success' && (needs.publish.result == 'success' || (needs.publish.result == 'skipped' && needs.check.outputs.has == 'false')) }}
+>>>

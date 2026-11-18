@@ -1,0 +1,66 @@
+# The build context of the Node images (migrate, api and
+# web), of the collector validator (otelcol-validator) and of
+# the collector tester (otelcol-testing) is the repository's root
+# (D13a Preflight ruling 6, D13b spec decision 17, D14a spec decision 14), so
+# that their images can carry catalog/, the collector catalogue. This file
+# is an allowlist: only the workspace, the catalogue, the install templates
+# (the API image's default set, D17c-1 decision 35), the two Python
+# services' directories and one file of vendor/ go in. Everything else stays
+# out: .git, docs/, docker/ (the tester's and the evaluator's development
+# secrets among it), the rest of vendor/ (the opamp-server's contract
+# files), the other services (the OTTL evaluator builds from its own
+# context, with its own .dockerignore; the opamp-server, in its own
+# repository, runs its published image) and scratch files. Each
+# Python service's directory goes in whole but for what Python leaves
+# behind: its tests are needed by its Dockerfile's `test` target, and its
+# runtime stage copies only what the service runs (app/, telemetry.py, the
+# runtime lock; the tester's kwok configuration and seed too), so the tests
+# never reach a runtime image. The tester's image also reads the validator's
+# downloader (scripts/download-binaries.py). The one vendor/ file let in is
+# the opamp-server's org-token corpus, which the validator's `test` target
+# copies for tests/test_org_variables.py (D33-1 Ruling 329); no runtime
+# stage copies it.
+*
+!telflo-core/
+!catalog/
+!install-templates/
+!services/otelcol-validator/
+!services/otelcol-testing/
+!vendor/opamp-server/org-token-corpus.json
+
+# Within the workspace, keep the context to source: nothing installed, built
+# or secret.
+telflo-core/**/node_modules
+telflo-core/**/dist
+telflo-core/**/build
+telflo-core/**/.react-router
+telflo-core/**/*.tsbuildinfo
+telflo-core/coverage
+# Every package's too: the web dev server reads apps/web/.env.
+telflo-core/**/.env
+telflo-core/**/.env.*
+!telflo-core/.env.example
+# The browser tests: never part of an image.
+telflo-core/e2e
+telflo-core/playwright.config.ts
+telflo-core/test-results
+telflo-core/playwright-report
+# The fake OIDC provider and other test support: never part of an image.
+telflo-core/apps/api/src/testing
+
+# Within the validator's directory: no virtual environment, bytecode, test
+# cache or local secret.
+services/otelcol-validator/**/.venv
+services/otelcol-validator/**/__pycache__
+services/otelcol-validator/**/*.py[cod]
+services/otelcol-validator/**/.pytest_cache
+services/otelcol-validator/**/.env
+services/otelcol-validator/**/.env.*
+
+# Within the tester's directory, the same.
+services/otelcol-testing/**/.venv
+services/otelcol-testing/**/__pycache__
+services/otelcol-testing/**/*.py[cod]
+services/otelcol-testing/**/.pytest_cache
+services/otelcol-testing/**/.env
+services/otelcol-testing/**/.env.*

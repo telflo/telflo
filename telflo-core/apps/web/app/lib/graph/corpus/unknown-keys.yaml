@@ -1,0 +1,23 @@
+# Unknown components, sections and keys stay in the text.
+x-notes:
+  owner: platform-team
+receivers:
+  mysterious:
+    level: 11
+  otlp: {}
+processors:
+  custom_enricher/eu:
+    region: eu-west-1
+exporters:
+  debug:
+    verbosity: detailed
+    not_a_real_option: true
+service:
+  flags:
+    feature: on
+  pipelines:
+    logs:
+      receivers: [mysterious, otlp]
+      processors: [custom_enricher/eu]
+      exporters: [debug]
+      x-comment: unknown pipeline key

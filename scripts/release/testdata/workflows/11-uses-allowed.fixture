@@ -1,0 +1,12 @@
+# Breaks one rule: an action not on the allow-list.
+file: release.yml
+rule: uses-allowed
+<<<
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: release-files
+===
+      - uses: softprops/action-gh-release@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: release-files
+>>>

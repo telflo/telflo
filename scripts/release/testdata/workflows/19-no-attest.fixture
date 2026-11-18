@@ -1,0 +1,8 @@
+# Breaks one rule: --no-attest in a workflow.
+file: release.yml
+rule: no-attest
+<<<
+--builder telflo-release --image "$IMAGE"
+===
+--builder telflo-release --image "$IMAGE" --no-attest
+>>>

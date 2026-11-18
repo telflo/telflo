@@ -1,0 +1,12 @@
+# Breaks one rule: an artifact kept 30 days.
+file: release.yml
+rule: artifacts
+<<<
+          name: release-files
+          path: ${{ runner.temp }}/release/
+          retention-days: 3
+===
+          name: release-files
+          path: ${{ runner.temp }}/release/
+          retention-days: 30
+>>>

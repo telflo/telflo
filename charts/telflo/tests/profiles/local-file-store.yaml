@@ -1,0 +1,23 @@
+# The local file store, its volume's class and size given, over the
+# port-forward origin the kind smoke and the walkthrough use.
+publicUrl: http://localhost:8080
+api:
+  mail:
+    from: noreply@telflo.example.com
+    smtp:
+      host: mailpit.example.svc
+      port: 1025
+      allowInsecure: true
+      # Mailpit takes plain SMTP.
+      tls: none
+  opampAllowInsecureConnections: true
+  fileStore:
+    kind: local
+    storageClassName: standard
+    size: 2Gi
+postgres:
+  storageClassName: standard
+  size: 2Gi
+opamp-server:
+  server:
+    publicUrl: http://telflo-opamp-server-agent:51234/opamp/api/v1

@@ -1,0 +1,37 @@
+# Anchors components own, and merges of nested mappings (Preflight ruling 8).
+x-tls: &tls-defaults
+  tls:
+    insecure: false
+    ca_file: /etc/ca.pem
+receivers:
+  otlp: {}
+exporters:
+  otlp/alpha:
+    endpoint: a:4317
+    headers: &shared-headers
+      x-team: platform
+    retry_on_failure: &retry
+      enabled: true
+  otlp/beta:
+    endpoint: b:4317
+    headers: *shared-headers
+    retry_on_failure:
+      <<: *retry
+      max_elapsed_time: 60s
+  otlp/gamma:
+    <<: *tls-defaults
+    endpoint: c:4317
+  otlp/delta:
+    endpoint: d:4317
+    hosts: &hosts [h1, h2]
+  otlp/echo:
+    endpoint: e:4317
+    hosts: *hosts
+    items:
+      - *shared-headers
+      - plain
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      exporters: [otlp/alpha, otlp/beta, otlp/gamma, otlp/delta, otlp/echo]

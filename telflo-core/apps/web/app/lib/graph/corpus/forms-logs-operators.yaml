@@ -1,0 +1,259 @@
+# The logs receivers' forms and their operators (D9c Task 1): comments,
+# an anchor and aliases, flow items, a literal two-character '\n', and
+# `0750`, as a person writes them. Task 5 adds operators of
+# the shapes the operator cards read: bracketed and body fields, an epoch
+# layout, a mapping keyed in upper case, a type outside the 26, and an item
+# that isn't a mapping. Task 6 adds `filelog/parsers`, the 12 parsers with
+# keys set, comments and flow items. Task 7 adds `filelog/transforms`, the
+# 14 transformers and flow operators, with comments, flow items and quoted
+# scalars. Task 8 adds the receivers' own keys: `journald/source`,
+# `syslog/udp`, `syslog/tls` and `netflow/sflow`, and filelog's poll
+# interval and compression.
+x-retry: &retry
+  enabled: true
+  initial_interval: 2s # longer
+receivers:
+  filelog:
+    include:
+      - /var/log/app/*.log # the app
+      - /var/log/sys/*.log
+    exclude: [/var/log/app/debug.log]
+    start_at: beginning
+    include_file_path: true
+    storage: file_storage
+    multiline:
+      line_start_pattern: ^\d{4}-
+    attributes:
+      team: platform # who owns it
+    resource:
+      service.name: checkout
+    poll_interval: 500ms # a busy disk
+    compression: gzip
+    operators:
+      # parse the JSON body
+      - type: json_parser
+        id: parse
+        parse_from: body
+        timestamp:
+          parse_from: attributes.time
+          layout_type: strptime
+          layout: '%Y-%m-%d %H:%M:%S'
+        severity:
+          parse_from: attributes.level
+      - type: router
+        routes:
+          - expr: 'attributes.level == "error"'
+            output: errors
+        default: move
+      - type: add # a value typed as a number
+        id: errors
+        field: attributes.priority
+        value: 0750
+      - {type: move, id: move, from: attributes.msg, to: body}
+      - type: recombine
+        combine_field: body
+        combine_with: '\n'
+        is_first_entry: body matches "^\\d"
+      - type: retain
+        fields:
+          - attributes.team
+          - resource["service.name"]
+  journald:
+    units: [ssh, sudo]
+    priority: info
+    start_at: end
+    matches:
+      - _SYSTEMD_UNIT: ssh.service
+        _UID: "1000"
+      - _TRANSPORT: kernel
+    dmesg: true
+    retry_on_failure: *retry
+    operators:
+      - type: regex_parser
+        regex: '^(?P<time>\S+) (?P<msg>.*)$'
+      # the message's JSON, with epoch time and a mapping as written
+      - type: json_parser
+        parse_from: body["message.json"]
+        parse_to: attributes
+        timestamp:
+          parse_from: attributes.time
+          layout_type: epoch
+          layout: s.us
+        severity:
+          parse_from: body.level
+          preset: otel
+          mapping:
+            WARN: [warning, W]
+            error: 5xx
+      - type: drop_output # not one of the 26
+        id: dropped
+      - noop # not a mapping
+  syslog:
+    tcp:
+      listen_address: 0.0.0.0:54526 # the syslog port
+      max_log_size: 1MiB
+    protocol: rfc5424
+    enable_octet_counting: true
+    retry_on_failure:
+      <<: *retry
+      max_elapsed_time: 10m
+  fluentforward:
+    endpoint: 0.0.0.0:8006
+  netflow:
+    scheme: netflow
+    port: 2055
+    sockets: 2
+    queue_size: 1000
+  journald/source:
+    directory: /var/log/journal # the host's
+    files:
+      - /var/log/journal/a.journal
+    root_path: /host
+    journalctl_path: /usr/bin/journalctl
+    namespace: audit
+    identifiers: [sudo]
+    grep: (failed|denied)
+    merge: true
+    all: true
+    storage: file_storage
+  syslog/udp:
+    udp:
+      listen_address: 0.0.0.0:5140 # the relay's port
+      encoding: utf-16le
+      add_attributes: true
+      async:
+        readers: 2
+    protocol: rfc3164
+    location: America/New_York
+  syslog/tls:
+    tcp:
+      listen_address: 0.0.0.0:6514
+      encoding: utf-16le # the relay's
+      add_attributes: true
+      tls:
+        cert_file: /etc/tls/syslog.crt
+      max_connections: 100
+    protocol: rfc5424
+    non_transparent_framing_trailer: LF
+  netflow/sflow:
+    scheme: sflow
+    hostname: 10.0.0.1
+    port: 6343
+    workers: 4 # one per core
+    send_raw: true
+  # every transformer and flow operator, as their forms read and write them
+  filelog/transforms:
+    include: [/var/log/transforms/*.log]
+    operators:
+      - type: add # a string value
+        field: attributes.env
+        value: "production"
+      - {type: copy, from: body.msg, to: attributes.copied}
+      - type: move
+        from: attributes.host
+        to: 'resource["host.name"]' # a key with dots
+      - type: remove
+        field: attributes.password
+      - type: retain
+        fields:
+          - body.message # the message
+          - attributes.team
+      - type: flatten
+        field: body.nested
+        depth: 2 # not a key: left alone
+      - {type: unquote, field: body.quoted}
+      - type: regex_replace
+        field: body
+        regex: '\x1b\[\d+m' # colour codes
+        replace_with: ""
+      - type: sanitize_utf8
+        field: attributes.raw
+      - type: assign_keys
+        field: body.list
+        keys: [id, level]
+      - type: filter
+        expr: 'body matches "^DEBUG"'
+        drop_ratio: 0.5 # half
+      - type: router
+        routes:
+          - expr: 'attributes.level == "error"' # errors first
+            output: kept
+          - {expr: "true"}
+        default: kept
+      - type: recombine
+        combine_field: body.message
+        combine_with: "\t"
+        is_last_entry: 'body matches "}$"'
+        source_identifier: attributes.stream
+        max_batch_size: 100
+        max_log_size: 1MiB
+        force_flush_period: 10s
+        overwrite_with: newest # the latest fields
+      - type: noop
+        id: kept
+  # every parser, as the parser forms read and write them
+  filelog/parsers:
+    include: [/var/log/parsers/*.log]
+    operators:
+      - type: json_parser # the JSON body
+        id: json
+        parse_from: body
+        parse_to: attributes
+        parse_ints: false
+      - type: regex_parser
+        regex: '^(?P<time>\S+) (?P<level>\w+) (?P<msg>.*)$'
+        parse_from: body.message
+        cache:
+          size: 100 # entries
+      - type: csv_parser
+        header: id,name,msg
+        delimiter: ","
+        lazy_quotes: true # loose quoting
+      - {type: key_value_parser, delimiter: ":", pair_delimiter: ";", parse_to: attributes.kv}
+      - type: syslog_parser
+        protocol: rfc3164
+        location: America/New_York
+        timestamp: # kept: the form shows no timestamp section
+          parse_from: attributes.ts
+          layout_type: gotime
+          layout: Jan 02 15:04:05
+      - type: json_array_parser
+        parse_to: body
+        header: a,b,c
+      - type: container
+        format: docker
+        add_metadata_from_filepath: false
+        max_log_size: 2MiB
+      - type: severity_parser
+        parse_from: attributes.sev
+        preset: none
+        mapping:
+          Error: [err, E] # keyed as written
+          info: ok
+        overwrite_text: true
+      - type: time_parser
+        parse_from: attributes.ts
+        layout_type: gotime
+        layout: "2006-01-02 15:04:05"
+        location: UTC
+      - type: trace_parser
+        trace_id:
+          parse_from: attributes.trace
+        span_id: {parse_from: attributes.span}
+      - type: uri_parser
+        parse_from: attributes.url
+      - type: scope_name_parser
+        parse_from: attributes.logger # the logger's name
+exporters:
+  debug:
+    verbosity: basic
+extensions:
+  file_storage:
+    directory: /var/lib/otelcol/file_storage
+    directory_permissions: "0750" # a string the collector parses as octal
+service:
+  extensions: [file_storage]
+  pipelines:
+    logs:
+      receivers: [filelog, journald, syslog, fluentforward, netflow, journald/source, syslog/udp, syslog/tls, netflow/sflow, filelog/transforms, filelog/parsers]
+      exporters: [debug]

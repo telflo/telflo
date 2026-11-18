@@ -1,0 +1,31 @@
+{
+  "name": "telflo",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=22" },
+  "workspaces": ["packages/*", "apps/*"],
+  "scripts": {
+    "typecheck": "tsc --build --force",
+    "lint": "eslint .",
+    "test": "vitest run --maxWorkers=1 --minWorkers=1",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage --maxWorkers=1 --minWorkers=1",
+    "test:e2e": "playwright test",
+    "check:naming": "../scripts/check-naming.sh ..",
+    "check:licenses": "../scripts/check-licenses.mjs package-lock.json",
+    "db:migrate": "npm run migrate --workspace @telflo/db",
+    "dev:services": "docker compose -f ../docker-compose.yml up -d --wait db mailpit && docker compose -f ../docker-compose.yml up -d opamp-server otelcol-validator otelcol-testing otelcol-testing-forward ottl-evaluator ottl-evaluator-forward object-store && node ../scripts/wait-for-http.mjs http://127.0.0.1:51235/health 60 ../docker-compose.yml opamp-server && node ../scripts/wait-for-http.mjs http://127.0.0.1:51236/health 60 ../docker-compose.yml otelcol-validator && node ../scripts/wait-for-http.mjs http://127.0.0.1:51237/testing/v1/health 60 ../docker-compose.yml otelcol-testing && node ../scripts/wait-for-http.mjs http://127.0.0.1:51238/health 60 ../docker-compose.yml ottl-evaluator && node ../scripts/wait-for-http.mjs http://127.0.0.1:51240/healthz 60"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.13.0",
+    "@playwright/test": "^1.63.0",
+    "@vitest/coverage-v8": "^2.1.0",
+    "eslint": "^9.13.0",
+    "typescript": "^5.6.0",
+    "typescript-eslint": "^8.11.0",
+    "vitest": "^2.1.0"
+  },
+  "overrides": {
+    "monaco-worker-manager": "2.0.1"
+  }
+}

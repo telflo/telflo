@@ -1,0 +1,8 @@
+# Breaks one rule: the kind job checking less disk than it needs.
+file: release.yml
+rule: free-disk
+<<<
+      - run: bash scripts/release/steps.sh free-disk 18
+===
+      - run: bash scripts/release/steps.sh free-disk 13
+>>>

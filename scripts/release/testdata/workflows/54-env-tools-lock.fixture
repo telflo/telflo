@@ -1,0 +1,22 @@
+# Breaks one rule: a job's TELFLO_TOOLS_LOCK (another lock for the private tools).
+file: release.yml
+rule: env-names
+<<<
+  static:
+    needs: version
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    permissions:
+      contents: read
+
+===
+  static:
+    needs: version
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    permissions:
+      contents: read
+    env:
+      TELFLO_TOOLS_LOCK: /tmp/tools.lock
+
+>>>

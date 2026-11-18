@@ -1,0 +1,217 @@
+# Validate (D25 decision 17's route 15; decision 34; Preflight rulings 9 and
+# 17), and D27's anonymous validate (decisions 23-25; its Preflight ruling 9):
+# an open route, no token. Assembled by document.ts. An unknown or retired
+# version is 400, not 200 valid:false.
+paths:
+  /validate:
+    post:
+      operationId: validate
+      summary: Validate a collector configuration
+      description: >-
+        Checks an OpenTelemetry Collector configuration's YAML with the
+        collector validator, as the editor's validation does: `valid`, the
+        collector version it was checked against, and the collector's errors.
+        Nothing is stored. `distribution` defaults to the catalogue's default
+        (`otelcol-contrib`) and `collectorVersion` to that distribution's
+        default version. A distribution or version the catalogue doesn't
+        have answers 400 `collector_distribution_unknown` or
+        `collector_version_unknown`, a retired version 400
+        `collector_version_retired`. The organization's variables the YAML
+        references (`${org:NAME}`) are filled in before the check. A
+        validator that couldn't check the YAML answers 503
+        `validation_unavailable`, never `valid: false`: nothing was checked.
+        The token's user's validations are limited (60 a minute, two at
+        once: 429 `validation_rate_limited`).
+      tags: [validate]
+      x-telflo-access: read
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ValidateRequest"
+      responses:
+        "200":
+          description: The validator's verdict.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                enum: [no-store]
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidateAnswer"
+        "400":
+          description: >-
+            The request was not valid (`invalid_request`), or names a
+            distribution or version the catalogue doesn't have
+            (`collector_distribution_unknown`, `collector_version_unknown`) or
+            a retired version (`collector_version_retired`), or a personal
+            token sent no X-Telflo-Org, or one that isn't an organization's id
+            (`organization_required`).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "413":
+          $ref: "#/components/responses/ValidateBodyTooLarge"
+        "429":
+          description: >-
+            Over the token's 60 requests a minute (`rate_limited`), or the
+            user's validations (`validation_rate_limited`).
+          headers:
+            Retry-After:
+              description: Seconds until a retry may succeed.
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "503":
+          description: >-
+            The validator couldn't check the YAML (`validation_unavailable`), or
+            the organization's variables it references couldn't be read
+            (`variables_unavailable`). Nothing was checked: retry shortly.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /validate/anonymous:
+    post:
+      operationId: validateAnonymous
+      summary: Validate a collector configuration without a token
+      description: >-
+        Checks an OpenTelemetry Collector configuration's YAML as `POST
+        /validate` does, with no token and no organization: send no
+        `Authorization` header (one that is sent is ignored). The body and
+        the answer are `/validate`'s, and so are its 400s for a distribution
+        or version the catalogue doesn't have or a retired version. No
+        organization's variables are filled in: a `${org:NAME}` is checked
+        as written. Nothing is stored or logged of the YAML. Limited per
+        client address (10 a minute, one at a time) and across every caller
+        (120 a minute, four at a time): 429 `rate_limited` with
+        `Retry-After`. A validator that couldn't check the YAML answers 503
+        `validation_unavailable`, never `valid: false`.
+      tags: [validate]
+      security: []
+      x-telflo-access: none
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ValidateRequest"
+      responses:
+        "200":
+          description: The validator's verdict.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                enum: [no-store]
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidateAnswer"
+        "400":
+          description: >-
+            The request was not valid (`invalid_request`), or names a
+            distribution or version the catalogue doesn't have
+            (`collector_distribution_unknown`, `collector_version_unknown`) or
+            a retired version (`collector_version_retired`).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: >-
+            This site doesn't offer validation without a token (its
+            anonymous validate is switched off, as a self-hosted install's
+            is by default): the answer of a path nothing serves
+            (`not_found`). Validate with a token instead (`POST /validate`).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "413":
+          $ref: "#/components/responses/AnonymousValidateBodyTooLarge"
+        "429":
+          description: >-
+            Over this address's 10 validations a minute or its one at a time,
+            or every caller's 120 a minute or four at a time
+            (`rate_limited`).
+          headers:
+            Retry-After:
+              description: Seconds until a retry may succeed.
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "503":
+          description: >-
+            The validator couldn't check the YAML (`validation_unavailable`).
+            Nothing was checked: retry shortly.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+components:
+  schemas:
+    ValidateRequest:
+      type: object
+      additionalProperties: false
+      required: [yaml]
+      properties:
+        yaml:
+          description: >-
+            The configuration's YAML, 1 to 262,144 characters, with no control
+            character but tab, line feed and carriage return.
+          type: string
+          minLength: 1
+          maxLength: 262144
+        distribution:
+          description: A collector distribution of the catalogue, such as `otelcol-contrib`.
+          type: string
+          maxLength: 64
+          pattern: "^[a-z0-9]+(-[a-z0-9]+)*$"
+        collectorVersion:
+          description: A collector version of the distribution, `major.minor.patch`.
+          type: string
+          maxLength: 64
+          pattern: "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    ValidateAnswer:
+      type: object
+      additionalProperties: false
+      required: [valid, collectorVersion, errors]
+      properties:
+        valid:
+          type: boolean
+        collectorVersion:
+          description: The collector version the YAML was checked against.
+          type: string
+        errors:
+          description: The collector's errors, none when `valid`.
+          type: array
+          items:
+            $ref: "#/components/schemas/ValidationErrorItem"
+  responses:
+    ValidateBodyTooLarge:
+      description: The body is over 2 MiB (`payload_too_large`).
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    AnonymousValidateBodyTooLarge:
+      description: The body is over 1 MiB (`payload_too_large`).
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"

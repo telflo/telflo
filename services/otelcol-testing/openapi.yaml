@@ -1,0 +1,519 @@
+openapi: 3.1.0
+jsonSchemaDialect: https://json-schema.org/draft/2020-12/schema
+info:
+  title: otelcol-testing API
+  version: 1.0.0
+  description: |
+    The collector tester (D14a spec decisions 1, 5 and 13; Preflight rulings
+    1, 2, 4 and 5): runs one test of an OpenTelemetry Collector
+    configuration, starting the pinned `otelcol-contrib` in a sandbox,
+    feeding it the input and returning what came out. It holds no database
+    or storage credentials: the request carries the text, the settings and
+    the input; the answer carries everything the platform stores. The
+    platform's API (its dispatcher) is its only caller; browsers never
+    reach it.
+
+    - It listens on an internal port (8002), on a network with no route out.
+    - Every request but `GET /testing/v1/health` needs
+      `Authorization: Bearer <secret>`, the shared secret in the file
+      `OTELCOL_TESTING_SECRET_FILE` names (or one in
+      `OTELCOL_TESTING_SECRETS_PREVIOUS_FILE` during a rotation), compared in
+      constant time. Without it, every request, whatever its path, answers
+      the same 401, before the body is read.
+    - After authentication, a request no route matches, by path or by
+      method, answers 404 `not_found`.
+    - A request body is at most 16 MiB (16,777,216 bytes), refused with 413
+      `payload_too_large` as soon as it is declared or read past that; its
+      `yaml` is at most 262,144 characters (413 `payload_too_large` too) and
+      its input at most 10 MiB decoded (413 `input_too_large`).
+    - Anything else the contract refuses answers 400 `invalid_request`. A
+      version this tester's catalogue doesn't list answers 400
+      `version_unknown`; one it deprecates, 409 `version_retired`; an offered
+      version whose collector this tester doesn't hold, 503
+      `version_unavailable`.
+    - At most `OTELCOL_TESTING_MAX_CONCURRENCY` (4) runs at once; a request
+      waits at most 5 s for a slot to free up, then answers 503
+      `tester_busy`. While kwok starts, a run answers 503 `tester_starting`;
+      once kwok has failed every attempt, or its cluster stopped answering
+      (re-checked on health and before each run; two probes in a row),
+      503 `tester_unavailable`
+      (and the service then exits, to be restarted). A run is never served
+      without kwok.
+    - A run's processes are one process group under one deadline, 57 + d s
+      (d its duration); a request has 64 + d s in all. A run past either
+      answers 200, `failed`, `timed_out`.
+    - Every error answers the envelope `{"error": {"code", "message"}}`. A
+      message never quotes the request.
+    - Nothing is stored. The text, the input, the output and the
+      collector's logs never reach a log line; the answer holds no path
+      inside the tester and never the shared secret.
+    - An answer is at most 32 MiB.
+
+    This file is the contract: the tester's conformance test checks every
+    answer of every route against it, and the platform's client and test
+    double are checked against it too.
+servers:
+  - url: http://localhost:8002
+    description: The tester inside the stack.
+security:
+  - bearerAuth: []
+tags:
+  - name: runs
+    description: Running a test.
+  - name: health
+    description: The service and its fake Kubernetes cluster.
+paths:
+  /testing/v1/health:
+    get:
+      operationId: getHealth
+      tags: [health]
+      summary: Whether runs can be served.
+      description: |
+        Answers without the secret. The service listens first and starts its
+        fake Kubernetes cluster (kwok) in the background: 503 `starting`
+        meanwhile (a failed start is retried, three attempts in all), 200
+        once it is up, 503 `unavailable` once every attempt has failed or
+        the cluster, re-checked on every health request, stopped answering
+        (the service then exits with a non-zero status, so its restart
+        policy starts it afresh).
+      security: []
+      responses:
+        "200":
+          description: The tester is up, kwok with it.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthReady"
+              example:
+                status: ok
+                kwok: ready
+        "503":
+          description: kwok is starting, failed to start, or stopped answering.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthNotReady"
+              examples:
+                starting:
+                  value:
+                    status: starting
+                    kwok: starting
+                failed:
+                  value:
+                    status: unavailable
+                    kwok: failed
+  /testing/v1/runs:
+    post:
+      operationId: runTest
+      tags: [runs]
+      summary: Run one test and answer what came out.
+      description: |
+        Runs the text's `pipeline` with the pinned collector for
+        `durationSeconds`, fed with the input, inside the request. Before
+        any collector starts, every live non-`env` confmap provider
+        reference is replaced (R-105), and a text that can't be read as one
+        YAML document, or isn't shaped as a collector configuration, is
+        refused (C-000, `unreadable`); one the compatibility checks refuse
+        (C-002, C-004, C-005, C-006) answers `refused`, as does a processor
+        setting that names a file found in the exact text a collector would
+        read (C-006). The sandbox's mutations (R-001
+        to R-008, R-100, R-101, R-103, R-106) and the fixture-shape advisories (F-001
+        to F-003) are listed in `mutations`. The input is fed by the
+        strategy the pipeline takes: OTLP replay (each payload POSTed to a
+        sandbox OTLP/HTTP receiver, within 30 s in all), filelog pull (the
+        input staged as a file) or syslog push (the input streamed over
+        TCP). `status` is `succeeded` when the collector ran, `failed`
+        otherwise, with `error`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RunRequest"
+      responses:
+        "200":
+          description: The run ended, successfully or not.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RunAnswer"
+              examples:
+                succeeded:
+                  value:
+                    status: succeeded
+                    strategy: otlp
+                    kwokEnabled: false
+                    collectorVersion: 0.162.0
+                    logs: "2026-10-09T10:00:00.000Z\tinfo\tservice/service.go\tEverything is ready. Begin running and processing data.\n"
+                    mutatedYaml: "receivers:\n  otlp/test_in:\n    protocols:\n      http:\n        endpoint: 127.0.0.1:24123\nexporters:\n  file/test_out:\n    path: <sandbox/output>\nservice:\n  pipelines:\n    logs:\n      receivers: [otlp/test_in]\n      exporters: [file/test_out]\n  telemetry:\n    metrics:\n      level: none\n"
+                    mutations:
+                      - id: R-001
+                        severity: info
+                        message: "Your receivers (otlp) were replaced with a sandbox OTLP/HTTP source. The data flowing through your processor chain comes from the fixture you selected, not from the original receivers."
+                        details:
+                          original_receivers: [otlp]
+                          test_receiver: otlp/test_in
+                      - id: R-105
+                        severity: warn
+                        message: "Configuration provider references (${file:...}) were replaced with a placeholder. Only ${env:VAR} substitution runs in the sandbox; providers that read files or the network are neutralized so a test can't read host files or secrets."
+                        details:
+                          schemes: [file]
+                    compatibility: []
+                    output:
+                      base64: eyJyZXNvdXJjZUxvZ3MiOltdfQ==
+                      bytesOnDisk: 20
+                      truncated: false
+                    decodedInput:
+                      base64: eyJyZXNvdXJjZUxvZ3MiOltdfQ==
+                      truncated: false
+                    timings:
+                      totalMs: 6210
+                      readyMs: 410
+                      informerMs: null
+                      replayMs: 35
+                      holdMs: 5000
+                      stopMs: 60
+                refused:
+                  value:
+                    status: failed
+                    error:
+                      code: unreadable
+                      message: "could not parse YAML: mapping values are not allowed here (line 3)"
+                    strategy: null
+                    kwokEnabled: false
+                    collectorVersion: 0.162.0
+                    logs: ""
+                    mutatedYaml: null
+                    mutations: []
+                    compatibility:
+                      - id: C-000
+                        severity: refuse
+                        component: <yaml>
+                        message: "could not parse YAML: mapping values are not allowed here (line 3)"
+                        details:
+                          error_type: ScannerError
+                    output: null
+                    decodedInput: null
+                    timings:
+                      totalMs: 4
+                      readyMs: null
+                      informerMs: null
+                      replayMs: null
+                      holdMs: null
+                      stopMs: null
+        "400":
+          description: |
+            `invalid_request`: the body is malformed. `version_unknown`: it
+            names a version this tester's catalogue doesn't list.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: invalid_request
+                  message: "`signal` must be traces, metrics or logs."
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "409":
+          description: The version is deprecated in the catalogue.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: version_retired
+                  message: "This collector version is retired: pick an offered version to run this test."
+        "413":
+          description: |
+            `payload_too_large`: the body is larger than 16 MiB, or its `yaml`
+            longer than 262,144 characters. `input_too_large`: the input is
+            larger than 10 MiB decoded.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: payload_too_large
+                  message: The request body is larger than 16 MiB.
+        "500":
+          $ref: "#/components/responses/InternalError"
+        "503":
+          description: |
+            `tester_busy`: no slot freed up within 5 s. `version_unavailable`:
+            the version is offered but this tester doesn't hold its
+            collector. `tester_starting`: kwok is still starting.
+            `tester_unavailable`: kwok failed every attempt to start, or its
+            cluster stopped answering (the service is about to exit and be
+            restarted). Nothing was run: the platform may send the run
+            again.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: tester_busy
+                  message: Every run slot is busy. Retry shortly.
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: The shared secret (at least 32 bytes) from `OTELCOL_TESTING_SECRET_FILE`, or one from `OTELCOL_TESTING_SECRETS_PREVIOUS_FILE`.
+  responses:
+    Unauthorized:
+      description: The `Authorization` header is missing or names no accepted secret.
+      headers:
+        WWW-Authenticate:
+          schema:
+            type: string
+            const: Bearer
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            error:
+              code: unauthorized
+              message: Missing or invalid credentials.
+    InternalError:
+      description: Something unexpected failed; nothing is known of the run.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            error:
+              code: internal_error
+              message: Internal server error.
+  schemas:
+    HealthReady:
+      type: object
+      additionalProperties: false
+      required: [status, kwok]
+      properties:
+        status:
+          const: ok
+        kwok:
+          const: ready
+    HealthNotReady:
+      type: object
+      additionalProperties: false
+      required: [status, kwok]
+      properties:
+        status:
+          enum: [starting, unavailable]
+        kwok:
+          enum: [starting, failed]
+    RunRequest:
+      type: object
+      additionalProperties: false
+      required: [runId, yaml, pipeline, signal, durationSeconds, distribution, version, input]
+      properties:
+        runId:
+          type: string
+          description: The platform's run id, a label for the tester's log lines only.
+          pattern: "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        yaml:
+          type: string
+          minLength: 1
+          maxLength: 262144
+          description: The configuration's text, as queued; longer answers 413.
+        pipeline:
+          type: string
+          minLength: 1
+          maxLength: 200
+          description: The pipeline to run, as the text names it (`logs`, `logs/app`).
+        signal:
+          enum: [traces, metrics, logs]
+        durationSeconds:
+          type: integer
+          minimum: 1
+          maximum: 60
+          description: How long the collector runs once fed.
+        distribution:
+          const: otelcol-contrib
+        version:
+          type: string
+          maxLength: 64
+          pattern: "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+        input:
+          type: object
+          additionalProperties: false
+          required: [base64]
+          properties:
+            base64:
+              type: string
+              contentEncoding: base64
+              maxLength: 13981016
+              description: The input's bytes, standard base64; at most 10 MiB decoded (413 `input_too_large`).
+    RunAnswer:
+      type: object
+      additionalProperties: false
+      required:
+        [status, strategy, kwokEnabled, collectorVersion, logs, mutatedYaml, mutations, compatibility, output, decodedInput, timings]
+      properties:
+        status:
+          enum: [succeeded, failed]
+        error:
+          type: object
+          additionalProperties: false
+          required: [code, message]
+          properties:
+            code:
+              enum: [refused, collector_failed, replay_rejected, timed_out, unreadable]
+            message:
+              type: string
+        strategy:
+          description: How the input was fed; null when no collector started.
+          enum: [otlp, filelog, syslog, null]
+        kwokEnabled:
+          type: boolean
+          description: Whether the run used the tester's fake Kubernetes cluster.
+        collectorVersion:
+          type: string
+        logs:
+          type: string
+          maxLength: 262144
+          description: The collector's logs, scrubbed, at most 256 KiB (cut at a line), with the replay's `[replay]` block.
+        mutatedYaml:
+          type: [string, "null"]
+          maxLength: 1048576
+          description: The text the collector ran, after the sandbox's mutations, scrubbed; null when none ran.
+        mutations:
+          type: array
+          items:
+            $ref: "#/components/schemas/Mutation"
+        compatibility:
+          type: array
+          items:
+            $ref: "#/components/schemas/CompatibilityIssue"
+        output:
+          description: |
+            The collector's output: a single record as
+            it is, several as `{"records": [...]}`, serialised compact (UTF-8,
+            no spaces). At most 10 MiB: past it, trailing records are left
+            out, `truncated` is true and R-006 is added. `bytesOnDisk` is the
+            collector's file's size. Null when it wrote no record.
+          oneOf:
+            - type: "null"
+            - type: object
+              additionalProperties: false
+              required: [base64, bytesOnDisk, truncated]
+              properties:
+                base64:
+                  type: string
+                  contentEncoding: base64
+                  maxLength: 13981016
+                bytesOnDisk:
+                  type: integer
+                  minimum: 0
+                truncated:
+                  type: boolean
+        decodedInput:
+          description: The input as the OTLP replay decoded it (a UTF-16 input included), as UTF-8, at most 10 MiB (`truncated` past it); null for the other strategies and when no collector started.
+          oneOf:
+            - type: "null"
+            - type: object
+              additionalProperties: false
+              required: [base64, truncated]
+              properties:
+                base64:
+                  type: string
+                  contentEncoding: base64
+                  maxLength: 13981016
+                truncated:
+                  type: boolean
+        timings:
+          type: object
+          additionalProperties: false
+          required: [totalMs, readyMs, informerMs, replayMs, holdMs, stopMs]
+          properties:
+            totalMs:
+              type: integer
+              minimum: 0
+            readyMs:
+              type: [integer, "null"]
+              minimum: 0
+            informerMs:
+              type: [integer, "null"]
+              minimum: 0
+            replayMs:
+              type: [integer, "null"]
+              minimum: 0
+            holdMs:
+              type: [integer, "null"]
+              minimum: 0
+            stopMs:
+              type: [integer, "null"]
+              minimum: 0
+      if:
+        properties:
+          status:
+            const: failed
+      then:
+        required: [error]
+      else:
+        not:
+          required: [error]
+    Mutation:
+      type: object
+      additionalProperties: false
+      required: [id, severity, message, details]
+      properties:
+        id:
+          type: string
+          description: A sandbox mutation (R-*) or a fixture-shape advisory (F-*).
+          pattern: "^[RF]-[0-9]{3}$"
+        severity:
+          enum: [info, caution, warn]
+        message:
+          type: string
+        details:
+          type: object
+    CompatibilityIssue:
+      type: object
+      additionalProperties: false
+      required: [id, severity, component, message, details]
+      properties:
+        id:
+          type: string
+          pattern: "^C-[0-9]{3}$"
+        severity:
+          enum: [refuse, advisory]
+        component:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+    Error:
+      type: object
+      additionalProperties: false
+      required: [error]
+      properties:
+        error:
+          type: object
+          additionalProperties: false
+          required: [code, message]
+          properties:
+            code:
+              type: string
+              enum:
+                - unauthorized
+                - invalid_request
+                - not_found
+                - version_unknown
+                - version_retired
+                - version_unavailable
+                - tester_busy
+                - tester_starting
+                - tester_unavailable
+                - payload_too_large
+                - input_too_large
+                - internal_error
+            message:
+              type: string

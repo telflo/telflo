@@ -1,0 +1,224 @@
+{
+  "_comment": "Cross-implementation parity corpus for fixture-shape detection, the one copy both suites read (D14a Preflight ruling 18): the tester's tests/test_fixture_shape_parity.py and the platform web app's fixture-shape parity test (D14a Task 9). The Python module (services/otelcol-testing/app/fixture_shape.py) and the web app's module are hand-kept mirrors; this corpus is the contract that catches drift. If you change detection rules, advisory message text, or strategy-picking in one module, update the other AND this file — a stale entry fails on both sides at once. Inputs are plain UTF-8 text (truncation/BOM/binary edge cases live in each suite's own unit tests, since they aren't expressible as small shared strings). The target_strategies cases (D14a Task 9) carry the run's target pipeline too (`target_pipeline`, a key of the text's service.pipelines, or a stale name, which falls back to the signal's pipelines).",
+  "detection": [
+    { "name": "empty", "text": "", "expected": "empty" },
+    { "name": "whitespace_only", "text": "   \n\t\r\n  ", "expected": "empty" },
+    { "name": "envelope_logs", "text": "{\"resourceLogs\": []}", "expected": "otlp_envelope" },
+    { "name": "envelope_metrics", "text": "{\"resourceMetrics\": []}", "expected": "otlp_envelope" },
+    { "name": "envelope_traces", "text": "{\"resourceSpans\": []}", "expected": "otlp_envelope" },
+    { "name": "envelope_pretty", "text": "{\n  \"resourceLogs\": [\n    { \"resource\": {}, \"scopeLogs\": [] }\n  ]\n}\n", "expected": "otlp_envelope" },
+    { "name": "array_of_envelopes", "text": "[{\"resourceLogs\": []}, {\"resourceLogs\": []}]", "expected": "otlp_array" },
+    { "name": "array_of_plain_dicts", "text": "[{\"foo\": 1}, {\"bar\": 2}]", "expected": "single_json" },
+    { "name": "single_non_otlp_object", "text": "{\"msg\": \"hello\", \"level\": \"info\"}", "expected": "single_json" },
+    { "name": "ndjson", "text": "{\"msg\":\"a\"}\n{\"msg\":\"b\"}\n{\"msg\":\"c\"}\n", "expected": "ndjson" },
+    { "name": "raw_lines", "text": "2026-05-26 INFO order placed\n2026-05-26 WARN payment declined\n", "expected": "raw_lines" },
+    { "name": "mixed_json_and_text", "text": "{\"msg\":\"json\"}\nplain text line\n{\"msg\":\"more\"}\n", "expected": "raw_lines" },
+    { "name": "single_text_line", "text": "just one line of text", "expected": "single_line" }
+  ],
+  "signals": [
+    { "name": "signal_envelope_logs", "text": "{\"resourceLogs\": []}", "expected": "logs" },
+    { "name": "signal_envelope_metrics", "text": "{\"resourceMetrics\": []}", "expected": "metrics" },
+    { "name": "signal_envelope_traces", "text": "{\"resourceSpans\": []}", "expected": "traces" },
+    { "name": "signal_array_logs", "text": "[{\"resourceLogs\": []}, {\"resourceLogs\": []}]", "expected": "logs" },
+    { "name": "signal_non_otlp_object", "text": "{\"msg\": \"hello\"}", "expected": null },
+    { "name": "signal_ndjson", "text": "{\"msg\":\"a\"}\n{\"msg\":\"b\"}\n", "expected": null },
+    { "name": "signal_raw_lines", "text": "plain text\nmore text\n", "expected": null },
+    { "name": "signal_empty", "text": "", "expected": null }
+  ],
+  "advisories": [
+    {
+      "name": "raw_lines_otlp",
+      "shape": "raw_lines",
+      "strategy": "otlp",
+      "expected_id": "F-001",
+      "expected_message": "Your fixture looks like raw text log lines, but the target pipeline uses an OTLP receiver. The sandbox OTLP/HTTP endpoint will reject each line as invalid JSON, so the run is likely to produce no output. Convert the fixture to OTLP-JSON to test this pipeline, or test a `file_log` (or `filelog`) receiver pipeline against this fixture as-is."
+    },
+    {
+      "name": "single_line_otlp",
+      "shape": "single_line",
+      "strategy": "otlp",
+      "expected_id": "F-001",
+      "expected_message": "Your fixture looks like raw text log lines, but the target pipeline uses an OTLP receiver. The sandbox OTLP/HTTP endpoint will reject each line as invalid JSON, so the run is likely to produce no output. Convert the fixture to OTLP-JSON to test this pipeline, or test a `file_log` (or `filelog`) receiver pipeline against this fixture as-is."
+    },
+    {
+      "name": "ndjson_otlp",
+      "shape": "ndjson",
+      "strategy": "otlp",
+      "expected_id": "F-001",
+      "expected_message": "Your fixture is NDJSON, but the target pipeline uses an OTLP receiver. Each line is POSTed to the sandbox OTLP/HTTP endpoint and will be rejected unless every line is itself a valid OTLP document (a JSON object containing `resourceLogs`, `resourceMetrics`, or `resourceSpans`). If these are app log records, run the test on a `file_log` (or `filelog`) pipeline with a `json_parser` operator instead."
+    },
+    { "name": "envelope_otlp_ok", "shape": "otlp_envelope", "strategy": "otlp", "expected_id": null },
+    { "name": "array_otlp_ok", "shape": "otlp_array", "strategy": "otlp", "expected_id": null },
+    { "name": "empty_otlp_ok", "shape": "empty", "strategy": "otlp", "expected_id": null },
+    { "name": "envelope_signal_match_ok", "shape": "otlp_envelope", "strategy": "otlp", "signal_type": "traces", "fixture_signal": "traces", "expected_id": null },
+    { "name": "envelope_signal_unknown_ok", "shape": "otlp_envelope", "strategy": "otlp", "signal_type": "traces", "fixture_signal": null, "expected_id": null },
+    {
+      "name": "logs_fixture_traces_pipeline",
+      "shape": "otlp_envelope",
+      "strategy": "otlp",
+      "signal_type": "traces",
+      "fixture_signal": "logs",
+      "expected_id": "F-003",
+      "expected_message": "Your fixture contains OTLP logs data, but the target pipeline handles traces. The sandbox POSTs the fixture to the OTLP/HTTP traces endpoint, which decodes logs data as zero traces records — so the run is likely to produce no output. Select a traces fixture (an OTLP envelope with `resourceSpans`), or run this fixture against a logs pipeline."
+    },
+    {
+      "name": "metrics_fixture_logs_pipeline",
+      "shape": "otlp_envelope",
+      "strategy": "otlp",
+      "signal_type": "logs",
+      "fixture_signal": "metrics",
+      "expected_id": "F-003",
+      "expected_message": "Your fixture contains OTLP metrics data, but the target pipeline handles logs. The sandbox POSTs the fixture to the OTLP/HTTP logs endpoint, which decodes metrics data as zero logs records — so the run is likely to produce no output. Select a logs fixture (an OTLP envelope with `resourceLogs`), or run this fixture against a metrics pipeline."
+    },
+    {
+      "name": "traces_array_metrics_pipeline",
+      "shape": "otlp_array",
+      "strategy": "otlp",
+      "signal_type": "metrics",
+      "fixture_signal": "traces",
+      "expected_id": "F-003",
+      "expected_message": "Your fixture contains OTLP traces data, but the target pipeline handles metrics. The sandbox POSTs the fixture to the OTLP/HTTP metrics endpoint, which decodes traces data as zero metrics records — so the run is likely to produce no output. Select a metrics fixture (an OTLP envelope with `resourceMetrics`), or run this fixture against a traces pipeline."
+    },
+    {
+      "name": "envelope_filelog",
+      "shape": "otlp_envelope",
+      "strategy": "filelog",
+      "expected_id": "F-002",
+      "expected_message": "Your fixture looks like an OTLP-JSON envelope, but the target pipeline uses a `file_log` (or `filelog`) receiver. `file_log` reads input line by line, so the whole envelope arrives as a single record with the raw JSON string in `body` — your operator chain runs against that one line, not the records nested inside. To test the records as OTLP, run on an otlp-receiver pipeline. To test `file_log` operators, supply a fixture with one log per line."
+    },
+    {
+      "name": "envelope_syslog",
+      "shape": "otlp_envelope",
+      "strategy": "syslog",
+      "expected_id": "F-002",
+      "expected_message": "Your fixture looks like an OTLP-JSON envelope, but the target pipeline uses a `syslog` receiver. `syslog` reads input line by line, so the whole envelope arrives as a single record with the raw JSON string in `body` — your operator chain runs against that one line, not the records nested inside. To test the records as OTLP, run on an otlp-receiver pipeline. To test `syslog` operators, supply a fixture with one log per line."
+    },
+    {
+      "name": "array_filelog",
+      "shape": "otlp_array",
+      "strategy": "filelog",
+      "expected_id": "F-002",
+      "expected_message": "Your fixture looks like a JSON array of OTLP envelopes, but the target pipeline uses a `file_log` (or `filelog`) receiver. `file_log` reads input line by line, so the whole envelope arrives as a single record with the raw JSON string in `body` — your operator chain runs against that one line, not the records nested inside. To test the records as OTLP, run on an otlp-receiver pipeline. To test `file_log` operators, supply a fixture with one log per line."
+    },
+    {
+      "name": "array_syslog",
+      "shape": "otlp_array",
+      "strategy": "syslog",
+      "expected_id": "F-002",
+      "expected_message": "Your fixture looks like a JSON array of OTLP envelopes, but the target pipeline uses a `syslog` receiver. `syslog` reads input line by line, so the whole envelope arrives as a single record with the raw JSON string in `body` — your operator chain runs against that one line, not the records nested inside. To test the records as OTLP, run on an otlp-receiver pipeline. To test `syslog` operators, supply a fixture with one log per line."
+    },
+    { "name": "raw_lines_filelog_ok", "shape": "raw_lines", "strategy": "filelog", "expected_id": null },
+    { "name": "ndjson_filelog_ok", "shape": "ndjson", "strategy": "filelog", "expected_id": null },
+    { "name": "single_line_filelog_ok", "shape": "single_line", "strategy": "filelog", "expected_id": null },
+    { "name": "single_json_filelog_ok", "shape": "single_json", "strategy": "filelog", "expected_id": null },
+    { "name": "raw_lines_syslog_ok", "shape": "raw_lines", "strategy": "syslog", "expected_id": null },
+    { "name": "empty_filelog_ok", "shape": "empty", "strategy": "filelog", "expected_id": null }
+  ],
+  "strategies": [
+    {
+      "name": "filelog_wired_to_logs",
+      "yaml": "receivers:\n  filelog:\n    include: [/var/log/x.log]\nservice:\n  pipelines:\n    logs:\n      receivers: [filelog]\n      exporters: [debug]\n",
+      "signal_type": "logs",
+      "expected_kind": "filelog"
+    },
+    {
+      "name": "syslog_wired_to_logs",
+      "yaml": "receivers:\n  syslog:\n    tcp:\n      listen_address: 0.0.0.0:514\n    protocol: rfc5424\nservice:\n  pipelines:\n    logs:\n      receivers: [syslog]\n      exporters: [debug]\n",
+      "signal_type": "logs",
+      "expected_kind": "syslog"
+    },
+    {
+      "name": "filelog_with_instance_suffix",
+      "yaml": "receivers:\n  filelog/app1:\n    include: [/var/log/x.log]\nservice:\n  pipelines:\n    logs:\n      receivers: [filelog/app1]\n      exporters: [debug]\n",
+      "signal_type": "logs",
+      "expected_kind": "filelog"
+    },
+    {
+      "name": "filelog_not_wired_to_target_signal",
+      "yaml": "receivers:\n  otlp:\n    protocols:\n      http: {}\n  filelog:\n    include: [/var/log/x.log]\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      exporters: [debug]\n    logs:\n      receivers: [filelog]\n      exporters: [debug]\n",
+      "signal_type": "traces",
+      "expected_kind": "otlp"
+    },
+    {
+      "name": "no_matching_pipeline",
+      "yaml": "receivers:\n  filelog: {}\nservice:\n  pipelines:\n    logs:\n      receivers: [filelog]\n      exporters: [debug]\n",
+      "signal_type": "traces",
+      "expected_kind": "otlp"
+    },
+    {
+      "name": "plain_otlp_pipeline",
+      "yaml": "receivers:\n  otlp:\n    protocols:\n      http: {}\nservice:\n  pipelines:\n    logs:\n      receivers: [otlp]\n      exporters: [debug]\n",
+      "signal_type": "logs",
+      "expected_kind": "otlp"
+    },
+    {
+      "name": "file_log_wired_to_logs",
+      "yaml": "receivers:\n  file_log:\n    include: [/var/log/x.log]\nservice:\n  pipelines:\n    logs:\n      receivers: [file_log]\n      exporters: [debug]\n",
+      "signal_type": "logs",
+      "expected_kind": "filelog"
+    },
+    {
+      "name": "file_log_with_instance_suffix",
+      "yaml": "receivers:\n  file_log/app1:\n    include: [/var/log/x.log]\nservice:\n  pipelines:\n    logs:\n      receivers: [file_log/app1]\n      exporters: [debug]\n",
+      "signal_type": "logs",
+      "expected_kind": "filelog"
+    },
+    {
+      "name": "file_log_not_wired_to_target_signal",
+      "yaml": "receivers:\n  otlp:\n    protocols:\n      http: {}\n  file_log:\n    include: [/var/log/x.log]\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      exporters: [debug]\n    logs:\n      receivers: [file_log]\n      exporters: [debug]\n",
+      "signal_type": "traces",
+      "expected_kind": "otlp"
+    }
+  ],
+  "target_strategies": [
+    {
+      "name": "target_otlp_beside_filelog_sibling",
+      "yaml": "receivers:\n  otlp: {protocols: {http: {}}}\n  filelog: {include: [/a.log]}\nservice:\n  pipelines:\n    logs:      {receivers: [filelog], exporters: [debug]}\n    logs/otlp: {receivers: [otlp],    exporters: [debug]}\n",
+      "signal_type": "logs",
+      "target_pipeline": "logs/otlp",
+      "expected_kind": "otlp"
+    },
+    {
+      "name": "target_filelog_beside_otlp_sibling",
+      "yaml": "receivers:\n  otlp: {protocols: {http: {}}}\n  filelog: {include: [/a.log]}\nservice:\n  pipelines:\n    logs:      {receivers: [filelog], exporters: [debug]}\n    logs/otlp: {receivers: [otlp],    exporters: [debug]}\n",
+      "signal_type": "logs",
+      "target_pipeline": "logs",
+      "expected_kind": "filelog"
+    },
+    {
+      "name": "target_stale_falls_back_to_signal",
+      "yaml": "receivers:\n  otlp: {protocols: {http: {}}}\n  filelog: {include: [/a.log]}\nservice:\n  pipelines:\n    logs:      {receivers: [filelog], exporters: [debug]}\n    logs/otlp: {receivers: [otlp],    exporters: [debug]}\n",
+      "signal_type": "logs",
+      "target_pipeline": "logs/gone",
+      "expected_kind": "filelog"
+    },
+    {
+      "name": "target_picks_its_own_syslog_over_an_earlier_filelog",
+      "yaml": "receivers:\n  filelog/a: {include: [/a.log]}\n  syslog/b: {tcp: {listen_address: 0.0.0.0:514}, protocol: rfc5424}\nservice:\n  pipelines:\n    logs/a: {receivers: [filelog/a], exporters: [debug]}\n    logs/b: {receivers: [syslog/b], exporters: [debug]}\n",
+      "signal_type": "logs",
+      "target_pipeline": "logs/b",
+      "expected_kind": "syslog"
+    },
+    {
+      "name": "target_file_log_beside_otlp_sibling",
+      "yaml": "receivers:\n  otlp: {protocols: {http: {}}}\n  file_log: {include: [/a.log]}\nservice:\n  pipelines:\n    logs:      {receivers: [file_log], exporters: [debug]}\n    logs/otlp: {receivers: [otlp],     exporters: [debug]}\n",
+      "signal_type": "logs",
+      "target_pipeline": "logs",
+      "expected_kind": "filelog"
+    },
+    {
+      "name": "target_otlp_beside_file_log_sibling",
+      "yaml": "receivers:\n  otlp: {protocols: {http: {}}}\n  file_log: {include: [/a.log]}\nservice:\n  pipelines:\n    logs:      {receivers: [file_log], exporters: [debug]}\n    logs/otlp: {receivers: [otlp],     exporters: [debug]}\n",
+      "signal_type": "logs",
+      "target_pipeline": "logs/otlp",
+      "expected_kind": "otlp"
+    },
+    {
+      "name": "target_picks_its_own_file_log_over_an_earlier_syslog",
+      "yaml": "receivers:\n  syslog/a: {tcp: {listen_address: 0.0.0.0:514}, protocol: rfc5424}\n  file_log/b: {include: [/b.log]}\nservice:\n  pipelines:\n    logs/a: {receivers: [syslog/a], exporters: [debug]}\n    logs/b: {receivers: [file_log/b], exporters: [debug]}\n",
+      "signal_type": "logs",
+      "target_pipeline": "logs/b",
+      "expected_kind": "filelog"
+    }
+  ]
+}

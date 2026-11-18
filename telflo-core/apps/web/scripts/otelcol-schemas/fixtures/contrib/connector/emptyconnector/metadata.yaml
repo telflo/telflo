@@ -1,0 +1,5 @@
+# Its settings are `type Config struct{}`; upstream's schema is `{}`.
+type: empty
+deprecated_type: emptyold
+status:
+  class: connector

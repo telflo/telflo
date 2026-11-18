@@ -1,0 +1,878 @@
+{
+ "_comment": "Recorded by D13b Task 1 on 2026-10-06: `otelcol-contrib validate --config=<file>` (darwin_arm64, sha256 checked against catalog/) run on each case's text with an empty environment; the cases are the preflight's (D13b Preflight ruling 6). stdout was empty for every case. The echo-* cases (D13b ruling 25) were recorded the same way by Task 1's fix: a requirement's phrasing put where the collector echoes the text (an invalid key, a map key, a quoted value, an id, a type). The echo cases added by Task 1's second fix (D13b rulings 28 and 29: echo-headers-key-*, echo-start-at-stat, echo-encoding-*, echo-operator-type-stat, echo-error-mode-stat, echo-detector-*) were recorded the same way: a value or key that closes the collector's unescaped '\u2026' early, or one it echoes unquoted. The cases added by Task 1's third fix (D13b rulings 34 and 35) name their `environment`: `empty`, as above, or `service`, run as the service runs the collector: on the text as `_prepare` leaves it (providers neutralised) with the service's environment (the allowlist, VALIDATION_ENV_OVERRIDES and the `${env:}` placeholders). req-* are real requirement outputs (with reqs and k8sattr-node, the sources of the requirement templates); bypass-* are the review of 207bc02's ruling-29 bypasses (through the collector's own substitution, and through texts PyYAML refuses that the collector reads).",
+ "cases": {
+  "yaml-syntax": {
+   "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc:\n     bad: indentation\nexporters:\n  debug:\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      exporters: [debug]\n",
+   "runs": {
+    "0.147.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to get config: cannot resolve the configuration: retrieved value (type=string) cannot be used as a Conf: assuming string type since contents are not valid YAML: yaml: line 2: did not find expected key\n"
+    },
+    "0.162.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to get config: cannot resolve the configuration: retrieved value (type=string) cannot be used as a Conf: assuming string type since contents are not valid YAML: yaml: line 2: did not find expected key\n"
+    }
+   }
+  },
+  "env-badname": {
+   "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc:\n        endpoint: ${env:BAD-NAME}\nexporters:\n  debug:\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      exporters: [debug]\n",
+   "runs": {
+    "0.147.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to get config: cannot resolve the configuration: environment variable \"BAD-NAME\" has invalid name: must match regex ^[a-zA-Z_][a-zA-Z0-9_]*$\n"
+    },
+    "0.162.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to get config: cannot resolve the configuration: environment variable \"BAD-NAME\" has invalid name: must match regex ^[a-zA-Z_][a-zA-Z0-9_]*$\n"
+    }
+   }
+  },
+  "scalar": {
+   "yaml": "just a string\n",
+   "runs": {
+    "0.147.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to get config: cannot resolve the configuration: retrieved value (type=string) cannot be used as a Conf\n"
+    },
+    "0.162.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to get config: cannot resolve the configuration: retrieved value (type=string) cannot be used as a Conf\n"
+    }
+   }
+  },
+  "one-error": {
+   "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc:\n        endpoint: 0.0.0.0:4317\nexporters:\n  otlp_http:\n    endpoint: \"not a url ::\"\n    timeout: notaduration\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      exporters: [otlp_http]\n",
+   "runs": {
+    "0.147.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to get config: cannot unmarshal the configuration: decoding failed due to the following error(s):\n\n'exporters' error reading configuration for \"otlp_http\": decoding failed due to the following error(s):\n\n'timeout' time: invalid duration\n"
+    },
+    "0.162.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to get config: cannot unmarshal the configuration: decoding failed due to the following error(s):\n\n'exporters' error reading configuration for \"otlp_http\": decoding failed due to the following error(s):\n\n'' decoding failed due to the following error(s):\n\n'timeout' time: invalid duration\n"
+    }
+   }
+  },
+  "two-unmarshal": {
+   "yaml": "receivers:\n  otlp:\n    bad_one: 1\n    protocols:\n      grpc:\nprocessors:\n  batch/my-batch:\n    bad_two: 2\nexporters:\n  debug:\n    bad_three: 3\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      processors: [batch/my-batch]\n      exporters: [debug]\n",
+   "runs": {
+    "0.147.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to get config: cannot unmarshal the configuration: decoding failed due to the following error(s):\n\n'receivers' error reading configuration for \"otlp\": decoding failed due to the following error(s):\n\n'otlpreceiver.Config' has invalid keys: bad_one\n'processors' error reading configuration for \"batch/my-batch\": decoding failed due to the following error(s):\n\n'batchprocessor.Config' has invalid keys: bad_two\n'exporters' error reading configuration for \"debug\": decoding failed due to the following error(s):\n\n'debugexporter.Config' has invalid keys: bad_three\n"
+    },
+    "0.162.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to get config: cannot unmarshal the configuration: decoding failed due to the following error(s):\n\n'receivers' error reading configuration for \"otlp\": decoding failed due to the following error(s):\n\n'otlpreceiver.Config' has invalid keys: bad_one\n'processors' error reading configuration for \"batch/my-batch\": decoding failed due to the following error(s):\n\n'batchprocessor.Config' has invalid keys: bad_two\n'exporters' error reading configuration for \"debug\": decoding failed due to the following error(s):\n\n'debugexporter.Config' has invalid keys: bad_three\n"
+    }
+   }
+  },
+  "hyphen-decode": {
+   "yaml": "receivers:\n  otlp/my-recv.v2:\n    protocols:\n      grpc:\n        endpoint: 0.0.0.0:4317\n        max_recv_msg_size_mib: notanumber\nexporters:\n  debug:\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp/my-recv.v2]\n      exporters: [debug]\n",
+   "runs": {
+    "0.147.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to get config: cannot unmarshal the configuration: decoding failed due to the following error(s):\n\n'receivers' error reading configuration for \"otlp/my-recv.v2\": decoding failed due to the following error(s):\n\n'protocols.grpc' decoding failed due to the following error(s):\n\n'max_recv_msg_size_mib' expected type 'int', got unconvertible type 'string'\n"
+    },
+    "0.162.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to get config: cannot unmarshal the configuration: decoding failed due to the following error(s):\n\n'receivers' error reading configuration for \"otlp/my-recv.v2\": decoding failed due to the following error(s):\n\n'protocols.grpc' decoding failed due to the following error(s):\n\n'max_recv_msg_size_mib' expected type 'int', got unconvertible type 'string'\n"
+    }
+   }
+  },
+  "unknown-type": {
+   "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc:\n  nosuchreceiver:\nexporters:\n  debug:\n  nosuchexporter/2:\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp, nosuchreceiver]\n      exporters: [debug, nosuchexporter/2]\n",
+   "runs": {
+    "0.147.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to get config: cannot unmarshal the configuration: decoding failed due to the following error(s):\n\n'receivers' unknown type: \"nosuchreceiver\" for id: \"nosuchreceiver\" (valid values: [riak skywalking windowseventlog windowsperfcounters nop docker_stats purefa rabbitmq otlp envoyals flinkmetrics jmx journald k8sobjects namedpipe nginx filelog googlecloudpubsub jaeger mongodb signalfx prometheus_simple splunkenterprise sqlserver aerospike awsfirehose awss3 googlecloudmonitoring haproxy mongodbatlas otlpjsonfile prometheusremotewrite awsecscontainermetrics kafka pulsar snowflake solace sqlquery tcpcheck wavefront couchdb datadog k8s_events otelarrow podman_stats snmp cloudfoundry splunk_hec sshcheck vcenter zookeeper awscontainerinsightreceiver awsxray carbon oracledb prometheus webhookevent cloudflare github loki mysql tlscheck active_directory_ds fluentforward iis kubeletstats mongodb_atlas nsxt ntp apache azureeventhub chrony faro filestats gitlab syslog systemd hostmetrics influxdb memcached stef statsd awscloudwatch googlecloudspanner httpcheck netflow redis udplog yanggrpc azureblob azure_event_hub azuremonitor collectd elasticsearch libhoney macosunifiedlogging receiver_creator k8s_cluster kafkametrics postgresql purefb saphana tcplog zipkin apachespark expvar])\n'exporters' unknown type: \"nosuchexporter\" for id: \"nosuchexporter/2\" (valid values: [sumologic zipkin otlp_http awss3 elasticsearch logzio opensearch rabbitmq nop awscloudwatchlogs azureblob googlecloud googlecloudpubsub googlemanagedprometheus logicmonitor prometheusremotewrite awsxray clickhouse googlecloudstorage loadbalancing pulsar sentry stef syslog otlp kafka mezmo otelarrow prometheus tinybird debug otlp_grpc coralogix file influxdb splunk_hec alibabacloud_logservice awsemf awskinesis azuredataexplorer dataset doris signalfx otlphttp cassandra honeycombmarker tencentcloud_logservice azuremonitor bmchelix datadog faro])\n"
+    },
+    "0.162.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to get config: cannot unmarshal the configuration: decoding failed due to the following error(s):\n\n'receivers' unknown type: \"nosuchreceiver\" for id: \"nosuchreceiver\" (valid values: [chrony expvar iis kubeletstats saphana nsxt pprof apache_spark apachespark azure_monitor filestats kafkametrics splunk_hec purefa aerospike azure_event_hub cloud_foundry gitlab snmp windows_event_log netflow prometheus azure_blob fluentforward github k8s_objects kafka_metrics prometheus_simple host_metrics kafka udp_log awsxray influxdb udplog named_pipe windowseventlog couchdb datadog googlecloudpubsub mongodbatlas pulsar sshcheck windows_service jaeger macos_unified_logging ntp otlp_json_file ciscoos filelog mysql purefb zipkin otlp obi flink_metrics googlecloudmonitoring riak tlscheck awscontainerinsightreceiver collectd googlecloudspanner k8s_cluster nginx receiver_creator vcenter windowsperfcounters aws_lambda otlpjsonfile tcp_check awsecscontainermetrics cloudflare file_log icmp_check podman_stats splunk_enterprise awscloudwatch httpcheck loki otelarrow skywalking tls_check awsfirehose cisco_os mongodb_atlas tcp_log memcached envoy_als faro google_cloud_spanner libhoney apache elasticsearch macosunifiedlogging webhookevent envoyals postgresql statsd azuremonitor carbon aws_cloudwatch awss3 journald prometheus_remote_write redis ssh_check systemd aws_s3 k8sobjects tcpcheck tcplog yang_grpc active_directory_ds rabbitmq hostmetrics k8s_events namedpipe oracledb stef sqlserver windowsservice cloudfoundry docker_stats http_check flinkmetrics mongodb sql_query yanggrpc splunkenterprise azureeventhub webhook_event nop snowflake azureblob windows_perf_counters zookeeper fluent_forward haproxy kubelet_stats solace file_stats icmpcheckreceiver prometheusremotewrite sqlquery syslog])\n'exporters' unknown type: \"nosuchexporter\" for id: \"nosuchexporter/2\" (valid values: [logzio otlp awsemf alibabacloud_logservice awss3 googlecloud syslog doris googlecloudstorage kafka prometheus otlp_grpc otlp_http cassandra load_balancing splunk_hec nop otelarrow prometheusremotewrite coralogix influxdb prometheus_remote_write azure_monitor azuremonitor honeycomb_marker pulsar tencentcloud_logservice azureblob googlecloudpubsub otlphttp azure_blob clickhouse dataset googlemanagedprometheus logicmonitor bmchelix elasticsearch faro sentry debug file loadbalancing awskinesis awsxray bmc_helix rabbitmq sumologic awscloudwatchlogs azuredataexplorer honeycombmarker opensearch signalfx stef zipkin datadog google_cloud_storage tinybird])\n"
+    }
+   }
+  },
+  "unknown-all": {
+   "yaml": "receivers:\n  zz_nosuch:\nprocessors:\n  zz_nosuch:\nexporters:\n  zz_nosuch:\nconnectors:\n  zz_nosuch:\nextensions:\n  zz_nosuch:\nservice:\n  pipelines:\n    traces:\n      receivers: [zz_nosuch]\n      exporters: [zz_nosuch]\n",
+   "runs": {
+    "0.147.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to get config: cannot unmarshal the configuration: decoding failed due to the following error(s):\n\n'receivers' unknown type: \"zz_nosuch\" for id: \"zz_nosuch\" (valid values: [receiver_creator splunkenterprise apachespark jaeger netflow prometheusremotewrite windowsperfcounters awsxray k8s_events libhoney mongodb nginx tcplog nop apache couchdb filelog statsd webhookevent awscontainerinsightreceiver cloudflare collectd faro fluentforward hostmetrics mysql active_directory_ds elasticsearch expvar jmx namedpipe ntp oracledb otelarrow azure_event_hub azuremonitor docker_stats mongodb_atlas solace splunk_hec sqlquery udplog aerospike gitlab googlecloudpubsub nsxt otlpjsonfile podman_stats awsfirehose awss3 k8s_cluster kafka mongodbatlas purefa pulsar snowflake azureeventhub cloudfoundry haproxy kubeletstats redis prometheus_simple sshcheck syslog carbon journald macosunifiedlogging memcached rabbitmq riak stef windowseventlog flinkmetrics prometheus saphana sqlserver tlscheck wavefront yanggrpc zipkin datadog envoyals googlecloudmonitoring postgresql skywalking vcenter otlp awscloudwatch chrony k8sobjects systemd awsecscontainermetrics googlecloudspanner signalfx tcpcheck snmp azureblob github influxdb kafkametrics purefb zookeeper filestats httpcheck iis loki])\n'processors' unknown type: \"zz_nosuch\" for id: \"zz_nosuch\" (valid values: [coralogix deltatocumulative unroll batch isolationforest k8s_attributes k8sattributes logdedup metricsgeneration metricstransform sumologic cumulativetodelta interval remotetap resourcedetection memory_limiter filter groupbyattrs deltatorate geoip groupbytrace metricstarttime resource schema span attributes transform probabilistic_sampler redaction tail_sampling])\n'exporters' unknown type: \"zz_nosuch\" for id: \"zz_nosuch\" (valid values: [cassandra doris loadbalancing prometheus prometheusremotewrite honeycombmarker mezmo sumologic alibabacloud_logservice awskinesis awsxray azuremonitor bmchelix influxdb pulsar rabbitmq otlp_grpc elasticsearch otelarrow sentry splunk_hec tencentcloud_logservice tinybird debug otlp otlphttp clickhouse googlemanagedprometheus kafka opensearch signalfx datadog stef zipkin awscloudwatchlogs azuredataexplorer coralogix dataset googlecloud syslog googlecloudpubsub googlecloudstorage nop awsemf faro file logicmonitor logzio otlp_http awss3 azureblob])\n'connectors' unknown type: \"zz_nosuch\" for id: \"zz_nosuch\" (valid values: [signaltometrics forward count exceptions grafanacloud otlpjson servicegraph spanmetrics sum datadog failover roundrobin routing signal_to_metrics])\n'extensions' unknown type: \"zz_nosuch\" for id: \"zz_nosuch\" (valid values: [http_forwarder docker_observer db_storage oidc file_storage sumologic json_log_encoding opamp k8s_leader_elector asapclient awsproxy cgroupruntime datadog awslogs_encoding jaegerremotesampling host_observer redis_storage awscloudwatchmetricstreams_encoding jaeger_encoding zipkin_encoding oauth2client ack bearertokenauth text_encoding kafkatopics_observer pprof zpages googlecloudlogentry_encoding otlp_encoding skywalking_encoding ecs_observer k8s_observer sigv4auth azureauth basicauth googleclientauth headers_setter health_check])\n"
+    },
+    "0.162.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to get config: cannot unmarshal the configuration: decoding failed due to the following error(s):\n\n'receivers' unknown type: \"zz_nosuch\" for id: \"zz_nosuch\" (valid values: [github memcached otlpjsonfile ssh_check hostmetrics mongodb_atlas rabbitmq splunk_enterprise awsfirehose azure_monitor filelog filestats k8s_objects libhoney purefb couchdb splunkenterprise stef file_log windows_perf_counters azuremonitor carbon macosunifiedlogging nsxt webhook_event cloudflare icmp_check prometheus_remote_write faro google_cloud_spanner namedpipe sshcheck tlscheck snmp envoyals solace kafkametrics loki prometheus systemd udplog aws_lambda saphana sql_query awss3 azureblob kubelet_stats prometheus_simple splunk_hec flinkmetrics influxdb k8sobjects windowsperfcounters zipkin zookeeper otlp jaeger kafka_metrics sqlquery webhookevent redis windowsservice podman_stats nop obi apachespark azure_blob azureeventhub mysql otelarrow macos_unified_logging ntp tls_check windows_event_log yanggrpc aws_s3 journald kubeletstats tcp_check awsecscontainermetrics docker_stats windowseventlog awscontainerinsightreceiver elasticsearch purefa tcpcheck active_directory_ds cloud_foundry snowflake statsd tcp_log googlecloudpubsub k8s_events otlp_json_file sqlserver apache apache_spark fluent_forward httpcheck pprof syslog yang_grpc file_stats windows_service fluentforward googlecloudspanner nginx tcplog udp_log chrony collectd googlecloudmonitoring iis riak cloudfoundry flink_metrics netflow receiver_creator datadog host_metrics http_check icmpcheckreceiver cisco_os kafka mongodbatlas mongodb named_pipe vcenter envoy_als gitlab k8s_cluster pulsar aerospike aws_cloudwatch expvar haproxy postgresql prometheusremotewrite skywalking awscloudwatch awsxray azure_event_hub ciscoos oracledb])\n'processors' unknown type: \"zz_nosuch\" for id: \"zz_nosuch\" (valid values: [groupbytrace k8s_attributes metricsgeneration metric_start_time metricstransform batch memory_limiter deltatocumulative deltatorate log_dedup redaction resource_detection cardinality_guardian cumulative_to_delta cumulativetodelta span_pruning tail_sampling interval span coralogix delta_to_rate metricstarttime spanpruning attributes groupbyattrs isolationforest logdedup remotetap resource schema transform delta_to_cumulative filter gen_ai_normalizer geoip k8sattributes probabilistic_sampler resourcedetection unroll drain metrics_transform sumologic])\n'exporters' unknown type: \"zz_nosuch\" for id: \"zz_nosuch\" (valid values: [azuredataexplorer datadog dataset signalfx zipkin otlp_grpc awskinesis faro clickhouse influxdb rabbitmq alibabacloud_logservice awss3 googlemanagedprometheus opensearch azure_blob elasticsearch otelarrow otlp_http bmchelix file kafka logicmonitor load_balancing bmc_helix googlecloudpubsub honeycombmarker logzio awsemf azureblob tinybird honeycomb_marker splunk_hec otlphttp awscloudwatchlogs cassandra google_cloud_storage sentry googlecloudstorage loadbalancing prometheus sumologic azure_monitor coralogix googlecloud nop otlp azuremonitor doris prometheus_remote_write prometheusremotewrite pulsar stef debug awsxray syslog tencentcloud_logservice])\n'connectors' unknown type: \"zz_nosuch\" for id: \"zz_nosuch\" (valid values: [service_graph span_metrics sum signaltometrics otlp_json servicegraph datadog failover otlpjson round_robin roundrobin spanmetrics signal_to_metrics count exceptions grafana_cloud grafanacloud forward routing])\n'extensions' unknown type: \"zz_nosuch\" for id: \"zz_nosuch\" (valid values: [sumologic asapclient basicauth cgroup_runtime cgroupruntime datadog google_cloud_logentry_encoding json_log_encoding docker_observer awslogs_encoding jaeger_encoding skywalking_encoding text_encoding headers_setter health_check k8s_observer redis_storage zpages aws_logs_encoding otlp_encoding pebble_tail_storage bearertokenauth awscloudwatchmetricstreams_encoding googlecloudlogentry_encoding http_forwarder pprof sigv4auth db_storage k8s_leader_elector oidc file_storage sd_notify aws_iam_db_auth azure_auth azure_encoding azureauth zipkin_encoding googleclientauth jaegerremotesampling oauth2client ecs_observer host_observer ack awsproxy opamp])\n"
+    }
+   }
+  },
+  "unknown-hyphen": {
+   "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc:\nexporters:\n  debug:\n  no-such_exp/my-exp.v2:\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      exporters: [debug, no-such_exp/my-exp.v2]\n",
+   "runs": {
+    "0.147.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to get config: cannot unmarshal the configuration: decoding failed due to the following error(s):\n\n'exporters' '' in \"no-such_exp/my-exp.v2\" id: invalid character(s) in type \"no-such_exp\"\n'service.pipelines[traces].exporters[1]' in \"no-such_exp/my-exp.v2\" id: invalid character(s) in type \"no-such_exp\"\n"
+    },
+    "0.162.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to get config: cannot unmarshal the configuration: decoding failed due to the following error(s):\n\n'exporters' '' in \"no-such_exp/my-exp.v2\" id: invalid character(s) in type \"no-such_exp\"\n'service.pipelines[traces].exporters[1]' in \"no-such_exp/my-exp.v2\" id: invalid character(s) in type \"no-such_exp\"\n"
+    }
+   }
+  },
+  "dd-unknown": {
+   "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc:\nexporters:\n  datadog:\n    api:\n      key: 0123456789abcdef0123456789abcdef\n    hostname: h\n    zzz_not_a_key: 1\n    logs:\n      zzz_nor_this: true\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      exporters: [datadog]\n",
+   "runs": {
+    "0.147.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to get config: cannot unmarshal the configuration: decoding failed due to the following error(s):\n\n'exporters' error reading configuration for \"datadog\": decoding failed due to the following error(s):\n\n'' decoding failed due to the following error(s):\n\n'logs' has invalid keys: zzz_nor_this\n'config.Config' has invalid keys: zzz_not_a_key\n"
+    },
+    "0.162.0": {
+     "exitCode": 0,
+     "stderr": ""
+    }
+   }
+  },
+  "rd-unknown": {
+   "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc:\nprocessors:\n  resourcedetection:\n    detectors: [ecs]\n    ecs:\n      zzz_not_a_key: 1\n      client_config:\n        zzz_nor_this: 1\nexporters:\n  debug:\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      processors: [resourcedetection]\n      exporters: [debug]\n",
+   "runs": {
+    "0.147.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to get config: cannot unmarshal the configuration: decoding failed due to the following error(s):\n\n'processors' error reading configuration for \"resourcedetection\": decoding failed due to the following error(s):\n\n'ecs' has invalid keys: client_config, zzz_not_a_key\n"
+    },
+    "0.162.0": {
+     "exitCode": 0,
+     "stderr": ""
+    }
+   }
+  },
+  "uk-service-telemetry": {
+   "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc:\nexporters:\n  debug:\nservice:\n  zzz_bad: 1\n  pipelines:\n    traces:\n      receivers: [otlp]\n      exporters: [debug]\n",
+   "runs": {
+    "0.147.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to get config: cannot unmarshal the configuration: decoding failed due to the following error(s):\n\n'service' has invalid keys: zzz_bad\n"
+    },
+    "0.162.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to get config: cannot unmarshal the configuration: decoding failed due to the following error(s):\n\n'service' has invalid keys: zzz_bad\n"
+    }
+   }
+  },
+  "uk-top-level": {
+   "yaml": "zzz_bad: 1\nreceivers:\n  otlp:\n    protocols:\n      grpc:\nexporters:\n  debug:\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      exporters: [debug]\n",
+   "runs": {
+    "0.147.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to get config: cannot unmarshal the configuration: decoding failed due to the following error(s):\n\n'otelcol.configSettings' has invalid keys: zzz_bad\n"
+    },
+    "0.162.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to get config: cannot unmarshal the configuration: decoding failed due to the following error(s):\n\n'otelcol.configSettings' has invalid keys: zzz_bad\n"
+    }
+   }
+  },
+  "d9d-transform-group-after-flat": {
+   "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc:\nprocessors:\n  transform:\n    trace_statements:\n      - set(span.name, \"a\")\n      - statements:\n          - set(span.name, \"b\")\nexporters:\n  debug:\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      processors: [transform]\n      exporters: [debug]\n",
+   "runs": {
+    "0.147.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to get config: cannot unmarshal the configuration: decoding failed due to the following error(s):\n\n'processors' error reading configuration for \"transform\": '' configuring multiple configuration styles is not supported, please use only Basic configuration or only Advanced configuration\n"
+    },
+    "0.162.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to get config: cannot unmarshal the configuration: decoding failed due to the following error(s):\n\n'processors' error reading configuration for \"transform\": '' configuring multiple configuration styles is not supported, please use only Basic configuration or only Advanced configuration\n"
+    }
+   }
+  },
+  "d9c-syslog-framing-trailer-empty": {
+   "yaml": "receivers:\n  syslog:\n    tcp:\n      listen_address: 0.0.0.0:54526\n    protocol: rfc5424\n    octet_counting: false\n    non_transparent_framing_trailer: ''\nexporters:\n  debug:\nservice:\n  pipelines:\n    logs:\n      receivers: [syslog]\n      exporters: [debug]\n",
+   "runs": {
+    "0.147.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to get config: cannot unmarshal the configuration: decoding failed due to the following error(s):\n\n'receivers' error reading configuration for \"syslog\": decoding failed due to the following error(s):\n\n'' decoding failed due to the following error(s):\n\n'syslogreceiver.SysLogConfig' has invalid keys: octet_counting\n"
+    },
+    "0.162.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to get config: cannot unmarshal the configuration: decoding failed due to the following error(s):\n\n'receivers' error reading configuration for \"syslog\": decoding failed due to the following error(s):\n\n'' decoding failed due to the following error(s):\n\n'syslogreceiver.SysLogConfig' has invalid keys: octet_counting\n"
+    }
+   }
+  },
+  "two-errors": {
+   "yaml": "receivers:\n  otlp:\n    protocols: {}\nexporters:\n  otlp_grpc/2:\n    endpoint: \"\"\n  otlp_http/my-exp:\n    endpoint: \"\"\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      exporters: [otlp_grpc/2, otlp_http/my-exp]\n",
+   "runs": {
+    "0.147.0": {
+     "exitCode": 1,
+     "stderr": "Error: receivers::otlp: must specify at least one protocol when using the OTLP receiver\nexporters::otlp_grpc/2: requires a non-empty \"endpoint\"\nexporters::otlp_http/my-exp: at least one endpoint must be specified\n"
+    },
+    "0.162.0": {
+     "exitCode": 1,
+     "stderr": "Error: receivers::otlp: must specify at least one protocol when using the OTLP receiver\nexporters::otlp_http/my-exp: at least one endpoint must be specified\nexporters::otlp_grpc/2: requires a non-empty \"endpoint\"\n"
+    }
+   }
+  },
+  "pipeline-err": {
+   "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc:\nexporters:\n  debug:\nservice:\n  pipelines:\n    traces/2:\n      receivers: [otlp]\n      exporters: [debug/missing]\n",
+   "runs": {
+    "0.147.0": {
+     "exitCode": 1,
+     "stderr": "Error: service::pipelines::traces/2: references exporter \"debug/missing\" which is not configured\n"
+    },
+    "0.162.0": {
+     "exitCode": 1,
+     "stderr": "Error: service::pipelines::traces/2: references exporter \"debug/missing\" which is not configured\n"
+    }
+   }
+  },
+  "pipeline-empty": {
+   "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc:\nexporters:\n  debug:\nservice:\n  pipelines:\n    traces/my-pipe:\n      receivers: [otlp]\n",
+   "runs": {
+    "0.147.0": {
+     "exitCode": 1,
+     "stderr": "Error: service::pipelines::traces/my-pipe: must have at least one exporter\n"
+    },
+    "0.162.0": {
+     "exitCode": 1,
+     "stderr": "Error: service::pipelines::traces/my-pipe: must have at least one exporter\n"
+    }
+   }
+  },
+  "d9c-time_parser-%s": {
+   "yaml": "receivers:\n  filelog:\n    include: [/tmp/x.log]\n    operators:\n      - type: time_parser\n        parse_from: body\n        layout_type: epoch\n        layout: '%s'\nexporters:\n  debug:\nservice:\n  pipelines:\n    logs:\n      receivers: [filelog]\n      exporters: [debug]\n",
+   "runs": {
+    "0.147.0": {
+     "exitCode": 1,
+     "stderr": "Error: receivers::filelog::baseconfig::operators::0::builder: invalid `layout` for `epoch` type\nreceivers::filelog::baseconfig::operators::0::builder::timeparser: invalid `layout` for `epoch` type\n"
+    },
+    "0.162.0": {
+     "exitCode": 1,
+     "stderr": "Error: receivers::filelog::baseconfig::operators::0::builder: invalid `layout` for `epoch` type\nreceivers::filelog::baseconfig::operators::0::builder::timeparser: invalid `layout` for `epoch` type\n"
+    }
+   }
+  },
+  "reqs": {
+   "yaml": "extensions:\n  file_storage:\n    directory: /var/lib/does-not-exist/x\nreceivers:\n  hostmetrics:\n    root_path: /hostfs-missing\n    scrapers:\n      cpu: {}\n  otlp:\n    protocols:\n      grpc:\n        tls:\n          cert_file: /etc/missing/cert.pem\n          key_file: /etc/missing/key.pem\nexporters:\n  debug:\nservice:\n  extensions: [file_storage]\n  pipelines:\n    metrics:\n      receivers: [hostmetrics, otlp]\n      exporters: [debug]\n",
+   "runs": {
+    "0.147.0": {
+     "exitCode": 1,
+     "stderr": "Error: receivers::hostmetrics: root_path is supported on linux only\nextensions::file_storage: directory must exist: stat /var/lib/does-not-exist/x: no such file or directory. You can enable the create_directory option to automatically create it\n"
+    },
+    "0.162.0": {
+     "exitCode": 1,
+     "stderr": "Error: receivers::hostmetrics: root_path is supported on linux only\nextensions::file_storage: directory must exist: stat /var/lib/does-not-exist/x: no such file or directory. You can enable the create_directory option to automatically create it\n"
+    }
+   }
+  },
+  "k8sattr-node": {
+   "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc:\nprocessors:\n  k8sattributes:\n    filter:\n      node_from_env_var: K8S_NODE_NAME\nexporters:\n  debug:\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      processors: [k8sattributes]\n      exporters: [debug]\n",
+   "runs": {
+    "0.147.0": {
+     "exitCode": 1,
+     "stderr": "Error: processors::k8sattributes::filter: `node_from_env_var` is configured but envvar \"K8S_NODE_NAME\" is not set\n"
+    },
+    "0.162.0": {
+     "exitCode": 1,
+     "stderr": "Error: processors::k8sattributes::filter: `node_from_env_var` is configured but envvar \"K8S_NODE_NAME\" is not set\n"
+    }
+   }
+  },
+  "env-unset": {
+   "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc:\n        endpoint: ${env:MY_ENDPOINT}\nexporters:\n  otlp_http:\n    endpoint: ${env:EXPORT_URL}\n    headers:\n      x-api-key: ${env:API_KEY}\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      exporters: [otlp_http]\n",
+   "runs": {
+    "0.147.0": {
+     "exitCode": 1,
+     "stderr": "Error: exporters::otlp_http: at least one endpoint must be specified\n"
+    },
+    "0.162.0": {
+     "exitCode": 1,
+     "stderr": "Error: exporters::otlp_http: at least one endpoint must be specified\n"
+    }
+   }
+  },
+  "empty": {
+   "yaml": "# nothing\n",
+   "runs": {
+    "0.147.0": {
+     "exitCode": 1,
+     "stderr": "Error: empty configuration file\nservice::pipelines: service must have at least one pipeline\n"
+    },
+    "0.162.0": {
+     "exitCode": 1,
+     "stderr": "Error: empty configuration file\nservice::pipelines: service must have at least one pipeline\n"
+    }
+   }
+  },
+  "build-hyphen": {
+   "yaml": "receivers:\n  filelog/my-logs.v2:\n    include: []\nexporters:\n  debug:\nservice:\n  pipelines:\n    logs:\n      receivers: [filelog/my-logs.v2]\n      exporters: [debug]\n",
+   "runs": {
+    "0.147.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to build pipelines: failed to create \"filelog/my-logs.v2\" receiver for data type \"logs\": 'include' must be specified\n"
+    },
+    "0.162.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to build pipelines: failed to create \"filelog/my-logs.v2\" receiver for data type \"logs\": 'include' must be specified\n"
+    }
+   }
+  },
+  "connector-misused": {
+   "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc:\nexporters:\n  debug:\nconnectors:\n  forward/my-fwd:\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      exporters: [forward/my-fwd]\n",
+   "runs": {
+    "0.147.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to build pipelines: connector \"forward/my-fwd\" used as exporter in [traces] pipeline but not used in any supported receiver pipeline\n"
+    },
+    "0.162.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to build pipelines: connector \"forward/my-fwd\" used as exporter in [traces] pipeline but not used in any supported receiver pipeline\n"
+    }
+   }
+  },
+  "two-build": {
+   "yaml": "receivers:\n  filelog:\n    include: []\n  syslog:\n    tcp:\n      listen_address: 0.0.0.0:54526\n    protocol: nope\nexporters:\n  debug:\nservice:\n  pipelines:\n    logs:\n      receivers: [filelog, syslog]\n      exporters: [debug]\n",
+   "runs": {
+    "0.147.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to build pipelines: failed to create \"filelog\" receiver for data type \"logs\": 'include' must be specified\n"
+    },
+    "0.162.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to build pipelines: failed to create \"filelog\" receiver for data type \"logs\": 'include' must be specified\n"
+    }
+   }
+  },
+  "k8s-rd": {
+   "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc:\nprocessors:\n  resourcedetection:\n    detectors: [k8snode]\nexporters:\n  debug:\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      processors: [resourcedetection]\n      exporters: [debug]\n",
+   "runs": {
+    "0.147.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to build pipelines: failed to create \"resourcedetection\" processor, in pipeline \"traces\": failed creating detector type \"k8snode\": node name can't be found. Check the readme on how to set the required env variable\n"
+    },
+    "0.162.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to build pipelines: failed to create \"resourcedetection\" processor, in pipeline \"traces\": failed creating detector type \"k8snode\": node name can't be found. Check the readme on how to set the required env variable\n"
+    }
+   }
+  },
+  "d9d-routing-names-deleted-pipeline": {
+   "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc:\nexporters:\n  debug:\nconnectors:\n  routing:\n    default_pipelines: [traces/b]\n    table:\n      - condition: 'attributes[\"x\"] == \"y\"'\n        pipelines: [traces/gone]\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      exporters: [routing]\n    traces/b:\n      receivers: [routing]\n      exporters: [debug]\n",
+   "runs": {
+    "0.147.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to build pipelines: pipeline not found: missing consumer: \"traces/gone\"\n"
+    },
+    "0.162.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to build pipelines: pipeline not found: missing consumer: \"traces/gone\"\n"
+    }
+   }
+  },
+  "d9d-failover-names-deleted-pipeline": {
+   "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc:\nexporters:\n  debug:\nconnectors:\n  failover:\n    priority_levels:\n      - [traces/a]\n      - [traces/gone]\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      exporters: [failover]\n    traces/a:\n      receivers: [failover]\n      exporters: [debug]\n",
+   "runs": {
+    "0.147.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to build pipelines: Error registering consumer\n"
+    },
+    "0.162.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to build pipelines: Error registering consumer\n"
+    }
+   }
+  },
+  "d9c-journald-lowercase-match": {
+   "yaml": "receivers:\n  journald:\n    matches:\n      - _systemd_unit: ssh.service\nexporters:\n  debug:\nservice:\n  pipelines:\n    logs:\n      receivers: [journald]\n      exporters: [debug]\n",
+   "runs": {
+    "0.147.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to build pipelines: failed to create \"journald\" receiver for data type \"logs\": journald is only supported on linux\ntelemetry type is not supported\n"
+    },
+    "0.162.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to build pipelines: failed to create \"journald\" receiver for data type \"logs\": journald is only supported on linux\ntelemetry type is not supported\n"
+    }
+   }
+  },
+  "d9c-filelog-in-metrics-pipeline": {
+   "yaml": "receivers:\n  filelog:\n    include: [/tmp/x.log]\nexporters:\n  debug:\nservice:\n  pipelines:\n    metrics:\n      receivers: [filelog]\n      exporters: [debug]\n",
+   "runs": {
+    "0.147.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to build pipelines: failed to create \"filelog\" receiver for data type \"metrics\": telemetry type is not supported\n"
+    },
+    "0.162.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to build pipelines: failed to create \"filelog\" receiver for data type \"metrics\": telemetry type is not supported\n"
+    }
+   }
+  },
+  "ok": {
+   "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc:\nexporters:\n  debug:\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      exporters: [debug]\n",
+   "runs": {
+    "0.147.0": {
+     "exitCode": 0,
+     "stderr": ""
+    },
+    "0.162.0": {
+     "exitCode": 0,
+     "stderr": ""
+    }
+   }
+  },
+  "d9d-tail_sampling-ottl-no-condition": {
+   "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc:\nprocessors:\n  tail_sampling:\n    policies:\n      - name: p\n        type: ottl_condition\n        ottl_condition:\n          error_mode: ignore\nexporters:\n  debug:\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      processors: [tail_sampling]\n      exporters: [debug]\n",
+   "runs": {
+    "0.147.0": {
+     "exitCode": 0,
+     "stderr": ""
+    },
+    "0.162.0": {
+     "exitCode": 0,
+     "stderr": ""
+    }
+   }
+  },
+  "echo-invalid-key": {
+   "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc: {}\n    'envvar \"X\" is not set': 1\nexporters:\n  debug: {}\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      exporters: [debug]\n",
+   "runs": {
+    "0.147.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to get config: cannot unmarshal the configuration: decoding failed due to the following error(s):\n\n'receivers' error reading configuration for \"otlp\": decoding failed due to the following error(s):\n\n'otlpreceiver.Config' has invalid keys: envvar \"X\" is not set\n"
+    },
+    "0.162.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to get config: cannot unmarshal the configuration: decoding failed due to the following error(s):\n\n'receivers' error reading configuration for \"otlp\": decoding failed due to the following error(s):\n\n'otlpreceiver.Config' has invalid keys: envvar \"X\" is not set\n"
+    }
+   }
+  },
+  "echo-invalid-key-stat": {
+   "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc: {}\n    'stat /y: no such file or directory': 1\nexporters:\n  debug: {}\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      exporters: [debug]\n",
+   "runs": {
+    "0.147.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to get config: cannot unmarshal the configuration: decoding failed due to the following error(s):\n\n'receivers' error reading configuration for \"otlp\": decoding failed due to the following error(s):\n\n'otlpreceiver.Config' has invalid keys: stat /y: no such file or directory\n"
+    },
+    "0.162.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to get config: cannot unmarshal the configuration: decoding failed due to the following error(s):\n\n'receivers' error reading configuration for \"otlp\": decoding failed due to the following error(s):\n\n'otlpreceiver.Config' has invalid keys: stat /y: no such file or directory\n"
+    }
+   }
+  },
+  "echo-map-key-type": {
+   "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc: {}\nexporters:\n  otlp_http:\n    endpoint: https://example.com\n    headers:\n      'envvar \"X\" is not set': {a: 1}\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      exporters: [otlp_http]\n",
+   "runs": {
+    "0.147.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to get config: cannot unmarshal the configuration: decoding failed due to the following error(s):\n\n'exporters' error reading configuration for \"otlp_http\": decoding failed due to the following error(s):\n\n'headers' decoding failed due to the following error(s):\n\n'[envvar \"X\" is not set]' expected type 'configopaque.String', got unconvertible type 'map[string]interface {}'\n"
+    },
+    "0.162.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to get config: cannot unmarshal the configuration: decoding failed due to the following error(s):\n\n'exporters' error reading configuration for \"otlp_http\": decoding failed due to the following error(s):\n\n'' decoding failed due to the following error(s):\n\n'headers' decoding failed due to the following error(s):\n\n'[envvar \"X\" is not set]' expected type 'configopaque.String', got unconvertible type 'map[string]interface {}'\n"
+    }
+   }
+  },
+  "echo-quoted-stat": {
+   "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc: {}\nexporters:\n  otlp_http:\n    endpoint: https://example.com\n    compression: 'stat /y: no such file or directory'\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      exporters: [otlp_http]\n",
+   "runs": {
+    "0.147.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to get config: cannot unmarshal the configuration: decoding failed due to the following error(s):\n\n'exporters' error reading configuration for \"otlp_http\": decoding failed due to the following error(s):\n\n'compression' unsupported compression type \"stat /y: no such file or directory\"\n"
+    },
+    "0.162.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to get config: cannot unmarshal the configuration: decoding failed due to the following error(s):\n\n'exporters' error reading configuration for \"otlp_http\": decoding failed due to the following error(s):\n\n'' decoding failed due to the following error(s):\n\n'compression' unsupported compression type \"stat /y: no such file or directory\"\n"
+    }
+   }
+  },
+  "echo-quoted-tls": {
+   "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc: {}\nexporters:\n  debug: {}\nservice:\n  telemetry:\n    logs:\n      level: 'tls: failed to verify certificate'\n  pipelines:\n    traces:\n      receivers: [otlp]\n      exporters: [debug]\n",
+   "runs": {
+    "0.147.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to get config: cannot unmarshal the configuration: decoding failed due to the following error(s):\n\n'service.telemetry.logs' decoding failed due to the following error(s):\n\n'level' unrecognized level: \"tls: failed to verify certificate\"\n"
+    },
+    "0.162.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to get config: cannot unmarshal the configuration: decoding failed due to the following error(s):\n\n'service.telemetry.logs' decoding failed due to the following error(s):\n\n'level' unrecognized level: \"tls: failed to verify certificate\"\n"
+    }
+   }
+  },
+  "echo-id-name": {
+   "yaml": "receivers:\n  otlp/envvar \"X\" is not set:\n    protocols:\n      grpc: {}\nexporters:\n  debug: {}\nservice:\n  pipelines:\n    traces:\n      receivers: ['otlp/envvar \"X\" is not set']\n      exporters: [debug]\n",
+   "runs": {
+    "0.147.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to get config: cannot unmarshal the configuration: decoding failed due to the following error(s):\n\n'receivers' '' in \"envvar \\\"X\\\" is not set\" id: invalid character(s) in name \"envvar \\\"X\\\" is not set\"\n'service.pipelines[traces].receivers[0]' in \"envvar \\\"X\\\" is not set\" id: invalid character(s) in name \"envvar \\\"X\\\" is not set\"\n"
+    },
+    "0.162.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to get config: cannot unmarshal the configuration: decoding failed due to the following error(s):\n\n'receivers' '' in \"envvar \\\"X\\\" is not set\" id: invalid character(s) in name \"envvar \\\"X\\\" is not set\"\n'service.pipelines[traces].receivers[0]' in \"envvar \\\"X\\\" is not set\" id: invalid character(s) in name \"envvar \\\"X\\\" is not set\"\n"
+    }
+   }
+  },
+  "echo-unknown-type": {
+   "yaml": "receivers:\n  'envvar \"X\" is not set': {}\n  otlp:\n    protocols:\n      grpc: {}\nexporters:\n  debug: {}\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      exporters: [debug]\n",
+   "runs": {
+    "0.147.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to get config: cannot unmarshal the configuration: decoding failed due to the following error(s):\n\n'receivers' '' in \"envvar \\\"X\\\" is not set\" id: invalid character(s) in type \"envvar \\\"X\\\" is not set\"\n"
+    },
+    "0.162.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to get config: cannot unmarshal the configuration: decoding failed due to the following error(s):\n\n'receivers' '' in \"envvar \\\"X\\\" is not set\" id: invalid character(s) in type \"envvar \\\"X\\\" is not set\"\n"
+    }
+   }
+  },
+  "echo-pipeline-ref": {
+   "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc: {}\nexporters:\n  debug: {}\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      exporters: ['debug/envvar \"X\" is not set']\n",
+   "runs": {
+    "0.147.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to get config: cannot unmarshal the configuration: decoding failed due to the following error(s):\n\n'service.pipelines[traces].exporters[0]' in \"envvar \\\"X\\\" is not set\" id: invalid character(s) in name \"envvar \\\"X\\\" is not set\"\n"
+    },
+    "0.162.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to get config: cannot unmarshal the configuration: decoding failed due to the following error(s):\n\n'service.pipelines[traces].exporters[0]' in \"envvar \\\"X\\\" is not set\" id: invalid character(s) in name \"envvar \\\"X\\\" is not set\"\n"
+    }
+   }
+  },
+  "echo-headers-key-stat": {
+   "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc: {}\nexporters:\n  otlp_http:\n    endpoint: https://example.com\n    headers:\n      \"x': stat /y: no such file or directory\": {a: 1}\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      exporters: [otlp_http]\n",
+   "runs": {
+    "0.147.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to get config: cannot unmarshal the configuration: decoding failed due to the following error(s):\n\n'exporters' error reading configuration for \"otlp_http\": decoding failed due to the following error(s):\n\n'headers' decoding failed due to the following error(s):\n\n'[x': stat /y: no such file or directory]' expected type 'configopaque.String', got unconvertible type 'map[string]interface {}'\n"
+    },
+    "0.162.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to get config: cannot unmarshal the configuration: decoding failed due to the following error(s):\n\n'exporters' error reading configuration for \"otlp_http\": decoding failed due to the following error(s):\n\n'' decoding failed due to the following error(s):\n\n'headers' decoding failed due to the following error(s):\n\n'[x': stat /y: no such file or directory]' expected type 'configopaque.String', got unconvertible type 'map[string]interface {}'\n"
+    }
+   }
+  },
+  "echo-headers-key-envvar": {
+   "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc: {}\nexporters:\n  otlp_http:\n    endpoint: https://example.com\n    headers:\n      \"x': envvar \\\"X\\\" is not set\": {a: 1}\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      exporters: [otlp_http]\n",
+   "runs": {
+    "0.147.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to get config: cannot unmarshal the configuration: decoding failed due to the following error(s):\n\n'exporters' error reading configuration for \"otlp_http\": decoding failed due to the following error(s):\n\n'headers' decoding failed due to the following error(s):\n\n'[x': envvar \"X\" is not set]' expected type 'configopaque.String', got unconvertible type 'map[string]interface {}'\n"
+    },
+    "0.162.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to get config: cannot unmarshal the configuration: decoding failed due to the following error(s):\n\n'exporters' error reading configuration for \"otlp_http\": decoding failed due to the following error(s):\n\n'' decoding failed due to the following error(s):\n\n'headers' decoding failed due to the following error(s):\n\n'[x': envvar \"X\" is not set]' expected type 'configopaque.String', got unconvertible type 'map[string]interface {}'\n"
+    }
+   }
+  },
+  "echo-headers-key-bracket-stat": {
+   "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc: {}\nexporters:\n  otlp_http:\n    endpoint: https://example.com\n    headers:\n      \"x'] stat /y: no such file or directory\": {a: 1}\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      exporters: [otlp_http]\n",
+   "runs": {
+    "0.147.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to get config: cannot unmarshal the configuration: decoding failed due to the following error(s):\n\n'exporters' error reading configuration for \"otlp_http\": decoding failed due to the following error(s):\n\n'headers' decoding failed due to the following error(s):\n\n'[x'] stat /y: no such file or directory]' expected type 'configopaque.String', got unconvertible type 'map[string]interface {}'\n"
+    },
+    "0.162.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to get config: cannot unmarshal the configuration: decoding failed due to the following error(s):\n\n'exporters' error reading configuration for \"otlp_http\": decoding failed due to the following error(s):\n\n'' decoding failed due to the following error(s):\n\n'headers' decoding failed due to the following error(s):\n\n'[x'] stat /y: no such file or directory]' expected type 'configopaque.String', got unconvertible type 'map[string]interface {}'\n"
+    }
+   }
+  },
+  "echo-start-at-stat": {
+   "yaml": "receivers:\n  filelog:\n    include: [/tmp/x.log]\n    start_at: \"x': stat /y: no such file or directory\"\nexporters:\n  debug: {}\nservice:\n  pipelines:\n    logs:\n      receivers: [filelog]\n      exporters: [debug]\n",
+   "runs": {
+    "0.147.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to build pipelines: failed to create \"filelog\" receiver for data type \"logs\": invalid start_at location 'x': stat /y: no such file or directory'\n"
+    },
+    "0.162.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to build pipelines: failed to create \"filelog\" receiver for data type \"logs\": invalid start_at location 'x': stat /y: no such file or directory'\n"
+    }
+   }
+  },
+  "echo-encoding-stat": {
+   "yaml": "receivers:\n  filelog:\n    include: [/tmp/x.log]\n    encoding: \"x': stat /y: no such file or directory\"\nexporters:\n  debug: {}\nservice:\n  pipelines:\n    logs:\n      receivers: [filelog]\n      exporters: [debug]\n",
+   "runs": {
+    "0.147.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to build pipelines: failed to create \"filelog\" receiver for data type \"logs\": unsupported encoding 'x': stat /y: no such file or directory'\n"
+    },
+    "0.162.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to build pipelines: failed to create \"filelog\" receiver for data type \"logs\": unsupported encoding 'x': stat /y: no such file or directory'\n"
+    }
+   }
+  },
+  "echo-operator-type-stat": {
+   "yaml": "receivers:\n  filelog:\n    include: [/tmp/x.log]\n    operators:\n      - type: \"x': stat /y: no such file or directory\"\nexporters:\n  debug: {}\nservice:\n  pipelines:\n    logs:\n      receivers: [filelog]\n      exporters: [debug]\n",
+   "runs": {
+    "0.147.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to get config: cannot unmarshal the configuration: decoding failed due to the following error(s):\n\n'receivers' error reading configuration for \"filelog\": decoding failed due to the following error(s):\n\n'operators[0]' unsupported type 'x': stat /y: no such file or directory'\n"
+    },
+    "0.162.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to get config: cannot unmarshal the configuration: decoding failed due to the following error(s):\n\n'receivers' error reading configuration for \"filelog\": decoding failed due to the following error(s):\n\n'operators[0]' unsupported type 'x': stat /y: no such file or directory'\n"
+    }
+   }
+  },
+  "echo-error-mode-stat": {
+   "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc: {}\nprocessors:\n  transform:\n    error_mode: 'x: stat /y: no such file or directory'\nexporters:\n  debug: {}\nservice:\n  pipelines:\n    logs:\n      receivers: [otlp]\n      processors: [transform]\n      exporters: [debug]\n",
+   "runs": {
+    "0.147.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to get config: cannot unmarshal the configuration: decoding failed due to the following error(s):\n\n'processors' error reading configuration for \"transform\": decoding failed due to the following error(s):\n\n'' decoding failed due to the following error(s):\n\n'error_mode' unknown error mode x: stat /y: no such file or directory\n"
+    },
+    "0.162.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to get config: cannot unmarshal the configuration: decoding failed due to the following error(s):\n\n'processors' error reading configuration for \"transform\": decoding failed due to the following error(s):\n\n'' decoding failed due to the following error(s):\n\n'error_mode' unknown error mode x: stat /y: no such file or directory\n"
+    }
+   }
+  },
+  "echo-detector-envvar": {
+   "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc: {}\nprocessors:\n  resourcedetection:\n    detectors: ['x: envvar \"HOME_DIR\" is not set']\nexporters:\n  debug: {}\nservice:\n  pipelines:\n    logs:\n      receivers: [otlp]\n      processors: [resourcedetection]\n      exporters: [debug]\n",
+   "runs": {
+    "0.147.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to build pipelines: failed to create \"resourcedetection\" processor, in pipeline \"logs\": invalid detector key: x: envvar \"HOME_DIR\" is not set\n"
+    },
+    "0.162.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to build pipelines: failed to create \"resourcedetection\" processor, in pipeline \"logs\": invalid detector key: x: envvar \"HOME_DIR\" is not set\n"
+    }
+   }
+  },
+  "echo-detector-stat": {
+   "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc: {}\nprocessors:\n  resourcedetection:\n    detectors: ['stat /y: no such file or directory']\nexporters:\n  debug: {}\nservice:\n  pipelines:\n    logs:\n      receivers: [otlp]\n      processors: [resourcedetection]\n      exporters: [debug]\n",
+   "runs": {
+    "0.147.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to build pipelines: failed to create \"resourcedetection\" processor, in pipeline \"logs\": invalid detector key: stat /y: no such file or directory\n"
+    },
+    "0.162.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to build pipelines: failed to create \"resourcedetection\" processor, in pipeline \"logs\": invalid detector key: stat /y: no such file or directory\n"
+    }
+   }
+  },
+  "echo-encoding-quotes": {
+   "yaml": "receivers:\n  filelog:\n    include: [/tmp/x.log]\n    encoding: \"a': 'b': 'b': 'b\"\nexporters:\n  debug: {}\nservice:\n  pipelines:\n    logs:\n      receivers: [filelog]\n      exporters: [debug]\n",
+   "runs": {
+    "0.147.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to build pipelines: failed to create \"filelog\" receiver for data type \"logs\": unsupported encoding 'a': 'b': 'b': 'b'\n"
+    },
+    "0.162.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to build pipelines: failed to create \"filelog\" receiver for data type \"logs\": unsupported encoding 'a': 'b': 'b': 'b'\n"
+    }
+   }
+  },
+  "req-file-storage-directory": {
+   "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc: {}\nextensions:\n  file_storage:\n    directory: /var/lib/otelcol-missing/fs\nexporters:\n  debug: {}\nservice:\n  extensions: [file_storage]\n  pipelines:\n    traces:\n      receivers: [otlp]\n      exporters: [debug]\n",
+   "environment": "service",
+   "runs": {
+    "0.147.0": {
+     "exitCode": 1,
+     "stderr": "Error: extensions::file_storage: directory must exist: stat /var/lib/otelcol-missing/fs: no such file or directory. You can enable the create_directory option to automatically create it\n"
+    },
+    "0.162.0": {
+     "exitCode": 1,
+     "stderr": "Error: extensions::file_storage: directory must exist: stat /var/lib/otelcol-missing/fs: no such file or directory. You can enable the create_directory option to automatically create it\n"
+    }
+   }
+  },
+  "req-k8sattr-node-env-custom": {
+   "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc: {}\nprocessors:\n  k8sattributes:\n    filter:\n      node_from_env_var: MY_CUSTOM_NODE\nexporters:\n  debug: {}\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      processors: [k8sattributes]\n      exporters: [debug]\n",
+   "environment": "service",
+   "runs": {
+    "0.147.0": {
+     "exitCode": 1,
+     "stderr": "Error: processors::k8sattributes::filter: `node_from_env_var` is configured but envvar \"MY_CUSTOM_NODE\" is not set\n"
+    },
+    "0.162.0": {
+     "exitCode": 1,
+     "stderr": "Error: processors::k8sattributes::filter: `node_from_env_var` is configured but envvar \"MY_CUSTOM_NODE\" is not set\n"
+    }
+   }
+  },
+  "req-rd-k8snode-service-account": {
+   "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc: {}\nprocessors:\n  resourcedetection:\n    detectors: [k8snode]\nexporters:\n  debug: {}\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      processors: [resourcedetection]\n      exporters: [debug]\n",
+   "environment": "service",
+   "runs": {
+    "0.147.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to build pipelines: failed to create \"resourcedetection\" processor, in pipeline \"traces\": failed creating detector type \"k8snode\": failed creating k8snode detector: failed to create K8s API client: open /var/run/secrets/kubernetes.io/serviceaccount/token: no such file or directory\n"
+    },
+    "0.162.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to build pipelines: failed to create \"resourcedetection\" processor, in pipeline \"traces\": failed creating detector type \"k8snode\": failed creating k8snode detector: failed to create K8s API client: open /var/run/secrets/kubernetes.io/serviceaccount/token: no such file or directory\n"
+    }
+   }
+  },
+  "rd-k8snode-node-env-unset": {
+   "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc: {}\nprocessors:\n  resourcedetection:\n    detectors: [k8snode]\n    k8snode:\n      node_from_env_var: MY_CUSTOM_NODE\nexporters:\n  debug: {}\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      processors: [resourcedetection]\n      exporters: [debug]\n",
+   "environment": "service",
+   "runs": {
+    "0.147.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to build pipelines: failed to create \"resourcedetection\" processor, in pipeline \"traces\": failed creating detector type \"k8snode\": node name can't be found. Check the readme on how to set the required env variable\n"
+    },
+    "0.162.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to build pipelines: failed to create \"resourcedetection\" processor, in pipeline \"traces\": failed creating detector type \"k8snode\": node name can't be found. Check the readme on how to set the required env variable\n"
+    }
+   }
+  },
+  "bypass-error-mode-dollar-escape": {
+   "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc: {}\nprocessors:\n  transform:\n    error_mode: 'x: stat /$${y}: no such file or directory'\nexporters:\n  debug: {}\nservice:\n  pipelines:\n    logs:\n      receivers: [otlp]\n      processors: [transform]\n      exporters: [debug]\n",
+   "environment": "service",
+   "runs": {
+    "0.147.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to get config: cannot unmarshal the configuration: decoding failed due to the following error(s):\n\n'processors' error reading configuration for \"transform\": decoding failed due to the following error(s):\n\n'' decoding failed due to the following error(s):\n\n'error_mode' unknown error mode x: stat /${y}: no such file or directory\n"
+    },
+    "0.162.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to get config: cannot unmarshal the configuration: decoding failed due to the following error(s):\n\n'processors' error reading configuration for \"transform\": decoding failed due to the following error(s):\n\n'' decoding failed due to the following error(s):\n\n'error_mode' unknown error mode x: stat /${y}: no such file or directory\n"
+    }
+   }
+  },
+  "bypass-error-mode-env-placeholder": {
+   "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc: {}\nprocessors:\n  transform:\n    error_mode: 'x: stat /${env:Y}: no such file or directory'\nexporters:\n  debug: {}\nservice:\n  pipelines:\n    logs:\n      receivers: [otlp]\n      processors: [transform]\n      exporters: [debug]\n",
+   "environment": "service",
+   "runs": {
+    "0.147.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to get config: cannot unmarshal the configuration: decoding failed due to the following error(s):\n\n'processors' error reading configuration for \"transform\": decoding failed due to the following error(s):\n\n'' decoding failed due to the following error(s):\n\n'error_mode' unknown error mode x: stat /otelvalidatorplaceholder00000000: no such file or directory\n"
+    },
+    "0.162.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to get config: cannot unmarshal the configuration: decoding failed due to the following error(s):\n\n'processors' error reading configuration for \"transform\": decoding failed due to the following error(s):\n\n'' decoding failed due to the following error(s):\n\n'error_mode' unknown error mode x: stat /otelvalidatorplaceholder00000000: no such file or directory\n"
+    }
+   }
+  },
+  "bypass-error-mode-file-neutralised": {
+   "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc: {}\nprocessors:\n  transform:\n    error_mode: 'x: stat /${file:/z}: no such file or directory'\nexporters:\n  debug: {}\nservice:\n  pipelines:\n    logs:\n      receivers: [otlp]\n      processors: [transform]\n      exporters: [debug]\n",
+   "environment": "service",
+   "runs": {
+    "0.147.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to get config: cannot unmarshal the configuration: decoding failed due to the following error(s):\n\n'processors' error reading configuration for \"transform\": decoding failed due to the following error(s):\n\n'' decoding failed due to the following error(s):\n\n'error_mode' unknown error mode x: stat /otelvalidatorplaceholder00000000: no such file or directory\n"
+    },
+    "0.162.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to get config: cannot unmarshal the configuration: decoding failed due to the following error(s):\n\n'processors' error reading configuration for \"transform\": decoding failed due to the following error(s):\n\n'' decoding failed due to the following error(s):\n\n'error_mode' unknown error mode x: stat /otelvalidatorplaceholder00000000: no such file or directory\n"
+    }
+   }
+  },
+  "bypass-detector-envvar-env-placeholder": {
+   "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc: {}\nprocessors:\n  resourcedetection:\n    detectors: ['envvar \"${env:Q}\" is not set']\nexporters:\n  debug: {}\nservice:\n  pipelines:\n    logs:\n      receivers: [otlp]\n      processors: [resourcedetection]\n      exporters: [debug]\n",
+   "environment": "service",
+   "runs": {
+    "0.147.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to build pipelines: failed to create \"resourcedetection\" processor, in pipeline \"logs\": invalid detector key: envvar \"otelvalidatorplaceholder00000000\" is not set\n"
+    },
+    "0.162.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to build pipelines: failed to create \"resourcedetection\" processor, in pipeline \"logs\": invalid detector key: envvar \"otelvalidatorplaceholder00000000\" is not set\n"
+    }
+   }
+  },
+  "bypass-detector-stat-dollar-escape": {
+   "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc: {}\nprocessors:\n  resourcedetection:\n    detectors: ['stat /$${y}: no such file or directory']\nexporters:\n  debug: {}\nservice:\n  pipelines:\n    logs:\n      receivers: [otlp]\n      processors: [resourcedetection]\n      exporters: [debug]\n",
+   "environment": "service",
+   "runs": {
+    "0.147.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to build pipelines: failed to create \"resourcedetection\" processor, in pipeline \"logs\": invalid detector key: stat /${y}: no such file or directory\n"
+    },
+    "0.162.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to build pipelines: failed to create \"resourcedetection\" processor, in pipeline \"logs\": invalid detector key: stat /${y}: no such file or directory\n"
+    }
+   }
+  },
+  "bypass-headers-key-escaped": {
+   "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc: {}\nexporters:\n  otlp_http:\n    endpoint: https://example.com\n    headers:\n      \"x': stat \\x2fy: no such file or directory\": {a: 1}\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      exporters: [otlp_http]\n",
+   "environment": "empty",
+   "runs": {
+    "0.147.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to get config: cannot unmarshal the configuration: decoding failed due to the following error(s):\n\n'exporters' error reading configuration for \"otlp_http\": decoding failed due to the following error(s):\n\n'headers' decoding failed due to the following error(s):\n\n'[x': stat /y: no such file or directory]' expected type 'configopaque.String', got unconvertible type 'map[string]interface {}'\n"
+    },
+    "0.162.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to get config: cannot unmarshal the configuration: decoding failed due to the following error(s):\n\n'exporters' error reading configuration for \"otlp_http\": decoding failed due to the following error(s):\n\n'' decoding failed due to the following error(s):\n\n'headers' decoding failed due to the following error(s):\n\n'[x': stat /y: no such file or directory]' expected type 'configopaque.String', got unconvertible type 'map[string]interface {}'\n"
+    }
+   }
+  },
+  "bypass-headers-key-escaped-second-document": {
+   "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc: {}\nexporters:\n  otlp_http:\n    endpoint: https://example.com\n    headers:\n      \"x': stat \\x2fy: no such file or directory\": {a: 1}\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      exporters: [otlp_http]\n---\nz: 1\n",
+   "environment": "empty",
+   "runs": {
+    "0.147.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to get config: cannot unmarshal the configuration: decoding failed due to the following error(s):\n\n'exporters' error reading configuration for \"otlp_http\": decoding failed due to the following error(s):\n\n'headers' decoding failed due to the following error(s):\n\n'[x': stat /y: no such file or directory]' expected type 'configopaque.String', got unconvertible type 'map[string]interface {}'\n"
+    },
+    "0.162.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to get config: cannot unmarshal the configuration: decoding failed due to the following error(s):\n\n'exporters' error reading configuration for \"otlp_http\": decoding failed due to the following error(s):\n\n'' decoding failed due to the following error(s):\n\n'headers' decoding failed due to the following error(s):\n\n'[x': stat /y: no such file or directory]' expected type 'configopaque.String', got unconvertible type 'map[string]interface {}'\n"
+    }
+   }
+  },
+  "bypass-headers-key-escaped-equals-value": {
+   "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc: {}\nexporters:\n  otlp_http:\n    endpoint: https://example.com\n    headers:\n      \"x': stat \\x2fy: no such file or directory\": {a: 1}\n      h: =\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      exporters: [otlp_http]\n",
+   "environment": "empty",
+   "runs": {
+    "0.147.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to get config: cannot unmarshal the configuration: decoding failed due to the following error(s):\n\n'exporters' error reading configuration for \"otlp_http\": decoding failed due to the following error(s):\n\n'headers' decoding failed due to the following error(s):\n\n'[x': stat /y: no such file or directory]' expected type 'configopaque.String', got unconvertible type 'map[string]interface {}'\n"
+    },
+    "0.162.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to get config: cannot unmarshal the configuration: decoding failed due to the following error(s):\n\n'exporters' error reading configuration for \"otlp_http\": decoding failed due to the following error(s):\n\n'' decoding failed due to the following error(s):\n\n'headers' decoding failed due to the following error(s):\n\n'[x': stat /y: no such file or directory]' expected type 'configopaque.String', got unconvertible type 'map[string]interface {}'\n"
+    }
+   }
+  },
+  "bypass-headers-key-escaped-date-value": {
+   "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc: {}\nexporters:\n  otlp_http:\n    endpoint: https://example.com\n    headers:\n      \"x': stat \\x2fy: no such file or directory\": {a: 1}\n      h: 2001-13-45\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      exporters: [otlp_http]\n",
+   "environment": "empty",
+   "runs": {
+    "0.147.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to get config: cannot unmarshal the configuration: decoding failed due to the following error(s):\n\n'exporters' error reading configuration for \"otlp_http\": decoding failed due to the following error(s):\n\n'headers' decoding failed due to the following error(s):\n\n'[x': stat /y: no such file or directory]' expected type 'configopaque.String', got unconvertible type 'map[string]interface {}'\n"
+    },
+    "0.162.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to get config: cannot unmarshal the configuration: decoding failed due to the following error(s):\n\n'exporters' error reading configuration for \"otlp_http\": decoding failed due to the following error(s):\n\n'' decoding failed due to the following error(s):\n\n'headers' decoding failed due to the following error(s):\n\n'[x': stat /y: no such file or directory]' expected type 'configopaque.String', got unconvertible type 'map[string]interface {}'\n"
+    }
+   }
+  },
+  "bypass-headers-key-plain-second-document": {
+   "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc: {}\nexporters:\n  otlp_http:\n    endpoint: https://example.com\n    headers:\n      \"x': stat /y: no such file or directory\": {a: 1}\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      exporters: [otlp_http]\n---\nz: 1\n",
+   "environment": "empty",
+   "runs": {
+    "0.147.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to get config: cannot unmarshal the configuration: decoding failed due to the following error(s):\n\n'exporters' error reading configuration for \"otlp_http\": decoding failed due to the following error(s):\n\n'headers' decoding failed due to the following error(s):\n\n'[x': stat /y: no such file or directory]' expected type 'configopaque.String', got unconvertible type 'map[string]interface {}'\n"
+    },
+    "0.162.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to get config: cannot unmarshal the configuration: decoding failed due to the following error(s):\n\n'exporters' error reading configuration for \"otlp_http\": decoding failed due to the following error(s):\n\n'' decoding failed due to the following error(s):\n\n'headers' decoding failed due to the following error(s):\n\n'[x': stat /y: no such file or directory]' expected type 'configopaque.String', got unconvertible type 'map[string]interface {}'\n"
+    }
+   }
+  },
+  "bypass-headers-key-envvar-escaped-second-document": {
+   "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc: {}\nexporters:\n  otlp_http:\n    endpoint: https://example.com\n    headers:\n      \"x': envvar \\x22X\\x22 is not set\": {a: 1}\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      exporters: [otlp_http]\n---\nz: 1\n",
+   "environment": "empty",
+   "runs": {
+    "0.147.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to get config: cannot unmarshal the configuration: decoding failed due to the following error(s):\n\n'exporters' error reading configuration for \"otlp_http\": decoding failed due to the following error(s):\n\n'headers' decoding failed due to the following error(s):\n\n'[x': envvar \"X\" is not set]' expected type 'configopaque.String', got unconvertible type 'map[string]interface {}'\n"
+    },
+    "0.162.0": {
+     "exitCode": 1,
+     "stderr": "Error: failed to get config: cannot unmarshal the configuration: decoding failed due to the following error(s):\n\n'exporters' error reading configuration for \"otlp_http\": decoding failed due to the following error(s):\n\n'' decoding failed due to the following error(s):\n\n'headers' decoding failed due to the following error(s):\n\n'[x': envvar \"X\" is not set]' expected type 'configopaque.String', got unconvertible type 'map[string]interface {}'\n"
+    }
+   }
+  }
+ }
+}

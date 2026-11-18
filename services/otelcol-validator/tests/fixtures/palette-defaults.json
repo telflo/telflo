@@ -1,0 +1,756 @@
+{
+  "description": "What a drop of each palette entry writes, per offered collector version, in the smallest configuration around it (D13b decision 9). Generated: never edit by hand.",
+  "script": "npm run fixture:palette-defaults --workspace @telflo/web",
+  "cases": [
+    {
+      "paletteId": "otlp-receiver",
+      "kind": "receiver",
+      "type": "otlp",
+      "distribution": "otelcol-contrib",
+      "versions": [
+        "0.159.0",
+        "0.160.0",
+        "0.161.0",
+        "0.162.0"
+      ],
+      "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc:\n        endpoint: localhost:4317\n      http:\n        endpoint: localhost:4318\nexporters:\n  debug: {}\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      exporters: [debug]\n"
+    },
+    {
+      "paletteId": "prometheus-receiver",
+      "kind": "receiver",
+      "type": "prometheus",
+      "distribution": "otelcol-contrib",
+      "versions": [
+        "0.159.0",
+        "0.160.0",
+        "0.161.0",
+        "0.162.0"
+      ],
+      "yaml": "receivers:\n  prometheus:\n    trim_metric_suffixes: false\n    config:\n      scrape_configs:\n        - job_name: otel-collector\n          scrape_interval: 10s\n          static_configs:\n            - targets:\n                - localhost:8888\nexporters:\n  debug: {}\nservice:\n  pipelines:\n    metrics:\n      receivers: [prometheus]\n      exporters: [debug]\n"
+    },
+    {
+      "paletteId": "filelog-receiver",
+      "kind": "receiver",
+      "type": "file_log",
+      "distribution": "otelcol-contrib",
+      "versions": [
+        "0.159.0",
+        "0.160.0",
+        "0.161.0",
+        "0.162.0"
+      ],
+      "yaml": "receivers:\n  file_log:\n    include:\n      - /var/log/*.log\n    start_at: end\n    encoding: utf-8\n    poll_interval: 200ms\n    max_concurrent_files: 1024\n    fingerprint_size: 1kb\n    max_log_size: 1MiB\n    force_flush_period: 500ms\n    include_file_name: true\nexporters:\n  debug: {}\nservice:\n  pipelines:\n    logs:\n      receivers: [file_log]\n      exporters: [debug]\n"
+    },
+    {
+      "paletteId": "fluentforward-receiver",
+      "kind": "receiver",
+      "type": "fluent_forward",
+      "distribution": "otelcol-contrib",
+      "versions": [
+        "0.159.0",
+        "0.160.0",
+        "0.161.0",
+        "0.162.0"
+      ],
+      "yaml": "receivers:\n  fluent_forward:\n    endpoint: 0.0.0.0:8006\nexporters:\n  debug: {}\nservice:\n  pipelines:\n    logs:\n      receivers: [fluent_forward]\n      exporters: [debug]\n"
+    },
+    {
+      "paletteId": "docker-stats-receiver",
+      "kind": "receiver",
+      "type": "docker_stats",
+      "distribution": "otelcol-contrib",
+      "versions": [
+        "0.159.0",
+        "0.160.0",
+        "0.161.0",
+        "0.162.0"
+      ],
+      "yaml": "receivers:\n  docker_stats:\n    endpoint: unix:///var/run/docker.sock\n    collection_interval: 10s\n    timeout: 5s\nexporters:\n  debug: {}\nservice:\n  pipelines:\n    metrics:\n      receivers: [docker_stats]\n      exporters: [debug]\n"
+    },
+    {
+      "paletteId": "hostmetrics-receiver",
+      "kind": "receiver",
+      "type": "host_metrics",
+      "distribution": "otelcol-contrib",
+      "versions": [
+        "0.159.0",
+        "0.160.0",
+        "0.161.0",
+        "0.162.0"
+      ],
+      "yaml": "receivers:\n  host_metrics:\n    collection_interval: 10s\n    initial_delay: 1s\n    scrapers:\n      cpu: {}\n      memory: {}\n      disk: {}\n      filesystem: {}\nexporters:\n  debug: {}\nservice:\n  pipelines:\n    metrics:\n      receivers: [host_metrics]\n      exporters: [debug]\n"
+    },
+    {
+      "paletteId": "jaeger-receiver",
+      "kind": "receiver",
+      "type": "jaeger",
+      "distribution": "otelcol-contrib",
+      "versions": [
+        "0.159.0",
+        "0.160.0",
+        "0.161.0",
+        "0.162.0"
+      ],
+      "yaml": "receivers:\n  jaeger:\n    protocols:\n      grpc:\n        endpoint: 0.0.0.0:14250\n      thrift_http:\n        endpoint: 0.0.0.0:14268\n      thrift_compact:\n        endpoint: 0.0.0.0:6831\nexporters:\n  debug: {}\nservice:\n  pipelines:\n    traces:\n      receivers: [jaeger]\n      exporters: [debug]\n"
+    },
+    {
+      "paletteId": "zipkin-receiver",
+      "kind": "receiver",
+      "type": "zipkin",
+      "distribution": "otelcol-contrib",
+      "versions": [
+        "0.159.0",
+        "0.160.0",
+        "0.161.0",
+        "0.162.0"
+      ],
+      "yaml": "receivers:\n  zipkin:\n    endpoint: 0.0.0.0:9411\n    parse_string_tags: false\nexporters:\n  debug: {}\nservice:\n  pipelines:\n    traces:\n      receivers: [zipkin]\n      exporters: [debug]\n"
+    },
+    {
+      "paletteId": "datadog-receiver",
+      "kind": "receiver",
+      "type": "datadog",
+      "distribution": "otelcol-contrib",
+      "versions": [
+        "0.159.0",
+        "0.160.0",
+        "0.161.0",
+        "0.162.0"
+      ],
+      "yaml": "receivers:\n  datadog:\n    endpoint: localhost:8126\n    read_timeout: 60s\n    trace_id_cache_size: 100\n    idle_series_cleanup_interval: 5m\nexporters:\n  debug: {}\nservice:\n  pipelines:\n    traces:\n      receivers: [datadog]\n      exporters: [debug]\n"
+    },
+    {
+      "paletteId": "k8s-cluster-receiver",
+      "kind": "receiver",
+      "type": "k8s_cluster",
+      "distribution": "otelcol-contrib",
+      "versions": [
+        "0.159.0",
+        "0.160.0",
+        "0.161.0",
+        "0.162.0"
+      ],
+      "yaml": "receivers:\n  k8s_cluster:\n    auth_type: serviceAccount\n    collection_interval: 10s\n    distribution: kubernetes\n    node_conditions_to_report:\n      - Ready\n    allocatable_types_to_report: []\n    metadata_collection_interval: 5m\nexporters:\n  debug: {}\nservice:\n  pipelines:\n    metrics:\n      receivers: [k8s_cluster]\n      exporters: [debug]\n"
+    },
+    {
+      "paletteId": "k8s-events-receiver",
+      "kind": "receiver",
+      "type": "k8s_events",
+      "distribution": "otelcol-contrib",
+      "versions": [
+        "0.159.0",
+        "0.160.0",
+        "0.161.0",
+        "0.162.0"
+      ],
+      "yaml": "receivers:\n  k8s_events:\n    auth_type: serviceAccount\nexporters:\n  debug: {}\nservice:\n  pipelines:\n    logs:\n      receivers: [k8s_events]\n      exporters: [debug]\n"
+    },
+    {
+      "paletteId": "k8s-objects-receiver",
+      "kind": "receiver",
+      "type": "k8s_objects",
+      "distribution": "otelcol-contrib",
+      "versions": [
+        "0.159.0",
+        "0.160.0",
+        "0.161.0",
+        "0.162.0"
+      ],
+      "yaml": "receivers:\n  k8s_objects:\n    auth_type: serviceAccount\n    error_mode: propagate\n    objects: []\nexporters:\n  debug: {}\nservice:\n  pipelines:\n    logs:\n      receivers: [k8s_objects]\n      exporters: [debug]\n"
+    },
+    {
+      "paletteId": "kubeletstats-receiver",
+      "kind": "receiver",
+      "type": "kubelet_stats",
+      "distribution": "otelcol-contrib",
+      "versions": [
+        "0.159.0",
+        "0.160.0",
+        "0.161.0",
+        "0.162.0"
+      ],
+      "yaml": "receivers:\n  kubelet_stats:\n    auth_type: serviceAccount\n    collection_interval: 10s\n    initial_delay: 1s\n    endpoint: https://${env:K8S_NODE_NAME}:10250\n    insecure_skip_verify: false\n    metric_groups:\n      - container\n      - pod\n      - node\n      - volume\n    extra_metadata_labels: []\nexporters:\n  debug: {}\nservice:\n  pipelines:\n    metrics:\n      receivers: [kubelet_stats]\n      exporters: [debug]\n"
+    },
+    {
+      "paletteId": "netflow-receiver",
+      "kind": "receiver",
+      "type": "netflow",
+      "distribution": "otelcol-contrib",
+      "versions": [
+        "0.159.0",
+        "0.160.0",
+        "0.161.0",
+        "0.162.0"
+      ],
+      "yaml": "receivers:\n  netflow:\n    scheme: netflow\n    hostname: 0.0.0.0\n    port: 2055\n    sockets: 1\n    workers: 2\n    queue_size: 1000\n    send_raw: false\nexporters:\n  debug: {}\nservice:\n  pipelines:\n    logs:\n      receivers: [netflow]\n      exporters: [debug]\n"
+    },
+    {
+      "paletteId": "journald-receiver",
+      "kind": "receiver",
+      "type": "journald",
+      "distribution": "otelcol-contrib",
+      "versions": [
+        "0.159.0",
+        "0.160.0",
+        "0.161.0",
+        "0.162.0"
+      ],
+      "yaml": "receivers:\n  journald:\n    start_at: end\n    priority: info\nexporters:\n  debug: {}\nservice:\n  pipelines:\n    logs:\n      receivers: [journald]\n      exporters: [debug]\n"
+    },
+    {
+      "paletteId": "syslog-receiver",
+      "kind": "receiver",
+      "type": "syslog",
+      "distribution": "otelcol-contrib",
+      "versions": [
+        "0.159.0",
+        "0.160.0",
+        "0.161.0",
+        "0.162.0"
+      ],
+      "yaml": "receivers:\n  syslog:\n    tcp:\n      listen_address: 0.0.0.0:54526\n      max_log_size: 1048576\n    protocol: rfc5424\n    location: UTC\n    enable_octet_counting: false\n    max_octets: 8192\n    allow_skip_pri_header: false\nexporters:\n  debug: {}\nservice:\n  pipelines:\n    logs:\n      receivers: [syslog]\n      exporters: [debug]\n"
+    },
+    {
+      "paletteId": "statsd-receiver",
+      "kind": "receiver",
+      "type": "statsd",
+      "distribution": "otelcol-contrib",
+      "versions": [
+        "0.159.0",
+        "0.160.0",
+        "0.161.0",
+        "0.162.0"
+      ],
+      "yaml": "receivers:\n  statsd:\n    endpoint: localhost:8125\n    transport: udp\n    aggregation_interval: 60s\n    enable_ip_only_aggregation: false\n    enable_metric_type: false\n    is_monotonic_counter: false\n    enable_simple_tags: false\n    timer_histogram_mapping:\n      - statsd_type: histogram\n        observer_type: histogram\n        histogram:\n          max_size: 100\n      - statsd_type: timing\n        observer_type: summary\n        summary:\n          percentiles:\n            - 0\n            - 10\n            - 50\n            - 90\n            - 95\n            - 100\nexporters:\n  debug: {}\nservice:\n  pipelines:\n    metrics:\n      receivers: [statsd]\n      exporters: [debug]\n"
+    },
+    {
+      "paletteId": "awss3-receiver",
+      "kind": "receiver",
+      "type": "awss3",
+      "distribution": "otelcol-contrib",
+      "versions": [
+        "0.159.0",
+        "0.160.0",
+        "0.161.0"
+      ],
+      "yaml": "receivers:\n  awss3:\n    s3downloader:\n      region: us-east-1\n      s3_bucket: ${env:AWS_S3_BUCKET}\n      s3_prefix: telemetry\n    sqs:\n      queue_url: ${env:AWS_SQS_QUEUE_URL}\n      region: us-east-1\nexporters:\n  debug: {}\nservice:\n  pipelines:\n    traces:\n      receivers: [awss3]\n      exporters: [debug]\n"
+    },
+    {
+      "paletteId": "awss3-receiver",
+      "kind": "receiver",
+      "type": "aws_s3",
+      "distribution": "otelcol-contrib",
+      "versions": [
+        "0.162.0"
+      ],
+      "yaml": "receivers:\n  aws_s3:\n    s3downloader:\n      region: us-east-1\n      s3_bucket: ${env:AWS_S3_BUCKET}\n      s3_prefix: telemetry\n    sqs:\n      queue_url: ${env:AWS_SQS_QUEUE_URL}\n      region: us-east-1\nexporters:\n  debug: {}\nservice:\n  pipelines:\n    traces:\n      receivers: [aws_s3]\n      exporters: [debug]\n"
+    },
+    {
+      "paletteId": "batch-processor",
+      "kind": "processor",
+      "type": "batch",
+      "distribution": "otelcol-contrib",
+      "versions": [
+        "0.159.0",
+        "0.160.0",
+        "0.161.0",
+        "0.162.0"
+      ],
+      "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc:\n        endpoint: localhost:4317\nprocessors:\n  batch:\n    timeout: 200ms\n    send_batch_size: 8192\n    send_batch_max_size: 0\n    metadata_keys: []\n    metadata_cardinality_limit: 1000\nexporters:\n  debug: {}\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      processors: [batch]\n      exporters: [debug]\n"
+    },
+    {
+      "paletteId": "memory-limiter-processor",
+      "kind": "processor",
+      "type": "memory_limiter",
+      "distribution": "otelcol-contrib",
+      "versions": [
+        "0.159.0",
+        "0.160.0",
+        "0.161.0",
+        "0.162.0"
+      ],
+      "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc:\n        endpoint: localhost:4317\nprocessors:\n  memory_limiter:\n    check_interval: 1s\n    limit_mib: 512\nexporters:\n  debug: {}\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      processors: [memory_limiter]\n      exporters: [debug]\n"
+    },
+    {
+      "paletteId": "resource-processor",
+      "kind": "processor",
+      "type": "resource",
+      "distribution": "otelcol-contrib",
+      "versions": [
+        "0.159.0",
+        "0.160.0",
+        "0.161.0",
+        "0.162.0"
+      ],
+      "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc:\n        endpoint: localhost:4317\nprocessors:\n  resource:\n    attributes:\n      - key: environment\n        value: production\n        action: insert\nexporters:\n  debug: {}\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      processors: [resource]\n      exporters: [debug]\n"
+    },
+    {
+      "paletteId": "attributes-processor",
+      "kind": "processor",
+      "type": "attributes",
+      "distribution": "otelcol-contrib",
+      "versions": [
+        "0.159.0",
+        "0.160.0",
+        "0.161.0",
+        "0.162.0"
+      ],
+      "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc:\n        endpoint: localhost:4317\nprocessors:\n  attributes:\n    actions:\n      - key: environment\n        action: insert\n        value: production\n      - key: db.password\n        action: delete\nexporters:\n  debug: {}\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      processors: [attributes]\n      exporters: [debug]\n"
+    },
+    {
+      "paletteId": "filter-processor",
+      "kind": "processor",
+      "type": "filter",
+      "distribution": "otelcol-contrib",
+      "versions": [
+        "0.159.0",
+        "0.160.0",
+        "0.161.0",
+        "0.162.0"
+      ],
+      "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc:\n        endpoint: localhost:4317\nprocessors:\n  filter:\n    error_mode: ignore\n    traces:\n      span:\n        - attributes[\"container.name\"] == \"app\"\nexporters:\n  debug: {}\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      processors: [filter]\n      exporters: [debug]\n"
+    },
+    {
+      "paletteId": "probabilistic-sampler-processor",
+      "kind": "processor",
+      "type": "probabilistic_sampler",
+      "distribution": "otelcol-contrib",
+      "versions": [
+        "0.159.0",
+        "0.160.0",
+        "0.161.0",
+        "0.162.0"
+      ],
+      "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc:\n        endpoint: localhost:4317\nprocessors:\n  probabilistic_sampler:\n    mode: proportional\n    sampling_percentage: 10\n    fail_closed: true\n    sampling_precision: 4\nexporters:\n  debug: {}\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      processors: [probabilistic_sampler]\n      exporters: [debug]\n"
+    },
+    {
+      "paletteId": "tail-sampling-processor",
+      "kind": "processor",
+      "type": "tail_sampling",
+      "distribution": "otelcol-contrib",
+      "versions": [
+        "0.159.0",
+        "0.160.0",
+        "0.161.0",
+        "0.162.0"
+      ],
+      "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc:\n        endpoint: localhost:4317\nprocessors:\n  tail_sampling:\n    decision_wait: 30s\n    num_traces: 50000\n    expected_new_traces_per_sec: 0\n    policies:\n      - name: sample-errors\n        type: status_code\n        status_code:\n          status_codes:\n            - ERROR\n      - name: sample-10-percent\n        type: probabilistic\n        probabilistic:\n          sampling_percentage: 10\nexporters:\n  debug: {}\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      processors: [tail_sampling]\n      exporters: [debug]\n"
+    },
+    {
+      "paletteId": "k8sattributes-processor",
+      "kind": "processor",
+      "type": "k8s_attributes",
+      "distribution": "otelcol-contrib",
+      "versions": [
+        "0.159.0",
+        "0.160.0",
+        "0.161.0",
+        "0.162.0"
+      ],
+      "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc:\n        endpoint: localhost:4317\nprocessors:\n  k8s_attributes:\n    auth_type: serviceAccount\n    passthrough: false\n    extract:\n      metadata:\n        - k8s.namespace.name\n        - k8s.pod.name\n        - k8s.pod.uid\n        - k8s.deployment.name\n        - k8s.node.name\n    pod_association:\n      - sources:\n          - from: connection\nexporters:\n  debug: {}\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      processors: [k8s_attributes]\n      exporters: [debug]\n"
+    },
+    {
+      "paletteId": "redaction-processor",
+      "kind": "processor",
+      "type": "redaction",
+      "distribution": "otelcol-contrib",
+      "versions": [
+        "0.159.0",
+        "0.160.0",
+        "0.161.0",
+        "0.162.0"
+      ],
+      "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc:\n        endpoint: localhost:4317\nprocessors:\n  redaction:\n    allow_all_keys: false\n    summary: info\n    url_sanitizer:\n      enabled: true\n      attributes:\n        - http.url\n        - url\nexporters:\n  debug: {}\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      processors: [redaction]\n      exporters: [debug]\n"
+    },
+    {
+      "paletteId": "cumulativetodelta-processor",
+      "kind": "processor",
+      "type": "cumulative_to_delta",
+      "distribution": "otelcol-contrib",
+      "versions": [
+        "0.159.0",
+        "0.160.0",
+        "0.161.0",
+        "0.162.0"
+      ],
+      "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc:\n        endpoint: localhost:4317\nprocessors:\n  cumulative_to_delta:\n    initial_value: auto\n    max_staleness: 5m\nexporters:\n  debug: {}\nservice:\n  pipelines:\n    metrics:\n      receivers: [otlp]\n      processors: [cumulative_to_delta]\n      exporters: [debug]\n"
+    },
+    {
+      "paletteId": "resourcedetection-processor",
+      "kind": "processor",
+      "type": "resource_detection",
+      "distribution": "otelcol-contrib",
+      "versions": [
+        "0.159.0",
+        "0.160.0",
+        "0.161.0",
+        "0.162.0"
+      ],
+      "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc:\n        endpoint: localhost:4317\nprocessors:\n  resource_detection:\n    detectors:\n      - env\n      - system\n    timeout: 5s\n    override: true\nexporters:\n  debug: {}\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      processors: [resource_detection]\n      exporters: [debug]\n"
+    },
+    {
+      "paletteId": "transform-processor",
+      "kind": "processor",
+      "type": "transform",
+      "distribution": "otelcol-contrib",
+      "versions": [
+        "0.159.0",
+        "0.160.0",
+        "0.161.0",
+        "0.162.0"
+      ],
+      "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc:\n        endpoint: localhost:4317\nprocessors:\n  transform:\n    error_mode: propagate\n    trace_statements: []\n    metric_statements: []\n    log_statements: []\nexporters:\n  debug: {}\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      processors: [transform]\n      exporters: [debug]\n"
+    },
+    {
+      "paletteId": "logdedup-processor",
+      "kind": "processor",
+      "type": "log_dedup",
+      "distribution": "otelcol-contrib",
+      "versions": [
+        "0.159.0",
+        "0.160.0",
+        "0.161.0",
+        "0.162.0"
+      ],
+      "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc:\n        endpoint: localhost:4317\nprocessors:\n  log_dedup:\n    interval: 10s\n    log_count_attribute: log_count\n    timezone: UTC\nexporters:\n  debug: {}\nservice:\n  pipelines:\n    logs:\n      receivers: [otlp]\n      processors: [log_dedup]\n      exporters: [debug]\n"
+    },
+    {
+      "paletteId": "span-processor",
+      "kind": "processor",
+      "type": "span",
+      "distribution": "otelcol-contrib",
+      "versions": [
+        "0.159.0",
+        "0.160.0",
+        "0.161.0",
+        "0.162.0"
+      ],
+      "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc:\n        endpoint: localhost:4317\nprocessors:\n  span:\n    name:\n      to_attributes:\n        rules:\n          - ^\\/api\\/v1\\/document\\/(?P<documentId>.*)\\/update$\nexporters:\n  debug: {}\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      processors: [span]\n      exporters: [debug]\n"
+    },
+    {
+      "paletteId": "groupbyattrs-processor",
+      "kind": "processor",
+      "type": "groupbyattrs",
+      "distribution": "otelcol-contrib",
+      "versions": [
+        "0.159.0",
+        "0.160.0",
+        "0.161.0",
+        "0.162.0"
+      ],
+      "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc:\n        endpoint: localhost:4317\nprocessors:\n  groupbyattrs:\n    keys:\n      - host.name\nexporters:\n  debug: {}\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      processors: [groupbyattrs]\n      exporters: [debug]\n"
+    },
+    {
+      "paletteId": "metricstransform-processor",
+      "kind": "processor",
+      "type": "metrics_transform",
+      "distribution": "otelcol-contrib",
+      "versions": [
+        "0.159.0",
+        "0.160.0",
+        "0.161.0",
+        "0.162.0"
+      ],
+      "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc:\n        endpoint: localhost:4317\nprocessors:\n  metrics_transform:\n    transforms:\n      - include: system.cpu.usage\n        match_type: strict\n        action: update\n        new_name: system.cpu.usage_time\nexporters:\n  debug: {}\nservice:\n  pipelines:\n    metrics:\n      receivers: [otlp]\n      processors: [metrics_transform]\n      exporters: [debug]\n"
+    },
+    {
+      "paletteId": "otlp-exporter",
+      "kind": "exporter",
+      "type": "otlp_grpc",
+      "distribution": "otelcol-contrib",
+      "versions": [
+        "0.159.0",
+        "0.160.0",
+        "0.161.0",
+        "0.162.0"
+      ],
+      "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc:\n        endpoint: localhost:4317\nexporters:\n  otlp_grpc:\n    endpoint: otelcol:4317\n    timeout: 5s\n    compression: gzip\n    tls:\n      insecure: true\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      exporters: [otlp_grpc]\n"
+    },
+    {
+      "paletteId": "otlphttp-exporter",
+      "kind": "exporter",
+      "type": "otlp_http",
+      "distribution": "otelcol-contrib",
+      "versions": [
+        "0.159.0",
+        "0.160.0",
+        "0.161.0",
+        "0.162.0"
+      ],
+      "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc:\n        endpoint: localhost:4317\nexporters:\n  otlp_http:\n    endpoint: http://localhost:4318\n    timeout: 30s\n    encoding: proto\n    compression: gzip\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      exporters: [otlp_http]\n"
+    },
+    {
+      "paletteId": "loadbalancing-exporter",
+      "kind": "exporter",
+      "type": "load_balancing",
+      "distribution": "otelcol-contrib",
+      "versions": [
+        "0.159.0",
+        "0.160.0",
+        "0.161.0",
+        "0.162.0"
+      ],
+      "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc:\n        endpoint: localhost:4317\nexporters:\n  load_balancing:\n    protocol:\n      otlp:\n        timeout: 10s\n        compression: gzip\n        retry_on_failure:\n          enabled: true\n          initial_interval: 5s\n          max_interval: 30s\n          max_elapsed_time: 300s\n        sending_queue:\n          enabled: true\n          num_consumers: 10\n          queue_size: 1000\n    resolver:\n      static:\n        hostnames:\n          - localhost:4317\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      exporters: [load_balancing]\n"
+    },
+    {
+      "paletteId": "zipkin-exporter",
+      "kind": "exporter",
+      "type": "zipkin",
+      "distribution": "otelcol-contrib",
+      "versions": [
+        "0.159.0",
+        "0.160.0",
+        "0.161.0",
+        "0.162.0"
+      ],
+      "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc:\n        endpoint: localhost:4317\nexporters:\n  zipkin:\n    endpoint: http://zipkin:9411/api/v2/spans\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      exporters: [zipkin]\n"
+    },
+    {
+      "paletteId": "prometheus-exporter",
+      "kind": "exporter",
+      "type": "prometheus",
+      "distribution": "otelcol-contrib",
+      "versions": [
+        "0.159.0",
+        "0.160.0",
+        "0.161.0",
+        "0.162.0"
+      ],
+      "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc:\n        endpoint: localhost:4317\nexporters:\n  prometheus:\n    endpoint: 0.0.0.0:8889\n    metric_expiration: 5m\nservice:\n  pipelines:\n    metrics:\n      receivers: [otlp]\n      exporters: [prometheus]\n"
+    },
+    {
+      "paletteId": "prometheusremotewrite-exporter",
+      "kind": "exporter",
+      "type": "prometheus_remote_write",
+      "distribution": "otelcol-contrib",
+      "versions": [
+        "0.159.0",
+        "0.160.0",
+        "0.161.0",
+        "0.162.0"
+      ],
+      "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc:\n        endpoint: localhost:4317\nexporters:\n  prometheus_remote_write:\n    endpoint: https://prometheus.example.com/api/v1/write\nservice:\n  pipelines:\n    metrics:\n      receivers: [otlp]\n      exporters: [prometheus_remote_write]\n"
+    },
+    {
+      "paletteId": "datadog-exporter",
+      "kind": "exporter",
+      "type": "datadog",
+      "distribution": "otelcol-contrib",
+      "versions": [
+        "0.159.0",
+        "0.160.0",
+        "0.161.0",
+        "0.162.0"
+      ],
+      "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc:\n        endpoint: localhost:4317\nexporters:\n  datadog:\n    api:\n      key: ${env:DD_API_KEY}\n      site: datadoghq.com\n    host_metadata:\n      enabled: true\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      exporters: [datadog]\n"
+    },
+    {
+      "paletteId": "clickhouse-exporter",
+      "kind": "exporter",
+      "type": "clickhouse",
+      "distribution": "otelcol-contrib",
+      "versions": [
+        "0.159.0",
+        "0.160.0",
+        "0.161.0",
+        "0.162.0"
+      ],
+      "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc:\n        endpoint: localhost:4317\nexporters:\n  clickhouse:\n    endpoint: tcp://localhost:9000?dial_timeout=10s\n    database: otel\n    ttl: 72h\n    compress: lz4\n    async_insert: true\n    create_schema: true\n    timeout: 5s\n    retry_on_failure:\n      enabled: true\n      initial_interval: 5s\n      max_interval: 30s\n      max_elapsed_time: 300s\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      exporters: [clickhouse]\n"
+    },
+    {
+      "paletteId": "debug-exporter",
+      "kind": "exporter",
+      "type": "debug",
+      "distribution": "otelcol-contrib",
+      "versions": [
+        "0.159.0",
+        "0.160.0",
+        "0.161.0",
+        "0.162.0"
+      ],
+      "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc:\n        endpoint: localhost:4317\nexporters:\n  debug:\n    verbosity: basic\n    sampling_initial: 2\n    sampling_thereafter: 1\n    use_internal_logger: true\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      exporters: [debug]\n"
+    },
+    {
+      "paletteId": "file-exporter",
+      "kind": "exporter",
+      "type": "file",
+      "distribution": "otelcol-contrib",
+      "versions": [
+        "0.159.0",
+        "0.160.0",
+        "0.161.0",
+        "0.162.0"
+      ],
+      "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc:\n        endpoint: localhost:4317\nexporters:\n  file:\n    path: ./output.json\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      exporters: [file]\n"
+    },
+    {
+      "paletteId": "awss3-exporter",
+      "kind": "exporter",
+      "type": "awss3",
+      "distribution": "otelcol-contrib",
+      "versions": [
+        "0.159.0",
+        "0.160.0",
+        "0.161.0",
+        "0.162.0"
+      ],
+      "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc:\n        endpoint: localhost:4317\nexporters:\n  awss3:\n    s3uploader:\n      region: us-east-1\n      s3_bucket: ${env:AWS_S3_BUCKET}\n      s3_prefix: telemetry\n    marshaler: otlp_json\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      exporters: [awss3]\n"
+    },
+    {
+      "paletteId": "health-check-extension",
+      "kind": "extension",
+      "type": "health_check",
+      "distribution": "otelcol-contrib",
+      "versions": [
+        "0.159.0",
+        "0.160.0",
+        "0.161.0",
+        "0.162.0"
+      ],
+      "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc:\n        endpoint: localhost:4317\nexporters:\n  debug: {}\nextensions:\n  health_check:\n    endpoint: 0.0.0.0:13133\n    path: /\nservice:\n  extensions: [health_check]\n  pipelines:\n    traces:\n      receivers: [otlp]\n      exporters: [debug]\n"
+    },
+    {
+      "paletteId": "pprof-extension",
+      "kind": "extension",
+      "type": "pprof",
+      "distribution": "otelcol-contrib",
+      "versions": [
+        "0.159.0",
+        "0.160.0",
+        "0.161.0",
+        "0.162.0"
+      ],
+      "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc:\n        endpoint: localhost:4317\nexporters:\n  debug: {}\nextensions:\n  pprof:\n    endpoint: 0.0.0.0:1777\nservice:\n  extensions: [pprof]\n  pipelines:\n    traces:\n      receivers: [otlp]\n      exporters: [debug]\n"
+    },
+    {
+      "paletteId": "zpages-extension",
+      "kind": "extension",
+      "type": "zpages",
+      "distribution": "otelcol-contrib",
+      "versions": [
+        "0.159.0",
+        "0.160.0",
+        "0.161.0",
+        "0.162.0"
+      ],
+      "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc:\n        endpoint: localhost:4317\nexporters:\n  debug: {}\nextensions:\n  zpages:\n    endpoint: 0.0.0.0:55679\nservice:\n  extensions: [zpages]\n  pipelines:\n    traces:\n      receivers: [otlp]\n      exporters: [debug]\n"
+    },
+    {
+      "paletteId": "file-storage-extension",
+      "kind": "extension",
+      "type": "file_storage",
+      "distribution": "otelcol-contrib",
+      "versions": [
+        "0.159.0",
+        "0.160.0",
+        "0.161.0",
+        "0.162.0"
+      ],
+      "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc:\n        endpoint: localhost:4317\nexporters:\n  debug: {}\nextensions:\n  file_storage:\n    directory: /var/lib/otelcol/file_storage\n    timeout: 1s\n    create_directory: true\nservice:\n  extensions: [file_storage]\n  pipelines:\n    traces:\n      receivers: [otlp]\n      exporters: [debug]\n"
+    },
+    {
+      "paletteId": "opamp-extension",
+      "kind": "extension",
+      "type": "opamp",
+      "distribution": "otelcol-contrib",
+      "versions": [
+        "0.159.0",
+        "0.160.0",
+        "0.161.0",
+        "0.162.0"
+      ],
+      "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc:\n        endpoint: localhost:4317\nexporters:\n  debug: {}\nextensions:\n  opamp:\n    server:\n      ws:\n        endpoint: wss://opamp-server:4320/v1/opamp\nservice:\n  extensions: [opamp]\n  pipelines:\n    traces:\n      receivers: [otlp]\n      exporters: [debug]\n"
+    },
+    {
+      "paletteId": "memory-limiter-extension",
+      "kind": "extension",
+      "type": "memory_limiter",
+      "distribution": "otelcol-contrib",
+      "versions": [
+        "0.159.0",
+        "0.160.0",
+        "0.161.0",
+        "0.162.0"
+      ],
+      "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc:\n        endpoint: localhost:4317\nexporters:\n  debug: {}\nextensions:\n  memory_limiter:\n    check_interval: 1s\n    limit_mib: 512\nservice:\n  extensions: [memory_limiter]\n  pipelines:\n    traces:\n      receivers: [otlp]\n      exporters: [debug]\n"
+    },
+    {
+      "paletteId": "bearertokenauth-extension",
+      "kind": "extension",
+      "type": "bearertokenauth",
+      "distribution": "otelcol-contrib",
+      "versions": [
+        "0.159.0",
+        "0.160.0",
+        "0.161.0",
+        "0.162.0"
+      ],
+      "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc:\n        endpoint: localhost:4317\nexporters:\n  debug: {}\nextensions:\n  bearertokenauth:\n    tokens:\n      - ${env:OTLP_AUTH_TOKEN}\nservice:\n  extensions: [bearertokenauth]\n  pipelines:\n    traces:\n      receivers: [otlp]\n      exporters: [debug]\n"
+    },
+    {
+      "paletteId": "oidc-extension",
+      "kind": "extension",
+      "type": "oidc",
+      "distribution": "otelcol-contrib",
+      "versions": [
+        "0.159.0",
+        "0.160.0",
+        "0.161.0",
+        "0.162.0"
+      ],
+      "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc:\n        endpoint: localhost:4317\nexporters:\n  debug: {}\nextensions:\n  oidc:\n    providers:\n      - issuer_url: ${env:OIDC_ISSUER_URL}\n        audience: ${env:OIDC_AUDIENCE}\nservice:\n  extensions: [oidc]\n  pipelines:\n    traces:\n      receivers: [otlp]\n      exporters: [debug]\n"
+    },
+    {
+      "paletteId": "spanmetrics-connector",
+      "kind": "connector",
+      "type": "span_metrics",
+      "distribution": "otelcol-contrib",
+      "versions": [
+        "0.159.0",
+        "0.160.0",
+        "0.161.0",
+        "0.162.0"
+      ],
+      "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc:\n        endpoint: localhost:4317\nexporters:\n  debug: {}\nconnectors:\n  span_metrics:\n    histogram:\n      unit: ms\n      explicit:\n        buckets:\n          - 2ms\n          - 4ms\n          - 6ms\n          - 8ms\n          - 10ms\n          - 50ms\n          - 100ms\n          - 200ms\n          - 400ms\n          - 800ms\n          - 1s\n          - 1400ms\n          - 2s\n          - 5s\n          - 10s\n          - 15s\n    dimensions: []\n    aggregation_temporality: CUMULATIVE\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      exporters: [span_metrics]\n    metrics:\n      receivers: [span_metrics]\n      exporters: [debug]\n"
+    },
+    {
+      "paletteId": "forward-connector",
+      "kind": "connector",
+      "type": "forward",
+      "distribution": "otelcol-contrib",
+      "versions": [
+        "0.159.0",
+        "0.160.0",
+        "0.161.0",
+        "0.162.0"
+      ],
+      "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc:\n        endpoint: localhost:4317\nexporters:\n  debug: {}\nconnectors:\n  forward: {}\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      exporters: [forward]\n    traces/out:\n      receivers: [forward]\n      exporters: [debug]\n"
+    },
+    {
+      "paletteId": "routing-connector",
+      "kind": "connector",
+      "type": "routing",
+      "distribution": "otelcol-contrib",
+      "versions": [
+        "0.159.0",
+        "0.160.0",
+        "0.161.0",
+        "0.162.0"
+      ],
+      "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc:\n        endpoint: localhost:4317\nexporters:\n  debug: {}\nconnectors:\n  routing:\n    error_mode: ignore\n    table: []\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      exporters: [routing]\n    traces/out:\n      receivers: [routing]\n      exporters: [debug]\n"
+    },
+    {
+      "paletteId": "failover-connector",
+      "kind": "connector",
+      "type": "failover",
+      "distribution": "otelcol-contrib",
+      "versions": [
+        "0.159.0",
+        "0.160.0",
+        "0.161.0",
+        "0.162.0"
+      ],
+      "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc:\n        endpoint: localhost:4317\nexporters:\n  debug: {}\nconnectors:\n  failover:\n    priority_levels: []\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      exporters: [failover]\n    traces/out:\n      receivers: [failover]\n      exporters: [debug]\n"
+    }
+  ]
+}

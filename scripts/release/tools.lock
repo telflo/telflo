@@ -1,0 +1,42 @@
+# The release pipeline's private tools (D36-2 decision 110; Q281, Ruling 383,
+# Preflight rulings 4 and 5), read by scripts/release/tools.sh. Nothing here is
+# installed system-wide: tools.sh fetches each into the git-ignored .tools/ and
+# checks it against the sha256 below before it may run; images are pulled by
+# digest only. A runner installs the same versions with the same sums.
+#
+# tool <name> <version> <os-arch> <url> <sha256> <sums file> <member> <binary sha256>
+#   <sha256> is the downloaded file's, as the project publishes it in
+#   <sums file> (a file of that release); <member> is the one file taken from
+#   a .tar.gz download ("-": the download is the binary itself); <binary
+#   sha256> is that member's own sha256 ("-" when the download is the binary:
+#   <sha256> is then the binary's), which `tools.sh path` checks the installed
+#   binary against every time (Ruling 399). The binaries' sums were taken from
+#   files `tools.sh fetch` had extracted from archives that matched <sha256>.
+#   kind: each asset's own .sha256sum; crane: the release's checksums.txt
+#   (crane only, from go-containerregistry's archive); buildx: checksums.txt
+#   for Linux, checksums-signed.txt for macOS (its macOS binaries are signed
+#   after the build, so checksums.txt's macOS lines don't match them).
+tool kind v0.33.0 darwin-arm64 https://github.com/kubernetes-sigs/kind/releases/download/v0.33.0/kind-darwin-arm64 0c8c7dbe5e23594a198b786c4bc13dacc101fa6196b0cb0b23a1ca44e61f4b4f kind-darwin-arm64.sha256sum - -
+tool kind v0.33.0 linux-amd64 https://github.com/kubernetes-sigs/kind/releases/download/v0.33.0/kind-linux-amd64 aee6151561422756b764a4ae28e7f44cda5af5a9eead3cc9985112b1de8d8e0d kind-linux-amd64.sha256sum - -
+tool crane v0.22.1 darwin-arm64 https://github.com/google/go-containerregistry/releases/download/v0.22.1/go-containerregistry_Darwin_arm64.tar.gz 2231fc8df8806d20d680ff1225db44e095a55dd6ac1ae8eced4faf4b278b78fb checksums.txt crane 712be73700414edb792c9d7dd07315ff6ef1200decd6b2363e4ab834babb302d
+tool crane v0.22.1 linux-amd64 https://github.com/google/go-containerregistry/releases/download/v0.22.1/go-containerregistry_Linux_x86_64.tar.gz 0ab7a1d6932a213aed964ce97666c3077fe691c8606413674a8b3e0b9ec4cda0 checksums.txt crane 8e75c326adb43b053cfd78b9b987663f8f4fe4557f4d3915905643f25c730992
+tool buildx v0.38.1 darwin-arm64 https://github.com/docker/buildx/releases/download/v0.38.1/buildx-v0.38.1.darwin-arm64 6f20ba2437865311ef99015bf5d1039c3c8e4d2177c1c64aa41b134b5ecd3012 checksums-signed.txt - -
+tool buildx v0.38.1 linux-amd64 https://github.com/docker/buildx/releases/download/v0.38.1/buildx-v0.38.1.linux-amd64 e25d5cd675092bb5d1d03632fdc46cdf3fede7b514dc5f023a105e00d3ce5ad4 checksums.txt - -
+#
+# image <key> <repository> <tag> <digest> <after>
+#   pulled by `tools.sh pull <key>` as <repository>@<digest> only (the tag is
+#   for people); <after> is `remove` (tools.sh remove deletes it when D36-2 is
+#   done) or `keep` (it was on the machine before, for other work).
+#   binfmt (QEMU's emulators) runs on the runner only, pinned by the workflow.
+image buildkit moby/buildkit v0.34.1 sha256:99368f3e46177c6405b9740e4461d91cee004128daeecca78d4ceac50ec1da5c remove
+image registry registry 2.8.3 sha256:a3d8aaa63ed8681a604f1dea0aa03f100d5895b6a58ace528858a7b332415373 remove
+image syft-scanner docker/buildkit-syft-scanner 1.12.1 sha256:873a7458c3c8ac8e32c7b796c10e1600b07b963d2aa000a72a2d97aaaa2d6315 remove
+image kind-node kindest/node v1.35.8 sha256:07b2536e30b803ed61d1677a79df6115f798ce64c80f9e22f6ed45afd09323c0 remove
+image postgres postgres 18.7 sha256:9f4fd4aa918f52ae3d6f3b687f1de90d8f867cd4d520021545a9a50c120eae3b remove
+image mailpit axllent/mailpit v1.31.2 sha256:74d609a42ec279aa63c6b4622a6fa9b5408d1ad5b1d76a1c4be40a265ce0863d keep
+#
+# builder <name>
+#   the docker-container builder (BuildKit at the buildkit image above) the
+#   release scripts create in a tools.sh docker-config; tools.sh remove
+#   deletes its container and state volume by name.
+builder telflo-release

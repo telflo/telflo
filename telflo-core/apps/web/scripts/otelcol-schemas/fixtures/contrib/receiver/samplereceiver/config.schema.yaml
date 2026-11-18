@@ -1,0 +1,124 @@
+# Every $ref form, allOf, a declared map, every value type, a reference to
+# another component's settings and a hand-copied set of definitions.
+$defs:
+  local_settings:
+    description: Settings in the same file.
+    type: object
+    properties:
+      depth:
+        type: integer
+  labels:
+    type: object
+    additionalProperties:
+      type: string
+  name:
+    type: string
+  # A hand-written copy of another project's settings (as prometheus's
+  # prom_*): every string in its definitions takes any scalar (one `*` part),
+  # one enum is checked in any casing, one never.
+  copy_outer:
+    type: object
+    properties:
+      kind:
+        description: An enum checked in any casing.
+        type: string
+        enum: [first, second]
+      scheme:
+        description: An enum never checked.
+        type: string
+        enum: [plain, secure]
+      label:
+        type: string
+      nested:
+        type: object
+        properties:
+          tag:
+            type: string
+          depth:
+            type: integer
+      tags:
+        type: array
+        items:
+          type: string
+      headers:
+        type: object
+        additionalProperties:
+          type: string
+      protocols:
+        type: array
+        items:
+          $ref: copy_protocol
+      named:
+        $ref: name
+  copy_protocol:
+    description: A copied enum definition.
+    type: string
+    enum: [One, Two]
+  copy_base:
+    type: object
+    properties:
+      inherited:
+        description: A copied string the receiver embeds.
+        type: string
+description: The sample receiver's settings.
+type: object
+properties:
+  local:
+    description: A bare reference.
+    $ref: local_settings
+  relative:
+    $ref: ./internal/extra.extra_settings
+  shared:
+    $ref: /pkg/shared.shared_settings
+  client:
+    $ref: go.opentelemetry.io/collector/config/confighttp.client_config
+  rooted:
+    $ref: /pkg/rootonly.config
+  labels:
+    $ref: labels
+  include:
+    type: array
+    items:
+      type: string
+  operators:
+    type: array
+    items:
+      $ref: local_settings
+  enabled:
+    type: boolean
+  ratio:
+    type: number
+  count:
+    description: How many.
+    type: integer
+    default: 3
+  timeout:
+    type: string
+    x-customType: time.Duration
+    format: duration
+  mode:
+    type: string
+    enum: [fast, slow]
+  name:
+    type: string
+    x-optional: true
+  anything:
+    x-customType: any
+  missing:
+    description: A definition upstream never wrote.
+    $ref: /pkg/nowhere.gone
+  names:
+    type: array
+    items:
+      $ref: name
+  inner:
+    $ref: /receiver/innerreceiver.config
+  copied:
+    $ref: copy_outer
+  other_copy:
+    $ref: /pkg/shared.copy_other
+allOf:
+  - $ref: /pkg/shared.embedded
+  - $ref: /pkg/shared.first
+  - $ref: /pkg/shared.second
+  - $ref: copy_base

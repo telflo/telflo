@@ -1,0 +1,148 @@
+# The metrics forms' components (D9d Task 1): comments, an anchor and a
+# merge, flow lists, a plain octal `0622` and `0750`, as a person writes
+# them. cumulative_to_delta and prometheus_remote_write are the collector's
+# own spellings at v0.162.0.
+x-scrape: &scrape
+  scrape_interval: 30s
+  scrape_timeout: 10s
+receivers:
+  prometheus:
+    trim_metric_suffixes: false
+    config:
+      global:
+        extra_scrape_metrics: true # Prometheus' own key, not the receiver's
+      scrape_configs:
+        - job_name: otel-collector
+          <<: *scrape
+          static_configs:
+            - targets: [localhost:8888]
+        # the hosts, over TLS
+        - job_name: node
+          scrape_interval: 15s
+          metrics_path: /metrics
+          scheme: https
+          tls_config:
+            min_version: TLS12
+            max_version: TLS13
+          basic_auth:
+            username: scraper
+            password: ${env:SCRAPE_PASSWORD}
+          static_configs:
+            - targets:
+                - node-1:9100
+                - node-2:9100
+              labels:
+                env: prod
+  statsd:
+    endpoint: localhost:8125
+    transport: udp
+    aggregation_interval: 60s
+    enable_metric_type: true
+    is_monotonic_counter: false
+    timer_histogram_mapping:
+      - statsd_type: histogram
+        observer_type: histogram
+        histogram:
+          max_size: 100
+      - statsd_type: timing # timers as summaries
+        observer_type: summary
+        summary:
+          percentiles: [0, 10, 50, 90, 95, 100]
+      - statsd_type: distribution
+        observer_type: gauge
+  statsd/unix:
+    endpoint: /var/run/statsd.sock
+    transport: unixgram
+    socket_permissions: 0622 # octal to the collector
+processors:
+  cumulativetodelta:
+    include:
+      match_type: strict
+      metrics:
+        - system.network.io
+        - system.disk.operations # per device
+    max_staleness: 5m
+    initial_value: auto
+  cumulative_to_delta/regexp:
+    exclude:
+      match_type: regexp
+      metrics: [".*_total"]
+  metricstransform:
+    transforms:
+      - include: system.cpu.usage
+        action: update
+        new_name: system.cpu.usage_time
+      - include: http.server.duration
+        match_type: strict
+        action: insert
+        new_name: http.server.duration.copy
+        operations:
+          - action: add_label
+            new_label: version
+            new_value: "1.0"
+          - action: aggregate_labels
+            label_set: [state]
+            aggregation_type: sum
+      # the disks, combined into one metric
+      - include: ^system\.disk\.(.*)
+        match_type: regexp
+        action: combine
+        new_name: system.disk.all
+        submatch_case: lower
+        aggregation_type: sum
+  groupbyattrs:
+    keys: [host.name, k8s.pod.name]
+  groupbyattrs/compact: {}
+exporters:
+  prometheus:
+    endpoint: 0.0.0.0:8889
+    namespace: telflo
+    const_labels:
+      region: eu-west-1 # the deployment's
+    send_timestamps: true
+    metric_expiration: 5m
+    resource_to_telemetry_conversion:
+      enabled: false
+    enable_open_metrics: true
+    add_metric_suffixes: false
+  prometheusremotewrite:
+    endpoint: https://prometheus.example.com/api/v1/write
+    namespace: telflo
+    external_labels:
+      cluster: prod
+    headers:
+      X-Scope-OrgID: tenant-1
+    resource_to_telemetry_conversion:
+      enabled: true
+    target_info:
+      enabled: true
+    remote_write_queue:
+      enabled: true
+      queue_size: 0750 # a number to the collector
+      num_consumers: 5
+    retry_on_failure:
+      enabled: true
+      initial_interval: 5s
+      max_interval: 30s
+  prometheus_remote_write/mimir:
+    endpoint: https://mimir.example.com/api/v1/push
+    protobuf_message: prometheus.WriteRequest
+    tls:
+      insecure: false
+extensions:
+  file_storage:
+    directory: /var/lib/otelcol/storage
+    create_directory: true
+    directory_permissions: "0750" # a string the collector parses as octal
+service:
+  extensions: [file_storage]
+  pipelines:
+    metrics:
+      receivers: [prometheus, statsd, statsd/unix]
+      processors: [cumulativetodelta, metricstransform, groupbyattrs]
+      exporters: [prometheus, prometheusremotewrite]
+    metrics/regexp:
+      receivers:
+        - prometheus
+      processors: [cumulative_to_delta/regexp, groupbyattrs/compact]
+      exporters: [prometheus_remote_write/mimir]

@@ -1,0 +1,6 @@
+# Flow mappings where block ones usually are.
+receivers: {otlp: {protocols: {grpc: {endpoint: "0.0.0.0:4317"}}}}
+processors:
+  batch: {timeout: 5s, send_batch_size: 100}
+exporters: {debug: {verbosity: basic}, file: {path: /tmp/out.json}}
+service: {extensions: [], pipelines: {traces: {receivers: [otlp], processors: [batch], exporters: [debug, file]}}}

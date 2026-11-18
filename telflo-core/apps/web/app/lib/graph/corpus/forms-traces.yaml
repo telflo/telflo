@@ -1,0 +1,157 @@
+# The traces and sampling forms' components (D9d Task 1): comments, an
+# anchor and its aliases, flow lists and mappings, and `0750`, as a person
+# writes them. span_metrics is the connector's own spelling at v0.162.0.
+x-slow: &slow
+  threshold_ms: 1000
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+  jaeger:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:14250
+      thrift_http:
+        endpoint: 0.0.0.0:14268
+      # the agents' UDP ports
+      thrift_compact:
+        endpoint: localhost:6831
+        queue_size: 0750 # a number to the collector
+        max_packet_size: 65000
+        workers: 10
+      thrift_binary:
+        endpoint: localhost:6832
+  zipkin:
+    endpoint: 0.0.0.0:9411
+    parse_string_tags: false
+processors:
+  probabilistic_sampler:
+    mode: hash_seed
+    sampling_percentage: 15.3
+    hash_seed: 22 # the same on every collector
+    fail_closed: true
+  probabilistic_sampler/logs:
+    sampling_percentage: 50
+    attribute_source: record
+    from_attribute: logID
+    sampling_priority: priority
+  span:
+    name:
+      from_attributes: [db.svc, operation]
+      separator: "::"
+    status:
+      code: Error
+      description: some error description
+  span/to_attributes:
+    include:
+      match_type: regexp
+      services: ["auth.*"]
+    name:
+      to_attributes:
+        rules:
+          - '^/api/v1/document/(?P<documentId>[^/]+)/update'
+        break_after_match: true
+  tail_sampling:
+    decision_wait: 10s
+    num_traces: 50000
+    expected_new_traces_per_sec: 10
+    decision_cache:
+      sampled_cache_size: 100000
+    policies:
+      - name: errors # keep every failure
+        type: status_code
+        status_code:
+          status_codes: [ERROR]
+      - name: slow
+        type: latency
+        latency: *slow
+      - name: sampled
+        type: probabilistic
+        probabilistic:
+          sampling_percentage: 10
+      - name: checkout
+        type: string_attribute
+        string_attribute:
+          key: http.route
+          values:
+            - /checkout
+            - /pay
+          enabled_regex_matching: false
+      - name: rate
+        type: rate_limiting
+        rate_limiting:
+          spans_per_second: 500
+      - name: server-errors
+        type: ottl_condition
+        ottl_condition:
+          error_mode: ignore
+          span:
+            - span.attributes["http.status_code"] >= 500
+      - name: prod-and-slow
+        type: and
+        and:
+          and_sub_policy:
+            - name: prod
+              type: string_attribute
+              string_attribute: {key: deployment.environment, values: [prod]}
+            - name: long
+              type: latency
+              latency: *slow
+      - name: health
+        type: drop
+        drop:
+          drop_sub_policy:
+            - name: health-drop
+              type: string_attribute
+              string_attribute:
+                key: url.path
+                values: [/health, /metrics]
+      - name: sampled-flag
+        type: trace_flags
+exporters:
+  zipkin:
+    endpoint: http://zipkin:9411/api/v2/spans
+    format: proto
+    default_service_name: unknown-service
+  debug:
+    verbosity: basic
+connectors:
+  spanmetrics:
+    histogram:
+      unit: ms
+      explicit:
+        buckets: [2ms, 4ms, 6ms, 8ms, 10ms, 50ms, 100ms, 200ms, 400ms, 800ms, 1s, 1400ms, 2s, 5s, 10s, 15s]
+    dimensions:
+      - name: http.method
+        default: GET
+      - name: http.status_code
+    exemplars:
+      enabled: true
+    aggregation_temporality: AGGREGATION_TEMPORALITY_CUMULATIVE
+    metrics_flush_interval: 15s
+    namespace: traces.span.metrics
+  span_metrics/delta:
+    histogram:
+      exponential:
+        max_size: 160
+    aggregation_temporality: AGGREGATION_TEMPORALITY_DELTA
+    metric_timestamp_cache_size: 1000
+extensions:
+  file_storage:
+    directory: /var/lib/otelcol/storage
+    directory_permissions: "0750" # a string the collector parses as octal
+service:
+  extensions: [file_storage]
+  pipelines:
+    traces:
+      receivers: [otlp, jaeger, zipkin]
+      processors: [probabilistic_sampler, span, span/to_attributes, tail_sampling]
+      exporters: [zipkin, spanmetrics, span_metrics/delta]
+    metrics/spans:
+      receivers: [spanmetrics, span_metrics/delta]
+      exporters: [debug]
+    logs:
+      receivers: [otlp]
+      processors: [probabilistic_sampler/logs]
+      exporters: [debug]

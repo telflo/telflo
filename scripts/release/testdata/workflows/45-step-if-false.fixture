@@ -1,0 +1,11 @@
+# Breaks one rule: a step that can be switched off: the kind smoke with `if: false` (the reviewer's form).
+file: release.yml
+rule: step-if
+<<<
+      - name: The kind smoke
+        env:
+===
+      - name: The kind smoke
+        if: false
+        env:
+>>>

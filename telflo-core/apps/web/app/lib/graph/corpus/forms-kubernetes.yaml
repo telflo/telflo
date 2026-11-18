@@ -1,0 +1,84 @@
+# The Kubernetes forms' components (D9c Task 1): comments, an anchor and
+# merges, a flow mapping and `0750`, as a person writes them.
+x-k8s-auth: &k8s-auth
+  auth_type: serviceAccount
+receivers:
+  k8s_cluster:
+    <<: *k8s-auth
+    collection_interval: 10s # the default
+    node_conditions_to_report: [Ready, MemoryPressure]
+    allocatable_types_to_report:
+      - cpu # millicores
+      - memory
+    metadata_exporters: [otlp]
+    namespaces:
+      - default
+  k8s_events:
+    <<: *k8s-auth
+    namespaces: [default, kube-system]
+  k8sobjects:
+    <<: *k8s-auth
+    objects:
+      # pods, pulled hourly
+      - name: pods
+        mode: pull
+        interval: 60m
+        label_selector: environment in (production)
+      - name: events # watched
+        mode: watch
+        namespaces: [default]
+  kubeletstats:
+    <<: *k8s-auth
+    collection_interval: 20s
+    endpoint: https://${env:K8S_NODE_NAME}:10250
+    insecure_skip_verify: true
+    metric_groups: [node, pod, container]
+    extra_metadata_labels:
+      - container.id
+processors:
+  k8sattributes:
+    passthrough: false
+    extract:
+      metadata:
+        - k8s.namespace.name
+        - k8s.pod.name # the pod
+      labels:
+        - tag_name: app
+          key: app.kubernetes.io/name
+          from: pod
+    pod_association:
+      - sources:
+          - from: resource_attribute
+            name: k8s.pod.ip
+      - sources: [{from: connection}]
+  resourcedetection:
+    detectors: [env, system] # in order
+    timeout: 2s
+    override: false
+    system:
+      hostname_sources: [os]
+      resource_attributes:
+        host.id: {enabled: true}
+        os.type:
+          enabled: false
+  batch: {}
+exporters:
+  otlp:
+    endpoint: backend:4317
+extensions:
+  file_storage:
+    directory: /var/lib/otelcol/file_storage
+    directory_permissions: "0750" # a string the collector parses as octal
+    compaction:
+      max_transaction_size: 0750 # bare: an int64 to the collector (filestorage config.go, contrib v0.162.0)
+service:
+  extensions: [file_storage]
+  pipelines:
+    metrics:
+      receivers: [k8s_cluster, kubeletstats]
+      processors: [k8sattributes, resourcedetection, batch]
+      exporters: [otlp]
+    logs:
+      receivers: [k8s_events, k8sobjects]
+      processors: [k8sattributes, batch]
+      exporters: [otlp]

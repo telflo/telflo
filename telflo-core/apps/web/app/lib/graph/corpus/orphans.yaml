@@ -1,0 +1,16 @@
+# Declared components no pipeline uses are shown, ungrouped.
+receivers:
+  otlp: {}
+  jaeger: {}
+processors:
+  batch: {}
+  memory_limiter: {}
+exporters:
+  debug: {}
+  otlphttp:
+    endpoint: https://backend:4318
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      exporters: [debug]

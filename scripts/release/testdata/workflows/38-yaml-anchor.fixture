@@ -1,0 +1,14 @@
+# Breaks one rule: an anchor and an alias.
+file: release.yml
+rule: yaml
+<<<
+    permissions:
+      contents: write # the GitHub Release
+      packages: write # the images and the chart, in GHCR
+
+===
+    permissions: &publishing
+      contents: write # the GitHub Release
+      packages: write # the images and the chart, in GHCR
+
+>>>

@@ -1,0 +1,439 @@
+# Test runs (D25 decision 17's routes 26-28; decisions 39-44; Q168).
+# Assembled by document.ts.
+# A run comes from a configuration's version or from a YAML with no
+# configuration; its sample is sent inline and stored as one of the token
+# user's test files; its rules are inline (used once, never saved), the
+# version's saved ones. A YAML run is its creator's alone. Every
+# reply is no-store. A rule is the platform's (kind, target, pattern or
+# ottl, name, description); the statuses are the platform's; the
+# collector's stderr isn't answered.
+paths:
+  /test-runs:
+    post:
+      operationId: queueTestRun
+      summary: Queue a test run
+      description: >-
+        Runs a collector configuration against an input sample in the testing
+        sandbox, then checks its rules against the output. The configuration
+        is exactly one of a configuration's version (`configurationId` and
+        `versionNumber`: its YAML, its collector version unless
+        `collectorVersion` names another, its configuration's distribution) or
+        a YAML (`yaml`: the catalogue's default distribution and version
+        unless named). Answers 202 at once; poll `GET /test-runs/{runId}`
+        until `status` is `succeeded`, `failed` or `validation_failed`, then
+        read `GET /test-runs/{runId}/output`.
+
+
+        `pipeline` must be a key of the YAML's `service.pipelines` (422
+        `configuration_invalid`), its first part `signal`. `sample` (at most
+        1 MiB as UTF-8; 413 `payload_too_large` past it) is saved as one of
+        your test files, `api-sample.json`, counting against your uploads a
+        minute; it stays there for you to delete. The rules are `rules` (1
+        to 20, each checked as the web app's Validation tab checks one,
+        counting against your rule checks a minute, and used for this run
+        only), or the version's saved validation pipeline for `pipeline`
+        (`useSavedRules: true`, a version's run only): one or the
+        other. `useSavedRules` on a version with no saved rules for
+        `pipeline` answers 422 `configuration_invalid`. Organization
+        variables (`${org:NAME}`) are filled in, as for every run. A YAML
+        run is visible to you alone. Counts against your test runs a minute
+        (20) and your waiting runs (50).
+      tags: [test-runs]
+      x-telflo-access: write
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QueueTestRunRequest"
+      responses:
+        "202":
+          description: The run is queued.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QueuedTestRun"
+        "400":
+          description: >-
+            `invalid_request`: a body that isn't the schema's (both sources or
+            neither, `rules` with `useSavedRules` or neither, `useSavedRules` with `yaml`,
+            a pipeline of another signal, an OTTL context the signal doesn't
+            have, a version's `distribution` that isn't its configuration's);
+            `organization_required`; `collector_distribution_unknown`,
+            `collector_version_unknown`, `collector_version_retired`: a
+            collector the catalogue doesn't offer; `validation_rule_invalid`:
+            a rule that doesn't check, or an OTTL condition that can't fail or
+            can't pass (`true` with `all`), with `details.ruleIndex` (from 0)
+            and `details.problems`; `filled_in_too_long`: the YAML over a run's
+            limit with its organization variables filled in.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          description: >-
+            `configuration_not_found` (another member's draft, another
+            organization's configuration, a malformed id) or
+            `configuration_version_not_found`, for a version's run.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "413":
+          description: The body is over 8 MiB, or the sample over 1 MiB as UTF-8 (`payload_too_large`).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "422":
+          description: >-
+            `configuration_invalid`: the YAML's `service.pipelines` has no
+            `pipeline` (or the YAML doesn't parse), the version's YAML can't
+            be run (empty, or holding a control character), or
+            `useSavedRules` finds no saved rules for `pipeline` on the
+            version; one error, in fixed words. Nothing was stored or spent.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConfigurationVersionInvalidError"
+        "429":
+          description: >-
+            `rate_limited`: over 60 requests a minute for this token, or over
+            your test file uploads a minute; `test_run_rate_limited`: over 20
+            runs a minute, or too many being queued at once;
+            `test_run_queue_full`: 50 of your runs waiting already;
+            `validation_rule_rate_limited`: over your rule checks a minute.
+          headers:
+            Retry-After:
+              description: Seconds until the window ends.
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "503":
+          description: >-
+            `testing_unavailable`: the testing sandbox is down;
+            `rules_unavailable`: the rules can't be checked right now;
+            `variables_unavailable`: the organization variables the YAML
+            references couldn't be read. Nothing was queued.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /test-runs/{runId}:
+    parameters:
+      - $ref: "#/components/parameters/RunId"
+    get:
+      operationId: getTestRun
+      summary: Get a test run
+      description: >-
+        A run's status and, once it has ended, its results: each rule's
+        result in the rules' order (`validationResults`), the sandbox's
+        mutations and compatibility findings, and its error. A run you can't
+        see answers 404 `test_run_not_found`: another member's YAML run,
+        another member's draft's run, another organization's, or a malformed
+        id.
+      tags: [test-runs]
+      x-telflo-access: read
+      responses:
+        "200":
+          description: The run.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TestRun"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+  /test-runs/{runId}/output:
+    parameters:
+      - $ref: "#/components/parameters/RunId"
+    get:
+      operationId: getTestRunOutput
+      summary: Get a test run's output
+      description: >-
+        What the collector exported during the run, as text. 404
+        `test_run_output_not_found` until the run has ended with an output;
+        404 `test_run_not_found` for a run you can't see.
+      tags: [test-runs]
+      x-telflo-access: read
+      responses:
+        "200":
+          description: The run's output.
+          content:
+            text/plain:
+              schema:
+                type: string
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+components:
+  parameters:
+    RunId:
+      name: runId
+      in: path
+      required: true
+      description: The run's id, as `POST /test-runs` answered it.
+      schema:
+        type: string
+  schemas:
+    QueueTestRunRequest:
+      description: >-
+        Exactly one of `configurationId` with `versionNumber`, or `yaml`;
+        exactly one of `rules` and `useSavedRules: true`, and `useSavedRules`
+        only with a version.
+      type: object
+      additionalProperties: false
+      required: [sample, signal, pipeline]
+      properties:
+        configurationId:
+          type: string
+        versionNumber:
+          type: integer
+          minimum: 1
+          maximum: 999999999
+        yaml:
+          description: >-
+            The configuration to run: 1 to 262,144 UTF-16 code units, no
+            control character but tab, line feed and carriage return, no lone
+            surrogate.
+          type: string
+          minLength: 1
+          maxLength: 262144
+          pattern: '^[^\x00-\x08\x0B\x0C\x0E-\x1F\uD800-\uDFFF]*$'
+        sample:
+          description: The input the sandbox replays, at most 1 MiB as UTF-8 (413 past it).
+          type: string
+        signal:
+          type: string
+          enum: [traces, metrics, logs]
+        pipeline:
+          description: A key of the YAML's `service.pipelines`, its first part `signal`; 1 to 200 characters.
+          type: string
+          minLength: 1
+          maxLength: 200
+          pattern: '^[^\x00-\x08\x0B\x0C\x0E-\x1F\uD800-\uDFFF]*$'
+        durationSeconds:
+          type: integer
+          minimum: 1
+          maximum: 60
+          default: 5
+        collectorVersion:
+          type: string
+          maxLength: 64
+          pattern: '^[0-9]+\.[0-9]+\.[0-9]+$'
+        distribution:
+          description: Only `otelcol-contrib` is offered today.
+          type: string
+          maxLength: 64
+          pattern: '^[a-z0-9]+(-[a-z0-9]+)*$'
+        rules:
+          description: The rules for this run only, in order; never saved.
+          type: array
+          minItems: 1
+          maxItems: 20
+          items:
+            $ref: "#/components/schemas/ValidationRuleInput"
+        useSavedRules:
+          description: Run the version's saved validation pipeline for `pipeline` (a version's run only).
+          type: boolean
+          default: false
+      oneOf:
+        - type: object
+          required: [yaml]
+          properties:
+            yaml: true
+            configurationId: false
+            versionNumber: false
+        - type: object
+          required: [configurationId, versionNumber]
+          properties:
+            configurationId: true
+            versionNumber: true
+            yaml: false
+      anyOf:
+        - type: object
+          required: [rules]
+          properties:
+            rules: true
+            useSavedRules:
+              const: false
+        - type: object
+          required: [useSavedRules]
+          properties:
+            rules: false
+            useSavedRules:
+              const: true
+      if:
+        type: object
+        required: [yaml]
+        properties:
+          yaml: true
+      then:
+        type: object
+        properties:
+          useSavedRules:
+            const: false
+    QueuedTestRun:
+      type: object
+      additionalProperties: false
+      required: [id, status]
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [queued]
+    TestRunValidationResult:
+      description: >-
+        One rule's result, in the rules' order. A rule with an `error` failed
+        on its own; `detail` says why a rule failed, by `kind`; `advisory`
+        why a pass may mislead.
+      type: object
+      additionalProperties: false
+      required: [id, passed, error, advisory, detail]
+      properties:
+        id:
+          description: The rule's id in this run (a saved rule's own id; an inline rule's, new).
+          type: string
+          format: uuid
+        passed:
+          type: boolean
+        error:
+          type: [string, "null"]
+        advisory:
+          type: [string, "null"]
+        detail:
+          oneOf:
+            - type: "null"
+            - type: object
+              required: [kind]
+              properties:
+                kind:
+                  type: string
+                  enum: [no_match, unexpected_match, record_mismatch, distinct_mismatch]
+    TestRunMutation:
+      description: A sandbox mutation (R-*) or a fixture-shape advisory (F-*).
+      type: object
+      additionalProperties: false
+      required: [id, severity, message, details]
+      properties:
+        id:
+          type: string
+          pattern: '^[RF]-[0-9]{3}$'
+        severity:
+          type: string
+          enum: [info, caution, warn]
+        message:
+          type: string
+        details:
+          type: object
+    TestRunCompatibilityIssue:
+      description: A compatibility finding (C-*).
+      type: object
+      additionalProperties: false
+      required: [id, severity, component, message, details]
+      properties:
+        id:
+          type: string
+          pattern: '^C-[0-9]{3}$'
+        severity:
+          type: string
+          enum: [refuse, advisory]
+        component:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+    TestRun:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - status
+        - success
+        - signal
+        - pipeline
+        - durationMs
+        - collectorVersion
+        - distribution
+        - validationResults
+        - mutations
+        - compatibility
+        - errorMessage
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          description: >-
+            `queued`, `running`, then `succeeded`, `failed` (the run, or a
+            rule, failed) or `validation_failed` (a rule failed).
+          type: string
+          enum: [queued, running, succeeded, failed, validation_failed]
+        success:
+          description: Null until the run has ended; then whether it succeeded.
+          type: [boolean, "null"]
+        signal:
+          type: string
+          enum: [traces, metrics, logs]
+        pipeline:
+          type: string
+        durationMs:
+          description: How long the run took in the sandbox, null until it has run.
+          type: [integer, "null"]
+          minimum: 0
+        collectorVersion:
+          type: string
+        distribution:
+          type: string
+        validationResults:
+          description: One result per rule, in the rules' order; null until checked, or for a run with no rules.
+          oneOf:
+            - type: "null"
+            - type: array
+              maxItems: 200
+              items:
+                $ref: "#/components/schemas/TestRunValidationResult"
+        mutations:
+          oneOf:
+            - type: "null"
+            - type: array
+              items:
+                $ref: "#/components/schemas/TestRunMutation"
+        compatibility:
+          oneOf:
+            - type: "null"
+            - type: array
+              items:
+                $ref: "#/components/schemas/TestRunCompatibilityIssue"
+        errorMessage:
+          description: Why the run failed, in fixed words; null otherwise.
+          type: [string, "null"]
+        createdAt:
+          description: When it was queued.
+          type: string
+          format: date-time

@@ -1,0 +1,12 @@
+# Breaks one rule: the token in a job's env (every step of the job would hold it).
+file: release.yml
+rule: token-env
+<<<
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
+===
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
+>>>

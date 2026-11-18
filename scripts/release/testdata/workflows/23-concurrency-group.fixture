@@ -1,0 +1,10 @@
+# Breaks one rule: a concurrency group per ref (two releases at once).
+file: release.yml
+rule: concurrency
+<<<
+  group: release
+  cancel-in-progress: false
+===
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+>>>

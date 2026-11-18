@@ -1,0 +1,23 @@
+# Sequences written at their key's column (Preflight ruling 1).
+receivers:
+  filelog:
+    include:
+    - /var/log/a.log
+    - /var/log/b.log
+    exclude: []
+exporters:
+  debug: {}
+  file:
+    path: /tmp/out.json
+extensions:
+  health_check: {}
+service:
+  extensions:
+  - health_check
+  pipelines:
+    logs:
+      receivers:
+      - filelog
+      exporters:
+      - debug # printed
+      - file

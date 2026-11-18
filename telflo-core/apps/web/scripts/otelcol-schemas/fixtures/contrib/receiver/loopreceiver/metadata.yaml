@@ -1,0 +1,5 @@
+# Built only by the test that wants its optional section behind references
+# that never reach a definition.
+type: loop
+status:
+  class: receiver

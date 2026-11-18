@@ -1,0 +1,11 @@
+{
+  "distribution": "otelcol-contrib",
+  "label": "OpenTelemetry Collector Contrib",
+  "description": "The tester's test catalogue: two offered versions (the tests hold only 0.162.0) and a retired one. Fields the tester doesn't read are ignored.",
+  "default": true,
+  "versions": [
+    { "version": "0.162.0", "label": "v0.162.0", "default": true, "deprecated": false },
+    { "version": "0.161.0", "label": "v0.161.0", "default": false, "deprecated": false },
+    { "version": "0.155.0", "label": "v0.155.0", "default": false, "deprecated": true }
+  ]
+}

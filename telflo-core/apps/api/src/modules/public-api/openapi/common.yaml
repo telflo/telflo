@@ -1,0 +1,144 @@
+# The public surface's shared components (D25 decision 49, Ruling 160): the
+# security schemes, the error envelope, a validation error's item and the
+# list shape, the refusals every route shares, and GET /health. Each area's
+# fragment (<area>.yaml) refers to them by $ref. Assembled by document.ts.
+paths:
+  /health:
+    get:
+      operationId: getHealth
+      summary: Whether the API answers
+      description: No token, no organization, and outside the per-token limit.
+      tags: [health]
+      security: []
+      x-telflo-access: none
+      responses:
+        "200":
+          description: The API answers.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Health"
+components:
+  securitySchemes:
+    bearer:
+      type: http
+      scheme: bearer
+      description: >-
+        A `tf_` token: a service account's (Settings › Service Accounts) or
+        your own (Settings › Account), sent as `Authorization: Bearer tf_…`.
+    organization:
+      type: apiKey
+      in: header
+      name: X-Telflo-Org
+      description: >-
+        The id of the organization a personal token acts in. A service
+        account's token ignores it.
+  schemas:
+    Health:
+      type: object
+      additionalProperties: false
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [healthy]
+    Error:
+      description: The one error envelope. `code` is stable; `message` is for people and may change.
+      type: object
+      additionalProperties: false
+      required: [error]
+      properties:
+        error:
+          type: object
+          additionalProperties: false
+          required: [code, message]
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            details:
+              description: >-
+                More about the refusal, when there is more to say. A 400
+                `invalid_request` carries one of two shapes, each entry with
+                `path`, the field's keys and indexes. From request
+                validation, `[{ path, code }]`, one per issue: `code` Zod's
+                issue code (`"<unknown>"` in `path` for an unrecognized key
+                or a segment that isn't one of the schema's keys); never a
+                received value or a message. From a route's own check (a
+                bad `cursor`, a field the resource refuses),
+                `[{ path, message }]`: `message` fixed words, never a value
+                the request sent. Other codes keep their own details (a
+                rule's `ruleIndex`, a validation's `errors`).
+    ValidationErrorItem:
+      description: One problem a configuration's validation found.
+      type: object
+      additionalProperties: false
+      required: [message, componentPath]
+      properties:
+        message:
+          type: string
+        componentPath:
+          description: Where in the configuration, as `section.component`, or null for the whole.
+          type: [string, "null"]
+    ListPage:
+      description: >-
+        The shape of every list. `nextCursor` is null on the last page; a
+        list that isn't paginated answers every item and a null cursor.
+      type: object
+      required: [items, nextCursor]
+      properties:
+        items:
+          type: array
+        nextCursor:
+          type: [string, "null"]
+  responses:
+    BadRequest:
+      description: >-
+        The request was not valid (`invalid_request`), or a personal token sent
+        no X-Telflo-Org, or one that isn't an organization's id
+        (`organization_required`).
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Unauthorized:
+      description: >-
+        A missing, malformed, unknown, revoked or expired token
+        (`invalid_api_token`), every refusal alike.
+      headers:
+        WWW-Authenticate:
+          schema:
+            type: string
+            enum: [Bearer]
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Forbidden:
+      description: >-
+        A read token on a write route (`insufficient_access`), or a personal
+        token's X-Telflo-Org naming an organization its person isn't an
+        active member of, or one that doesn't exist or was deleted, alike
+        (`organization_access_denied`).
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    NotFound:
+      description: Nothing the caller can see answers to it (`not_found` or the resource's own code).
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    RateLimited:
+      description: Over 60 requests a minute for this token, or a feature's own limit (`rate_limited`).
+      headers:
+        Retry-After:
+          description: Seconds until the window ends.
+          schema:
+            type: integer
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"

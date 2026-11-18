@@ -1,0 +1,10 @@
+# Breaks one rule: a release run cancelled part way.
+file: release.yml
+rule: concurrency
+<<<
+  group: release
+  cancel-in-progress: false
+===
+  group: release
+  cancel-in-progress: true
+>>>

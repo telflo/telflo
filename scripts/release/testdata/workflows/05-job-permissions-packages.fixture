@@ -1,0 +1,21 @@
+# Breaks one rule: a test job asking for packages: write.
+file: release.yml
+rule: job-permissions
+<<<
+  static:
+    needs: version
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    permissions:
+      contents: read
+
+===
+  static:
+    needs: version
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      packages: write
+
+>>>

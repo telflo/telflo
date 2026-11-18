@@ -1,0 +1,18 @@
+# Decision 3: a declared extension service.extensions doesn't list stays
+# disabled; the list keeps its own order.
+receivers:
+  otlp: {}
+exporters:
+  debug: {}
+extensions:
+  health_check:
+    endpoint: 0.0.0.0:13133
+  pprof:
+    endpoint: 0.0.0.0:1777
+  zpages: {}
+service:
+  extensions: [zpages, health_check]
+  pipelines:
+    traces:
+      receivers: [otlp]
+      exporters: [debug]

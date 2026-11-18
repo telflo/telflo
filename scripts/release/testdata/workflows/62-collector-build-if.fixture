@@ -1,0 +1,11 @@
+# Breaks one rule: collector.yml's build running even when there is nothing to build (an empty matrix fails the run).
+file: collector.yml
+rule: publish-if
+<<<
+  build:
+    needs: check
+    if: ${{ needs.check.outputs.has == 'true' }}
+===
+  build:
+    needs: check
+>>>

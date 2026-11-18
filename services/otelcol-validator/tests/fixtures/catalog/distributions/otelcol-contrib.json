@@ -1,0 +1,45 @@
+{
+  "distribution": "otelcol-contrib",
+  "label": "OpenTelemetry Collector Contrib",
+  "description": "A test catalogue: two offered versions and a retired one. The fields the validator doesn't read are here to show it ignores them.",
+  "icon": "otel",
+  "sortOrder": 0,
+  "default": true,
+  "renamedTypes": [
+    { "kind": "receiver", "name": "file_log", "deprecatedName": "filelog", "since": "0.149.0" }
+  ],
+  "aFieldAddedLater": { "anything": [1, 2, 3] },
+  "versions": [
+    {
+      "version": "0.162.0",
+      "label": "v0.162.0",
+      "description": "Current default.",
+      "releasedAt": "2026-09-29",
+      "default": true,
+      "deprecated": false,
+      "deprecatedNote": null,
+      "containerImage": "otel/opentelemetry-collector-contrib:0.162.0",
+      "distribution": "otelcol-contrib",
+      "otelcolContribVersion": null,
+      "supportedComponents": null
+    },
+    {
+      "version": "0.161.0",
+      "label": "v0.161.0",
+      "description": null,
+      "releasedAt": "2026-09-16",
+      "default": false,
+      "deprecated": false,
+      "deprecatedNote": null
+    },
+    {
+      "version": "0.155.0",
+      "label": "v0.155.0",
+      "description": null,
+      "releasedAt": "2026-06-24",
+      "default": false,
+      "deprecated": true,
+      "deprecatedNote": "Retired for the tests."
+    }
+  ]
+}

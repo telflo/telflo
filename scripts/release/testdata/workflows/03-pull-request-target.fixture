@@ -1,0 +1,11 @@
+# Breaks one rule: a pull_request_target trigger.
+file: release.yml
+rule: pull-request-target
+<<<
+  push:
+    tags: ["v*"]
+===
+  push:
+    tags: ["v*"]
+  pull_request_target:
+>>>

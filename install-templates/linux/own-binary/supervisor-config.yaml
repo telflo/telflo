@@ -1,0 +1,31 @@
+# The OpAMP supervisor's configuration. Telflo writes each value it fills
+# as one YAML double-quoted scalar (never holding `"`, `\`, `$` or a control
+# character) and the booleans as true or false; start_supervisor.sh writes
+# the fleet's token into Authorization and ServerName (each `$` doubled, so
+# the supervisor's own expansion leaves it literal) and host.ip (an
+# address's characters only) on every run, and keeps this file root's alone.
+server:
+  endpoint: ${OPAMP_ENDPOINT}
+  headers:
+    Authorization: ""
+    ServerName: ""
+  tls:
+    insecure_skip_verify: ${OPAMP_ALLOW_INSECURE_CONNECTIONS}
+    insecure: ${OPAMP_ALLOW_INSECURE_CONNECTIONS}
+capabilities:
+  reports_effective_config: true
+  reports_own_metrics: true
+  reports_own_logs: true
+  reports_health: true
+  accepts_remote_config: true
+  accepts_opamp_connection_settings: true
+agent:
+  executable: ${EXECUTABLE_PATH}
+  config_files:
+    - ${CONFIG_PATH}
+  description:
+    non_identifying_attributes:
+      telflo.collector_group_id: ${COLLECTOR_GROUP_ID}
+      host.ip: ""
+storage:
+  directory: ${STORAGE_DIRECTORY}

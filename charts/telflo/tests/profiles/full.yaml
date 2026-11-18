@@ -1,0 +1,137 @@
+# Every value the chart takes set to something other than its default
+# (cloud-neutral: example.com keys and generic classes only).
+publicUrl: https://telflo.example.com
+global:
+  imagePullSecrets:
+    - name: registry-pull
+    - name: registry-pull-mirror
+image:
+  registry: registry.example.com:5000/telflo
+  pullPolicy: Always
+existingSecrets:
+  postgres: example-postgres
+  api: example-api
+  internalServices: example-internal
+  oidcGoogle: example-oidc
+  mail: example-mail
+networkPolicy:
+  enabled: true
+api:
+  image:
+    registry: registry.example.com/api-mirror
+    repository: platform/api
+    tag: mirror-test
+    digest: sha256:1111111111111111111111111111111111111111111111111111111111111111
+    pullPolicy: IfNotPresent
+  replicas: 3
+  resources:
+    requests: {cpu: 200m, memory: 512Mi}
+    limits: {memory: 1Gi}
+  nodeSelector: {example.com/pool: platform}
+  tolerations:
+    - {key: example.com/dedicated, operator: Equal, value: platform, effect: NoSchedule}
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - {key: example.com/pool, operator: In, values: [platform]}
+  podAnnotations: {example.com/scrape: "true"}
+  serviceAccount:
+    annotations: {example.com/identity: telflo-api}
+  trustProxyHops: 2
+  verificationTokenTtlHours: 48
+  salesInquiryTo: sales@telflo.example.com
+  opampAllowInsecureConnections: true
+  mail:
+    transport: sendgrid
+    from: noreply@telflo.example.com
+    smtp:
+      host: ""
+      port: 587
+      allowInsecure: false
+  oidcGoogle:
+    enabled: true
+  fileStore:
+    kind: s3
+    storageClassName: fast
+    size: 20Gi
+    bucket: telflo-files
+    region: region-b
+    prefix: full
+    endpoint: http://objects.example.com:9000
+    forcePathStyle: true
+web:
+  image: {registry: "", repository: web, tag: mirror-test, digest: sha256:2222222222222222222222222222222222222222222222222222222222222222, pullPolicy: ""}
+  replicas: 2
+  resources: {requests: {cpu: 100m, memory: 256Mi}}
+  nodeSelector: {example.com/pool: platform}
+  tolerations: [{key: example.com/dedicated, operator: Exists}]
+  affinity: {}
+  podAnnotations: {example.com/web: "yes"}
+  posthog:
+    key: phc_example
+    host: https://analytics.example.com
+gateway:
+  image: {registry: registry.example.com/mirror, repository: nginx, tag: 1.27-alpine, digest: "", pullPolicy: IfNotPresent}
+  replicas: 2
+  resources: {requests: {cpu: 50m, memory: 64Mi}}
+  nodeSelector: {example.com/pool: edge}
+  tolerations: []
+  affinity: {}
+  podAnnotations: {example.com/gateway: "yes"}
+  service:
+    type: LoadBalancer
+    annotations: {example.com/load-balancer: external}
+    externalTrafficPolicy: Local
+    loadBalancerSourceRanges: [203.0.113.0/24, 2001:db8::/32]
+otelcolValidator:
+  image: {registry: "", repository: otelcol-validator, tag: "", digest: sha256:3333333333333333333333333333333333333333333333333333333333333333, pullPolicy: ""}
+  replicas: 2
+  resources: {requests: {cpu: 200m, memory: 512Mi}}
+  nodeSelector: {example.com/pool: sandbox}
+  tolerations: []
+  affinity: {}
+  podAnnotations: {example.com/validator: "yes"}
+otelcolTesting:
+  image: {registry: "", repository: otelcol-testing, tag: "", digest: sha256:4444444444444444444444444444444444444444444444444444444444444444, pullPolicy: ""}
+  replicas: 2
+  resources: {requests: {cpu: 200m, memory: 1Gi}}
+  nodeSelector: {example.com/pool: sandbox}
+  tolerations: []
+  affinity: {}
+  podAnnotations: {example.com/tester: "yes"}
+ottlEvaluator:
+  image: {registry: "", repository: ottl-evaluator, tag: "", digest: sha256:5555555555555555555555555555555555555555555555555555555555555555, pullPolicy: ""}
+  replicas: 2
+  resources: {requests: {cpu: 200m, memory: 256Mi}, limits: {memory: 3Gi}}
+  nodeSelector: {example.com/pool: sandbox}
+  tolerations: []
+  affinity: {}
+  podAnnotations: {example.com/evaluator: "yes"}
+postgres:
+  image: {registry: registry.example.com/mirror, repository: postgres, tag: "18", digest: sha256:9f4fd4aa918f52ae3d6f3b687f1de90d8f867cd4d520021545a9a50c120eae3b, pullPolicy: IfNotPresent}
+  storageClassName: fast
+  size: 50Gi
+  resources: {requests: {cpu: 500m, memory: 1Gi}, limits: {memory: 2Gi}}
+  nodeSelector: {example.com/pool: data}
+  tolerations: [{key: example.com/data, operator: Exists}]
+  affinity: {}
+  podAnnotations: {example.com/postgres: "yes"}
+opamp-server:
+  imagePullSecrets:
+    - name: registry-pull
+    - name: registry-pull-mirror
+  auth:
+    existingSecret: example-opamp
+  server:
+    publicUrl: https://opamp.example.com/opamp/api/v1
+  podAnnotations: {example.com/opamp: "yes"}
+  serviceAccount:
+    annotations: {example.com/identity: opamp}
+  service:
+    agent:
+      type: LoadBalancer
+      annotations: {example.com/load-balancer: external}
+    management:
+      annotations: {example.com/internal: "yes"}

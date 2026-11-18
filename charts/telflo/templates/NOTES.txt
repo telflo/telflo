@@ -1,0 +1,35 @@
+{{- include "telflo.guards" . -}}
+{{ .Chart.Name }} {{ .Chart.Version }} is installed as release "{{ .Release.Name }}" in namespace "{{ .Release.Namespace }}".
+In the commands below, <context> is your cluster's kubectl context: every command names it.
+
+Watch the pods start (Postgres first: the API's pods run their migrations once it answers):
+  kubectl --context <context> -n {{ .Release.Namespace }} get pods -l app.kubernetes.io/instance={{ .Release.Name }} -w
+
+The platform's origin (the gateway, Service telflo-gateway, port 80, {{ default "LoadBalancer" .Values.gateway.service.type }}):
+  {{ .Values.publicUrl }}
+  Through a port-forward instead (publicUrl must then be http://localhost:8080):
+  kubectl --context <context> -n {{ .Release.Namespace }} port-forward svc/telflo-gateway 8080:80
+
+The collectors' agent endpoint (Service telflo-opamp-server-agent): collectors are handed
+{{ index .Values "opamp-server" "server" "publicUrl" }}
+
+The opamp-server's management API stays inside the cluster (ClusterIP), reached only by the API's pods.
+
+The first product admin (once, right after the install; it prints a set-password link and sends no email):
+  kubectl --context <context> -n {{ .Release.Namespace }} exec deploy/telflo-api -c api -- telflo-admin bootstrap --email <email> --organization <name>
+  The link is its output's last line (60 minutes, works once).
+  The link is a secret: run it in your own terminal, never where output is kept (a CI log).
+  Lost or expired: the same exec with telflo-admin reset-link --email <email> prints a new one.
+
+A changed Secret reaches the pods only when they restart, for example:
+  kubectl --context <context> -n {{ .Release.Namespace }} rollout restart deployment/telflo-api
+
+{{- if eq .Values.api.fileStore.kind "local" }}
+
+`helm uninstall` keeps Postgres's volume (data-telflo-postgres-0) and the API's file store (telflo-api-file-store); delete both explicitly to remove the data:
+  kubectl --context <context> -n {{ .Release.Namespace }} delete pvc data-telflo-postgres-0 telflo-api-file-store
+{{- else }}
+
+`helm uninstall` keeps Postgres's volume (data-telflo-postgres-0); delete it explicitly to remove the data:
+  kubectl --context <context> -n {{ .Release.Namespace }} delete pvc data-telflo-postgres-0
+{{- end }}

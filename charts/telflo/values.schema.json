@@ -1,0 +1,671 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "telflo chart values",
+  "type": "object",
+  "additionalProperties": false,
+  "definitions": {
+    "secretName": {
+      "description": "A Secret's name. Only its type is checked here, so a refusal never quotes it: the templates' guards check its shape with a fixed message.",
+      "type": "string"
+    },
+    "stringMap": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "openObject": {
+      "type": "object"
+    },
+    "openList": {
+      "type": "array"
+    },
+    "quantity": {
+      "oneOf": [
+        {
+          "type": "string",
+          "pattern": "^[0-9]+(\\.[0-9]+)?(m|k|Ki|M|Mi|G|Gi|T|Ti|P|Pi|E|Ei)?$"
+        },
+        {
+          "type": "number",
+          "minimum": 0
+        }
+      ]
+    },
+    "resources": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "requests": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/quantity"
+          }
+        },
+        "limits": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/quantity"
+          }
+        }
+      }
+    },
+    "pullPolicy": {
+      "type": "string",
+      "enum": [
+        "",
+        "Always",
+        "IfNotPresent",
+        "Never"
+      ]
+    },
+    "registry": {
+      "description": "A registry host (and port), then path components; empty is image.registry. Only its type here: a refusal never quotes it (a pasted one may hold a credential); a guard checks its shape with a fixed message.",
+      "type": "string"
+    },
+    "repository": {
+      "description": "An image's path under its registry. Only its type here, as registry.",
+      "type": "string"
+    },
+    "tag": {
+      "type": "string",
+      "pattern": "^([A-Za-z0-9_][A-Za-z0-9_.-]{0,127})?$"
+    },
+    "digest": {
+      "type": "string",
+      "pattern": "^(sha256:[a-f0-9]{64})?$"
+    },
+    "image": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "registry": {
+          "$ref": "#/definitions/registry"
+        },
+        "repository": {
+          "$ref": "#/definitions/repository"
+        },
+        "tag": {
+          "$ref": "#/definitions/tag"
+        },
+        "digest": {
+          "$ref": "#/definitions/digest"
+        },
+        "pullPolicy": {
+          "$ref": "#/definitions/pullPolicy"
+        }
+      },
+      "required": [
+        "registry",
+        "repository",
+        "tag",
+        "digest",
+        "pullPolicy"
+      ]
+    },
+    "replicas": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "storageClassName": {
+      "description": "A StorageClass's name; empty is the cluster's default.",
+      "type": "string",
+      "maxLength": 253,
+      "pattern": "^([a-z0-9]([-a-z0-9.]*[a-z0-9])?)?$"
+    },
+    "size": {
+      "type": "string",
+      "pattern": "^[1-9][0-9]*(Mi|Gi|Ti)$"
+    }
+  },
+  "properties": {
+    "publicUrl": {
+      "description": "The gateway's public origin (http or https, a host and an optional port, no path). Only its type here: a refusal never quotes it (a pasted URL may hold a user and password); the guards require it and check its shape with a fixed message.",
+      "type": "string"
+    },
+    "global": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "imagePullSecrets": {
+          "description": "The pull Secrets' names for every platform pod; none by default (a registry that needs a login takes one, such as ghcr-pull while the images are private). opamp-server.imagePullSecrets must be the same list: the templates' guard refuses a difference.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "$ref": "#/definitions/secretName"
+              }
+            },
+            "required": [
+              "name"
+            ]
+          }
+        }
+      }
+    },
+    "image": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "registry": {
+          "type": "string",
+          "description": "The platform images' registry. Only its type here: a guard checks its shape with a fixed message."
+        },
+        "pullPolicy": {
+          "type": "string",
+          "enum": [
+            "Always",
+            "IfNotPresent",
+            "Never"
+          ]
+        }
+      },
+      "required": [
+        "registry",
+        "pullPolicy"
+      ]
+    },
+    "existingSecrets": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "postgres": {
+          "$ref": "#/definitions/secretName"
+        },
+        "api": {
+          "$ref": "#/definitions/secretName"
+        },
+        "internalServices": {
+          "$ref": "#/definitions/secretName"
+        },
+        "oidcGoogle": {
+          "$ref": "#/definitions/secretName"
+        },
+        "mail": {
+          "$ref": "#/definitions/secretName"
+        }
+      },
+      "required": [
+        "postgres",
+        "api",
+        "internalServices",
+        "oidcGoogle",
+        "mail"
+      ]
+    },
+    "networkPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "enabled"
+      ]
+    },
+    "site": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "registration": {
+          "type": "string",
+          "enum": [
+            "open",
+            "invite-only",
+            "closed"
+          ]
+        },
+        "playground": {
+          "type": "boolean"
+        },
+        "anonymousValidate": {
+          "type": "boolean"
+        },
+        "publicFlows": {
+          "type": "boolean"
+        },
+        "salesInquiry": {
+          "type": "boolean"
+        },
+        "emailNotifications": {
+          "type": "boolean"
+        },
+        "docsUrl": {
+          "type": "string",
+          "maxLength": 2000,
+          "description": "Only its type and length here: a guard checks its shape with a fixed message."
+        },
+        "terms": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "version": {
+              "type": "string",
+              "maxLength": 32,
+              "description": "Only its type and length here: a guard checks its shape with a fixed message."
+            },
+            "termsUrl": {
+              "type": "string",
+              "maxLength": 2000,
+              "description": "Only its type and length here: a guard checks its shape with a fixed message."
+            },
+            "privacyUrl": {
+              "type": "string",
+              "maxLength": 2000,
+              "description": "Only its type and length here: a guard checks its shape with a fixed message."
+            },
+            "cookiePolicyUrl": {
+              "type": "string",
+              "maxLength": 2000,
+              "description": "Only its type and length here: a guard checks its shape with a fixed message."
+            }
+          }
+        }
+      }
+    },
+    "api": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "image": {
+          "$ref": "#/definitions/image"
+        },
+        "replicas": {
+          "$ref": "#/definitions/replicas"
+        },
+        "resources": {
+          "$ref": "#/definitions/resources"
+        },
+        "nodeSelector": {
+          "$ref": "#/definitions/stringMap"
+        },
+        "tolerations": {
+          "$ref": "#/definitions/openList"
+        },
+        "affinity": {
+          "$ref": "#/definitions/openObject"
+        },
+        "podAnnotations": {
+          "$ref": "#/definitions/stringMap"
+        },
+        "serviceAccount": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "annotations": {
+              "$ref": "#/definitions/stringMap"
+            }
+          }
+        },
+        "trustProxyHops": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 16
+        },
+        "verificationTokenTtlHours": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "salesInquiryTo": {
+          "type": "string",
+          "maxLength": 254
+        },
+        "opampAllowInsecureConnections": {
+          "type": "boolean"
+        },
+        "mail": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "transport": {
+              "type": "string",
+              "enum": [
+                "smtp",
+                "sendgrid"
+              ]
+            },
+            "from": {
+              "type": "string",
+              "maxLength": 320
+            },
+            "smtp": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "host": {
+                  "type": "string",
+                  "description": "Only its type here: a guard checks its shape with a fixed message."
+                },
+                "port": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 65535
+                },
+                "allowInsecure": {
+                  "type": "boolean"
+                },
+                "tls": {
+                  "type": "string",
+                  "enum": [
+                    "starttls",
+                    "implicit",
+                    "none"
+                  ]
+                },
+                "auth": {
+                  "type": "boolean"
+                },
+                "caSecret": {
+                  "$ref": "#/definitions/secretName"
+                }
+              }
+            }
+          }
+        },
+        "oidcGoogle": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            }
+          }
+        },
+        "fileStore": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "type": "string",
+              "enum": [
+                "local",
+                "s3"
+              ]
+            },
+            "storageClassName": {
+              "$ref": "#/definitions/storageClassName"
+            },
+            "size": {
+              "$ref": "#/definitions/size"
+            },
+            "bucket": {
+              "type": "string",
+              "maxLength": 63
+            },
+            "region": {
+              "type": "string",
+              "maxLength": 32
+            },
+            "prefix": {
+              "type": "string",
+              "maxLength": 256
+            },
+            "endpoint": {
+              "description": "Only its type here: a refusal never quotes it (a pasted endpoint may hold a credential); a guard checks its shape with a fixed message.",
+              "type": "string"
+            },
+            "forcePathStyle": {
+              "type": "boolean"
+            }
+          }
+        }
+      }
+    },
+    "web": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "image": {
+          "$ref": "#/definitions/image"
+        },
+        "replicas": {
+          "$ref": "#/definitions/replicas"
+        },
+        "resources": {
+          "$ref": "#/definitions/resources"
+        },
+        "nodeSelector": {
+          "$ref": "#/definitions/stringMap"
+        },
+        "tolerations": {
+          "$ref": "#/definitions/openList"
+        },
+        "affinity": {
+          "$ref": "#/definitions/openObject"
+        },
+        "podAnnotations": {
+          "$ref": "#/definitions/stringMap"
+        },
+        "posthog": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "key": {
+              "type": "string",
+              "maxLength": 200
+            },
+            "host": {
+              "type": "string",
+              "maxLength": 2048
+            }
+          }
+        }
+      }
+    },
+    "gateway": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "image": {
+          "$ref": "#/definitions/image"
+        },
+        "replicas": {
+          "$ref": "#/definitions/replicas"
+        },
+        "resources": {
+          "$ref": "#/definitions/resources"
+        },
+        "nodeSelector": {
+          "$ref": "#/definitions/stringMap"
+        },
+        "tolerations": {
+          "$ref": "#/definitions/openList"
+        },
+        "affinity": {
+          "$ref": "#/definitions/openObject"
+        },
+        "podAnnotations": {
+          "$ref": "#/definitions/stringMap"
+        },
+        "service": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "ClusterIP",
+                "NodePort",
+                "LoadBalancer"
+              ]
+            },
+            "annotations": {
+              "$ref": "#/definitions/stringMap"
+            },
+            "externalTrafficPolicy": {
+              "type": "string",
+              "enum": [
+                "",
+                "Cluster",
+                "Local"
+              ]
+            },
+            "loadBalancerSourceRanges": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^[0-9a-fA-F:.]+/[0-9]{1,3}$"
+              }
+            }
+          }
+        },
+        "extraRoutes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "path",
+              "match",
+              "service",
+              "port"
+            ],
+            "properties": {
+              "path": {
+                "type": "string",
+                "maxLength": 200,
+                "pattern": "^/[A-Za-z0-9._~/-]*$"
+              },
+              "match": {
+                "type": "string",
+                "enum": [
+                  "exact",
+                  "prefix"
+                ]
+              },
+              "service": {
+                "type": "string",
+                "maxLength": 63,
+                "pattern": "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"
+              },
+              "port": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 65535
+              }
+            }
+          }
+        }
+      }
+    },
+    "otelcolValidator": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "image": {
+          "$ref": "#/definitions/image"
+        },
+        "replicas": {
+          "$ref": "#/definitions/replicas"
+        },
+        "resources": {
+          "$ref": "#/definitions/resources"
+        },
+        "nodeSelector": {
+          "$ref": "#/definitions/stringMap"
+        },
+        "tolerations": {
+          "$ref": "#/definitions/openList"
+        },
+        "affinity": {
+          "$ref": "#/definitions/openObject"
+        },
+        "podAnnotations": {
+          "$ref": "#/definitions/stringMap"
+        }
+      }
+    },
+    "otelcolTesting": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "image": {
+          "$ref": "#/definitions/image"
+        },
+        "replicas": {
+          "$ref": "#/definitions/replicas"
+        },
+        "resources": {
+          "$ref": "#/definitions/resources"
+        },
+        "nodeSelector": {
+          "$ref": "#/definitions/stringMap"
+        },
+        "tolerations": {
+          "$ref": "#/definitions/openList"
+        },
+        "affinity": {
+          "$ref": "#/definitions/openObject"
+        },
+        "podAnnotations": {
+          "$ref": "#/definitions/stringMap"
+        }
+      }
+    },
+    "ottlEvaluator": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "image": {
+          "$ref": "#/definitions/image"
+        },
+        "replicas": {
+          "$ref": "#/definitions/replicas"
+        },
+        "resources": {
+          "$ref": "#/definitions/resources"
+        },
+        "nodeSelector": {
+          "$ref": "#/definitions/stringMap"
+        },
+        "tolerations": {
+          "$ref": "#/definitions/openList"
+        },
+        "affinity": {
+          "$ref": "#/definitions/openObject"
+        },
+        "podAnnotations": {
+          "$ref": "#/definitions/stringMap"
+        }
+      }
+    },
+    "postgres": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "image": {
+          "$ref": "#/definitions/image"
+        },
+        "storageClassName": {
+          "$ref": "#/definitions/storageClassName"
+        },
+        "size": {
+          "$ref": "#/definitions/size"
+        },
+        "resources": {
+          "$ref": "#/definitions/resources"
+        },
+        "nodeSelector": {
+          "$ref": "#/definitions/stringMap"
+        },
+        "tolerations": {
+          "$ref": "#/definitions/openList"
+        },
+        "affinity": {
+          "$ref": "#/definitions/openObject"
+        },
+        "podAnnotations": {
+          "$ref": "#/definitions/stringMap"
+        }
+      }
+    },
+    "opamp-server": {
+      "description": "The opamp-server chart's values, which its own values.schema.json checks; the templates' guards check the ones the platform's wiring needs.",
+      "type": "object"
+    }
+  }
+}

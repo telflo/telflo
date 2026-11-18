@@ -1,0 +1,11 @@
+# A profile for scripts/check-chart-cloud-neutral.sh: charts/supervisor-collector
+# as the platform installs it, role node (the chart takes no profile of its own:
+# its render tests build their values). The token is a placeholder.
+role: node
+group: node
+fullnameOverride: 3f9a1c2e-default
+collectorGroupId: 6f1c2a9e-3b4d-4e5f-8a7b-9c0d1e2f3a4b
+endpoint: https://opamp.example.com/opamp/api/v1
+token: cloud-neutral-check-placeholder
+collectorEnv:
+  EXAMPLE_VARIABLE: example

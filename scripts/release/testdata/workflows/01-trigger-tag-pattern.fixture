@@ -1,0 +1,8 @@
+# Breaks one rule: a tag pattern other than v*.
+file: release.yml
+rule: trigger
+<<<
+    tags: ["v*"]
+===
+    tags: ["*"]
+>>>

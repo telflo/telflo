@@ -1,0 +1,14 @@
+# Breaks one rule: the publish job's login without DOCKER_CONFIG under runner.temp.
+file: release.yml
+rule: login
+<<<
+      - name: Log in to GHCR (Docker and crane)
+        uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
+        env:
+          DOCKER_CONFIG: ${{ runner.temp }}/docker
+
+===
+      - name: Log in to GHCR (Docker and crane)
+        uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
+
+>>>

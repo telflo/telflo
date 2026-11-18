@@ -1,0 +1,153 @@
+# Who the token is (D25 decision 17's route 2) and the organizations it may
+# act in (route 3; decision 30). Assembled by document.ts. An organization
+# is answered without its logo.
+paths:
+  /whoami:
+    get:
+      operationId: getWhoAmI
+      summary: Who the token is
+      description: >-
+        The token's organization, its name, its access and whose it is. Needs
+        no X-Telflo-Org: a service account's token names its organization; a
+        personal token names the organization X-Telflo-Org sent (checked as
+        on any route), or null without one.
+      tags: [organizations]
+      x-telflo-access: read
+      responses:
+        "200":
+          description: The token's organization, name, access and kind.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                enum: [no-store]
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WhoAmI"
+        "400":
+          $ref: "#/components/responses/OrganizationHeaderMalformed"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/OrganizationAccessDenied"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+  /orgs:
+    get:
+      operationId: listOrganizations
+      summary: List the organizations the token may act in
+      description: >-
+        A service account's token answers its one organization; a personal
+        token, every organization its person is a member of, personal first,
+        then by name. Each with the token's user's role there. Not paginated.
+        Needs no X-Telflo-Org; one that is sent is checked as on any route.
+      tags: [organizations]
+      x-telflo-access: read
+      responses:
+        "200":
+          description: The organizations.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                enum: [no-store]
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrganizationList"
+        "400":
+          $ref: "#/components/responses/OrganizationHeaderMalformed"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/OrganizationAccessDenied"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+components:
+  responses:
+    OrganizationHeaderMalformed:
+      description: >-
+        A personal token sent an X-Telflo-Org that isn't an organization's id
+        (`organization_required`).
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    OrganizationAccessDenied:
+      description: >-
+        A personal token's X-Telflo-Org names an organization its person isn't
+        an active member of, or one that doesn't exist or was deleted, alike
+        (`organization_access_denied`).
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+  schemas:
+    WhoAmI:
+      description: A service account's token, or a personal token (`kind`).
+      oneOf:
+        - $ref: "#/components/schemas/ServiceAccountWhoAmI"
+        - $ref: "#/components/schemas/PersonWhoAmI"
+    ServiceAccountWhoAmI:
+      type: object
+      additionalProperties: false
+      required: [organizationId, tokenName, access, kind]
+      properties:
+        organizationId:
+          type: string
+          format: uuid
+        tokenName:
+          type: string
+        access:
+          type: string
+          enum: [read, write]
+        kind:
+          type: string
+          enum: [service_account]
+    PersonWhoAmI:
+      type: object
+      additionalProperties: false
+      required: [organizationId, tokenName, access, kind]
+      properties:
+        organizationId:
+          description: The organization X-Telflo-Org named, or null when none was sent.
+          type: [string, "null"]
+          format: uuid
+        tokenName:
+          type: string
+        access:
+          type: string
+          enum: [read, write]
+        kind:
+          type: string
+          enum: [person]
+    Organization:
+      description: An organization the token may act in, with the token's user's role there.
+      type: object
+      additionalProperties: false
+      required: [id, name, type, role]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        type:
+          type: string
+          enum: [personal, group]
+        role:
+          type: string
+          enum: [admin, contributor]
+    OrganizationList:
+      type: object
+      additionalProperties: false
+      required: [items, nextCursor]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Organization"
+        nextCursor:
+          description: Always null; the list isn't paginated.
+          type: "null"

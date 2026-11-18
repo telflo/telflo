@@ -1,0 +1,8 @@
+# Breaks one rule: a uses: by a short SHA.
+file: collector.yml
+rule: uses-pin
+<<<
+      - uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
+===
+      - uses: docker/setup-qemu-action@9901266 # v4.4.0
+>>>

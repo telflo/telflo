@@ -1,0 +1,370 @@
+# The telflo chart's values. README.md describes each one.
+#
+# Nothing secret goes here, ever: every credential is read from a Secret you
+# create before installing (scripts/create-secrets.sh; README.md, "Secrets"),
+# named under existingSecrets. The chart never renders a Secret and never
+# generates a value.
+#
+# One release per namespace: the platform's objects have fixed names
+# (telflo-api, telflo-web, telflo-postgres, ...), which the gateway's
+# configuration and the services' URLs name, so the chart refuses a second
+# release in a namespace that holds one.
+
+# The gateway's public origin, as a browser reaches it, with no path: for
+# example https://telflo.example.com, or http://localhost:8080 through a
+# port-forward. Required. It becomes TELFLO_PUBLIC_WEB_URL and
+# TELFLO_PUBLIC_API_URL (one origin serves both). Cookies are always Secure,
+# so a plain-http origin works only on localhost.
+publicUrl: ""
+
+global:
+  # Pull secrets (their names) for every platform pod. None by default. A
+  # registry that needs a login takes one: while the images on GHCR are
+  # private, a Secret ghcr-pull made by scripts/create-secrets.sh's
+  # [ghcr-pull] section, listed as `- name: ghcr-pull` (README.md, the
+  # cluster contract's "The images"). The opamp-server chart reads only its
+  # own, so opamp-server.imagePullSecrets must be the same list (the chart
+  # refuses a difference).
+  imagePullSecrets: []
+
+# The platform's images: <registry>/<repository>:<tag>@<digest>, without
+# "@<digest>" when digest is empty. A component's own image.registry, when
+# set, replaces this registry; an empty tag is the chart's appVersion; an
+# empty pullPolicy is this one.
+image:
+  registry: ghcr.io/telflo/telflo
+  pullPolicy: IfNotPresent
+
+# The Secrets the platform reads, by name (README.md, "Secrets", lists each
+# one's keys). Required; each must be a Secret's name, never a value.
+existingSecrets:
+  # postgres-password, owner-password, api-password: Postgres's superuser,
+  # telflo_platform_owner (migrations) and telflo_platform (the API). URL-safe.
+  postgres: telflo-postgres
+  # access-token-secret, quick-deploy-encryption-key, library-link-signing-key,
+  # and optionally quick-deploy-previous-encryption-keys and
+  # library-link-signing-keys-previous.
+  api: telflo-api
+  # otelcol-validator-secret, otelcol-testing-secret, ottl-evaluator-secret:
+  # the API holds all three, each service only its own.
+  internalServices: telflo-internal-services
+  # client-id, client-secret: read only while api.oidcGoogle.enabled.
+  oidcGoogle: telflo-oidc-google
+  # sendgrid-api-key: read only while api.mail.transport is sendgrid;
+  # smtp-username and smtp-password: read only while api.mail.smtp.auth.
+  mail: telflo-mail
+
+# NetworkPolicies for every platform pod (the sandbox: the validator, the
+# tester and the evaluator reach nothing and are reached only by the API).
+# They take effect only where the cluster's network plugin enforces them.
+# opamp-server.networkPolicy.enabled must be the same (the chart refuses a
+# difference).
+networkPolicy:
+  enabled: true
+
+# The site: what this install offers beyond the signed-in product, read by
+# the API and the web app alike (the same variables, the same rules). These
+# defaults are the open source's: invitation-only registration, the
+# playground and the anonymous reads off, no Terms, the public docs.
+site:
+  # TELFLO_REGISTRATION: open (anyone signs up), invite-only (an invitation
+  # creates an account; the first admin by `telflo-admin bootstrap`) or
+  # closed (no new account, an invitation joins an existing one only).
+  registration: invite-only
+  # TELFLO_PLAYGROUND: /playground, /playground/editor and /public-editor.
+  # Needs anonymousValidate and publicFlows true.
+  playground: false
+  # TELFLO_ANONYMOUS_VALIDATE: validating a configuration without signing in.
+  anonymousValidate: false
+  # TELFLO_PUBLIC_FLOWS: the flow showcase and the published flows, read
+  # without signing in.
+  publicFlows: false
+  # TELFLO_SALES_INQUIRY: the sales inquiry route; api.salesInquiryTo is
+  # required with it.
+  salesInquiry: false
+  # TELFLO_EMAIL_NOTIFICATIONS: Settings › Notifications (its nav item and
+  # page; off, the page is a 404).
+  emailNotifications: false
+  # TELFLO_DOCS_URL: where the docs links go; empty hides them. An https URL
+  # or a path starting with /.
+  docsUrl: "https://docs.telflo.com/"
+  terms:
+    # TELFLO_TERMS_VERSION: the Terms version every user must accept (1 to
+    # 32 letters, digits and ._-); empty asks for no Terms anywhere. A
+    # version needs termsUrl and privacyUrl.
+    version: ""
+    # TELFLO_TERMS_URL, TELFLO_PRIVACY_URL, TELFLO_COOKIE_POLICY_URL: where
+    # the Terms of Service, the Privacy Policy and the cookie policy (the
+    # consent banner's link) are read. Each an https URL or a path starting
+    # with /, or empty for none.
+    termsUrl: ""
+    privacyUrl: ""
+    cookiePolicyUrl: ""
+
+# The API (Deployment and Service telflo-api, port 8080), with its migrate
+# init container.
+api:
+  image:
+    registry: ""
+    repository: api
+    tag: ""
+    digest: ""
+    pullPolicy: ""
+  # More than one only with the S3 file store (the local one is a
+  # ReadWriteOnce volume; the chart refuses more).
+  replicas: 1
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  podAnnotations: {}
+  serviceAccount:
+    # On the API's ServiceAccount: where a cloud's workload identity goes
+    # (the bucket's role, for the S3 file store). No pod mounts its token.
+    annotations: {}
+  # TELFLO_TRUST_PROXY_HOPS: the proxies in front of the API that add an
+  # X-Forwarded-For entry. 1: the gateway (a load balancer that passes TCP
+  # through adds none).
+  trustProxyHops: 1
+  # TELFLO_VERIFICATION_TOKEN_TTL_HOURS: how long an email's verification
+  # link lasts.
+  verificationTokenTtlHours: 24
+  # TELFLO_SALES_INQUIRY_TO: where the sales inquiries go; required while
+  # site.salesInquiry is true (there is no default address).
+  salesInquiryTo: ""
+  # TELFLO_OPAMP_ALLOW_INSECURE_CONNECTIONS: whether a collector may connect
+  # without TLS checks (an agent URL on plain http).
+  opampAllowInsecureConnections: false
+  mail:
+    # smtp or sendgrid (sendgrid's key from existingSecrets.mail).
+    transport: smtp
+    # Required: the sender address.
+    from: ""
+    smtp:
+      # Required with smtp: the relay's host name and port.
+      host: ""
+      port: 25
+      # TELFLO_SMTP_ALLOW_INSECURE: plain SMTP to a host that isn't
+      # loopback.
+      allowInsecure: false
+      # TELFLO_SMTP_TLS: starttls (upgrade, and refuse a relay that can't),
+      # implicit (TLS from the start, port 465's) or none (plain SMTP:
+      # development relays only).
+      tls: starttls
+      # A login: TELFLO_SMTP_USERNAME and TELFLO_SMTP_PASSWORD from
+      # existingSecrets.mail's smtp-username and smtp-password.
+      auth: false
+      # A Secret's name whose ca.crt (PEM certificates) the API trusts for
+      # this connection alone, mounted read-only as TELFLO_SMTP_CA_FILE;
+      # empty for none (the system's CAs).
+      caSecret: ""
+  oidcGoogle:
+    # Sign-in with Google, its client from existingSecrets.oidcGoogle.
+    enabled: false
+  fileStore:
+    # local (a volume of the API's, one replica) or s3 (a bucket).
+    kind: local
+    # local: the volume (a PersistentVolumeClaim; an empty storage class is
+    # the cluster's default).
+    storageClassName: ""
+    size: 8Gi
+    # s3: the bucket (required), its region (required), a key prefix, and
+    # an endpoint (an http or https origin; empty is the region's own) with
+    # path-style addressing. Its credentials come from the cloud's workload
+    # identity (serviceAccount.annotations), never from here.
+    bucket: ""
+    region: ""
+    prefix: ""
+    endpoint: ""
+    forcePathStyle: false
+
+# The web app (Deployment and Service telflo-web, port 3000).
+web:
+  image:
+    registry: ""
+    repository: web
+    tag: ""
+    digest: ""
+    pullPolicy: ""
+  replicas: 1
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  podAnnotations: {}
+  # Product analytics: TELFLO_POSTHOG_KEY (a project's public key) and
+  # TELFLO_POSTHOG_HOST. Empty: no analytics and no cookie banner.
+  posthog:
+    key: ""
+    host: ""
+
+# The gateway (nginx, Deployment telflo-gateway): the one origin browsers
+# reach, routing to the web app and the API with docker/gateway/default.conf.
+gateway:
+  # nginx:1.27-alpine (1.27.5), pinned by its index digest.
+  image:
+    registry: docker.io/library
+    repository: nginx
+    tag: 1.27-alpine
+    digest: sha256:65645c7bb6a0661892a8b03b89d0743208a18dd2f3f17a54ef4b76fb8e2f2a10
+    pullPolicy: ""
+  replicas: 1
+  resources:
+    requests:
+      cpu: 25m
+      memory: 32Mi
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  podAnnotations: {}
+  # The gateway's Service, telflo-gateway, port 80.
+  service:
+    type: LoadBalancer
+    annotations: {}
+    # Cluster or Local (keeps the client's address at the node); empty
+    # leaves Kubernetes' default. Only for LoadBalancer or NodePort.
+    externalTrafficPolicy: ""
+    # Only for type LoadBalancer: the client CIDRs allowed in.
+    loadBalancerSourceRanges: []
+  # Routes the gateway sends to another Service in this namespace, ahead of
+  # the platform's own: each {path, match: exact | prefix, service, port}.
+  # A path that would shadow the platform's is refused. Empty by default.
+  # nginx resolves each Service's name when it starts: the Service must
+  # exist first, and its own NetworkPolicy (if any) admit the gateway's pods.
+  extraRoutes: []
+
+# The collector validator (Deployment and Service otelcol-validator, port
+# 8001). Its image carries every collector version the catalogue offers.
+otelcolValidator:
+  image:
+    registry: ""
+    repository: otelcol-validator
+    tag: ""
+    digest: ""
+    pullPolicy: ""
+  replicas: 1
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  podAnnotations: {}
+
+# The collector tester (Deployment and Service otelcol-testing, port 8002),
+# with kwok's fake cluster inside.
+otelcolTesting:
+  image:
+    registry: ""
+    repository: otelcol-testing
+    tag: ""
+    digest: ""
+    pullPolicy: ""
+  replicas: 1
+  resources:
+    requests:
+      cpu: 100m
+      memory: 512Mi
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  podAnnotations: {}
+
+# The OTTL evaluator (Deployment and Service ottl-evaluator, port 8003).
+ottlEvaluator:
+  image:
+    registry: ""
+    repository: ottl-evaluator
+    tag: ""
+    digest: ""
+    pullPolicy: ""
+  replicas: 1
+  # The 3Gi limit is compose's: four evaluations and eight validations at
+  # once, each child bounded by its own GOMEMLIMIT.
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      memory: 3Gi
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  podAnnotations: {}
+
+# The one Postgres (StatefulSet telflo-postgres) holding both databases,
+# telflo_platform and telflo_opamp_server. Both bootstraps run once, when it first creates
+# its data.
+postgres:
+  # postgres:18 (18.7), pinned by scripts/release/tools.lock's `postgres`
+  # digest (the Compose install's too; the tests hold them equal).
+  image:
+    registry: docker.io/library
+    repository: postgres
+    tag: "18"
+    digest: sha256:9f4fd4aa918f52ae3d6f3b687f1de90d8f867cd4d520021545a9a50c120eae3b
+    pullPolicy: ""
+  # Its volume (a PersistentVolumeClaim, kept by `helm uninstall`); an empty
+  # storage class is the cluster's default.
+  storageClassName: ""
+  size: 8Gi
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  podAnnotations: {}
+
+# The opamp-server chart's values (its README describes each one), passed
+# through. These defaults wire it to the platform; the chart refuses the
+# ones that would break that wiring.
+opamp-server:
+  # Fixed: the API's management URL is
+  # http://telflo-opamp-server-management:51235.
+  fullnameOverride: telflo-opamp-server
+  image:
+    # vendor/opamp-server/PIN's digest.
+    digest: sha256:525595dc26a5d601aed05a763475de9614fa11b44b5152d63c75086a7835ce5f
+  # The same list as global.imagePullSecrets (none by default).
+  imagePullSecrets: []
+  auth:
+    # The opamp-server's Secret (its keys: the opamp-server chart's README).
+    # Postgres reads its owner-password and runtime-password for the
+    # bootstrap, and the API its management-secret.
+    existingSecret: telflo-opamp-server
+  server:
+    # Required: the agent endpoint's public URL, as collectors reach it. The
+    # API hands it to every collector (TELFLO_OPAMP_AGENT_PUBLIC_URL).
+    publicUrl: ""
+  service:
+    agent:
+      type: LoadBalancer
+  networkPolicy:
+    # The same as networkPolicy.enabled.
+    enabled: true
+    management:
+      # The management port only from the API's pods (their labels are
+      # fixed; Helm can't template another chart's values).
+      from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: telflo
+              app.kubernetes.io/component: api
+  # The platform's Postgres, never the opamp-server chart's own.
+  postgres:
+    enabled: false
+  externalDatabase:
+    host: telflo-postgres
+    port: 5432
+    database: telflo_opamp_server
+    # Inside the cluster, behind the NetworkPolicies.
+    sslmode: disable

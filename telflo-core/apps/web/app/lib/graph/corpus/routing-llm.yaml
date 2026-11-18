@@ -1,0 +1,26 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+processors:
+  batch: {}
+exporters:
+  otlp/out:
+    endpoint: out:4317
+connectors:
+  routing:
+    error_mode: ignore
+    table:
+      - context: span
+        condition: attributes["gen_ai.system"] != nil
+        pipelines: [traces/llm]
+service:
+  pipelines:
+    traces/in:
+      receivers: [otlp]
+      exporters: [routing]
+    traces/llm:
+      receivers: [routing]
+      processors: [batch]
+      exporters: [otlp/out]

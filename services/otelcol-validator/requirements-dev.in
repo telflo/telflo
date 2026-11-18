@@ -1,0 +1,14 @@
+# The validator's test and tooling dependencies, locked against the runtime
+# lock. requirements-dev.txt is made from this file with
+#   pip-compile --generate-hashes --allow-unsafe --strip-extras \
+#     --output-file=requirements-dev.txt requirements-dev.in
+# and installed (after requirements.txt) with --require-hashes.
+-c requirements.txt
+pytest
+pytest-asyncio
+# Starlette's TestClient uses httpx2 when it is installed (httpx warns under
+# Starlette 1.x, and the suite runs with warnings as errors).
+httpx2
+# The OpenAPI conformance test validates answers against openapi.yaml.
+jsonschema
+pip-licenses

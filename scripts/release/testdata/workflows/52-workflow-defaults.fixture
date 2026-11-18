@@ -1,0 +1,14 @@
+# Breaks one rule: a workflow-level defaults: (another shell for every run:).
+file: release.yml
+rule: workflow-keys
+<<<
+permissions: {}
+
+===
+permissions: {}
+
+defaults:
+  run:
+    shell: sh
+
+>>>

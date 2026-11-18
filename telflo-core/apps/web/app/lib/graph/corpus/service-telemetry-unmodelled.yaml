@@ -1,0 +1,17 @@
+receivers:
+  filelog:
+    start_at: 'end'
+exporters:
+  otlp:
+    endpoint: 'otelcol:4317'
+service:
+  telemetry:
+    metrics:
+      level: basic
+    some_future_field:
+      nested:
+        deeply: 42
+  pipelines:
+    logs:
+      receivers: [filelog]
+      exporters: [otlp]

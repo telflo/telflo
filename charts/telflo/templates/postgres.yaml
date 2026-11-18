@@ -1,0 +1,209 @@
+{{- include "telflo.guards" . }}
+{{- $pg := .Values.postgres }}
+{{- $name := include "telflo.postgresName" . }}
+{{- $headless := include "telflo.postgresHeadlessName" . }}
+{{- $bootstrap := include "telflo.postgresBootstrapName" . }}
+{{- $secret := include "telflo.secretName" (list . "postgres") }}
+{{- $opampSecret := include "telflo.opampSecretName" . }}
+{{- /*
+The platform's one Postgres (D33-1 decisions 2, 3 and 25): the databases
+telflo_platform and telflo_opamp_server. Its container is the only place the superuser's
+password exists. It also holds the platform owner's password and the
+opamp-server's owner and runtime passwords, for the two bootstraps, which the
+image's entrypoint runs once, when it creates the data directory: the
+opamp-server chart's initdb.sh (from its ConfigMap) and the platform's
+telflo-initdb.sh (from this file's).
+*/}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $bootstrap | quote }}
+  labels:
+    {{- include "telflo.labels" (dict "ctx" . "component" "postgres") | nindent 4 }}
+data:
+  telflo-bootstrap.sql: |
+    {{- .Files.Get "files/telflo-bootstrap.sql" | nindent 4 }}
+  telflo-initdb.sh: |
+    {{- .Files.Get "files/telflo-initdb.sh" | nindent 4 }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $name | quote }}
+  labels:
+    {{- include "telflo.labels" (dict "ctx" . "component" "postgres") | nindent 4 }}
+spec:
+  type: ClusterIP
+  selector:
+    {{- include "telflo.selectorLabels" (dict "ctx" . "component" "postgres") | nindent 4 }}
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: postgres
+      protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $headless | quote }}
+  labels:
+    {{- include "telflo.labels" (dict "ctx" . "component" "postgres") | nindent 4 }}
+spec:
+  # Headless: the StatefulSet names its pod by it.
+  clusterIP: None
+  selector:
+    {{- include "telflo.selectorLabels" (dict "ctx" . "component" "postgres") | nindent 4 }}
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: postgres
+      protocol: TCP
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ $name | quote }}
+  labels:
+    {{- include "telflo.labels" (dict "ctx" . "component" "postgres") | nindent 4 }}
+spec:
+  serviceName: {{ $headless | quote }}
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "telflo.selectorLabels" (dict "ctx" . "component" "postgres") | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "telflo.labels" (dict "ctx" . "component" "postgres") | nindent 8 }}
+      {{- with $pg.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      {{- include "telflo.podBasics" . | nindent 6 }}
+      securityContext:
+        # 999 is the postgres user and group inside the postgres image.
+        {{- include "telflo.podSecurityContext" (dict "uid" 999 "gid" 999 "fsGroup" 999) | nindent 8 }}
+      containers:
+        - name: postgres
+          image: {{ include "telflo.image" (list . "postgres") | quote }}
+          imagePullPolicy: {{ include "telflo.pullPolicy" (list . "postgres") | quote }}
+          # The first-start guard. A bootstrap that fails on the first start
+          # is never run again (the data directory exists by then), leaving a
+          # Postgres without its roles. So the four passwords are checked
+          # before the image's entrypoint runs at all: set, non-empty and
+          # URL-safe (the chart puts three of them in database URLs).
+          # Otherwise it exits 1 with a fixed message, and the volume stays
+          # empty.
+          command:
+            - sh
+            - -c
+            - |
+              {{- include "telflo.urlSafeExec" (dict
+                    "vars" (list "POSTGRES_PASSWORD" "TELFLO_OWNER_PASSWORD" "OPAMP_OWNER_PASSWORD" "OPAMP_RUNTIME_PASSWORD")
+                    "exec" "docker-entrypoint.sh postgres"
+                    "message" "telflo-postgres: the four passwords (postgres-password and owner-password in the Secret existingSecrets.postgres names, owner-password and runtime-password in the opamp-server Secret) must be set, non-empty and URL-safe (only A-Z a-z 0-9 . _ ~ -); Postgres was not started") | nindent 14 }}
+          ports:
+            - name: postgres
+              containerPort: 5432
+              protocol: TCP
+          # No POSTGRES_DB: the entrypoint makes no database of its own; the
+          # bootstraps make telflo_platform and telflo_opamp_server.
+          env:
+            - name: POSTGRES_USER
+              value: postgres
+            {{- include "telflo.secretEnv" (dict "name" "POSTGRES_PASSWORD" "secret" $secret "key" "postgres-password") | nindent 12 }}
+            {{- include "telflo.secretEnv" (dict "name" "TELFLO_OWNER_PASSWORD" "secret" $secret "key" "owner-password") | nindent 12 }}
+            {{- include "telflo.secretEnv" (dict "name" "OPAMP_OWNER_PASSWORD" "secret" $opampSecret "key" "owner-password") | nindent 12 }}
+            {{- include "telflo.secretEnv" (dict "name" "OPAMP_RUNTIME_PASSWORD" "secret" $opampSecret "key" "runtime-password") | nindent 12 }}
+            - name: OPAMP_DATABASE_NAME
+              value: telflo_opamp_server
+          # Ready once Postgres answers on TCP: while the entrypoint creates
+          # the data directory its temporary server listens on a Unix socket
+          # only.
+          readinessProbe:
+            exec:
+              command: ["pg_isready", "-h", "127.0.0.1", "-p", "5432", "-U", "postgres", "-d", "postgres"]
+            periodSeconds: 5
+            timeoutSeconds: 3
+          livenessProbe:
+            exec:
+              command: ["pg_isready", "-h", "127.0.0.1", "-p", "5432", "-U", "postgres", "-d", "postgres"]
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 3
+          volumeMounts:
+            # Postgres 18's image keeps its data in /var/lib/postgresql/18/docker.
+            - name: data
+              mountPath: /var/lib/postgresql
+            - name: run
+              mountPath: /var/run/postgresql
+            - name: tmp
+              mountPath: /tmp
+            # The two initdb scripts alone in the entrypoint's folder, each
+            # executable (one without the bit would be sourced, and its exec
+            # would replace the entrypoint). The .sql files there would be
+            # run a second time, so they are mounted elsewhere.
+            - name: initdb
+              mountPath: /docker-entrypoint-initdb.d
+              readOnly: true
+            - name: opamp-bootstrap
+              mountPath: /opamp-bootstrap
+              readOnly: true
+            - name: telflo-bootstrap
+              mountPath: /telflo-bootstrap
+              readOnly: true
+          {{- with $pg.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          securityContext:
+            {{- include "telflo.containerSecurityContext" (dict "uid" 999 "gid" 999) | nindent 12 }}
+      volumes:
+        - name: run
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}
+        - name: initdb
+          projected:
+            sources:
+              - configMap:
+                  name: {{ include "telflo.opampBootstrapName" . | quote }}
+                  items:
+                    - key: initdb.sh
+                      path: opamp-initdb.sh
+                      mode: 0555
+              - configMap:
+                  name: {{ $bootstrap | quote }}
+                  items:
+                    - key: telflo-initdb.sh
+                      path: telflo-initdb.sh
+                      mode: 0555
+        - name: opamp-bootstrap
+          configMap:
+            name: {{ include "telflo.opampBootstrapName" . | quote }}
+            items:
+              - key: bootstrap.sql
+                path: bootstrap.sql
+                mode: 0444
+        - name: telflo-bootstrap
+          configMap:
+            name: {{ $bootstrap | quote }}
+            items:
+              - key: telflo-bootstrap.sql
+                path: telflo-bootstrap.sql
+                mode: 0444
+      {{- include "telflo.scheduling" (list . "postgres") | nindent 6 }}
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+        labels:
+          {{- include "telflo.selectorLabels" (dict "ctx" . "component" "postgres") | nindent 10 }}
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        {{- with $pg.storageClassName }}
+        storageClassName: {{ . | quote }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ $pg.size | quote }}

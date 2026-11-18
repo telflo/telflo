@@ -1,0 +1,100 @@
+{{- include "telflo.guards" . }}
+{{- $c := .Values.otelcolValidator }}
+{{- $name := include "telflo.validatorName" . }}
+{{- $secret := include "telflo.secretName" (list . "internalServices") }}
+{{- /*
+The collector validator (D33-1 decisions 19, 20 and 25; Preflight ruling 7):
+Deployment and ClusterIP Service otelcol-validator, port 8001. The API is its
+only caller (networkpolicies.yaml admits nothing else, and it reaches
+nothing).
+
+Its secret is in its environment, from the Secret existingSecrets.
+internalServices names (key otelcol-validator-secret): the validator reads
+it so (services/otelcol-validator/app/settings.py). No service-account
+token is mounted: the image bakes a FAKE token at
+/var/run/secrets/kubernetes.io/serviceaccount/ (for the collectors' k8s
+components to find), and a real mount would put the cluster's token where a
+user's configuration could read it.
+*/}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $name | quote }}
+  labels:
+    {{- include "telflo.labels" (dict "ctx" . "component" "otelcol-validator") | nindent 4 }}
+spec:
+  type: ClusterIP
+  selector:
+    {{- include "telflo.selectorLabels" (dict "ctx" . "component" "otelcol-validator") | nindent 4 }}
+  ports:
+    - name: http
+      port: 8001
+      targetPort: http
+      protocol: TCP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $name | quote }}
+  labels:
+    {{- include "telflo.labels" (dict "ctx" . "component" "otelcol-validator") | nindent 4 }}
+spec:
+  replicas: {{ int $c.replicas }}
+  selector:
+    matchLabels:
+      {{- include "telflo.selectorLabels" (dict "ctx" . "component" "otelcol-validator") | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "telflo.labels" (dict "ctx" . "component" "otelcol-validator") | nindent 8 }}
+      {{- with $c.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      {{- include "telflo.podBasics" . | nindent 6 }}
+      securityContext:
+        # 10001 is the image's otelcol-validator user and group.
+        {{- include "telflo.podSecurityContext" (dict "uid" 10001 "gid" 10001) | nindent 8 }}
+      containers:
+        - name: otelcol-validator
+          image: {{ include "telflo.image" (list . "otelcolValidator") | quote }}
+          imagePullPolicy: {{ include "telflo.pullPolicy" (list . "otelcolValidator") | quote }}
+          ports:
+            - name: http
+              containerPort: 8001
+              protocol: TCP
+          env:
+            {{- include "telflo.secretEnv" (dict "name" "OTELCOL_VALIDATOR_SECRET" "secret" $secret "key" "otelcol-validator-secret") | nindent 12 }}
+          # GET /health needs no secret; the service drops its access line
+          # (app/main.py), so probes write no log.
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 3
+          volumeMounts:
+            # Each validation's temporary files (without it, validation
+            # answers 503 version_unavailable).
+            - name: tmp
+              mountPath: /tmp
+          {{- with $c.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          securityContext:
+            {{- include "telflo.containerSecurityContext" (dict "uid" 10001 "gid" 10001) | nindent 12 }}
+      volumes:
+        - name: tmp
+          emptyDir:
+            sizeLimit: 256Mi
+      {{- include "telflo.scheduling" (list . "otelcolValidator") | nindent 6 }}

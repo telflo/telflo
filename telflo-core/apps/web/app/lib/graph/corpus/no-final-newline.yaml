@@ -1,0 +1,11 @@
+# No line break at the end of the text.
+receivers:
+  otlp: {}
+exporters:
+  debug:
+    verbosity: basic
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      exporters: [debug]

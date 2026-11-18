@@ -1,0 +1,18 @@
+# telflo's collector image: the collector's starting configuration.
+#
+# Bootstrap config — runs only until the OpAMP server pushes the real
+# configuration after the agent enrolls. Uses the nop receiver/exporter so
+# the collector binds NO network ports at startup; this avoids failing to
+# start when something is already listening on the OTLP default (4317). The
+# real pipeline arrives via OpAMP moments after enrollment.
+receivers:
+  nop:
+
+exporters:
+  nop:
+
+service:
+  pipelines:
+    traces:
+      receivers: [nop]
+      exporters: [nop]

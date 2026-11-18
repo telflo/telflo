@@ -1,0 +1,32 @@
+# Breaks one rule: a job building another ref than the verified commit.
+file: release.yml
+rule: checkout-ref
+<<<
+  build:
+    needs: version
+    runs-on: ubuntu-24.04
+    timeout-minutes: 150
+    permissions:
+      contents: read
+    strategy:
+      matrix:
+        image: [api, web, otelcol-validator, otelcol-testing, ottl-evaluator]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.version.outputs.commit }}
+===
+  build:
+    needs: version
+    runs-on: ubuntu-24.04
+    timeout-minutes: 150
+    permissions:
+      contents: read
+    strategy:
+      matrix:
+        image: [api, web, otelcol-validator, otelcol-testing, ottl-evaluator]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.ref }}
+>>>

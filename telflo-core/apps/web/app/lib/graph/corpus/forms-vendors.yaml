@@ -1,0 +1,98 @@
+# The vendor forms' components (D9d Task 1), with CRLF line endings: the
+# Datadog exporter and receiver, comments, an anchor and its merges, flow
+# lists and mappings, and `${env:…}` references, as a person writes them.
+x-dd-api: &dd-api
+  key: ${env:DD_API_KEY}
+  fail_on_invalid_key: true
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+  datadog:
+    endpoint: localhost:8126
+    read_timeout: 60s
+    trace_id_cache_size: 100
+    keepalive:
+      enabled: true
+      idle_timeout: 2m
+    tls:
+      cert_file: /etc/otel/tls/server.crt
+      key_file: /etc/otel/tls/server.key
+    cors:
+      allowed_origins: [https://*.example.com]
+    response_headers:
+      X-Origin: telflo
+    compression_algorithms: ["", gzip, zstd] # "" is an uncompressed body
+  # the old flat key, which the form moves into keepalive
+  datadog/legacy:
+    endpoint: localhost:8127
+    idle_timeout: 90s
+exporters:
+  datadog:
+    api:
+      <<: *dd-api
+      site: datadoghq.eu
+    hostname: telflo-host
+    timeout: 15s
+    idle_conn_timeout: 90s
+    tls:
+      insecure_skip_verify: false
+    host_metadata:
+      enabled: true
+      hostname_source: config_or_system
+      reporter_period: 30m
+      tags: [env:prod, team:platform]
+    traces:
+      endpoint: https://trace.agent.datadoghq.eu
+      ignore_resources: ["(GET|POST) /healthz"]
+      span_name_as_resource_name: true
+      compute_stats_by_span_kind: true
+      peer_tags_aggregation: true
+      peer_tags: [db.system, messaging.system]
+      trace_buffer: 10
+    metrics:
+      delta_ttl: 3600
+      resource_attributes_as_tags: true
+      instrumentation_scope_metadata_as_tags: true
+      histograms:
+        mode: distributions
+        send_aggregation_metrics: true
+      sums:
+        cumulative_monotonic_mode: to_delta
+        initial_cumulative_monotonic_value: auto
+      summaries:
+        mode: gauges
+    logs:
+      use_compression: true
+      compression_level: 6
+      batch_wait: 5
+    retry_on_failure:
+      enabled: true
+      initial_interval: 5s
+      max_interval: 30s
+      max_elapsed_time: 300s
+    sending_queue:
+      enabled: true
+      num_consumers: 10
+      queue_size: 1000
+  # host metadata only
+  datadog/metadata:
+    api:
+      <<: *dd-api
+      site: us5.datadoghq.com
+    only_metadata: true
+    host_metadata:
+      enabled: true
+      hostname_source: first_resource
+service:
+  pipelines:
+    traces:
+      receivers: [otlp, datadog]
+      exporters: [datadog]
+    metrics:
+      receivers: [otlp, datadog, datadog/legacy]
+      exporters: [datadog, datadog/metadata]
+    logs:
+      receivers: [otlp]
+      exporters: [datadog]

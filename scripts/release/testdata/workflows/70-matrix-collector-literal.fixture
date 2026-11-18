@@ -1,0 +1,26 @@
+# Breaks one rule: collector.yml's build matrix a literal version list (it skips the check job's filter and has).
+file: collector.yml
+rule: matrix
+<<<
+  build:
+    needs: check
+    if: ${{ needs.check.outputs.has == 'true' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    permissions:
+      contents: read
+    strategy:
+      matrix:
+        version: ${{ fromJSON(needs.check.outputs.versions) }}
+===
+  build:
+    needs: check
+    if: ${{ needs.check.outputs.has == 'true' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    permissions:
+      contents: read
+    strategy:
+      matrix:
+        version: ["0.162.0", "0.161.0"]
+>>>

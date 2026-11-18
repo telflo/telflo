@@ -1,0 +1,12 @@
+# The tester's test and tooling dependencies, locked against the runtime
+# lock. requirements-dev.txt is made from this file with
+#   pip-compile --generate-hashes --allow-unsafe --strip-extras \
+#     --output-file=requirements-dev.txt requirements-dev.in
+# and installed (after requirements.txt) with --require-hashes.
+-c requirements.txt
+pytest
+pytest-asyncio
+# The OpenAPI conformance test validates requests and answers against
+# openapi.yaml.
+jsonschema
+pip-licenses

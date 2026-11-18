@@ -1,0 +1,11 @@
+# An exporter embedding the HTTP client settings, which the fixtures' open
+# parts open to unknown keys: the embedding object opens with them.
+type: object
+properties:
+  endpoint:
+    description: The exporter's own endpoint, which wins over the embedded client's.
+    type: string
+  encoding:
+    type: string
+allOf:
+  - $ref: go.opentelemetry.io/collector/config/confighttp.client_config

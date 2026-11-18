@@ -1,0 +1,28 @@
+# Breaks one rule: an extra matrix include in collector.yml's test job.
+file: collector.yml
+rule: matrix
+<<<
+  test:
+    needs: [check, build]
+    if: ${{ needs.check.outputs.has == 'true' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    strategy:
+      matrix:
+        version: ${{ fromJSON(needs.check.outputs.versions) }}
+===
+  test:
+    needs: [check, build]
+    if: ${{ needs.check.outputs.has == 'true' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    strategy:
+      matrix:
+        version: ${{ fromJSON(needs.check.outputs.versions) }}
+        include:
+          - version: 0.1.0
+>>>

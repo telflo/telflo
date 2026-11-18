@@ -1,0 +1,37 @@
+# Anchors, aliases and merge keys.
+x-defaults: &defaults
+  timeout: 5s
+  compression: gzip
+x-tls: &tls
+  insecure: true
+receivers:
+  otlp: &otlp-receiver
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+  otlp/second: *otlp-receiver
+processors:
+  batch: &batch
+    timeout: 10s
+  batch/large:
+    <<: *batch
+    send_batch_size: 8192
+exporters:
+  otlp_grpc/primary:
+    <<: *defaults
+    endpoint: primary:4317
+    tls: *tls
+  otlp_grpc/backup:
+    <<: [*defaults]
+    endpoint: backup:4317
+    timeout: 10s
+service:
+  pipelines:
+    traces:
+      receivers: [otlp, otlp/second]
+      processors: [batch]
+      exporters: [otlp_grpc/primary]
+    traces/backup:
+      receivers: [otlp]
+      processors: [batch/large]
+      exporters: [otlp_grpc/backup]

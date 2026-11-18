@@ -1,0 +1,135 @@
+# The routing forms' components (D9d Task 1), with CRLF line endings:
+# comments, an anchor and its merges, flow and block lists, the routing and
+# failover READMEs' shapes, and every target pipeline listing its connector
+# in its receivers (a consistent text). load_balancing is the exporter's
+# own spelling at v0.162.0.
+x-otlp-out: &otlp-out
+  timeout: 10s
+  compression: gzip
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+exporters:
+  file/other:
+    path: ./other.log
+  file/acme:
+    path: ./acme.log
+  file/ecorp:
+    path: ./ecorp.log
+  file/cheap:
+    path: ./cheap.log
+  file/service1:
+    path: ./service1-important.log
+  otlp_grpc/first:
+    <<: *otlp-out
+    endpoint: first:4317
+  otlp_grpc/second:
+    <<: *otlp-out
+    endpoint: second:4317
+  otlp_grpc/third:
+    endpoint: third:4317
+  otlp_grpc/fourth:
+    endpoint: fourth:4317
+  loadbalancing:
+    protocol:
+      otlp:
+        timeout: 1s
+        tls:
+          insecure: true
+    resolver:
+      static:
+        hostnames: [backend-1:4317, backend-2:4317]
+  loadbalancing/k8s:
+    routing_key: attributes
+    routing_attributes: [tenant.id]
+    protocol:
+      otlp:
+        timeout: 1s
+    resolver:
+      k8s:
+        service: lb-svc.kube-public
+        ports: [15317, 16317]
+    retry_on_failure:
+      enabled: true
+      initial_interval: 5s
+  load_balancing/dns:
+    routing_key: service # metrics route by service
+    protocol:
+      otlp: {}
+    resolver:
+      dns:
+        hostname: otelcol-backend.observability.svc.cluster.local
+        port: 4317
+        interval: 5s
+        timeout: 1s
+connectors:
+  # the routing README's tenant routes
+  routing:
+    default_pipelines: [logs/other]
+    table:
+      - context: resource
+        condition: otelcol.client.metadata["X-Tenant"][0] == "acme"
+        pipelines: [logs/acme]
+      - context: resource
+        condition: otelcol.client.metadata["X-Tenant"][0] == "ecorp"
+        pipelines:
+          - logs/ecorp
+  routing/severity:
+    error_mode: propagate
+    table:
+      - condition: log.severity_number < SEVERITY_NUMBER_ERROR
+        pipelines: [logs/cheap]
+      - statement: route() where resource.attributes["service.name"] == "service1"
+        pipelines: [logs/service1]
+  # the failover README's levels
+  failover:
+    priority_levels:
+      - [traces/first, traces/also_first]
+      - [traces/second]
+      - [traces/third]
+    retry_interval: 10s
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      exporters: [failover]
+    traces/first:
+      receivers: [failover]
+      exporters: [otlp_grpc/first]
+    traces/second:
+      receivers: [failover]
+      exporters: [otlp_grpc/second]
+    traces/third:
+      receivers: [failover]
+      exporters: [otlp_grpc/third]
+    traces/also_first:
+      receivers:
+        - failover # the second of the first level
+      exporters: [otlp_grpc/fourth]
+    traces/balanced:
+      receivers: [otlp]
+      exporters: [loadbalancing, loadbalancing/k8s]
+    metrics:
+      receivers: [otlp]
+      exporters: [load_balancing/dns]
+    logs/in:
+      receivers: [otlp]
+      exporters: [routing, routing/severity]
+    logs/acme:
+      receivers: [routing]
+      exporters: [file/acme]
+    logs/ecorp:
+      receivers:
+        - routing
+      exporters: [file/ecorp]
+    logs/other:
+      receivers: [routing]
+      exporters: [file/other]
+    logs/cheap:
+      receivers: [routing/severity]
+      exporters: [file/cheap]
+    logs/service1:
+      receivers: [routing/severity]
+      exporters: [file/service1]

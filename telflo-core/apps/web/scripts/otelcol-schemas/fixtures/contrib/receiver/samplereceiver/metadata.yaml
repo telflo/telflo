@@ -1,0 +1,4 @@
+type: sample_logs
+deprecated_type: samplelogs
+status:
+  class: receiver

@@ -1,0 +1,11 @@
+# Breaks one rule: publish not in the release environment.
+file: release.yml
+rule: publish-environment
+<<<
+    timeout-minutes: 60
+    environment: release
+
+===
+    timeout-minutes: 60
+
+>>>

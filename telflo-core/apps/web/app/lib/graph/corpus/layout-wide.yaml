@@ -1,0 +1,38 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+  jaeger:
+    protocols:
+      grpc:
+processors:
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 512
+  transform/sanitize_span_attributes:
+    trace_statements:
+      - context: span
+        statements:
+          - delete_key(attributes, "http.request.header.authorization")
+  batch: {}
+exporters:
+  otlp:
+    endpoint: backend:4317
+  debug: {}
+connectors:
+  spanmetrics: {}
+extensions:
+  health_check: {}
+  pprof: {}
+service:
+  extensions: [health_check, pprof]
+  pipelines:
+    traces:
+      receivers: [otlp, jaeger]
+      processors: [memory_limiter, transform/sanitize_span_attributes, batch]
+      exporters: [otlp, debug, spanmetrics]
+    metrics:
+      receivers: [spanmetrics]
+      processors: [batch]
+      exporters: [otlp]

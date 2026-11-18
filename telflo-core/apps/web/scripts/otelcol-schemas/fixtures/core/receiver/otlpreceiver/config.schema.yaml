@@ -1,0 +1,65 @@
+# Optional sections (upstream's x-optional, a configoptional.Optional): one
+# definition used both optionally and not, one only optionally (with an
+# optional section of its own), an inline one, and one that describes its
+# enabled itself; and two through an alias (a definition that is only a
+# reference), one to an object, one to the object that describes enabled.
+$defs:
+  alias_settings:
+    $ref: aliased
+  aliased:
+    type: object
+    properties:
+      depth:
+        type: integer
+  alias_switch:
+    $ref: switchable
+  keepalive_settings:
+    type: object
+    properties:
+      time:
+        type: string
+        format: duration
+      params:
+        x-optional: true
+        $ref: keepalive_params
+  keepalive_params:
+    type: object
+    properties:
+      max:
+        type: integer
+  switchable:
+    type: object
+    properties:
+      enabled:
+        description: Upstream's own description of the section's enabled.
+        type: boolean
+      level:
+        type: integer
+type: object
+properties:
+  protocols:
+    type: object
+    properties:
+      grpc:
+        $ref: /config/confighttp.client_config
+      http:
+        x-optional: true
+        $ref: /config/confighttp.client_config
+      keepalive:
+        x-optional: true
+        $ref: keepalive_settings
+      inline:
+        x-optional: true
+        type: object
+        properties:
+          port:
+            type: integer
+      switch:
+        x-optional: true
+        $ref: switchable
+      aliased:
+        x-optional: true
+        $ref: alias_settings
+      switch_alias:
+        x-optional: true
+        $ref: alias_switch

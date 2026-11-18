@@ -1,0 +1,17 @@
+# The validator's runtime dependencies (D13b Preflight ruling 10). The lock,
+# requirements.txt, is made from this file with
+#   pip-compile --generate-hashes --allow-unsafe --strip-extras \
+#     --output-file=requirements.txt requirements.in
+# and installed with `pip install --require-hashes -r requirements.txt`.
+fastapi
+# Plain uvicorn (no [standard]): no uvloop, httptools or watchfiles.
+uvicorn
+pyyaml
+
+# The service's own telemetry (telemetry.py), inert unless
+# OTEL_EXPORTER_OTLP_ENDPOINT is set. OTLP over gRPC.
+opentelemetry-sdk
+opentelemetry-exporter-otlp-proto-grpc
+opentelemetry-instrumentation-fastapi
+opentelemetry-instrumentation-logging
+opentelemetry-instrumentation-system-metrics

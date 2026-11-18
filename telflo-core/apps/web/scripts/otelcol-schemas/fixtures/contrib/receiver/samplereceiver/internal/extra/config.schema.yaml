@@ -1,0 +1,6 @@
+$defs:
+  extra_settings:
+    type: object
+    properties:
+      level:
+        type: string

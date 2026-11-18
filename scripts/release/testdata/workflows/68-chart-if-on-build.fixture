@@ -1,0 +1,12 @@
+# Breaks one rule: the chart job's allow-listed expression on another job (build).
+file: collector.yml
+rule: status-functions
+<<<
+  build:
+    needs: check
+    if: ${{ needs.check.outputs.has == 'true' }}
+===
+  build:
+    needs: check
+    if: ${{ !cancelled() && inputs.publish && needs.check.result == 'success' && (needs.publish.result == 'success' || (needs.publish.result == 'skipped' && needs.check.outputs.has == 'false')) }}
+>>>

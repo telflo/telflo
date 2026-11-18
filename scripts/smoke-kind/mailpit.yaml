@@ -1,0 +1,80 @@
+# The kind smoke's mail catcher (scripts/smoke-kind.sh; D33-1 spec
+# decision 35): Mailpit in the release's namespace, where the API's SMTP
+# mailer sends (api.mail.smtp.host mailpit, port 1025, allowInsecure). A
+# fixture of the smoke, never part of the chart. It passes the namespace's
+# restricted Pod Security Standard (non-root, a read-only root, no
+# capability, RuntimeDefault seccomp) and never calls home
+# (--disable-version-check). It carries none of the platform's labels, so no
+# platform NetworkPolicy selects it, and the API (whose egress is open)
+# reaches it. Its image is loaded into the cluster: pullPolicy Never.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mailpit
+  labels:
+    app.kubernetes.io/name: smoke-mailpit
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: smoke-mailpit
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: smoke-mailpit
+    spec:
+      automountServiceAccountToken: false
+      enableServiceLinks: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: mailpit
+          image: axllent/mailpit:v1.31
+          imagePullPolicy: Never
+          args: ["--disable-version-check"]
+          ports:
+            - name: smtp
+              containerPort: 1025
+            - name: http
+              containerPort: 8025
+          readinessProbe:
+            tcpSocket:
+              port: http
+            periodSeconds: 2
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            capabilities:
+              drop: ["ALL"]
+            seccompProfile:
+              type: RuntimeDefault
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir:
+            sizeLimit: 64Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mailpit
+  labels:
+    app.kubernetes.io/name: smoke-mailpit
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: smoke-mailpit
+  ports:
+    - name: smtp
+      port: 1025
+      targetPort: smtp
+    - name: http
+      port: 8025
+      targetPort: http

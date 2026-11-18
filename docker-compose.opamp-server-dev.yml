@@ -1,0 +1,42 @@
+# The opamp-server built from a sibling checkout, for a change to it that
+# isn't released yet (D26 decisions 5 and 37). docker-compose.yml runs the
+# release vendor/opamp-server/PIN names; this override builds the server
+# instead, from OPAMP_SERVER_SRC (default ../opamp-server, beside the
+# platform; a relative path resolves against the platform's root), and
+# bootstraps its database with that checkout's deploy/bootstrap.sql.
+# docs/conventions/opamp-server.md is the guide: pulling a merged change,
+# building, the contract files (scripts/check-opamp-server-pin.sh --refresh),
+# going back to the pin (--restore) and releasing.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.opamp-server-dev.yml build opamp-server
+#   docker compose -f docker-compose.yml -f docker-compose.opamp-server-dev.yml up -d
+#
+# (`up -d --build` would rebuild the collector validator and tester too,
+# which download collectors.) Only the two services that run the server's
+# image and the bootstrap's mount change; their names, ports, secrets and
+# health check stay docker-compose.yml's.
+services:
+  # Each sets its own image name beside build: the base's pinned reference
+  # carries a digest, and Docker refuses to tag a build with one. The tag,
+  # from-sibling, says where the build came from (an older
+  # telflo-opamp-server:dev, built before the server had its own repository,
+  # may still be on a machine).
+  opamp-migrate:
+    build: ${OPAMP_SERVER_SRC:-../opamp-server}
+    image: telflo-opamp-server:from-sibling
+
+  opamp-server:
+    build: ${OPAMP_SERVER_SRC:-../opamp-server}
+    image: telflo-opamp-server:from-sibling
+
+  # The checkout's bootstrap.sql replaces the vendored one (the mounts merge
+  # by their target). Long syntax, so a missing checkout fails the `up`
+  # instead of leaving an empty directory where the file should be.
+  opamp-bootstrap:
+    volumes:
+      - type: bind
+        source: ${OPAMP_SERVER_SRC:-../opamp-server}/deploy/bootstrap.sql
+        target: /opamp/bootstrap.sql
+        read_only: true
+        bind:
+          create_host_path: false

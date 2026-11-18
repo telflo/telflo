@@ -1,0 +1,72 @@
+{
+  "$comment": "The parts of each collector schema upstream doesn't describe, written by hand (D13c decisions 8 and 9) in the generated schema's own form: the service section, the definitions it refers to, and the components that take no settings (each closed: an empty map, null or a ${…} reference).",
+  "service": {
+    "description": "The service: the extensions the collector starts, its pipelines, and its own telemetry.",
+    "type": ["object", "string", "null"],
+    "pattern": "\\$\\{",
+    "patternErrorMessage": "Expected a map or a ${…} reference.",
+    "properties": {
+      "extensions": {
+        "description": "The extensions the collector starts, by id (type or type/name), in this order.",
+        "type": ["array", "string", "null"],
+        "items": { "type": "string" },
+        "errorMessage": "Expected a list or a string."
+      },
+      "pipelines": {
+        "description": "The pipelines, by id: a signal (traces, metrics, logs or profiles), optionally followed by /name.",
+        "type": ["object", "string", "null"],
+        "pattern": "\\$\\{",
+        "patternErrorMessage": "Expected a map or a ${…} reference.",
+        "properties": {
+          "logs": { "$ref": "#/$defs/pipeline" },
+          "metrics": { "$ref": "#/$defs/pipeline" },
+          "profiles": { "$ref": "#/$defs/pipeline" },
+          "traces": { "$ref": "#/$defs/pipeline" }
+        },
+        "patternProperties": {
+          "^(logs|metrics|profiles|traces)/.+$": { "$ref": "#/$defs/pipeline" }
+        },
+        "additionalProperties": false
+      },
+      "telemetry": {
+        "description": "The collector's own telemetry: its logs, metrics and traces.",
+        "$comment": "Open: the collector's telemetry settings aren't checked (D13c decision 8)."
+      }
+    },
+    "additionalProperties": false
+  },
+  "definitions": {
+    "pipeline": {
+      "description": "A pipeline: the receivers it reads from, the processors it runs, in order, and the exporters it writes to, each by id (type or type/name).",
+      "type": ["object", "string", "null"],
+      "pattern": "\\$\\{",
+      "patternErrorMessage": "Expected a map or a ${…} reference.",
+      "properties": {
+        "exporters": {
+          "description": "The exporters (or connectors) this pipeline writes to, by id.",
+          "type": ["array", "string", "null"],
+          "items": { "type": "string" },
+          "errorMessage": "Expected a list or a string."
+        },
+        "processors": {
+          "description": "The processors this pipeline runs, by id, in order.",
+          "type": ["array", "string", "null"],
+          "items": { "type": "string" },
+          "errorMessage": "Expected a list or a string."
+        },
+        "receivers": {
+          "description": "The receivers (or connectors) this pipeline reads from, by id.",
+          "type": ["array", "string", "null"],
+          "items": { "type": "string" },
+          "errorMessage": "Expected a list or a string."
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "withoutSettings": {
+    "connector/forward": "The forward connector passes data from one pipeline to another and takes no settings.",
+    "connector/otlp_json": "The OTLP JSON connector turns OTLP JSON found in log record bodies into logs, metrics or traces, and takes no settings.",
+    "connector/round_robin": "The round-robin connector spreads data across the pipelines it feeds, one after another, and takes no settings."
+  }
+}

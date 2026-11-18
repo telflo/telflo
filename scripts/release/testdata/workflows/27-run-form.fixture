@@ -1,0 +1,10 @@
+# Breaks one rule: a run: piping a download into a shell.
+file: release.yml
+rule: run-form
+<<<
+      - name: crane (tools.lock's, sha256-checked)
+        run: bash scripts/release/tools.sh fetch crane
+===
+      - name: crane (tools.lock's, sha256-checked)
+        run: curl -fsSL https://example.invalid/crane.sh | sh
+>>>

@@ -1,0 +1,8 @@
+# Breaks one rule: the chart job's if: without its check-succeeded condition.
+file: collector.yml
+rule: publish-if
+<<<
+    if: ${{ !cancelled() && inputs.publish && needs.check.result == 'success' && (needs.publish.result == 'success' || (needs.publish.result == 'skipped' && needs.check.outputs.has == 'false')) }}
+===
+    if: ${{ !cancelled() && inputs.publish && (needs.publish.result == 'success' || (needs.publish.result == 'skipped' && needs.check.outputs.has == 'false')) }}
+>>>

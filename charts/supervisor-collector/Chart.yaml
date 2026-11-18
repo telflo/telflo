@@ -1,0 +1,6 @@
+apiVersion: v2
+name: supervisor-collector
+description: The Telflo platform's OpAMP-supervised OpenTelemetry collector for Kubernetes fleets.
+type: application
+version: 0.1.0
+appVersion: "0.162.0"

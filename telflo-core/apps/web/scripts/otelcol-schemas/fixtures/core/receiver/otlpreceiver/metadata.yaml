@@ -1,0 +1,3 @@
+type: otlp
+status:
+  class: receiver

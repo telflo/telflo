@@ -1,0 +1,13 @@
+# Breaks one rule: a step's env naming a variable no script reads.
+file: collector.yml
+rule: env-names
+<<<
+      - name: The versions
+        id: versions
+        env:
+===
+      - name: The versions
+        id: versions
+        env:
+          EXTRA_SETTING: "1"
+>>>

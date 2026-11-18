@@ -1,0 +1,70 @@
+# Flow sequences spread over lines (D9d Ruling 38), with CRLF line
+# endings: pipeline lists and component lists, comments on items, trailing
+# commas, and a comma on its own line.
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+  filelog:
+    include: [
+      /var/log/app/*.log, # the app
+      /var/log/syslog,
+    ]
+    exclude: [
+      /var/log/app/debug.log
+      , /var/log/app/trace.log
+    ]
+processors:
+  batch:
+  attributes:
+    actions: [
+      # the environment
+      {key: env, value: prod, action: upsert},
+      {key: secret, action: delete} # never sent
+    ]
+  filter:
+    error_mode: ignore
+    traces:
+      span: [
+        'attributes["http.route"] == "/health"', # probes
+        'attributes["http.route"] == "/ready"',
+      ]
+exporters:
+  debug:
+  otlphttp:
+    endpoint: https://collector.example.com:4318
+    headers: {x-tenant: acme}
+connectors:
+  forward:
+service:
+  pipelines:
+    traces:
+      receivers: [
+        otlp, # the apps
+      ]
+      processors: [
+        # first
+        batch,
+        attributes, # tags
+        filter
+      ]
+      exporters: [debug, # local
+        forward]
+    logs:
+      receivers: [
+        filelog
+        , otlp
+      ]
+      processors: [batch]
+      exporters: [
+        otlphttp,
+        debug, # also local
+      ]
+    traces/out:
+      receivers: [forward]
+      processors: [
+        batch,]
+      exporters: [
+        otlphttp # remote
+      ]

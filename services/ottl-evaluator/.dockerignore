@@ -1,0 +1,25 @@
+# Keep the build context to what `go build ./cmd/server` needs: nothing
+# local, secret or test-only (as the opamp-server's, in its own repository).
+.env
+.env.*
+.git
+.gitignore
+.vscode
+.claude
+.DS_Store
+**/.DS_Store
+
+# A local `go build -o ottl-evaluator ./cmd/server` writes the binary here
+# (about 30MB, would bloat the context).
+ottl-evaluator
+
+# Docs, the contract and the license and container checks with their
+# fixture modules: none of them is built into the image.
+docs/
+scripts/
+*.md
+openapi.yaml
+
+# Tests and test fixtures: not needed in the runtime image.
+**/*_test.go
+**/testdata/

@@ -1,0 +1,7 @@
+{
+  "distribution": "acme-collector",
+  "label": "A second distribution, for the tests",
+  "versions": [
+    { "version": "1.2.3", "deprecated": false, "otelcolContribVersion": "0.162.0" }
+  ]
+}

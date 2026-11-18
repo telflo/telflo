@@ -1,0 +1,420 @@
+name: CI
+on:
+  push: { branches: [main] }
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    # The owner's ruling (D10 decision 16): it took 34 minutes on main at
+    # 5d2ac98, with no limit. Splitting or sharding the unit suite is declined
+    # for now.
+    timeout-minutes: 60
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: telflo_platform_owner
+          POSTGRES_PASSWORD: telflo-local
+          POSTGRES_DB: telflo_platform
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U telflo_platform_owner -d telflo_platform"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+      mailpit:
+        # Pinned, not :latest — see finding 10 of the D1 final review: an
+        # unpinned tag in the foundation deliverable's CI breaks a green
+        # build on someone else's day with no diff to blame. v1.31 matches
+        # what docker-compose.yml's local dev stack is currently running
+        # (`docker exec ... mailpit version` → v1.31.2).
+        image: axllent/mailpit:v1.31
+        ports: ["1025:1025", "8025:8025"]
+    env:
+      # The API's own login role, and the tables' owner (D5 decision 1).
+      # db:migrate and test setup provision the first with this CI-only
+      # password.
+      TELFLO_DATABASE_URL: postgresql://telflo_platform:ci-only-api-password@localhost:5432/telflo_platform
+      TELFLO_MIGRATION_DATABASE_URL: postgresql://telflo_platform_owner:telflo-local@localhost:5432/telflo_platform
+      TELFLO_API_PORT: "8080"
+      TELFLO_MAIL_TRANSPORT: smtp
+      TELFLO_MAIL_FROM: no-reply@telflo.local
+      TELFLO_SMTP_HOST: localhost
+      TELFLO_SMTP_PORT: "1025"
+      # The Mailpit service above publishes its API on 8025, not the local
+      # stack's 58025 that the integration tests default to. Without this the
+      # registration-flow test cannot reach Mailpit and CI has been red since D1.
+      TELFLO_MAILPIT_API_URL: http://localhost:8025
+      TELFLO_PUBLIC_WEB_URL: http://localhost:3000
+      TELFLO_VERIFICATION_TOKEN_TTL_HOURS: "24"
+      # CI only, never used outside this job: tests need a 32+ byte secret.
+      TELFLO_ACCESS_TOKEN_SECRET: ci-only-access-token-secret-not-for-production
+    # The Node workspace lives in telflo-core/, not at the repository
+    # root (ADR 0015), so every npm step runs there. The exceptions run from
+    # the root: the naming guard, which covers the whole repository, and the
+    # self-tests of the scripts that live there.
+    defaults:
+      run:
+        working-directory: telflo-core
+    steps:
+      - uses: actions/checkout@v4
+      - name: Naming guard
+        working-directory: .
+        run: ./scripts/check-naming.sh
+      - name: Naming guard self-test
+        working-directory: .
+        run: ./scripts/check-naming.test.sh
+      # The collector image's shell tests (D17c-1): its entrypoint and its
+      # build script's checks, with no Docker and no network.
+      - name: Collector image entrypoint tests
+        working-directory: .
+        run: bash docker/collector-image/entrypoint_test.sh
+      - name: Collector image build script tests
+        working-directory: .
+        run: bash docker/collector-image/build-collector-image_test.sh
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: telflo-core/package-lock.json
+      # Every shipped dependency must allow redistribution (ADR 0019). Reads
+      # the lockfile, so it runs before npm ci and fails fast.
+      - name: License guard
+        run: npm run check:licenses
+      - name: License guard self-test
+        working-directory: .
+        run: ./scripts/check-licenses.test.sh
+      # `npm run dev:services` waits for the opamp-server with it (D11b
+      # Preflight ruling 10); CI never runs dev:services, so this is its test.
+      - name: wait-for-http self-test
+        working-directory: .
+        run: ./scripts/wait-for-http.test.sh
+      - run: npm ci
+      - run: npm run typecheck
+      - name: Typecheck web (react-router typegen must run before tsc; see apps/web's own script)
+        run: npm run typecheck --workspace=@telflo/web
+      - run: npm run lint
+      - run: npm run db:migrate
+      - run: npm run test:coverage
+
+  # Browser tests in Chromium, Firefox and WebKit (D2b decision 8). Playwright
+  # starts its own API and web dev server and uses its own database,
+  # telflo_platform_e2e_test, on the same Postgres service; see playwright.config.ts.
+  # One job per browser (D9d decision 15): on main after D9c the single job
+  # took 36 of its 40 minutes, and D9d adds forms in all three browsers.
+  # fail-fast off, so one browser's failure doesn't cancel the other two.
+  e2e:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
+    # 40 per browser, as the single job had for all three (D9a Ruling 42;
+    # D9d Preflight ruling 27); 50 from D13c (decision 16: WebKit took 33
+    # minutes in D13b, and D13c adds the schema's browser tests).
+    timeout-minutes: 50
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: telflo_platform_owner
+          POSTGRES_PASSWORD: telflo-local
+          POSTGRES_DB: telflo_platform
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U telflo_platform_owner -d telflo_platform"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+      mailpit:
+        image: axllent/mailpit:v1.31
+        ports: ["1025:1025", "8025:8025"]
+    # The same settings as verify. The E2E servers take only Postgres's and
+    # Mailpit's addresses from here; playwright.config.ts sets the rest.
+    env:
+      # start-api.ts provisions the API's role in telflo_platform_e2e_test.
+      TELFLO_DATABASE_URL: postgresql://telflo_platform:ci-only-api-password@localhost:5432/telflo_platform
+      TELFLO_MIGRATION_DATABASE_URL: postgresql://telflo_platform_owner:telflo-local@localhost:5432/telflo_platform
+      TELFLO_API_PORT: "8080"
+      TELFLO_MAIL_TRANSPORT: smtp
+      TELFLO_MAIL_FROM: no-reply@telflo.local
+      TELFLO_SMTP_HOST: localhost
+      TELFLO_SMTP_PORT: "1025"
+      TELFLO_MAILPIT_API_URL: http://localhost:8025
+      TELFLO_PUBLIC_WEB_URL: http://localhost:3000
+      TELFLO_VERIFICATION_TOKEN_TTL_HOURS: "24"
+      TELFLO_ACCESS_TOKEN_SECRET: ci-only-access-token-secret-not-for-production
+    defaults:
+      run:
+        working-directory: telflo-core
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: telflo-core/package-lock.json
+      - run: npm ci
+      # This job's browser only, and the full browser, never --only-shell:
+      # e2e/support/analytics.ts uses the full chromium channel.
+      - run: npx playwright install --with-deps ${{ matrix.browser }}
+      - run: npm run test:e2e -- --project=${{ matrix.browser }}
+      - name: Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          # One name per browser: the three jobs' artifacts can't share one.
+          name: playwright-report-${{ matrix.browser }}
+          path: |
+            telflo-core/playwright-report/
+            telflo-core/test-results/
+          retention-days: 14
+
+  # The OTTL evaluator (services/ottl-evaluator, D15a), written as if it were
+  # its own repository, with no Postgres: it
+  # touches nothing outside the service but the platform's license policy and,
+  # for one test, the collector catalogue (pkg/ottlassert's
+  # TestOTTLVersionIsTheCatalogueDefault reads catalog/), and runs no npm.
+  ottl-evaluator:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      # go.mod's `go 1.26.9` is the toolchain: never let a go command download
+      # a newer one (D15a Preflight ruling 1; docs/conventions/go.md).
+      GOTOOLCHAIN: local
+    defaults:
+      run:
+        working-directory: services/ottl-evaluator
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: services/ottl-evaluator/go.mod
+          cache-dependency-path: services/ottl-evaluator/go.sum
+      # go.mod and go.sum say exactly what the code imports, and every
+      # downloaded module matches go.sum's hashes.
+      - name: go mod tidy
+        run: go mod tidy -diff
+      - name: go mod verify
+        run: go mod verify
+      - name: gofmt
+        run: |
+          unformatted=$(gofmt -l .)
+          if [ -n "$unformatted" ]; then
+            echo "gofmt would change these files:"
+            echo "$unformatted"
+            exit 1
+          fi
+      - run: go vet ./...
+      # Every Go module the service builds on must allow redistribution
+      # (ADR 0019), checked against the platform's own allowed list; the two
+      # MPL-2.0 modules OTTL brings pass only as named in its goModules, each
+      # at its version (amended by D15a).
+      - name: License guard
+        run: ./scripts/check-licenses.sh
+      - name: License guard self-test
+        run: ./scripts/check-licenses.test.sh
+      # -json, so the next step can see skips; a failing test's output is
+      # printed here, since the report itself goes to a file.
+      - name: Tests
+        run: |
+          status=0
+          go test -race -count=1 -json ./... > test-report.json || status=$?
+          if [ "$status" -ne 0 ]; then
+            echo "go test failed; the output of each failing test and package:"
+            jq -rs '
+              (map(select(.Action == "fail") | [.Package, (.Test // "")])) as $failed
+              | .[]
+              | select(
+                  (.Action == "output" and ([.Package, (.Test // "")] | IN($failed[])))
+                  or .Action == "build-output")
+              | .Output' test-report.json
+          fi
+          exit "$status"
+      # No test may skip itself: CI runs every one.
+      # Only test-level skips count: go test also reports a "skip" for every
+      # package that has no test files.
+      - name: No skipped tests
+        run: |
+          skipped=$(jq -r 'select(.Action == "skip" and .Test != null) | "\(.Package) \(.Test)"' test-report.json)
+          if [ -n "$skipped" ]; then
+            echo "These tests were skipped; CI runs every test:"
+            echo "$skipped"
+            exit 1
+          fi
+
+  # The collector validator (services/otelcol-validator, D13b), written as if
+  # it were its own repository, like the OTTL evaluator's job: it touches
+  # nothing outside the service but the platform's license policy, the
+  # collector catalogue (catalog/, which its image carries, so the image
+  # builds from the repository's root) and, for one guard, the web's corpus
+  # (tests/test_builder_texts.py reads telflo-core's
+  # apps/web/app/lib/graph/corpus/ to check the binary tests' copies of its
+  # texts; D13b Ruling 68), and runs no npm.
+  otelcol-validator:
+    runs-on: ubuntu-latest
+    # A cold image build with every offered version took about 75 s on an
+    # arm64 laptop (D13b Task 2), and the binary tests about 2 minutes; the
+    # limit leaves room for a slow download.
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: services/otelcol-validator
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+          cache-dependency-path: |
+            services/otelcol-validator/requirements.txt
+            services/otelcol-validator/requirements-dev.txt
+      # The hash-pinned locks, as the image installs them: wheels, nothing
+      # outside the lock (D13b Preflight ruling 10).
+      - name: Install the locked dependencies
+        run: |
+          python -m pip install --require-hashes --no-deps --only-binary=:all: -r requirements.txt
+          python -m pip install --require-hashes --no-deps --only-binary=:all: -r requirements-dev.txt
+      # Everything but the real collectors (pytest.ini deselects `binary`);
+      # warnings are errors.
+      - name: Tests
+        run: python -m pytest -q
+      # Every Python package the service ships must allow redistribution
+      # (ADR 0019), checked against the platform's own allowed list.
+      - name: License guard
+        run: ./scripts/check-licenses.sh
+      - name: License guard self-test
+        run: ./scripts/check-licenses.test.sh
+      # The full image holds every offered collector (about 400 MB each,
+      # unpacked), and building it holds the collectors twice (the download
+      # stage and the runtime's layer): make room first by removing the
+      # runner's largest preinstalled SDKs, none of which this job uses.
+      - name: Free disk space
+        working-directory: .
+        run: |
+          df -h /
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /usr/local/.ghcup \
+            /opt/hostedtoolcache/CodeQL /usr/share/swift /usr/local/share/powershell
+          docker image prune --all --force
+          df -h /
+      # The `test` target is the runtime image plus the development lock and
+      # the tests, with every offered collector (each checked against the
+      # catalogue's sha256 while it builds).
+      - name: Build the test image with every offered collector
+        working-directory: .
+        run: |
+          docker build --file services/otelcol-validator/Dockerfile --target test \
+            --build-arg OTELCOL_VERSIONS=all --tag telflo-otelcol-validator-test .
+          docker image ls telflo-otelcol-validator-test
+      # The real-collector tests, inside the image, with no network.
+      - name: Binary tests
+        run: docker run --rm --network none telflo-otelcol-validator-test pytest -m binary -q
+
+  # The collector tester (services/otelcol-testing, D14a), written as the
+  # validator's job is: it touches nothing outside the service but the
+  # platform's license policy, the collector catalogue (its image carries
+  # catalog/, so it builds from the repository's root), and the validator's
+  # files it shares (the neutraliser's three modules, whose identity test
+  # reads ../otelcol-validator/app; the lock its own is compiled against;
+  # the downloader its image runs), and runs no npm.
+  otelcol-testing:
+    runs-on: ubuntu-latest
+    # The binary and kwok tests took about 3.5 minutes on an arm64 laptop
+    # (D14a Task 5), the cold image build about a minute; the limit leaves
+    # room for a slow download.
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: services/otelcol-testing
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+          cache-dependency-path: |
+            services/otelcol-testing/requirements.txt
+            services/otelcol-testing/requirements-dev.txt
+      # The hash-pinned locks, as the image installs them: wheels, nothing
+      # outside the lock (D14a Preflight ruling 19).
+      - name: Install the locked dependencies
+        run: |
+          python -m pip install --require-hashes --no-deps --only-binary=:all: -r requirements.txt
+          python -m pip install --require-hashes --no-deps --only-binary=:all: -r requirements-dev.txt
+      # Everything but the real collectors and kwok (pytest.ini deselects
+      # `binary` and `kwok`); warnings are errors.
+      - name: Tests
+        run: python -m pytest -q
+      # Every Python package the service ships must allow redistribution
+      # (ADR 0019), checked against the platform's own allowed list.
+      - name: License guard
+        run: ./scripts/check-licenses.sh
+      - name: License guard self-test
+        run: ./scripts/check-licenses.test.sh
+      # As the validator's job: the full image holds every offered collector
+      # (about 400 MB each, unpacked) and kwok's binaries, held twice while it
+      # builds.
+      - name: Free disk space
+        working-directory: .
+        run: |
+          df -h /
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /usr/local/.ghcup \
+            /opt/hostedtoolcache/CodeQL /usr/share/swift /usr/local/share/powershell
+          docker image prune --all --force
+          df -h /
+      # The `test` target is the runtime image plus the development lock and
+      # the tests, with every offered collector and kwok's five binaries (each
+      # checked against its sha256 while it builds).
+      - name: Build the test image with every offered collector
+        working-directory: .
+        run: |
+          docker build --file services/otelcol-testing/Dockerfile --target test \
+            --build-arg OTELCOL_VERSIONS=all --tag telflo-otelcol-testing-test .
+          docker image ls telflo-otelcol-testing-test
+      # The real-collector and kwok tests, inside the image, with no network.
+      - name: Binary and kwok tests
+        run: docker run --rm --network none telflo-otelcol-testing-test pytest -m "binary or kwok" -q
+
+  # Keeps docker-compose.yml evergreen (ADR 0017): builds every image from
+  # source, starts the whole stack from an empty database, and drives a real
+  # registration through the gateway. A component that is ported without
+  # being wired into the stack, or that breaks it, fails here.
+  stack:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      # The validator's and the tester's images bake only the catalogue's
+      # default collector here (D13b spec decision 8, D14a decision 14): the
+      # otelcol-validator and otelcol-testing jobs check every version.
+      OTELCOL_VERSIONS: default
+      # The URL the opamp-server hands collectors (D16a Preflight ruling 23):
+      # the smoke's collectors run on the compose network, where the
+      # development default (host.docker.internal) doesn't resolve on Linux.
+      # The smoke builds its collector (docker/smoke-collector) from the
+      # validator image built here and the OpAMP supervisor's image, pinned
+      # by digest, which it pulls.
+      OPAMP_SERVER_URL: http://opamp-server:51234/opamp/api/v1
+    steps:
+      - uses: actions/checkout@v4
+      # The opamp-server's image is private (ghcr.io): this needs a pull
+      # credential if CI returns.
+      - name: Build and start the full stack
+        run: docker compose up --build --wait --wait-timeout 300
+      - name: Smoke-test through the gateway
+        run: ./scripts/smoke-test-stack.sh
+      # The collector tester as compose runs it (D14a spec decision 5): from
+      # inside its container no external name resolves and no external
+      # address answers, the root filesystem is read-only, and the secret is
+      # in no environment.
+      - name: The tester's container is locked down
+        run: ./services/otelcol-testing/scripts/check-container.sh
+      # The OTTL evaluator as compose runs it (D15a spec decision 10,
+      # Preflight ruling 13): its binary's `selfcheck` from inside its
+      # distroless container (uid 65532, no capability, read-only root, no
+      # route out, no secret in its environment, serve not dumpable, a child
+      # that raises its oom_score_adj), then its forwarder's lockdown.
+      - name: The evaluator's container is locked down
+        run: ./services/ottl-evaluator/scripts/check-container.sh
+      - name: Container logs
+        if: failure()
+        run: docker compose logs --no-color
+      - name: Tear down
+        if: always()
+        run: docker compose down -v

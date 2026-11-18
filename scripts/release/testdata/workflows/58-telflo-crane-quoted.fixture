@@ -1,0 +1,11 @@
+# Breaks one rule: TELFLO_CRANE set in a step's env through a quoted key, which the text rule doesn't see (the reviewer's form).
+file: release.yml
+rule: telflo-crane
+<<<
+      - name: The images (the archives' bytes, digests kept)
+        env:
+===
+      - name: The images (the archives' bytes, digests kept)
+        env:
+          "TELFLO_CRANE": /tmp/crane
+>>>

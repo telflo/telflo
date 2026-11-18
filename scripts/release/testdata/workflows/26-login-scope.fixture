@@ -1,0 +1,11 @@
+# Breaks one rule: a login with a scope: input.
+file: collector.yml
+rule: login
+<<<
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: The versions
+===
+          password: ${{ secrets.GITHUB_TOKEN }}
+          scope: "@push"
+      - name: The versions
+>>>

@@ -1,0 +1,13 @@
+# Breaks one rule: the job's token in the env of a step that isn't verify-tag.sh.
+file: release.yml
+rule: token-env
+<<<
+      - name: The collector images and chart exist
+        env:
+          DOCKER_CONFIG: ${{ runner.temp }}/docker
+===
+      - name: The collector images and chart exist
+        env:
+          DOCKER_CONFIG: ${{ runner.temp }}/docker
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+>>>

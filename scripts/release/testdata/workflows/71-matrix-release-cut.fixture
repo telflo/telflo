@@ -1,0 +1,8 @@
+# Breaks one rule: release.yml's build matrix without one of the five images.
+file: release.yml
+rule: matrix
+<<<
+        image: [api, web, otelcol-validator, otelcol-testing, ottl-evaluator]
+===
+        image: [api, web, otelcol-validator, otelcol-testing]
+>>>

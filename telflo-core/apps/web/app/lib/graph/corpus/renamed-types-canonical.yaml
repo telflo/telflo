@@ -1,0 +1,40 @@
+# The collector's new spellings: each keeps its spelling in the text.
+receivers:
+  fluent_forward:
+    endpoint: 0.0.0.0:8006
+  otlp: {}
+  k8s_objects:
+    objects:
+      - name: events
+        mode: watch
+  kubelet_stats:
+    collection_interval: 20s
+  host_metrics:
+    scrapers:
+      cpu: {}
+processors:
+  k8s_attributes: {}
+  log_dedup: {}
+  metrics_transform: {}
+exporters:
+  otlp_grpc:
+    endpoint: backend:4317
+  otlp_http:
+    endpoint: https://backend:4318
+  prometheus_remote_write:
+    endpoint: https://prometheus/api/v1/write
+connectors:
+  span_metrics: {}
+service:
+  pipelines:
+    logs:
+      receivers: [fluent_forward, k8s_objects]
+      processors: [k8s_attributes, log_dedup]
+      exporters: [otlp_grpc, otlp_http]
+    traces:
+      receivers: [otlp]
+      exporters: [span_metrics]
+    metrics:
+      receivers: [span_metrics, kubelet_stats, host_metrics]
+      processors: [metrics_transform]
+      exporters: [prometheus_remote_write]

@@ -1,0 +1,136 @@
+{{- include "telflo.guards" . }}
+{{- $c := .Values.otelcolTesting }}
+{{- $name := include "telflo.testerName" . }}
+{{- $secret := include "telflo.secretName" (list . "internalServices") }}
+{{- /*
+The collector tester (D33-1 decisions 19, 20, 23 and 25; Preflight rulings 7
+and 10; ADR 0028): Deployment and ClusterIP Service otelcol-testing, port
+8002, with kwok's fake cluster inside the pod. The API is its only caller
+(networkpolicies.yaml admits nothing else, and it reaches nothing: compose's
+internal network, in Kubernetes).
+
+Its secret is ONLY a file: a projected item of the Secret
+existingSecrets.internalServices names (key otelcol-testing-secret), mode
+0440, group 10001 (fsGroup), at OTELCOL_TESTING_SECRET_FILE. The tester
+refuses to start when the secret is in its environment, or when any
+variable's value contains it (services/otelcol-testing/app/settings.py):
+the collectors and kwok a run starts are execs, so the secret must be in no
+process's environment. So no variable here comes from a Secret.
+
+Writable paths (a read-only root): /tmp, each run's workspace (1Gi), and the
+user's home, where kwok keeps its cluster (~/.kwok; etcd's WAL alone is
+128 MB): emptyDirs, with fsGroup 10001.
+*/}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $name | quote }}
+  labels:
+    {{- include "telflo.labels" (dict "ctx" . "component" "otelcol-testing") | nindent 4 }}
+spec:
+  type: ClusterIP
+  selector:
+    {{- include "telflo.selectorLabels" (dict "ctx" . "component" "otelcol-testing") | nindent 4 }}
+  ports:
+    - name: http
+      port: 8002
+      targetPort: http
+      protocol: TCP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $name | quote }}
+  labels:
+    {{- include "telflo.labels" (dict "ctx" . "component" "otelcol-testing") | nindent 4 }}
+spec:
+  replicas: {{ int $c.replicas }}
+  selector:
+    matchLabels:
+      {{- include "telflo.selectorLabels" (dict "ctx" . "component" "otelcol-testing") | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "telflo.labels" (dict "ctx" . "component" "otelcol-testing") | nindent 8 }}
+      {{- with $c.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      {{- include "telflo.podBasics" . | nindent 6 }}
+      securityContext:
+        # 10001 is the image's otelcol-testing user and group; fsGroup gives
+        # the group the secret's file and the emptyDirs.
+        {{- include "telflo.podSecurityContext" (dict "uid" 10001 "gid" 10001 "fsGroup" 10001) | nindent 8 }}
+      containers:
+        - name: otelcol-testing
+          image: {{ include "telflo.image" (list . "otelcolTesting") | quote }}
+          imagePullPolicy: {{ include "telflo.pullPolicy" (list . "otelcolTesting") | quote }}
+          ports:
+            - name: http
+              containerPort: 8002
+              protocol: TCP
+          # A path only: never the secret, never a secretKeyRef.
+          env:
+            - name: OTELCOL_TESTING_SECRET_FILE
+              value: /run/secrets/telflo/otelcol-testing-secret
+          # GET /testing/v1/health needs no secret and answers 503 until
+          # kwok's cluster is up; the service drops its access line
+          # (app/main.py), so probes write no log. kwok's start is three
+          # attempts (app/kwok.py), with 2 s and 4 s backoffs before the
+          # retries, after which the service exits. An attempt whose kwokctl
+          # create times out takes 150 s (app/kwok_cluster.py: a 30 s delete
+          # of a leftover cluster, the 90 s create, then a 30 s delete of what
+          # it began): 3 x 150 + 6 = 456 s in all. The startup probe waits
+          # 480 s (5 s x 96).
+          startupProbe:
+            httpGet:
+              path: /testing/v1/health
+              port: http
+            periodSeconds: 5
+            timeoutSeconds: 5
+            failureThreshold: 96
+          readinessProbe:
+            httpGet:
+              path: /testing/v1/health
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /testing/v1/health
+              port: http
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          volumeMounts:
+            - name: secret
+              mountPath: /run/secrets/telflo
+              readOnly: true
+            - name: tmp
+              mountPath: /tmp
+            - name: home
+              mountPath: /home/otelcol-testing
+          {{- with $c.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          securityContext:
+            {{- include "telflo.containerSecurityContext" (dict "uid" 10001 "gid" 10001) | nindent 12 }}
+      volumes:
+        - name: secret
+          projected:
+            sources:
+              - secret:
+                  name: {{ $secret | quote }}
+                  items:
+                    - key: otelcol-testing-secret
+                      path: otelcol-testing-secret
+                      mode: 0440
+        - name: tmp
+          emptyDir:
+            sizeLimit: 1Gi
+        - name: home
+          emptyDir:
+            sizeLimit: 512Mi
+      {{- include "telflo.scheduling" (list . "otelcolTesting") | nindent 6 }}

@@ -1,0 +1,185 @@
+# Default state of the kwok-simulated Kubernetes cluster used by the test
+# runner. Applied at FastAPI startup before the first test runs. The test
+# runner sends OTLP traffic from 127.0.0.1; processors that rely on
+# k8sattributes' `pod_association: from: connection` look up the pod by
+# that source IP, so the canonical fixture pod here MUST end up with
+# podIP = 127.0.0.1.
+#
+# kwok's default Stages assign podIP from the node's InternalIP, but only
+# when pod.status doesn't already specify one. We declare nodeName +
+# podIP up front so the values are deterministic; the KwokCluster service
+# additionally patches the pod status subresource after apply because
+# `kubectl apply` does not write status by default.
+#
+# We hand-author the full Deployment -> ReplicaSet -> Pod owner chain so
+# k8sattributes' owner-chain enrichment (k8s.deployment.name,
+# k8s.replicaset.name) works without requiring kube-controller-manager to
+# be running.
+#
+# UIDs are NOT pinned in metadata.uid: the apiserver assigns those
+# server-side and overrides anything we provide. The pinned
+# ownerReferences[].uid values below are therefore stale the moment the
+# manifest is applied — k8sattributes DOES look the owning ReplicaSet up
+# by uid when resolving k8s.deployment.name, so KwokCluster rewrites the
+# pod's ownerReferences uid to the ReplicaSet's live uid after apply
+# (_fix_owner_reference_uids), and reads the pod's own live uid back for
+# the filelog staging path (_read_seed_pod_uid). Confirmed live
+# 2026-08-22: without the rewrite, deployment-name enrichment silently
+# fails while node/labels/annotations work.
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: demo
+  labels:
+    kwok.x-k8s.io/managed-by: telflo
+
+---
+# kwokctl-managed clusters disable kube-controller-manager (we don't need
+# its high-level controllers because the seed hand-authors everything).
+# That means the apiserver's ServiceAccount admission controller can't
+# find the `default` SA it expects to mount into new pods, so pod
+# creation gets a 403. Declaring the SA explicitly is the simplest fix.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: default
+  namespace: demo
+
+---
+apiVersion: v1
+kind: Node
+metadata:
+  name: kwok-node-0
+  labels:
+    type: kwok
+    kubernetes.io/hostname: kwok-node-0
+    kubernetes.io/os: linux
+    kubernetes.io/arch: arm64
+  annotations:
+    node.alpha.kubernetes.io/ttl: "0"
+    kwok.x-k8s.io/node: fake
+spec:
+  taints:
+    - effect: NoSchedule
+      key: kwok.x-k8s.io/node
+      value: fake
+status:
+  addresses:
+    - address: 127.0.0.1
+      type: InternalIP
+    - address: kwok-node-0
+      type: Hostname
+  allocatable:
+    cpu: "32"
+    memory: 256Gi
+    pods: "110"
+  capacity:
+    cpu: "32"
+    memory: 256Gi
+    pods: "110"
+  conditions:
+    - lastHeartbeatTime: "2026-01-01T00:00:00Z"
+      lastTransitionTime: "2026-01-01T00:00:00Z"
+      message: kubelet is posting ready status
+      reason: KubeletReady
+      status: "True"
+      type: Ready
+  nodeInfo:
+    architecture: arm64
+    kubeProxyVersion: fake
+    kubeletVersion: fake
+    operatingSystem: linux
+  phase: Running
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: telflo-test-deployment
+  namespace: demo
+  uid: aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa
+  labels:
+    app: telflo-test-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: telflo-test-app
+  template:
+    metadata:
+      labels:
+        app: telflo-test-app
+    spec:
+      containers:
+        - name: app
+          image: nginx:1.27
+
+---
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: telflo-test-deployment-7d8c9
+  namespace: demo
+  uid: bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb
+  labels:
+    app: telflo-test-app
+    pod-template-hash: 7d8c9
+  ownerReferences:
+    - apiVersion: apps/v1
+      kind: Deployment
+      name: telflo-test-deployment
+      uid: aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa
+      controller: true
+      blockOwnerDeletion: true
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: telflo-test-app
+      pod-template-hash: 7d8c9
+  template:
+    metadata:
+      labels:
+        app: telflo-test-app
+        pod-template-hash: 7d8c9
+    spec:
+      containers:
+        - name: app
+          image: nginx:1.27
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: telflo-test-pod
+  namespace: demo
+  uid: cccccccc-cccc-cccc-cccc-cccccccccccc
+  labels:
+    app: telflo-test-app
+    pod-template-hash: 7d8c9
+    # Well-known workload labels so label-extraction configs
+    # (k8sattributes extract.labels) have something real to pull.
+    app.kubernetes.io/name: telflo-test-app
+    app.kubernetes.io/version: "1.2.3"
+    app.kubernetes.io/component: server
+  annotations:
+    # A deterministic annotation for extract.annotations configs.
+    telflo.dev/test-annotation: sandbox
+  ownerReferences:
+    - apiVersion: apps/v1
+      kind: ReplicaSet
+      name: telflo-test-deployment-7d8c9
+      uid: bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb
+      controller: true
+      blockOwnerDeletion: true
+spec:
+  nodeName: kwok-node-0
+  tolerations:
+    - key: kwok.x-k8s.io/node
+      operator: Exists
+      effect: NoSchedule
+  containers:
+    - name: app
+      image: nginx:1.27

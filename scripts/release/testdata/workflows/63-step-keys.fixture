@@ -1,0 +1,11 @@
+# Breaks one rule: a step key outside the allow-list (a step's own timeout-minutes).
+file: release.yml
+rule: step-keys
+<<<
+      - name: The archive smoke
+        env:
+===
+      - name: The archive smoke
+        timeout-minutes: 5
+        env:
+>>>

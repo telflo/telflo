@@ -1,0 +1,25 @@
+# Breaks one rule: the publish downloading another run's artifacts (with: run-id).
+file: release.yml
+rule: with-keys
+<<<
+      - run: bash scripts/release/tools.sh fetch crane
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: image-*
+          merge-multiple: true
+          path: ${{ runner.temp }}/oci
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: release-files
+===
+      - run: bash scripts/release/tools.sh fetch crane
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: image-*
+          merge-multiple: true
+          run-id: "1234567890"
+          path: ${{ runner.temp }}/oci
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: release-files
+>>>

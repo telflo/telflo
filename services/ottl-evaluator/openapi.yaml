@@ -1,0 +1,714 @@
+openapi: 3.1.0
+info:
+  title: telflo ottl-evaluator
+  version: 1.0.0
+  description: |
+    The evaluator checks a test run's validation rules against the collector's
+    output and log (D15a; plan Preflight rulings 5-12). Only the platform's API calls it, on an internal
+    network.
+
+    Every request but `GET /health` carries `Authorization: Bearer <secret>`.
+    The secret is checked before anything routes or reads the body, so a
+    request without it gets 401 whatever its path or method (an unknown path
+    and `OPTIONS *` included); with it, an unknown path, or one that isn't
+    its own cleaned form (`//health`, `/x/../health`, a trailing slash), is
+    404 `not_found` and another method on a known path 405
+    `method_not_allowed`. Every error is `{"error": {"code", "message"}}`,
+    and a message never quotes the request.
+
+    A rule's own problem (a pattern that doesn't compile, an OTTL condition
+    that doesn't parse, a context the signal doesn't have) is that rule's
+    error in a 200 answer, never the request's: 400 is for a request that
+    doesn't follow this file. Each request's work runs in a child process
+    killed at its limit: an evaluation's rules left unfinished at 20 s fail
+    with "Not checked: the rules took longer than 20 s to check." (or "…ran
+    out of memory."), and a validation killed at 2 s answers `valid: false`,
+    "The condition is too complex to check." (or the pattern, or the
+    expression: the field it was checking).
+
+    A rule's problem is worded the same at validate and in an evaluation's
+    rule error, so Save and a run read alike: a parser's own message after
+    "OTTL syntax error: ", a regexp's after "Invalid regex: ", and every
+    other problem in its own words.
+
+    `POST /ottl/v1/lint` (D25) parse-checks OTTL texts for the platform's
+    public API: each text's verdict, never the text.
+servers:
+  - url: http://localhost:8003
+security:
+  - bearer: []
+paths:
+  /health:
+    get:
+      operationId: health
+      summary: Whether the evaluator is up, and its OTTL version. No secret needed.
+      security: []
+      responses:
+        "200":
+          description: Up.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Health"
+  /ottl/v1/evaluate:
+    post:
+      operationId: evaluate
+      summary: Check a run's rules against its output and the collector's log.
+      description: |
+        One result per rule, in the request's order, each with its rule's id.
+        At most 4 evaluations run at once; a request waits up to 5 s for a
+        slot (taken before its body is read), then gets 503.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EvaluateRequest"
+      responses:
+        "200":
+          description: Each rule's result.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EvaluateAnswer"
+        "400":
+          $ref: "#/components/responses/InvalidRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "413":
+          $ref: "#/components/responses/PayloadTooLarge"
+        "500":
+          $ref: "#/components/responses/InternalError"
+        "503":
+          $ref: "#/components/responses/EvaluatorBusy"
+  /ottl/v1/validate:
+    post:
+      operationId: validate
+      summary: Check one rule as a run would, without an output (at Save).
+      description: |
+        The same checks evaluate gives each rule: the lengths, OTTL nesting
+        of 12 at most, the context the signal allows, the quantifier, count
+        and expression agreeing (`between` needs `value2 >= value`), a
+        single-escaped `\b` refused in OTTL (it is correct RE2), the parse with
+        the converters-only parser runs use, and Go's `regexp` compile. At
+        most 8 validations run at once; a request waits up to 1 s for a slot,
+        then gets 503.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ValidateRequest"
+      responses:
+        "200":
+          description: Whether the rule is valid, and its problems when it isn't.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidateAnswer"
+        "400":
+          $ref: "#/components/responses/InvalidRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "413":
+          $ref: "#/components/responses/PayloadTooLarge"
+        "500":
+          $ref: "#/components/responses/InternalError"
+        "503":
+          $ref: "#/components/responses/EvaluatorBusy"
+  /ottl/v1/lint:
+    post:
+      operationId: lint
+      summary: Parse-check OTTL conditions, statements and value expressions against one context.
+      description: |
+        For the platform's public API (D25). Each text gets the rule checks'
+        guards first (8,192 bytes at most, OTTL nesting of 12 at most, a
+        single-escaped regex sequence such as `\b` refused), then the parse
+        with the standard OTTL functions (editors and converters). The
+        answer holds one item per text, the conditions first, then the
+        statements, then the value expressions, each in the request's
+        order, and never echoes a text. The texts are parsed in a child
+        process holding one of the validations' 8 slots (a request waits up
+        to 1 s for one, then gets 503), killed at 10 s: the items it hadn't
+        reached are `valid: false`, "Not checked: the expressions took too
+        long to check.".
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LintRequest"
+      responses:
+        "200":
+          description: Each text's verdict.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LintAnswer"
+        "400":
+          $ref: "#/components/responses/InvalidRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "413":
+          $ref: "#/components/responses/PayloadTooLarge"
+        "500":
+          $ref: "#/components/responses/InternalError"
+        "503":
+          $ref: "#/components/responses/EvaluatorBusy"
+components:
+  securitySchemes:
+    bearer:
+      type: http
+      scheme: bearer
+      description: The shared secret (OTTL_EVALUATOR_SECRET_FILE, or a previous one during a rotation).
+  responses:
+    InvalidRequest:
+      description: The request doesn't follow this file (a member's shape or cap, an unknown or retired kind, an OTTL rule on stderr, more than 200 rules, a repeated id, base64 that doesn't decode or decodes past 10 MiB, a lint of no text or more than 200 in all, a body that isn't JSON).
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"
+          example:
+            error:
+              code: invalid_request
+              message: "The request doesn't follow the contract: rules[0].kind must be one of contains_text, not_contains_text, contains_regex, not_contains_regex, ottl"
+    Unauthorized:
+      description: No secret, or not an accepted one. The body isn't read, and the connection is closed.
+      headers:
+        WWW-Authenticate:
+          schema:
+            type: string
+            const: Bearer
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"
+          example:
+            error:
+              code: unauthorized
+              message: A valid secret is required.
+    PayloadTooLarge:
+      description: The body is larger than its cap (36 MiB for evaluate, 64 KiB for validate, 10 MiB for lint), from its declared length or while it is read.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"
+          example:
+            error:
+              code: payload_too_large
+              message: The request body is too large.
+    InternalError:
+      description: The evaluator couldn't answer (its child process failed).
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"
+          example:
+            error:
+              code: internal_error
+              message: The evaluator couldn't answer.
+    EvaluatorBusy:
+      description: Every slot stayed taken through the wait. Try again after Retry-After.
+      headers:
+        Retry-After:
+          schema:
+            type: string
+            const: "1"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"
+          example:
+            error:
+              code: evaluator_busy
+              message: The evaluator is busy. Try again shortly.
+  schemas:
+    ErrorEnvelope:
+      type: object
+      additionalProperties: false
+      required: [error]
+      properties:
+        error:
+          type: object
+          additionalProperties: false
+          required: [code, message]
+          properties:
+            code:
+              type: string
+              enum: [unauthorized, not_found, method_not_allowed, payload_too_large, invalid_request, evaluator_busy, internal_error]
+            message:
+              type: string
+              minLength: 1
+    Health:
+      type: object
+      additionalProperties: false
+      required: [status, ottlVersion]
+      properties:
+        status:
+          type: string
+          const: ok
+        ottlVersion:
+          type: string
+          minLength: 1
+          description: The pkg/ottl version built in, such as v0.162.0.
+    Signal:
+      type: string
+      enum: [logs, traces, metrics]
+    Target:
+      type: string
+      enum: [output, stderr]
+    TextKind:
+      type: string
+      enum: [contains_text, not_contains_text, contains_regex, not_contains_regex]
+    Pattern:
+      type: string
+      minLength: 1
+      maxLength: 8192
+      description: |
+        A text rule's text or a regex rule's pattern. At most 8,192 bytes:
+        past that (under 8,192 characters) it is the rule's error. A text is
+        whitespace-tolerant (any whitespace in it matches any run of
+        whitespace, or none); a pattern is Go's regexp (RE2), matched exactly.
+    RuleId:
+      type: string
+      minLength: 1
+      maxLength: 128
+    Ottl:
+      type: object
+      additionalProperties: false
+      required: [context, quantifier]
+      properties:
+        context:
+          type: string
+          enum: [log, span, spanevent, metric, datapoint, resource, scope]
+          description: "Per signal: logs log, resource, scope; traces span, spanevent, resource, scope; metrics metric, datapoint, resource, scope. Another is the rule's error."
+        quantifier:
+          type: string
+          enum: [all, any, none, count, distinct]
+        condition:
+          type: string
+          maxLength: 8192
+          description: Required (not blank) but for distinct, where it is an optional filter.
+        expression:
+          type: string
+          maxLength: 8192
+          description: A distinct rule's value expression; only distinct has one.
+        count:
+          $ref: "#/components/schemas/Count"
+    Count:
+      type: object
+      additionalProperties: false
+      required: [operator, value]
+      description: count and distinct rules only; value2 with between only, at least value.
+      properties:
+        operator:
+          type: string
+          enum: [eq, ne, gt, gte, lt, lte, between]
+        value:
+          type: integer
+          minimum: 0
+          maximum: 2147483647
+        value2:
+          type: integer
+          minimum: 0
+          maximum: 2147483647
+    TextRule:
+      type: object
+      additionalProperties: false
+      required: [id, kind, target, pattern]
+      properties:
+        id:
+          $ref: "#/components/schemas/RuleId"
+        kind:
+          $ref: "#/components/schemas/TextKind"
+        target:
+          $ref: "#/components/schemas/Target"
+        pattern:
+          $ref: "#/components/schemas/Pattern"
+    OttlRule:
+      type: object
+      additionalProperties: false
+      required: [id, kind, target, ottl]
+      properties:
+        id:
+          $ref: "#/components/schemas/RuleId"
+        kind:
+          type: string
+          const: ottl
+        target:
+          type: string
+          const: output
+        ottl:
+          $ref: "#/components/schemas/Ottl"
+    Output:
+      type: object
+      additionalProperties: false
+      required: [base64, truncated]
+      description: The tester's output, as it answered it but for bytesOnDisk.
+      properties:
+        base64:
+          type: string
+          contentEncoding: base64
+          maxLength: 13981016
+          description: Standard base64 of the output's bytes, at most 10,485,760 decoded.
+        truncated:
+          type: boolean
+          description: The tester cut the output at 10 MiB (R-006); every output rule's result says so.
+    EvaluateRequest:
+      type: object
+      additionalProperties: false
+      required: [signal, output, log, rules]
+      properties:
+        signal:
+          $ref: "#/components/schemas/Signal"
+        output:
+          description: |
+            The stored output, its bytes as they are: one OTLP/JSON document,
+            or several as `{"records": [...]}`. OTTL rules read the records
+            unwrapped; text and regex rules search the bytes. Null when the
+            collector wrote no record: contains rules fail, not-contains rules
+            pass, OTTL sees zero records.
+          oneOf:
+            - type: "null"
+            - $ref: "#/components/schemas/Output"
+        log:
+          type: string
+          maxLength: 262144
+          description: The collector's log, which stderr rules search.
+        rules:
+          type: array
+          minItems: 1
+          maxItems: 200
+          description: Each id once.
+          items:
+            oneOf:
+              - $ref: "#/components/schemas/TextRule"
+              - $ref: "#/components/schemas/OttlRule"
+    ValidateTextRule:
+      type: object
+      additionalProperties: false
+      required: [kind, target, pattern]
+      properties:
+        kind:
+          $ref: "#/components/schemas/TextKind"
+        target:
+          $ref: "#/components/schemas/Target"
+        pattern:
+          $ref: "#/components/schemas/Pattern"
+    ValidateOttlRule:
+      type: object
+      additionalProperties: false
+      required: [kind, target, ottl]
+      properties:
+        kind:
+          type: string
+          const: ottl
+        target:
+          type: string
+          const: output
+        ottl:
+          $ref: "#/components/schemas/Ottl"
+    ValidateRequest:
+      type: object
+      additionalProperties: false
+      required: [signal, rule]
+      properties:
+        signal:
+          $ref: "#/components/schemas/Signal"
+        rule:
+          oneOf:
+            - $ref: "#/components/schemas/ValidateTextRule"
+            - $ref: "#/components/schemas/ValidateOttlRule"
+    Message:
+      type: string
+      minLength: 1
+      maxLength: 4096
+    EvaluateAnswer:
+      type: object
+      additionalProperties: false
+      required: [ottlVersion, results]
+      properties:
+        ottlVersion:
+          type: string
+          minLength: 1
+        results:
+          type: array
+          maxItems: 200
+          items:
+            $ref: "#/components/schemas/Result"
+    Result:
+      type: object
+      additionalProperties: false
+      required: [id, passed, error, advisory, detail]
+      description: An error means passed is false and detail is null.
+      properties:
+        id:
+          $ref: "#/components/schemas/RuleId"
+        passed:
+          type: boolean
+        error:
+          oneOf:
+            - type: "null"
+            - $ref: "#/components/schemas/Message"
+        advisory:
+          description: >-
+            An all or none OTTL rule that passed over zero records; a not-contains regex that failed
+            on matches that were all empty (x*, ^, \b), which has no detail to show, counted and never
+            quoting the text searched; or a truncated output (joined, when two apply).
+          oneOf:
+            - type: "null"
+            - $ref: "#/components/schemas/Message"
+        detail:
+          description: Why the rule failed (null when it passed, when it erred, and for a not-contains regex whose only matches were empty, whose advisory says so).
+          oneOf:
+            - type: "null"
+            - $ref: "#/components/schemas/NoMatch"
+            - $ref: "#/components/schemas/UnexpectedMatch"
+            - $ref: "#/components/schemas/RecordMismatch"
+            - $ref: "#/components/schemas/DistinctMismatch"
+    NoMatch:
+      type: object
+      additionalProperties: false
+      required: [kind, source, searchedCharacters]
+      properties:
+        kind:
+          type: string
+          const: no_match
+        source:
+          $ref: "#/components/schemas/Target"
+        searchedCharacters:
+          type: integer
+          minimum: 0
+    UnexpectedMatch:
+      type: object
+      additionalProperties: false
+      required: [kind, source, totalMatchCount, moreMatches, matches]
+      properties:
+        kind:
+          type: string
+          const: unexpected_match
+        source:
+          $ref: "#/components/schemas/Target"
+        totalMatchCount:
+          type: integer
+          minimum: 1
+          maximum: 100000
+        moreMatches:
+          type: boolean
+          description: More than 100,000 matches; the count stopped.
+        matches:
+          type: array
+          minItems: 1
+          maxItems: 5
+          items:
+            $ref: "#/components/schemas/Match"
+    Match:
+      type: object
+      additionalProperties: false
+      required: [text, textTruncated, before, after, record]
+      properties:
+        text:
+          type: string
+          maxLength: 200
+          description: At most 200 bytes.
+        textTruncated:
+          type: boolean
+        before:
+          type: string
+          maxLength: 40
+          description: Up to 40 bytes before the match on its line.
+        after:
+          type: string
+          maxLength: 40
+          description: Up to 40 bytes after the match on its line.
+        record:
+          oneOf:
+            - $ref: "#/components/schemas/OutputRecord"
+            - $ref: "#/components/schemas/LogLine"
+    OutputRecord:
+      type: object
+      additionalProperties: false
+      required: [index, path]
+      description: Where in the output a match is.
+      properties:
+        index:
+          description: The element of the output's records holding the match's start (0 for a single document); null outside every record, or when the output isn't JSON.
+          oneOf:
+            - type: "null"
+            - type: integer
+              minimum: 0
+        path:
+          type: string
+          maxLength: 200
+          description: The JSON path, inside that record, of the innermost value holding the whole match ("" for the record itself, or when the match runs past it); its last 200 bytes when longer.
+    LogLine:
+      type: object
+      additionalProperties: false
+      required: [line]
+      properties:
+        line:
+          type: integer
+          minimum: 1
+    RecordMismatch:
+      type: object
+      additionalProperties: false
+      required: [kind, context, totalCount, matchedCount, missCount, misses]
+      properties:
+        kind:
+          type: string
+          const: record_mismatch
+        context:
+          type: string
+          enum: [log, span, spanevent, metric, datapoint, resource, scope]
+        totalCount:
+          type: integer
+          minimum: 0
+        matchedCount:
+          type: integer
+          minimum: 0
+        missCount:
+          type: integer
+          minimum: 0
+          description: "The records against the rule: all, those that failed; none, those that matched; any, every record (none matched); count, 0 (the count failed, no record)."
+        misses:
+          type: array
+          maxItems: 5
+          description: "The first 5 of the records missCount counts, in the output's order (all and any, reason \"condition evaluated to false\"; none, reason \"unexpected match\"); a count rule lists none, so its misses is empty."
+          items:
+            $ref: "#/components/schemas/Miss"
+    Miss:
+      type: object
+      additionalProperties: false
+      required: [index, reason, snippet]
+      properties:
+        index:
+          type: integer
+          minimum: 0
+        reason:
+          type: string
+        snippet:
+          type: string
+          maxLength: 200
+    DistinctMismatch:
+      type: object
+      additionalProperties: false
+      required: [kind, totalCount, matchedCount, distinctCount, samples]
+      properties:
+        kind:
+          type: string
+          const: distinct_mismatch
+        totalCount:
+          type: integer
+          minimum: 0
+        matchedCount:
+          type: integer
+          minimum: 0
+        distinctCount:
+          type: integer
+          minimum: 0
+        samples:
+          type: array
+          maxItems: 5
+          items:
+            type: string
+            maxLength: 120
+    ValidateAnswer:
+      type: object
+      additionalProperties: false
+      required: [valid, ottlVersion]
+      properties:
+        valid:
+          type: boolean
+        problems:
+          type: array
+          minItems: 1
+          description: Only when the rule isn't valid.
+          items:
+            $ref: "#/components/schemas/Problem"
+        ottlVersion:
+          type: string
+          minLength: 1
+    Problem:
+      type: object
+      additionalProperties: false
+      required: [field, message]
+      properties:
+        field:
+          type: string
+          enum: [kind, pattern, ottl, ottl.context, ottl.quantifier, ottl.condition, ottl.expression, ottl.count, ottl.count.value2]
+        message:
+          $ref: "#/components/schemas/Message"
+          description: >-
+            The reason, exactly as an evaluation's rule error words the same
+            problem: a parser's message after "OTTL syntax error: ", a
+            regexp's after "Invalid regex: ", any other problem in its own
+            words. The platform shows it as it is.
+    LintText:
+      type: string
+      maxLength: 8192
+      description: An OTTL text. Past 8,192 bytes (under 8,192 characters), blank, nested past 12 or not parsing, it is its item's error.
+    LintTexts:
+      type: array
+      maxItems: 200
+      items:
+        $ref: "#/components/schemas/LintText"
+    LintRequest:
+      type: object
+      additionalProperties: false
+      required: [context]
+      description: 1 to 200 texts in all, in at least one non-empty array.
+      anyOf:
+        - required: [conditions]
+          properties:
+            conditions:
+              minItems: 1
+        - required: [statements]
+          properties:
+            statements:
+              minItems: 1
+        - required: [valueExpressions]
+          properties:
+            valueExpressions:
+              minItems: 1
+      properties:
+        context:
+          type: string
+          enum: [log, span, spanevent, metric, datapoint, resource, scope]
+        conditions:
+          $ref: "#/components/schemas/LintTexts"
+        statements:
+          $ref: "#/components/schemas/LintTexts"
+        valueExpressions:
+          $ref: "#/components/schemas/LintTexts"
+    LintItem:
+      type: object
+      additionalProperties: false
+      required: [kind, index, valid]
+      description: One text's verdict. `error` is there exactly when the text isn't valid.
+      properties:
+        kind:
+          type: string
+          enum: [condition, statement, valueExpression]
+        index:
+          type: integer
+          minimum: 0
+          maximum: 199
+          description: The text's place in its own array.
+        valid:
+          type: boolean
+        error:
+          $ref: "#/components/schemas/Message"
+    LintAnswer:
+      type: object
+      additionalProperties: false
+      required: [ottlVersion, items]
+      properties:
+        ottlVersion:
+          type: string
+          minLength: 1
+        items:
+          type: array
+          minItems: 1
+          maxItems: 200
+          items:
+            $ref: "#/components/schemas/LintItem"

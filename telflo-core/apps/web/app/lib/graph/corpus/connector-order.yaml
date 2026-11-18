@@ -1,0 +1,22 @@
+# A pipeline's list keeps its order when a connector comes first.
+receivers:
+  otlp: {}
+  jaeger: {}
+processors:
+  batch: {}
+exporters:
+  otlp:
+    endpoint: backend:4317
+  debug: {}
+connectors:
+  forward: {}
+  forward/second: {}
+service:
+  pipelines:
+    traces/in:
+      receivers: [otlp]
+      exporters: [forward/second, debug, forward]
+    traces/out:
+      receivers: [forward, jaeger, forward/second, otlp]
+      processors: [batch]
+      exporters: [otlp]

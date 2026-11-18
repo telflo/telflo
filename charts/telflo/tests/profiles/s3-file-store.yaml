@@ -1,0 +1,21 @@
+# The S3 file store, with more than one API pod.
+publicUrl: https://telflo.example.com
+api:
+  replicas: 2
+  mail:
+    from: noreply@telflo.example.com
+    smtp:
+      host: smtp.example.com
+  fileStore:
+    kind: s3
+    bucket: telflo-files
+    region: region-a
+    prefix: platform/
+    endpoint: https://objects.example.com
+    forcePathStyle: true
+  serviceAccount:
+    annotations:
+      example.com/bucket-role: telflo-files
+opamp-server:
+  server:
+    publicUrl: https://opamp.example.com/opamp/api/v1

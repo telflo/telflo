@@ -1,0 +1,29 @@
+receivers:
+  filelog:
+    include:
+      - '/var/log/*.log'
+    start_at: 'end'
+exporters:
+  otlp:
+    endpoint: 'otelcol:4317'
+    tls:
+      insecure: true
+service:
+  telemetry:
+    metrics:
+      level: detailed
+      readers:
+        - periodic:
+            interval: 60000
+            exporter:
+              otlp:
+                protocol: http/protobuf
+                temporality_preference: delta
+                endpoint: http://3.133.102.227:4318
+                headers:
+                  - name: Authorization
+                    value: 'dc0236cc-6684-41ec-abf5-1df74d486114'
+  pipelines:
+    logs:
+      receivers: [filelog]
+      exporters: [otlp]

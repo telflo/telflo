@@ -1,0 +1,776 @@
+# Configurations and their versions (D25 decision 17's routes 4-12; decisions
+# 18, 19, 20 and 31). Assembled by document.ts. A token sees the published
+# configurations and its own user's drafts, never another member's; every
+# reply is no-store. Each operation's refusals name the codes it answers (Ruling 165); the
+# request schemas are as strict as the contracts' (packages/contracts/src/
+# public-api/configurations.ts), but for trimming, which the API does first.
+paths:
+  /configurations:
+    get:
+      operationId: listConfigurations
+      summary: List configurations
+      description: >-
+        The configurations the token's user can see in the organization: every
+        published one and the user's own drafts. Most recently updated first,
+        a page at a time: pass the reply's `nextCursor` as `cursor` for the
+        next. Each item is a summary without YAML, with its latest version's
+        number and collector version and its highest published version's
+        number.
+      tags: [configurations]
+      x-telflo-access: read
+      parameters:
+        - name: limit
+          in: query
+          description: At most this many items, 1 to 100 (50 when left out).
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+        - name: cursor
+          in: query
+          description: A previous page's `nextCursor`.
+          schema:
+            type: string
+            maxLength: 256
+      responses:
+        "200":
+          description: A page of configurations.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConfigurationPage"
+        "400":
+          description: >-
+            `invalid_request`: a `limit` out of range, a `cursor` that isn't
+            one, or another parameter; `organization_required`: a personal
+            token without X-Telflo-Org, or with one that isn't an organization's id.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/ConfigurationReadForbidden"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+    post:
+      operationId: createConfiguration
+      summary: Create a configuration
+      description: >-
+        Creates a draft configuration and its version 1, holding the YAML as
+        given (not validated: call `POST /validate`, or PATCH the version with
+        `?validate=true`). `distribution` is the collector distribution it is
+        built for, fixed for its life; left out, the default (`otelcol-contrib`).
+      tags: [configurations]
+      x-telflo-access: write
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateConfigurationRequest"
+      responses:
+        "201":
+          description: The configuration, with its version 1's YAML.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConfigurationDetail"
+        "400":
+          description: >-
+            `invalid_request`: a body that isn't the schema's;
+            `collector_distribution_unknown`: a distribution that isn't
+            offered; `organization_required`: a personal token without
+            X-Telflo-Org, or with one that isn't an organization's id.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/ConfigurationWriteForbidden"
+        "404":
+          description: "`organization_not_found`: the token's organization or membership went away meanwhile."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "413":
+          $ref: "#/components/responses/ConfigurationContentTooLarge"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+  /configurations/{configurationId}:
+    parameters:
+      - $ref: "#/components/parameters/ConfigurationId"
+    get:
+      operationId: getConfiguration
+      summary: Get a configuration
+      description: >-
+        A configuration with its latest version's YAML. Another member's draft,
+        another organization's configuration and a malformed id answer 404
+        `configuration_not_found`.
+      tags: [configurations]
+      x-telflo-access: read
+      responses:
+        "200":
+          description: The configuration, with its latest version's YAML.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConfigurationDetail"
+        "400":
+          $ref: "#/components/responses/ConfigurationOrganizationRequired"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/ConfigurationReadForbidden"
+        "404":
+          $ref: "#/components/responses/ConfigurationNotFound"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+    patch:
+      operationId: updateConfiguration
+      summary: Change a configuration's name or description
+      description: >-
+        Merge-patch: send `name`, `description`, both or neither. A null
+        `description` clears it. The YAML lives on versions.
+      tags: [configurations]
+      x-telflo-access: write
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateConfigurationRequest"
+      responses:
+        "200":
+          description: The configuration as it now is, with its latest version's YAML.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConfigurationDetail"
+        "400":
+          $ref: "#/components/responses/ConfigurationInvalidRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/ConfigurationWriteForbidden"
+        "404":
+          description: >-
+            `configuration_not_found`: one the token's user can't see, or a
+            malformed id; `organization_not_found`: the token's organization
+            or membership went away meanwhile.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "413":
+          $ref: "#/components/responses/ConfigurationBodyTooLarge"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+  /configurations/{configurationId}/versions:
+    parameters:
+      - $ref: "#/components/parameters/ConfigurationId"
+    get:
+      operationId: listConfigurationVersions
+      summary: List a configuration's versions
+      description: >-
+        Every version, highest number first, without YAML. Not paginated:
+        `nextCursor` is always null.
+      tags: [configurations]
+      x-telflo-access: read
+      responses:
+        "200":
+          description: The versions.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConfigurationVersionList"
+        "400":
+          $ref: "#/components/responses/ConfigurationOrganizationRequired"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/ConfigurationReadForbidden"
+        "404":
+          $ref: "#/components/responses/ConfigurationNotFound"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+    post:
+      operationId: createConfigurationVersion
+      summary: Append a version
+      description: >-
+        Appends the next version, holding the YAML as given (not validated),
+        from the latest version: its collector version, test suites and
+        validation pipelines are carried over.
+      tags: [configurations]
+      x-telflo-access: write
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateConfigurationVersionRequest"
+      responses:
+        "201":
+          description: The new version.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConfigurationVersion"
+        "400":
+          $ref: "#/components/responses/ConfigurationInvalidRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/ConfigurationWriteForbidden"
+        "404":
+          description: >-
+            `configuration_not_found`: one the token's user can't see, or a
+            malformed id; `organization_not_found`: the token's organization
+            or membership went away meanwhile.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "413":
+          $ref: "#/components/responses/ConfigurationContentTooLarge"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+  /configurations/{configurationId}/versions/{versionNumber}:
+    parameters:
+      - $ref: "#/components/parameters/ConfigurationId"
+      - $ref: "#/components/parameters/VersionNumber"
+    get:
+      operationId: getConfigurationVersion
+      summary: Get a version
+      description: One version by its number, with its YAML.
+      tags: [configurations]
+      x-telflo-access: read
+      responses:
+        "200":
+          description: The version.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConfigurationVersion"
+        "400":
+          $ref: "#/components/responses/ConfigurationVersionNumberInvalid"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/ConfigurationReadForbidden"
+        "404":
+          $ref: "#/components/responses/ConfigurationVersionNotFound"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+    patch:
+      operationId: updateConfigurationVersion
+      summary: Change a draft version's YAML or collector version
+      description: >-
+        Merge-patch over a draft: send `yaml`, `collectorVersion`, both or
+        neither; a field left out keeps the one stored. A published version
+        can't change: append a new version instead. With `?validate=true` the
+        resulting YAML is validated first, and an invalid one is refused with
+        the validator's errors in `details.errors`; the YAML validated is the
+        YAML saved (a save landing in between is refused). Nothing is saved
+        on any refusal.
+      tags: [configurations]
+      x-telflo-access: write
+      parameters:
+        - name: validate
+          in: query
+          description: Validate the resulting YAML before saving.
+          schema:
+            type: string
+            enum: ["true", "false"]
+            default: "false"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateConfigurationVersionRequest"
+      responses:
+        "200":
+          description: The version as it now is.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConfigurationVersion"
+        "400":
+          description: >-
+            `invalid_request`: a body, a version number or a `validate` that
+            isn't the schema's; `collector_version_unknown`: a collector
+            version the configuration's distribution doesn't offer (a retired
+            one included, without `?validate=true`);
+            `collector_version_retired`: with `?validate=true`, a retired
+            collector version; `organization_required`: a personal token
+            without X-Telflo-Org, or with one that isn't an organization's id.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/ConfigurationWriteForbidden"
+        "404":
+          $ref: "#/components/responses/ConfigurationVersionNotFound"
+        "409":
+          description: >-
+            `configuration_version_published`: the version is published;
+            `configuration_version_changed`: with `?validate=true`, the version
+            was saved between its validation and this write.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "413":
+          $ref: "#/components/responses/ConfigurationContentTooLarge"
+        "422":
+          description: "`configuration_invalid`: the resulting YAML didn't validate."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConfigurationVersionInvalidError"
+        "429":
+          description: >-
+            `rate_limited`: over 60 requests a minute for this token;
+            `validation_rate_limited`: with `?validate=true`, too many checks
+            by the token's user in the last minute, or at once.
+          headers:
+            Retry-After:
+              description: Seconds until the window ends.
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "503":
+          description: >-
+            With `?validate=true`: `validation_unavailable`, the validator
+            couldn't check the YAML; `variables_unavailable`, the organization
+            variables it references couldn't be read.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /configurations/{configurationId}/versions/{versionNumber}/publish:
+    parameters:
+      - $ref: "#/components/parameters/ConfigurationId"
+      - $ref: "#/components/parameters/VersionNumber"
+    post:
+      operationId: publishConfigurationVersion
+      summary: Publish a version
+      description: >-
+        Publishes the version as it is saved, so collector groups can be
+        assigned to it. Idempotent: a published version answers 200 as it is,
+        its published time unchanged. No body.
+      tags: [configurations]
+      x-telflo-access: write
+      responses:
+        "200":
+          description: The configuration, now published, with its latest version's YAML.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConfigurationDetail"
+        "400":
+          description: >-
+            `invalid_request`: a version number that isn't one, or a YAML
+            referencing an organization variable whose name no variable can
+            have; `organization_required`: a personal token without
+            X-Telflo-Org, or with one that isn't an organization's id.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/ConfigurationWriteForbidden"
+        "404":
+          $ref: "#/components/responses/ConfigurationVersionNotFound"
+        "409":
+          description: >-
+            `configuration_version_empty`: the version's YAML is empty;
+            `configuration_version_changed`: it was saved or renamed while it
+            was being published.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "413":
+          $ref: "#/components/responses/ConfigurationBodyTooLarge"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "503":
+          description: "`publishing_unavailable`: the fleet service couldn't take it; the version stays a draft."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+components:
+  parameters:
+    ConfigurationId:
+      name: configurationId
+      in: path
+      required: true
+      description: The configuration's id. One that isn't a UUID answers 404, as an unknown one does.
+      schema:
+        type: string
+    VersionNumber:
+      name: versionNumber
+      in: path
+      required: true
+      description: A version's number, a positive integer written plainly (no sign, leading zero or exponent).
+      schema:
+        type: string
+        pattern: "^[1-9][0-9]{0,8}$"
+  schemas:
+    Configuration:
+      description: A configuration without its YAML.
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - name
+        - description
+        - organizationId
+        - isPublished
+        - distribution
+        - collectorVersion
+        - versionNumber
+        - publishedVersionNumber
+        - updatedAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        organizationId:
+          type: string
+          format: uuid
+        isPublished:
+          description: Whether at least one of its versions is published.
+          type: boolean
+        distribution:
+          description: The collector distribution it is built for, fixed when it was created.
+          type: string
+        collectorVersion:
+          description: The latest version's collector version.
+          type: string
+        versionNumber:
+          description: The latest version's number.
+          type: integer
+          minimum: 1
+        publishedVersionNumber:
+          description: The highest published version's number, or null for a draft.
+          type: [integer, "null"]
+          minimum: 1
+        updatedAt:
+          type: string
+          format: date-time
+    ConfigurationDetail:
+      description: A configuration with its latest version's YAML.
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - name
+        - description
+        - organizationId
+        - isPublished
+        - distribution
+        - collectorVersion
+        - versionNumber
+        - publishedVersionNumber
+        - updatedAt
+        - yaml
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        organizationId:
+          type: string
+          format: uuid
+        isPublished:
+          type: boolean
+        distribution:
+          type: string
+        collectorVersion:
+          type: string
+        versionNumber:
+          type: integer
+          minimum: 1
+        publishedVersionNumber:
+          type: [integer, "null"]
+          minimum: 1
+        updatedAt:
+          type: string
+          format: date-time
+        yaml:
+          description: The latest version's YAML, exactly as saved.
+          type: string
+    ConfigurationPage:
+      type: object
+      additionalProperties: false
+      required: [items, nextCursor]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Configuration"
+        nextCursor:
+          description: The next page's cursor, or null on the last page.
+          type: [string, "null"]
+    ConfigurationVersionSummary:
+      description: A version without its YAML.
+      type: object
+      additionalProperties: false
+      required: [id, versionNumber, status, label, distribution, collectorVersion, createdAt, publishedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        versionNumber:
+          type: integer
+          minimum: 1
+        status:
+          type: string
+          enum: [draft, published]
+        label:
+          description: The version's name, or null for an unnamed one.
+          type: [string, "null"]
+        distribution:
+          type: string
+        collectorVersion:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        publishedAt:
+          type: [string, "null"]
+          format: date-time
+    ConfigurationVersion:
+      description: A version with its YAML.
+      type: object
+      additionalProperties: false
+      required: [id, versionNumber, status, label, distribution, collectorVersion, createdAt, publishedAt, configurationId, yaml]
+      properties:
+        id:
+          type: string
+          format: uuid
+        versionNumber:
+          type: integer
+          minimum: 1
+        status:
+          type: string
+          enum: [draft, published]
+        label:
+          type: [string, "null"]
+        distribution:
+          type: string
+        collectorVersion:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        publishedAt:
+          type: [string, "null"]
+          format: date-time
+        configurationId:
+          type: string
+          format: uuid
+        yaml:
+          type: string
+    ConfigurationVersionList:
+      type: object
+      additionalProperties: false
+      required: [items, nextCursor]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ConfigurationVersionSummary"
+        nextCursor:
+          description: Always null; the list isn't paginated.
+          type: "null"
+    ConfigurationName:
+      description: >-
+        Trimmed, 1 to 200 characters, not only spaces, without U+0000 or a
+        lone surrogate.
+      type: string
+      minLength: 1
+      maxLength: 200
+      pattern: '^[^\x00\uD800-\uDFFF]*[^\s\x00\uD800-\uDFFF][^\x00\uD800-\uDFFF]*$'
+    ConfigurationYaml:
+      description: >-
+        A version's YAML, stored as given: at most 262,144 UTF-16 code units,
+        without U+0000 or a lone surrogate.
+      type: string
+      maxLength: 262144
+      pattern: '^[^\x00\uD800-\uDFFF]*$'
+    CreateConfigurationRequest:
+      type: object
+      additionalProperties: false
+      required: [name, yaml]
+      properties:
+        name:
+          $ref: "#/components/schemas/ConfigurationName"
+        yaml:
+          $ref: "#/components/schemas/ConfigurationYaml"
+        distribution:
+          description: The collector distribution, lowercase words joined by hyphens; left out, the default.
+          type: string
+          maxLength: 64
+          pattern: "^[a-z0-9]+(-[a-z0-9]+)*$"
+    UpdateConfigurationRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        name:
+          $ref: "#/components/schemas/ConfigurationName"
+        description:
+          description: >-
+            Trimmed, at most 500 characters, without U+0000 or a lone
+            surrogate; null clears it.
+          type: [string, "null"]
+          maxLength: 500
+          pattern: '^[^\x00\uD800-\uDFFF]*$'
+    CreateConfigurationVersionRequest:
+      type: object
+      additionalProperties: false
+      required: [yaml]
+      properties:
+        yaml:
+          $ref: "#/components/schemas/ConfigurationYaml"
+        label:
+          description: >-
+            The version's name: trimmed, 1 to 80
+            characters, not only spaces, without U+0000 or a lone surrogate;
+            null or left out for none.
+          type: [string, "null"]
+          minLength: 1
+          maxLength: 80
+          pattern: '^[^\x00\uD800-\uDFFF]*[^\s\x00\uD800-\uDFFF][^\x00\uD800-\uDFFF]*$'
+    UpdateConfigurationVersionRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        yaml:
+          $ref: "#/components/schemas/ConfigurationYaml"
+        collectorVersion:
+          description: A collector version of the configuration's distribution, as `major.minor.patch`.
+          type: string
+          maxLength: 64
+          pattern: "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    ConfigurationVersionInvalidError:
+      description: The error envelope of `configuration_invalid`, with the validator's errors.
+      type: object
+      additionalProperties: false
+      required: [error]
+      properties:
+        error:
+          type: object
+          additionalProperties: false
+          required: [code, message, details]
+          properties:
+            code:
+              type: string
+              enum: [configuration_invalid]
+            message:
+              type: string
+            details:
+              type: object
+              additionalProperties: false
+              required: [errors]
+              properties:
+                errors:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/ValidationErrorItem"
+  responses:
+    ConfigurationOrganizationRequired:
+      description: "`organization_required`: a personal token without X-Telflo-Org, or with one that isn't an organization's id."
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    ConfigurationInvalidRequest:
+      description: >-
+        `invalid_request`: a body that isn't the schema's;
+        `organization_required`: a personal token without X-Telflo-Org, or with one that isn't an organization's id.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    ConfigurationVersionNumberInvalid:
+      description: >-
+        `invalid_request`: a version number that isn't a plain positive
+        integer; `organization_required`: a personal token without
+        X-Telflo-Org, or with one that isn't an organization's id.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    ConfigurationReadForbidden:
+      description: >-
+        `organization_access_denied`: a personal token's X-Telflo-Org names an
+        organization the person isn't an active member of.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    ConfigurationWriteForbidden:
+      description: >-
+        `insufficient_access`: a read token; `organization_access_denied`: a
+        personal token's X-Telflo-Org names an organization the person isn't
+        an active member of.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    ConfigurationNotFound:
+      description: >-
+        `configuration_not_found`: one the token's user can't see (another
+        member's draft, another organization's, a deleted or unknown one), or
+        a malformed id.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    ConfigurationVersionNotFound:
+      description: >-
+        `configuration_not_found` as for the configuration's routes, then
+        `configuration_version_not_found`: a number it has no version of; on
+        a write, `organization_not_found` when the token's organization or
+        membership went away meanwhile.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    ConfigurationContentTooLarge:
+      description: "`payload_too_large`: the body is over 2 MiB."
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    ConfigurationBodyTooLarge:
+      description: "`payload_too_large`: the body is over 1 MiB."
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"

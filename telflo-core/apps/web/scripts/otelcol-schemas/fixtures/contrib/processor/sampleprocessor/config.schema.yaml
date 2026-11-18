@@ -1,0 +1,27 @@
+$defs:
+  group:
+    type: object
+    properties:
+      statements:
+        type: array
+        items:
+          type: string
+  statement_group:
+    type: object
+    properties:
+      statements:
+        type: array
+        items:
+          type: string
+type: object
+properties:
+  statements:
+    type: array
+    items:
+      $ref: statement_group
+  groups:
+    type: array
+    items:
+      $ref: group
+  http:
+    $ref: go.opentelemetry.io/collector/config/confighttp.client_config

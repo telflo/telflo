@@ -1,0 +1,20 @@
+# Breaks one rule: TELFLO_CRANE set in the publish job.
+file: release.yml
+rule: telflo-crane
+<<<
+      TELFLO_CRANE: ""
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.version.outputs.commit }}
+          persist-credentials: false
+      - run: bash scripts/release/steps.sh free-disk 13
+===
+      TELFLO_CRANE: /usr/local/bin/crane
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.version.outputs.commit }}
+          persist-credentials: false
+      - run: bash scripts/release/steps.sh free-disk 13
+>>>

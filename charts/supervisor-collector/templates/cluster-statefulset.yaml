@@ -1,0 +1,54 @@
+{{- if eq .Values.role "cluster" -}}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "tsc.fullname" . | quote }}
+spec:
+  serviceName: {{ include "tsc.fullname" . | quote }}
+  replicas: 1
+  selector:
+    matchLabels: { app: {{ include "tsc.fullname" . | quote }} }
+  template:
+    metadata:
+      labels: { app: {{ include "tsc.fullname" . | quote }} }
+{{- include "tsc.podChecksums" . }}
+    spec:
+      serviceAccountName: {{ include "tsc.serviceAccountName" . | quote }}
+{{- include "tsc.podSecurityContext" . }}
+      containers:
+        - name: supervisor
+          image: {{ include "tsc.image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+{{- include "tsc.collectorEnv" . }}
+{{- include "tsc.collectorEnvFrom" . }}
+          volumeMounts:
+            - { name: storage, mountPath: /app/opamp }
+{{- if .Values.clickhouse.endpoint }}
+            # Durable, uid-10001-writable home for the collector's file_storage
+            # (clickhouse exporter sending_queue). ClickStack-only — see
+            # values.yaml collectorDataDir. PVC-backed, so fsGroup: 10001 (from
+            # tsc.podSecurityContext) makes it group-writable — no chown needed.
+            - { name: collector-data, mountPath: {{ .Values.collectorDataDir | quote }} }
+{{- end }}
+{{- if .Values.volumes }}
+{{- include "tsc.extraVolumeMounts" . }}
+{{- end }}
+          resources: {{ toYaml .Values.resources | nindent 12 }}
+{{- if .Values.volumes }}
+      volumes:
+{{- include "tsc.extraVolumes" . }}
+{{- end }}
+  volumeClaimTemplates:
+    - metadata: { name: storage }
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources: { requests: { storage: 1Gi } }
+{{- if .Values.clickhouse.endpoint }}
+    # Collector file_storage PVC — see values.yaml collectorDataDir.
+    - metadata: { name: collector-data }
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources: { requests: { storage: 5Gi } }
+{{- end }}
+{{- end -}}

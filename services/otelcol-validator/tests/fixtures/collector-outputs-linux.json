@@ -1,0 +1,71 @@
+{
+  "_comment": "Recorded by D13b Task 7 on 2026-10-07 inside the validator's test image (linux_arm64, every offered version, its collectors sha256-checked against catalog/ by the image's build; run with --network none): `otelcol-contrib validate --config=<file>` on each case's text with the service's environment (the allowlist, VALIDATION_ENV_OVERRIDES and the ${env:} placeholders), the image's staged service account and directories (D13b rulings 34 and 41). req-hostmetrics-root-path is the source of the host_filesystem template (Linux only: darwin refuses root_path). linux-rd-k8snode-service-account is req-rd-k8snode-service-account's text, which prints nothing here (the image stages the service account the darwin recording missed). linux-kubeletstats-tls-files is kubeletstats' own TLS files missing (auth_type: tls), an error: no template. The requirement patterns' other phrasings (in-cluster configuration, the placeholder CA, the apiserver unreachable, an unset variable without k8sattributes' lead, TLS files under tls:, a bare stat) printed nothing for any case tried: validate passed.",
+  "cases": {
+    "req-hostmetrics-root-path": {
+      "yaml": "receivers:\n  hostmetrics:\n    root_path: /nonexistent-root\n    scrapers:\n      cpu: {}\nexporters:\n  debug: {}\nservice:\n  pipelines:\n    metrics:\n      receivers: [hostmetrics]\n      exporters: [debug]\n",
+      "environment": "service",
+      "runs": {
+        "0.159.0": {
+          "exitCode": 1,
+          "stderr": "Error: receivers::hostmetrics: invalid root_path: stat /nonexistent-root: no such file or directory\n"
+        },
+        "0.160.0": {
+          "exitCode": 1,
+          "stderr": "Error: receivers::hostmetrics: invalid root_path: stat /nonexistent-root: no such file or directory\n"
+        },
+        "0.161.0": {
+          "exitCode": 1,
+          "stderr": "Error: receivers::hostmetrics: invalid root_path: stat /nonexistent-root: no such file or directory\n"
+        },
+        "0.162.0": {
+          "exitCode": 1,
+          "stderr": "Error: receivers::hostmetrics: invalid root_path: stat /nonexistent-root: no such file or directory\n"
+        }
+      }
+    },
+    "linux-rd-k8snode-service-account": {
+      "yaml": "receivers:\n  otlp:\n    protocols:\n      grpc: {}\nprocessors:\n  resourcedetection:\n    detectors: [k8snode]\nexporters:\n  debug: {}\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      processors: [resourcedetection]\n      exporters: [debug]\n",
+      "environment": "service",
+      "runs": {
+        "0.159.0": {
+          "exitCode": 0,
+          "stderr": ""
+        },
+        "0.160.0": {
+          "exitCode": 0,
+          "stderr": ""
+        },
+        "0.161.0": {
+          "exitCode": 0,
+          "stderr": ""
+        },
+        "0.162.0": {
+          "exitCode": 0,
+          "stderr": ""
+        }
+      }
+    },
+    "linux-kubeletstats-tls-files": {
+      "yaml": "receivers:\n  kubeletstats:\n    auth_type: tls\n    ca_file: /etc/otel/missing-ca.pem\n    cert_file: /etc/otel/missing.crt\n    key_file: /etc/otel/missing.key\n    endpoint: https://${env:K8S_NODE_NAME}:10250\nexporters:\n  debug: {}\nservice:\n  pipelines:\n    metrics:\n      receivers: [kubeletstats]\n      exporters: [debug]\n",
+      "environment": "service",
+      "runs": {
+        "0.159.0": {
+          "exitCode": 1,
+          "stderr": "Error: failed to build pipelines: failed to create \"kubeletstats\" receiver for data type \"metrics\": cert path /etc/otel/missing-ca.pem could not be read: open /etc/otel/missing-ca.pem: no such file or directory\n"
+        },
+        "0.160.0": {
+          "exitCode": 1,
+          "stderr": "Error: failed to build pipelines: failed to create \"kubeletstats\" receiver for data type \"metrics\": cert path /etc/otel/missing-ca.pem could not be read: open /etc/otel/missing-ca.pem: no such file or directory\n"
+        },
+        "0.161.0": {
+          "exitCode": 1,
+          "stderr": "Error: failed to build pipelines: failed to create \"kubeletstats\" receiver for data type \"metrics\": cert path /etc/otel/missing-ca.pem could not be read: open /etc/otel/missing-ca.pem: no such file or directory\n"
+        },
+        "0.162.0": {
+          "exitCode": 1,
+          "stderr": "Error: failed to build pipelines: failed to create \"kubeletstats\" receiver for data type \"metrics\": cert path /etc/otel/missing-ca.pem could not be read: open /etc/otel/missing-ca.pem: no such file or directory\n"
+        }
+      }
+    }
+  }
+}

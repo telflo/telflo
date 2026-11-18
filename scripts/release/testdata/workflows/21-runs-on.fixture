@@ -1,0 +1,12 @@
+# Breaks one rule: a job on ubuntu-latest.
+file: release.yml
+rule: runs-on
+<<<
+  package:
+    needs: version
+    runs-on: ubuntu-24.04
+===
+  package:
+    needs: version
+    runs-on: ubuntu-latest
+>>>

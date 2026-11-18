@@ -1,0 +1,4 @@
+# A root that only says it's an object: no settings described. Built only by
+# the test that wants it.
+description: An exporter whose schema describes none of its settings.
+type: object

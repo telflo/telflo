@@ -1,0 +1,134 @@
+{{- include "telflo.guards" . }}
+{{- if .Values.networkPolicy.enabled }}
+{{- /*
+The platform's NetworkPolicies (D33-1 decision 19; Preflight ruling 3), on
+while networkPolicy.enabled (the default); none at all when it is false.
+They take effect only where the cluster's network plugin enforces them (the
+kind smoke runs kind's own kindnet, which enforces them: D36-2 Preflight
+ruling 4).
+
+- The sandbox: the validator, the tester and the evaluator admit only the
+  API's pods, on their own port, and reach nothing at all (Egress listed
+  with no rule: no DNS, no Service, no address outside; their own
+  loopback is the pod's, which no policy touches). Compose's internal
+  networks, in Kubernetes.
+- The API admits only the gateway's and the web app's pods, on 8080: no
+  other pod can reach it to forge X-Forwarded-For under one trusted hop.
+- The web app admits only the gateway's pods, on 3000.
+- Postgres admits only the API's pods (their migrate init container
+  included) and the opamp-server's (its migrate init container included),
+  on 5432.
+- The gateway has no policy: it is the public way in (its LoadBalancer
+  Service), and it listens on port 80 only.
+- The opamp-server chart writes its own (the agent port from anywhere, the
+  management port from the API's pods only: opamp-server.networkPolicy).
+
+The API, the web app and Postgres keep every egress: they call each other,
+the opamp-server, the internal services, the file store's bucket and mail.
+*/}}
+{{- $api := dict "ctx" . "component" "api" }}
+{{- $sandbox := list (list "otelcol-validator" (include "telflo.validatorName" .) 8001) (list "otelcol-testing" (include "telflo.testerName" .) 8002) (list "ottl-evaluator" (include "telflo.evaluatorName" .) 8003) }}
+{{- range $sandbox }}
+{{- $component := index . 0 }}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ index . 1 | quote }}
+  labels:
+    {{- include "telflo.labels" (dict "ctx" $ "component" $component) | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "telflo.selectorLabels" (dict "ctx" $ "component" $component) | nindent 6 }}
+  policyTypes: ["Ingress", "Egress"]
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              {{- include "telflo.selectorLabels" $api | nindent 14 }}
+      ports:
+        - port: {{ index . 2 }}
+          protocol: TCP
+  # Nothing out, not even DNS.
+  egress: []
+{{- end }}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "telflo.apiName" . | quote }}
+  labels:
+    {{- include "telflo.labels" $api | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "telflo.selectorLabels" $api | nindent 6 }}
+  policyTypes: ["Ingress"]
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              {{- include "telflo.selectorLabels" (dict "ctx" . "component" "gateway") | nindent 14 }}
+        - podSelector:
+            matchLabels:
+              {{- include "telflo.selectorLabels" (dict "ctx" . "component" "web") | nindent 14 }}
+      ports:
+        - port: 8080
+          protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "telflo.webName" . | quote }}
+  labels:
+    {{- include "telflo.labels" (dict "ctx" . "component" "web") | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "telflo.selectorLabels" (dict "ctx" . "component" "web") | nindent 6 }}
+  policyTypes: ["Ingress"]
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              {{- include "telflo.selectorLabels" (dict "ctx" . "component" "gateway") | nindent 14 }}
+      ports:
+        - port: 3000
+          protocol: TCP
+---
+{{- /*
+The opamp-server's pods carry its chart's selector labels: its name (the
+chart's name, or its nameOverride, cut to 43 characters as its helper does),
+this release, and component agent or management (since 0.2.4 two
+Deployments; both run the migrations and serve, so both reach Postgres).
+*/}}
+{{- $opampName := default "opamp-server" (dig "nameOverride" "" (index .Values "opamp-server")) | trunc 43 | trimSuffix "-" }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "telflo.postgresName" . | quote }}
+  labels:
+    {{- include "telflo.labels" (dict "ctx" . "component" "postgres") | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "telflo.selectorLabels" (dict "ctx" . "component" "postgres") | nindent 6 }}
+  policyTypes: ["Ingress"]
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              {{- include "telflo.selectorLabels" $api | nindent 14 }}
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: {{ $opampName | quote }}
+              app.kubernetes.io/instance: {{ .Release.Name | quote }}
+            matchExpressions:
+              - key: app.kubernetes.io/component
+                operator: In
+                values: ["agent", "management"]
+      ports:
+        - port: 5432
+          protocol: TCP
+{{- end }}

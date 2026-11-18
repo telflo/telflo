@@ -1,0 +1,20 @@
+# A release manifest in miniature (distributions/<distribution>/manifest.yaml).
+dist:
+  name: otelcol-sample
+receivers:
+  - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/receiver/samplereceiver v0.200.0
+  - gomod: go.opentelemetry.io/collector/receiver/otlpreceiver v0.200.0
+  - gomod: example.com/outside v1.0.0
+    import: example.com/outside/collector
+  - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/receiver/innerreceiver v0.200.0
+processors:
+  - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/processor/sampleprocessor v0.200.0
+  - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/processor/policyprocessor v0.200.0
+exporters:
+  - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/exporter/bareexporter v0.200.0
+  - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/exporter/httpexporter v0.200.0
+extensions:
+  - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/extension/sampleextension v0.200.0
+connectors:
+  - gomod: go.opentelemetry.io/collector/connector/forwardconnector v0.200.0
+  - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/connector/emptyconnector v0.200.0

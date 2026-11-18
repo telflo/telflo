@@ -1,0 +1,92 @@
+# The OTTL, redaction and dedup forms' components (D9d Task 1): comments,
+# an anchor and its merges, flow lists, OTTL written as typed (quotes and
+# escapes kept), statement groups before flat statements, and `0750`, as a
+# person writes them.
+x-dedup: &dedup
+  interval: 60s
+  log_count_attribute: dedup_count
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+processors:
+  transform:
+    error_mode: ignore
+    trace_statements:
+      # a group whose context is set, then one inferred, then flat statements
+      - context: resource
+        statements:
+          - keep_keys(attributes, ["service.name", "service.namespace", "cloud.region"])
+      - statements:
+          - set(span.status.code, STATUS_CODE_ERROR) where span.attributes["http.status_code"] >= 500
+      - set(span.attributes["env"], "prod")
+      - truncate_all(span.attributes, 4096) # long values
+    metric_statements:
+      - context: datapoint
+        statements:
+          - set(attributes["host"], resource.attributes["host.name"])
+      - convert_sum_to_gauge() where metric.name == "system.processes.count"
+    log_statements:
+      - context: log
+        statements:
+          - set(severity_text, "FAIL") where body == "request failed"
+          - replace_all_matches(attributes, "/user/*/list/*", "/user/{userId}/list/{listId}")
+      - 'set(log.attributes["source"], "app") where IsMatch(log.body, "^\\d+")'
+  transform/flat:
+    log_statements:
+      - set(log.body, log.attributes["message"]) where log.attributes["message"] != nil
+  redaction:
+    allow_all_keys: false
+    allowed_keys: [description, group, id, name]
+    ignored_keys:
+      - safe_attribute
+    blocked_values:
+      - "4[0-9]{12}(?:[0-9]{3})?" # Visa
+      - "(5[1-5][0-9]{14})" # MasterCard
+    blocked_key_patterns: [".*token.*", ".*api_key.*"]
+    allowed_values:
+      - '.+@mycompany\.com'
+    hash_function: md5
+    summary: debug
+    url_sanitizer:
+      enabled: true
+      attributes: [http.url, url.full]
+  logdedup:
+    <<: *dedup
+    timezone: America/Los_Angeles
+    exclude_fields:
+      - body.timestamp
+      - attributes.host\.name
+    conditions:
+      - attributes["ID"] == 1
+  logdedup/include:
+    <<: *dedup
+    include_fields: [attributes.error, body.message]
+exporters:
+  debug:
+    verbosity: detailed
+    sampling_initial: 0750 # a number to the collector
+extensions:
+  file_storage:
+    directory: /var/lib/otelcol/storage
+    directory_permissions: "0750" # a string the collector parses as octal
+service:
+  extensions: [file_storage]
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [transform, redaction]
+      exporters: [debug]
+    metrics:
+      receivers: [otlp]
+      processors: [transform]
+      exporters: [debug]
+    logs:
+      receivers: [otlp]
+      processors: [transform/flat, redaction, logdedup]
+      exporters: [debug]
+    logs/include:
+      receivers: [otlp]
+      processors: [logdedup/include]
+      exporters: [debug]

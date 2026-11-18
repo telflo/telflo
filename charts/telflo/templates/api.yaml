@@ -1,0 +1,338 @@
+{{- include "telflo.guards" . }}
+{{- $api := .Values.api }}
+{{- $name := include "telflo.apiName" . }}
+{{- $pgSecret := include "telflo.secretName" (list . "postgres") }}
+{{- $apiSecret := include "telflo.secretName" (list . "api") }}
+{{- $internal := include "telflo.secretName" (list . "internalServices") }}
+{{- $opampSecret := include "telflo.opampSecretName" . }}
+{{- $local := eq $api.fileStore.kind "local" }}
+{{- $smtp := eq $api.mail.transport "smtp" }}
+{{- $smtpCa := and $smtp $api.mail.smtp.caSecret }}
+{{- $image := include "telflo.image" (list . "api") }}
+{{- $pullPolicy := include "telflo.pullPolicy" (list . "api") }}
+{{- /*
+The API (D33-1 decisions 14, 18, 20 and 25; Preflight rulings 4, 7, 8 and 9;
+the plan's Appendix). Its pods carry app.kubernetes.io/name telflo
+and app.kubernetes.io/component api, exactly what the opamp-server chart's
+networkPolicy.management.from selects (Ruling 3).
+
+Two containers, each with only its own credentials:
+- migrate, an init container: the migrations, the catalogue's sync and
+  telflo_platform's provisioning, as telflo_platform_owner (never a Helm hook). Each
+  takes an advisory lock, so pods starting together wait for each other.
+  It holds the owner's URL, which no other container of the platform does,
+  and the API's (it provisions that role).
+- api: the server, with TELFLO_DATABASE_URL (telflo_platform) only.
+
+A database URL's password variable is listed before the URL, so Kubernetes'
+$(VAR) expansion fills it in: no password is rendered. Both containers check
+their passwords are URL-safe before exec node: a password Node's URL parser
+can't read would make it throw with the whole URL, password and all
+(Preflight ruling 4).
+*/}}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ $name | quote }}
+  labels:
+    {{- include "telflo.labels" (dict "ctx" . "component" "api") | nindent 4 }}
+  {{- with $api.serviceAccount.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+# Its annotations are where a cloud's workload identity goes (the S3 file
+# store's bucket role); no pod mounts its token.
+automountServiceAccountToken: false
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $name | quote }}
+  labels:
+    {{- include "telflo.labels" (dict "ctx" . "component" "api") | nindent 4 }}
+spec:
+  type: ClusterIP
+  selector:
+    {{- include "telflo.selectorLabels" (dict "ctx" . "component" "api") | nindent 4 }}
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+      protocol: TCP
+{{- if $local }}
+---
+# The local file store's volume (fileStore.kind local): ReadWriteOnce, so
+# one API pod (a guard refuses more). `helm uninstall` leaves it, as it
+# leaves Postgres's: the database names its files, so a reinstall onto the
+# kept database finds them (Ruling 331). Delete it explicitly to remove the
+# files.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ printf "%s-file-store" $name | quote }}
+  labels:
+    {{- include "telflo.labels" (dict "ctx" . "component" "api") | nindent 4 }}
+  annotations:
+    helm.sh/resource-policy: keep
+spec:
+  accessModes: ["ReadWriteOnce"]
+  {{- with $api.fileStore.storageClassName }}
+  storageClassName: {{ . | quote }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ $api.fileStore.size | quote }}
+{{- end }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $name | quote }}
+  labels:
+    {{- include "telflo.labels" (dict "ctx" . "component" "api") | nindent 4 }}
+spec:
+  replicas: {{ int $api.replicas }}
+  strategy:
+    {{- if $local }}
+    # The local file store's ReadWriteOnce volume: the old pod lets go of it
+    # before the new one starts.
+    type: Recreate
+    {{- else }}
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+    {{- end }}
+  selector:
+    matchLabels:
+      {{- include "telflo.selectorLabels" (dict "ctx" . "component" "api") | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "telflo.labels" (dict "ctx" . "component" "api") | nindent 8 }}
+      {{- with $api.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      serviceAccountName: {{ $name | quote }}
+      {{- include "telflo.podBasics" . | nindent 6 }}
+      securityContext:
+        # 1000, the image's node user. With the local file store, its volume
+        # is given to group 1000 so the API can write it.
+        {{- if $local }}
+        {{- include "telflo.podSecurityContext" (dict "uid" 1000 "gid" 1000 "fsGroup" 1000) | nindent 8 }}
+        {{- else }}
+        {{- include "telflo.podSecurityContext" (dict "uid" 1000 "gid" 1000) | nindent 8 }}
+        {{- end }}
+      initContainers:
+        # node runs the compiled migrate.js directly, never `npm run` (npm
+        # reaches its registry and writes ~/.npm), and writes nothing (D36-1
+        # decision 43). The image carries the catalogue at /catalog, where
+        # packages/db finds it.
+        - name: migrate
+          image: {{ $image | quote }}
+          imagePullPolicy: {{ $pullPolicy | quote }}
+          workingDir: /app/packages/db
+          command:
+            - sh
+            - -c
+            - |
+              {{- include "telflo.urlSafeExec" (dict
+                    "vars" (list "TELFLO_OWNER_PASSWORD" "TELFLO_API_PASSWORD")
+                    "exec" "node dist/migrate.js"
+                    "message" "telflo-api migrate: owner-password and api-password (in the Secret existingSecrets.postgres names) must be set, non-empty and URL-safe (only A-Z a-z 0-9 . _ ~ -); nothing was migrated") | nindent 14 }}
+          env:
+            {{- include "telflo.secretEnv" (dict "name" "TELFLO_OWNER_PASSWORD" "secret" $pgSecret "key" "owner-password") | nindent 12 }}
+            {{- include "telflo.secretEnv" (dict "name" "TELFLO_API_PASSWORD" "secret" $pgSecret "key" "api-password") | nindent 12 }}
+            - name: TELFLO_MIGRATION_DATABASE_URL
+              value: {{ include "telflo.databaseUrl" (list "telflo_platform_owner" "TELFLO_OWNER_PASSWORD" "telflo_platform") | quote }}
+            - name: TELFLO_DATABASE_URL
+              value: {{ include "telflo.databaseUrl" (list "telflo_platform" "TELFLO_API_PASSWORD" "telflo_platform") | quote }}
+          {{- with $api.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          securityContext:
+            {{- include "telflo.containerSecurityContext" (dict "uid" 1000 "gid" 1000) | nindent 12 }}
+      containers:
+        # The image's own start (node dist/index.js in /app/apps/api), after
+        # the password check. The operator's commands run in this container,
+        # with its environment: `kubectl exec deploy/telflo-api -c api --
+        # telflo-admin bootstrap --email <email> --organization <name>` makes
+        # the site's first product admin (D36-1 decision 37) and prints its
+        # set-password link, never mailing it (decision 54, Q266).
+        - name: api
+          image: {{ $image | quote }}
+          imagePullPolicy: {{ $pullPolicy | quote }}
+          workingDir: /app/apps/api
+          command:
+            - sh
+            - -c
+            - |
+              {{- include "telflo.urlSafeExec" (dict
+                    "vars" (list "TELFLO_API_PASSWORD")
+                    "exec" "node dist/index.js"
+                    "message" "telflo-api: api-password (in the Secret existingSecrets.postgres names) must be set, non-empty and URL-safe (only A-Z a-z 0-9 . _ ~ -); the API was not started") | nindent 14 }}
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          env:
+            {{- include "telflo.secretEnv" (dict "name" "TELFLO_API_PASSWORD" "secret" $pgSecret "key" "api-password") | nindent 12 }}
+            - name: TELFLO_DATABASE_URL
+              value: {{ include "telflo.databaseUrl" (list "telflo_platform" "TELFLO_API_PASSWORD" "telflo_platform") | quote }}
+            - name: TELFLO_API_PORT
+              value: "8080"
+            # One origin serves the web app and the API (the gateway's).
+            - name: TELFLO_PUBLIC_WEB_URL
+              value: {{ include "telflo.envLiteral" .Values.publicUrl }}
+            - name: TELFLO_PUBLIC_API_URL
+              value: {{ include "telflo.envLiteral" .Values.publicUrl }}
+            - name: TELFLO_MAIL_TRANSPORT
+              value: {{ include "telflo.envLiteral" $api.mail.transport }}
+            - name: TELFLO_MAIL_FROM
+              value: {{ include "telflo.envLiteral" $api.mail.from }}
+            {{- if eq $api.mail.transport "sendgrid" }}
+            {{- include "telflo.secretEnv" (dict "name" "TELFLO_SENDGRID_API_KEY" "secret" (include "telflo.secretName" (list . "mail")) "key" "sendgrid-api-key") | nindent 12 }}
+            {{- else }}
+            - name: TELFLO_SMTP_HOST
+              value: {{ include "telflo.envLiteral" $api.mail.smtp.host }}
+            - name: TELFLO_SMTP_PORT
+              value: {{ include "telflo.envLiteral" (toString (int $api.mail.smtp.port)) }}
+            - name: TELFLO_SMTP_ALLOW_INSECURE
+              value: {{ include "telflo.envLiteral" (toString $api.mail.smtp.allowInsecure) }}
+            - name: TELFLO_SMTP_TLS
+              value: {{ include "telflo.envLiteral" $api.mail.smtp.tls }}
+            {{- if $api.mail.smtp.auth }}
+            {{- $mail := include "telflo.secretName" (list . "mail") }}
+            {{- include "telflo.secretEnv" (dict "name" "TELFLO_SMTP_USERNAME" "secret" $mail "key" "smtp-username") | nindent 12 }}
+            {{- include "telflo.secretEnv" (dict "name" "TELFLO_SMTP_PASSWORD" "secret" $mail "key" "smtp-password") | nindent 12 }}
+            {{- end }}
+            {{- if $smtpCa }}
+            # api.mail.smtp.caSecret's ca.crt, mounted read-only below.
+            - name: TELFLO_SMTP_CA_FILE
+              value: {{ printf "%s/ca.crt" (include "telflo.smtpCaDir" .) | quote }}
+            {{- end }}
+            {{- end }}
+            - name: TELFLO_VERIFICATION_TOKEN_TTL_HOURS
+              value: {{ include "telflo.envLiteral" (toString (int $api.verificationTokenTtlHours)) }}
+            {{- include "telflo.secretEnv" (dict "name" "TELFLO_ACCESS_TOKEN_SECRET" "secret" $apiSecret "key" "access-token-secret") | nindent 12 }}
+            - name: TELFLO_TRUST_PROXY_HOPS
+              value: {{ include "telflo.envLiteral" (toString (int $api.trustProxyHops)) }}
+            {{- if $api.oidcGoogle.enabled }}
+            {{- $oidc := include "telflo.secretName" (list . "oidcGoogle") }}
+            {{- include "telflo.secretEnv" (dict "name" "TELFLO_OIDC_GOOGLE_CLIENT_ID" "secret" $oidc "key" "client-id") | nindent 12 }}
+            {{- include "telflo.secretEnv" (dict "name" "TELFLO_OIDC_GOOGLE_CLIENT_SECRET" "secret" $oidc "key" "client-secret") | nindent 12 }}
+            {{- end }}
+            {{- with $api.salesInquiryTo }}
+            - name: TELFLO_SALES_INQUIRY_TO
+              value: {{ include "telflo.envLiteral" . }}
+            {{- end }}
+            {{- include "telflo.siteEnv" . | nindent 12 }}
+            - name: TELFLO_OPAMP_MANAGEMENT_URL
+              value: {{ include "telflo.opampManagementUrl" . | quote }}
+            {{- include "telflo.secretEnv" (dict "name" "TELFLO_OPAMP_MANAGEMENT_SECRET" "secret" $opampSecret "key" "management-secret") | nindent 12 }}
+            - name: TELFLO_OPAMP_AGENT_PUBLIC_URL
+              value: {{ include "telflo.envLiteral" (index .Values "opamp-server" "server" "publicUrl") }}
+            - name: TELFLO_OPAMP_ALLOW_INSECURE_CONNECTIONS
+              value: {{ include "telflo.envLiteral" (toString $api.opampAllowInsecureConnections) }}
+            - name: TELFLO_OTELCOL_VALIDATOR_URL
+              value: {{ include "telflo.validatorUrl" . | quote }}
+            {{- include "telflo.secretEnv" (dict "name" "TELFLO_OTELCOL_VALIDATOR_SECRET" "secret" $internal "key" "otelcol-validator-secret") | nindent 12 }}
+            - name: TELFLO_OTELCOL_TESTING_URL
+              value: {{ include "telflo.testerUrl" . | quote }}
+            {{- include "telflo.secretEnv" (dict "name" "TELFLO_OTELCOL_TESTING_SECRET" "secret" $internal "key" "otelcol-testing-secret") | nindent 12 }}
+            - name: TELFLO_OTTL_EVALUATOR_URL
+              value: {{ include "telflo.evaluatorUrl" . | quote }}
+            {{- include "telflo.secretEnv" (dict "name" "TELFLO_OTTL_EVALUATOR_SECRET" "secret" $internal "key" "ottl-evaluator-secret") | nindent 12 }}
+            - name: TELFLO_FILE_STORE
+              value: {{ include "telflo.envLiteral" $api.fileStore.kind }}
+            {{- if $local }}
+            - name: TELFLO_FILE_STORE_ROOT
+              value: /var/lib/telflo/file-store
+            {{- else }}
+            # The bucket's credentials come from the cloud's workload identity
+            # (serviceAccount.annotations): no AWS_* variable is ever set.
+            - name: TELFLO_FILE_STORE_BUCKET
+              value: {{ include "telflo.envLiteral" $api.fileStore.bucket }}
+            {{- with $api.fileStore.prefix }}
+            - name: TELFLO_FILE_STORE_PREFIX
+              value: {{ include "telflo.envLiteral" . }}
+            {{- end }}
+            - name: TELFLO_FILE_STORE_S3_REGION
+              value: {{ include "telflo.envLiteral" $api.fileStore.region }}
+            {{- with $api.fileStore.endpoint }}
+            - name: TELFLO_FILE_STORE_S3_ENDPOINT
+              value: {{ include "telflo.envLiteral" . }}
+            {{- end }}
+            - name: TELFLO_FILE_STORE_S3_FORCE_PATH_STYLE
+              value: {{ include "telflo.envLiteral" (toString $api.fileStore.forcePathStyle) }}
+            {{- end }}
+            {{- include "telflo.secretEnv" (dict "name" "TELFLO_QUICK_DEPLOY_ENCRYPTION_KEY" "secret" $apiSecret "key" "quick-deploy-encryption-key") | nindent 12 }}
+            {{- include "telflo.secretEnv" (dict "name" "TELFLO_QUICK_DEPLOY_PREVIOUS_ENCRYPTION_KEYS" "secret" $apiSecret "key" "quick-deploy-previous-encryption-keys" "optional" true) | nindent 12 }}
+            {{- include "telflo.secretEnv" (dict "name" "TELFLO_LIBRARY_LINK_SIGNING_KEY" "secret" $apiSecret "key" "library-link-signing-key") | nindent 12 }}
+            {{- include "telflo.secretEnv" (dict "name" "TELFLO_LIBRARY_LINK_SIGNING_KEYS_PREVIOUS" "secret" $apiSecret "key" "library-link-signing-keys-previous" "optional" true) | nindent 12 }}
+          # The kubelet's probes write no log line: readiness asks /health
+          # (exactly that path; the route logs nothing, even when it fails,
+          # Preflight ruling 8), which checks the database; liveness only
+          # opens a TCP connection, so a database blip never restarts the
+          # API. The startup probe gives the first start two minutes.
+          startupProbe:
+            tcpSocket:
+              port: http
+            periodSeconds: 5
+            failureThreshold: 24
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          livenessProbe:
+            tcpSocket:
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          volumeMounts:
+            # A writable /tmp under the read-only root, for Node and the
+            # libraries that reach for one.
+            - name: tmp
+              mountPath: /tmp
+            {{- if $local }}
+            - name: file-store
+              mountPath: /var/lib/telflo/file-store
+            {{- end }}
+            {{- if $smtpCa }}
+            - name: smtp-ca
+              mountPath: {{ include "telflo.smtpCaDir" . | quote }}
+              readOnly: true
+            {{- end }}
+          {{- with $api.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          securityContext:
+            {{- include "telflo.containerSecurityContext" (dict "uid" 1000 "gid" 1000) | nindent 12 }}
+      volumes:
+        - name: tmp
+          emptyDir:
+            sizeLimit: 64Mi
+        {{- if $local }}
+        - name: file-store
+          persistentVolumeClaim:
+            claimName: {{ printf "%s-file-store" $name | quote }}
+        {{- end }}
+        {{- if $smtpCa }}
+        # The relay's CA (api.mail.smtp.caSecret): its ca.crt only, read-only.
+        - name: smtp-ca
+          secret:
+            secretName: {{ include "telflo.checkedSecretName" (list $api.mail.smtp.caSecret "api.mail.smtp.caSecret") | quote }}
+            items:
+              - key: ca.crt
+                path: ca.crt
+            defaultMode: 0444
+        {{- end }}
+      {{- include "telflo.scheduling" (list . "api") | nindent 6 }}

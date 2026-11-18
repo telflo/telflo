@@ -1,0 +1,183 @@
+# OTTL lint (D25 decision 17's route 16; decision 33; Preflight rulings 13 and
+# 17). Assembled by document.ts. A request of the wrong shape is 400
+# invalid_request.
+paths:
+  /ottl/lint:
+    post:
+      operationId: lintOttl
+      summary: Lint OTTL
+      description: >-
+        Parse-checks OTTL (the OpenTelemetry Transformation Language) with the
+        real grammar; nothing is run. Two modes: send `context` with any of
+        `conditions`, `statements` and `valueExpressions` (1 to 200 in all,
+        each at most 8,192 characters) to check them against that context, or
+        send a collector configuration as `yaml` to check every OTTL
+        expression in it (the transform, filter and tail_sampling processors
+        and the routing connector), each finding with its `location` in the
+        YAML and the `context` it was checked against. Also refused: OTTL
+        nested more than 12 deep, and a single-escaped regex sequence such as
+        `\d`, which can never match. A transform processor's own functions
+        aren't known to the linter: their use is a `note`, not an error.
+        What the linter can't judge is listed in `skipped`. Each item's
+        `input` is the expression as sent (or as the YAML holds it). Both
+        modes, neither, an unknown context and more than 200 expressions
+        answer 400 `invalid_request`; a YAML that doesn't parse 422
+        `configuration_invalid`; a linter that couldn't answer 503
+        `ottl_lint_unavailable`: nothing was checked. The body is at most
+        2 MiB as sent (413 past it): with long expressions, or ones JSON
+        escapes, that is the effective bound, below 200 of 8,192 characters.
+        An expression a YAML holds over 8,192 characters is its item's error.
+        The token's user's lints are limited to 30 a minute and two at once
+        (429 `rate_limited`).
+      tags: [ottl]
+      x-telflo-access: read
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OttlLintRequest"
+      responses:
+        "200":
+          description: Each expression's verdict.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                enum: [no-store]
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OttlLintAnswer"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "413":
+          $ref: "#/components/responses/OttlLintBodyTooLarge"
+        "422":
+          description: >-
+            The YAML doesn't parse, or isn't a collector configuration (a
+            mapping): `configuration_invalid`, the reason in
+            `details.errors`.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "503":
+          description: The linter couldn't answer (`ottl_lint_unavailable`). Nothing was checked; retry shortly.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+components:
+  schemas:
+    OttlContext:
+      type: string
+      enum: [log, span, spanevent, metric, datapoint, resource, scope]
+    OttlExpressions:
+      type: array
+      maxItems: 200
+      items:
+        type: string
+        maxLength: 8192
+    OttlLintRequest:
+      description: >-
+        Either `yaml`, or `context` with 1 to 200 expressions in all. The body
+        is at most 2 MiB as sent, the effective bound on long expressions.
+      oneOf:
+        - type: object
+          additionalProperties: false
+          required: [yaml]
+          properties:
+            yaml:
+              description: A collector configuration's YAML, 1 to 262,144 characters.
+              type: string
+              minLength: 1
+              maxLength: 262144
+        - type: object
+          additionalProperties: false
+          required: [context]
+          properties:
+            context:
+              $ref: "#/components/schemas/OttlContext"
+            conditions:
+              $ref: "#/components/schemas/OttlExpressions"
+            statements:
+              $ref: "#/components/schemas/OttlExpressions"
+            valueExpressions:
+              $ref: "#/components/schemas/OttlExpressions"
+    OttlLintItem:
+      type: object
+      additionalProperties: false
+      required: [kind, index, input, valid, error, context, location, note]
+      properties:
+        kind:
+          type: string
+          enum: [condition, statement, valueExpression]
+        index:
+          description: >-
+            The expression's place among the request's of its kind; for a YAML,
+            its place in the YAML's order.
+          type: integer
+          minimum: 0
+        input:
+          description: The expression as sent, or as the YAML holds it.
+          type: string
+        valid:
+          type: boolean
+        error:
+          description: >-
+            Why it isn't valid (a parser's message after "OTTL syntax error: "); null
+            when valid.
+          type: [string, "null"]
+        context:
+          description: The context it was checked against.
+          oneOf:
+            - $ref: "#/components/schemas/OttlContext"
+            - type: "null"
+        location:
+          description: Where it is in the YAML (`processors.transform.log_statements[0].statements[1]`); null for an expression sent as such.
+          type: [string, "null"]
+        note:
+          description: >-
+            That a flat transform statement's context was inferred, or that a
+            transform processor's own function's arguments weren't checked.
+          type: [string, "null"]
+    OttlLintAnswer:
+      type: object
+      additionalProperties: false
+      required: [valid, ottlVersion, checked, items, skipped]
+      properties:
+        valid:
+          description: Every item is valid.
+          type: boolean
+        ottlVersion:
+          description: >-
+            The OTTL version the linter runs; null when the evaluator wasn't
+            asked (no expression, or every one over 8,192 characters).
+          type: [string, "null"]
+        checked:
+          description: How many expressions were checked.
+          type: integer
+          minimum: 0
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/OttlLintItem"
+        skipped:
+          description: What in the YAML the linter can't judge, by location (a routing table's `request` context, a legacy `statement`, an unknown context).
+          type: array
+          items:
+            type: string
+  responses:
+    OttlLintBodyTooLarge:
+      description: The body is over 2 MiB (`payload_too_large`).
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"

@@ -1,0 +1,23 @@
+# Breaks one rule: collector.yml's build asking for packages: write.
+file: collector.yml
+rule: job-permissions
+<<<
+  build:
+    needs: check
+    if: ${{ needs.check.outputs.has == 'true' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    permissions:
+      contents: read
+
+===
+  build:
+    needs: check
+    if: ${{ needs.check.outputs.has == 'true' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      packages: write
+
+>>>

@@ -1,0 +1,27 @@
+$defs:
+  shared_settings:
+    type: object
+    properties:
+      size:
+        type: integer
+  embedded:
+    type: object
+    properties:
+      retry:
+        description: Embedded by the sample receiver.
+        type: boolean
+  first:
+    type: object
+    properties:
+      order:
+        description: From the first embedded member.
+        type: string
+  second:
+    type: object
+    properties:
+      order:
+        description: From the second embedded member, which wins.
+        type: boolean
+  copy_other:
+    description: A string in another package whose name starts like the copy's.
+    type: string

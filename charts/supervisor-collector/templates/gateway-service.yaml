@@ -1,0 +1,11 @@
+{{- if eq .Values.role "gateway" -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "tsc.fullname" . | quote }}
+spec:
+  selector: { app: {{ include "tsc.fullname" . | quote }} }
+  ports:
+    - { name: otlp-grpc, port: 4317, targetPort: 4317 }
+    - { name: otlp-http, port: 4318, targetPort: 4318 }
+{{- end -}}

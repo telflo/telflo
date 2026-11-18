@@ -1,0 +1,165 @@
+# Flows (D25 decision 17's routes 24-25; decisions 19 and 45): the public
+# catalogue of prebuilt collector configurations. Global, not an
+# organization's: a token sees the published flows only. Assembled by
+# document.ts. Every reply is no-store.
+paths:
+  /flows:
+    get:
+      operationId: listFlows
+      summary: List flows
+      description: >-
+        Every published flow, in the gallery's order, without its description
+        and YAML. Not paginated.
+      tags: [flows]
+      x-telflo-access: read
+      responses:
+        "200":
+          description: The published flows.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FlowList"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+  /flows/{slug}:
+    parameters:
+      - name: slug
+        in: path
+        required: true
+        description: The flow's slug, its stable identity.
+        schema:
+          type: string
+    get:
+      operationId: getFlow
+      summary: Get a flow
+      description: >-
+        One published flow with its description (Markdown) and its YAML. A
+        slug no published flow has answers 404 `flow_not_found`.
+      tags: [flows]
+      x-telflo-access: read
+      responses:
+        "200":
+          description: The flow.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FlowDetail"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+components:
+  schemas:
+    Flow:
+      description: A published flow without its description and YAML.
+      type: object
+      additionalProperties: false
+      required: [id, slug, name, summary, source, authorName, authorUrl, signals, tags, collectorVersion, distribution, sourceUrl, updatedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        slug:
+          description: Its stable identity, also its path segment.
+          type: string
+        name:
+          type: string
+        summary:
+          type: string
+        source:
+          type: string
+          enum: [telflo, community]
+        authorName:
+          type: [string, "null"]
+        authorUrl:
+          type: [string, "null"]
+        signals:
+          type: array
+          items:
+            type: string
+            enum: [traces, metrics, logs]
+        tags:
+          type: array
+          items:
+            type: string
+        collectorVersion:
+          description: The collector version it was checked against (pin it).
+          type: string
+        distribution:
+          description: The collector distribution it is built for.
+          type: string
+        sourceUrl:
+          type: [string, "null"]
+        updatedAt:
+          type: string
+          format: date-time
+    FlowDetail:
+      description: A published flow with its description and YAML.
+      type: object
+      additionalProperties: false
+      required: [id, slug, name, summary, source, authorName, authorUrl, signals, tags, collectorVersion, distribution, sourceUrl, updatedAt, description, yaml]
+      properties:
+        id:
+          type: string
+          format: uuid
+        slug:
+          type: string
+        name:
+          type: string
+        summary:
+          type: string
+        source:
+          type: string
+          enum: [telflo, community]
+        authorName:
+          type: [string, "null"]
+        authorUrl:
+          type: [string, "null"]
+        signals:
+          type: array
+          items:
+            type: string
+            enum: [traces, metrics, logs]
+        tags:
+          type: array
+          items:
+            type: string
+        collectorVersion:
+          type: string
+        distribution:
+          type: string
+        sourceUrl:
+          type: [string, "null"]
+        updatedAt:
+          type: string
+          format: date-time
+        description:
+          description: The long description, in Markdown.
+          type: string
+        yaml:
+          description: The flow's collector configuration.
+          type: string
+    FlowList:
+      type: object
+      additionalProperties: false
+      required: [items, nextCursor]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Flow"
+        nextCursor:
+          description: Always null; the list isn't paginated.
+          type: "null"

@@ -1,0 +1,7 @@
+# No service.pipelines: the canvas shows the three default pipelines.
+receivers:
+  otlp: {}
+extensions:
+  health_check: {}
+service:
+  extensions: [health_check]

@@ -1,0 +1,10 @@
+# Breaks one rule: the token as github.token (the verify-tag step's GH_TOKEN).
+file: release.yml
+rule: token-env
+<<<
+          EXPECT: ${{ github.sha }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+===
+          EXPECT: ${{ github.sha }}
+          GH_TOKEN: ${{ github.token }}
+>>>

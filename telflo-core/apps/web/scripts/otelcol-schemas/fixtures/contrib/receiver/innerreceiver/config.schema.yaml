@@ -1,0 +1,6 @@
+# A component another file refers to (`/receiver/innerreceiver.config`) before
+# the manifest reaches it.
+type: object
+properties:
+  depth:
+    type: integer

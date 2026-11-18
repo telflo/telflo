@@ -1,0 +1,11 @@
+# Breaks one rule: collector.yml's test job without its collector-test step.
+file: collector.yml
+rule: required-steps
+<<<
+      - env:
+          COLLECTOR_VERSION: ${{ matrix.version }}
+        run: bash scripts/release/steps.sh collector-test --version "$COLLECTOR_VERSION"
+
+===
+
+>>>

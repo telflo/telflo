@@ -1,0 +1,8 @@
+# Breaks one rule: the archive smoke called directly, its output not through redact.sh (Ruling 408).
+file: release.yml
+rule: required-steps
+<<<
+        run: bash scripts/release/steps.sh archive-smoke --version "$VERSION" --release "$RUNNER_TEMP/release" --work "$RUNNER_TEMP/archive-smoke"
+===
+        run: bash scripts/smoke-compose-install.sh --archive "$RUNNER_TEMP/release/telflo-compose-$VERSION.tar.gz" --sums "$RUNNER_TEMP/release/SHA256SUMS" --work "$RUNNER_TEMP/archive-smoke"
+>>>

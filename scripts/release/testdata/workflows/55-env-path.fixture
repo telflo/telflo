@@ -1,0 +1,11 @@
+# Breaks one rule: a step's PATH (another crane or docker first).
+file: release.yml
+rule: env-names
+<<<
+      - name: The pull-back, by digest
+        env:
+===
+      - name: The pull-back, by digest
+        env:
+          PATH: /tmp/bin:/usr/bin:/bin
+>>>

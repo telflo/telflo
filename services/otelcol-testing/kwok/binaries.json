@@ -1,0 +1,58 @@
+{
+  "description": "kwok's five release binaries, baked into the tester's image under /opt/kwok/v<kwokVersion>/ by scripts/download-kwok.py, each checked against its sha256 for linux/amd64 and linux/arm64 (D14a spec decision 6, Preflight ruling 19). All are Apache-2.0 upstream releases, never modified (ADR 0019's reviewed components). kwokctl.yaml names the same paths and Kubernetes version; tests/test_kwok_manifest.py keeps the two in step.",
+  "kwokVersion": "0.7.0",
+  "kubernetesVersion": "1.31.6",
+  "binaries": [
+    {
+      "name": "kwok",
+      "version": "v0.7.0",
+      "license": "Apache-2.0",
+      "url": "https://github.com/kubernetes-sigs/kwok/releases/download/v0.7.0/kwok-linux-{arch}",
+      "sha256": {
+        "amd64": "56ca852c4aa5851b44e99019214942ec55c6b6c25cbf85bea91019c1931b3415",
+        "arm64": "d66e9a2532ecfecff83de0f68ee1973a941b9c145ca246340cf9e8de8aeca033"
+      }
+    },
+    {
+      "name": "kwokctl",
+      "version": "v0.7.0",
+      "license": "Apache-2.0",
+      "url": "https://github.com/kubernetes-sigs/kwok/releases/download/v0.7.0/kwokctl-linux-{arch}",
+      "sha256": {
+        "amd64": "f21329c7522f4c3ab3f27caeaa5598820cb4560a0d4584fb69c4c79c66b8e0b5",
+        "arm64": "57e78abd75ca52d065c3d1921b7039b6134c89351ed618e8092fa66f4792ae23"
+      }
+    },
+    {
+      "name": "kubectl",
+      "version": "v1.31.6",
+      "license": "Apache-2.0",
+      "url": "https://dl.k8s.io/release/v1.31.6/bin/linux/{arch}/kubectl",
+      "sha256": {
+        "amd64": "c46b2f5b0027e919299d1eca073ebf13a4c5c0528dd854fc71a5b93396c9fa9d",
+        "arm64": "fc40a8bbdba41f022aced2dec729a1b9e937ad99872b430b6c2489f1f36a61f5"
+      }
+    },
+    {
+      "name": "kube-apiserver",
+      "version": "v1.31.6",
+      "license": "Apache-2.0",
+      "url": "https://dl.k8s.io/release/v1.31.6/bin/linux/{arch}/kube-apiserver",
+      "sha256": {
+        "amd64": "c7b543cd5f86dedc4fff8593552036b8f57f10033f6045751c241c5c34303c17",
+        "arm64": "009d58e57fe234c6a5d0af3eea12c61a1d43f688e46a938c550d1a03a05671d5"
+      }
+    },
+    {
+      "name": "etcd",
+      "version": "v3.5.21",
+      "license": "Apache-2.0",
+      "url": "https://github.com/etcd-io/etcd/releases/download/v3.5.21/etcd-v3.5.21-linux-{arch}.tar.gz",
+      "member": "etcd-v3.5.21-linux-{arch}/etcd",
+      "sha256": {
+        "amd64": "adddda4b06718e68671ffabff2f8cee48488ba61ad82900e639d108f2148501c",
+        "arm64": "95bf6918623a097c0385b96f139d90248614485e781ec9bee4768dbb6c79c53f"
+      }
+    }
+  ]
+}

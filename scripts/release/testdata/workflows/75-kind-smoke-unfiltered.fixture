@@ -1,0 +1,8 @@
+# Breaks one rule: the kind smoke called directly, its output not through redact.sh (Ruling 408).
+file: release.yml
+rule: required-steps
+<<<
+        run: bash scripts/release/steps.sh kind-smoke --version "$VERSION" --release "$RUNNER_TEMP/release" --work "$RUNNER_TEMP/kind-smoke"
+===
+        run: bash scripts/smoke-kind.sh --profile telflo-release-kind --work "$RUNNER_TEMP/kind-smoke" --images "$VERSION" --chart "$RUNNER_TEMP/release/telflo-$VERSION.tgz"
+>>>

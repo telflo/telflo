@@ -1,0 +1,65 @@
+# The host forms' components (D9c Task 1), with CRLF line endings:
+# comments, an anchor and a merge, a quoted API version and `0750`,
+# a bare scraper (null: on, with its defaults) and a root path.
+x-interval: &interval
+  collection_interval: 30s
+receivers:
+  hostmetrics:
+    <<: *interval
+    initial_delay: 1s
+    root_path: /hostfs # the host's mount
+    scrapers:
+      cpu: {}
+      memory: # the defaults
+      load:
+        cpu_average: false
+      disk:
+        include:
+          devices: [sda, sdb] # the data disks
+          match_type: strict
+      filesystem:
+        include_devices:
+          devices:
+            - /dev/sda1
+          match_type: regexp
+        exclude_fs_types:
+          fs_types: [tmpfs, overlay]
+          match_type: strict
+      network:
+        exclude:
+          interfaces:
+            - lo # loopback
+          match_type: strict
+      process:
+        include:
+          names: [nginx]
+          match_type: strict
+        mute_process_name_error: true
+  docker_stats:
+    <<: *interval
+    endpoint: unix:///var/run/docker.sock
+    api_version: "1.44" # a string to the collector
+    container_labels_to_metric_labels:
+      com.example.team: team # who owns it
+    env_vars_to_metric_labels:
+      SERVICE_NAME: service
+    excluded_images:
+      - "*/redis*"
+processors:
+  batch: {}
+exporters:
+  otlp:
+    endpoint: backend:4317
+extensions:
+  file_storage:
+    directory: /var/lib/otelcol/file_storage
+    directory_permissions: "0750" # a string the collector parses as octal
+    compaction:
+      max_transaction_size: 0750 # bare: an int64 to the collector (filestorage config.go, contrib v0.162.0)
+service:
+  extensions: [file_storage]
+  pipelines:
+    metrics:
+      receivers: [hostmetrics, docker_stats]
+      processors: [batch]
+      exporters: [otlp]

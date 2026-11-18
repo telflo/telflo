@@ -1,0 +1,22 @@
+# Breaks one rule: a job-level env value in a job that needs none (static's VERSION).
+file: release.yml
+rule: job-env
+<<<
+  static:
+    needs: version
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    permissions:
+      contents: read
+
+===
+  static:
+    needs: version
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    permissions:
+      contents: read
+    env:
+      VERSION: "9.9.9"
+
+>>>

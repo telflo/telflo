@@ -1,0 +1,51 @@
+# Routing and failover whose receivers disagree with their configs (D9d
+# decision 8, Task 3), with CRLF line endings: the canvas keeps each
+# pipeline's receivers, and its processors, as the text has them.
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+processors:
+  batch: {}
+  memory_limiter:
+    check_interval: 1s
+    limit_percentage: 80
+exporters:
+  debug:
+    verbosity: basic
+  debug/audit:
+connectors:
+  routing:
+    default_pipelines: [traces/named] # names a pipeline without routing
+    table:
+      - condition: resource.attributes["tenant"] == "acme"
+        pipelines: [traces/acme]
+  failover:
+    priority_levels:
+      - [traces/primary]
+      - [traces/backup] # a level naming a pipeline without failover
+service:
+  pipelines:
+    traces/in:
+      receivers: [otlp]
+      exporters: [routing, failover]
+    traces/acme:
+      receivers: [routing]
+      exporters: [debug]
+    traces/listed: # lists routing, which nothing in its config names
+      receivers: [routing]
+      processors: [memory_limiter, batch]
+      exporters: [debug/audit]
+    traces/named:
+      receivers: [otlp]
+      processors: [memory_limiter, batch]
+      exporters: [debug]
+    traces/primary:
+      receivers: [failover]
+      exporters: [debug]
+    traces/backup:
+      receivers:
+        - otlp
+      processors: [batch]
+      exporters: [debug]

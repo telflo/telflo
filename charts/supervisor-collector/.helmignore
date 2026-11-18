@@ -1,0 +1,3 @@
+# Render tests live beside the chart but must not ship inside the packaged
+# .tgz (helm package includes everything not listed here).
+tests/

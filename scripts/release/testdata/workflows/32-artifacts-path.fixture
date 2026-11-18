@@ -1,0 +1,10 @@
+# Breaks one rule: a smoke's work folder uploaded.
+file: release.yml
+rule: artifacts
+<<<
+          name: release-files
+          path: ${{ runner.temp }}/release/
+===
+          name: release-files
+          path: ${{ runner.temp }}/stack-smoke/
+>>>

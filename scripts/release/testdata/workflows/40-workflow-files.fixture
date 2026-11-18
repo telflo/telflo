@@ -1,0 +1,4 @@
+# Breaks one rule: another workflow file beside the three.
+file: deploy.yml
+rule: workflow-files
+extra: deploy.yml

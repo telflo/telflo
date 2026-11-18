@@ -1,0 +1,7 @@
+# The service's own scratch (the repository's root .gitignore is the
+# TypeScript workspace's). A virtual environment lives outside the checkout
+# or here, never committed.
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/

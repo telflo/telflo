@@ -1,0 +1,147 @@
+# The storage forms' components (D9d Task 1): S3 and ClickHouse fixtures
+# (the exporter's and the receiver's forms, and the ClickHouse exporter's),
+# comments, an anchor and its merge, flow and block lists, and `0750`, as a
+# person writes them. aws_s3 is the
+# receiver's own spelling at v0.162.0; the exporter is still awss3.
+x-rotation: &rotation
+  max_megabytes: 10
+  max_days: 3
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+  # SQS mode (awss3-receiver.test.ts)
+  awss3/sqs_traces:
+    s3downloader:
+      region: us-east-1
+      s3_bucket: mybucket
+      s3_prefix: mytrace
+      s3_force_path_style: true
+      skip_ingesting_tagged_objects: true
+    sqs:
+      queue_url: https://sqs.us-east-1.amazonaws.com/123456789012/test-queue
+      region: us-east-1
+      wait_time_seconds: 10
+      max_number_of_messages: 5
+  # a time range, under the collector's current name
+  aws_s3/replay:
+    starttime: "2024-01-01 01:00"
+    endtime: "2024-01-02"
+    s3downloader:
+      region: us-west-1
+      s3_bucket: mybucket
+      s3_prefix: trace
+      s3_partition_timezone: UTC
+      file_prefix_include_telemetry_type: false
+      tag_object_after_ingestion: true
+    encodings:
+      - extension: text_encoding
+        suffix: .txt
+    notifications:
+      opampextension: opamp
+  # the receiver and the exporter share a name
+  awss3:
+    starttime: "2024-01-01"
+    endtime: "2024-01-02"
+    s3downloader:
+      s3_bucket: archive
+      s3_prefix: logs
+exporters:
+  awss3:
+    s3uploader:
+      region: eu-central-1
+      s3_bucket: databucket
+      s3_base_prefix: environment/prod
+      s3_prefix: metric
+      s3_partition_format: '%Y/%m/%d/%H/%M'
+      s3_partition_timezone: UTC
+      role_arn: arn:aws:iam::123456789012:role/otel-s3-writer
+      storage_class: STANDARD_IA
+      compression: gzip
+      s3_force_path_style: true
+      retry_mode: adaptive
+      retry_max_attempts: 5
+      retry_max_backoff: 30s
+      unique_key_func_name: uuidv7
+    marshaler: otlp_proto
+    resource_attrs_to_s3:
+      s3_bucket: com.awss3.bucket
+      s3_prefix: com.awss3.prefix
+    timeout: 20s
+    sending_queue:
+      enabled: true
+      num_consumers: 10
+      queue_size: 100
+    retry_on_failure:
+      enabled: true
+      initial_interval: 5s
+      max_interval: 30s
+  clickhouse:
+    endpoint: tcp://clickhouse:9000?dial_timeout=10s
+    database: otel
+    username: otel_writer
+    password: ${env:CLICKHOUSE_PASSWORD}
+    ttl: 72h
+    compress: zstd
+    async_insert: true
+    create_schema: false
+    logs_table_name: my_logs
+    traces_table_name: my_traces
+    metrics_tables:
+      gauge:
+        name: my_metrics_gauge
+      exponential_histogram:
+        name: my_metrics_exp_histogram
+    cluster_name: my_cluster
+    table_engine:
+      name: ReplicatedMergeTree
+      params: "'/clickhouse/tables/{shard}/otel', '{replica}'"
+    timeout: 10s
+    sending_queue:
+      enabled: true
+      num_consumers: 4
+      queue_size: 0750 # a number to the collector
+    retry_on_failure:
+      enabled: true
+      initial_interval: 5s
+      max_interval: 30s
+      max_elapsed_time: 300s
+    tls:
+      insecure_skip_verify: true
+      ca_file: /etc/ssl/certs/ca.pem
+  file/rotated:
+    path: /var/log/otel/telemetry.json
+    format: json
+    rotation:
+      <<: *rotation
+      max_backups: 3
+      localtime: true
+    flush_interval: 5s
+    create_directory: true
+    directory_permissions: "0750" # a string the collector parses as octal
+  file/append:
+    path: /var/log/otel/append.json
+    append: true # no rotation with it
+extensions:
+  text_encoding: {}
+  opamp:
+    server:
+      ws:
+        endpoint: wss://opamp.example.com/v1/opamp
+service:
+  extensions: [text_encoding, opamp]
+  pipelines:
+    traces:
+      receivers: [otlp, awss3/sqs_traces]
+      exporters: [awss3, clickhouse]
+    metrics:
+      receivers: [otlp]
+      exporters: [awss3]
+    logs:
+      receivers: [otlp, aws_s3/replay, awss3]
+      exporters:
+        - awss3
+        - clickhouse
+        - file/rotated
+        - file/append

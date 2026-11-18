@@ -1,0 +1,10 @@
+# Breaks one rule: kind-smoke not needing build and package (the reviewer's form).
+file: release.yml
+rule: needs
+<<<
+  kind-smoke:
+    needs: [version, build, package]
+===
+  kind-smoke:
+    needs: [version]
+>>>

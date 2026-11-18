@@ -1,0 +1,3 @@
+type: http_sample
+status:
+  class: exporter

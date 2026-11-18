@@ -1,0 +1,118 @@
+/* driver.js theme overrides to match Telflo design (ADR 0018). Rules for
+ * guides that run over a Radix dialog belong to the deploy guide and arrive
+ * with it. The editor's tour (D9a) uses these rules as they are. */
+
+.driver-popover.tour-popover {
+  background-color: var(--color-popover, #ffffff);
+  color: var(--color-popover-foreground, #09090b);
+  border-radius: var(--radius, 0.5rem);
+  border: 1px solid var(--color-border, #e4e4e7);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  padding: 16px;
+  max-width: 340px;
+}
+
+.driver-popover.tour-popover .driver-popover-title {
+  font-size: 1rem;
+  font-weight: 600;
+  font-family: var(--font-sans, ui-sans-serif);
+  color: var(--color-foreground, #09090b);
+}
+
+.driver-popover.tour-popover .driver-popover-description {
+  font-size: 0.875rem;
+  line-height: 1.5;
+  font-family: var(--font-sans, ui-sans-serif);
+  color: var(--color-muted-foreground, #71717a);
+}
+
+.driver-popover.tour-popover .driver-popover-progress-text {
+  font-size: 0.75rem;
+  color: var(--color-muted-foreground, #71717a);
+}
+
+.driver-popover.tour-popover .driver-popover-description a {
+  color: var(--color-brand, #2364d2);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+:where(.dark, .dark *) .driver-popover.tour-popover .driver-popover-description a {
+  color: var(--color-brand, #5f95ef);
+}
+
+.driver-popover.tour-popover .driver-popover-navigation-btns {
+  gap: 8px;
+}
+
+.driver-popover.tour-popover .driver-popover-next-btn {
+  background-color: var(--color-primary, #18181b);
+  color: var(--color-primary-foreground, #fafafa);
+  border: none;
+  border-radius: calc(var(--radius, 0.5rem) - 2px);
+  padding: 6px 16px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  font-family: var(--font-sans, ui-sans-serif);
+  text-shadow: none;
+}
+
+.driver-popover.tour-popover .driver-popover-next-btn:hover {
+  opacity: 0.9;
+}
+
+.driver-popover.tour-popover .driver-popover-prev-btn {
+  background-color: transparent;
+  color: var(--color-foreground, #09090b);
+  border: 1px solid var(--color-border, #e4e4e7);
+  border-radius: calc(var(--radius, 0.5rem) - 2px);
+  padding: 6px 16px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  font-family: var(--font-sans, ui-sans-serif);
+  text-shadow: none;
+}
+
+.driver-popover.tour-popover .driver-popover-prev-btn:hover {
+  background-color: var(--color-secondary, #f4f4f5);
+}
+
+.driver-popover.tour-popover .driver-popover-close-btn {
+  color: var(--color-muted-foreground, #71717a);
+}
+
+.driver-popover.tour-popover .driver-popover-close-btn:hover {
+  color: var(--color-foreground, #09090b);
+}
+
+/* driver.js arrow color override */
+.driver-popover.tour-popover .driver-popover-arrow-side-left,
+.driver-popover.tour-popover .driver-popover-arrow-side-right,
+.driver-popover.tour-popover .driver-popover-arrow-side-top,
+.driver-popover.tour-popover .driver-popover-arrow-side-bottom {
+  border-color: var(--color-border, #e4e4e7);
+}
+
+/* Dark mode overrides */
+:where(.dark, .dark *) .driver-popover.tour-popover {
+  background-color: var(--color-popover, #1e293b);
+  color: var(--color-popover-foreground, #f8fafc);
+  border-color: var(--color-border, #334155);
+}
+
+:where(.dark, .dark *) .driver-popover.tour-popover .driver-popover-title {
+  color: var(--color-foreground, #f8fafc);
+}
+
+:where(.dark, .dark *) .driver-popover.tour-popover .driver-popover-prev-btn {
+  color: var(--color-foreground, #f8fafc);
+  border-color: var(--color-border, #334155);
+}
+
+:where(.dark, .dark *) .driver-popover.tour-popover .driver-popover-prev-btn:hover {
+  background-color: var(--color-secondary, #334155);
+}
+
+:where(.dark, .dark *) .driver-popover.tour-popover .driver-popover-close-btn:hover {
+  color: var(--color-foreground, #f8fafc);
+}

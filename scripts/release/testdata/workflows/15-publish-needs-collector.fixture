@@ -1,0 +1,10 @@
+# Breaks one rule: collector.yml's publish not needing test.
+file: collector.yml
+rule: publish-needs
+<<<
+    if: ${{ inputs.publish && needs.check.outputs.has == 'true' }}
+    needs: [check, test]
+===
+    if: ${{ inputs.publish && needs.check.outputs.has == 'true' }}
+    needs: [check, build]
+>>>

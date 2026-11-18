@@ -1,0 +1,9 @@
+$defs:
+  client_config:
+    type: object
+    properties:
+      endpoint:
+        type: string
+      timeout:
+        type: string
+        format: duration

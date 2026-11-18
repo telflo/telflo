@@ -1,0 +1,15 @@
+# Breaks one rule: a job without timeout-minutes.
+file: release.yml
+rule: timeout
+<<<
+  package:
+    needs: version
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+
+===
+  package:
+    needs: version
+    runs-on: ubuntu-24.04
+
+>>>

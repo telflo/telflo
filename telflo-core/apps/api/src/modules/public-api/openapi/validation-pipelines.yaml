@@ -1,0 +1,388 @@
+# A version's validation pipelines (D25 decision 17's routes 13-14;
+# decisions 19, 20 and 32; Preflight ruling 8): the Validation tab's
+# pipelines and rules, which a test run with `useSavedRules` evaluates.
+# Assembled by document.ts. A version's pipelines follow its configuration's
+# visibility: the published ones and the token's user's own drafts. Every
+# reply is no-store. A rule is the platform's (kind, target, pattern or
+# ottl, name, description); a pipeline has no `name` of its own.
+paths:
+  /configurations/{configurationId}/versions/{versionNumber}/validation-pipelines:
+    parameters:
+      - $ref: "#/components/parameters/ConfigurationId"
+      - $ref: "#/components/parameters/VersionNumber"
+    get:
+      operationId: listValidationPipelines
+      summary: List a version's validation pipelines
+      description: >-
+        The validation pipelines saved on the version (what the web app's
+        Validation tab shows), one per YAML pipeline, oldest first, each with
+        its rules in position order. `isApiOwned` marks the rules this API
+        wrote, which its next PUT on that pipeline replaces. Not paginated.
+        Another member's draft, another organization's configuration and a
+        malformed id answer 404 `configuration_not_found`; a number the
+        configuration has no version of, 404 `configuration_version_not_found`.
+      tags: [validation-pipelines]
+      x-telflo-access: read
+      responses:
+        "200":
+          description: The version's validation pipelines.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationPipelineList"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+  /configurations/{configurationId}/versions/{versionNumber}/validation-pipelines/{pipeline}:
+    parameters:
+      - $ref: "#/components/parameters/ConfigurationId"
+      - $ref: "#/components/parameters/VersionNumber"
+      - name: pipeline
+        in: path
+        required: true
+        description: >-
+          A key of the version's `service.pipelines` (`logs`, `traces/otlp`),
+          1 to 200 characters. Its `/` may be sent as it is or as `%2F`; the
+          path is decoded once, so `%252F` is a literal `%2F`.
+        schema:
+          type: string
+          minLength: 1
+          maxLength: 200
+    put:
+      operationId: replaceValidationPipelineRules
+      summary: Save rules as the version's validation pipeline for a YAML pipeline
+      description: >-
+        Creates the version's validation pipeline for `pipeline` if it has
+        none, then replaces the rules this API saved on it before with the
+        body's, after every rule kept: rules added in the web app's Validation
+        tab are kept, wherever they are. A test run with `useSavedRules` then
+        evaluates them all. Allowed on a published version.
+
+
+        `signal` must be the pipeline name's first part (400
+        `invalid_request`). `pipeline` must be a key of the version's
+        `service.pipelines` (422 `configuration_invalid`). Each regex and OTTL
+        rule is checked as the Validation tab checks one, counting against
+        your rule checks a minute (429 `validation_rule_rate_limited`): an
+        OTTL context the signal doesn't have is 400 `invalid_request`; an
+        OTTL condition that can't fail or can't pass (`true` with `all`) is
+        400 `validation_rule_invalid` before any check; a rule
+        that doesn't parse is 400 `validation_rule_invalid`, with
+        `details.ruleIndex` (from 0) and `details.problems`; the checker
+        unavailable is 503 `rules_unavailable`. A pipeline holds at most 200
+        rules, kept and new together (409 `validation_rule_limit_reached`).
+        Nothing is saved on a refusal.
+      tags: [validation-pipelines]
+      x-telflo-access: write
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReplaceValidationRulesRequest"
+      responses:
+        "200":
+          description: The validation pipeline as it now is, with what the call did.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplacedValidationRules"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          description: The pipeline would hold more than 200 rules (`validation_rule_limit_reached`).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "413":
+          description: The body is over 1 MiB (`payload_too_large`).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "422":
+          description: >-
+            The pipeline isn't a key of the version's `service.pipelines`, or
+            the version's YAML doesn't parse (`configuration_invalid`, one error
+            at `service.pipelines`).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConfigurationVersionInvalidError"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "503":
+          description: The rules can't be checked right now (`rules_unavailable`); nothing was saved.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+components:
+  schemas:
+    ValidationRuleCount:
+      description: A count or distinct rule's comparison; `value2` with `between` only, at least `value`.
+      type: object
+      additionalProperties: false
+      required: [operator, value]
+      properties:
+        operator:
+          type: string
+          enum: [eq, ne, gt, gte, lt, lte, between]
+        value:
+          type: integer
+          minimum: 0
+          maximum: 2147483647
+        value2:
+          type: integer
+          minimum: 0
+          maximum: 2147483647
+    ValidationRuleOttl:
+      description: >-
+        An OTTL rule's OTTL. `all`, `any` and `none` take a `condition`;
+        `count` a `condition` and a `count`; `distinct` an `expression` and a
+        `count`, its `condition` an optional filter. Each text is at most
+        8,192 bytes and not blank. The context must be one the pipeline's
+        signal has (logs: log, resource, scope; traces: span, spanevent,
+        resource, scope; metrics: metric, datapoint, resource, scope).
+      type: object
+      additionalProperties: false
+      required: [context, quantifier]
+      properties:
+        context:
+          type: string
+          enum: [log, span, spanevent, metric, datapoint, resource, scope]
+        quantifier:
+          type: string
+          enum: [all, any, none, count, distinct]
+        condition:
+          type: string
+        expression:
+          type: string
+        count:
+          $ref: "#/components/schemas/ValidationRuleCount"
+    ValidationRuleInput:
+      description: >-
+        A rule, as the Validation tab saves one. A text or regex rule
+        (`contains_text`, `not_contains_text`, `contains_regex`,
+        `not_contains_regex`) has a `pattern` (at most 8,192 bytes, not blank;
+        a regex is Go's RE2) and searches the `output` or the collector's
+        `stderr`; an `ottl` rule has its `ottl` and checks the `output`.
+        `name` (trimmed, at most 200 characters) and `description` (at most
+        2,000) may be left out.
+      type: object
+      additionalProperties: false
+      required: [kind, target]
+      properties:
+        kind:
+          type: string
+          enum: [contains_text, not_contains_text, contains_regex, not_contains_regex, ottl]
+        target:
+          type: string
+          enum: [output, stderr]
+        pattern:
+          type: string
+        ottl:
+          $ref: "#/components/schemas/ValidationRuleOttl"
+        name:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+          maxLength: 2000
+    ValidationRule:
+      description: A saved rule. `pattern` is null for an OTTL rule, `ottl` null for the others.
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - validationPipelineId
+        - position
+        - kind
+        - target
+        - pattern
+        - ottl
+        - name
+        - description
+        - createdByUserId
+        - createdAt
+        - updatedAt
+        - isApiOwned
+      properties:
+        id:
+          type: string
+          format: uuid
+        validationPipelineId:
+          type: string
+          format: uuid
+        position:
+          description: Its place in the pipeline, from 1; gaps after a delete stay.
+          type: integer
+          minimum: 1
+        kind:
+          type: string
+          enum: [contains_text, not_contains_text, contains_regex, not_contains_regex, ottl]
+        target:
+          type: string
+          enum: [output, stderr]
+        pattern:
+          type: [string, "null"]
+        ottl:
+          oneOf:
+            - $ref: "#/components/schemas/ValidationRuleOttl"
+            - type: "null"
+        name:
+          description: The empty string when it has none.
+          type: string
+        description:
+          description: The empty string when it has none.
+          type: string
+        createdByUserId:
+          description: Who added it (for a rule this API wrote, the token's user), or null once their account is deleted.
+          type: [string, "null"]
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        isApiOwned:
+          description: Written by this API's PUT, which replaces it next time; false for a rule added in the web app.
+          type: boolean
+    ValidationPipeline:
+      description: A version's validation pipeline for one YAML pipeline, with its rules in position order.
+      type: object
+      additionalProperties: false
+      required: [id, configurationId, versionId, versionNumber, pipeline, signal, createdByUserId, createdAt, rules]
+      properties:
+        id:
+          type: string
+          format: uuid
+        configurationId:
+          type: string
+          format: uuid
+        versionId:
+          type: string
+          format: uuid
+        versionNumber:
+          type: integer
+          minimum: 1
+        pipeline:
+          description: The `service.pipelines` key it validates.
+          type: string
+          maxLength: 200
+        signal:
+          description: The pipeline name's first part.
+          type: string
+          enum: [traces, metrics, logs]
+        createdByUserId:
+          type: [string, "null"]
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        rules:
+          type: array
+          maxItems: 200
+          items:
+            $ref: "#/components/schemas/ValidationRule"
+    ValidationPipelineList:
+      type: object
+      additionalProperties: false
+      required: [items, nextCursor]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ValidationPipeline"
+        nextCursor:
+          description: Always null; the list isn't paginated.
+          type: "null"
+    ReplaceValidationRulesRequest:
+      type: object
+      additionalProperties: false
+      required: [signal, rules]
+      properties:
+        signal:
+          description: The pipeline's signal, its name's first part.
+          type: string
+          enum: [traces, metrics, logs]
+        rules:
+          description: The rules this API owns on the pipeline from now on, in order.
+          type: array
+          minItems: 1
+          maxItems: 20
+          items:
+            $ref: "#/components/schemas/ValidationRuleInput"
+    ReplacedValidationRules:
+      description: The validation pipeline as it now is, whether this call created it, and how many rules it replaced and kept.
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - configurationId
+        - versionId
+        - versionNumber
+        - pipeline
+        - signal
+        - createdByUserId
+        - createdAt
+        - rules
+        - created
+        - rulesReplaced
+        - rulesKept
+      properties:
+        id:
+          type: string
+          format: uuid
+        configurationId:
+          type: string
+          format: uuid
+        versionId:
+          type: string
+          format: uuid
+        versionNumber:
+          type: integer
+          minimum: 1
+        pipeline:
+          type: string
+          maxLength: 200
+        signal:
+          type: string
+          enum: [traces, metrics, logs]
+        createdByUserId:
+          type: [string, "null"]
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        rules:
+          type: array
+          maxItems: 200
+          items:
+            $ref: "#/components/schemas/ValidationRule"
+        created:
+          description: This call created the validation pipeline.
+          type: boolean
+        rulesReplaced:
+          description: How many rules this API saved before were deleted.
+          type: integer
+          minimum: 0
+        rulesKept:
+          description: How many rules added in the web app were kept.
+          type: integer
+          minimum: 0

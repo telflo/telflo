@@ -1,0 +1,9 @@
+# Breaks one rule: a step writing GITHUB_ENV.
+file: release.yml
+rule: github-env
+<<<
+      - run: mkdir -p "$RUNNER_TEMP/release"
+===
+      - run: mkdir -p "$RUNNER_TEMP/release"
+      - run: bash scripts/release/steps.sh free-disk 1 GITHUB_ENV
+>>>

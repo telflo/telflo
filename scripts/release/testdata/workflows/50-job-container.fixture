@@ -1,0 +1,13 @@
+# Breaks one rule: a job run inside a container image (container:).
+file: release.yml
+rule: job-keys
+<<<
+  static:
+    needs: version
+    runs-on: ubuntu-24.04
+===
+  static:
+    needs: version
+    container: ubuntu:24.04
+    runs-on: ubuntu-24.04
+>>>

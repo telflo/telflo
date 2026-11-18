@@ -1,0 +1,44 @@
+# List items that own anchors, aliased in later components (ruling 32).
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+processors:
+  attributes:
+    actions:
+      - &insert-environment
+        key: environment
+        value: production
+        action: insert
+      - key: mode
+        value: 0750 # octal to the collector
+        action: upsert
+      - &delete-secret {key: secret, action: delete}
+  attributes/shared:
+    actions:
+      - *insert-environment
+      - &insert-team
+        key: team
+        value: platform
+        action: insert
+      - *delete-secret
+  resource:
+    attributes:
+      - *insert-team
+      - &upsert-region {key: region, value: eu, action: upsert}
+      - key: zone # dropped
+        action: delete
+exporters:
+  debug:
+  file:
+    path: /tmp/out.json
+    rules:
+      - *upsert-region
+      - max_days: 3
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [attributes, attributes/shared, resource]
+      exporters: [debug, file]

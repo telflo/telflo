@@ -1,0 +1,47 @@
+# Settings upstream names after Go fields: a map tagged `,remain` (as
+# tail_sampling's ExtensionCfg), in a definition used and in one embedded,
+# and headers the collector reads by their Go names.
+$defs:
+  policy:
+    type: object
+    properties:
+      name:
+        type: string
+      ExtensionCfg:
+        description: Configs for any extensions that are used.
+        type: object
+        additionalProperties:
+          type: object
+          additionalProperties:
+            x-customType: any
+  sub_policy:
+    type: object
+    properties:
+      kind:
+        type: string
+      ExtensionCfg:
+        type: object
+        additionalProperties:
+          type: object
+  headers:
+    type: object
+    properties:
+      Fixed:
+        type: object
+        additionalProperties:
+          type: string
+type: object
+properties:
+  policies:
+    type: array
+    items:
+      $ref: policy
+  group:
+    type: object
+    properties:
+      label:
+        type: string
+    allOf:
+      - $ref: sub_policy
+allOf:
+  - $ref: headers

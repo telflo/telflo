@@ -1,0 +1,30 @@
+# The default profile with the site block written out at the values'
+# defaults: the open source's (D36-1 decision 27; Q248). It renders exactly
+# as the default profile does.
+publicUrl: https://telflo.example.com
+site:
+  registration: invite-only
+  playground: false
+  anonymousValidate: false
+  publicFlows: false
+  salesInquiry: false
+  emailNotifications: false
+  docsUrl: "https://docs.telflo.com/"
+  terms:
+    version: ""
+    termsUrl: ""
+    privacyUrl: ""
+    cookiePolicyUrl: ""
+api:
+  mail:
+    from: noreply@telflo.example.com
+    smtp:
+      host: smtp.example.com
+      tls: starttls
+      auth: false
+      caSecret: ""
+opamp-server:
+  server:
+    publicUrl: https://opamp.example.com/opamp/api/v1
+gateway:
+  extraRoutes: []

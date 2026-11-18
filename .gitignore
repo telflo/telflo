@@ -1,0 +1,44 @@
+# Dependencies
+node_modules/
+.pnp/
+.pnp.js
+
+# Build output
+dist/
+build/
+.react-router/
+*.tsbuildinfo
+
+# Test output
+coverage/
+.vitest/
+test-results/
+playwright-report/
+
+# Environment
+.env
+.env.*
+!.env.example
+# The chart's Secrets' values, for scripts/create-secrets.sh (e.g. dev.secrets.env)
+*.secrets.env
+
+# Editor
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Subagent-driven-development scratch (ledger, briefs, review packages)
+.superpowers/
+
+# The release pipeline's private tools (scripts/release/tools.sh, D36-2)
+.tools/
+# The Compose install's generated secrets (deploy/compose/setup.sh, D36-2)
+deploy/compose/secrets/

@@ -1,0 +1,11 @@
+# Breaks one rule: a push to a branch besides the tags.
+file: release.yml
+rule: trigger
+<<<
+  push:
+    tags: ["v*"]
+===
+  push:
+    branches: [main]
+    tags: ["v*"]
+>>>

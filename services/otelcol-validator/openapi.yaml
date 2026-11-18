@@ -1,0 +1,385 @@
+openapi: 3.1.0
+jsonSchemaDialect: https://json-schema.org/draft/2020-12/schema
+info:
+  title: otelcol-validator API
+  version: 1.0.0
+  description: |
+    The collector validator (D13b spec decisions 10 and 11): checks an
+    OpenTelemetry Collector configuration with `otelcol-contrib validate` of
+    the version it is pinned to, and says what a host must provide to run
+    it. The platform's API is its only caller; browsers never reach it.
+
+    - It listens on an internal port (8001), never behind the gateway.
+    - Every request but `GET /health` needs `Authorization: Bearer <secret>`,
+      the shared secret in `OTELCOL_VALIDATOR_SECRET` (or one of
+      `OTELCOL_VALIDATOR_SECRETS_PREVIOUS` during a rotation), compared in
+      constant time. Without it, every request, whatever its path, answers
+      the same 401, before the body is read.
+    - After authentication, a request no route matches, by path or by
+      method, answers 404 `not_found`.
+    - The distribution and the version are the catalogue's
+      (`catalog/distributions/*.json`): one it doesn't list answers 404, a
+      deprecated version 409 `version_retired`, an offered version whose
+      collector this validator doesn't hold 503 `version_unavailable`. These
+      are checked before the body is read.
+    - A request body is at most 2 MiB (2,097,152 bytes), refused with 413
+      as soon as it is declared or read past that (the longest body these
+      limits allow is about 1.61 MiB; the platform's own, its text and the
+      organization's values, about 1.4 MB); its
+      `yaml` is at most 262,144 characters (the platform's limit), refused
+      with 413 too.
+    - A check runs under one deadline: the collector's limit (10 s) plus
+      2 s. A check past it answers 200, invalid, `Validation timed out
+      after 12s`.
+    - At most `OTELCOL_VALIDATOR_MAX_CONCURRENCY` (8) collectors run at once;
+      a request waits at most 5 seconds for one to free up, then answers 503
+      `validator_busy`.
+    - Every error answers the envelope `{"error": {"code", "message"}}`. A
+      message never quotes the request.
+    - Nothing is stored, and the text and the collector's output never
+      reach a log line.
+
+    This file is the contract: the validator's conformance test checks every
+    answer of every route against it, and the platform's client and test
+    double are checked against it too.
+servers:
+  - url: http://localhost:8001
+    description: The validator inside the stack (compose publishes it on the host's 127.0.0.1:51236).
+security:
+  - bearerAuth: []
+tags:
+  - name: validation
+    description: Checking a configuration's text.
+  - name: health
+    description: Liveness.
+paths:
+  /health:
+    get:
+      operationId: getHealth
+      tags: [health]
+      summary: Liveness.
+      description: Answers 200 without the secret. It says nothing about the versions held.
+      security: []
+      responses:
+        "200":
+          description: The validator is up.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [status]
+                properties:
+                  status:
+                    type: string
+                    const: ok
+  /validator/v1/validate/{distribution}/{version}:
+    parameters:
+      - name: distribution
+        in: path
+        required: true
+        description: A distribution of the catalogue, e.g. `otelcol-contrib`.
+        schema:
+          type: string
+          maxLength: 64
+          pattern: "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+      - name: version
+        in: path
+        required: true
+        description: One of the distribution's versions, `major.minor.patch`.
+        schema:
+          type: string
+          maxLength: 64
+          pattern: "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    post:
+      operationId: validateConfiguration
+      tags: [validation]
+      summary: Check a configuration's text with one collector version.
+      description: |
+        Fills in the organization's values first (D20 decision 13): each live
+        `${org:NAME}` with a value in `organizationVariables` is replaced by
+        it, every `$` of the value doubled, as the opamp-server fills them
+        in, and everything below runs on the filled-in text. A text whose
+        fill-in is over 1 MiB of UTF-8 answers 200, invalid, `The
+        configuration with its organization variables filled in is over 1
+        MiB.`, and nothing is built.
+
+        Then runs `otelcol-contrib validate` of the version on the text, with the
+        validator's protections (D13b spec decision 10): non-`env` confmap
+        providers are replaced with placeholders, `${env:VAR}` gets a
+        placeholder in the collector's environment only, Datadog exporters get
+        a placeholder `hostname`. `valid` is false whenever `errors` isn't
+        empty, and `errors` is never empty when `valid` is false.
+        Requirements never count as errors.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ValidateRequest"
+      responses:
+        "200":
+          description: The text was checked.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidateResponse"
+              examples:
+                valid:
+                  value:
+                    valid: true
+                    errors: []
+                    requirements:
+                      - category: env_var
+                        title: Set environment variable EXPORT_URL
+                        description: This configuration references EXPORT_URL via ${env:EXPORT_URL}. Set it in your deployment environment before starting the collector, or provide a default with ${env:EXPORT_URL:-fallback}.
+                        componentPath: null
+                    distribution: otelcol-contrib
+                    version: 0.162.0
+                invalid:
+                  value:
+                    valid: false
+                    errors:
+                      - message: 'unknown type: "nosuchexporter" for id: "nosuchexporter/2"'
+                        componentPath: exporters::nosuchexporter/2
+                    requirements: []
+                    distribution: otelcol-contrib
+                    version: 0.162.0
+        "400":
+          description: The path or the body is malformed.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: invalid_request
+                  message: The request body must be a JSON object.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          description: The catalogue lists no such distribution, or no such version of it.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: not_found
+                  message: The catalogue lists no such version of this distribution.
+        "409":
+          description: The version is deprecated in the catalogue; the validator doesn't hold it.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: version_retired
+                  message: "This collector version is retired: pick an offered version to check this configuration."
+        "413":
+          description: The body is larger than 2 MiB, or its `yaml` is longer than 262,144 characters; `payload_too_large` either way.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: payload_too_large
+                  message: The request body is larger than 2 MiB.
+        "500":
+          $ref: "#/components/responses/InternalError"
+        "503":
+          description: |
+            `version_unavailable`: the version is offered but this validator
+            doesn't hold its collector. `validator_busy`: no slot freed up
+            within 5 seconds.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: validator_busy
+                  message: Every validation slot is busy. Retry shortly.
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: The shared secret, `OTELCOL_VALIDATOR_SECRET` (at least 32 bytes) or one of `OTELCOL_VALIDATOR_SECRETS_PREVIOUS`.
+  responses:
+    Unauthorized:
+      description: The `Authorization` header is missing or names no accepted secret.
+      headers:
+        WWW-Authenticate:
+          schema:
+            type: string
+            const: Bearer
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            error:
+              code: unauthorized
+              message: Missing or invalid credentials.
+    InternalError:
+      description: Something unexpected failed; the text was not checked.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            error:
+              code: internal_error
+              message: Internal server error.
+  schemas:
+    ValidateRequest:
+      type: object
+      additionalProperties: false
+      required: [yaml]
+      properties:
+        yaml:
+          type: string
+          minLength: 1
+          maxLength: 262144
+          description: The configuration's text, as written; longer answers 413.
+        organizationVariables:
+          type: object
+          description: |
+            The organization's values, by name, to fill in before every check
+            (D20 decisions 13 and 27): the platform sends those the text
+            references. Left out, none. Within the opamp-server's bounds: at
+            most 150; a name an ASCII letter or an underscore, then ASCII
+            letters, digits or underscores, at most 128 characters; a value
+            of at most 1,024 characters on one line, with no control
+            character (C0, DEL or C1) and neither U+2028 nor U+2029. Outside
+            them, 400 `invalid_request`.
+          maxProperties: 150
+          propertyNames:
+            type: string
+            minLength: 1
+            maxLength: 128
+            pattern: "^[A-Za-z_][A-Za-z0-9_]*$"
+          additionalProperties:
+            type: string
+            maxLength: 1024
+            pattern: "^[^\\x00-\\x1f\\x7f-\\x9f\\u2028\\u2029]*$"
+    ValidateResponse:
+      type: object
+      additionalProperties: false
+      required: [valid, errors, requirements, distribution, version]
+      properties:
+        valid:
+          type: boolean
+        errors:
+          type: array
+          description: >-
+            At most 200 of the collector's errors; when it reported more, a
+            201st says so (`The collector reported more errors than shown.`,
+            componentPath null).
+          maxItems: 201
+          items:
+            $ref: "#/components/schemas/ValidationError"
+        requirements:
+          type: array
+          description: >-
+            Each requirement once (by category, title and componentPath) and
+            at most 200 of them: the collector's and the confmap providers'
+            first, then the text scan's; past 200 the rest are dropped.
+          maxItems: 200
+          items:
+            $ref: "#/components/schemas/Requirement"
+        distribution:
+          type: string
+        version:
+          type: string
+      if:
+        properties:
+          valid:
+            const: true
+      then:
+        properties:
+          errors:
+            maxItems: 0
+      else:
+        properties:
+          errors:
+            minItems: 1
+    ValidationError:
+      type: object
+      additionalProperties: false
+      required: [message, componentPath]
+      properties:
+        message:
+          type: string
+          minLength: 1
+          maxLength: 4096
+          description: >-
+            The collector's message (it can echo configuration values), cut
+            with "…" to at most 4,096 bytes of the answer's JSON (so at most
+            4,096 characters).
+        componentPath:
+          description: |
+            Where the collector says the error is, `::`-separated, keeping
+            the whole id (`exporters::otlp_http/my-exp.v2`,
+            `service::pipelines::traces/2`,
+            `receivers::filelog::baseconfig::operators::0::builder`); null
+            when it names nothing. Cut with "…" to at most 1,024 bytes of the
+            answer's JSON.
+          type: [string, "null"]
+          maxLength: 1024
+    Requirement:
+      type: object
+      additionalProperties: false
+      required: [category, title, description, componentPath]
+      properties:
+        category:
+          type: string
+          enum:
+            - env_var
+            - k8s_in_cluster
+            - k8s_downward_api
+            - host_filesystem
+            - directory
+            - tls_files
+            - missing_path
+            - organization_variable
+            - confmap_provider
+        title:
+          type: string
+          minLength: 1
+          maxLength: 1024
+          description: Cut with "…" to at most 1,024 bytes of the answer's JSON.
+        description:
+          type: string
+          minLength: 1
+          maxLength: 4096
+          description: Cut with "…" to at most 4,096 bytes of the answer's JSON.
+        componentPath:
+          type: [string, "null"]
+          maxLength: 1024
+    Error:
+      type: object
+      additionalProperties: false
+      required: [error]
+      properties:
+        error:
+          type: object
+          additionalProperties: false
+          required: [code, message]
+          properties:
+            code:
+              type: string
+              enum:
+                - unauthorized
+                - invalid_request
+                - not_found
+                - version_retired
+                - version_unavailable
+                - validator_busy
+                - payload_too_large
+                - internal_error
+            message:
+              type: string

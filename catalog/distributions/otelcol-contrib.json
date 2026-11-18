@@ -1,0 +1,541 @@
+{
+  "distribution": "otelcol-contrib",
+  "label": "OpenTelemetry Collector Contrib",
+  "description": "The full upstream component catalog. Pick this unless your collectors run a specific vendor build.",
+  "icon": "otel",
+  "sortOrder": 0,
+  "default": true,
+  "renamedTypes": [
+    { "kind": "receiver", "name": "file_log", "deprecatedName": "filelog", "since": "0.149.0" },
+    { "kind": "receiver", "name": "fluent_forward", "deprecatedName": "fluentforward", "since": "0.151.0" },
+    { "kind": "receiver", "name": "k8s_objects", "deprecatedName": "k8sobjects", "since": "0.151.0" },
+    { "kind": "receiver", "name": "kubelet_stats", "deprecatedName": "kubeletstats", "since": "0.152.0" },
+    { "kind": "receiver", "name": "host_metrics", "deprecatedName": "hostmetrics", "since": "0.151.0" },
+    { "kind": "receiver", "name": "aws_s3", "deprecatedName": "awss3", "since": "0.162.0" },
+    { "kind": "processor", "name": "k8s_attributes", "deprecatedName": "k8sattributes", "since": "0.146.0" },
+    { "kind": "processor", "name": "resource_detection", "deprecatedName": "resourcedetection", "since": "0.153.0" },
+    { "kind": "processor", "name": "log_dedup", "deprecatedName": "logdedup", "since": "0.151.0" },
+    { "kind": "processor", "name": "metrics_transform", "deprecatedName": "metricstransform", "since": "0.152.0" },
+    { "kind": "processor", "name": "cumulative_to_delta", "deprecatedName": "cumulativetodelta", "since": "0.157.0" },
+    { "kind": "exporter", "name": "load_balancing", "deprecatedName": "loadbalancing", "since": "0.153.0" },
+    { "kind": "exporter", "name": "otlp_grpc", "deprecatedName": "otlp", "since": "0.144.0" },
+    { "kind": "exporter", "name": "otlp_http", "deprecatedName": "otlphttp", "since": "0.144.0" },
+    { "kind": "exporter", "name": "prometheus_remote_write", "deprecatedName": "prometheusremotewrite", "since": "0.154.0" },
+    { "kind": "connector", "name": "span_metrics", "deprecatedName": "spanmetrics", "since": "0.151.0" }
+  ],
+  "versions": [
+    {
+      "version": "0.162.0",
+      "label": "v0.162.0",
+      "description": "Current default.",
+      "releasedAt": "2026-09-29",
+      "default": true,
+      "deprecated": false,
+      "deprecatedNote": null,
+      "containerImage": "otel/opentelemetry-collector-contrib:0.162.0",
+      "distribution": "otelcol-contrib",
+      "otelcolContribVersion": null,
+      "supportedComponents": null,
+      "otelcolContrib": {
+        "linux_amd64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v0.162.0/otelcol-contrib_0.162.0_linux_amd64.tar.gz",
+          "sha256": "fcc063749f730f8c21fe29f2d340ff174f5f1c5885bd3156fb6c985a3036fcc3"
+        },
+        "linux_arm64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v0.162.0/otelcol-contrib_0.162.0_linux_arm64.tar.gz",
+          "sha256": "ecf6a917e2b53beb1703b19a84bc4e112a2fcaba549639cf6b0ba58446bfd7d2"
+        },
+        "darwin_amd64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v0.162.0/otelcol-contrib_0.162.0_darwin_amd64.tar.gz",
+          "sha256": "91a6e7a0f5e1981986c897db4535de5ba8d7fc45d4205809aecb9ebebf68c71c"
+        },
+        "darwin_arm64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v0.162.0/otelcol-contrib_0.162.0_darwin_arm64.tar.gz",
+          "sha256": "d5e11974d2e4adac3cc001a25137aad52f6e77ec3034ba7735cac7c219a5f97a"
+        },
+        "windows_amd64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v0.162.0/otelcol-contrib_0.162.0_windows_amd64.tar.gz",
+          "sha256": "b371829181e89947a1a6570b8b6c38c20d85e2d215b76bf042f89b365b9e5c3d"
+        }
+      },
+      "opampSupervisor": {
+        "linux_amd64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/cmd%2Fopampsupervisor%2Fv0.162.0/opampsupervisor_0.162.0_linux_amd64",
+          "sha256": "905e81160405133f242035f96b1d0f0a572778dcf188ce93cb64e2b90b63d8c9"
+        },
+        "linux_arm64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/cmd%2Fopampsupervisor%2Fv0.162.0/opampsupervisor_0.162.0_linux_arm64",
+          "sha256": "6b0a4a59673bf00ed2b0bac772f0a697f8f1f045163af46100a299b170835477"
+        },
+        "darwin_amd64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/cmd%2Fopampsupervisor%2Fv0.162.0/opampsupervisor_0.162.0_darwin_amd64",
+          "sha256": "6486d0e1c304b66214f18f8696e31142027423c3f782a159e825590a7363bc1c"
+        },
+        "darwin_arm64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/cmd%2Fopampsupervisor%2Fv0.162.0/opampsupervisor_0.162.0_darwin_arm64",
+          "sha256": "7177e0634a257577d1d4a452f4b947d9c55094e860aa77df08ed78bb891f0656"
+        },
+        "windows_amd64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/cmd%2Fopampsupervisor%2Fv0.162.0/opampsupervisor_0.162.0_windows_amd64.exe",
+          "sha256": "028a9a23666ce68711308eb43f7345efea80d46553196ff18a4a1c74d9bc9b3e"
+        }
+      }
+    },
+    {
+      "version": "0.161.0",
+      "label": "v0.161.0",
+      "description": null,
+      "releasedAt": "2026-09-16",
+      "default": false,
+      "deprecated": false,
+      "deprecatedNote": null,
+      "containerImage": "otel/opentelemetry-collector-contrib:0.161.0",
+      "distribution": "otelcol-contrib",
+      "otelcolContribVersion": null,
+      "supportedComponents": null,
+      "otelcolContrib": {
+        "linux_amd64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v0.161.0/otelcol-contrib_0.161.0_linux_amd64.tar.gz",
+          "sha256": "778c689efa681ff6e4722ce9f66b9b7f57c3ba009ab2e2b43dc2e0315862c731"
+        },
+        "linux_arm64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v0.161.0/otelcol-contrib_0.161.0_linux_arm64.tar.gz",
+          "sha256": "cd5de93213a0dbb90e4998b3b9e4e15ed691ec635cf7cf4147f95799fb16b676"
+        },
+        "darwin_amd64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v0.161.0/otelcol-contrib_0.161.0_darwin_amd64.tar.gz",
+          "sha256": "357fc0a7a77f5d42cab2f46af6be301062a7824b82454cc264cb8661fa9a8734"
+        },
+        "darwin_arm64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v0.161.0/otelcol-contrib_0.161.0_darwin_arm64.tar.gz",
+          "sha256": "ccc0cf5de5242adcaedc7b5aebed43a1dc56aa2dc7de6ebc495d5db60512d34c"
+        },
+        "windows_amd64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v0.161.0/otelcol-contrib_0.161.0_windows_amd64.tar.gz",
+          "sha256": "fd1a6d23aa7855efc4fc12e4ee2c21b410e0a35c85587a07def7746eec9cea24"
+        }
+      },
+      "opampSupervisor": {
+        "linux_amd64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/cmd%2Fopampsupervisor%2Fv0.161.0/opampsupervisor_0.161.0_linux_amd64",
+          "sha256": "17b97152979518e3d6c66838aabf5a957084371704802ac87843da5e388b04c6"
+        },
+        "linux_arm64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/cmd%2Fopampsupervisor%2Fv0.161.0/opampsupervisor_0.161.0_linux_arm64",
+          "sha256": "1d2fab153d856c5893bbd7cce2d028db23947d662410aa875bc1de84a1920f17"
+        },
+        "darwin_amd64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/cmd%2Fopampsupervisor%2Fv0.161.0/opampsupervisor_0.161.0_darwin_amd64",
+          "sha256": "1de2dc1b256badc1fe56c5bf3c65cd2687a0f0505b27444bc97880c9e3c96f9c"
+        },
+        "darwin_arm64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/cmd%2Fopampsupervisor%2Fv0.161.0/opampsupervisor_0.161.0_darwin_arm64",
+          "sha256": "9c87d949016b2b9fca6439fc1ec6e0422035e6eda28d20343b98288edf87556c"
+        },
+        "windows_amd64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/cmd%2Fopampsupervisor%2Fv0.161.0/opampsupervisor_0.161.0_windows_amd64.exe",
+          "sha256": "76b88915c3ff62e9c93964a539ac0d00127c7d38261cfef63d67b59428c1c139"
+        }
+      }
+    },
+    {
+      "version": "0.160.0",
+      "label": "v0.160.0",
+      "description": null,
+      "releasedAt": "2026-09-02",
+      "default": false,
+      "deprecated": false,
+      "deprecatedNote": null,
+      "containerImage": "otel/opentelemetry-collector-contrib:0.160.0",
+      "distribution": "otelcol-contrib",
+      "otelcolContribVersion": null,
+      "supportedComponents": null,
+      "otelcolContrib": {
+        "linux_amd64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v0.160.0/otelcol-contrib_0.160.0_linux_amd64.tar.gz",
+          "sha256": "7bb60c584c241c86261c2b8697cd3725dd8c56691f5ad5d98454eaa005b47b0c"
+        },
+        "linux_arm64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v0.160.0/otelcol-contrib_0.160.0_linux_arm64.tar.gz",
+          "sha256": "bff414e6a287309dfd0c51350c1e13c96c4ab807127b4320bd684f605e781326"
+        },
+        "darwin_amd64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v0.160.0/otelcol-contrib_0.160.0_darwin_amd64.tar.gz",
+          "sha256": "1576c3049c1fd4e8172d9817313a0129f4d2a1004aa653987d765df048e1e959"
+        },
+        "darwin_arm64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v0.160.0/otelcol-contrib_0.160.0_darwin_arm64.tar.gz",
+          "sha256": "ceb5309ba16f2587dbef765d54e15c803354d038b0495b0b691e1eb9876d17c9"
+        },
+        "windows_amd64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v0.160.0/otelcol-contrib_0.160.0_windows_amd64.tar.gz",
+          "sha256": "d8de67cf9dc3ffe928610d52b192cb029365bb42dc79a23e0586c040c83293cf"
+        }
+      },
+      "opampSupervisor": {
+        "linux_amd64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/cmd%2Fopampsupervisor%2Fv0.160.0/opampsupervisor_0.160.0_linux_amd64",
+          "sha256": "7967e3210e0252f25f41a96b15758dd2e03feb0aecbe85a945f1e2e6e71865c9"
+        },
+        "linux_arm64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/cmd%2Fopampsupervisor%2Fv0.160.0/opampsupervisor_0.160.0_linux_arm64",
+          "sha256": "712a3b0466ad75097920dc86b2dd4a5f1df44f09140278ee982bbaf596d074c1"
+        },
+        "darwin_amd64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/cmd%2Fopampsupervisor%2Fv0.160.0/opampsupervisor_0.160.0_darwin_amd64",
+          "sha256": "dc70beb003a3eb0b01c7c81e9800d9c1ebf77eca5efde2f67f951a0836edd8f6"
+        },
+        "darwin_arm64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/cmd%2Fopampsupervisor%2Fv0.160.0/opampsupervisor_0.160.0_darwin_arm64",
+          "sha256": "1cdd91e65abf04120ba3fad71e0433feeac5fb038ef37729015e156377f1b328"
+        },
+        "windows_amd64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/cmd%2Fopampsupervisor%2Fv0.160.0/opampsupervisor_0.160.0_windows_amd64.exe",
+          "sha256": "df2dfae96d6b711db31675d2deb8493d3dbada8561b25fe575fd90bd7cac8449"
+        }
+      }
+    },
+    {
+      "version": "0.159.0",
+      "label": "v0.159.0",
+      "description": null,
+      "releasedAt": "2026-08-18",
+      "default": false,
+      "deprecated": false,
+      "deprecatedNote": null,
+      "containerImage": "otel/opentelemetry-collector-contrib:0.159.0",
+      "distribution": "otelcol-contrib",
+      "otelcolContribVersion": null,
+      "supportedComponents": null,
+      "otelcolContrib": {
+        "linux_amd64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v0.159.0/otelcol-contrib_0.159.0_linux_amd64.tar.gz",
+          "sha256": "9d589f6349f01179957a2052bc7307a99db2efc971e14e00575941a77122eaaf"
+        },
+        "linux_arm64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v0.159.0/otelcol-contrib_0.159.0_linux_arm64.tar.gz",
+          "sha256": "abb8665cc963e886c2d1286c50b38bcb2e53d968b192c3d8fe4d1ed6b91c3901"
+        },
+        "darwin_amd64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v0.159.0/otelcol-contrib_0.159.0_darwin_amd64.tar.gz",
+          "sha256": "c683fc414117b8477794dcd7591e84e61cbef1e2ff8817afb6fd622e7fb5c0d9"
+        },
+        "darwin_arm64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v0.159.0/otelcol-contrib_0.159.0_darwin_arm64.tar.gz",
+          "sha256": "7e317b75b1b087ba2150bf95d79e39a394d0d091f1231af6bbebee895d200375"
+        },
+        "windows_amd64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v0.159.0/otelcol-contrib_0.159.0_windows_amd64.tar.gz",
+          "sha256": "86434cf172aa91a5fc148978dad9bfaacd25a80bd2df93f19015814e7c5359bb"
+        }
+      },
+      "opampSupervisor": {
+        "linux_amd64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/cmd%2Fopampsupervisor%2Fv0.159.0/opampsupervisor_0.159.0_linux_amd64",
+          "sha256": "5c22d3c10f7ecb80a178a703f321f490a64d041702422f53c9e2b020931d8b0f"
+        },
+        "linux_arm64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/cmd%2Fopampsupervisor%2Fv0.159.0/opampsupervisor_0.159.0_linux_arm64",
+          "sha256": "2d1bd9d5c281350ac0bfa134c0afd2f6cd3866d9a686e751230245156a1efa61"
+        },
+        "darwin_amd64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/cmd%2Fopampsupervisor%2Fv0.159.0/opampsupervisor_0.159.0_darwin_amd64",
+          "sha256": "9b5127e307f5b02b2dd3d85ff27ac2c06d4059e9bb1cfb879634a18c9a3d3f1d"
+        },
+        "darwin_arm64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/cmd%2Fopampsupervisor%2Fv0.159.0/opampsupervisor_0.159.0_darwin_arm64",
+          "sha256": "39c657c433eb4f47347b922c1d0d61e62a5a0f34943d4ea1de0f1697436fc3e8"
+        },
+        "windows_amd64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/cmd%2Fopampsupervisor%2Fv0.159.0/opampsupervisor_0.159.0_windows_amd64.exe",
+          "sha256": "dcf186e81099b56edb78da03d2d4a22ee74e499805c93d3c292080838427a2d7"
+        }
+      }
+    },
+    {
+      "version": "0.158.0",
+      "label": "v0.158.0",
+      "description": null,
+      "releasedAt": "2026-08-04",
+      "default": false,
+      "deprecated": true,
+      "deprecatedNote": "No longer offered. Pick a newer collector version.",
+      "containerImage": "otel/opentelemetry-collector-contrib:0.158.0",
+      "distribution": "otelcol-contrib",
+      "otelcolContribVersion": null,
+      "supportedComponents": null,
+      "otelcolContrib": {
+        "linux_amd64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v0.158.0/otelcol-contrib_0.158.0_linux_amd64.tar.gz",
+          "sha256": "7623348c295ec7b00d86c30040a30730f7e3537e813b34c880c1d5abb9bbe8d5"
+        },
+        "linux_arm64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v0.158.0/otelcol-contrib_0.158.0_linux_arm64.tar.gz",
+          "sha256": "9996b981ad63a4d594af8bc408a5e6ad979d5a9263a43cbc6babe124ddf239b2"
+        },
+        "darwin_amd64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v0.158.0/otelcol-contrib_0.158.0_darwin_amd64.tar.gz",
+          "sha256": "c55e9dfa2e87bafc35bc0a34c4956a4501ee4680155df96d815dd89a540b38d1"
+        },
+        "darwin_arm64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v0.158.0/otelcol-contrib_0.158.0_darwin_arm64.tar.gz",
+          "sha256": "e2b68ae0eeb165795c1c9aecc29d24fe91790dd6ec7d200dd7e5a8b226a2f636"
+        },
+        "windows_amd64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v0.158.0/otelcol-contrib_0.158.0_windows_amd64.tar.gz",
+          "sha256": "4314abde3c8acc67af58bb8d7611aa991fd80abe4a412695167f956d9fff3005"
+        }
+      },
+      "opampSupervisor": {
+        "linux_amd64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/cmd%2Fopampsupervisor%2Fv0.158.0/opampsupervisor_0.158.0_linux_amd64",
+          "sha256": "01bfe84f277a270bc75e660a8736eb52d5d7428b12854596604a247c93d1de48"
+        },
+        "linux_arm64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/cmd%2Fopampsupervisor%2Fv0.158.0/opampsupervisor_0.158.0_linux_arm64",
+          "sha256": "c164523bda3c0eaa18e5d64c1314837faa15bafbf98e7fdede4ac5e1509df357"
+        },
+        "darwin_amd64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/cmd%2Fopampsupervisor%2Fv0.158.0/opampsupervisor_0.158.0_darwin_amd64",
+          "sha256": "8e7232ea07cf2093995396fa372489a109165648dcbff3157adbf71a4edecbcc"
+        },
+        "darwin_arm64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/cmd%2Fopampsupervisor%2Fv0.158.0/opampsupervisor_0.158.0_darwin_arm64",
+          "sha256": "7edfca0edfb0867405df664335139eecb921a9c4d3f74c3068d5ddb42cbc0686"
+        },
+        "windows_amd64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/cmd%2Fopampsupervisor%2Fv0.158.0/opampsupervisor_0.158.0_windows_amd64.exe",
+          "sha256": "418059b4f7d6590b4e6f4196cf41f04bd59d727f45369cd89390b2ee8d7db002"
+        }
+      }
+    },
+    {
+      "version": "0.157.0",
+      "label": "v0.157.0",
+      "description": null,
+      "releasedAt": "2026-07-22",
+      "default": false,
+      "deprecated": true,
+      "deprecatedNote": "No longer offered. Pick a newer collector version.",
+      "containerImage": "otel/opentelemetry-collector-contrib:0.157.0",
+      "distribution": "otelcol-contrib",
+      "otelcolContribVersion": null,
+      "supportedComponents": null,
+      "otelcolContrib": {
+        "linux_amd64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v0.157.0/otelcol-contrib_0.157.0_linux_amd64.tar.gz",
+          "sha256": "d33177515a244a2393f03ffd66ab3e68a8fc11a56bc145ec4d0ca2644ee95504"
+        },
+        "linux_arm64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v0.157.0/otelcol-contrib_0.157.0_linux_arm64.tar.gz",
+          "sha256": "34eb82390c462c877dd60ec5ec84de899088916facd07306ec988e4c34bd05b3"
+        },
+        "darwin_amd64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v0.157.0/otelcol-contrib_0.157.0_darwin_amd64.tar.gz",
+          "sha256": "e11e7482144c3ac1eb1f612d3d175589435cad968a791d6ef5c73be43e1b8c34"
+        },
+        "darwin_arm64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v0.157.0/otelcol-contrib_0.157.0_darwin_arm64.tar.gz",
+          "sha256": "6c03308935573712a795b4229f756bc4288bbbb13850604f3c7287868af84d4b"
+        },
+        "windows_amd64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v0.157.0/otelcol-contrib_0.157.0_windows_amd64.tar.gz",
+          "sha256": "7b3938e1522ff04261a694a58e7111c5f7cdd19be617c3a77118cffad7abb815"
+        }
+      },
+      "opampSupervisor": {
+        "linux_amd64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/cmd%2Fopampsupervisor%2Fv0.157.0/opampsupervisor_0.157.0_linux_amd64",
+          "sha256": "73aecaa331aece3cfcd0e513dbbb8f9f02bb06efa7f4acff144ecdfe8bae7955"
+        },
+        "linux_arm64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/cmd%2Fopampsupervisor%2Fv0.157.0/opampsupervisor_0.157.0_linux_arm64",
+          "sha256": "1f9a2a82b59874eb9cc5312acd1618351ede422df38d33834fb7b1fe3fd531df"
+        },
+        "darwin_amd64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/cmd%2Fopampsupervisor%2Fv0.157.0/opampsupervisor_0.157.0_darwin_amd64",
+          "sha256": "1caf1624ab415707098c0fbfdfeff34f151717b032d7959a0f74808b204a9b3e"
+        },
+        "darwin_arm64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/cmd%2Fopampsupervisor%2Fv0.157.0/opampsupervisor_0.157.0_darwin_arm64",
+          "sha256": "3247f724641d2186e64f31d005c3d4bab997091c5455439d00e6e3e5d445dc5b"
+        },
+        "windows_amd64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/cmd%2Fopampsupervisor%2Fv0.157.0/opampsupervisor_0.157.0_windows_amd64.exe",
+          "sha256": "ed3f172c92e7d29cc2aba3dde17d85b43818d8b64a220cd0769d602a0c9048d3"
+        }
+      }
+    },
+    {
+      "version": "0.156.0",
+      "label": "v0.156.0",
+      "description": null,
+      "releasedAt": "2026-07-07",
+      "default": false,
+      "deprecated": true,
+      "deprecatedNote": "No longer offered. Pick a newer collector version.",
+      "containerImage": "otel/opentelemetry-collector-contrib:0.156.0",
+      "distribution": "otelcol-contrib",
+      "otelcolContribVersion": null,
+      "supportedComponents": null,
+      "otelcolContrib": {
+        "linux_amd64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v0.156.0/otelcol-contrib_0.156.0_linux_amd64.tar.gz",
+          "sha256": "ee70d7b1221be8a9cc4700f48bf985c04b1ab8aaeef24409fe79623849e2f9f2"
+        },
+        "linux_arm64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v0.156.0/otelcol-contrib_0.156.0_linux_arm64.tar.gz",
+          "sha256": "1f9afe1d245b4babbb4bcb7d6b57ba2836b3b23c5f61b38abc00ab461f049288"
+        },
+        "darwin_amd64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v0.156.0/otelcol-contrib_0.156.0_darwin_amd64.tar.gz",
+          "sha256": "f463ace0f14f76607adc68cb265c2235e33db636ed99f7934b9699e462007d5e"
+        },
+        "darwin_arm64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v0.156.0/otelcol-contrib_0.156.0_darwin_arm64.tar.gz",
+          "sha256": "f5e3a6fbc8cca5e9fc9ce642c5ca16da084b4b6fea3f38a8ad29eea69ddf8e0f"
+        },
+        "windows_amd64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v0.156.0/otelcol-contrib_0.156.0_windows_amd64.tar.gz",
+          "sha256": "85e9f2763cfc671da2f580393040f282f9539a052bd141cb8a6a2b7be77bc2da"
+        }
+      },
+      "opampSupervisor": {
+        "linux_amd64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/cmd%2Fopampsupervisor%2Fv0.156.0/opampsupervisor_0.156.0_linux_amd64",
+          "sha256": "3e11313b7c1d1efcc2fb5b748a762892e7d86498fa4dc1f71d6c6f89d11a189d"
+        },
+        "linux_arm64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/cmd%2Fopampsupervisor%2Fv0.156.0/opampsupervisor_0.156.0_linux_arm64",
+          "sha256": "0e5bf35e694c47349fdc66c29c215fe53cadaadd889a4ac5e00fa7caa448bdd7"
+        },
+        "darwin_amd64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/cmd%2Fopampsupervisor%2Fv0.156.0/opampsupervisor_0.156.0_darwin_amd64",
+          "sha256": "9b90ac31d28d9766ebff005b6590c365f5c6e08ddf95435140b6c6d57997988c"
+        },
+        "darwin_arm64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/cmd%2Fopampsupervisor%2Fv0.156.0/opampsupervisor_0.156.0_darwin_arm64",
+          "sha256": "347c93fa5a956c464a564a5491da2cf8d4ba80e9bc81416c07c7615fcb79999f"
+        },
+        "windows_amd64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/cmd%2Fopampsupervisor%2Fv0.156.0/opampsupervisor_0.156.0_windows_amd64.exe",
+          "sha256": "be38aa8ff9ee843d93f5ca204d3ba265de3f575edad63a38b695b7d2dcb22a7d"
+        }
+      }
+    },
+    {
+      "version": "0.155.0",
+      "label": "v0.155.0",
+      "description": null,
+      "releasedAt": "2026-06-24",
+      "default": false,
+      "deprecated": true,
+      "deprecatedNote": "No longer offered. Pick a newer collector version.",
+      "containerImage": "otel/opentelemetry-collector-contrib:0.155.0",
+      "distribution": "otelcol-contrib",
+      "otelcolContribVersion": null,
+      "supportedComponents": null,
+      "otelcolContrib": {
+        "linux_amd64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v0.155.0/otelcol-contrib_0.155.0_linux_amd64.tar.gz",
+          "sha256": "229cfddeb0621d2a011bfd1c8894335479e46349b93a0cfbccbe653443a3ec95"
+        },
+        "linux_arm64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v0.155.0/otelcol-contrib_0.155.0_linux_arm64.tar.gz",
+          "sha256": "f2fac079d5b761a729e49ba5db319cab92affc558406dc42e3c1c08e0827e14f"
+        },
+        "darwin_amd64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v0.155.0/otelcol-contrib_0.155.0_darwin_amd64.tar.gz",
+          "sha256": "7a792b03c6c7d8cfa1b67c08fd9d0c5c021a1387f926ecba92b9cfbec2d0f80e"
+        },
+        "darwin_arm64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v0.155.0/otelcol-contrib_0.155.0_darwin_arm64.tar.gz",
+          "sha256": "dc9ecd5243bc632a2901d028bfc7a705fb6317b269c9514b5f8187b80caf8c56"
+        },
+        "windows_amd64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v0.155.0/otelcol-contrib_0.155.0_windows_amd64.tar.gz",
+          "sha256": "c34e1e064641956f16f2089d1384657ecef43dd64407da0516948f786fd045a8"
+        }
+      },
+      "opampSupervisor": {
+        "linux_amd64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/cmd%2Fopampsupervisor%2Fv0.155.0/opampsupervisor_0.155.0_linux_amd64",
+          "sha256": "3e86e018a1151842903d4fef901ff39a936800c61467be2565f252b91b6348aa"
+        },
+        "linux_arm64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/cmd%2Fopampsupervisor%2Fv0.155.0/opampsupervisor_0.155.0_linux_arm64",
+          "sha256": "141b3d365f63ef3f86a1b115be6de04b364cfc6f113fffd09da137919ea4f12b"
+        },
+        "darwin_amd64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/cmd%2Fopampsupervisor%2Fv0.155.0/opampsupervisor_0.155.0_darwin_amd64",
+          "sha256": "5317e7c6eddbd74a3c609c90a4e784efeb9278846ed077e380fc271cd435b38c"
+        },
+        "darwin_arm64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/cmd%2Fopampsupervisor%2Fv0.155.0/opampsupervisor_0.155.0_darwin_arm64",
+          "sha256": "028c0a792e099845bece9482aa5dfee0928b65c26d4391cdbb9392d4b3727123"
+        },
+        "windows_amd64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/cmd%2Fopampsupervisor%2Fv0.155.0/opampsupervisor_0.155.0_windows_amd64.exe",
+          "sha256": "ac5843d24b5ebba6d59161d97b102b43942efc8f6fc73dc6dd6cdf2b3f58eff3"
+        }
+      }
+    },
+    {
+      "version": "0.147.0",
+      "label": "v0.147.0",
+      "description": null,
+      "releasedAt": "2026-03-02",
+      "default": false,
+      "deprecated": true,
+      "deprecatedNote": "No longer offered. Pick a newer collector version.",
+      "containerImage": "otel/opentelemetry-collector-contrib:0.147.0",
+      "distribution": "otelcol-contrib",
+      "otelcolContribVersion": null,
+      "supportedComponents": null,
+      "otelcolContrib": {
+        "linux_amd64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v0.147.0/otelcol-contrib_0.147.0_linux_amd64.tar.gz",
+          "sha256": "17cc9a8f2e44e80ceff0e0647aec18b28a6b1b17823040e362ddc4a9fd017ccc"
+        },
+        "linux_arm64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v0.147.0/otelcol-contrib_0.147.0_linux_arm64.tar.gz",
+          "sha256": "1ab4a5b12327466b7395582eb6ea0732810acb2b5e4ea9b464bd336527e85e38"
+        },
+        "darwin_amd64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v0.147.0/otelcol-contrib_0.147.0_darwin_amd64.tar.gz",
+          "sha256": "f0075b96fcc9d1c085ae76d7206cf2c52080a3237eee4ce36218cafb2c6cd9d5"
+        },
+        "darwin_arm64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v0.147.0/otelcol-contrib_0.147.0_darwin_arm64.tar.gz",
+          "sha256": "3b79e51fbd0a1eecba7c0f90f4022cf5b498ee7f19d34674f4eef8b0f1f24162"
+        },
+        "windows_amd64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v0.147.0/otelcol-contrib_0.147.0_windows_amd64.tar.gz",
+          "sha256": "431feffbc3f05795329d31a073b3fdc14558a363a5a952c2bb335b1b48955c31"
+        }
+      },
+      "opampSupervisor": {
+        "linux_amd64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/cmd%2Fopampsupervisor%2Fv0.147.0/opampsupervisor_0.147.0_linux_amd64",
+          "sha256": "1c3fb2bfd39e8718a9fd1b7eb40da91211cbd27178830cc485a0bf8c428addbf"
+        },
+        "linux_arm64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/cmd%2Fopampsupervisor%2Fv0.147.0/opampsupervisor_0.147.0_linux_arm64",
+          "sha256": "e3fe81bfe52a94e80de8abee0ba246064fb915cabd5effcbc7adfe4952b108ca"
+        },
+        "darwin_amd64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/cmd%2Fopampsupervisor%2Fv0.147.0/opampsupervisor_0.147.0_darwin_amd64",
+          "sha256": "daebed5c31d4091691808572fa42143c32abe0544dd02beefb1e306ae13f7829"
+        },
+        "darwin_arm64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/cmd%2Fopampsupervisor%2Fv0.147.0/opampsupervisor_0.147.0_darwin_arm64",
+          "sha256": "633c1406bcb7cca2b513944d2732d7c04851023109075707ca703faf2b15f228"
+        },
+        "windows_amd64": {
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/cmd%2Fopampsupervisor%2Fv0.147.0/opampsupervisor_0.147.0_windows_amd64.exe",
+          "sha256": "f4bd187a756a2856d31e6ff5611d2ea04533b9953b3f84d0cf3640dc4f914b69"
+        }
+      }
+    }
+  ]
+}

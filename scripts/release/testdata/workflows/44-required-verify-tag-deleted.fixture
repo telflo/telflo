@@ -1,0 +1,15 @@
+# Breaks one rule: release.yml's version job without its verify-tag.sh step (the reviewer's form).
+file: release.yml
+rule: required-steps
+<<<
+      - name: The tag
+        id: tag
+        env:
+          DOCKER_CONFIG: ${{ runner.temp }}/docker
+          TAG: ${{ github.ref_name }}
+          EXPECT: ${{ github.sha }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: bash scripts/release/verify-tag.sh "$TAG" --expect "$EXPECT"
+===
+
+>>>

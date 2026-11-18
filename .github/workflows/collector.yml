@@ -1,0 +1,258 @@
+# The collector images and the supervisor-collector chart, started by hand
+# (docs/releasing.md; D36-2 decisions 63, 65, 85 and 111; Q277): for one
+# collector version the catalogue offers, or `all` of them (one matrix job
+# each), it builds ghcr.io/telflo/telflo/collector:<version> for amd64 and
+# arm64 with its attestations, tests it, and only with `publish` copies the
+# archive's bytes to GHCR (digests kept), pulls them back, and pushes the
+# supervisor-collector chart when its version isn't published yet. It makes
+# no GitHub Release. It can be started only once it is on main (Actions runs
+# a dispatched workflow from the branch named; the owner dispatches it from
+# main).
+#
+# Every `run:` is tool setup, artifact handling or one call of a committed
+# script; values reach a script only through `env:`, never `${{ }}` inside
+# `run:`. scripts/release/check-workflows.sh holds these rules.
+name: Collector images
+
+on:
+  workflow_dispatch:
+    inputs:
+      collector_version:
+        description: "A collector version the catalogue offers (x.y.z), or all"
+        required: true
+        type: string
+      publish:
+        description: "Publish to ghcr.io/telflo/telflo (otherwise build and test only)"
+        required: false
+        type: boolean
+        default: false
+
+permissions: {}
+
+# One collector run at a time, never cancelled part way.
+concurrency:
+  group: collector
+  cancel-in-progress: false
+
+jobs:
+  # Each version offered and not deprecated (the catalogue); with publish, a
+  # published version is never pushed again (Ruling 399): an x.y.z already
+  # published is refused; `all` keeps the versions not yet published, and
+  # when none is left the run has nothing to build or publish (has=false:
+  # every later job is skipped, a notice says so, and the run succeeds; a
+  # matrix over an empty list would fail).
+  check:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      packages: read
+    outputs:
+      versions: ${{ steps.versions.outputs.versions }}
+      has: ${{ steps.versions.outputs.has }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - run: bash scripts/release/tools.sh fetch crane
+      - name: Log in to GHCR (read; the private packages)
+        uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
+        env:
+          DOCKER_CONFIG: ${{ runner.temp }}/docker
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: The versions
+        id: versions
+        env:
+          DOCKER_CONFIG: ${{ runner.temp }}/docker
+          COLLECTOR_VERSION: ${{ inputs.collector_version }}
+          PUBLISH: ${{ inputs.publish }}
+        run: bash scripts/release/steps.sh collector-versions "$COLLECTOR_VERSION" --publish "$PUBLISH"
+
+  # Both processor types (arm64 under QEMU), the downloads' sha256 checked by
+  # the Dockerfile, SBOM and provenance attestations, into an OCI archive.
+  build:
+    needs: check
+    if: ${{ needs.check.outputs.has == 'true' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    permissions:
+      contents: read
+    strategy:
+      matrix:
+        version: ${{ fromJSON(needs.check.outputs.versions) }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - run: bash scripts/release/steps.sh free-disk 14
+      - run: bash scripts/release/tools.sh fetch buildx
+      - run: bash scripts/release/tools.sh docker-config "$RUNNER_TEMP/docker"
+      - uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
+        env:
+          DOCKER_CONFIG: ${{ runner.temp }}/docker
+        with:
+          image: tonistiigi/binfmt:qemu-v10.2.3-68@sha256:400a4873b838d1b89194d982c45e5fb3cda4593fbfd7e08a02e76b03b21166f0
+          platforms: arm64
+      - env:
+          DOCKER_CONFIG: ${{ runner.temp }}/docker
+        run: bash scripts/release/steps.sh builder
+      - run: mkdir -p "$RUNNER_TEMP/oci"
+      - name: Build
+        env:
+          DOCKER_CONFIG: ${{ runner.temp }}/docker
+          COLLECTOR_VERSION: ${{ matrix.version }}
+        run: bash scripts/build-collector-image.sh "$COLLECTOR_VERSION" --build-oci "$RUNNER_TEMP/oci" --builder telflo-release
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: collector-${{ matrix.version }}
+          path: |
+            ${{ runner.temp }}/oci/collector-${{ matrix.version }}.oci.tar
+            ${{ runner.temp }}/oci/collector-${{ matrix.version }}.digest
+          retention-days: 3
+          compression-level: 0
+          if-no-files-found: error
+
+  # The build script's and the entrypoint's self-tests; the amd64 image (the
+  # runner's platform, named) runs both binaries; the supervisor-collector
+  # chart renders and lints with it.
+  test:
+    needs: [check, build]
+    if: ${{ needs.check.outputs.has == 'true' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    strategy:
+      matrix:
+        version: ${{ fromJSON(needs.check.outputs.versions) }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - run: bash scripts/release/steps.sh free-disk 8
+      - uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310 # v5.0.1
+        with:
+          version: v4.2.1
+      - run: bash docker/collector-image/entrypoint_test.sh
+      - run: bash docker/collector-image/build-collector-image_test.sh
+      - run: bash charts/supervisor-collector/tests/render-tests.sh
+      - run: bash scripts/release/tools.sh fetch crane
+      - run: bash scripts/release/tools.sh pull registry
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: collector-${{ matrix.version }}
+          path: ${{ runner.temp }}/oci
+      - env:
+          COLLECTOR_VERSION: ${{ matrix.version }}
+        run: bash scripts/release/load-images.sh --oci "$RUNNER_TEMP/oci" --version "$COLLECTOR_VERSION" --image collector --platform linux/amd64
+      - env:
+          COLLECTOR_VERSION: ${{ matrix.version }}
+        run: bash scripts/release/steps.sh collector-test --version "$COLLECTOR_VERSION"
+
+  # Only with publish: each image's archive copied with its digests kept,
+  # then pulled back by digest (decisions 80 and 81's rules). The `release`
+  # environment admits only v* tags and main (the owner's setting); on
+  # the Team plan a private repository can't have required reviewers (Q280,
+  # Preflight ruling 7), so dispatching with publish is the owner's yes until
+  # D36-3 adds the environment's reviewer.
+  publish:
+    if: ${{ inputs.publish && needs.check.outputs.has == 'true' }}
+    needs: [check, test]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    environment: release
+    permissions:
+      contents: read
+      packages: write
+    env:
+      # crane is tools.sh's checked one only (Rulings 391 and 392).
+      TELFLO_CRANE: ""
+    strategy:
+      matrix:
+        version: ${{ fromJSON(needs.check.outputs.versions) }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - run: bash scripts/release/steps.sh free-disk 8
+      - run: bash scripts/release/tools.sh fetch crane
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: collector-${{ matrix.version }}
+          path: ${{ runner.temp }}/oci
+      - name: Log in to GHCR (Docker and crane)
+        uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
+        env:
+          DOCKER_CONFIG: ${{ runner.temp }}/docker
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: The image (the archive's bytes, digests kept)
+        env:
+          DOCKER_CONFIG: ${{ runner.temp }}/docker
+          COLLECTOR_VERSION: ${{ matrix.version }}
+        run: bash scripts/build-collector-image.sh "$COLLECTOR_VERSION" --push-oci "$RUNNER_TEMP/oci"
+      - name: The pull-back, by digest
+        env:
+          DOCKER_CONFIG: ${{ runner.temp }}/docker
+          COLLECTOR_VERSION: ${{ matrix.version }}
+        run: bash scripts/release/pull-back.sh --oci "$RUNNER_TEMP/oci" --version "$COLLECTOR_VERSION" --image collector --no-chart
+
+  # Only with publish, after the images: the supervisor-collector chart at
+  # its Chart.yaml version, unless that version is published already (a
+  # notice: a published chart version is never pushed again). It runs when
+  # the check passed and the publish passed, or the publish was skipped
+  # because there was no collector version to build (has == 'false': a chart
+  # bump alone). Its if: holds the workflows' one status function (not
+  # cancelled: so a skipped publish doesn't skip it), allow-listed for this
+  # job only by check-workflows.sh (Ruling 401); a failed or cancelled test
+  # or publish still stops it.
+  chart:
+    if: ${{ !cancelled() && inputs.publish && needs.check.result == 'success' && (needs.publish.result == 'success' || (needs.publish.result == 'skipped' && needs.check.outputs.has == 'false')) }}
+    needs: [check, publish]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: release
+    permissions:
+      contents: read
+      packages: write
+    env:
+      TELFLO_CRANE: ""
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310 # v5.0.1
+        with:
+          version: v4.2.1
+      - run: bash scripts/release/tools.sh fetch crane
+      - name: Log in to GHCR (Docker and crane)
+        uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
+        env:
+          DOCKER_CONFIG: ${{ runner.temp }}/docker
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Log in to GHCR (Helm)
+        env:
+          DOCKER_CONFIG: ${{ runner.temp }}/docker
+          HELM_REGISTRY_CONFIG: ${{ runner.temp }}/helm/registry/config.json
+          GHCR_USER: ${{ github.actor }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: bash scripts/release/steps.sh helm-login
+      - run: mkdir -p "$RUNNER_TEMP/chart"
+      - name: The chart, if its version is new
+        env:
+          DOCKER_CONFIG: ${{ runner.temp }}/docker
+          HELM_REGISTRY_CONFIG: ${{ runner.temp }}/helm/registry/config.json
+        run: bash scripts/release/steps.sh chart-if-new --out "$RUNNER_TEMP/chart"

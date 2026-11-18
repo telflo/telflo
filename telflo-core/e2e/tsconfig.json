@@ -1,0 +1,13 @@
+{
+  "extends": "@telflo/tsconfig/base.json",
+  "compilerOptions": { "noEmit": true },
+  "include": [
+    "**/*.ts",
+    "../playwright.config.ts",
+    "../apps/web/app/lib/stores/history-throttle.ts",
+    "../apps/web/app/lib/flows-data.ts",
+    "../apps/cli/src/login-listener.ts",
+    "../apps/cli/src/version.ts"
+  ],
+  "references": [{ "path": "../packages/db" }, { "path": "../apps/api" }, { "path": "../packages/contracts" }]
+}

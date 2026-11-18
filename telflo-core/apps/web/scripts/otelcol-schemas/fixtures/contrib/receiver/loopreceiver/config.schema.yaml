@@ -1,0 +1,11 @@
+# An optional section behind two definitions that only refer to each other.
+$defs:
+  first:
+    $ref: second
+  second:
+    $ref: first
+type: object
+properties:
+  section:
+    x-optional: true
+    $ref: first

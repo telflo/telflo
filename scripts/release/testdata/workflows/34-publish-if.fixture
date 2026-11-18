@@ -1,0 +1,12 @@
+# Breaks one rule: collector.yml's publish running without the publish input.
+file: collector.yml
+rule: publish-if
+<<<
+  publish:
+    if: ${{ inputs.publish && needs.check.outputs.has == 'true' }}
+
+===
+  publish:
+    if: ${{ needs.check.outputs.has == 'true' }}
+
+>>>

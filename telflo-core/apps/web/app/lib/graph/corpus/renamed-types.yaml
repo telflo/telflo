@@ -1,0 +1,31 @@
+receivers:
+  file_log:
+    include:
+      - /var/log/app/*.log
+
+processors:
+  k8s_attributes:
+    auth_type: serviceAccount
+  resource_detection:
+    detectors:
+      - env
+
+exporters:
+  otlp_grpc:
+    endpoint: backend:4317
+  load_balancing:
+    protocol:
+      otlp:
+        endpoint: placeholder
+
+service:
+  pipelines:
+    logs:
+      receivers:
+        - file_log
+      processors:
+        - k8s_attributes
+        - resource_detection
+      exporters:
+        - otlp_grpc
+        - load_balancing

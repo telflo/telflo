@@ -1,0 +1,42 @@
+{
+  "$comment": "Licenses a redistributed telflo dependency may carry: only licenses that allow redistribution (ADR 0019). Every change here needs that check.",
+  "allowed": [
+    "MIT",
+    "MIT-0",
+    "ISC",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "0BSD",
+    "Apache-2.0",
+    "Unlicense",
+    "CC0-1.0",
+    "OFL-1.1",
+    "BlueOak-1.0.0",
+    "Python-2.0",
+    "PSF-2.0"
+  ],
+  "exceptions": {
+    "$comment": "Package name, or name@version to except only the version that was checked, -> reason. Only for a package whose lockfile license field is missing or non-SPDX but whose actual license was checked by hand and is allowed. Every entry needs a reason a reviewer can verify.",
+    "posthog-js@1.376.0": "LICENSE is Apache-2.0, with MIT-licensed portions from Sentry, Meta (metro) and Expo; all allowed; hand-checked at 1.376.0."
+  },
+  "vendored": {
+    "$comment": "Folder (relative to this file) -> what was vendored, its licenses (each an SPDX expression the allowed list must satisfy) and each file's sha256. check-licenses.mjs fails on a disallowed license, a file not listed, a missing file or a changed sha256. Recorded with its source and integrity in docs/third-party-assets.md.",
+    "../telflo-core/apps/api/src/modules/public-api/docs/swagger-ui": {
+      "source": "swagger-ui-dist@5.32.15 (npm tarball integrity sha512-TSFER+rFQlf1nzk6WvKkMaHTxAPQ3eAAxigFThnxQedSREanfZgSbJFayZVs/ULnSbNdrJOb99vLD6xpb3R3eg==), D25 decision 49",
+      "licensesNote": "swagger-ui-bundle.js.LICENSE.txt is PARTIAL (webpack keeps only preserved banners): the bundle also holds zenscroll (Unlicense), remarkable (MIT), short-unique-id and apidom (Apache-2.0); D30's notices are to list swagger-ui@5.32.15's production dependencies in full (not done yet).",
+      "licenses": ["Apache-2.0", "MIT", "BSD-3-Clause", "(Apache-2.0 OR MPL-2.0)", "Unlicense"],
+      "files": {
+        "LICENSE": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "NOTICE": "0d20d1adef18aee3f40dd258172155521ce702ac445cb5f7b7d60ed32dad2fb2",
+        "swagger-ui-bundle.js": "a7e344f2770b2f07527ce828e0951626983b8f2dcdb7a826689c0232023f995b",
+        "swagger-ui-bundle.js.LICENSE.txt": "63818894e4b04cd0e3180d9cb20761e227a939121e7484f8e1d528227c756f89",
+        "swagger-ui.css": "d7f39f764aa18c7b47dd05b9af5613e373e4ac0f3557c2693d52d0abc2464d76"
+      }
+    }
+  },
+  "goModules": {
+    "$comment": "Go module@version -> reason. Read only by services/ottl-evaluator/scripts/check-licenses.sh: a module named here, at exactly this version, may carry MPL-2.0 (and no other license outside \"allowed\"). Reviewed MPL-2.0 dependencies of the ottl-evaluator, used unmodified, their upstream sources pointed to in D30's notices; MPL-2.0's file-level copyleft reaches only their own files (ADR 0019, amended by D15a). Every entry needs a reason a reviewer can verify; another version, or another MPL module, still fails.",
+    "github.com/hashicorp/go-version@v1.9.0": "MPL-2.0 (LICENSE), reviewed at v1.9.0 (D15a decision 4): reached through pkg/ottl by go.opentelemetry.io/collector/featuregate, linked unmodified; its source at https://github.com/hashicorp/go-version/tree/v1.9.0.",
+    "github.com/hashicorp/golang-lru@v1.0.2": "MPL-2.0 (LICENSE), reviewed at v1.0.2 (D15a decision 4): reached through pkg/ottl's ottlfuncs by github.com/ua-parser/uap-go (its cache; the module's root and simplelru packages), linked unmodified; its source at https://github.com/hashicorp/golang-lru/tree/v1.0.2."
+  }
+}

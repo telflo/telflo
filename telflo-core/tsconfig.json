@@ -1,0 +1,4 @@
+{
+  "include": [],
+  "references": [{ "path": "packages/db" }, { "path": "apps/api" }, { "path": "apps/cli" }, { "path": "packages/contracts" }, { "path": "e2e" }]
+}

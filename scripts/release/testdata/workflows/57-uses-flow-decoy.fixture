@@ -1,0 +1,12 @@
+# Breaks one rule: a flow-style step running an action off the allow-list, with a decoy uses: line inside a name: block so the raw line count still matches (the reviewer's form).
+file: release.yml
+rule: uses-allowed
+<<<
+      - run: bash scripts/release/steps.sh free-disk 8
+===
+      - run: bash scripts/release/steps.sh free-disk 8
+      - { uses: evil/action@v1 }
+      - name: |
+          uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        run: bash scripts/release/steps.sh free-disk 8
+>>>

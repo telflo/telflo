@@ -1,0 +1,11 @@
+# Breaks one rule: the GitHub Release made without re-checking the tag's commit (no --commit from the version job).
+file: release.yml
+rule: required-steps
+<<<
+          TAG: ${{ needs.version.outputs.tag }}
+          COMMIT: ${{ needs.version.outputs.commit }}
+        run: bash scripts/release/steps.sh github-release --tag "$TAG" --commit "$COMMIT" --oci "$RUNNER_TEMP/oci" --release "$RUNNER_TEMP/release"
+===
+          TAG: ${{ needs.version.outputs.tag }}
+        run: bash scripts/release/steps.sh github-release --tag "$TAG" --oci "$RUNNER_TEMP/oci" --release "$RUNNER_TEMP/release"
+>>>

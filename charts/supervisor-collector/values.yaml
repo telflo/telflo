@@ -1,0 +1,115 @@
+# Role selects the workload shape. One of: node | cluster | gateway.
+role: ""
+# Collector group name. node/cluster use their role name; a gateway's is its
+# objects' name and its Service's address: a DNS-1035 label of at most 52
+# characters, not node, cluster, telflo-node or telflo-cluster (guarded). Not
+# injected as an OpAMP attribute (see collectorGroupId).
+group: ""
+
+# The Agent's (node) and the Cluster's object names: the DaemonSet or
+# StatefulSet, its ServiceAccount, ClusterRole and binding, its Secrets and
+# the node's state directory. Empty: telflo-node / telflo-cluster. The Telflo
+# platform passes `<the fleet id's first 8 characters>-<the group's slug>`
+# (e.g. 3f9a1c2e-default, 3f9a1c2e-cluster) so several fleets can run in one
+# cluster, each in its own namespace. When set, a DNS-1123 label of at most 52
+# characters (guarded). A gateway's names ignore it (it is named by its
+# group), but a set value is still checked.
+fullnameOverride: ""
+
+# Collector group id (opamp.collector_group.id), required: a UUID (guarded).
+# Injected as COLLECTOR_GROUP_ID so the server binds this collector to its
+# group by immutable id. Set by the Telflo platform's Install with Helm values.
+collectorGroupId: ""
+
+# OpAMP bootstrap (server-vouched; set by the platform's Install with Helm values).
+endpoint: ""
+token: ""
+
+# When true, the supervisor skips TLS verification to the OpAMP server.
+# The platform sets this for http endpoints. Default secure.
+allowInsecure: false
+
+image:
+  # Shared collector image (opampsupervisor PID 1 + otelcol-contrib child),
+  # tag pinned to the group's configured collector version by the platform's values.
+  repository: ghcr.io/telflo/telflo/collector
+  tag: ""            # defaults to appVersion via _helpers if empty
+  pullPolicy: IfNotPresent
+
+# Gateway/cluster only. Node ignores replicas (DaemonSet).
+replicas: 1
+
+resources: {}
+nodeSelector: {}
+tolerations: []
+
+serviceAccount:
+  create: true
+  name: ""
+
+# Node role only: hostPath log source mounted read-only for filelog.
+nodeLogHostPath: /var/log/pods
+
+# Extra environment variables for the collector container, as NAME: value
+# pairs. For values the deployed configuration references with ${env:NAME}.
+# Set by the Telflo platform's Install with Helm values file; also settable
+# here directly (e.g. GitOps). Delivered via a chart-created Secret
+# ({fullname}-collector-env) + envFrom rather than inline env, so values are
+# readable only with Secret RBAC, not from the pod spec; a pod-template
+# checksum annotation rolls the pods when a value changes. These can never
+# override the chart's own OPAMP_*/identity env (explicit env beats envFrom).
+# The names are quoted in the Secret, so any variable name, a YAML word such
+# as ON or null included, arrives as written. Empty map renders nothing.
+collectorEnv: {}
+
+# User-defined extra volume mounts (type-general; v1 = hostPath), appended to
+# every role's pod. Managed by Telflo's Volume-mounts UI. Each entry:
+#   { hostPath, hostPathType (Directory|DirectoryOrCreate|File|Socket),
+#     mountPath, readOnly }. The node role's /var/log/pods mount is built-in and
+#   separate from this list.
+volumes: []
+
+# ClickStack distribution only. Left empty for contrib deploys (the chart emits
+# no ClickHouse env when clickhouse.endpoint is unset). Set by Telflo's ClickStack
+# deploy view via --set-string. The migrate step at pod start uses these; the
+# clickhouseexporter can also reference them via ${env:CLICKHOUSE_*}.
+#
+# Coupling note: clickhouse.endpoint is also what gates OPAMP_SERVER_URL (see
+# templates/_helpers.tpl's tsc.collectorEnv) — the chart only enters ClickStack
+# supervisor mode (emitting OPAMP_SERVER_URL + CLICKHOUSE_*) when this is set.
+# A ClickStack image deployed via this chart WITHOUT clickhouse.endpoint set
+# would run standalone and never join the Telflo fleet.
+clickhouse:
+  endpoint: ""          # full URL with protocol + port, e.g. https://host:8443
+  user: ""
+  database: ""          # -> HYPERDX_OTEL_EXPORTER_CLICKHOUSE_DATABASE (default "otel" upstream)
+  # Password delivery — exactly one of:
+  #   password:       inline (chart creates {fullname}-clickhouse Secret)
+  #   existingSecret: reference a pre-existing Secret (GitOps/production; chart creates nothing)
+  password: ""
+  existingSecret: ""
+  passwordKey: "CLICKHOUSE_PASSWORD"
+
+# Directory mounted as a durable, collector-writable volume for the collector's
+# own on-disk state — specifically the `file_storage` extension that backs the
+# clickhouse exporter's persistent sending_queue (and filelog offset
+# checkpoints). Your collector config's `file_storage.directory` must live at or
+# under this path.
+#
+# WHY THIS EXISTS (mounted ONLY when clickhouse.endpoint is set, i.e. ClickStack):
+# The ClickStack collector image runs as NON-ROOT uid 10001, and the chart pins
+# runAsUser: 10001 for the ClickStack path (see tsc.podSecurityContext). The
+# default /var/lib/otelcol lives on the container's root filesystem, which is
+# root-owned — so uid 10001 cannot create/write file_storage there and the
+# collector exits code 1 at startup ("failed to create directory ... permission
+# denied"). The contrib image runs as ROOT and never hits this, which is why the
+# volume is ClickStack-gated. Backing it with a real volume (PVC for
+# gateway/cluster; hostPath for node) ALSO makes the queue durable across
+# restarts — an emptyDir would be wiped on reschedule and defeat the queue's
+# whole purpose (surviving a ClickHouse outage).
+#
+# Contract: keep this in sync with file_storage.directory in the deployed config
+# (Telflo's convention is <collectorDataDir>/file_storage). Contrib deploys leave
+# clickhouse.endpoint empty, so no collector-data volume is emitted and their
+# rendered pods stay byte-identical.
+collectorDataDir: /var/lib/otelcol

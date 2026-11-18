@@ -1,0 +1,9 @@
+# Breaks one rule: top-level permissions other than {}.
+file: release.yml
+rule: permissions-top
+<<<
+permissions: {}
+===
+permissions:
+  contents: read
+>>>

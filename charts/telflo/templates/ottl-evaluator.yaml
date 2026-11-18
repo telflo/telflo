@@ -1,0 +1,117 @@
+{{- include "telflo.guards" . }}
+{{- $c := .Values.ottlEvaluator }}
+{{- $name := include "telflo.evaluatorName" . }}
+{{- $secret := include "telflo.secretName" (list . "internalServices") }}
+{{- /*
+The OTTL evaluator (D33-1 decisions 19, 20 and 25; Preflight ruling 10):
+Deployment and ClusterIP Service ottl-evaluator, port 8003. The API is its
+only caller (networkpolicies.yaml admits nothing else, and it reaches
+nothing).
+
+Its secret is ONLY a file: a projected item of the Secret
+existingSecrets.internalServices names (key ottl-evaluator-secret), mode
+0440, group 65532 (fsGroup), at OTTL_EVALUATOR_SECRET_FILE; the evaluator
+reads no secret from its environment (internal/server/secrets.go). So no
+variable here comes from a Secret.
+
+Compose's limits: GOMAXPROCS 4 for serve's own threads (each request's child
+sets its own), the memory limit from ottlEvaluator.resources (3Gi), and 45 s
+for requests in flight to finish within serve's 40 s shutdown. It writes
+nothing, so it has no emptyDir.
+*/}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $name | quote }}
+  labels:
+    {{- include "telflo.labels" (dict "ctx" . "component" "ottl-evaluator") | nindent 4 }}
+spec:
+  type: ClusterIP
+  selector:
+    {{- include "telflo.selectorLabels" (dict "ctx" . "component" "ottl-evaluator") | nindent 4 }}
+  ports:
+    - name: http
+      port: 8003
+      targetPort: http
+      protocol: TCP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $name | quote }}
+  labels:
+    {{- include "telflo.labels" (dict "ctx" . "component" "ottl-evaluator") | nindent 4 }}
+spec:
+  replicas: {{ int $c.replicas }}
+  selector:
+    matchLabels:
+      {{- include "telflo.selectorLabels" (dict "ctx" . "component" "ottl-evaluator") | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "telflo.labels" (dict "ctx" . "component" "ottl-evaluator") | nindent 8 }}
+      {{- with $c.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      {{- include "telflo.podBasics" . | nindent 6 }}
+      terminationGracePeriodSeconds: 45
+      securityContext:
+        # 65532 is distroless's nonroot user and group; fsGroup gives the
+        # group the secret's file.
+        {{- include "telflo.podSecurityContext" (dict "uid" 65532 "gid" 65532 "fsGroup" 65532) | nindent 8 }}
+      containers:
+        - name: ottl-evaluator
+          image: {{ include "telflo.image" (list . "ottlEvaluator") | quote }}
+          imagePullPolicy: {{ include "telflo.pullPolicy" (list . "ottlEvaluator") | quote }}
+          args: ["serve"]
+          ports:
+            - name: http
+              containerPort: 8003
+              protocol: TCP
+          # A path and a thread count: never the secret, never a secretKeyRef.
+          env:
+            - name: OTTL_EVALUATOR_SECRET_FILE
+              value: /run/secrets/telflo/ottl-evaluator-secret
+            - name: GOMAXPROCS
+              value: "4"
+          # TCP probes, never HTTP (D33-1 decision 18, Ruling 332): a probe
+          # writes no log line, and the evaluator logs every request it
+          # serves, GET /health included (internal/server/server.go,
+          # observe). Its /health checks nothing a TCP accept doesn't: it
+          # always answers 200, and serve listens only after its settings,
+          # its secret and its server are loaded (internal/server/serve.go).
+          readinessProbe:
+            tcpSocket:
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 5
+          livenessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 3
+          volumeMounts:
+            - name: secret
+              mountPath: /run/secrets/telflo
+              readOnly: true
+          {{- with $c.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          securityContext:
+            {{- include "telflo.containerSecurityContext" (dict "uid" 65532 "gid" 65532) | nindent 12 }}
+      volumes:
+        - name: secret
+          projected:
+            sources:
+              - secret:
+                  name: {{ $secret | quote }}
+                  items:
+                    - key: ottl-evaluator-secret
+                      path: ottl-evaluator-secret
+                      mode: 0440
+      {{- include "telflo.scheduling" (list . "ottlEvaluator") | nindent 6 }}

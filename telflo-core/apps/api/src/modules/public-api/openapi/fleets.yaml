@@ -1,0 +1,710 @@
+# Fleets, their collector groups and install (D25 decision 17's routes 17-23;
+# decisions 15, 19 and 35-38). Assembled by document.ts. Fleet types are the
+# platform's (`server`, `kubernetes-supervisor`); a fleet's collectors are in
+# collector groups; install's env is a list of {name, value}.
+paths:
+  /fleets:
+    get:
+      operationId: listFleets
+      summary: List fleets
+      description: >-
+        The organization's fleets, newest first, a page at a time: pass the
+        reply's `nextCursor` as `cursor` for the next.
+      tags: [fleets]
+      x-telflo-access: read
+      parameters:
+        - name: limit
+          in: query
+          description: At most this many items, 1 to 100 (50 when left out).
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+        - name: cursor
+          in: query
+          description: A previous page's `nextCursor`. One the list didn't give answers 400 `invalid_request`.
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 2048
+      responses:
+        "200":
+          description: A page of fleets.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FleetPage"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "503":
+          $ref: "#/components/responses/FleetsUnavailable"
+    post:
+      operationId: createFleet
+      summary: Create a fleet
+      description: >-
+        Creates a fleet, its Default group and its two enrollment tokens. The
+        reply names the rotate token and its expiry, and holds NO bearer:
+        reveal a fleet's tokens in Telflo, or ask `POST
+        /fleets/{fleetId}/install` for a ready command. A label another of the
+        organization's fleets has answers 409 `fleet_label_taken`. Counts
+        toward the caller's limit of replies that carry a bearer (10 a
+        minute), as a create in Telflo does.
+      tags: [fleets]
+      x-telflo-access: write
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateFleetRequest"
+      responses:
+        "201":
+          description: The fleet and its rotate token's id and expiry.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                enum: [no-store]
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FleetCreated"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/FleetConflict"
+        "413":
+          $ref: "#/components/responses/FleetBodyTooLarge"
+        "422":
+          $ref: "#/components/responses/FleetUnprocessable"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "503":
+          $ref: "#/components/responses/FleetsUnavailable"
+  /fleets/{fleetId}/install:
+    parameters:
+      - $ref: "#/components/parameters/FleetId"
+    post:
+      operationId: installCollector
+      summary: Get a ready command that installs a collector
+      description: >-
+        The command Telflo's install dialogs show for the same choices, ready
+        to run: `docker` (a `docker run`) or `linux` (an All In One Quick
+        Deploy command: a 24-hour install link, then the supervisor, as a
+        systemd service or in the foreground) for a server fleet, `kubernetes`
+        (a 24-hour Helm values link's download, then `helm upgrade --install`)
+        for a kubernetes-supervisor fleet. `groupId` left out is a server
+        fleet's Default group or a kubernetes-supervisor fleet's only group.
+        Only the variables the group's published version reads can be set.
+
+
+        The command is a SECRET: it holds the fleet's enrollment token
+        (docker, linux) or a link whose download holds it (linux, kubernetes).
+        The reply is `no-store`; keep the command out of logs, tickets and
+        chat. Every call is audited as a reveal of the fleet's default token
+        and counts toward the caller's limit of replies that carry a bearer
+        (10 a minute). A linux or kubernetes install needs the organization's
+        "Public install links" setting on (409
+        `public_install_links_disabled`), and a fleet holds at most 100 active
+        links (409 `quick_deploy_link_limit_reached`).
+      tags: [fleets]
+      x-telflo-access: write
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InstallRequest"
+      responses:
+        "200":
+          description: The command, built for the group.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                enum: [no-store]
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InstallReply"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/FleetConflict"
+        "413":
+          $ref: "#/components/responses/FleetBodyTooLarge"
+        "422":
+          $ref: "#/components/responses/FleetUnprocessable"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "503":
+          $ref: "#/components/responses/FleetsUnavailable"
+  /fleets/{fleetId}/groups:
+    parameters:
+      - $ref: "#/components/parameters/FleetId"
+    get:
+      operationId: listCollectorGroups
+      summary: List a fleet's collector groups
+      description: >-
+        Every group of the fleet, the Default group
+        first, each with its role, its Kubernetes settings and the
+        configuration and version number assigned it. Not paginated.
+      tags: [fleets]
+      x-telflo-access: read
+      responses:
+        "200":
+          description: The fleet's groups.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CollectorGroupList"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "503":
+          $ref: "#/components/responses/FleetsUnavailable"
+    post:
+      operationId: createCollectorGroup
+      summary: Create a collector group
+      description: >-
+        A group assigned a PUBLISHED version of a configuration the token's
+        user can see (a draft answers 422 `configuration_version_not_published`;
+        a configuration or version the user can't see 404). On a
+        kubernetes-supervisor fleet the group is the Cluster (named `cluster`)
+        or a gateway pool (any other name: lowercase letters, digits and
+        hyphens, starting with a letter); `role`, when sent, must be that,
+        `namespace` defaults to `telflo-collectors`, and only a gateway takes
+        `replicas`. A server fleet's group takes none of the three. A name the
+        fleet's other groups have answers 409 `collector_group_name_taken`.
+      tags: [fleets]
+      x-telflo-access: write
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCollectorGroupRequest"
+      responses:
+        "201":
+          description: The group.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CollectorGroup"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/FleetConflict"
+        "413":
+          $ref: "#/components/responses/FleetBodyTooLarge"
+        "422":
+          $ref: "#/components/responses/FleetUnprocessable"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "503":
+          $ref: "#/components/responses/FleetsUnavailable"
+  /fleets/{fleetId}/groups/{groupId}:
+    parameters:
+      - $ref: "#/components/parameters/FleetId"
+      - $ref: "#/components/parameters/GroupId"
+    get:
+      operationId: getCollectorGroup
+      summary: Get a collector group
+      tags: [fleets]
+      x-telflo-access: read
+      responses:
+        "200":
+          description: The group.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CollectorGroup"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "503":
+          $ref: "#/components/responses/FleetsUnavailable"
+    patch:
+      operationId: updateCollectorGroup
+      summary: Change a collector group
+      description: >-
+        A merge-patch: `configurationId` with `versionNumber` assigns that
+        configuration's version, `versionNumber` alone another version of the
+        configuration assigned, and a null `configurationId` clears the
+        assignment (`configurationId` without `versionNumber` is 400). The
+        version must be published. A kubernetes-supervisor group's `namespace`
+        (null: `telflo-collectors`) and a gateway's `replicas` (null: 1) change
+        its settings; its name never changes (409 `collector_group_name_fixed`:
+        its Helm release is named after it). `role` isn't patchable. Fields
+        left out are unchanged.
+      tags: [fleets]
+      x-telflo-access: write
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateCollectorGroupRequest"
+      responses:
+        "200":
+          description: The group as it now is.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CollectorGroup"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/FleetConflict"
+        "413":
+          $ref: "#/components/responses/FleetBodyTooLarge"
+        "422":
+          $ref: "#/components/responses/FleetUnprocessable"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "503":
+          $ref: "#/components/responses/FleetsUnavailable"
+components:
+  parameters:
+    FleetId:
+      name: fleetId
+      in: path
+      required: true
+      description: The fleet's id. One that isn't a UUID answers 404 `fleet_not_found`, as an unknown one does.
+      schema:
+        type: string
+    GroupId:
+      name: groupId
+      in: path
+      required: true
+      description: The group's id. One that isn't a UUID answers 404 `collector_group_not_found`, as an unknown one does.
+      schema:
+        type: string
+  schemas:
+    FleetType:
+      description: A server fleet's collectors run on hosts (docker, linux); a kubernetes-supervisor fleet's in a cluster (Helm).
+      type: string
+      enum: [server, kubernetes-supervisor]
+    CreateFleetRequest:
+      type: object
+      additionalProperties: false
+      required: [label, type]
+      properties:
+        label:
+          description: 1 to 80 characters, not starting or ending with a space, no control character; unique in the organization.
+          type: string
+          minLength: 1
+          maxLength: 80
+          pattern: '^[^\x00-\x20\x7f-\xa0  -     　]([^\x00-\x1f\x7f-\x9f]*[^\x00-\x20\x7f-\xa0  -     　])?$'
+        type:
+          $ref: "#/components/schemas/FleetType"
+        expiresIn:
+          description: The rotate token's lifetime (180 days, 365, 730), `never` when left out.
+          type: string
+          enum: ["180d", "1y", "2y", never]
+    FleetCreated:
+      description: A new fleet, with its rotate token's id and expiry. No bearer.
+      type: object
+      additionalProperties: false
+      required: [id, label, type, tokenId, tokenExpiresAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        label:
+          type: string
+        type:
+          $ref: "#/components/schemas/FleetType"
+        tokenId:
+          description: The rotate token's id.
+          type: string
+          format: uuid
+        tokenExpiresAt:
+          description: When the rotate token expires, or null for never.
+          type: [string, "null"]
+          format: date-time
+    Fleet:
+      type: object
+      additionalProperties: false
+      required: [id, label, type, status, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        label:
+          type: string
+        type:
+          $ref: "#/components/schemas/FleetType"
+        status:
+          type: string
+          enum: [active, archived]
+        createdAt:
+          type: string
+          format: date-time
+    FleetPage:
+      type: object
+      additionalProperties: false
+      required: [items, nextCursor]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Fleet"
+        nextCursor:
+          description: The next page's cursor, or null on the last page.
+          type: [string, "null"]
+    KubernetesRole:
+      description: >-
+        A kubernetes-supervisor fleet's group's role: its Default group is the
+        Agent (`node`, one collector per node), the group named `cluster` the
+        Cluster, any other a gateway pool.
+      type: string
+      enum: [node, cluster, gateway]
+    CollectorGroup:
+      description: A fleet's collector group.
+      type: object
+      additionalProperties: false
+      required:
+        [id, fleetId, name, isDefault, role, namespace, replicas, assignedPublishedVersionId, configurationId, versionNumber, createdAt, updatedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        fleetId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        isDefault:
+          type: boolean
+        role:
+          description: Null on a server fleet.
+          oneOf:
+            - $ref: "#/components/schemas/KubernetesRole"
+            - type: "null"
+        namespace:
+          description: A kubernetes-supervisor group's namespace; null on a server fleet, or where its settings can't be read.
+          type: [string, "null"]
+        replicas:
+          description: A gateway's replicas; null for any other group.
+          type: [integer, "null"]
+          minimum: 1
+        assignedPublishedVersionId:
+          description: The published version assigned, or null when unassigned.
+          type: [string, "null"]
+          format: uuid
+        configurationId:
+          description: The assigned version's configuration, or null when unassigned (or its configuration deleted).
+          type: [string, "null"]
+          format: uuid
+        versionNumber:
+          description: The assigned version's number, or null as configurationId.
+          type: [integer, "null"]
+          minimum: 1
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    CollectorGroupList:
+      type: object
+      additionalProperties: false
+      required: [items, nextCursor]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/CollectorGroup"
+        nextCursor:
+          description: Always null; the list isn't paginated.
+          type: "null"
+    CollectorGroupName:
+      description: 1 to 80 characters, not starting or ending with a space, no control character; a kubernetes-supervisor fleet's is `cluster` or a gateway's name.
+      type: string
+      minLength: 1
+      maxLength: 80
+      pattern: '^[^\x00-\x20\x7f-\xa0  -     　]([^\x00-\x1f\x7f-\x9f]*[^\x00-\x20\x7f-\xa0  -     　])?$'
+    CreateCollectorGroupRequest:
+      type: object
+      additionalProperties: false
+      required: [name, configurationId, versionNumber]
+      properties:
+        name:
+          $ref: "#/components/schemas/CollectorGroupName"
+        configurationId:
+          type: string
+          maxLength: 64
+        versionNumber:
+          description: The configuration's published version to assign.
+          type: integer
+          minimum: 1
+          maximum: 999999999
+        role:
+          $ref: "#/components/schemas/KubernetesRole"
+        replicas:
+          description: A gateway's, 1 to 1,000 (1 when left out).
+          type: integer
+          minimum: 1
+          maximum: 1000
+        namespace:
+          description: A kubernetes-supervisor group's namespace (a DNS label of at most 63 characters), `telflo-collectors` when left out.
+          type: string
+          maxLength: 63
+          pattern: "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"
+    UpdateCollectorGroupRequest:
+      description: >-
+        At least one field. `configurationId` (a string) needs `versionNumber`;
+        a null `configurationId` takes none.
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      allOf:
+        - if:
+            required: [configurationId]
+            properties:
+              configurationId:
+                type: string
+          then:
+            required: [versionNumber]
+            properties:
+              versionNumber: true
+        - if:
+            required: [configurationId]
+            properties:
+              configurationId:
+                type: "null"
+          then:
+            not:
+              required: [versionNumber]
+              properties:
+                versionNumber: true
+      properties:
+        name:
+          $ref: "#/components/schemas/CollectorGroupName"
+        configurationId:
+          description: With `versionNumber`, the configuration to assign; null clears the assignment.
+          type: [string, "null"]
+          maxLength: 64
+        versionNumber:
+          type: integer
+          minimum: 1
+          maximum: 999999999
+        replicas:
+          description: A gateway's, 1 to 1,000; null sets it back to 1.
+          type: [integer, "null"]
+          minimum: 1
+          maximum: 1000
+        namespace:
+          description: A kubernetes-supervisor group's namespace; null sets it back to `telflo-collectors`.
+          type: [string, "null"]
+          maxLength: 63
+          pattern: "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"
+    InstallEnvVar:
+      description: A variable the group's published version reads (`${env:NAME}`), and its value.
+      type: object
+      additionalProperties: false
+      required: [name, value]
+      properties:
+        name:
+          type: string
+          maxLength: 256
+          pattern: "^[A-Za-z_][A-Za-z0-9_]*$"
+        value:
+          description: >-
+            Trimmed, then 1 to 4,096 characters, no control character, no lone
+            surrogate (a blank value is 400).
+          type: string
+          minLength: 1
+          pattern: '^\s*[^\s\u0000-\u001f\u007f-\u009f\uD800-\uDFFF](?:[^\u0000-\u001f\u007f-\u009f\uD800-\uDFFF]{0,4094}[^\s\u0000-\u001f\u007f-\u009f\uD800-\uDFFF])?\s*$'
+    InstallEnv:
+      description: At most 50 variables, each named once (a name given twice is 400).
+      type: array
+      maxItems: 50
+      items:
+        $ref: "#/components/schemas/InstallEnvVar"
+    InstallGroupId:
+      description: The group the collector joins; left out, a server fleet's Default group or a kubernetes-supervisor fleet's only group.
+      type: string
+      maxLength: 64
+    InstallDisplayName:
+      description: The collector's name in the fleet, 1 to 80 letters, digits, spaces, dots, dashes and underscores (trimmed); empty or left out for an automatic one.
+      type: string
+      maxLength: 1000
+      pattern: '^\s*(?:[A-Za-z0-9._-](?:[A-Za-z0-9 ._-]{0,78}[A-Za-z0-9._-])?)?\s*$'
+    DockerInstallRequest:
+      type: object
+      additionalProperties: false
+      required: [platform]
+      properties:
+        platform:
+          type: string
+          enum: [docker]
+        groupId:
+          $ref: "#/components/schemas/InstallGroupId"
+        displayName:
+          $ref: "#/components/schemas/InstallDisplayName"
+        env:
+          $ref: "#/components/schemas/InstallEnv"
+    LinuxInstallRequest:
+      type: object
+      additionalProperties: false
+      required: [platform, arch, rootPath, systemd]
+      properties:
+        platform:
+          type: string
+          enum: [linux]
+        groupId:
+          $ref: "#/components/schemas/InstallGroupId"
+        displayName:
+          $ref: "#/components/schemas/InstallDisplayName"
+        arch:
+          type: string
+          enum: [amd64, arm64]
+        rootPath:
+          description: >-
+            The absolute directory the supervisor and the collector install
+            into (`/etc/otelcol` in Telflo's dialog): letters, digits, dots,
+            dashes, underscores and `/`, at most 200 characters, no `.` or
+            `..` segment, not the root; a trailing `/` is removed.
+          type: string
+          pattern: '^(?!.*(?:^|/)\.{1,2}(?:/|$))(?=/[A-Za-z0-9._/-]{0,198}[A-Za-z0-9._-]/*$)/[A-Za-z0-9._/-]*$'
+        systemd:
+          description: Install and start the telflo-supervisor systemd service (else run the supervisor in the foreground).
+          type: boolean
+        env:
+          $ref: "#/components/schemas/InstallEnv"
+    KubernetesInstallRequest:
+      type: object
+      additionalProperties: false
+      required: [platform]
+      properties:
+        platform:
+          type: string
+          enum: [kubernetes]
+        groupId:
+          $ref: "#/components/schemas/InstallGroupId"
+        env:
+          description: As the other platforms', but none the chart sets itself (POD_NAMESPACE, POD_NAME, NODE_NAME, HOST_IP).
+          $ref: "#/components/schemas/InstallEnv"
+    InstallRequest:
+      oneOf:
+        - $ref: "#/components/schemas/DockerInstallRequest"
+        - $ref: "#/components/schemas/LinuxInstallRequest"
+        - $ref: "#/components/schemas/KubernetesInstallRequest"
+    InstallReply:
+      description: "A ready command. A SECRET: keep it out of logs, tickets and chat."
+      type: object
+      additionalProperties: false
+      required: [fleetId, fleetType, platform, groupId, groupName, command, notes, expiresAt]
+      properties:
+        fleetId:
+          type: string
+          format: uuid
+        fleetType:
+          $ref: "#/components/schemas/FleetType"
+        platform:
+          type: string
+          enum: [docker, linux, kubernetes]
+        groupId:
+          type: string
+          format: uuid
+        groupName:
+          type: string
+        command:
+          description: The command to run, holding the fleet's enrollment token or a link whose download holds it.
+          type: string
+        notes:
+          description: Where to run it, and the variables the group's published version reads that weren't set.
+          type: array
+          items:
+            type: string
+        expiresAt:
+          description: "When the command's link expires (linux and kubernetes, after 24 hours), or null (docker)."
+          type: [string, "null"]
+          format: date-time
+  responses:
+    FleetConflict:
+      description: >-
+        A refusal of the fleet's state: a taken label (`fleet_label_taken`) or
+        group name (`collector_group_name_taken`), an archived fleet
+        (`fleet_archived`), a Kubernetes group's rename
+        (`collector_group_name_fixed`), a group with no published version
+        assigned (`collector_group_unassigned`) or settings that can't be read
+        (`collector_group_settings_unreadable`), no valid default token
+        (`enrollment_token_default_missing`), install links turned off
+        (`public_install_links_disabled`) or at their most
+        (`quick_deploy_link_limit_reached`), and the like.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    FleetUnprocessable:
+      description: >-
+        A version that isn't published (`configuration_version_not_published`),
+        a platform that doesn't suit the fleet's type
+        (`fleet_type_not_installable`), or no group named where the fleet has
+        several (`collector_group_required`, with `details.groupIds`).
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    FleetBodyTooLarge:
+      description: The body is over 1 MiB (`payload_too_large`).
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    FleetsUnavailable:
+      description: Fleet management is unavailable right now (`fleets_unavailable`); a write's may have been made.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"

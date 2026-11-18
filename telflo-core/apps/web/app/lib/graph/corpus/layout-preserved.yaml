@@ -1,0 +1,38 @@
+# Layout every edit keeps outside itself (Preflight ruling 1).
+receivers:
+  otlp: # the key's own comment
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317   # spaced comment
+processors:
+  transform:
+    error_mode: ignore
+    trace_statements:
+      - >-
+        set(attributes["folded"],
+        "one line")
+    note: |
+      literal line one
+      literal line two
+    plain_multi: this plain scalar
+      runs on
+  batch:
+    timeout: 5s
+  # an indented comment
+# a column-0 comment after an indented one
+exporters:
+  debug:
+extensions:
+  file_storage:
+    directory: /var/lib/otelcol
+    directory_permissions: "0750"
+    big: 12345678901234567890
+    exponent: 1e3
+    leading_zero: 0750
+service:
+  extensions: [file_storage]
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [transform, batch]
+      exporters: [debug]

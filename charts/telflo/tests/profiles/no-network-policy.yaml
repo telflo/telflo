@@ -1,0 +1,14 @@
+# NetworkPolicies off, on both charts.
+publicUrl: https://telflo.example.com
+networkPolicy:
+  enabled: false
+api:
+  mail:
+    from: noreply@telflo.example.com
+    smtp:
+      host: smtp.example.com
+opamp-server:
+  server:
+    publicUrl: https://opamp.example.com/opamp/api/v1
+  networkPolicy:
+    enabled: false

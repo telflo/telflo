@@ -1,0 +1,16 @@
+# Decision 3: an extension service.extensions lists but nobody declares
+# stays listed, and is never declared.
+receivers:
+  otlp:
+    auth:
+      authenticator: basicauth/server
+exporters:
+  debug: {}
+extensions:
+  health_check: {}
+service:
+  extensions: [health_check, basicauth/server, oauth2client]
+  pipelines:
+    logs:
+      receivers: [otlp]
+      exporters: [debug]

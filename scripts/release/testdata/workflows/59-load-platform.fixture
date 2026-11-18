@@ -1,0 +1,8 @@
+# Breaks one rule: collector.yml's load-images.sh without --platform linux/amd64 (the engine's own platform then).
+file: collector.yml
+rule: load-platform
+<<<
+        run: bash scripts/release/load-images.sh --oci "$RUNNER_TEMP/oci" --version "$COLLECTOR_VERSION" --image collector --platform linux/amd64
+===
+        run: bash scripts/release/load-images.sh --oci "$RUNNER_TEMP/oci" --version "$COLLECTOR_VERSION" --image collector
+>>>

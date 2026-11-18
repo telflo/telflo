@@ -1,0 +1,11 @@
+# Breaks one rule: a step's BASH_ENV (a file bash sources before the script).
+file: release.yml
+rule: env-names
+<<<
+      - name: The stack smoke (oss)
+        env:
+===
+      - name: The stack smoke (oss)
+        env:
+          BASH_ENV: /tmp/x
+>>>

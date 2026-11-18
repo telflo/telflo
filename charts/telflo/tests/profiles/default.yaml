@@ -1,0 +1,11 @@
+# The defaults plus only what an install must give (the render tests' and
+# the cloud-neutral check's baseline).
+publicUrl: https://telflo.example.com
+api:
+  mail:
+    from: noreply@telflo.example.com
+    smtp:
+      host: smtp.example.com
+opamp-server:
+  server:
+    publicUrl: https://opamp.example.com/opamp/api/v1

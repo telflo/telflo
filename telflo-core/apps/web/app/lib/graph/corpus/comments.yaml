@@ -1,0 +1,29 @@
+# Header comment
+# on two lines
+
+receivers: # the receivers
+  # the OTLP receiver
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317 # gRPC
+      http: # HTTP
+        endpoint: 0.0.0.0:4318
+
+processors:
+  batch: # batches
+    timeout: 5s
+  # commented-out component:
+  # memory_limiter:
+  #   limit_mib: 512
+exporters:
+  debug: {} # prints
+service:
+  # the pipelines
+  pipelines:
+    traces:
+      receivers: [otlp] # in
+      processors:
+        - batch # the only one
+      exporters: [debug]
+# a trailing comment
