@@ -24,10 +24,10 @@ import type { OrganizationRepositories, OrganizationTransaction, WithOrganizatio
 import { TEST_TERMS_VERSION } from "../../testing/site.js";
 
 /*
- * The branches of acceptance and registration that follow the commit
- * (Preflight ruling 5), which the database can't be made to reach on
- * demand. invitations.integration.test.ts proves the rest against Postgres:
- * the refusals, the locks, the races, and a switch refused after the join.
+ * The branches of acceptance and registration that follow the commit, which
+ * the database can't be made to reach on demand.
+ * invitations.integration.test.ts proves the rest against Postgres: the
+ * refusals, the locks, the races, and a switch refused after the join.
  */
 
 const NOW = new Date("2030-01-01T00:00:00.000Z");
@@ -182,7 +182,7 @@ function buildHarness() {
   });
   const sessions = {
     switchOrganization: vi.fn<ISessionService["switchOrganization"]>(),
-    // An invitation's session always names its organization: never a sign-in's landing (Q265).
+    // An invitation's session always names its organization: never a sign-in's landing.
     startSession: vi.fn(async (input: StartSessionInput): Promise<IssuedSession | undefined> => {
       if (input.organizationId === undefined) throw new Error("an invitation's session names its organization");
       return issued(input.organizationId);

@@ -37,7 +37,7 @@ export interface User {
   email: string;
   passwordHash: string | null;
   emailVerifiedAt: Date | null;
-  /** Null for a user who has accepted no terms yet (D2c decision 6). */
+  /** Null for a user who has accepted no terms yet. */
   acceptedTermsVersion: string | null;
   createdAt: Date;
 }
@@ -77,7 +77,7 @@ export interface CreateUserInput {
   emailVerifiedAt: Date | null;
   /**
    * The caller's clock: when the starter configuration and its version 1
-   * are created (D8 decision 10), never SQL `now()`.
+   * are created, never SQL `now()`.
    */
   createdAt: Date;
   /** Recorded on the starter configuration's audit row, as on the account's own. */
@@ -92,10 +92,9 @@ export interface CreateFederatedUserInput {
 }
 
 /**
- * The single place snake_case becomes camelCase (Global Constraints). Callers
- * above this line never see a database column name. Exported for the
- * repositories that join `users` (user-identity-repository.ts), not for
- * services.
+ * The single place snake_case becomes camelCase. Callers above this line never
+ * see a database column name. Exported for the repositories that join `users`
+ * (user-identity-repository.ts), not for services.
  */
 export function toUser(row: Selectable<UsersTable>): User {
   return {
@@ -131,16 +130,15 @@ export interface AccountWrites {
   /**
    * Points the account's transaction at another organization and hands out
    * its repositories: an account created from an invitation joins the
-   * inviting organization in the same transaction (D6 decision 9), and
-   * row-level security admits that membership, and shows that invitation,
-   * only in the context's organization. After it, the context no longer
-   * names the personal organization, until `createAccount` points it back
-   * there for the starter configuration.
+   * inviting organization in the same transaction, and row-level security
+   * admits that membership, and shows that invitation, only in the
+   * context's organization. After it, the context no longer names the
+   * personal organization, until `createAccount` points it back there for
+   * the starter configuration.
    */
   enterOrganization?(organizationId: string): Promise<OrganizationRepositories>;
   /**
-   * Makes the new account the site's first product admin (D36-1 decisions
-   * 36 and 37, Preflight ruling 3): migration 043's
+   * Makes the new account the site's first product admin: migration 043's
    * `bootstrap_first_product_admin`, in the account's transaction, so a
    * refusal rolls the account back. Throws `ProductAdminExistsError` when a
    * product admin already exists. `telflo-admin bootstrap` is its one
@@ -231,18 +229,18 @@ async function callBootstrapFunction(db: Kysely<Database> | Transaction<Database
 
 /**
  * Whether the site has a product admin, as the bootstrap function answers
- * it (D36-1 Preflight ruling 3; Ruling 353). How: it calls the definer,
- * bootstrap_first_product_admin, with a random uuid no user holds, in a
- * transaction of its own that always rolls back (the function's refusal
- * aborts it; were it ever to return, the throw after it rolls it back).
- * The call briefly takes the function's global advisory lock, released at
- * that rollback: it leaves no lock, no audit row and no change. The answer
- * is read from the refusal's HINT alone: `telflo_product_admin_exists`
- * means one exists, `telflo_bootstrap_user_not_found` means none does. So
- * the flag itself is never read here (database/context-source.test.ts pins
- * who may). `telflo-admin bootstrap` asks it first, so a rerun is refused
- * before anything else; the function stays the real guard, in the
- * account's own transaction.
+ * it. How: it calls the definer, bootstrap_first_product_admin, with a
+ * random uuid no user holds, in a transaction of its own that always rolls
+ * back (the function's refusal aborts it; were it ever to return, the
+ * throw after it rolls it back). The call briefly takes the function's
+ * global advisory lock, released at that rollback: it leaves no lock, no
+ * audit row and no change. The answer is read from the refusal's HINT
+ * alone: `telflo_product_admin_exists` means one exists,
+ * `telflo_bootstrap_user_not_found` means none does. So the flag itself is
+ * never read here (database/context-source.test.ts pins who may).
+ * `telflo-admin bootstrap` asks it first, so a rerun is refused before
+ * anything else; the function stays the real guard, in the account's own
+ * transaction.
  */
 export async function productAdminExists(db: Kysely<Database>, at: Date): Promise<boolean> {
   try {
@@ -274,7 +272,7 @@ export interface AccountTakenOver {
   hadPassword: boolean;
   /**
    * True when a terms acceptance was cleared. It was the pre-registrant's
-   * consent, not the owner's, who accepts for themselves (D2c Ruling 14).
+   * consent, not the owner's, who accepts for themselves.
    */
   hadTerms: boolean;
 }
@@ -297,11 +295,11 @@ export interface IUserRepository {
 export function createUserRepository(db: Kysely<Database> | Transaction<Database>): IUserRepository {
   const repository: IUserRepository = {
     /**
-     * A person only (D22 decisions 12 and 22): every caller starts a
-     * person's flow (registration and its race refetch, resend, password
-     * sign-in, the reset request), so a service account's address reads as
-     * no account there and each flow keeps its answer for an unknown
-     * address. `findById` keeps every kind.
+     * A person only: every caller starts a person's flow (registration and
+     * its race refetch, resend, password sign-in, the reset request), so a
+     * service account's address reads as no account there and each flow
+     * keeps its answer for an unknown address. `findById` keeps every
+     * kind.
      */
     async findByEmail(email: string): Promise<User | undefined> {
       const row = await db
@@ -317,15 +315,14 @@ export function createUserRepository(db: Kysely<Database> | Transaction<Database
     /**
      * Like `findByEmail`, but a soft-deleted user is found too, and reported
      * as one. `uq_users_lower_email` covers soft-deleted rows, so the address
-     * cannot be given to a new account while one holds it (D2c decision 4).
-     * A person only, as `findByEmail` (D22 decision 22): its callers (Google
-     * sign-in's link, take-over or create; the invitation preview's
-     * `hasAccount`; registering from an invitation) start a person's flow.
-     * Google sign-in and registering from an invitation refuse the
-     * reserved domain before calling it, so they never create an account
-     * at a service account's address (the index backs that up). The
-     * preview does reach one, for an invitation written before D22, and
-     * answers `hasAccount: false` for it, as the spec wants (decision 22).
+     * cannot be given to a new account while one holds it. A person only, as
+     * `findByEmail`: its callers (Google sign-in's link, take-over or create;
+     * the invitation preview's `hasAccount`; registering from an invitation)
+     * start a person's flow. Google sign-in and registering from an
+     * invitation refuse the reserved domain before calling it, so they never
+     * create an account at a service account's address (the index backs that
+     * up). The preview does reach one, for an older invitation to such an
+     * address, and answers `hasAccount: false` for it.
      */
     async findByEmailIncludingDeleted(email: string): Promise<UserWithDeletion | undefined> {
       const row = await db
@@ -349,30 +346,29 @@ export function createUserRepository(db: Kysely<Database> | Transaction<Database
     },
 
     /**
-     * Creates an account: the user, their personal organization and an
-     * `admin` membership of it, in one transaction (D1b), then runs
-     * `onCreated` in that same transaction for the writes that belong with
-     * the account (registration's audit trail and verification token, a
-     * federated sign-up's identity link, an invitation's membership and
-     * acceptance), then creates the starter configuration in the personal
-     * organization (D8 decision 10). Either everything persists or nothing
-     * does. Every kind of account is created here, so D1b's invariant, the
-     * starter and the duplicate-email handling below hold for all of them.
+     * Creates an account: the user, their personal organization and an `admin`
+     * membership of it, in one transaction, then runs `onCreated` in that same
+     * transaction for the writes that belong with the account (registration's
+     * audit trail and verification token, a federated sign-up's identity link,
+     * an invitation's membership and acceptance), then creates the starter
+     * configuration in the personal organization. Either everything persists
+     * or nothing does. Every kind of account is created here, so the personal
+     * organization, the starter and the duplicate-email handling below hold
+     * for all of them.
      *
-     * `findByEmail` then `createAccount` (in ../service.ts) is a check-then-act
-     * with no transaction spanning the two, so two concurrent registrations
-     * of the same brand-new address can both pass the check and both
-     * attempt the insert. `uq_users_lower_email` guarantees only one
+     * `findByEmail` then `createAccount` (in ../service.ts) is a
+     * check-then-act with no transaction spanning the two, so two concurrent
+     * registrations of the same brand-new address can both pass the check and
+     * both attempt the insert. `uq_users_lower_email` guarantees only one
      * succeeds; the loser's user insert fails, its transaction rolls back
      * before anything else is written (and `onCreated` never runs), and it
-     * must not surface
-     * that as a raw 500 (Global Constraints; see also the enumeration-safety
-     * comment in ../service.ts — a 500-vs-200 difference is itself an
-     * enumeration signal). Catching the unique violation here, rather than
-     * an `onConflict` clause, is what lets the loser fall through to the
-     * exact same "email already registered" handling as a request that
-     * found the row up front. It is caught outside the transaction, so the
-     * rollback has already happened when DuplicateEmailError is thrown.
+     * must not surface that as a raw 500 (see the enumeration-safety comment
+     * in ../service.ts — a 500-vs-200 difference is itself an enumeration
+     * signal). Catching the unique violation here, rather than an `onConflict`
+     * clause, is what lets the loser fall through to the exact same "email
+     * already registered" handling as a request that found the row up front.
+     * It is caught outside the transaction, so the rollback has already
+     * happened when DuplicateEmailError is thrown.
      */
     async createAccount(input: CreateUserInput, onCreated?: AccountCreatedCallback): Promise<Account> {
       try {
@@ -395,7 +391,7 @@ export function createUserRepository(db: Kysely<Database> | Transaction<Database
             ownerEmail: user.email,
           });
           // Row-level security admits a membership only into the context's
-          // organization (D5 decision 3), and this one has only just been made.
+          // organization, and this one has only just been made.
           await setOrganizationContext(transaction, organization.id);
           const membership = await createMemberRepository(transaction, { organizationId: organization.id }).add({
             userId: user.id,
@@ -418,19 +414,18 @@ export function createUserRepository(db: Kysely<Database> | Transaction<Database
             bootstrapFirstProductAdmin: (userId, at) => callBootstrapFunction(transaction, userId, at),
           });
 
-          // The starter configuration (D8 decision 10), after `onCreated`, so
-          // its audit row follows the account's own (D8 Preflight ruling 6).
-          // `enterOrganization` may have pointed the context at an inviting
-          // organization; the starter belongs to the personal one, so the
-          // context names it again, and the new user too: a configuration is
-          // its creator's draft, which row-level security shows (and so lets
-          // an insert return) only to them (D11b decision 1, Preflight ruling
-          // 2). It locks only rows this transaction made.
+          // The starter configuration, after `onCreated`, so its audit row
+          // follows the account's own. `enterOrganization` may have pointed
+          // the context at an inviting organization; the starter belongs to
+          // the personal one, so the context names it again, and the new user
+          // too: a configuration is its creator's draft, which row-level
+          // security shows (and so lets an insert return) only to them. It
+          // locks only rows this transaction made.
           await setDatabaseContext(transaction, { userId: user.id, organizationId: organization.id });
           const personal = { organizationId: organization.id, userId: user.id };
-          // The catalogue's default distribution and its default version
-          // (D13a decisions 3 and 9), read in this transaction, as a
-          // configuration created through the API gets them.
+          // The catalogue's default distribution and its default version,
+          // read in this transaction, as a configuration created through
+          // the API gets them.
           const pin = await createCollectorCatalogueRepository(transaction).findDefaults();
           const starter = await createConfigurationRepository(transaction, personal).create({
             name: STARTER_CONFIGURATION_NAME,
@@ -442,7 +437,6 @@ export function createUserRepository(db: Kysely<Database> | Transaction<Database
           await createConfigurationVersionRepository(transaction, personal).create({
             configurationId: starter.id,
             versionNumber: 1,
-            // D10 decision 14.
             label: STARTER_VERSION_LABEL,
             yamlContent: STARTER_CONFIGURATION_YAML,
             createdByUserId: user.id,
@@ -452,7 +446,7 @@ export function createUserRepository(db: Kysely<Database> | Transaction<Database
           });
           // As the account's own rows are written: the new user as actor, in
           // the personal organization, with the request's origin. Never the
-          // YAML (D8 decision 17).
+          // YAML.
           await createAuditRepository(transaction).record({
             action: "configuration.created",
             actorUserId: user.id,
@@ -473,11 +467,10 @@ export function createUserRepository(db: Kysely<Database> | Transaction<Database
     },
 
     /**
-     * An account created by a federated sign-in (D2c decision 4): no
-     * password, the email verified by the provider, and no terms accepted,
-     * so the terms dialog shows on first use. The same path as
-     * `createAccount`, so the same transaction, callback and
-     * DuplicateEmailError apply.
+     * An account created by a federated sign-in: no password, the email
+     * verified by the provider, and no terms accepted, so the terms dialog
+     * shows on first use. The same path as `createAccount`, so the same
+     * transaction, callback and DuplicateEmailError apply.
      */
     async createFederatedAccount(
       input: CreateFederatedUserInput,
@@ -505,10 +498,10 @@ export function createUserRepository(db: Kysely<Database> | Transaction<Database
     },
 
     /**
-     * A completed password reset (D3 decision 5): sets the new hash and
-     * confirms the email if it wasn't already, since opening the emailed
-     * link proves the user controls the mailbox. A soft-deleted user is not
-     * touched, and gives `undefined`.
+     * A completed password reset: sets the new hash and confirms the email
+     * if it wasn't already, since opening the emailed link proves the user
+     * controls the mailbox. A soft-deleted user is not touched, and gives
+     * `undefined`.
      *
      * An `UPDATE … RETURNING` returns the new `email_verified_at`, so the old
      * one is read first with `for update`, which holds the row until the
@@ -547,12 +540,12 @@ export function createUserRepository(db: Kysely<Database> | Transaction<Database
     },
 
     /**
-     * A password changed from Settings (D21 decision 35, Preflight ruling
-     * 11): sets the hash and `updated_at`, and nothing else. Unlike a reset
-     * it never touches `email_verified_at`: knowing the current password
-     * proves nothing about the mailbox. True when it changed the row; false
-     * for a soft-deleted or unknown user. The caller holds the row (`lockForUpdate`)
-     * and has rechecked the hash under that lock.
+     * A password changed from Settings: sets the hash and `updated_at`, and
+     * nothing else. Unlike a reset it never touches `email_verified_at`:
+     * knowing the current password proves nothing about the mailbox. True when
+     * it changed the row; false for a soft-deleted or unknown user. The caller
+     * holds the row (`lockForUpdate`) and has rechecked the hash under that
+     * lock.
      */
     async setPasswordHash(userId: string, passwordHash: string, at: Date): Promise<boolean> {
       const result = await db
@@ -565,13 +558,13 @@ export function createUserRepository(db: Kysely<Database> | Transaction<Database
     },
 
     /**
-     * A verified federated sign-in taking over an unverified account with
-     * the same email (D2c decision 4): confirms the email and deletes the
-     * password, so whoever registered the address before its owner is
-     * locked out. The terms acceptance is cleared too: the consent was the
-     * pre-registrant's, and the owner accepts for themselves (D2c Ruling
-     * 14). Touches only a live, unverified user; a verified, soft-deleted or
-     * unknown one gives `undefined` and is not changed.
+     * A verified federated sign-in taking over an unverified account with the
+     * same email: confirms the email and deletes the password, so whoever
+     * registered the address before its owner is locked out. The terms
+     * acceptance is cleared too: the consent was the pre-registrant's, and the
+     * owner accepts for themselves. Touches only a live, unverified user; a
+     * verified, soft-deleted or unknown one gives `undefined` and is not
+     * changed.
      *
      * Reads `for update` first, as `setPasswordAndConfirmEmail` does, so the
      * row cannot be verified between the check and the update, and
@@ -613,10 +606,10 @@ export function createUserRepository(db: Kysely<Database> | Transaction<Database
     },
 
     /**
-     * Records the user's acceptance of `version` at `at` (D2c decision 6).
-     * True when it changed the row; false for a soft-deleted or unknown
-     * user, or one who had already accepted this version, whose acceptance
-     * time is kept.
+     * Records the user's acceptance of `version` at `at`. True when it
+     * changed the row; false for a soft-deleted or unknown user, or one
+     * who had already accepted this version, whose acceptance time is
+     * kept.
      */
     async acceptTerms(userId: string, version: string, at: Date): Promise<boolean> {
       const result = await db

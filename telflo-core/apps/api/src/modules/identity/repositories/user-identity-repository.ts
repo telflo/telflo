@@ -2,7 +2,7 @@ import type { Kysely, Selectable, Transaction } from "kysely";
 import type { Database, UserIdentitiesTable } from "@telflo/db";
 import { toUser, type UserWithDeletion } from "./user-repository.js";
 
-/** A user's identity at a federated provider (D2c decision 5). */
+/** A user's identity at a federated provider. */
 export interface UserIdentity {
   id: string;
   userId: string;
@@ -77,13 +77,13 @@ export interface IUserIdentityRepository {
   findUserBySubject(provider: string, subject: string): Promise<UserWithDeletion | undefined>;
   link(input: LinkIdentityInput): Promise<UserIdentity>;
   /**
-   * The user's identities (D21 decision 37), oldest link first: every one,
-   * whether or not its provider is still configured (Preflight ruling 16).
+   * The user's identities, oldest link first: every one, whether or not
+   * its provider is still configured.
    */
   listForUser(userId: string): Promise<UserIdentity[]>;
   /** The user's identity at `provider`: at most one (`uq_user_identities_user_id_provider`). */
   findForUser(userId: string, provider: string): Promise<UserIdentity | undefined>;
-  /** Deletes the user's identity at `provider` (D21 decision 39); false when they have none there. */
+  /** Deletes the user's identity at `provider`; false when they have none there. */
   unlink(userId: string, provider: string): Promise<boolean>;
 }
 
@@ -107,7 +107,7 @@ export function createUserIdentityRepository(
      * The user linked to `(provider, subject)`. A soft-deleted user is
      * returned with `isDeleted: true` rather than hidden, so sign-in can
      * refuse them instead of treating the subject as unknown and creating a
-     * second account (D2c decision 4). Hence not "findLiveUserBySubject".
+     * second account. Hence not "findLiveUserBySubject".
      */
     async findUserBySubject(provider: string, subject: string): Promise<UserWithDeletion | undefined> {
       const row = await db

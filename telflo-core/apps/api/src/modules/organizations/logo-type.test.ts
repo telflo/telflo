@@ -2,12 +2,11 @@ import { imageTypeOf } from "@telflo/contracts";
 import { describe, expect, it } from "vitest";
 
 /*
- * D23-2 decisions 32 and 34 (Preflight ruling 15): the API types a logo with
- * the contracts' `imageTypeOf` on the Buffer the upload was read into. A
- * Buffer is a Uint8Array, often a view into a larger shared pool (a
- * non-zero byteOffset): these are the API's own cases, beside the
- * contracts' Uint8Array ones. Only the bytes decide; a file's name or its
- * declared type never reaches the function.
+ * The API types a logo with the contracts' `imageTypeOf` on the Buffer
+ * the upload was read into. A Buffer is a Uint8Array, often a view into a
+ * larger shared pool (a non-zero byteOffset): these are the API's own
+ * cases, beside the contracts' Uint8Array ones. Only the bytes decide; a
+ * file's name or its declared type never reaches the function.
  */
 describe("imageTypeOf on the API's Buffers", () => {
   const png = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d]);

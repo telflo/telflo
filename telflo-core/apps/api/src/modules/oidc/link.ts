@@ -9,17 +9,16 @@ import type { ISessionRepository } from "../sessions/repositories/session-reposi
 import type { RequestOrigin } from "../sessions/service.js";
 
 /*
- * Linking a provider's account from Settings (D21 decision 38): the
- * callback's link branch, once the flow, the state, a provider error and the
- * exchange have been checked as for a sign-in. Nothing here is matched by
- * email: the signed-in person proved the account with their session (and
- * their current password when they have one) and the provider's account at
- * the provider, so the provider's `sub` is linked to the flow's user, whatever
- * address the provider gives. ADR 0021 point 1's authority rule guards
- * matching by email, and is not applied.
+ * Linking a provider's account from Settings: the callback's link branch, once
+ * the flow, the state, a provider error and the exchange have been checked as
+ * for a sign-in. Nothing here is matched by email: the signed-in person proved
+ * the account with their session (and their current password when they have
+ * one) and the provider's account at the provider, so the provider's `sub` is
+ * linked to the flow's user, whatever address the provider gives. The
+ * email-authority rule guards matching by email, and is not applied.
  */
 
-/** `user.identity_link_failed`'s reasons (D21 decision 44, Preflight rulings 6 and 8). */
+/** `user.identity_link_failed`'s reasons. */
 export type IdentityLinkFailureReason =
   /** A decoded link flow whose provider is unknown, or isn't the callback's. */
   | "flow_cookie_invalid"
@@ -39,8 +38,8 @@ export type IdentityLinkFailureReason =
 
 /**
  * The repositories the link writes through, bound to its one transaction.
- * Lock order (D3 Ruling 17, Preflight ruling 10): the user's row first, then
- * the session `for share`, then the identity.
+ * Lock order: the user's row first, then the session `for share`, then
+ * the identity.
  */
 export interface LinkTransaction {
   users: Pick<IUserRepository, "lockForUpdate" | "findById">;
@@ -62,7 +61,7 @@ export interface LinkInput {
   /**
    * The ID token's email, trimmed and lowercased, when it parses and
    * `email_verified` is the boolean `true`; else `undefined`. Checked here,
-   * after the session, in decision 38's order.
+   * after the session, in the link's order.
    */
   verifiedEmail: string | undefined;
   /** The flow's signed-in person: whose account, and which session started the link. */
@@ -78,7 +77,7 @@ export interface LinkInput {
  *   goes: a second callback of the same link (a double submit) writes nothing.
  * - `refused`: the result code, the audit row's reason, and what was read
  *   for that row: the user while live, and the session's organization once
- *   the session was read (Preflight ruling 8).
+ *   the session was read.
  */
 export type LinkOutcome =
   | { status: "linked"; isWritten: boolean; user: User | undefined }
@@ -93,13 +92,13 @@ export type LinkOutcome =
     };
 
 /**
- * D21 decision 38's link, in one transaction: lock the user's row; the user
- * live; the flow's session live and the user's own, held `for share` so a
- * sign-out waits for the link; the email verified; then by the `sub`: another
+ * The link, in one transaction: lock the user's row; the user live; the
+ * flow's session live and the user's own, held `for share` so a sign-out
+ * waits for the link; the email verified; then by the `sub`: another
  * account's is `identity_in_use`, this account's is `linked` with nothing
  * written, and this account holding another identity at the provider is
- * `identity_exists`. Else the link and `user.identity_linked` `{ provider,
- * via: "settings" }`, with the session's organization.
+ * `identity_exists`. Else the link and `user.identity_linked`
+ * `{ provider, via: "settings" }`, with the session's organization.
  *
  * A link that loses a unique index to a concurrent one is read again after
  * the rollback, as the sign-in's `afterLinkConflict` does: the `sub` now this

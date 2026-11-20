@@ -5,11 +5,11 @@ import { loadFlowsMigration } from "@telflo/db/testing";
 import { lintFlowConfig, pythonRegExp, pythonStrip } from "./lint.js";
 
 /*
- * The flows' security lint (D12 decision 6, Preflight ruling 3): each
- * rule's cases (classes as describe blocks, tests by their names), then
- * Ruling 3's accepted differences, Python's semantics kept, the exact
- * messages, the seeded flows' answers and hostile input. Where the answer
- * differs from a YAML 1.1 reading (PyYAML 6.0.3), the test says so and why.
+ * The flows' security lint: each rule's cases (classes as describe blocks,
+ * tests by their names), then the accepted differences, Python's semantics
+ * kept, the exact messages, the seeded flows' answers and hostile input. Where
+ * the answer differs from a YAML 1.1 reading (PyYAML 6.0.3), the test says so
+ * and why.
  */
 
 const CLEAN = `
@@ -226,8 +226,8 @@ describe("lintFlowConfig: each rule's cases", () => {
       expect(codes(lint(withEndpoint("${org:PROD_ENDPOINT}")))).not.toContain("provider-not-allowed");
     });
 
-    it("test_legacy_org_token_is_plain_text_since_d20", () => {
-      // D20 decision 16: nothing fills `$orgvar:NAME` in, so it is no token.
+    it("test_legacy_org_token_is_plain_text", () => {
+      // Nothing fills `$orgvar:NAME` in, so it is no token.
       expect(codes(lint(withEndpoint("$orgvar:PROD_ENDPOINT")))).not.toContain("org-scoped-reference");
     });
 
@@ -316,7 +316,7 @@ describe("lintFlowConfig: each rule's exact answer (messages, paths, destination
     });
   });
 
-  it("org-scoped-reference: each distinct token once, sorted, the legacy form none (D20 decision 16)", () => {
+  it("org-scoped-reference: each distinct token once, sorted, the legacy form none", () => {
     const report = lint(`${withEndpoint("${org:B}")}# \${org:A} \${org:B} $orgvar:C\n`);
     const tokenFinding = (token: string) => ({
       severity: "block",
@@ -507,11 +507,11 @@ describe("lintFlowConfig: each rule's exact answer (messages, paths, destination
 });
 
 /*
- * Preflight ruling 3's accepted differences: the text is read as YAML 1.2
- * (the collector's reading, through the `yaml` package), where PyYAML reads
- * YAML 1.1. Each test names PyYAML's answer.
+ * The accepted differences: the text is read as YAML 1.2 (the collector's
+ * reading, through the `yaml` package), where PyYAML reads YAML 1.1. Each
+ * test names PyYAML's answer.
  */
-describe("lintFlowConfig: Ruling 3's accepted differences (YAML 1.2, not 1.1)", () => {
+describe("lintFlowConfig: the accepted differences (YAML 1.2, not 1.1)", () => {
   it("`yes` is a string, so `insecure: yes` disables nothing (PyYAML: true, a tls-verification-disabled warning)", () => {
     // The collector reads `yes` as YAML 1.2 does: the string "yes".
     expect(codes(lint(withExporter("  extra:\n    insecure: yes\n")))).not.toContain("tls-verification-disabled");
@@ -636,10 +636,10 @@ describe("lintFlowConfig: Ruling 3's accepted differences (YAML 1.2, not 1.1)", 
 });
 
 /*
- * Ruling 3: where Python's string and regex semantics decide an answer, the
+ * Where Python's string and regex semantics decide an answer, the
  * lint keeps them. Each case's answer is what Python gives.
  */
-describe("lintFlowConfig: Python's string and regex semantics, kept (Preflight ruling 3)", () => {
+describe("lintFlowConfig: Python's string and regex semantics, kept", () => {
   it("`$` matches before one final newline: a key ending in a newline is still a secret's or an address's", () => {
     expect(
       summary(lint(withExporter('  extra:\n    "token\\n": abc\n    "endpoint\\n": https://a.example\n'))),
@@ -734,7 +734,7 @@ describe("lintFlowConfig: Python's string and regex semantics, kept (Preflight r
   });
 });
 
-describe("lintFlowConfig: a line break only YAML 1.1 has (beyond Ruling 3)", () => {
+describe("lintFlowConfig: a line break only YAML 1.1 has (beyond the accepted differences)", () => {
   it("refuses a lone CR, U+0085, U+2028 or U+2029 as invalid-yaml: after a comment, the `yaml` package would read past one", () => {
     // PyYAML and the collector's parser (libyaml's) start a new line at each,
     // so `exporters:` here is a section to them; the `yaml` package would
@@ -765,7 +765,7 @@ describe("lintFlowConfig: a line break only YAML 1.1 has (beyond Ruling 3)", () 
   });
 });
 
-describe("pythonRegExp and pythonStrip (Preflight ruling 3's semantics, checked against Python's re)", () => {
+describe("pythonRegExp and pythonStrip (Python's semantics, checked against Python's re)", () => {
   it("`$` matches at the end or before one final newline", () => {
     const end = pythonRegExp("^a$");
     expect(["a", "a\n", "a\n\n", "a\nb"].map((text) => end.test(text))).toEqual([true, true, false, false]);
@@ -837,8 +837,8 @@ const privileged = (component: string, access: string): FlowLintFinding => ({
 });
 
 /**
- * Each seeded flow's answer (Preflight ruling 3: five blocked). Advisory: a
- * blocked seeded flow is published all the same.
+ * Each seeded flow's answer (five blocked). Advisory: a blocked seeded flow
+ * is published all the same.
  */
 const SEEDED_ANSWERS: Record<string, FlowLintResponse> = {
   "log-volume-cost-control": {
@@ -963,7 +963,7 @@ const SEEDED_ANSWERS: Record<string, FlowLintResponse> = {
   },
 };
 
-describe("lintFlowConfig: the 13 seeded flows (Preflight ruling 3)", () => {
+describe("lintFlowConfig: the 13 seeded flows", () => {
   it("answers each exactly; five are blocked", async () => {
     const { seededFlows } = await loadFlowsMigration();
     expect(seededFlows.map((flow) => flow.slug).sort()).toEqual(Object.keys(SEEDED_ANSWERS).sort());

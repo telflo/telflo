@@ -4,7 +4,7 @@ import { buildInvitationEmail } from "./emails.js";
 describe("buildInvitationEmail", () => {
   const acceptUrl = "https://app.telflo.local/accept-invitation#token=abc123";
 
-  it("has decision 12's subject and lines, in order, in the text part", () => {
+  it("has the invitation's subject and lines, in order, in the text part", () => {
     const email = buildInvitationEmail({ organizationName: "Acme Corp", organizationType: "group", acceptUrl });
 
     expect(email.subject).toBe("You've been invited to join Acme Corp on Telflo");
@@ -51,7 +51,7 @@ describe("buildInvitationEmail", () => {
     expect(email.subject).toBe(`You've been invited to join ${organizationName} on Telflo`);
   });
 
-  it("names a personal workspace under its default name, its owner's email, as <email>'s organization in the subject and both parts (D36-1 Q264)", () => {
+  it("names a personal workspace under its default name, its owner's email, as <email>'s organization in the subject and both parts", () => {
     const email = buildInvitationEmail({ organizationName: "someone@example.com", organizationType: "personal", acceptUrl });
 
     expect(email.subject).toBe("You've been invited to join someone@example.com's organization on Telflo");
@@ -63,7 +63,7 @@ describe("buildInvitationEmail", () => {
     );
   });
 
-  it("names a renamed personal workspace, one only like an email, and a group named by an email address by their names alone (Q264)", () => {
+  it("names a renamed personal workspace, one only like an email, and a group named by an email address by their names alone", () => {
     for (const [organizationName, organizationType] of [
       ["Sam's Lab", "personal"],
       ["sam@example", "personal"],

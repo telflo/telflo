@@ -75,8 +75,8 @@ export function createVerificationTokenRepository(
     /**
      * Consumes every unconsumed token of the user, so no link already sent
      * can verify the email again: a federated sign-in that takes over an
-     * unverified account (D2c Ruling 9) leaves nothing behind that could
-     * rewrite `email_verified_at`. Returns how many it consumed.
+     * unverified account leaves nothing behind that could rewrite
+     * `email_verified_at`. Returns how many it consumed.
      */
     async consumeAllForUser(userId: string, at: Date): Promise<number> {
       const result = await db

@@ -21,7 +21,7 @@ import { UNCALLED_TESTING } from "../../testing/otelcol-testing.js";
 import { hashPassword } from "../identity/password.js";
 import { lintFlowConfig } from "./lint.js";
 
-// The opamp-server every server needs (D11b decision 8): this file's own fake.
+// The opamp-server every server needs: this file's own fake.
 const opamp = useFakeOpampServer();
 
 const csrfHeaders = { [CSRF_HEADER_NAME]: CSRF_HEADER_VALUE };
@@ -51,10 +51,9 @@ function accessCookie(response: LightMyRequestResponse): string {
 }
 
 /**
- * `POST /api/v1/flows/lint` (D12 decision 6, Preflight ruling 3) against
- * Postgres: the flow lint behind the product-admin flag, rate limited per
- * product admin, never logged and never audited. What the lint answers is
- * lint.test.ts's; here, that the
+ * `POST /api/v1/flows/lint` against Postgres: the flow lint behind the
+ * product-admin flag, rate limited per product admin, never logged and
+ * never audited. What the lint answers is lint.test.ts's; here, that the
  * endpoint answers exactly lintFlowConfig's answer.
  */
 describe("POST /api/v1/flows/lint", () => {
@@ -137,7 +136,7 @@ describe("POST /api/v1/flows/lint", () => {
       payload: { organizationId: group.id },
     });
     expect(switched.statusCode).toBe(200);
-    // A no-op when the sign-in already landed there (D36-1 decision 56): no new cookie, the token sent stands.
+    // A no-op when the sign-in already landed there: no new cookie, the token sent stands.
     return switched.headers["set-cookie"] === undefined ? accessCookie(response) : accessCookie(switched);
   }
 
@@ -152,7 +151,7 @@ describe("POST /api/v1/flows/lint", () => {
 
   const auditRows = () => databases.ownerDb.selectFrom("audit_events").selectAll().execute();
 
-  describe("who may lint (decision 6: product admins only, a Parity Note)", () => {
+  describe("who may lint (product admins only)", () => {
     it("answers 401 signed out", async () => {
       const response = await lint(undefined, { yaml: MARKED_YAML });
       expect(response.statusCode).toBe(401);

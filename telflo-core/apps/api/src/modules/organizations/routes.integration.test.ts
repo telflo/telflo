@@ -32,7 +32,7 @@ import { UNCALLED_OTELCOL_VALIDATOR } from "../../testing/otelcol-validator.js";
 import { UNCALLED_FILE_STORE } from "../../testing/file-store.js";
 import { UNCALLED_TESTING } from "../../testing/otelcol-testing.js";
 
-// The opamp-server every server needs (D11b decision 8): this file's own fake.
+// The opamp-server every server needs: this file's own fake.
 const opamp = useFakeOpampServer();
 
 const csrfHeaders = { [CSRF_HEADER_NAME]: CSRF_HEADER_VALUE };
@@ -62,8 +62,8 @@ describe("organization routes", () => {
   /**
    * The file store the shared server reaches: UNCALLED_FILE_STORE, so every
    * test but the logos' fails should it touch the store (an organization
-   * with no logo never does: D23-2 decision 38). The logos' tests point it
-   * at their recording store for the test's length.
+   * with no logo never does). The logos' tests point it at their recording
+   * store for the test's length.
    */
   let currentStore: IFileStore = UNCALLED_FILE_STORE;
   const sharedStore: IFileStore = {
@@ -161,7 +161,7 @@ describe("organization routes", () => {
       payload: { organizationId },
     });
     expect(response.statusCode).toBe(200);
-    // A no-op when the sign-in already landed there (D36-1 decision 56): no new cookie, the token sent stands.
+    // A no-op when the sign-in already landed there: no new cookie, the token sent stands.
     return response.headers["set-cookie"] === undefined ? access : cookieValue(response, "telflo_access");
   };
 
@@ -424,7 +424,7 @@ describe("organization routes", () => {
     it("answers another organization's id with 404 organization_not_found, even for its admin", async () => {
       // An admin of both, acting in their personal organization.
       const account = await verifiedUser();
-      // Signed in before joining: the session starts in the personal organization (D36-1 decision 56).
+      // Signed in before joining: the session starts in the personal organization.
       const { access } = await signedIn(account.user.email);
       const { organization: other } = await addMembership(ownerDb, { userId: account.user.id, role: "admin" });
 
@@ -445,7 +445,7 @@ describe("organization routes", () => {
       expect(response.json()).toMatchObject({ error: { code: "organization_not_found" } });
     });
 
-    it("refuses an admin demoted while their rename waited on the organization lock (decision 8)", async () => {
+    it("refuses an admin demoted while their rename waited on the organization lock", async () => {
       // A separate connection holds the organization `for no key update`, as a
       // concurrent role change does, and demotes the admin. Their request
       // read the role as admin before it reached the lock; the re-check
@@ -495,7 +495,7 @@ describe("organization routes", () => {
     });
   });
 
-  describe("settings (D17d-2 decision 20)", () => {
+  describe("settings", () => {
     const readSettings = (access: string, organizationId: string) =>
       server.inject({ method: "GET", url: `/api/v1/organizations/${organizationId}/settings`, cookies: { telflo_access: access } });
 
@@ -578,7 +578,7 @@ describe("organization routes", () => {
     it("another organization's settings are 404", async () => {
       // An admin of both, acting in their personal organization.
       const account = await verifiedUser();
-      // Signed in before joining: the session starts in the personal organization (D36-1 decision 56).
+      // Signed in before joining: the session starts in the personal organization.
       const { access } = await signedIn(account.user.email);
       const { organization: other } = await addMembership(ownerDb, { userId: account.user.id, role: "admin" });
       const stranger = await groupNamed("Stranger");
@@ -607,7 +607,7 @@ describe("organization routes", () => {
       expect(await auditRows("organization.settings_changed")).toEqual([]);
     });
 
-    it("refuses an admin demoted while their settings change waited on the organization lock (Ruling 39)", async () => {
+    it("refuses an admin demoted while their settings change waited on the organization lock", async () => {
       // The rename's sibling: a separate connection holds the organization
       // `for no key update`, as a concurrent role change does, and demotes the
       // admin. Their request read the role as admin before it reached the
@@ -726,7 +726,7 @@ describe("organization routes", () => {
       const admin = await memberActiveInGroup("admin");
       const member = await memberActiveInGroup("contributor", admin.group.id);
       const elsewhere = await verifiedUser();
-      // Signed in before joining: the session starts in the personal organization (D36-1 decision 56).
+      // Signed in before joining: the session starts in the personal organization.
       const elsewhereCookies = await signedIn(elsewhere.user.email);
       await addMembership(ownerDb, { userId: elsewhere.user.id, organizationId: admin.group.id });
 
@@ -759,7 +759,7 @@ describe("organization routes", () => {
       const member = await memberActiveInGroup("contributor", admin.group.id);
       // A person whose only membership is here, with a session: a shape the
       // owner writes and no API path creates (a service account can have no
-      // session, D22 decision 18), which the deletion must still handle.
+      // session), which the deletion must still handle.
       const onlyHere = await ownerDb.transaction().execute(async (transaction) => {
         const user = await transaction
           .insertInto("users")
@@ -783,9 +783,9 @@ describe("organization routes", () => {
         now: () => clock,
       }).issue({ userId: onlyHere.user.id, sessionId: session.id, organizationId: admin.group.id });
       expect((await me(token.token)).statusCode).toBe(200);
-      // A real service account of the group, with a live token (D22
-      // decisions 20 and 21): its only membership is here too. The token
-      // check's lookup is called as the API's role, as the check will.
+      // A real service account of the group, with a live token: its only
+      // membership is here too. The token check's lookup is called as the
+      // API's role, as the check will.
       const { user: serviceAccount } = await addServiceAccount(ownerDb, { organizationId: admin.group.id });
       const { apiToken } = await addApiToken(ownerDb, {
         organizationId: admin.group.id,
@@ -807,7 +807,7 @@ describe("organization routes", () => {
         .where("id", "=", onlyHere.user.id)
         .executeTakeFirstOrThrow();
       expect(user.deleted_at).not.toBeNull();
-      // D5's deletion, unchanged: the service account's user soft-deleted,
+      // As for any account: the service account's user soft-deleted,
       // its row, membership and token left as they were, and the lookup
       // answering no row.
       const serviceUser = await ownerDb
@@ -853,7 +853,7 @@ describe("organization routes", () => {
 
     it("refuses a personal organization with 409 personal_organization_protected, changing nothing", async () => {
       const account = await verifiedUser();
-      // Signed in before joining: the session starts in the personal organization (D36-1 decision 56).
+      // Signed in before joining: the session starts in the personal organization.
       const { access } = await signedIn(account.user.email);
       await addMembership(ownerDb, { userId: account.user.id });
 
@@ -878,7 +878,7 @@ describe("organization routes", () => {
 
     it("answers another organization's id with 404, even for its admin", async () => {
       const account = await verifiedUser();
-      // Signed in before joining: the session starts in the personal organization (D36-1 decision 56).
+      // Signed in before joining: the session starts in the personal organization.
       const { access } = await signedIn(account.user.email);
       const { organization: other } = await addMembership(ownerDb, { userId: account.user.id });
 
@@ -890,7 +890,7 @@ describe("organization routes", () => {
     });
   });
 
-  describe("members (D5 decisions 7, 8 and 9)", () => {
+  describe("members", () => {
     const membersUrl = (organizationId: string, userId?: string) =>
       `/api/v1/organizations/${organizationId}/members${userId === undefined ? "" : `/${userId}`}`;
 
@@ -1006,10 +1006,9 @@ describe("organization routes", () => {
 
     /**
      * Resolves once `count` backends other than this test's own are waiting
-     * on a lock (D2a Ruling 6), or once `isSettled()` holds: the requests
-     * have reached the locks a held transaction blocks, or didn't block at
-     * all (which the test's assertions then catch). Throws after five
-     * seconds.
+     * on a lock, or once `isSettled()` holds: the requests have reached the
+     * locks a held transaction blocks, or didn't block at all (which the
+     * test's assertions then catch). Throws after five seconds.
      */
     const waitForLockWaits = async (count: number, isSettled: () => boolean = () => false): Promise<void> => {
       const deadline = Date.now() + 5_000;
@@ -1107,7 +1106,7 @@ describe("organization routes", () => {
         });
       });
 
-      it("marks the personal organization's owner (Preflight ruling 11)", async () => {
+      it("marks the personal organization's owner", async () => {
         const owner = await verifiedUser();
         const admin = await memberActiveInGroup("admin", owner.organization.id);
 
@@ -1153,7 +1152,7 @@ describe("organization routes", () => {
       });
 
       it.each(endpoints)("answers %s naming another organization with 404, even for its admin", async (_, request) => {
-        // An admin of both, acting in their personal organization: signed in before joining (D36-1 decision 56).
+        // An admin of both, acting in their personal organization: signed in before joining.
         const account = await verifiedUser();
         const { access } = await signedIn(account.user.email);
         const { organization: other } = await addMembership(ownerDb, { userId: account.user.id, role: "admin" });
@@ -1168,7 +1167,7 @@ describe("organization routes", () => {
       });
     });
 
-    describe("decision 8's refusals", () => {
+    describe("the member changes' refusals", () => {
       it("refuses changing your own role with 409 cannot_change_own_membership", async () => {
         const { admin, group } = await adminAndMember();
         const before = await snapshot(group.id);
@@ -1310,7 +1309,7 @@ describe("organization routes", () => {
         expect((await membershipRow(group.id, member.account.user.id)).role).toBe("contributor");
       });
 
-      it("refuses viewer, which is retired, with 400 invalid_request, changing and auditing nothing (D7 decision 2)", async () => {
+      it("refuses viewer, which is retired, with 400 invalid_request, changing and auditing nothing", async () => {
         const { admin, member, group } = await adminAndMember();
         const before = await snapshot(group.id);
 
@@ -1355,7 +1354,7 @@ describe("organization routes", () => {
         // A second session of theirs, active in the group too.
         const second = await signedIn(member.account.user.email);
         await switchTo(second.access, group.id);
-        // And a third, in their personal organization (a new sign-in starts where they last were, D36-1 decision 56).
+        // And a third, in their personal organization (a new sign-in starts where they last were).
         await switchTo((await signedIn(member.account.user.email)).access, member.personal.id);
 
         const response = await removeMember(admin.access, group.id, member.account.user.id);
@@ -1446,11 +1445,11 @@ describe("organization routes", () => {
       });
     });
 
-    describe("service accounts (D22 decisions 6 and 30)", () => {
+    describe("service accounts", () => {
       /**
-       * A service account of `organizationId` in the real shape (D22
-       * decision 27), written by the owner at the clock's time: the API
-       * deletes with the clock, and not before the creation.
+       * A service account of `organizationId` in the real shape, written by
+       * the owner at the clock's time: the API deletes with the clock, and not
+       * before the creation.
        */
       const serviceAccountIn = async (organizationId: string) =>
         (await addServiceAccount(ownerDb, { organizationId, createdAt: clock })).user;
@@ -1528,8 +1527,8 @@ describe("organization routes", () => {
       });
     });
 
-    describe("under concurrency (decision 8's lock)", () => {
-      it("a restore of a member a product admin's delete takes while it waits: the account's row locked after the organization, 404 member_not_found, the membership still removed (D29 Ruling 272)", async () => {
+    describe("under concurrency (the organization lock)", () => {
+      it("a restore of a member a product admin's delete takes while it waits: the account's row locked after the organization, 404 member_not_found, the membership still removed", async () => {
         const { admin, member, group } = await adminAndMember("contributor");
         expect((await removeMember(admin.access, group.id, member.account.user.id)).statusCode).toBe(204);
 
@@ -1624,14 +1623,14 @@ describe("organization routes", () => {
         },
       );
 
-      it("removing a member as they switch to the organization they're in doesn't deadlock (Ruling 16)", async () => {
-        // A separate connection holds the member's membership, so the
-        // removal holds the organization lock while it waits on it. The
-        // member's switch to the organization their session is already in
-        // must not wait on the organization while it holds the session: the
-        // removal, reaching the session to reassign it, would close the
-        // cycle (40P01). The no-op takes no lock (Ruling 22), so it answers
-        // 200 before the removal, which then reassigns the session.
+      it("removing a member as they switch to the organization they're in doesn't deadlock", async () => {
+        // A separate connection holds the member's membership, so the removal
+        // holds the organization lock while it waits on it. The member's
+        // switch to the organization their session is already in must not wait
+        // on the organization while it holds the session: the removal,
+        // reaching the session to reassign it, would close the cycle (40P01).
+        // The no-op takes no lock, so it answers 200 before the removal, which
+        // then reassigns the session.
         const { admin, member, group } = await adminAndMember();
 
         await withLocker(async (locker, release) => {
@@ -1668,13 +1667,13 @@ describe("organization routes", () => {
         // A separate connection holds the member's session, so the removal,
         // holding the organization and the membership, waits on it to
         // reassign it. The switch, whose session still acts in the
-        // organization, is a no-op: it takes no lock (Ruling 22), so it
-        // doesn't queue behind the removal, and answers from what is
-        // committed, before the removal. The removal then reassigns the
-        // session, and the member's next request refreshes out.
+        // organization, is a no-op: it takes no lock, so it doesn't queue
+        // behind the removal, and answers from what is committed, before
+        // the removal. The removal then reassigns the session, and the
+        // member's next request refreshes out.
         const { admin, member, group } = await adminAndMember();
         const [session] = await sessionRowsOf(member.account.user.id);
-        // The setup's switches (no-ops when the sign-in landed in the group, D36-1 decision 56) audited what they did.
+        // The setup's switches (no-ops when the sign-in landed in the group) audited what they did.
         const switchesBefore = (await auditRows("session.organization_switched")).length;
 
         await withLocker(async (locker, release) => {
@@ -1728,11 +1727,10 @@ describe("organization routes", () => {
       /**
        * A person whose only memberships are in these organizations, with no
        * personal organization: a shape the owner writes and no API path
-       * creates, which the locks must still handle. Not a service account:
-       * the database refuses one a session (D22 decision 18, Preflight
-       * ruling 8), and the member routes refuse to change one (409). Such an
-       * account can't sign in, so its sessions are written directly
-       * (sessionIn).
+       * creates, which the locks must still handle. Not a service account: the
+       * database refuses one a session, and the member routes refuse to change
+       * one (409). Such an account can't sign in, so its sessions are written
+       * directly (sessionIn).
        */
       const accountInGroupsOnly = (organizationIds: string[]) =>
         ownerDb.transaction().execute(async (transaction) => {
@@ -1766,7 +1764,7 @@ describe("organization routes", () => {
         // `for no key update` lets the key share through.
         const u = await verifiedUser();
         const v = await verifiedUser();
-        // Signed in at home before joining: a sign-in starts in the organization joined most recently (D36-1 decision 56).
+        // Signed in at home before joining: a sign-in starts in the organization joined most recently.
         const uAtHome = (await signedIn(u.user.email)).access;
         const vAtHome = (await signedIn(v.user.email)).access;
         await addMembership(ownerDb, { userId: v.user.id, organizationId: u.organization.id, role: "contributor" });
@@ -1900,7 +1898,7 @@ describe("organization routes", () => {
         { change: "a deletion of it", isMember: true, switchStatus: 403 },
         { change: "a restore of them in it", isMember: false, switchStatus: 401 },
       ] as const)(
-        "a member's password reset, their switch into an organization, and $change don't deadlock (Ruling 22)",
+        "a member's password reset, their switch into an organization, and $change don't deadlock",
         async ({ change, isMember, switchStatus }) => {
           // Three transactions, one member. The reset locks the member and
           // then revokes their sessions. The change locks the organization
@@ -1915,7 +1913,7 @@ describe("organization routes", () => {
           const admin = await memberActiveInGroup("admin");
           const organization = admin.group;
           const account = await verifiedUser();
-          // Signed in before joining: the session starts in the personal organization (D36-1 decision 56).
+          // Signed in before joining: the session starts in the personal organization.
           const { access } = await signedIn(account.user.email);
           await addMembership(ownerDb, { userId: account.user.id, organizationId: organization.id, role: "contributor" });
           if (!isMember) await removeMembership(ownerDb, { userId: account.user.id, organizationId: organization.id });
@@ -1961,13 +1959,12 @@ describe("organization routes", () => {
   });
 
   /*
-   * D23-2: organization logos in the API (decisions 1 to 3, 8, 9, 12 to 16
-   * and 32 to 40; Preflight rulings 3 to 8). The shared server's store is
-   * pointed, for each test here, at a real store on a temporary directory
-   * that records every write and removal: a refusal writes nothing, and a
-   * failure after the write leaves nothing.
+   * Organization logos in the API. The shared server's store is pointed, for
+   * each test here, at a real store on a temporary directory that records
+   * every write and removal: a refusal writes nothing, and a failure after the
+   * write leaves nothing.
    */
-  describe("logos (D23-2)", () => {
+  describe("logos", () => {
     let root: string | undefined;
     let store: IFileStore;
     /** Every key written and removed since the test began, in order. */
@@ -2021,7 +2018,7 @@ describe("organization routes", () => {
 
     const writes = () => storeCalls.filter((call) => call.operation === "write");
 
-    // Images by their first bytes (decision 32): only the signature matters to the API.
+    // Images by their first bytes: only the signature matters to the API.
     const PNG = Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), Buffer.from("png-body")]);
     const JPEG = Buffer.concat([Buffer.from([0xff, 0xd8, 0xff, 0xe0]), Buffer.from("jpeg-body")]);
     const WEBP = Buffer.concat([Buffer.from("RIFF"), Buffer.from([0x10, 0, 0, 0]), Buffer.from("WEBPVP8 body")]);
@@ -2094,7 +2091,7 @@ describe("organization routes", () => {
     const organizationsNamed = async (name: string) =>
       ownerDb.selectFrom("organizations").selectAll().where("name", "=", name).execute();
 
-    /** The logo audit rows' actions and metadata keys: ids only (decision 37). */
+    /** The logo audit rows' actions and metadata keys: ids only. */
     const logoAuditRows = async () =>
       (await ownerDb.selectFrom("audit_events").selectAll().where("action", "like", "organization.logo_%").orderBy("id").execute()).map(
         (row) => ({
@@ -2116,7 +2113,7 @@ describe("organization routes", () => {
       return { ...admin, logoId };
     };
 
-    describe("create (decisions 8, 33 to 35)", () => {
+    describe("create", () => {
       it.each([
         ["a PNG", PNG, "image/png"],
         ["a JPEG", JPEG, "image/jpeg"],
@@ -2317,7 +2314,7 @@ describe("organization routes", () => {
       });
     });
 
-    describe("change (decisions 9, 15, 36 and 37)", () => {
+    describe("change", () => {
       it("sets a first logo: the new bytes, the row, organization.logo_changed with ids only, and the name kept", async () => {
         const admin = await memberActiveInGroup("admin");
 
@@ -2514,7 +2511,7 @@ describe("organization routes", () => {
         expect(await auditActions()).toEqual(before);
       });
 
-      it("of two Saves at once, keeps exactly the final row's logo and removes the other two (decision 36)", async () => {
+      it("of two Saves at once, keeps exactly the final row's logo and removes the other two", async () => {
         const admin = await adminWithLogo(PNG);
         const real = store;
         // A barrier: neither write goes on until both have started, so both requests read their parts,
@@ -2599,7 +2596,7 @@ describe("organization routes", () => {
       });
     });
 
-    describe("delete (decision 38)", () => {
+    describe("delete", () => {
       it("removes the logo's bytes after the commit; the public read then answers 404", async () => {
         const admin = await adminWithLogo();
         const seenAtRemoval: Array<Date | null> = [];
@@ -2619,8 +2616,8 @@ describe("organization routes", () => {
       });
     });
 
-    describe("the public read (decisions 3, 16 and 39)", () => {
-      it("streams the bytes with no session, with exactly decision 39's headers", async () => {
+    describe("the public read", () => {
+      it("streams the bytes with no session, with exactly the public read's headers", async () => {
         const admin = await adminWithLogo(JPEG);
 
         const response = await readLogo(admin.group.id, admin.logoId);
@@ -2769,7 +2766,7 @@ describe("organization routes", () => {
       });
     });
 
-    describe("the read model (decision 40)", () => {
+    describe("the read model", () => {
       it("/me's organization and organizations, and the switch's answer, carry logoId", async () => {
         const admin = await adminWithLogo();
 

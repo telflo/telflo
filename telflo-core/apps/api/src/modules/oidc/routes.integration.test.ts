@@ -36,13 +36,13 @@ import { UNCALLED_OTELCOL_VALIDATOR } from "../../testing/otelcol-validator.js";
 import { UNCALLED_FILE_STORE } from "../../testing/file-store.js";
 import { UNCALLED_TESTING } from "../../testing/otelcol-testing.js";
 
-// The opamp-server every server needs (D11b decision 8): this file's own fake.
+// The opamp-server every server needs: this file's own fake.
 const opamp = useFakeOpampServer();
 
-// D2c Task 3: signing in and creating accounts with a provider, against the
-// real database and the fake provider on loopback. Nothing here reaches the
-// internet: the provider's redirect back to TELFLO_PUBLIC_WEB_URL is read
-// from its Location header and replayed against the server with inject.
+// Signing in and creating accounts with a provider, against the real database
+// and the fake provider on loopback. Nothing here reaches the internet: the
+// provider's redirect back to TELFLO_PUBLIC_WEB_URL is read from its Location
+// header and replayed against the server with inject.
 
 const PASSWORD = "a-sufficiently-long-password";
 const START_PATH = "/api/v1/auth/oidc/google";
@@ -311,7 +311,7 @@ describe("OIDC sign-in routes", () => {
     const cookies = setCookies(response);
     expect(cookies.has("telflo_access")).toBe(false);
     expect(cookies.has("telflo_refresh")).toBe(false);
-    // Nor the theme cookie, which only a sign-in sets (D21 decision 23).
+    // Nor the theme cookie, which only a sign-in sets.
     expect(cookies.has("telflo_theme")).toBe(false);
     expectFlowCookieCleared(response);
   }
@@ -345,7 +345,7 @@ describe("OIDC sign-in routes", () => {
     return ownerDb.selectFrom("user_identities").selectAll().where("user_id", "=", userId).execute();
   }
 
-  /** Every configuration and version in the database: a sign-in or a link creates none (D8 decision 10). */
+  /** Every configuration and version in the database: a sign-in or a link creates none. */
   async function configurationCounts() {
     const count = async (table: "configurations" | "configuration_versions") =>
       Number((await ownerDb.selectFrom(table).select(ownerDb.fn.countAll().as("n")).executeTakeFirstOrThrow()).n);
@@ -469,7 +469,7 @@ describe("OIDC sign-in routes", () => {
       expect(params.get("code_challenge")).toBe(createHash("sha256").update(flow!.codeVerifier).digest("base64url"));
     });
 
-    it("builds the redirect URI from TELFLO_PUBLIC_WEB_URL, never from the request's host (Ruling 3)", async () => {
+    it("builds the redirect URI from TELFLO_PUBLIC_WEB_URL, never from the request's host", async () => {
       const response = await server.inject({
         method: "GET",
         url: START_PATH,
@@ -548,7 +548,7 @@ describe("OIDC sign-in routes", () => {
     });
   });
 
-  describe("decision 4's table, row by row", () => {
+  describe("the account decision, row by row", () => {
     it("row 1: the provider returned an error (the user cancelled): nothing changes, oauth_failed", async () => {
       const response = await signInWithProvider({}, { error: "access_denied", redirectTo: "/app/settings" });
 
@@ -581,7 +581,7 @@ describe("OIDC sign-in routes", () => {
       expect(await auditRows("user.identity_linked")).toHaveLength(1);
     });
 
-    it("a provider's sign-in lands as a password sign-in does (D36-1 decision 56, Q265): the earlier session's organization, else the newest live membership", async () => {
+    it("a provider's sign-in lands as a password sign-in does: the earlier session's organization, else the newest live membership", async () => {
       const sub = randomUUID();
       const email = gmail();
       const first = expectSignedIn(await signInWithProvider({ sub, email }));
@@ -669,7 +669,7 @@ describe("OIDC sign-in routes", () => {
         expect(after.email_verified_at).toBeNull();
       });
 
-      it("refuses a non-Gmail address without hd, creating nothing (Ruling 7)", async () => {
+      it("refuses a non-Gmail address without hd, creating nothing", async () => {
         const response = await signInWithProvider({ email: `person-${randomUUID()}@example.com` });
 
         expectRefused(response, "oauth_email_unverified");
@@ -677,7 +677,7 @@ describe("OIDC sign-in routes", () => {
         expect(await failureReasons()).toEqual(["email_not_authoritative"]);
       });
 
-      it("refuses a non-Gmail address without hd against an existing verified account, linking nothing (Ruling 7)", async () => {
+      it("refuses a non-Gmail address without hd against an existing verified account, linking nothing", async () => {
         const account = await verifiedAccount(`person-${randomUUID()}@example.com`);
 
         const response = await signInWithProvider({ email: account.user.email });
@@ -688,7 +688,7 @@ describe("OIDC sign-in routes", () => {
         expect(await failureReasons()).toEqual(["email_not_authoritative"]);
       });
 
-      it("refuses a non-Gmail address without hd against an unverified account, taking nothing over (Ruling 7)", async () => {
+      it("refuses a non-Gmail address without hd against an unverified account, taking nothing over", async () => {
         const account = await createUserWithOrganization(ownerDb, {
           user: { email: `person-${randomUUID()}@example.com`, password_hash: passwordHash, email_verified_at: null },
         });
@@ -730,7 +730,7 @@ describe("OIDC sign-in routes", () => {
       const identities = await identitiesOf(account.user.id);
       expect(identities).toMatchObject([{ provider: "google", provider_subject: sub, email: account.user.email }]);
       expect(await auditRows("user.identity_linked")).toMatchObject([{ actor_user_id: account.user.id }]);
-      // A sign-in's link, as D21 decision 44 names it; it sends no email (Q118).
+      // A sign-in's link (`via: "sign_in"`); it sends no email.
       expect((await auditRows("user.identity_linked"))[0]!.metadata).toEqual({ provider: "google", via: "sign_in" });
       // Linking changes nothing else: the password still works, and no
       // starter configuration is made for an account that already exists.
@@ -739,7 +739,7 @@ describe("OIDC sign-in routes", () => {
       expect(await configurationCounts()).toEqual({ configurations: 0, versions: 0 });
     });
 
-    it("row 6: a live user with the email but a different identity for this provider is refused: identity_conflict (Ruling 8)", async () => {
+    it("row 6: a live user with the email but a different identity for this provider is refused: identity_conflict", async () => {
       const email = gmail();
       const { access } = expectSignedIn(await signInWithProvider({ sub: randomUUID(), email }));
       const user = await me(access);
@@ -759,7 +759,7 @@ describe("OIDC sign-in routes", () => {
       });
       const userId = account.user.id;
       // Whoever registered first accepted the terms; that was their consent,
-      // not the owner's (Ruling 14).
+      // not the owner's.
       expect(account.user.accepted_terms_version).not.toBeNull();
       const future = new Date(Date.now() + 3_600_000);
       await ownerDb
@@ -860,9 +860,9 @@ describe("OIDC sign-in routes", () => {
       expect(trail[3]!.metadata).toEqual({ provider: "google", via: "sign_in" });
       expect(trail[5]!.metadata).toEqual({ method: "oidc", provider: "google" });
 
-      // The starter configuration (D8 decision 10): exactly one, in the
-      // personal organization, made by the new user at the sign-in's time,
-      // at the catalogue's default distribution and version (D13a decision 9).
+      // The starter configuration: exactly one, in the personal
+      // organization, made by the new user at the sign-in's time, at the
+      // catalogue's default distribution and version.
       const pin = await catalogueDefaults(ownerDb);
       const personal = await ownerDb
         .selectFrom("organizations")
@@ -926,12 +926,12 @@ describe("OIDC sign-in routes", () => {
   });
 
   /**
-   * D22 decision 24: after the `sub` lookup and the verified email, before
-   * the authority rule and the lookup by email. The `hd` claim makes the
-   * fake provider authoritative for the address, so only the refusal
-   * stands between it and a link, a take-over or a new account.
+   * After the `sub` lookup and the verified email, before the authority rule
+   * and the lookup by email. The `hd` claim makes the fake provider
+   * authoritative for the address, so only the refusal stands between it and
+   * a link, a take-over or a new account.
    */
-  describe("the site's registration mode (D36-1 decision 35, Preflight ruling 5)", () => {
+  describe("the site's registration mode", () => {
     /** The round trip against `target`. */
     async function signInOn(target: FastifyInstance, claims: FakeOidcClaims): Promise<LightMyRequestResponse> {
       const started = await start(undefined, target);
@@ -996,7 +996,7 @@ describe("OIDC sign-in routes", () => {
     });
   });
 
-  describe("an email at the service accounts' domain (D22 decision 24)", () => {
+  describe("an email at the service accounts' domain", () => {
     it("an asserted email at the reserved domain is refused with oauth_email_reserved, audited email_reserved, and links, takes over or creates nothing", async () => {
       const { organization } = await verifiedAccount();
       const { user: serviceAccount } = await addServiceAccount(ownerDb, { organizationId: organization.id });
@@ -1034,7 +1034,7 @@ describe("OIDC sign-in routes", () => {
       expect(await failureReasons()).toEqual(["email_reserved"]);
     });
 
-    it("refuses an asserted email at the deleted accounts' domain with oauth_email_reserved, audited email_reserved, a deleted person's anonymous address included, and links or creates nothing (D29 decision 10, Preflight ruling 6)", async () => {
+    it("refuses an asserted email at the deleted accounts' domain with oauth_email_reserved, audited email_reserved, a deleted person's anonymous address included, and links or creates nothing", async () => {
       const { user: person } = await verifiedAccount();
       const anonymous = `deleted-${"0d".repeat(12)}@deleted-accounts.telflo.invalid`;
       await ownerDb.updateTable("users").set({ email: anonymous, password_hash: null, deleted_at: new Date() }).where("id", "=", person.id).execute();
@@ -1153,7 +1153,7 @@ describe("OIDC sign-in routes", () => {
       expect(await failureReasons()).toEqual(["exchange_failed"]);
     });
 
-    it("a token signed by another key (Ruling 2)", async () => {
+    it("a token signed by another key", async () => {
       expectRefused(await signInWithProvider({}, { fault: "foreign_key" }), "oauth_failed");
       await expectNothingWritten();
       expect(await failureReasons()).toEqual(["exchange_failed"]);
@@ -1187,7 +1187,7 @@ describe("OIDC sign-in routes", () => {
     });
   });
 
-  it("the OIDC sign-in sets it: telflo_theme, the stored theme (dark with no row), with the session cookies (D21 decision 23)", async () => {
+  it("the OIDC sign-in sets it: telflo_theme, the stored theme (dark with no row), with the session cookies", async () => {
     const sub = randomUUID();
     const email = gmail();
     const attributes = ["Max-Age=31536000", "Path=/", "HttpOnly", ...(settings.isCookieSecure ? ["Secure"] : []), "SameSite=Lax"];
@@ -1217,7 +1217,7 @@ describe("OIDC sign-in routes", () => {
     expect(await auditRows("user.identity_linked")).toHaveLength(1);
   });
 
-  it("builds the callback's URL from TELFLO_PUBLIC_WEB_URL whatever the request's host (Ruling 3)", async () => {
+  it("builds the callback's URL from TELFLO_PUBLIC_WEB_URL whatever the request's host", async () => {
     const started = await start();
     const authorized = await authorize(started);
 
@@ -1231,7 +1231,7 @@ describe("OIDC sign-in routes", () => {
     expectSignedIn(response);
   });
 
-  describe("concurrency: no 500, one user and one identity (Preflight minors)", () => {
+  describe("concurrency: no 500, one user and one identity", () => {
     it("a concurrent first sign-in of one new user: both callbacks end signed in or oauth_failed", async () => {
       const claims = { sub: randomUUID(), email: gmail() };
       const flows = [];
@@ -1515,8 +1515,8 @@ describe("OIDC sign-in routes", () => {
       await gate.done;
       const [signedIn, oidcResponse] = await Promise.all([signIn!.promise, oidc]);
 
-      // Queued, it rereads the hash the takeover deleted (D3 Ruling 15):
-      // 401 password_changed. Refused before it, 403.
+      // Queued, it rereads the hash the takeover deleted: 401
+      // password_changed. Refused before it, 403.
       expect([401, 403]).toContain(signedIn.statusCode);
       const [failure] = await auditRows("user.sign_in_failed");
       expect(failure?.metadata).toEqual({

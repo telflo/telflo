@@ -10,26 +10,26 @@ import {
 import { AppError } from "../../errors.js";
 
 /*
- * The refusals of the organization endpoints and of switching (D5 decisions
- * 7, 8 and 10) and of invitations (D6 decisions 8 and 9), each under its contract
- * code. The web shows the messages to the user as they are.
+ * The refusals of the organization endpoints and of switching and of
+ * invitations, each under its contract code. The web shows the messages to the
+ * user as they are.
  */
 
 function organizationError(code: OrganizationErrorCode, message: string, statusCode: number): AppError {
   return new AppError(code, message, statusCode);
 }
 
-/** Any organization but the active one, or a deleted one: a non-member learns nothing (decision 7). */
+/** Any organization but the active one, or a deleted one: a non-member learns nothing. */
 export function organizationNotFound(): AppError {
   return organizationError("organization_not_found", "Organization not found", 404);
 }
 
-/** A clash (decision 6). */
+/** A clash. */
 export function organizationNameTaken(): AppError {
   return organizationError("organization_name_taken", "That name is invalid or already exists", 409);
 }
 
-/** The site lets only product admins create organizations, and the caller isn't one (D36-1 decision 51). */
+/** The site lets only product admins create organizations, and the caller isn't one. */
 export function organizationCreationRestricted(): AppError {
   return organizationError("organization_creation_restricted", ORGANIZATION_CREATION_RESTRICTED_MESSAGE, 403);
 }
@@ -38,7 +38,7 @@ export function organizationAdminRequired(): AppError {
   return organizationError("organization_admin_required", "Only an admin of this organization can do that", 403);
 }
 
-/** telflo-api's words (decision 10), for an unknown or deleted organization as for one the user left. */
+/** Fixed words, for an unknown or deleted organization as for one the user left. */
 export function organizationAccessDenied(): AppError {
   return organizationError("organization_access_denied", "You are not an active member of this organization", 403);
 }
@@ -68,9 +68,9 @@ export function memberNotRemoved(): AppError {
 }
 
 /**
- * A role change, a removal or a restoration naming a service account (D22
- * decision 30): it is a fixed contributor, deleted only from its own page.
- * Fixed words: never its name or address.
+ * A role change, a removal or a restoration naming a service account: it is a
+ * fixed contributor, deleted only from its own page. Fixed words: never its
+ * name or address.
  */
 export function memberIsServiceAccount(): AppError {
   return organizationError(
@@ -93,7 +93,7 @@ export function personalOrganizationOwnerProtected(): AppError {
 }
 
 /*
- * Inviting, resending and cancelling (D6 decision 8).
+ * Inviting, resending and cancelling.
  */
 
 /** The address belongs to an active member, the caller's own included. */
@@ -117,8 +117,8 @@ export function invitationAlreadyPending(): AppError {
 
 /**
  * An invite or a resend from a personal organization while the site's
- * registration isn't open (D36-1 decision 57, Q268): fixed words, which the
- * web shows in place of Invite Member too.
+ * registration isn't open: fixed words, which the web shows in place of
+ * Invite Member too.
  */
 export function personalOrganizationInvitationsDisabled(): AppError {
   return organizationError(
@@ -135,8 +135,7 @@ export function pendingInvitationNotFound(): AppError {
 
 /**
  * The invitation committed, and only its email failed. It carries neither
- * details nor the mailer's error, which is logged on its own (Preflight
- * ruling 4).
+ * details nor the mailer's error, which is logged on its own.
  */
 export function invitationEmailFailed(): AppError {
   return organizationError(
@@ -156,9 +155,9 @@ export function resentInvitationEmailFailed(): AppError {
 }
 
 /*
- * The invitee's side: previewing, accepting and creating an account (D6
- * decision 9). The four messages the accept page also shows are the
- * contracts', so the two can't drift apart.
+ * The invitee's side: previewing, accepting and creating an account. The four
+ * messages the accept page also shows are the contracts', so the two can't
+ * drift apart.
  */
 
 /** An unknown, revoked or superseded token, or a deleted organization: all alike, so a dead link tells nothing. */
@@ -174,7 +173,7 @@ export function invitationAlreadyAccepted(): AppError {
   return organizationError("invitation_already_accepted", INVITATION_ALREADY_ACCEPTED_MESSAGE, 409);
 }
 
-/** Only the invited address may accept (decision 3); the message names it, for the page to show. */
+/** Only the invited address may accept; the message names it, for the page to show. */
 export function invitationEmailMismatch(email: string): AppError {
   return organizationError("invitation_email_mismatch", invitationEmailMismatchMessage(email), 403);
 }
@@ -198,9 +197,9 @@ export function accountExists(): AppError {
 }
 
 /*
- * An organization's logo (D23-2 decision 34): refused before anything is
- * written, with no details (they could echo a name). The browser checks
- * first and shows its own words; these are the API's.
+ * An organization's logo: refused before anything is written, with no details
+ * (they could echo a name). The browser checks first and shows its own words;
+ * these are the API's.
  */
 
 /** An empty file, or bytes that aren't a PNG, a JPEG or a WebP image (SVG included). */
@@ -214,9 +213,9 @@ export function organizationLogoTooLarge(): AppError {
 }
 
 /**
- * The public logo read's one refusal (D23-2 decision 39), answered in plain
- * text as "Not found.": a malformed id, an organization deleted or never
- * there, an old or removed logo's id and bytes that are gone, all alike.
+ * The public logo read's one refusal, answered in plain text as "Not found.":
+ * a malformed id, an organization deleted or never there, an old or removed
+ * logo's id and bytes that are gone, all alike.
  */
 export function organizationLogoNotFound(): AppError {
   return new AppError("organization_logo_not_found", "Not found.", 404);

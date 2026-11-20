@@ -48,10 +48,10 @@ import type { IOidcProviderRegistry, OidcProvider } from "./providers.js";
  * transaction: whatever is written through them commits together or not at
  * all.
  *
- * Lock order, as in D3 Ruling 17: the user's row, then token rows, then
- * sessions (D2c Ruling 9). `users` offers only what runs in the transaction
- * it is bound to; `createAccount` opens a transaction of its own, so leaving
- * it out of the type makes calling it here a compile error.
+ * Lock order: the user's row, then token rows, then sessions. `users` offers
+ * only what runs in the transaction it is bound to; `createAccount` opens a
+ * transaction of its own, so leaving it out of the type makes calling it here
+ * a compile error.
  */
 export interface OidcTransaction {
   users: Pick<IUserRepository, "lockForUpdate" | "findById" | "takeOverUnverified" | "findPasswordHashForShare">;
@@ -88,17 +88,17 @@ export interface OidcServiceDependencies {
   /** The personal organization, read in the user's database context. */
   withUserOrganizations: WithUserOrganizations;
   audit: IAuditRepository;
-  /** The one session start (D2c Ruling 10). */
+  /** The one session start. */
   sessions: Pick<ISessionService, "startSession">;
   withTransaction: WithOidcTransaction;
-  /** `site.registration`: whether a sign-in with no matching account may create one (D36-1 decision 35). */
+  /** `site.registration`: whether a sign-in with no matching account may create one. */
   settings: Pick<AppSettings, "publicWebUrl" | "accessTokenSecret" | "site">;
   now: () => Date;
   /** Injectable for unit tests; defaults to openid-client's authorization-code grant. */
   exchange?: ExchangeCode;
-  /** Registers a new account's personal organization in the opamp-server after the commit (D11a decision 20). */
+  /** Registers a new account's personal organization in the opamp-server after the commit. */
   opampRegistration: OpampRegistration;
-  /** The security emails of a link or an unlink from Settings, sent after the commit (D21 decision 43). */
+  /** The security emails of a link or an unlink from Settings, sent after the commit. */
   mailer: IMailer;
   runAfterResponse: RunAfterResponse;
   /** Injectable so tests can observe the order; defaults to identity's Argon2id verify. */
@@ -137,8 +137,8 @@ export type CompleteSignInResult =
       error?: unknown;
     }
   /**
-   * A link started from Settings ended (D21 decision 38): no session, and the
-   * browser goes to `/settings/account?link=<code>`.
+   * A link started from Settings ended: no session, and the browser goes to
+   * `/settings/account?link=<code>`.
    */
   | {
       kind: "link_ended";
@@ -147,7 +147,7 @@ export type CompleteSignInResult =
       error?: unknown;
     };
 
-/** The signed-in person asking, and from where: the account's own routes (D21 decisions 37-39). */
+/** The signed-in person asking, and from where: the account's own routes. */
 export interface AccountRequest {
   /** The request's session: whose account, and the audit rows' organization. */
   context: AuthContext;
@@ -173,7 +173,7 @@ export type BeginLinkResult =
     };
 
 export interface UnlinkInput extends AccountRequest {
-  /** From the path: looked up among the account's identities, configured or not (Preflight ruling 16). */
+  /** From the path: looked up among the account's identities, configured or not. */
   providerId: string;
   currentPassword: string;
 }
@@ -186,14 +186,14 @@ export type OidcSignInFailureReason =
   | "exchange_failed"
   | "email_unverified"
   | "email_not_authoritative"
-  /** The verified email is at the service accounts' domain (D22 decision 24). */
+  /** The verified email is at the service accounts' domain. */
   | "email_reserved"
   | "deleted_user"
   | "identity_conflict"
   | "no_personal_organization"
   | "session_refused"
   | "concurrent_sign_in"
-  /** No account has the email, and the site's registration isn't open (D36-1 decision 35): nothing was created. */
+  /** No account has the email, and the site's registration isn't open: nothing was created. */
   | "registration_not_open"
   /** Anything unexpected while finding the user or starting the session; the row names it by a label. */
   | "internal_error";
@@ -201,15 +201,15 @@ export type OidcSignInFailureReason =
 export interface IOidcService {
   beginSignIn(input: BeginSignInInput): Promise<BeginSignInResult>;
   completeSignIn(input: CompleteSignInInput): Promise<CompleteSignInResult>;
-  /** D21 decision 37: the password state, the linked identities and the configured providers. */
+  /** The password state, the linked identities and the configured providers. */
   signInMethods(context: AuthContext): Promise<SignInMethodsResponse>;
-  /** D21 decision 38's start. Throws the account's refusals (404, 409, 400). */
+  /** A link's start. Throws the account's refusals (404, 409, 400). */
   beginLink(input: BeginLinkInput): Promise<BeginLinkResult>;
-  /** D21 decision 39. Throws the account's refusals (404, 409, 400). */
+  /** Unlinks an identity. Throws the account's refusals (404, 409, 400). */
   unlink(input: UnlinkInput): Promise<void>;
 }
 
-/** openid-client's defaults (D2c Parity Notes); no `prompt`. */
+/** openid-client's defaults; no `prompt`. */
 const SCOPE = "openid email profile";
 const DEFAULT_REDIRECT = "/app";
 
@@ -241,7 +241,7 @@ function unauthenticated(): AppError {
   return new AppError("unauthenticated" satisfies SessionErrorCode, "You need to sign in.", 401);
 }
 
-/** The OIDC starts' one refusal of an unknown provider (D21 decision 21): the sign-in's and the link's. */
+/** The OIDC starts' one refusal of an unknown provider: the sign-in's and the link's. */
 export function unknownProvider(): AppError {
   return new AppError("not_found", "No such sign-in provider.", 404);
 }
@@ -254,7 +254,7 @@ export function unknownProvider(): AppError {
 const MAX_RESOLVE_ATTEMPTS = 3;
 
 /**
- * The redirect URI registered with the provider (D2c Ruling 3). Always from
+ * The redirect URI registered with the provider. Always from
  * TELFLO_PUBLIC_WEB_URL, never from the request: behind the gateway the
  * request's host is the API's own.
  */
@@ -274,7 +274,7 @@ export function oidcCallbackUrl(
   return url;
 }
 
-/** openid-client's defaults check everything D2c decision 4 lists; the registry turned on the signature check. */
+/** openid-client's defaults do the token checks; the registry turned on the signature check. */
 async function exchangeWithProvider(provider: OidcProvider, callbackUrl: URL, flow: OidcFlow): Promise<ProviderClaims> {
   const configuration = await provider.configuration();
   const tokens = await authorizationCodeGrant(configuration, callbackUrl, {
@@ -304,7 +304,7 @@ function providerErrorLabel(error: string): string {
   return /^[a-z0-9_]{1,64}$/.test(error) ? error : "unrecognized";
 }
 
-/** What the account decision (D2c decision 4) came to. */
+/** What the account decision (resolveOnce) came to. */
 type Resolution =
   | { kind: "user"; user: User }
   | { kind: "refused"; code: OidcQueryErrorCode; reason: OidcSignInFailureReason; user?: User | undefined }
@@ -323,7 +323,7 @@ type SignInOutcome =
   | Extract<CompleteSignInResult, { kind: "signed_in" }>
   | Extract<Resolution, { kind: "refused" }>;
 
-/** A link flow (D21 decision 38): whose account, and which session started it. */
+/** A link flow: whose account, and which session started it. */
 type LinkFlow = Extract<VerifiedOidcFlow, { intent: "link" }>;
 
 /** The identity the provider asserted, once its ID token has been validated. */
@@ -361,7 +361,7 @@ export function createOidcService(deps: OidcServiceDependencies): IOidcService {
    * is always a race: another sign-in of this `sub` linked it first. So is
    * `provider_taken` when that sign-in linked this `sub` to this user; only
    * when the `sub` is still unlinked does the user hold a different identity
-   * at this provider (D2c Ruling 8).
+   * at this provider.
    */
   async function afterLinkConflict(error: unknown, identity: AssertedIdentity, user: User): Promise<Resolution> {
     if (!(error instanceof IdentityLinkConflictError)) throw error;
@@ -373,8 +373,8 @@ export function createOidcService(deps: OidcServiceDependencies): IOidcService {
   }
 
   /**
-   * A sign-in's link (D21 decision 44: `via: "sign_in"`). It sends no email
-   * (Q118): only a link from Settings does.
+   * A sign-in's link (`via: "sign_in"`). It sends no email: only a link
+   * from Settings does.
    */
   function identityLinkedEvent(identity: AssertedIdentity, user: User, origin: RequestOrigin) {
     return {
@@ -391,7 +391,7 @@ export function createOidcService(deps: OidcServiceDependencies): IOidcService {
 
   /**
    * A verified account with the provider's email: link, then sign in. The
-   * user's row is locked first (D3 Ruling 17's order) and read again under
+   * user's row is locked first (the lock order above) and read again under
    * the lock, so a user soft-deleted since the lookup is not linked, and one
    * whose email changed since is not linked by the old address: the
    * decision runs again.
@@ -425,14 +425,13 @@ export function createOidcService(deps: OidcServiceDependencies): IOidcService {
   }
 
   /**
-   * An unverified account with the provider's email (D2c decision 4, Ruling
-   * 9): the provider has proven the mailbox, so whoever registered the
-   * address may not be its owner. The email is confirmed, the password
-   * deleted, every reset and confirmation link consumed and every session
-   * revoked (there can be none), and the identity linked, in one
-   * transaction. If the account was verified between the lookup and the
-   * lock, this is the plain link instead; if its email changed, or it was
-   * deleted, the decision runs again.
+   * An unverified account with the provider's email: the provider has proven
+   * the mailbox, so whoever registered the address may not be its owner. The
+   * email is confirmed, the password deleted, every reset and confirmation
+   * link consumed and every session revoked (there can be none), and the
+   * identity linked, in one transaction. If the account was verified between
+   * the lookup and the lock, this is the plain link instead; if its email
+   * changed, or it was deleted, the decision runs again.
    */
   async function takeOver(
     identity: AssertedIdentity,
@@ -485,7 +484,7 @@ export function createOidcService(deps: OidcServiceDependencies): IOidcService {
 
   /**
    * No user has the email: the account (no password, the email verified by
-   * the provider, no terms), its personal organization and membership (D1b),
+   * the provider, no terms), its personal organization and membership,
    * the link and the audit trail, in one transaction.
    */
   async function createAccount(
@@ -536,7 +535,7 @@ export function createOidcService(deps: OidcServiceDependencies): IOidcService {
           await writes.audit.record(identityLinkedEvent(identity, user, origin));
         },
       );
-      // Committed: the opamp-server registers it after the response (D11a decision 20).
+      // Committed: the opamp-server registers it after the response.
       opampRegistration.created(account.organization);
       return { kind: "user", user: account.user };
     } catch (error) {
@@ -550,7 +549,7 @@ export function createOidcService(deps: OidcServiceDependencies): IOidcService {
   }
 
   /**
-   * D2c decision 4's table, in its order. The `sub` lookup comes first, so
+   * The account decision, in its order. The `sub` lookup comes first, so
    * an identity already linked keeps working whatever the provider now says
    * about the email.
    */
@@ -563,31 +562,28 @@ export function createOidcService(deps: OidcServiceDependencies): IOidcService {
     // The boolean `true`, never the string: some providers have sent "true".
     const email = verifiedProviderEmail(claims);
     if (email === undefined) return refused("oauth_email_unverified", "email_unverified");
-    // The reserved domains, before the authority rule and the lookup by
-    // email (D22 decision 24): the service accounts' and the deleted
-    // accounts' (D29 decision 10, Preflight ruling 6). No person may hold
-    // such an address, so nothing is linked, taken over or created. Google
-    // can't be authoritative for either; this is the backstop for another
-    // provider.
+    // The reserved domains, before the authority rule and the lookup by email:
+    // the service accounts' and the deleted accounts'. No person may hold such
+    // an address, so nothing is linked, taken over or created. Google can't be
+    // authoritative for either; this is the backstop for another provider.
     if (isReservedEmail(email)) return refused("oauth_email_reserved", "email_reserved");
     // Only an address the provider controls today links, takes over or
-    // creates (D2c Ruling 7). Judged on the address as it will be matched.
+    // creates. Judged on the address as it will be matched.
     if (!provider.isEmailAuthoritative({ email, hd: claims.hd })) {
       return refused("oauth_email_unverified", "email_not_authoritative");
     }
 
     const existing = await users.findByEmailIncludingDeleted(email);
     if (!existing) {
-      // Only an open site lets a provider's sign-in make an account (D36-1
-      // decision 35, Preflight ruling 5); invite-only and closed refuse,
-      // creating nothing. Linking and taking over an existing account,
-      // below, work in every mode.
+      // Only an open site lets a provider's sign-in make an account;
+      // invite-only and closed refuse, creating nothing. Linking and taking
+      // over an existing account, below, work in every mode.
       if (!allowsRegistration(settings.site.registration, "self")) {
         return refused("registration_not_open", "registration_not_open");
       }
       return createAccount(identity, email, origin, at);
     }
-    // D1b's handoff: a soft-deleted user's address is not given to anyone.
+    // A soft-deleted user's address is not given to anyone.
     if (existing.isDeleted) return refused("oauth_failed", "deleted_user", existing.user);
     if (existing.user.emailVerifiedAt === null) return takeOver(identity, existing.user, email, origin, at);
     return linkVerified(identity, existing.user, email, origin);
@@ -617,9 +613,9 @@ export function createOidcService(deps: OidcServiceDependencies): IOidcService {
     const { user } = resolution;
 
     // As password sign-in: the session lands where the person last was, or
-    // in the organization they joined most recently, else the personal one
-    // (D36-1 decision 56, Q265), whose absence is a bug to surface in the
-    // audit trail, not to paper over.
+    // in the organization they joined most recently, else the personal one,
+    // whose absence is a bug to surface in the audit trail, not to paper
+    // over.
     const personal = await withUserOrganizations(user.id, (organizations) => organizations.findPersonalForUser(user.id));
     if (!personal) return { kind: "refused", code: "oauth_failed", reason: "no_personal_organization", user };
 
@@ -639,12 +635,12 @@ export function createOidcService(deps: OidcServiceDependencies): IOidcService {
   }
 
   /**
-   * A link's refusal (D21 decision 38, Preflight rulings 6 and 8): one
-   * `user.identity_link_failed` row, `{ provider, reason, error? }`, instead
-   * of the sign-in's `user.oidc_sign_in_failed`. The actor is the flow's
-   * user, by the address their live row holds (read here when the link
-   * didn't read it), never the provider's; the organization is the flow's
-   * session's once it was read, else none.
+   * A link's refusal: one `user.identity_link_failed` row,
+   * `{ provider, reason, error? }`, instead of the sign-in's
+   * `user.oidc_sign_in_failed`. The actor is the flow's user, by the address
+   * their live row holds (read here when the link didn't read it), never the
+   * provider's; the organization is the flow's session's once it was read,
+   * else none.
    */
   async function refuseLink(
     flow: LinkFlow,
@@ -670,7 +666,7 @@ export function createOidcService(deps: OidcServiceDependencies): IOidcService {
   }
 
   /**
-   * D21 decision 38's callback, once the flow, the state, a provider error
+   * The link's callback, once the flow, the state, a provider error
    * and the exchange have been checked: the link in one transaction
    * (`link.ts`), then, after the commit and only when this callback wrote
    * the row, the email to the account's address. No session is started.
@@ -746,23 +742,23 @@ export function createOidcService(deps: OidcServiceDependencies): IOidcService {
     },
 
     /**
-     * D2c decision 4. The flow and the exchange are checked before anything
-     * is read or written; the exchange happens before any transaction.
-     * Every refusal writes one `user.oidc_sign_in_failed` row, and none
-     * records the code, the verifier, the token or the cookie.
+     * The flow and the exchange are checked before anything is read or
+     * written; the exchange happens before any transaction. Every refusal
+     * writes one `user.oidc_sign_in_failed` row, and none records the code,
+     * the verifier, the token or the cookie.
      *
-     * A flow started from Settings to link (D21 decision 38) is checked the
-     * same way up to the exchange, then takes the link branch; its refusals,
-     * the earlier checks' included, write `user.identity_link_failed` and
-     * end in `link_failed` (Preflight ruling 6). A missing or unreadable
-     * cookie can't be known as a link, and stays the sign-in's refusal.
+     * A flow started from Settings to link is checked the same way up to the
+     * exchange, then takes the link branch; its refusals, the earlier
+     * checks' included, write `user.identity_link_failed` and end in
+     * `link_failed`. A missing or unreadable cookie can't be known as a
+     * link, and stays the sign-in's refusal.
      */
     async completeSignIn(input: CompleteSignInInput): Promise<CompleteSignInResult> {
       const { flow, callbackUrl, origin } = input;
       const at = now();
       const provider = providers.get(input.providerId);
       // The flow's `redirectTo` was cleaned when it started, and is kept on
-      // failure too (D2c Parity Notes).
+      // failure too.
       const redirectTo = flow?.redirectTo ?? DEFAULT_REDIRECT;
 
       const refuse = async (
@@ -795,7 +791,7 @@ export function createOidcService(deps: OidcServiceDependencies): IOidcService {
       if (!flow) return refuse("oauth_failed", "flow_cookie_invalid");
       if (!provider || flow.providerId !== provider.id) return refuseFlow("flow_cookie_invalid");
       // Only this browser's flow cookie proves the callback answers a
-      // sign-in it started (D2c decision 3). openid-client checks it again.
+      // sign-in it started. openid-client checks it again.
       if (callbackUrl.searchParams.get("state") !== flow.state) return refuseFlow("state_mismatch");
       const providerError = callbackUrl.searchParams.get("error");
       if (providerError !== null) {
@@ -844,7 +840,7 @@ export function createOidcService(deps: OidcServiceDependencies): IOidcService {
     },
 
     /**
-     * D21 decision 38's start, in its order: an unknown provider is the
+     * The link's start, in its order: an unknown provider is the
      * OIDC start's `404 not_found`; an identity the account already has at
      * it is `409 identity_already_linked`; with a password, the current one
      * is verified (a missing one is as wrong, and audited alike); without
@@ -905,14 +901,14 @@ export function createOidcService(deps: OidcServiceDependencies): IOidcService {
     },
 
     /**
-     * D21 decision 39, in its order: no identity at the provider is `404
-     * identity_not_linked`; no password is `409 unlink_requires_password`
-     * (it would leave no way to sign in); the current password verified
-     * outside any transaction; then, in one transaction, the user's row
-     * locked first, the hash reread under the lock and refused if it changed
-     * since the verify (Preflight ruling 11), the identity deleted and
-     * `user.identity_unlinked` audited. The email follows the commit. The
-     * sessions are kept.
+     * The unlink, in its order: no identity at the provider is
+     * `404 identity_not_linked`; no password is
+     * `409 unlink_requires_password` (it would leave no way to sign in); the
+     * current password verified outside any transaction; then, in one
+     * transaction, the user's row locked first, the hash reread under the
+     * lock and refused if it changed since the verify, the identity deleted
+     * and `user.identity_unlinked` audited. The email follows the commit.
+     * The sessions are kept.
      */
     async unlink(input: UnlinkInput): Promise<void> {
       const { context, origin, providerId } = input;
@@ -965,9 +961,8 @@ export function createOidcService(deps: OidcServiceDependencies): IOidcService {
       }
 
       // After the commit. The provider by its configured name, else its id
-      // (one no longer configured can still be unlinked; Preflight ruling 16).
-      // The re-link sentence only when a sign-in with it can link it again
-      // (Q126, Ruling 92).
+      // (one no longer configured can still be unlinked). The re-link
+      // sentence only when a sign-in with it can link it again.
       const providerName = providers.get(providerId)?.name ?? providerId;
       const relinksByEmail = providers.relinksByEmail(providerId);
       runAfterResponse(() =>

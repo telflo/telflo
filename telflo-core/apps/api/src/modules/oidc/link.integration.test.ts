@@ -21,12 +21,12 @@ import { hashPassword } from "../identity/password.js";
 import { createFlowCookie, readFlowCookie, type VerifiedOidcFlow } from "./flow-cookie.js";
 
 /*
- * D21 decisions 37-39, 41-44: the sign-in methods, linking Google by `sub`
- * from Settings and unlinking it, against the real database and the fake
- * provider on loopback. Nothing here reaches the internet: the provider's
- * redirect back to TELFLO_PUBLIC_WEB_URL is read from its Location header and
- * replayed against the server with inject. The emails go through a
- * collecting runner, so a test sees what was queued only after `settle()`.
+ * The sign-in methods, linking Google by `sub` from Settings and unlinking it,
+ * against the real database and the fake provider on loopback. Nothing here
+ * reaches the internet: the provider's redirect back to TELFLO_PUBLIC_WEB_URL
+ * is read from its Location header and replayed against the server with
+ * inject. The emails go through a collecting runner, so a test sees what was
+ * queued only after `settle()`.
  */
 
 const opamp = useFakeOpampServer();
@@ -104,7 +104,7 @@ interface Browser {
   sessionId: string;
 }
 
-describe("linking and unlinking a provider from Settings (D21 decisions 37-39)", () => {
+describe("linking and unlinking a provider from Settings", () => {
   let fake: FakeOidcProvider;
   let baseSettings: AppSettings;
   let settings: AppSettings;
@@ -364,7 +364,7 @@ describe("linking and unlinking a provider from Settings (D21 decisions 37-39)",
       expect(response.json()).toEqual({ hasPassword: false, identities: [], providers: [] });
     });
 
-    it("lists, and unlinks, an identity whose provider is no longer configured, named by its id in the email (Preflight ruling 16)", async () => {
+    it("lists, and unlinks, an identity whose provider is no longer configured, named by its id in the email", async () => {
       const browser = await signedIn();
       await ownerDb
         .insertInto("user_identities")
@@ -372,7 +372,7 @@ describe("linking and unlinking a provider from Settings (D21 decisions 37-39)",
         .execute();
 
       const listed = await server.inject({ method: "GET", url: SIGN_IN_METHODS_URL, cookies: { telflo_access: browser.access } });
-      // No sign-in with it is offered, so none links it again (Ruling 92).
+      // No sign-in with it is offered, so none links it again.
       expect(listed.json()).toMatchObject({
         identities: [{ provider: "okta", email: "old@okta.example", relinksByEmail: false }],
       });
@@ -385,7 +385,7 @@ describe("linking and unlinking a provider from Settings (D21 decisions 37-39)",
       expect(`${sent[0]!.text}${sent[0]!.html}`).not.toContain("links it again");
     });
 
-    it("a Google at an issuer that isn't Google's has no email-authority rule: relinksByEmail false, and no re-link sentence in the email (Ruling 92)", async () => {
+    it("a Google at an issuer that isn't Google's has no email-authority rule: relinksByEmail false, and no re-link sentence in the email", async () => {
       // Discovery isn't reached: listing and unlinking never ask the provider.
       const elsewhere = await extraServer({ ...settings, oidcProviders: [{ ...google, issuer: "https://idp.telflo.example" }] });
       const browser = await signedIn(elsewhere, gmail());
@@ -546,7 +546,7 @@ describe("linking and unlinking a provider from Settings (D21 decisions 37-39)",
     });
   });
 
-  describe("the budget the password checks share (D21 decisions 35 and 42)", () => {
+  describe("the budget the password checks share", () => {
     const MAX = 3;
     const SMALL: RateLimits = {
       ...TEST_RATE_LIMITS,
@@ -704,7 +704,7 @@ describe("linking and unlinking a provider from Settings (D21 decisions 37-39)",
       expect(await sentTo(browser.email)).toEqual([]);
     });
 
-    it("links whatever address the provider gives: no authority rule (ADR 0021 point 1), even another account's", async () => {
+    it("links whatever address the provider gives: no authority rule, even another account's", async () => {
       const bystander = await signedIn();
       const browser = await signedIn();
 
@@ -846,7 +846,7 @@ describe("linking and unlinking a provider from Settings (D21 decisions 37-39)",
     });
   });
 
-  describe("the callback's error handler (D21 Preflight ruling 7)", () => {
+  describe("the callback's error handler", () => {
     it("the error handler sends a link's failure to /settings/account?link=link_failed and a sign-in's to /login", async () => {
       // A 429 from the per-IP bucket, before the route has read the cookie.
       const limited = await extraServer(settings, {
@@ -927,7 +927,7 @@ describe("linking and unlinking a provider from Settings (D21 decisions 37-39)",
       expect(mailer.sent).toEqual([]);
       const sent = await sentTo(browser.email);
       expect(sent.map((message) => message.subject)).toEqual(["Google sign-in was removed from your Telflo account"]);
-      // Google re-links by email (Q126, Ruling 92): the email says so.
+      // Google re-links by email: the email says so.
       expect(sent[0]!.text).toContain(
         "If your Telflo address is this Google account's address, signing in with Google links it again.",
       );
@@ -985,9 +985,9 @@ describe("linking and unlinking a provider from Settings (D21 decisions 37-39)",
       expect(await identitiesOf(browser.userId)).toEqual([]);
     });
 
-    it("a later Google sign-in with the account's own address links it again, by sign_in, and sends no email (Q126)", async () => {
-      // The documented behaviour (Q126): the account's address is this
-      // Google account's, which Google is authoritative for (D2c, ADR 0021).
+    it("a later Google sign-in with the account's own address links it again, by sign_in, and sends no email", async () => {
+      // The documented behaviour: the account's address is this Google
+      // account's, which Google is authoritative for.
       const browser = await signedIn(server, gmail());
       await linked(browser, "own-address-sub");
       expect((await unlink(browser)).statusCode).toBe(204);
@@ -1043,7 +1043,7 @@ describe("linking and unlinking a provider from Settings (D21 decisions 37-39)",
     });
   });
 
-  describe("a sign-in's link (Q118): no path of a sign-in sends an email", () => {
+  describe("a sign-in's link: no path of a sign-in sends an email", () => {
     it("a sign-in's link records via sign_in and sends no email", async () => {
       const email = gmail();
       const account = await createUserWithOrganization(ownerDb, { user: { email, password_hash: passwordHash } });

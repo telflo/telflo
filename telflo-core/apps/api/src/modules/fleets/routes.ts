@@ -55,14 +55,14 @@ import { createQuickDeployLinkRepository } from "../quick-deploy/repositories/qu
 import { createDatabaseSessionService } from "../sessions/routes.js";
 import { createFleetsService, type WithFleetsTransaction } from "./service.js";
 
-/** What the fleets service is built from, once, in buildServer (D25 decision 15, Preflight ruling 4). */
+/** What the fleets service is built from, once, in buildServer. */
 export interface FleetServicesDependencies extends ServerDependencies {
   now: () => Date;
-  /** buildServer's: a create that finds its organization deleted runs its delete hook again (Preflight ruling 13). */
+  /** buildServer's: a create that finds its organization deleted runs its delete hook again. */
   opampRegistration: Pick<OpampRegistration, "deleted">;
 }
 
-/** The fleets service, one instance shared by the browser routes here and the public routes (D25 decision 15). */
+/** The fleets service, one instance shared by the browser routes here and the public routes. */
 export interface FleetServices {
   service: ReturnType<typeof createFleetsService>;
 }
@@ -74,19 +74,19 @@ export interface FleetRoutesDependencies extends FleetServicesDependencies {
 
 /**
  * Every route under an organization's fleets. Their queries are never
- * logged (Preflight ruling 16): `http/request-log.ts` names this prefix too.
+ * logged: `http/request-log.ts` names this prefix too.
  */
 const FLEETS_ROUTE = "/api/v1/organizations/:organizationId/fleets";
 
-/** A configuration's fleet usage (Task 4): beside the configurations, not under the fleets. */
+/** A configuration's fleet usage: beside the configurations, not under the fleets. */
 const FLEET_USAGE_ROUTE = "/api/v1/organizations/:organizationId/configurations/:configurationId/fleet-usage";
 
 /**
- * The replies that carry a bearer (a create's, a reveal's, a rotation's, a
- * new default token's) tell every cache to keep no copy (decision 1), set by the platform: the
- * opamp-server's own header isn't forwarded. A create's retry (200) too.
- * A collector's reads and update's answer too: they carry its
- * reported attributes and error text (D17b-1 decision 30).
+ * The replies that carry a bearer (a create's, a reveal's, a rotation's, a new
+ * default token's) tell every cache to keep no copy, set by the platform: the
+ * opamp-server's own header isn't forwarded. A create's retry (200) too. A
+ * collector's reads and update's answer too: they carry its reported
+ * attributes and error text.
  */
 const NO_STORE = "no-store";
 
@@ -95,8 +95,7 @@ const noContent = z.null();
 
 /**
  * Every fleet route's refusals: the contract's 400, the session's 401, the
- * terms' 403, the 404s, the person's limit (429) and the one 503
- * (Preflight ruling 8).
+ * terms' 403, the 404s, the person's limit (429) and the one 503.
  */
 const errorResponses = {
   400: ErrorResponseSchema,
@@ -114,9 +113,9 @@ const writeErrorResponses = { ...errorResponses, 409: ErrorResponseSchema };
 const versionWriteErrorResponses = { ...writeErrorResponses, 422: ErrorResponseSchema };
 
 /**
- * Any string for each id: a path naming anything but the active
- * organization is the same 404 (D5 decision 7), and a malformed fleet or
- * token id its own 404 with no call (Preflight ruling 9), never a 400.
+ * Any string for each id: a path naming anything but the active organization
+ * is the same 404, and a malformed fleet or token id its own 404 with no
+ * call, never a 400.
  */
 const OrganizationParamsSchema = z.object({ organizationId: z.string() });
 const FleetParamsSchema = z.object({ organizationId: z.string(), fleetId: z.string() });
@@ -127,9 +126,8 @@ const CollectorParamsSchema = z.object({ organizationId: z.string(), fleetId: z.
 const ConfigurationParamsSchema = z.object({ organizationId: z.string(), configurationId: z.string() });
 
 /**
- * The fleets service (D25 Preflight ruling 4), moved verbatim from the
- * routes: built once in buildServer and shared by the browser and the
- * public routes, so its limiter is counted once per person.
+ * The fleets service: built once in buildServer and shared by the browser and
+ * the public routes, so its limiter is counted once per person.
  */
 export function createFleetServices(
   deps: FleetServicesDependencies,
@@ -163,12 +161,11 @@ export function createFleetServices(
 }
 
 /**
- * D16b decision 13's routes: fleets and their tokens (Task 3), collector
- * groups, collectors and a configuration's fleet usage (Task 4).
- * Each needs a session and the current terms (403
- * `terms_acceptance_required` first), then the path's organization the
- * session's active one; every member of it may use them (decision 6). The
- * service does the rest: service.ts.
+ * The fleet routes: fleets and their tokens, collector groups, collectors
+ * and a configuration's fleet usage. Each needs a session and the current
+ * terms (403 `terms_acceptance_required` first), then the path's
+ * organization the session's active one; every member of it may use them.
+ * The service does the rest: service.ts.
  */
 export function registerFleetRoutes(
   server: FastifyInstance,
@@ -200,8 +197,8 @@ export function registerFleetRoutes(
     },
   );
 
-  // Decision 15: 201 with the fleet, its Default group and both bearers,
-  // once; a retry with the same id, label and type 200 with the fleet alone.
+  // 201 with the fleet, its Default group and both bearers, once; a retry
+  // with the same id, label and type 200 with the fleet alone.
   typed.post(
     FLEETS_ROUTE,
     {
@@ -275,7 +272,7 @@ export function registerFleetRoutes(
     },
   );
 
-  // Not no-store: ids, times and members' emails, as the tokens list's creators (decision 20).
+  // Not no-store: ids, times and members' emails, as the tokens list's creators.
   typed.get(
     `${FLEETS_ROUTE}/:fleetId/tokens/events`,
     {
@@ -312,8 +309,8 @@ export function registerFleetRoutes(
     },
   );
 
-  // D17c-1 decisions 29 and 45: a new default token once the fleet's are
-  // all revoked, the reveal's shape. No body: the actor is the session's.
+  // A new default token once the fleet's are all revoked, the reveal's
+  // shape. No body: the actor is the session's.
   typed.post(
     `${FLEETS_ROUTE}/:fleetId/tokens/default`,
     {
@@ -355,7 +352,7 @@ export function registerFleetRoutes(
   );
 
   // -------------------------------------------------------------------------
-  // Collector groups (Task 4): each with its assignment's configuration and version beside it.
+  // Collector groups: each with its assignment's configuration and version beside it.
 
   typed.get(
     `${FLEETS_ROUTE}/:fleetId/groups`,
@@ -369,10 +366,10 @@ export function registerFleetRoutes(
     },
   );
 
-  // Checked against the fleet's type once it is read (D17d-1 decisions 17
-  // and 18): a server fleet's group takes no telflo.kubernetes; a
-  // Kubernetes fleet's is the Cluster or a gateway pool, carrying its
-  // telflo.kubernetes and no telflo.dockerMounts (400 at each field's path).
+  // Checked against the fleet's type once it is read: a server fleet's group
+  // takes no telflo.kubernetes; a Kubernetes fleet's is the Cluster or a
+  // gateway pool, carrying its telflo.kubernetes and no telflo.dockerMounts
+  // (400 at each field's path).
   typed.post(
     `${FLEETS_ROUTE}/:fleetId/groups`,
     {
@@ -420,10 +417,9 @@ export function registerFleetRoutes(
     },
   );
 
-  // Its collectors (and their error history) are deleted with it (D17d-1
-  // decision 3), a long delete the platform waits up to 25 s for, as a
-  // fleet's (Ruling 47); the Default group itself can't be deleted (409).
-  // Unaudited, as every group write (D16b decision 18).
+  // Its collectors (and their error history) are deleted with it, a long
+  // delete the platform waits up to 25 s for, as a fleet's; the Default group
+  // itself can't be deleted (409). Unaudited, as every group write.
   typed.delete(
     `${FLEETS_ROUTE}/:fleetId/groups/:groupId`,
     {
@@ -438,12 +434,10 @@ export function registerFleetRoutes(
   );
 
   // -------------------------------------------------------------------------
-  // Installing (D17c-1 decisions 38 and 39, Preflight ruling 14): no bearer
-  // in either. The facts are sent `no-store` (the configuration's
-  // variables' names): a server group's, or a Kubernetes group's Helm facts
-  // (D17d-2 decision 15, Preflight ruling 1). The bundle's body (paths,
-  // values) is never logged: the request log keeps a fleet route's path,
-  // never its query or body.
+  // Installing: no bearer in either. The facts are sent `no-store` (the
+  // configuration's variables' names): a server group's, or a Kubernetes
+  // group's Helm facts. The bundle's body (paths, values) is never logged:
+  // the request log keeps a fleet route's path, never its query or body.
 
   typed.get(
     `${FLEETS_ROUTE}/:fleetId/groups/:groupId/install`,
@@ -477,8 +471,7 @@ export function registerFleetRoutes(
   );
 
   // -------------------------------------------------------------------------
-  // Quick-deploy links (D17c-2 decisions 4, 5, 22 and 25; Preflight rulings
-  // 13, 15, 20 and 25), for every member: the create a write (CSRF), its
+  // Quick-deploy links, for every member: the create a write (CSRF), its
   // reply the only one with the link's `url` (its secret), `no-store`; the
   // list a read (ids, times, emails, paths, names: not no-store, as the
   // token history); extend and revoke writes. No reply holds a secret's
@@ -490,7 +483,7 @@ export function registerFleetRoutes(
       preHandler,
       schema: {
         params: GroupParamsSchema,
-        // By kind (D17d-2 Preflight ruling 11): a Linux link's body (D17c-2's, `kind` absent or "linux") or a Helm values link's.
+        // By kind: a Linux link's body (`kind` absent or "linux") or a Helm values link's.
         body: CreateQuickDeployLinkRequestSchema,
         response: { 201: CreateQuickDeployLinkResponseSchema, ...writeErrorResponses },
       },
@@ -551,8 +544,8 @@ export function registerFleetRoutes(
   );
 
   // -------------------------------------------------------------------------
-  // Collectors (Task 4). The list's `q` and a name-sorted cursor hold a
-  // collector's name or address: never logged (request-log.ts's prefix).
+  // Collectors. The list's `q` and a name-sorted cursor hold a collector's
+  // name or address: never logged (request-log.ts's prefix).
 
   typed.get(
     `${FLEETS_ROUTE}/:fleetId/collectors`,
@@ -661,7 +654,7 @@ export function registerFleetRoutes(
   );
 
   // -------------------------------------------------------------------------
-  // A configuration's fleet usage (Task 4): only a configuration the person can see.
+  // A configuration's fleet usage: only a configuration the person can see.
 
   typed.get(
     FLEET_USAGE_ROUTE,

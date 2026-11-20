@@ -34,41 +34,41 @@ import {
 } from "./service.js";
 
 /*
- * The invitee's side of an invitation (D6 decision 9): previewing it,
- * accepting it while signed in, and creating an account from it. The token
- * is the credential. It finds its invitation through the one definer
- * function that reads past row-level security; from there the database
- * context names the invitation's organization, and everything goes through
- * the scoped repositories and the policy.
+ * The invitee's side of an invitation: previewing it, accepting it while
+ * signed in, and creating an account from it. The token is the credential.
+ * It finds its invitation through the one definer function that reads past
+ * row-level security; from there the database context names the
+ * invitation's organization, and everything goes through the scoped
+ * repositories and the policy.
  *
  * Nothing here logs, audits or returns the token or its hash.
  */
 
 export interface InviteeServiceDependencies {
-  /** The invitation whose token hashes to this, in any state, read past row-level security (decision 9). */
+  /** The invitation whose token hashes to this, in any state, read past row-level security. */
   findInvitationByTokenHash: (tokenHash: string) => Promise<InvitationByToken | undefined>;
   /** Acceptance's transaction, in the caller's database context, as the management endpoints' is. */
   withTransaction: WithOrganizationTransaction;
   users: Pick<IUserRepository, "findByEmailIncludingDeleted" | "createAccount">;
-  /** Acceptance ends in D5's switch, and registration in a session start: no session logic of its own. */
+  /** Acceptance ends in the organization switch, and registration in a session start: no session logic of its own. */
   sessions: Pick<ISessionService, "switchOrganization" | "startSession">;
-  /** Every expiry comparison reads this clock, never the database's (a Preflight minor). */
+  /** Every expiry comparison reads this clock, never the database's. */
   now: () => Date;
-  /** Where a join whose session couldn't follow it is reported (Preflight ruling 5). */
+  /** Where a join whose session couldn't follow it is reported. */
   log: Pick<FastifyBaseLogger, "warn">;
-  /** Registers a new account's personal organization in the opamp-server after the commit (D11a decision 20). */
+  /** Registers a new account's personal organization in the opamp-server after the commit. */
   opampRegistration: OpampRegistration;
   /**
-   * The site's Terms version (settings' `site.terms.version`, D36-1 decision
-   * 29), which a registration must accept; "" when the site asks for none
-   * (decision 32), and a registration records none.
+   * The site's Terms version (settings' `site.terms.version`), which a
+   * registration must accept; "" when the site asks for none, and a
+   * registration records none.
    */
   termsVersion: string;
   /**
-   * The site's registration mode (settings' `site.registration`, D36-1
-   * decision 35): under `invite-only`, a personal organization's invitation
-   * can't make an account (decision 52). `closed` is refused by the route's
-   * gate before this service runs.
+   * The site's registration mode (settings' `site.registration`): under
+   * `invite-only`, a personal organization's invitation can't make an
+   * account. `closed` is refused by the route's gate before this service
+   * runs.
    */
   registration: RegistrationMode;
 }
@@ -76,7 +76,7 @@ export interface InviteeServiceDependencies {
 /** What the accept page shows. A revoked or superseded invitation has no preview: it is a 404. */
 export interface InvitationPreview {
   organizationName: string;
-  /** Its type: the page names a personal workspace called by its owner's email "<email>'s organization" (D36-1 Q264). */
+  /** Its type: the page names a personal workspace called by its owner's email "<email>'s organization". */
   organizationType: OrganizationType;
   email: string;
   role: OrganizationRole;
@@ -84,9 +84,8 @@ export interface InvitationPreview {
   /** Whether an account, live or soft-deleted, holds the address. */
   hasAccount: boolean;
   /**
-   * Whether this invitation can make a new account on this site (D36-1
-   * decisions 35 and 52): the site's mode and the organization's type,
-   * nothing about the address.
+   * Whether this invitation can make a new account on this site: the site's
+   * mode and the organization's type, nothing about the address.
    */
   mayRegister: boolean;
 }
@@ -94,7 +93,7 @@ export interface InvitationPreview {
 /**
  * The organization joined, and the access token the switch into it issued.
  * No token when the session didn't move: it was already there, or the
- * switch failed after the join had committed (Preflight ruling 5).
+ * switch failed after the join had committed.
  */
 export interface AcceptedInvitation {
   organization: SessionOrganization;
@@ -104,14 +103,13 @@ export interface AcceptedInvitation {
 export interface RegisterFromInvitationInput extends RequestOrigin {
   token: string;
   password: string;
-  /** The Terms version the invitee accepted; refused unless it is the site's (D36-1 decision 29), unread when the site asks for none. */
+  /** The Terms version the invitee accepted; refused unless it is the site's, unread when the site asks for none. */
   acceptedTermsVersion?: string | undefined;
 }
 
 /**
  * The new account's session, and the organization it acts in: the inviting
- * one, or the new personal one when the session couldn't start there
- * (Preflight ruling 5).
+ * one, or the new personal one when the session couldn't start there.
  */
 export interface RegisteredFromInvitation {
   organization: SessionOrganization;
@@ -127,7 +125,7 @@ export interface IInviteeService {
   register(input: RegisterFromInvitationInput): Promise<RegisteredFromInvitation>;
 }
 
-/** The caller's account was deleted while the acceptance waited (D29 Ruling 271): refused as a revoked session is. */
+/** The caller's account was deleted while the acceptance waited: refused as a revoked session is. */
 function accountDeleted(): AppError {
   return new AppError("unauthenticated" satisfies SessionErrorCode, "You need to sign in.", 401);
 }
@@ -163,16 +161,16 @@ export function createInviteeService(deps: InviteeServiceDependencies): IInvitee
   }
 
   /**
-   * Decision 10's locks, the organization and then the invitation, and
-   * under them decision 9's refusals in their order. The transaction's
-   * context already names the invitation's organization: under row-level
-   * security a locking read applies the update policy, so without it the
-   * invitation isn't found at all.
+   * The locks, the organization and then the invitation, and under them the
+   * invitation's refusals in their order. The transaction's context already
+   * names the invitation's organization: under row-level security a locking
+   * read applies the update policy, so without it the invitation isn't found
+   * at all.
    *
-   * The hash is compared under the lock (Preflight ruling 1): a Resend that
-   * committed after the lookup gave the row a new token, and the old one
-   * names nothing. The clock is read under the lock too, so an invitation
-   * that expired while this waited for it has expired.
+   * The hash is compared under the lock: a Resend that committed after
+   * the lookup gave the row a new token, and the old one names nothing.
+   * The clock is read under the lock too, so an invitation that expired
+   * while this waited for it has expired.
    */
   async function lockPending(
     target: OrganizationRepositories,
@@ -189,7 +187,7 @@ export function createInviteeService(deps: InviteeServiceDependencies): IInvitee
     return { organization, invitation, at };
   }
 
-  /** Decision 11's two rows for a join by invitation, in the invitation's organization. */
+  /** The two audit rows for a join by invitation, in the invitation's organization. */
   function joinAuditEvents(
     actor: Omit<AuditEvent, "action">,
     invitation: Invitation,
@@ -203,7 +201,7 @@ export function createInviteeService(deps: InviteeServiceDependencies): IInvitee
       subjectId: invitation.id,
     };
     if (!isNewMember) return [accepted];
-    // D5's shape for a member added: the subject is the user.
+    // As for any member added: the subject is the user.
     return [
       accepted,
       {
@@ -236,34 +234,33 @@ export function createInviteeService(deps: InviteeServiceDependencies): IInvitee
      * One transaction in the caller's context, pointed at the invitation's
      * organization once the token has found it. The caller doesn't belong to
      * it yet: that is the point. Then, under the locks, the address check
-     * (decision 3) and the membership: a removed member is refused, an
-     * active one only marks the invitation accepted (a race: inviting
-     * refuses both), and anyone else joins in the invitation's role. The
-     * membership insert and `markAccepted` (its `accepted_by_user_id`) take
-     * key-share locks on the caller's account. Those wait on anything
-     * holding it `for update` (a password reset, a takeover, D2c's plain
-     * link), and none of those waits on an organization or an invitation
-     * (Preflight ruling 6).
+     * and the membership: a removed member is refused, an active one only
+     * marks the invitation accepted (a race: inviting refuses both), and
+     * anyone else joins in the invitation's role. The membership insert and
+     * `markAccepted` (its `accepted_by_user_id`) take key-share locks on the
+     * caller's account. Those wait on anything holding it `for update` (a
+     * password reset, a takeover, an OIDC sign-in's plain link), and none of
+     * those waits on an organization or an invitation.
      *
      * Before them, the caller's own account is locked `for share` and must
-     * still be live (D29 Ruling 271): a product admin's delete of the
-     * caller that committed while this waited would otherwise leave a live
-     * membership of a deleted account (its foreign keys pass: the row
-     * stays). The order is organization -> invitation -> user, as the
-     * delete's is organizations -> person (D29 decision 29): the delete
-     * takes every organization lock before any user lock, so while it
-     * holds the caller's row it waits on no organization this holds, and
-     * this waits on the row only after its own organization and
-     * invitation. The other holders of the row `for update` are Preflight
-     * ruling 6's, which wait on no organization or invitation. A deleted
-     * account is refused as a revoked session is (401 unauthenticated):
-     * the delete revoked its sessions in the same transaction.
+     * still be live: a product admin's delete of the caller that committed
+     * while this waited would otherwise leave a live membership of a
+     * deleted account (its foreign keys pass: the row stays). The order is
+     * organization -> invitation -> user, as the delete's is organizations
+     * -> person: the delete takes every organization lock before any user
+     * lock, so while it holds the caller's row it waits on no organization
+     * this holds, and this waits on the row only after its own
+     * organization and invitation. The other holders of the row
+     * `for update` are those above, which wait on no organization or
+     * invitation. A deleted account is refused as a revoked session is
+     * (401 unauthenticated): the delete revoked its sessions in the same
+     * transaction.
      *
-     * After the commit, D5's switch moves the session, in its own
+     * After the commit, the organization switch moves the session, in its own
      * transaction and its own lock order. If it refuses (a removal or a
      * revocation in between), the member has still joined: the answer is the
      * organization, with no new access token, and they switch from the
-     * sidebar (Preflight ruling 5).
+     * sidebar.
      */
     async accept(actor: SessionActor, token: string): Promise<AcceptedInvitation> {
       const lookup = await findByToken(token);
@@ -321,35 +318,34 @@ export function createInviteeService(deps: InviteeServiceDependencies): IInvitee
      * Registration's rules (the terms first, then the password's contract),
      * and the invitation's refusals before the password is hashed. Then, in
      * the account's one transaction: the account, verified, since the token
-     * proves the mailbox; D1b's personal organization and membership; the
+     * proves the mailbox; its personal organization and membership; the
      * audit trail; and, with the context pointed at the inviting
      * organization, the same locks and re-checks as an acceptance (a cancel
      * or a resend may have committed since the lookup), the membership and
      * the invitation accepted. The new account is invisible to every other
      * transaction until the commit, so no lock on it is needed.
      *
-     * Then a session in the inviting organization, checked under its locks.
-     * If that check refuses (a removal or a deletion since the commit), the
-     * session starts in the new personal organization instead (Preflight
-     * ruling 5). No verification email: the account is already verified.
+     * Then a session in the inviting organization, checked under its locks. If
+     * that check refuses (a removal or a deletion since the commit), the
+     * session starts in the new personal organization instead. No verification
+     * email: the account is already verified.
      */
     async register(input: RegisterFromInvitationInput): Promise<RegisteredFromInvitation> {
-      // A site that asks for no Terms (D36-1 decision 32) checks nothing
-      // here, whatever the request carries, and the account records none.
+      // A site that asks for no Terms checks nothing here, whatever the
+      // request carries, and the account records none.
       const asksForTerms = siteAsksForTerms(termsVersion);
       if (asksForTerms) assertCurrentTermsVersion(input.acceptedTermsVersion, termsVersion);
       const lookup = await findByToken(input.token);
       const { found } = lookup;
-      // Before the invitation's other refusals and the lookup by email (D22
-      // decision 23, Preflight ruling 13): only an invitation written
-      // before D22 can name the domain, since inviting now refuses it.
+      // Before the invitation's other refusals and the lookup by email:
+      // inviting refuses the domain, so only an older invitation can name it.
       assertAddressNotReserved(found.email);
       if (found.acceptedAt !== null) throw invitationAlreadyAccepted();
       if (isInvitationExpired(found, now())) throw invitationExpired();
       // Once the token has found a live, pending invitation (a bad or expired
       // one answers as before): under invite-only, a personal organization's
-      // invitation makes no account (D36-1 decision 52). Before anything is
-      // read by the address or written; the page offers sign-in instead.
+      // invitation makes no account. Before anything is read by the address
+      // or written; the page offers sign-in instead.
       if (!allowsInvitationRegistration(registration, found.organizationType)) {
         // `closed` never gets here (the route's gate), but answers in its own words if it did.
         throw registration === "closed" ? registrationNotOpen(registration) : personalInvitationRegistrationRefused();
@@ -379,14 +375,14 @@ export function createInviteeService(deps: InviteeServiceDependencies): IInvitee
               ipAddress: origin.ipAddress,
               userAgent: origin.userAgent,
             };
-            // D1b's rows, as registration writes them, in the personal organization.
+            // The rows registration writes, in the personal organization.
             await writes.audit.record({
               ...actor,
               organizationId: personal.id,
               action: "user.registered",
               subjectType: "user",
               subjectId: user.id,
-              // The accepted version, and no key at all when none was (Preflight ruling 1).
+              // The accepted version, and no key at all when none was.
               metadata: asksForTerms ? { via: "invitation", acceptedTermsVersion: termsVersion } : { via: "invitation" },
             });
             await writes.audit.record({
@@ -431,7 +427,7 @@ export function createInviteeService(deps: InviteeServiceDependencies): IInvitee
       }
       const joined = result.joined!;
       const { user, organization: personal, membership } = account;
-      // Committed: the opamp-server registers it after the response (D11a decision 20).
+      // Committed: the opamp-server registers it after the response.
       opampRegistration.created(personal);
       const auditMetadata = { via: "invitation" };
 

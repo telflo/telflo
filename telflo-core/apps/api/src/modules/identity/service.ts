@@ -28,7 +28,7 @@ export interface IdentityDependencies {
   settings: AppSettings;
   /** The clock for token issue and expiry, and for when the terms were accepted. */
   now: () => Date;
-  /** Registers the new personal organization in the opamp-server after the commit (D11a decision 20). */
+  /** Registers the new personal organization in the opamp-server after the commit. */
   opampRegistration: OpampRegistration;
 }
 
@@ -55,12 +55,12 @@ const HOUR_IN_MILLISECONDS = 60 * 60 * 1000;
  * registration; after that the duplicate path waits a real, recent
  * observation instead.
  *
- * Re-measured on 2026-09-28 for D8, whose starter configuration adds a
+ * Re-measured on 2026-09-28 with the starter configuration, which adds a
  * configuration, its version 1 and an audit row to the account's
  * transaction: the post-hash cost itself, 50 registrations through this
  * service with an in-memory mailer against the compose database, three
  * repetitions. Median 14.1-15.0 ms with the starter, 10.2-10.9 ms with it
- * taken out (D1b's figure was about 10).
+ * taken out.
  */
 const REGISTRATION_WAIT_FALLBACK_MILLISECONDS = 15;
 const REGISTRATION_TIMING_CAPACITY = 64;
@@ -81,7 +81,7 @@ export function createIdentityService(deps: IdentityDependencies) {
     return new Date(now().getTime() + settings.verificationTokenTtlHours * HOUR_IN_MILLISECONDS);
   }
 
-  /** D1's verification email, carrying `token`'s link. */
+  /** The verification email, carrying `token`'s link. */
   async function sendVerificationEmail(email: string, token: string): Promise<void> {
     await mailer.send({
       to: email,
@@ -136,22 +136,18 @@ export function createIdentityService(deps: IdentityDependencies) {
      * request-latency variance. Whether an account exists is disclosed only
      * to the address itself, by email — never to whoever submitted the form.
      *
-     * Ruling 30, revisited for D1b (decision 8). As first measured,
-     * creating an account ran a transaction of three inserts, then three
-     * audit inserts and the token insert, each committing on its own. (Since
-     * D1b's fix round 1 all seven run in one transaction; re-measured at the
-     * end.) Measured locally on 2026-09-24 against the compose
-     * database, 50 interleaved runs each through this service with an
-     * in-memory mailer, three repetitions:
-     *   - before D1b: new-account median 15.8-17.8 ms, duplicate 11.9-12.6 ms
-     *     (a 3.8-5.3 ms gap D1 already carried);
-     *   - D1b, duplicate path unchanged: new-account 19.7-21.3 ms, duplicate
-     *     11.5-12.2 ms, a gap of 8.2-9.1 ms. Over the 5 ms threshold, and
-     *     larger than the duplicate path's own spread (10.8-14.5 ms), so a
-     *     handful of timed requests would tell the paths apart.
+     * As first measured, creating an account ran a transaction of three
+     * inserts, then three audit inserts and the token insert, each
+     * committing on its own. (All seven now run in one transaction;
+     * re-measured at the end.) Measured locally on 2026-09-24 against the
+     * compose database, 50 interleaved runs each through this service with
+     * an in-memory mailer, three repetitions, the duplicate path unpadded:
+     * new-account 19.7-21.3 ms, duplicate 11.5-12.2 ms, a gap of 8.2-9.1 ms.
+     * Over the 5 ms threshold, and larger than the duplicate path's own
+     * spread (10.8-14.5 ms), so a handful of timed requests would tell the
+     * paths apart.
      * Decision: the duplicate branch waits, writing nothing. Options weighed:
-     *   - insert and roll back: ruled out by the plan; load on the database
-     *     for no data.
+     *   - insert and roll back: load on the database for no data.
      *   - read-only queries in place of the writes: pays the round trips but
      *     not the cost of committing writes, so it under-pays by an amount
      *     that depends on the database's storage.
@@ -170,9 +166,9 @@ export function createIdentityService(deps: IdentityDependencies) {
      *     records a sample; only a completed registration does.
      * With the wait (same method): new-account median 21.0-22.6 ms,
      * duplicate 21.2-21.8 ms, a gap of -0.2 to +0.8 ms.
-     * Re-measured after fix round 1 (one transaction for all seven inserts;
-     * same method): new-account 20.1-20.6 ms, existing-email duplicate
-     * 20.6-20.9 ms, gap -0.5 to -0.4 ms.
+     * Re-measured with all seven inserts in one transaction (same method):
+     * new-account 20.1-20.6 ms, existing-email duplicate 20.6-20.9 ms, gap
+     * -0.5 to -0.4 ms.
      * Accepted residue: double submission. Two simultaneous registrations
      * for one address let the sender compare the two responses. For a new
      * address the loser is consistently later than its winner (median
@@ -180,29 +176,27 @@ export function createIdentityService(deps: IdentityDependencies) {
      * method), because its insert waits for the winner's to commit; padding
      * cannot remove that, since it can only add time. For an existing
      * address both requests take the padded `existing` branch. Accepted
-     * because: it predates D1b (D1's loser path already differed); in
-     * production the existing-address pair also differs by the spread of
-     * two independent samples, so the signal is statistical, not one-shot;
-     * every probe emails the address owner, and a new-address probe creates
-     * their account; and D2a adds per-IP rate limiting. Rejected fix: a
-     * per-address advisory lock held through the padding, which would hold a
-     * pooled connection for the whole registration (about 20 ms locally,
-     * Argon2 included) instead of just its transaction, and needs care to
-     * avoid exhausting the pool. Accepted as a risk (Ruling 8).
+     * because: in production the existing-address pair also differs by the
+     * spread of two independent samples, so the signal is statistical, not
+     * one-shot; every probe emails the address owner, and a new-address probe
+     * creates their account; and registration is rate limited per IP.
+     * Rejected fix: a per-address advisory lock held through the padding,
+     * which would hold a pooled connection for the whole registration (about
+     * 20 ms locally, Argon2 included) instead of just its transaction, and
+     * needs care to avoid exhausting the pool. Accepted as a risk.
      */
     async registerUser(input: RegisterUserInput): Promise<RegisterResponse> {
       // Before the email lookup, so an old version is refused the same way
-      // for a new and an existing address (Ruling 18). What it accepts is
-      // the site's version (D36-1 decision 29), which the account records.
-      // A site that asks for no Terms (decision 32) checks nothing here,
-      // whatever the request carries, and the account records none.
+      // for a new and an existing address. What it accepts is the site's
+      // version, which the account records. A site that asks for no Terms
+      // checks nothing here, whatever the request carries, and the account
+      // records none.
       const siteTermsVersion = settings.site.terms.version;
       const asksForTerms = siteAsksForTerms(siteTermsVersion);
       if (asksForTerms) assertCurrentTermsVersion(input.acceptedTermsVersion, siteTermsVersion);
-      // After the terms, before the lookup and the hash (D22 decision 23,
-      // Preflight ruling 13): the domain is refused, whether or not a
-      // service account holds the address, so the answer says nothing about
-      // which addresses exist.
+      // After the terms, before the lookup and the hash: the domain is
+      // refused, whether or not a service account holds the address, so the
+      // answer says nothing about which addresses exist.
       assertAddressNotReserved(input.email);
       const existing = await users.findByEmail(input.email);
 
@@ -214,7 +208,7 @@ export function createIdentityService(deps: IdentityDependencies) {
         // away; it is the point.
         await hashPassword(input.password);
         // Then waits out the new-account path's database work, which this
-        // branch does not do (Ruling 30 as revisited above). Same rule: not
+        // branch does not do (the wait described above). Same rule: not
         // dead code, do not remove it.
         const afterHash = performance.now();
         const response = await sendDuplicateNotice(existing, input);
@@ -261,7 +255,7 @@ export function createIdentityService(deps: IdentityDependencies) {
               action: "user.registered",
               subjectType: "user",
               subjectId: created.id,
-              // The accepted version, and no key at all when none was (Preflight ruling 1).
+              // The accepted version, and no key at all when none was.
               metadata: asksForTerms ? { acceptedTermsVersion: siteTermsVersion } : {},
             });
             await writes.audit.record({
@@ -302,23 +296,20 @@ export function createIdentityService(deps: IdentityDependencies) {
           // uq_users_lower_email covers soft-deleted rows but findByEmail
           // skips them, so re-registering that email raises
           // DuplicateEmailError, the refetch finds nothing, and this rethrow
-          // returns a 500. Nothing soft-deletes an account yet, so today it
-          // takes a delete-between-conflict-and-refetch race; the
-          // deliverable that adds account deletion owns this case (handed
-          // over; D1b leaves the behavior unchanged).
+          // returns a 500.
           if (!winner) throw error;
           const response = await sendDuplicateNotice(winner, input);
-          // Pads like the `existing` branch (Ruling 30 as revisited above):
-          // a quick failed insert must not make this path measurably
-          // faster than a real registration. Not dead code.
+          // Pads like the `existing` branch: a quick failed insert must not
+          // make this path measurably faster than a real registration. Not
+          // dead code.
           await wait(registrationTiming.sample() - (performance.now() - afterHash));
           return response;
         }
         throw error;
       }
 
-      // Committed: the opamp-server registers it after the response (D11a
-      // decision 20). Only a scheduled job, so the timing below barely moves.
+      // Committed: the opamp-server registers it after the response. Only a
+      // scheduled job, so the timing below barely moves.
       opampRegistration.created(organization);
       await sendVerificationEmail(user.email, token);
 
@@ -416,14 +407,13 @@ export function createIdentityService(deps: IdentityDependencies) {
     },
 
     /**
-     * Runs after the response (D3 decision 2), so nothing here can change
-     * what the requester sees, and the response time is the same whether or
-     * not an account exists. `findByEmail` skips soft-deleted users, so a
+     * Runs after the response, so nothing here can change what the
+     * requester sees, and the response time is the same whether or not an
+     * account exists. `findByEmail` skips soft-deleted users, so a
      * soft-deleted account gets nothing, like no account at all.
      *
-     * Only an unverified account gets mail (D3 decision 3). Its earlier
-     * tokens are left valid until they expire: they all confirm the same
-     * address (D3 decision 8).
+     * Only an unverified account gets mail. Its earlier tokens are left
+     * valid until they expire: they all confirm the same address.
      */
     async resendVerification(input: ResendVerificationInput): Promise<void> {
       const user = await users.findByEmail(input.email);
@@ -458,7 +448,7 @@ export function createIdentityService(deps: IdentityDependencies) {
       await verificationTokens.create({ userId: user.id, tokenHash, expiresAt: expiryFromNow() });
       // After the write: an email must never carry a token that wasn't stored.
       // A failed send is audited, then rethrown for the runner to log: the
-      // requester was already told to check their email (D3 decision 2).
+      // requester was already told to check their email.
       try {
         await sendVerificationEmail(user.email, token);
       } catch (error) {

@@ -10,7 +10,7 @@ import { createActiveOrganizationRepository } from "./repositories/organization-
 import { canonicalIdOf, organizationLogoKey } from "./service.js";
 
 /*
- * The public logo read (D23-2 decisions 3, 16 and 39; Preflight ruling 7):
+ * The public logo read:
  * GET /api/v1/organization-logos/{organizationId}/{logoId}, for anyone, with
  * no session, no cookie read and no CSRF header (a GET). The sidebar's
  * switcher and the Settings cards show it as an `<img>`; a later email or
@@ -34,7 +34,7 @@ import { canonicalIdOf, organizationLogoKey } from "./service.js";
  * The URL holds ids only, so the request log needs no rule for it.
  */
 
-/** A logo's URL never changes its bytes: a new upload is a new logo id (D23-2 decision 16). */
+/** A logo's URL never changes its bytes: a new upload is a new logo id. */
 const LOGO_CACHE_CONTROL = "public, max-age=31536000, immutable";
 
 /** Any strings: a malformed id is the route's own 404, in plain text, never a 400. */

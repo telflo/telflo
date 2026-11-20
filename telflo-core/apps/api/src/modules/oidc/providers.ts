@@ -10,9 +10,8 @@ import {
 } from "openid-client";
 import { isLoopbackHttpIssuer, type AppSettings, type OidcProviderSettings } from "../../settings.js";
 
-// The configured OIDC providers (D2c decision 2). The flow reads providers
-// only through this registry, so a provider table later (D29) changes only
-// this file.
+// The configured OIDC providers. The flow reads providers only through
+// this registry, so a provider table would change only this file.
 
 /** The ID token claims a provider's authority over an email depends on. */
 export interface EmailAuthorityClaims {
@@ -29,8 +28,7 @@ export interface OidcProvider extends OidcProviderSummary {
   /**
    * True when this provider's `email_verified` proves the address belongs to
    * this account today, so the email may link, take over or create an
-   * account (D2c decision 4, Ruling 7). `email_verified` is checked
-   * separately.
+   * account. `email_verified` is checked separately.
    */
   isEmailAuthoritative(claims: EmailAuthorityClaims): boolean;
   /**
@@ -45,9 +43,9 @@ export interface IOidcProviderRegistry {
   get(id: string): OidcProvider | undefined;
   /**
    * Whether a sign-in with this provider can link it to an account again by
-   * the account's own address (Q126, Ruling 92): it is configured and has an
-   * email-authority rule. The Unlink dialog and the "removed" email say so
-   * exactly when this is true.
+   * the account's own address: it is configured and has an email-authority
+   * rule. The Unlink dialog and the "removed" email say so exactly when
+   * this is true.
    */
   relinksByEmail(id: string): boolean;
 }
@@ -83,11 +81,10 @@ export function isGoogleEmailAuthoritative({ email, hd }: EmailAuthorityClaims):
 const GOOGLE_ISSUER = "https://accounts.google.com";
 
 /**
- * Google's rule holds only for tokens Google issued (Ruling 17). The id
- * `google` alone proves nothing: TELFLO_OIDC_GOOGLE_ISSUER accepts any https
- * issuer, and a self-service IdP there would let anyone claim
- * `victim@gmail.com` or an `hd`. A loopback http issuer is the fake provider
- * in tests.
+ * Google's rule holds only for tokens Google issued. The id `google` alone
+ * proves nothing: TELFLO_OIDC_GOOGLE_ISSUER accepts any https issuer, and a
+ * self-service IdP there would let anyone claim `victim@gmail.com` or an
+ * `hd`. A loopback http issuer is the fake provider in tests.
  */
 function isGoogleIssuer(issuer: string): boolean {
   return issuer === GOOGLE_ISSUER || isLoopbackHttpIssuer(issuer);
@@ -110,11 +107,11 @@ function emailAuthorityRule({ id, issuer }: OidcProviderSettings): EmailAuthorit
 
 /**
  * openid-client v6 trusts TLS for the ID token by default and doesn't check
- * its signature; `enableNonRepudiationChecks` checks it against the
- * provider's published keys (Ruling 2). `allowInsecureRequests` is for a
- * loopback http issuer only (the fake provider in tests), and goes in
- * discovery's `execute` so it covers the discovery request itself. The
- * client authenticates with client_secret_post, pinned.
+ * its signature; `enableNonRepudiationChecks` checks it against the provider's
+ * published keys. `allowInsecureRequests` is for a loopback http issuer only
+ * (the fake provider in tests), and goes in discovery's `execute` so it covers
+ * the discovery request itself. The client authenticates with
+ * client_secret_post, pinned.
  */
 function discover(settings: OidcProviderSettings, fetch: CustomFetch | undefined): Promise<Configuration> {
   const execute: NonNullable<DiscoveryRequestOptions["execute"]> = [enableNonRepudiationChecks];

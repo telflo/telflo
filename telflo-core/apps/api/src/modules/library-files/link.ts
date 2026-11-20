@@ -4,9 +4,9 @@ import type { LibraryLinkSigningKeys } from "../../settings.js";
 import { canonicalIdOf } from "../organizations/service.js";
 
 /*
- * The library link (D23-2 decisions 4, 23 and 45; Q148; Preflight ruling 9):
- * a signed, stateless capability to download one library file for 24 hours,
- * the same for both file stores (never an S3 presigned URL).
+ * The library link: a signed, stateless capability to download one library
+ * file for 24 hours, the same for both file stores (never an S3 presigned
+ * URL).
  *
  *   link  = "tll_" ‖ base64url, no padding, of 53 bytes:
  *   bytes = version (1 byte, 0x01)
@@ -24,10 +24,10 @@ import { canonicalIdOf } from "../organizations/service.js";
  * Checking, in order: the shape (LIBRARY_LINK_PATTERN); the decoded bytes
  * exactly 53 long and re-encoding to the same text (base64url's last
  * character carries two spare bits: without this check, changing it to a
- * sibling spelling would verify, Preflight ruling 9); version 1; the tags.
- * Any of those failing is `invalid` (the route's 404). A good tag whose
- * expiry has come (`now >= expiry`, the injected clock) is `expired` (410).
- * Only then does the file's id go on.
+ * sibling spelling would verify); version 1; the tags. Any of those failing
+ * is `invalid` (the route's 404). A good tag whose expiry has come
+ * (`now >= expiry`, the injected clock) is `expired` (410). Only then does
+ * the file's id go on.
  *
  * The link and the keys are secrets: nothing here logs, and no error names
  * either.
@@ -98,7 +98,7 @@ export function createLibraryLinks(keys: LibraryLinkSigningKeys, tagOf: LibraryL
   };
 }
 
-/** A link's route, as `POST …/:fileId/link` answers its `path` (Q162). */
+/** A link's route, as `POST …/:fileId/link` answers its `path`. */
 export function libraryLinkPath(link: string): string {
   return `/api/v1/library-links/${link}`;
 }

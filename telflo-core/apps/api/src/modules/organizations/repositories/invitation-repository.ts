@@ -7,18 +7,18 @@ import {
 } from "../../../tenancy/organization-scope.js";
 
 /*
- * The invitations of the context's organization (D6 decisions 1, 2 and 9),
- * through the organization scope. Row-level security on
- * organization_invitations (migration 1700000000013) stands behind it: the
- * transaction must carry a database context naming the same organization,
- * or the policies show and admit nothing.
+ * The invitations of the context's organization, through the organization
+ * scope. Row-level security on organization_invitations (migration
+ * 1700000000013) stands behind it: the transaction must carry a database
+ * context naming the same organization, or the policies show and admit
+ * nothing.
  *
  * The one read that isn't scoped is `findInvitationByTokenHash`, below: an
  * invitee holds the token before they belong to the organization.
  *
  * No method returns the token's hash but `lockForUpdate`, whose caller
- * compares it with the token under the lock (Preflight ruling 1). Nothing
- * else needs it, and an object that doesn't carry it can't log it.
+ * compares it with the token under the lock. Nothing else needs it, and an
+ * object that doesn't carry it can't log it.
  */
 
 /** An invitation in any state. Pending while neither accepted nor revoked; expired is the caller's comparison. */
@@ -116,9 +116,9 @@ export interface IInvitationRepository {
   /**
    * The invitation in any state, locked `for update` until the transaction
    * ends, with its current token's hash; undefined when there is none. The
-   * caller has already locked the organization (D6 decision 10). Under
-   * row-level security a locking read applies the update policy, so the
-   * context must name this organization.
+   * caller has already locked the organization. Under row-level security a
+   * locking read applies the update policy, so the context must name this
+   * organization.
    */
   lockForUpdate(id: string): Promise<LockedInvitation | undefined>;
   /**
@@ -132,7 +132,7 @@ export interface IInvitationRepository {
   markAccepted(id: string, userId: string, at: Date): Promise<boolean>;
   /**
    * Cancels every pending invitation `userId` sent, expired ones included,
-   * and returns them, oldest first (D6 Ruling 17: an admin's invitations don't outlive
+   * and returns them, oldest first (an admin's invitations don't outlive
    * their removal or demotion). The caller holds the organization's lock,
    * which every other writer of these rows takes first, so this waits on
    * nothing. It changes no foreign-key column, so it takes no lock on a user.
@@ -249,7 +249,7 @@ export interface InvitationByToken {
   acceptedAt: Date | null;
   revokedAt: Date | null;
   organizationName: string;
-  /** Personal or group: under invite-only, a personal one's invitation can't register (D36-1 decision 52). */
+  /** Personal or group: under invite-only, a personal one's invitation can't register. */
   organizationType: OrganizationType;
   /** False once the organization is soft-deleted. */
   organizationIsLive: boolean;
@@ -257,14 +257,14 @@ export interface InvitationByToken {
 
 /**
  * The invitation whose token hashes to `tokenHash`, in any state, or
- * undefined. Outside the scope on purpose (D6 decision 9): it calls
+ * undefined. Outside the scope on purpose: it calls
  * organization_invitation_by_token_hash, the SECURITY DEFINER function that
  * reads past row-level security, and is that function's only caller. The
  * token is the credential; the caller decides what each state means, then
  * sets the database context to the invitation's organization for everything
- * after. The organization's type is read beside it from organizations
- * (no row-level security; the API's role reads it), by the id the function
- * found (D36-1 decision 52).
+ * after. The organization's type is read beside it from organizations (no
+ * row-level security; the API's role reads it), by the id the function
+ * found.
  */
 export async function findInvitationByTokenHash(
   db: Kysely<Database>,

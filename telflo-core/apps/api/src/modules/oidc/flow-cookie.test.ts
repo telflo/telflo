@@ -16,10 +16,9 @@ function secondsAt(date: Date): number {
 }
 
 /**
- * The key the contract names (Ruling, "minor"): HKDF-SHA256 of the
- * access-token secret, empty salt, info "telflo-oidc-flow". Derived here
- * independently, so a cookie this signs differs from a real one only in the
- * field a test changes.
+ * The key the contract names: HKDF-SHA256 of the access-token secret, empty
+ * salt, info "telflo-oidc-flow". Derived here independently, so a cookie this
+ * signs differs from a real one only in the field a test changes.
  */
 function flowKey(secret = SECRET): Uint8Array {
   return new Uint8Array(hkdfSync("sha256", secret, new Uint8Array(0), "telflo-oidc-flow", 32));
@@ -62,7 +61,7 @@ describe("the OIDC flow cookie", () => {
     expect(created.codeChallenge).toBe(await calculatePKCECodeChallenge(created.codeVerifier));
   });
 
-  describe("the intent (D21 decision 38, Preflight ruling 5)", () => {
+  describe("the intent", () => {
     const USER_ID = randomUUID();
     const SESSION_ID = randomUUID();
 
@@ -101,7 +100,7 @@ describe("the OIDC flow cookie", () => {
       expect(claims).not.toHaveProperty("session_id");
     });
 
-    it("reads a link's ids in their one lowercase spelling (Ruling 85)", async () => {
+    it("reads a link's ids in their one lowercase spelling", async () => {
       const value = await sign(
         wirePayload({ intent: "link", user_id: USER_ID.toUpperCase(), session_id: SESSION_ID.toUpperCase() }),
       );

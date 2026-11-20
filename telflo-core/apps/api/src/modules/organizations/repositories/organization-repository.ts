@@ -9,8 +9,7 @@ import type {
 import { createOrganizationScope, type OrganizationScopeContext } from "../../../tenancy/organization-scope.js";
 
 /*
- * Two repositories over `organizations`, split by what they are bound to
- * (D5 decision 5):
+ * Two repositories over `organizations`, split by what they are bound to:
  *
  * - `IOrganizationRepository` is global. Identity paths use it before any
  *   organization is chosen: registration creates the personal organization,
@@ -20,7 +19,7 @@ import { createOrganizationScope, type OrganizationScopeContext } from "../../..
  * - `IActiveOrganizationRepository` is organization-scoped: built from a
  *   transaction and a context, it reaches only the context's organization,
  *   through the organization scope. Organization management acts on the
- *   active organization only (decision 7).
+ *   active organization only.
  */
 
 export interface Organization {
@@ -30,16 +29,15 @@ export interface Organization {
   /** The user whose personal organization this is; null for a group organization. */
   ownerUserId: string | null;
   createdAt: Date;
-  /** Its logo's id (D23-2 decision 12): a new one per upload; null for none. */
+  /** Its logo's id: a new one per upload; null for none. */
   logoId: string | null;
   /** The logo's type, read from its bytes at upload; null exactly when `logoId` is. */
   logoContentType: OrganizationLogoContentType | null;
 }
 
 /**
- * An organization's logo as its row holds it (D23-2 decision 12): its id,
- * which names its bytes in the file store, and the type read from its
- * first bytes at upload.
+ * An organization's logo as its row holds it: its id, which names its bytes
+ * in the file store, and the type read from its first bytes at upload.
  */
 export interface OrganizationLogo {
   logoId: string;
@@ -47,8 +45,8 @@ export interface OrganizationLogo {
 }
 
 /**
- * An organization's settings (D17d-2 decision 20): whether its public
- * install links (Linux Quick Deploy and Helm values links) work.
+ * An organization's settings: whether its public install links (Linux Quick
+ * Deploy and Helm values links) work.
  */
 export interface OrganizationSettings {
   publicInstallLinks: boolean;
@@ -72,12 +70,11 @@ function toOrganization(row: Selectable<OrganizationsTable>): Organization {
 }
 
 /**
- * The lowercased email alone (the owner, D36-1 Q263; D1b decision 4 named it
- * `<lowercased email>'s workspace`). Only the name a new
- * personal organization is created under changed: no migration renames an
- * existing one. The email reaching here is already lowercased by the contract
- * and by the user insert; lowercasing again is defensive, so the name can
- * never disagree with the stored email.
+ * The owner's lowercased email alone: the name a new personal organization is
+ * created under (no migration renames an existing one). The email reaching
+ * here is already lowercased by the contract and by the user insert;
+ * lowercasing again is defensive, so the name can never disagree with the
+ * stored email.
  */
 export function personalOrganizationName(email: string): string {
   return email.trim().toLowerCase();
@@ -91,7 +88,7 @@ export interface OrganizationSummary {
 
 /**
  * An organization as its member sees it in a list: its type, its logo's id
- * (D23-2 decision 40), and their role in it.
+ * and their role in it.
  */
 export interface UserOrganization extends OrganizationSummary {
   type: OrganizationType;
@@ -100,9 +97,8 @@ export interface UserOrganization extends OrganizationSummary {
 }
 
 /**
- * A group organization's create (D23-2 decisions 33 and 35): its id, when
- * the API picked it first (a logo's bytes are written under it before the
- * row), and its logo.
+ * A group organization's create: its id, when the API picked it first (a
+ * logo's bytes are written under it before the row), and its logo.
  */
 export interface CreateGroupOptions {
   id?: string;
@@ -134,8 +130,8 @@ function isGroupNameViolation(error: unknown): boolean {
 
 /**
  * Thrown by `createGroup` and `rename` when a live group organization already
- * has the name, ignoring case (D5 decision 6). The statement failed, so the
- * transaction it ran in is aborted: the caller lets it roll back.
+ * has the name, ignoring case. The statement failed, so the transaction it
+ * ran in is aborted: the caller lets it roll back.
  */
 export class OrganizationNameTakenError extends Error {
   constructor() {
@@ -158,28 +154,27 @@ export interface IOrganizationRepository {
   createPersonal(input: CreatePersonalOrganizationInput): Promise<Organization>;
   createGroup(name: string, options?: CreateGroupOptions): Promise<Organization>;
   /**
-   * A new organization's id, picked before its row is written (D23-2
-   * decision 35, Preflight ruling 4): a logo's bytes are written under it
-   * first. The id the table's own default would have given (uuidv7()).
+   * A new organization's id, picked before its row is written: a logo's bytes
+   * are written under it first. The id the table's own default would have
+   * given (uuidv7()).
    */
   nextId(): Promise<string>;
   findPersonalForUser(userId: string): Promise<OrganizationSummary | undefined>;
   listForUser(userId: string): Promise<UserOrganization[]>;
   /**
-   * The id of the live organization the user joined most recently: their newest live membership
-   * (`created_at`, which a restore keeps) in an organization that isn't soft-deleted, the personal one
-   * included (D36-1 decision 56, Q265). Unlocked. Needs a database context naming the user, as
-   * `findPersonalForUser` does.
+   * The id of the live organization the user joined most recently: their newest live membership (`created_at`,
+   * which a restore keeps) in an organization that isn't soft-deleted, the personal one included. Unlocked.
+   * Needs a database context naming the user, as `findPersonalForUser` does.
    */
   findNewestJoinedForUser(userId: string): Promise<string | undefined>;
 }
 
 /**
  * Runs `work` with the repository bound to a transaction whose database
- * context is `userId` alone (D5 decision 2), and resolves once it commits.
- * Row-level security then shows it that user's memberships in every
- * organization and nobody else's: what sign-in's personal organization and
- * `/me`'s list need, before any organization is chosen.
+ * context is `userId` alone, and resolves once it commits. Row-level
+ * security then shows it that user's memberships in every organization and
+ * nobody else's: what sign-in's personal organization and `/me`'s list
+ * need, before any organization is chosen.
  */
 export type WithUserOrganizations = <Result>(
   userId: string,
@@ -209,11 +204,10 @@ export function createOrganizationRepository(
     },
 
     /**
-     * A group organization, which has no owner (D5 decision 6). The name is
-     * taken as given: the contract trims and bounds it. A live group
-     * organization with the same name, ignoring case, throws
-     * OrganizationNameTakenError. With `id`, the row takes it (nextId's);
-     * with `logo`, its columns (D23-2 decision 35).
+     * A group organization, which has no owner. The name is taken as given:
+     * the contract trims and bounds it. A live group organization with the
+     * same name, ignoring case, throws OrganizationNameTakenError. With `id`,
+     * the row takes it (nextId's); with `logo`, its columns.
      */
     async createGroup(name: string, options: CreateGroupOptions = {}): Promise<Organization> {
       const row = await withNameClashAsError(() =>
@@ -240,12 +234,12 @@ export function createOrganizationRepository(
     },
 
     /**
-     * The user's own personal organization, if they are still a live member
-     * of it and it is not soft-deleted. Needs a database context naming the
-     * user: row-level security hides every membership otherwise. It can be undefined: D1b guarantees
-     * every user a membership, not a personal organization (a service
-     * account's only membership is in a group one). There is at most one
-     * (uq_organizations_owner_user_id_personal).
+     * The user's own personal organization, if they are still a live member of
+     * it and it is not soft-deleted. Needs a database context naming the user:
+     * row-level security hides every membership otherwise. It can be
+     * undefined: every user is guaranteed a membership, not a personal
+     * organization (a service account's only membership is in a group one).
+     * There is at most one (uq_organizations_owner_user_id_personal).
      */
     async findPersonalForUser(userId: string): Promise<OrganizationSummary | undefined> {
       return db
@@ -306,9 +300,9 @@ export function createOrganizationRepository(
  * The user's role in the organization, while both the membership and the
  * organization are live; undefined otherwise (an unknown or deleted
  * organization, or one the user isn't a live member of, alike). A personal
- * token's organization check (D25 decision 24), read on every request, so a
- * removal or a role change takes effect on the next one. Needs a database
- * context naming the user (row-level security shows their own memberships).
+ * token's organization check, read on every request, so a removal or a role
+ * change takes effect on the next one. Needs a database context naming the
+ * user (row-level security shows their own memberships).
  */
 export async function findLiveMembershipRole(
   transaction: Transaction<Database>,
@@ -328,37 +322,36 @@ export async function findLiveMembershipRole(
 }
 
 /**
- * The context's organization, and nothing else (D5 decisions 5 and 7). Every
- * method acts on a live organization only: a soft-deleted one is not found
- * and not changed.
+ * The context's organization, and nothing else. Every method acts on a
+ * live organization only: a soft-deleted one is not found and not changed.
  */
 export interface IActiveOrganizationRepository {
   /** The organization, unless it is soft-deleted. */
   findActive(): Promise<Organization | undefined>;
   /**
-   * The same, locked `for no key update` until the transaction ends:
-   * decision 8's lock, which every change to the organization or its
+   * The same, locked `for no key update` until the transaction ends: the
+   * organization lock, which every change to the organization or its
    * members takes first. It conflicts with itself and with the switch's
-   * `for share` (Preflight ruling 8), so those serialize, but not with the
-   * `key share` a foreign-key check takes. Moving a session into an
-   * organization takes that on the organization, so with `for update` two
-   * changes reassigning sessions into each other's organization deadlock
-   * (40P01): two owners removing each other from their personal
-   * organizations at once, say.
+   * `for share`, so those serialize, but not with the `key share` a
+   * foreign-key check takes. Moving a session into an organization takes
+   * that on the organization, so with `for update` two changes
+   * reassigning sessions into each other's organization deadlock (40P01):
+   * two owners removing each other from their personal organizations at
+   * once, say.
    */
   lockActive(): Promise<Organization | undefined>;
   /**
-   * The same, locked `for share`: the switch's lock on its target (Preflight
-   * ruling 8), which a concurrent delete (`lockActive`) waits behind.
+   * The same, locked `for share`: the switch's lock on its target, which a
+   * concurrent delete (`lockActive`) waits behind.
    */
   findActiveForShare(): Promise<Organization | undefined>;
-  /** Its settings (D17d-2 decision 20), unless it is soft-deleted. */
+  /** Its settings, unless it is soft-deleted. */
   findSettings(): Promise<OrganizationSettings | undefined>;
   /**
-   * The same, locked `for share` (Preflight ruling 13): a link's create and
-   * a download's count read the switch under it, so an admin's change
-   * (under `lockActive`'s `for no key update`) waits for them, and they for
-   * it. Undefined when it is soft-deleted.
+   * The same, locked `for share`: a link's create and a download's count
+   * read the switch under it, so an admin's change (under `lockActive`'s
+   * `for no key update`) waits for them, and they for it. Undefined when it
+   * is soft-deleted.
    */
   findSettingsForShare(): Promise<OrganizationSettings | undefined>;
   /** Sets the "Public install links" switch. False, and nothing changed, when it is soft-deleted. */
@@ -366,31 +359,28 @@ export interface IActiveOrganizationRepository {
   /** Renames it. Undefined when it is soft-deleted; a clash throws OrganizationNameTakenError. */
   rename(name: string): Promise<Organization | undefined>;
   /**
-   * Points it at a new logo, or at none (null): both columns together
-   * (D23-2 decisions 15 and 36). Undefined when it is soft-deleted. The
-   * bytes are the caller's: written before, the old ones removed after the
-   * commit.
+   * Points it at a new logo, or at none (null): both columns together.
+   * Undefined when it is soft-deleted. The bytes are the caller's: written
+   * before, the old ones removed after the commit.
    */
   setLogo(logo: OrganizationLogo | null): Promise<Organization | undefined>;
   /**
-   * Its logo (D23-2 decision 39: the public read), unless it has none or
-   * is soft-deleted.
+   * Its logo (the public read), unless it has none or is soft-deleted.
    */
   findLogo(): Promise<OrganizationLogo | undefined>;
   /** Soft-deletes a group organization. False, and nothing changed, for a personal or already deleted one. */
   markDeleted(at: Date): Promise<boolean>;
   /**
    * Soft-deletes every live account whose only live membership in a live
-   * organization is here (decision 9): deleting the organization would
-   * otherwise strand them. Returns how many.
+   * organization is here: deleting the organization would otherwise strand
+   * them. Returns how many.
    */
   deleteAccountsOnlyInOrganization(): Promise<number>;
   /**
-   * Moves every live session acting here (of `userId` only, when given) to
-   * its user's fallback organization, or revokes it when there is none
-   * (decision 9). Returns how many it moved or revoked. Takes the sessions'
-   * row locks, so the caller has already locked the organization and the
-   * memberships (Preflight ruling 8's order).
+   * Moves every live session acting here (of `userId` only, when given) to its
+   * user's fallback organization, or revokes it when there is none. Returns how
+   * many it moved or revoked. Takes the sessions' row locks, so the caller has
+   * already locked the organization and the memberships (the lock order).
    */
   reassignSessionsLeavingOrganization(userId?: string): Promise<number>;
 }
@@ -398,7 +388,7 @@ export interface IActiveOrganizationRepository {
 /**
  * Bound to a transaction that carries the database context (context.ts) and
  * to the context whose organization it acts on. `organizations` has no
- * row-level security (decision 3), so the scope's filter is its only guard.
+ * row-level security, so the scope's filter is its only guard.
  */
 export function createActiveOrganizationRepository(
   transaction: Transaction<Database>,

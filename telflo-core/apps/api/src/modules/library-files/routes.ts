@@ -60,7 +60,7 @@ const LinkParamsSchema = z.object({ link: z.string() });
 
 const FILES_ROUTE = "/api/v1/library-files";
 
-/** The public link's route (decision 45). The request log redacts it (request-log.ts' LIBRARY_LINK_ROUTE). */
+/** The public link's route. The request log redacts it (request-log.ts' LIBRARY_LINK_ROUTE). */
 export const LIBRARY_LINK_ROUTE_PATH = "/api/v1/library-links/:link";
 
 /** A file's names go only into a response body. */
@@ -88,10 +88,10 @@ function writerOf(request: FastifyRequest): LibraryFileWriter {
 }
 
 /**
- * Streams a file's bytes (decision 22): never sniffed, a download with no
- * file name (the web names the saved file from the list, curl's `-o` from
- * the command: no person's text in a header), never cached. The public
- * link's reply also sends no Referer onwards.
+ * Streams a file's bytes: never sniffed, a download with no file name (the web
+ * names the saved file from the list, curl's `-o` from the command: no
+ * person's text in a header), never cached. The public link's reply also sends
+ * no Referer onwards.
  */
 async function sendBytes(reply: FastifyReply, opened: OpenedLibraryFile, options: { isPublic: boolean }): Promise<FastifyReply> {
   const { stream } = opened;
@@ -116,11 +116,11 @@ async function sendBytes(reply: FastifyReply, opened: OpenedLibraryFile, options
 }
 
 /**
- * Takes one of the cap's slots and holds it until the reply's socket closes
- * (Preflight ruling 11): the download streams up to 10 MiB after the
- * handler has returned, so InFlightCap.run's own release, on the handler's
- * settling, would free the slot before a byte was sent. Throws the cap's
- * 503 (Retry-After: 1) when every slot is held.
+ * Takes one of the cap's slots and holds it until the reply's socket closes:
+ * the download streams up to 10 MiB after the handler has returned, so
+ * InFlightCap.run's own release, on the handler's settling, would free the
+ * slot before a byte was sent. Throws the cap's 503 (Retry-After: 1) when
+ * every slot is held.
  */
 async function holdUntilClosed(cap: InFlightCap, reply: FastifyReply): Promise<void> {
   await new Promise<void>((admitted, refused) => {
@@ -137,7 +137,7 @@ async function holdUntilClosed(cap: InFlightCap, reply: FastifyReply): Promise<v
 }
 
 /**
- * The library endpoints (D23-2 decisions 5, 11, 20 to 22, 41 to 45, 48):
+ * The library endpoints:
  *
  *   * `GET /api/v1/library-files`: the files, newest first, at most 1,000,
  *     for a member with the current terms, and for a product admin with or
@@ -151,9 +151,9 @@ async function holdUntilClosed(cap: InFlightCap, reply: FastifyReply): Promise<v
  *     terms; the bytes; counted per person (`libraryFileDownloadsPerUser`)
  *     before the file is looked up.
  *   * `POST /api/v1/library-files/:fileId/link`: a member with the current
- *     terms; `201 { path }` (`/api/v1/library-links/tll_…`, Q162),
- *     `no-store`; counted per person (`libraryFileLinksPerUser`) before the
- *     file is looked up. Not audited (Q161).
+ *     terms; `201 { path }` (`/api/v1/library-links/tll_…`), `no-store`;
+ *     counted per person (`libraryFileLinksPerUser`) before the file is
+ *     looked up. Not audited.
  *   * `GET /api/v1/library-links/:link`: no session, no cookie read, no
  *     CSRF header (a GET); in order: the per-IP limit (`onRequest`, every
  *     request counted), the link checked (link.ts: 404 "Not found.", 410
@@ -168,8 +168,8 @@ async function holdUntilClosed(cap: InFlightCap, reply: FastifyReply): Promise<v
  * @fastify/multipart registered: its parser reads nothing, so the body is
  * read in the handler, after `authenticate` and `requireProductAdmin`.
  *
- * The library is global (ADR 0008): every read and write goes through the
- * API's role with no database context and no row-level security.
+ * The library is global: every read and write goes through the API's role
+ * with no database context and no row-level security.
  */
 export function registerLibraryFilesRoutes(
   server: FastifyInstance,

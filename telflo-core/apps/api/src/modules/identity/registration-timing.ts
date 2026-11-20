@@ -1,8 +1,8 @@
 /**
  * Remembers how long recent new-account registrations took after the
  * password hash, so the duplicate-email path can wait a comparable time
- * without writing anything (D1b decision 8; see registerUser in service.ts
- * for the measurements and the reasoning).
+ * without writing anything (see registerUser in service.ts for the
+ * measurements and the reasoning).
  *
  * `sample()` returns one of the recent observations at random rather than
  * their mean, so the padded duplicate path reproduces the spread of the

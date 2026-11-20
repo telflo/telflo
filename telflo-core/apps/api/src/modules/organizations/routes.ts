@@ -62,7 +62,7 @@ import {
 } from "./service.js";
 import { auditUserAgent } from "../../http/audit-user-agent.js";
 
-/** What the organizations' services are built from, once, in buildServer (D25 decision 15, Preflight ruling 4). */
+/** What the organizations' services are built from, once, in buildServer. */
 export interface OrganizationServicesDependencies extends ServerDependencies {
   now: () => Date;
   opampRegistration: OpampRegistration;
@@ -70,8 +70,8 @@ export interface OrganizationServicesDependencies extends ServerDependencies {
 
 /**
  * The organizations' services, one instance each, shared by the browser
- * routes here and the public routes (D25 decision 15): the organization
- * service and the invitee's.
+ * routes here and the public routes: the organization service and the
+ * invitee's.
  */
 export interface OrganizationServices {
   service: ReturnType<typeof createOrganizationService>;
@@ -87,7 +87,7 @@ export interface OrganizationRoutesDependencies extends OrganizationServicesDepe
 const noContent = z.null();
 
 /**
- * A create's and a change's own refusals of a logo (D23-2 decision 34): 413
+ * A create's and a change's own refusals of a logo: 413
  * `organization_logo_too_large` and 415 `organization_logo_type_unsupported`,
  * and Fastify's 415 for a body of a type nothing parses.
  */
@@ -117,13 +117,13 @@ const mailingErrorResponses = {
 
 /**
  * Inviting and registering from an invitation also refuse an address at
- * the service accounts' domain: `422 email_reserved` (D22 decision 23).
+ * the service accounts' domain: `422 email_reserved`.
  */
 const reservedAddressErrorResponse = { 422: ErrorResponseSchema };
 
 /**
  * Any string: a path naming anything but the active organization, a
- * malformed id included, is the same 404 (decision 7), not a 400.
+ * malformed id included, is the same 404, not a 400.
  */
 const OrganizationParamsSchema = z.object({ organizationId: z.string() });
 
@@ -139,7 +139,7 @@ const InvitationParamsSchema = z.object({ organizationId: z.string(), invitation
 /**
  * The caller, and where the request came from, for the checks and the audit
  * trail. The configuration routes use it too. A session's: a session-only
- * helper (D25 decision 15), so its actor is a `SessionActor`.
+ * helper, so its actor is a `SessionActor`.
  */
 export function actorOf(request: FastifyRequest): SessionActor {
   const authentication = requireAuthentication(request);
@@ -155,7 +155,7 @@ function toResponseBody(organization: Organization): OrganizationResponseBody {
   return { id: organization.id, name: organization.name, type: organization.type, logoId: organization.logoId };
 }
 
-/** What a multipart create or change holds (D23-2 decision 33): the name, and the logo read whole and typed. */
+/** What a multipart create or change holds: the name, and the logo read whole and typed. */
 interface OrganizationUpload {
   name: string;
   contentType: OrganizationLogoContentType;
@@ -178,13 +178,13 @@ async function readWhole(stream: Readable): Promise<Buffer> {
 }
 
 /**
- * A create's or a change's multipart body (D23-2 decisions 32 to 34): the
- * parts in ORGANIZATION_PART_NAMES' order, the name checked by the contract
- * (400 with no details: they could echo it), the file read whole, then
- * `finish` (413 past 2 MiB, 400 for anything after the file), then typed
- * from its first bytes, never its name or its declared type (415 for an
- * empty file, SVG, GIF or anything but a PNG, a JPEG or a WebP). Every
- * refusal comes before a byte is written.
+ * A create's or a change's multipart body: the parts in
+ * ORGANIZATION_PART_NAMES' order, the name checked by the contract (400
+ * with no details: they could echo it), the file read whole, then `finish`
+ * (413 past 2 MiB, 400 for anything after the file), then typed from its
+ * first bytes, never its name or its declared type (415 for an empty file,
+ * SVG, GIF or anything but a PNG, a JPEG or a WebP). Every refusal comes
+ * before a byte is written.
  */
 async function readOrganizationUpload(request: FastifyRequest): Promise<OrganizationUpload> {
   const parts = await readUploadParts(request, ORGANIZATION_LOGO_MAXIMUM_BYTES, ORGANIZATION_PART_NAMES, {
@@ -234,9 +234,9 @@ function organizationRepositories(transaction: Transaction<Database>, organizati
 }
 
 /**
- * The organizations' services (D25 Preflight ruling 4), moved verbatim from
- * the routes: built once in buildServer and shared by the browser and the
- * public routes, so the invitation mail limit is counted once per person.
+ * The organizations' services: built once in buildServer and shared by the
+ * browser and the public routes, so the invitation mail limit is counted once
+ * per person.
  */
 export function createOrganizationServices(
   deps: OrganizationServicesDependencies,
@@ -285,10 +285,9 @@ export function createOrganizationServices(
 }
 
 /**
- * D5 decision 7's organization and member endpoints, and D6 decision 7's
- * invitation endpoints. The management endpoints need a session and aren't
- * rate limited (as D2c decision 7), except that inviting and resending count
- * against the inviter's mail limit (D6 decision 6), which the service
+ * The organization, member and invitation endpoints. The management
+ * endpoints need a session and aren't rate limited, except that inviting and
+ * resending count against the inviter's mail limit, which the service
  * checks. Each of their transactions carries the request's `AuthContext` as
  * its database context. The invitee's three, at the end, share the per-IP
  * identity bucket; only acceptance needs a session.
@@ -306,15 +305,14 @@ export function registerOrganizationRoutes(
   const authenticate = createAuthenticate(createDatabaseSessionService(deps).service);
   const typed = server.withTypeProvider<ZodTypeProvider>();
 
-  // The create and the change (D23-2 decision 33, Preflight ruling 3), in
-  // their own encapsulated plugin, the only one here with
-  // @fastify/multipart registered: its parser reads nothing, so a logo's
-  // body is read in the handler, after `authenticate` (and, for a change,
-  // the active organization's and the role's checks). JSON stays for a body
-  // without a file. Fastify checks the body schema before the handler and a
-  // multipart body reaches it as null, so both are `.nullish()` and the
-  // handler decides by content: multipart, the parts; no body, 400; JSON,
-  // the contract's. The DELETE and everything else stay outside.
+  // The create and the change, in their own encapsulated plugin, the only one
+  // here with @fastify/multipart registered: its parser reads nothing, so a
+  // logo's body is read in the handler, after `authenticate` (and, for a
+  // change, the active organization's and the role's checks). JSON stays for
+  // a body without a file. Fastify checks the body schema before the handler
+  // and a multipart body reaches it as null, so both are `.nullish()` and the
+  // handler decides by content: multipart, the parts; no body, 400; JSON, the
+  // contract's. The DELETE and everything else stay outside.
   void server.register(async (scope) => {
     await scope.register(multipart, {
       limits: { ...uploadPartLimits(ORGANIZATION_PART_NAMES), fileSize: ORGANIZATION_LOGO_MAXIMUM_BYTES },
@@ -337,11 +335,11 @@ export function registerOrganizationRoutes(
         },
       },
       async (request, reply) => {
-        // The flag as this request's session check read it: the product admins' switch (D36-1 decision 51).
+        // The flag as this request's session check read it: the product admins' switch.
         const actor = { ...actorOf(request), isProductAdmin: requireAuthentication(request).isProductAdmin };
         let organization: Organization;
         if (request.isMultipart()) {
-          // The switch and the ids first, then the parts: nothing of the body is read before them (Preflight ruling 4).
+          // The switch and the ids first, then the parts: nothing of the body is read before them.
           const { organizationId, logoId } = await service.prepareCreate(actor);
           const upload = await readOrganizationUpload(request);
           organization = await service.create(actor, upload.name, {
@@ -371,7 +369,7 @@ export function registerOrganizationRoutes(
         const { organizationId } = request.params;
         let organization: Organization;
         if (request.isMultipart()) {
-          // The checks and the new logo's id first, then the parts (D23-2 decision 36).
+          // The checks and the new logo's id first, then the parts.
           const { logoId } = await service.prepareChange(actor, organizationId);
           const upload = await readOrganizationUpload(request);
           organization = await service.change(actor, organizationId, {
@@ -402,8 +400,8 @@ export function registerOrganizationRoutes(
     },
   );
 
-  // The organization's settings (D17d-2 decision 20): any member reads
-  // them; only an admin changes them (CSRF, as every PATCH).
+  // The organization's settings: any member reads them; only an admin changes
+  // them (CSRF, as every PATCH).
   typed.get(
     "/api/v1/organizations/:organizationId/settings",
     {
@@ -514,7 +512,8 @@ export function registerOrganizationRoutes(
   );
 
   // A delivery of the invitation: a new token and expiry, and the email
-  // again. A resource created, so POST and 201 (spec §3.12, no verbs).
+  // again. A resource created, so POST and 201 (the path names a resource,
+  // never a verb).
   typed.post(
     "/api/v1/organizations/:organizationId/invitations/:invitationId/deliveries",
     {
@@ -540,9 +539,9 @@ export function registerOrganizationRoutes(
     },
   );
 
-  // The invitee's three endpoints (D6 decision 7) share D2a's per-IP
-  // identity bucket, as sign-in and registration do. The token travels in
-  // the body only, never the path or query, so it stays out of access logs.
+  // The invitee's three endpoints share the per-IP identity bucket, as sign-in
+  // and registration do. The token travels in the body only, never the path or
+  // query, so it stays out of access logs.
 
   typed.post(
     "/api/v1/invitation-previews",
@@ -562,7 +561,7 @@ export function registerOrganizationRoutes(
   /**
    * Joins, then switches the session into the organization. Only the access
    * cookie is set, as the switch route sets it; none when the session didn't
-   * move (Preflight ruling 5).
+   * move.
    */
   typed.post(
     "/api/v1/invitation-acceptances",
@@ -587,9 +586,9 @@ export function registerOrganizationRoutes(
   typed.post(
     "/api/v1/invitation-registrations",
     {
-      // The registration mode's gate first (D36-1 decision 35, Preflight
-      // ruling 4): closed answers 403 registration_not_open before anything
-      // else reads the request; an existing account still accepts, above.
+      // The registration mode's gate first: closed answers 403
+      // registration_not_open before anything else reads the request; an
+      // existing account still accepts, above.
       onRequest: [registrationGate(settings.site.registration, "invitation"), rateLimiters.identityPerIp],
       schema: {
         body: InvitationRegistrationRequestSchema,
@@ -603,7 +602,7 @@ export function registerOrganizationRoutes(
         userAgent: auditUserAgent(request),
       });
       setSessionCookies(reply, settings, registered.issued);
-      // Always a new account, so no stored theme to read: the default (D21 decision 23).
+      // Always a new account, so no stored theme to read: the default.
       setThemeCookie(reply, settings, DEFAULT_USER_PREFERENCES.theme);
       return reply.status(201).send({ organization: registered.organization });
     },

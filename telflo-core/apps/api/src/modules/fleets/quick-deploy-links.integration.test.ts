@@ -32,7 +32,7 @@ import { openValues } from "../quick-deploy/sealed-values.js";
 import { quickDeploySecretHash } from "../quick-deploy/secret.js";
 import type * as CatalogueRepository from "../collector-catalogue/repositories/collector-catalogue-repository.js";
 
-/** A catalogue without one platform's binaries (Ruling 47's case the shared catalogue can't hold), cleared before each test. */
+/** A catalogue without one platform's binaries (a case the shared catalogue can't hold), cleared before each test. */
 const overrides = vi.hoisted(() => ({ withoutPlatform: undefined as string | undefined }));
 
 vi.mock("../collector-catalogue/repositories/collector-catalogue-repository.js", async (importOriginal) => {
@@ -75,7 +75,7 @@ const YAML = [
   "",
 ].join("\n");
 
-/** A Kubernetes group's version (D17d-2 Preflight ruling 4): YAML's variables, one the chart sets itself, and a YAML 1.1 word (offered like any other: D18 decision 23). */
+/** A Kubernetes group's version: YAML's variables, one the chart sets itself, and a YAML 1.1 word (offered like any other). */
 const KUBERNETES_YAML = [YAML.trimEnd(), "      x-node: ${env:NODE_NAME}", "      x-word: ${env:ON}", ""].join("\n");
 
 type Method = "GET" | "POST" | "PATCH" | "DELETE";
@@ -86,8 +86,7 @@ interface Call {
 }
 
 /**
- * D17c-2 decisions 4, 5, 10, 22 and 25; Preflight rulings 13, 15, 20 and 25:
- * the quick-deploy links' routes under a fleet, against Postgres through the
+ * The quick-deploy links' routes under a fleet, against Postgres through the
  * API as its own role, with the OpenAPI-checked fake as the opamp-server.
  */
 describe("the quick-deploy links' routes", () => {
@@ -237,7 +236,7 @@ describe("the quick-deploy links' routes", () => {
       payload: { organizationId: organization.id },
     });
     expect(switched.statusCode).toBe(200);
-    // A no-op when the sign-in already landed there (D36-1 decision 56): no new cookie, the token sent stands.
+    // A no-op when the sign-in already landed there: no new cookie, the token sent stands.
     return { organizationId: organization.id, person: { userId: account.user.id, email: account.user.email, access: (switched.headers["set-cookie"] === undefined ? cookieValue(signIn, "telflo_access") : cookieValue(switched, "telflo_access")) } };
   };
 
@@ -355,8 +354,8 @@ describe("the quick-deploy links' routes", () => {
   const storedLink = (id: string) => ownerDb.selectFrom("quick_deploy_links").selectAll().where("id", "=", id).executeTakeFirstOrThrow();
 
   /**
-   * D17d-2's world: a Kubernetes-supervisor fleet in a new organization (an
-   * admin and a contributor) whose Agent (never saved) and gateway
+   * The Kubernetes world: a Kubernetes-supervisor fleet in a new organization
+   * (an admin and a contributor) whose Agent (never saved) and gateway
    * traces-sampling (namespace tracing, 2 replicas) are assigned a published
    * version reading KUBERNETES_YAML.
    */
@@ -382,7 +381,7 @@ describe("the quick-deploy links' routes", () => {
 
   const helmRequest = (env: { name: string; value: string }[] = [{ name: "NGINX_ENV", value: VALUE }]) => ({ kind: "helm", env });
 
-  /** The organization's "Public install links" switch, by its admin (Task 2's route). */
+  /** The organization's "Public install links" switch, by its admin (the settings route). */
   const setPublicInstallLinks = async (admin: Person, organizationId: string, publicInstallLinks: boolean) =>
     expect((await send(admin, "PATCH", `/api/v1/organizations/${organizationId}/settings`, { publicInstallLinks })).statusCode).toBe(200);
 
@@ -505,7 +504,7 @@ describe("the quick-deploy links' routes", () => {
       expect(await ownerDb.selectFrom("quick_deploy_links").selectAll().execute()).toEqual([]);
     });
 
-    it("refuses 409 enrollment_token_default_missing with D17c-1's words once the default token is revoked; a new one makes links again", async () => {
+    it("refuses 409 enrollment_token_default_missing once the default token is revoked; a new one makes links again", async () => {
       const world = await aWorld();
       expect((await send(world.admin, "POST", `${fleetPath(world.organizationId, world.fleetId)}/tokens/${world.defaultTokenId}/revoke`)).statusCode).toBe(200);
       expectRefusal(
@@ -565,7 +564,7 @@ describe("the quick-deploy links' routes", () => {
       for (const text of [secret, VALUE, "/opt/root-path-canary", "NGINX_ENV"]) expect(logLines.filter((line) => line.includes(text))).toEqual([]);
     });
 
-    it("spends a write (Preflight ruling 13's admissions)", async () => {
+    it("spends a write admission", async () => {
       const world = await aWorld();
       const oneWrite = build({ ...TEST_RATE_LIMITS, fleetWritesPerUser: { ...TEST_RATE_LIMITS.fleetWritesPerUser, max: 1 } });
       try {
@@ -582,10 +581,10 @@ describe("the quick-deploy links' routes", () => {
 
   // -------------------------------------------------------------------------
 
-  describe("a Helm values link (D17d-2 decisions 20 and 21; Preflight rulings 4, 11 and 13)", () => {
+  describe("a Helm values link", () => {
     it("makes a Helm values link: 201 no-store, choices by kind, values sealed, audited with ids and kind only", async () => {
       const world = await aKubernetesWorld();
-      // A Helm body reaches the Helm path at the route (Ruling 36): its choices are the server's state, never the body's.
+      // A Helm body reaches the Helm path at the route: its choices are the server's state, never the body's.
       const response = await send(world.contributor, "POST", createPath(world.organizationId, world.fleetId, world.gatewayId), helmRequest());
       expect(response.statusCode).toBe(201);
       expect(response.headers["cache-control"]).toBe("no-store");
@@ -676,7 +675,7 @@ describe("the quick-deploy links' routes", () => {
         "collector_group_settings_unreadable",
         COLLECTOR_GROUP_SETTINGS_UNREADABLE_MESSAGE,
       );
-      // Nor an unassigned group, nor once its default token is revoked (D17c-2's checks, the Helm link's too).
+      // Nor an unassigned group, nor once its default token is revoked (a Linux link's checks, the Helm link's too).
       const spare = await send(kubernetes.admin, "POST", `${fleetPath(kubernetes.organizationId, kubernetes.fleetId)}/groups`, {
         name: "spare",
         annotations: { telflo: { kubernetes: { role: "gateway", namespace: "tracing", volumes: [] } } },
@@ -727,7 +726,7 @@ describe("the quick-deploy links' routes", () => {
     it("refuses a variable the chart sets itself or the version doesn't read", async () => {
       const world = await aKubernetesWorld();
       const path = createPath(world.organizationId, world.fleetId, world.gatewayId);
-      // Each the chart sets itself (its env beats envFrom): 400 at its index, in its own words (Ruling 41), never the name.
+      // Each the chart sets itself (its env beats envFrom): 400 at its index, in its own words, never the name.
       for (const name of HELM_CHART_ENV_NAMES) {
         const chartsOwn = await send(world.admin, "POST", path, helmRequest([{ name: "NGINX_ENV", value: "x" }, { name, value: "x" }]));
         expectRefusal(chartsOwn, 400, "invalid_request", HELM_CHART_ENV_NAME_MESSAGE);
@@ -748,7 +747,7 @@ describe("the quick-deploy links' routes", () => {
       expect(await linkAudits(world.organizationId)).toEqual([]);
     });
 
-    // D18 decision 23: the platform's chart quotes collectorEnv's keys, so a YAML 1.1 word the facts offer is a variable like any other.
+    // The platform's chart quotes collectorEnv's keys, so a YAML 1.1 word the facts offer is a variable like any other.
     it("takes a YAML 1.1 word's variable the facts offer (ON): 201, stored in the link's choices and its sealed values", async () => {
       const world = await aKubernetesWorld();
       const response = await send(world.admin, "POST", createPath(world.organizationId, world.fleetId, world.gatewayId), helmRequest([{ name: "NGINX_ENV", value: "x" }, { name: "ON", value: VALUE }]));
@@ -915,7 +914,7 @@ describe("the quick-deploy links' routes", () => {
       });
     });
 
-    it("refuses an expired link's extend at 100 active links (409 quick_deploy_link_limit_reached, Ruling 36): it stays expired, unaudited; an active link's extend still works", async () => {
+    it("refuses an expired link's extend at 100 active links (409 quick_deploy_link_limit_reached): it stays expired, unaudited; an active link's extend still works", async () => {
       const world = await aWorld();
       const at = clock.getTime();
       const active = [];

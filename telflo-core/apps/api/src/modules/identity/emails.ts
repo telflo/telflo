@@ -66,7 +66,7 @@ export function buildVerificationEmail(input: { verificationUrl: string; ttlHour
 export function buildDuplicateRegistrationEmail(input: {
   signInUrl: string;
   forgotPasswordUrl: string;
-  /** False for an account created with Google, which has no password (D2c). */
+  /** False for an account created with Google, which has no password. */
   hasPassword: boolean;
 }): {
   subject: string;
@@ -83,8 +83,8 @@ export function buildDuplicateRegistrationEmail(input: {
 
   // An account with no password can't "sign in instead" with the password
   // just typed: it was never set. Only Google creates such accounts today;
-  // a second provider would need this sentence to name it (D2c Ruling 19).
-  // Saying so is safe: this email reaches only the address's owner.
+  // a second provider would need this sentence to name it. Saying so is
+  // safe: this email reaches only the address's owner.
   if (!input.hasPassword) {
     return {
       subject: "Someone tried to create a Telflo account with your email",
@@ -129,11 +129,11 @@ export function buildDuplicateRegistrationEmail(input: {
 }
 
 /**
- * A password reset link (D3 decision 8). Plain, like the verification email,
- * with a fixed subject and wording. The lifetime is a constant
+ * A password reset link. Plain, like the verification email, with a fixed
+ * subject and wording. The lifetime is a constant
  * (PASSWORD_RESET_TOKEN_TTL_MINUTES), so the sentence is too. The caller puts
  * the token in the link's fragment, `/reset-password#token=…`, so it never
- * reaches a server or its logs (D3 Ruling 14).
+ * reaches a server or its logs.
  */
 export function buildPasswordResetEmail(input: { resetUrl: string }): {
   subject: string;
@@ -162,11 +162,11 @@ export function buildPasswordResetEmail(input: { resetUrl: string }): {
 }
 
 /*
- * The account's security emails (D21 decisions 11 and 43): sent to the
- * account's address after a change made from Settings commits, through the
- * after-response runner, which logs a failed send; nothing is rolled back or
- * retried. Each names no provider's address, no IP and no device. The
- * provider is named by its configured name ("Google"), never its email.
+ * The account's security emails: sent to the account's address after a
+ * change made from Settings commits, through the after-response runner,
+ * which logs a failed send; nothing is rolled back or retried. Each names no
+ * provider's address, no IP and no device. The provider is named by its
+ * configured name ("Google"), never its email.
  */
 
 /** Settings' section mark, written as an escape so this file stays ASCII. */
@@ -184,7 +184,7 @@ function securityClosing(forgotPasswordUrl: string): { text: string[]; html: str
   };
 }
 
-/** "Your Telflo password was changed" (D21 decision 43): every session stays signed in (Q114). */
+/** "Your Telflo password was changed": every session stays signed in. */
 export function buildPasswordChangedEmail(input: { forgotPasswordUrl: string }): {
   subject: string;
   text: string;
@@ -200,10 +200,10 @@ export function buildPasswordChangedEmail(input: { forgotPasswordUrl: string }):
 }
 
 /**
- * "Google sign-in was linked to your Telflo account" (D21 decision 43). Its
- * one way back is the ordered recovery (Q127), in place of the shared reset
- * lines: a reset alone leaves the identity linked and its sessions signed
- * in, so removing it and signing out everywhere come before the new password.
+ * "Google sign-in was linked to your Telflo account". Its one way back is the
+ * ordered recovery, in place of the shared reset lines: a reset alone leaves
+ * the identity linked and its sessions signed in, so removing it and signing
+ * out everywhere come before the new password.
  */
 export function buildIdentityLinkedEmail(input: { providerName: string; settingsUrl: string }): {
   subject: string;
@@ -226,11 +226,10 @@ export function buildIdentityLinkedEmail(input: { providerName: string; settings
 }
 
 /**
- * "Google sign-in was removed from your Telflo account" (D21 decision 43).
- * When the provider re-links by email (`relinksByEmail`: configured, with an
- * email-authority rule; Ruling 92), it says what unlinking doesn't stop
- * (Q126): a sign-in with the provider account whose address is the
- * account's own links it again (D2c, ADR 0021).
+ * "Google sign-in was removed from your Telflo account". When the provider
+ * re-links by email (`relinksByEmail`: configured, with an email-authority
+ * rule), it says what unlinking doesn't stop: a sign-in with the provider
+ * account whose address is the account's own links it again.
  */
 export function buildIdentityUnlinkedEmail(input: {
   providerName: string;

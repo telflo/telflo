@@ -197,9 +197,9 @@ describe("identity repositories", () => {
     });
 
     // Migration 1700000000026's trigger refuses the API's role any change of
-    // is_product_admin (D12 Preflight ruling 4). None of these writes names
-    // the flag, so each still goes through on a product admin's row, as the
-    // API's role, and leaves the flag as the owner set it.
+    // is_product_admin. None of these writes names the flag, so each still
+    // goes through on a product admin's row, as the API's role, and leaves
+    // the flag as the owner set it.
     it("makes every write it makes to users as the API's role on a product admin's row, and the flag stays set", async () => {
       const flagOf = async (id: string) =>
         (await ownerDb.selectFrom("users").select("is_product_admin").where("id", "=", id).executeTakeFirstOrThrow())
@@ -302,7 +302,7 @@ describe("identity repositories", () => {
     });
   });
 
-  describe("setPasswordHash (D21 Preflight ruling 11)", () => {
+  describe("setPasswordHash", () => {
     const at = new Date("2030-01-02T03:04:05.000Z");
 
     const userRow = (id: string) =>
@@ -428,7 +428,7 @@ describe("identity repositories", () => {
       expect(tokenRows[0]?.user_id).toBe(user.id);
     });
 
-    describe("the starter configuration (D8 decision 10)", () => {
+    describe("the starter configuration", () => {
       it("is created in the personal organization, by the new user at createdAt, with version 1 holding the starter YAML", async () => {
         const { user, organization } = await account();
 
@@ -436,7 +436,7 @@ describe("identity repositories", () => {
         expect(await ownerDb.selectFrom("configurations").selectAll().execute()).toHaveLength(1);
       });
 
-      it("is created under drafts-private row-level security as the new user's own draft, which they then see with its version (D11b decision 1, Preflight ruling 2)", async () => {
+      it("is created under drafts-private row-level security as the new user's own draft, which they then see with its version", async () => {
         // The insert's returning is held to the select policy, which shows a
         // draft only to its creator: without the new user in the context,
         // every sign-up would fail here.
@@ -468,7 +468,7 @@ describe("identity repositories", () => {
         ]);
       });
 
-      it('labels its version 1 "Initial version" (D10 decision 14)', async () => {
+      it('labels its version 1 "Initial version"', async () => {
         const { organization } = await account();
         const [starter] = await configurationsOf(organization.id);
 
@@ -492,7 +492,7 @@ describe("identity repositories", () => {
           ip_address: "203.0.113.7",
           user_agent: "repositories-test-agent",
         });
-        // Never the YAML (D8 decision 17).
+        // Never the YAML.
         expect(JSON.stringify(rows)).not.toContain("OpenTelemetry Collector Configuration");
       });
 
@@ -652,18 +652,18 @@ describe("identity repositories", () => {
   });
 
   /**
-   * D22 decisions 12 and 22: the two finders start a person's flow, so
-   * they match people only. A service account's address reads as no
-   * account there, live or deleted; `findById` keeps every kind.
+   * The two finders start a person's flow, so they match people only. A
+   * service account's address reads as no account there, live or deleted;
+   * `findById` keeps every kind.
    */
-  describe("the human-only lookups (D22 decision 22)", () => {
-    /** A service account in a person's personal organization, as D22's create writes one. */
+  describe("the human-only lookups", () => {
+    /** A service account in a person's personal organization, as the service accounts' create writes one. */
     const serviceAccount = async () => {
       const { organization } = await users.createAccount(registrationInput(`admin-${randomUUID()}@example.com`));
       return (await addServiceAccount(ownerDb, { organizationId: organization.id })).user;
     };
 
-    /** Soft-deletes it as D22's delete does: the user and its service_accounts row together. */
+    /** Soft-deletes it as the service accounts' delete does: the user and its service_accounts row together. */
     const softDelete = async (userId: string) => {
       const at = new Date();
       await ownerDb.updateTable("service_accounts").set({ deleted_at: at }).where("user_id", "=", userId).execute();
@@ -909,7 +909,7 @@ describe("identity repositories", () => {
       expect(error).toMatchObject({ code: "23503" });
     });
 
-    describe("the sign-in methods' reads and the unlink (D21 decisions 37 and 39)", () => {
+    describe("the sign-in methods' reads and the unlink", () => {
       it("listForUser lists the user's identities only, oldest link first, a provider no longer configured included", async () => {
         const user = await newUser("first@example.com");
         const other = await newUser("second@example.com");
@@ -1050,7 +1050,7 @@ describe("identity repositories", () => {
         actorEmail: user.email,
         metadata: { source: "web" },
       });
-      // The account's own starter configuration was audited too (D8 decision 10).
+      // The account's own starter configuration was audited too.
       const row = await ownerDb
         .selectFrom("audit_events")
         .selectAll()

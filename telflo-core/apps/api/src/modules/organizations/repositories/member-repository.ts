@@ -3,10 +3,9 @@ import type { Database, OrganizationMembersTable, OrganizationRole, UserKind } f
 import { createOrganizationScope, type OrganizationScopeContext } from "../../../tenancy/organization-scope.js";
 
 /*
- * The members of the context's organization (D5 decisions 5, 7 and 8),
- * through the organization scope. Row-level security on
- * organization_members (decision 3) stands behind it: the transaction must
- * carry a database context naming the same organization, or the policies
+ * The members of the context's organization, through the organization scope.
+ * Row-level security on organization_members stands behind it: the transaction
+ * must carry a database context naming the same organization, or the policies
  * show and admit nothing.
  */
 
@@ -19,21 +18,21 @@ export interface OrganizationMembership {
   createdAt: Date;
 }
 
-/** A member as the Permissions page lists them (decision 7's member shape). */
+/** A member as the Permissions page lists them. */
 export interface Member {
   userId: string;
   email: string;
   role: OrganizationRole;
-  /** The user whose personal organization this is (Preflight ruling 11): their membership can't be changed. */
+  /** The user whose personal organization this is: their membership can't be changed. */
   isOrganizationOwner: boolean;
   createdAt: Date;
   /** When the member was removed; null for an active member. */
   deletedAt: Date | null;
   /**
-   * Whether the account is a service account (`users.kind`, D22 decision
-   * 30): the service refuses a role change, a removal or a restoration of
-   * one with 409. Internal: the members' reply picks its fields and never
-   * carries it, and `list()` holds people only.
+   * Whether the account is a service account (`users.kind`): the service
+   * refuses a role change, a removal or a restoration of one with 409.
+   * Internal: the members' reply picks its fields and never carries it, and
+   * `list()` holds people only.
    */
   isServiceAccount: boolean;
 }
@@ -56,8 +55,8 @@ function toOrganizationMembership(row: Selectable<OrganizationMembersTable>): Or
 export interface IMemberRepository {
   /**
    * Active and removed members with a live account, newest first: people
-   * only, never a service account (D22 decision 30), so the Permissions
-   * page's rows and its three counts leave them out.
+   * only, never a service account, so the Permissions page's rows and its
+   * three counts leave them out.
    */
   list(): Promise<Member[]>;
   /**
@@ -68,14 +67,14 @@ export interface IMemberRepository {
   /**
    * The member whose account holds `email` (lowercased already, as the
    * account's is stored), active or removed; undefined when there is none
-   * or the account is deleted. Inviting checks it (D6 decision 8), and it
-   * says nothing about whether an account exists outside the organization.
+   * or the account is deleted. Inviting checks it, and it says nothing
+   * about whether an account exists outside the organization.
    */
   findByEmail(email: string): Promise<Member | undefined>;
   /**
    * The user's live membership, locked `for share` until the transaction
-   * ends, so a concurrent removal waits for it (decision 10's switch).
-   * Undefined when there is none, or it is removed.
+   * ends, so a concurrent removal waits for it (the switch). Undefined when
+   * there is none, or it is removed.
    */
   findForShare(userId: string): Promise<OrganizationMembership | undefined>;
   add(input: AddMemberInput): Promise<OrganizationMembership>;
@@ -100,28 +99,28 @@ export interface IMemberRepository {
    * member's lock only at commit, holding the organization and the
    * membership. That is a new wait (organization -> user), and it is safe
    * because nothing locks a session and then an organization any more: the
-   * switch locks its target organization before its session (Ruling 22).
+   * switch locks its target organization before its session.
    * Every path goes organization -> user -> session.
    */
   lockAccounts(userId?: string): Promise<void>;
   /**
-   * The joining user's own account, locked `for share` until the
-   * transaction ends; whether it is still live under the lock (D29 Ruling
-   * 271: an invitation's acceptance). `users` is global and has no
-   * row-level security, so any context may lock it. A product admin's
-   * delete holding the row `for update` makes this wait, and the row it
-   * then reads is the committed one: deleted, false.
+   * The joining user's own account, locked `for share` until the transaction
+   * ends; whether it is still live under the lock (an invitation's
+   * acceptance). `users` is global and has no row-level security, so any
+   * context may lock it. A product admin's delete holding the row
+   * `for update` makes this wait, and the row it then reads is the committed
+   * one: deleted, false.
    */
   lockJoiningAccountForShare(userId: string): Promise<boolean>;
   /**
    * A removed member's account, locked `for no key update` until the
-   * transaction ends; whether it is still live under the lock (D29 Ruling
-   * 272: a restore). The mode the membership invariant's commit-time
-   * trigger takes on the same row (migration 1700000000012), so the
-   * trigger needs no upgrade: two restores of one person in two
-   * organizations queue here rather than deadlock. A product admin's
-   * delete holding the row `for update` makes this wait, and the row it
-   * then reads is the committed one: deleted, false.
+   * transaction ends; whether it is still live under the lock (a restore).
+   * The mode the membership invariant's commit-time trigger takes on the same
+   * row (migration 1700000000012), so the trigger needs no upgrade: two
+   * restores of one person in two organizations queue here rather than
+   * deadlock. A product admin's delete holding the row `for update` makes
+   * this wait, and the row it then reads is the committed one: deleted,
+   * false.
    */
   lockRestoredAccount(userId: string): Promise<boolean>;
 }
@@ -180,10 +179,9 @@ export function createMemberRepository(
       return row ? toMember(row) : undefined;
     },
 
-    // No join: a `for share` over a join would lock the joined rows too
-    // (Preflight ruling 8). Under row-level security a locking read applies
-    // the update policy (Preflight ruling 1), so the context must name this
-    // organization, as the scope's filter does.
+    // No join: a `for share` over a join would lock the joined rows too.
+    // Under row-level security a locking read applies the update policy, so
+    // the context must name this organization, as the scope's filter does.
     async findForShare(userId: string): Promise<OrganizationMembership | undefined> {
       const row = await scope
         .selectFrom("organization_members")

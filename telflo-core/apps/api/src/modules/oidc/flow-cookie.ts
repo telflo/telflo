@@ -5,10 +5,10 @@ import { calculatePKCECodeChallenge, randomNonce, randomPKCECodeVerifier, random
 import { canonicalIdOf } from "../organizations/service.js";
 import { OIDC_FLOW_COOKIE_MAX_AGE_SECONDS } from "../sessions/cookies.js";
 
-// The OIDC flow cookie (D2c decision 3): what the callback needs to finish
-// the sign-in the start began. A JWT, HS256, under a key derived from the
-// access-token secret (HKDF, its own `info`), with its own audience and
-// `typ`: it can never pass as an access token, nor an access token as it.
+// The OIDC flow cookie: what the callback needs to finish the sign-in the
+// start began. A JWT, HS256, under a key derived from the access-token
+// secret (HKDF, its own `info`), with its own audience and `typ`: it can
+// never pass as an access token, nor an access token as it.
 
 const ALGORITHM = "HS256";
 const ISSUER = "telflo";
@@ -24,7 +24,7 @@ const DEFAULT_REDIRECT = "/app";
 /** The random values openid-client generates: 32 bytes, base64url. PKCE allows 43 to 128. */
 const RANDOM_VALUE_PATTERN = /^[A-Za-z0-9_-]{43,128}$/;
 
-/** Where a link started from Settings comes back to, with its result code (D21 decision 38). */
+/** Where a link started from Settings comes back to, with its result code. */
 export const LINK_REDIRECT_PATH = "/settings/account";
 
 /** What the callback needs from the start, whatever the flow is for. */
@@ -38,9 +38,9 @@ export interface OidcFlow {
 }
 
 /**
- * What the flow is for (D21 decision 38, Preflight ruling 5): a sign-in, or
- * a link started from Settings by a signed-in person, which carries whose
- * account and which session started it.
+ * What the flow is for: a sign-in, or a link started from Settings by a
+ * signed-in person, which carries whose account and which session started
+ * it.
  */
 export type OidcFlowIntent = { intent: "sign_in" } | { intent: "link"; userId: string; sessionId: string };
 
@@ -112,15 +112,15 @@ function isRandomValue(value: unknown): value is string {
   return typeof value === "string" && RANDOM_VALUE_PATTERN.test(value);
 }
 
-/** A uuid in its one lowercase spelling (Ruling 85), so the link compares it with the database's ids safely. */
+/** A uuid in its one lowercase spelling, so the link compares it with the database's ids safely. */
 function canonicalUuid(value: unknown): string | undefined {
   return typeof value === "string" ? canonicalIdOf(value) : undefined;
 }
 
 /**
- * The intent the claims carry. No `intent` (a cookie from before D21), or
+ * The intent the claims carry. No `intent` (an older cookie), or
  * `sign_in`, is a sign-in, and carries neither id; `link` needs both, as
- * uuids, answered lowercased (Ruling 85). Anything else is `undefined`.
+ * uuids, answered lowercased. Anything else is `undefined`.
  */
 function readIntent(claims: Record<string, unknown>): OidcFlowIntent | undefined {
   const { intent, user_id: userId, session_id: sessionId } = claims;
