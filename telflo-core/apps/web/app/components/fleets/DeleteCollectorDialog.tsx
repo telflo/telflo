@@ -22,15 +22,13 @@ import { COLLECTOR_NOT_FOUND_MESSAGE } from "./CollectorDetailsDialog.js";
 import { COLLECTOR_UNINSTALL_WORDS, HelmUninstall } from "./HelmUninstall.js";
 
 /*
- * "Delete collector record" (D17b-1 decisions 14 and 28; Preflight rulings 4
- * and 14): an AlertDialog (ADR 0018), its title, "Delete" / "Deleting...",
- * the fallback "Failed to delete collector" and the toast `Deleted record for
- * {name}`, with D17a's `DeleteFleetDialog` for a write under way. In the
- * D17b-1 Parity Notes:
+ * "Delete collector record": an AlertDialog, its title, "Delete" /
+ * "Deleting...", the fallback "Failed to delete collector" and the toast
+ * `Deleted record for {name}`, with `DeleteFleetDialog`'s pattern for a write
+ * under way. Differences:
  *
- * - The body says what a deleted collector becomes if it keeps polling
- *   (ruling 4), never "The collector itself is not affected"; no import
- *   warning (D16c removed importing).
+ * - The body says what a deleted collector becomes if it keeps polling, never
+ *   "The collector itself is not affected"; no import warning.
  * - Escape does nothing while the delete is under way; Cancel is disabled;
  *   the action keeps the dialog open (`preventDefault`) until the API
  *   answers. A double click sends once.
@@ -45,24 +43,22 @@ import { COLLECTOR_UNINSTALL_WORDS, HelmUninstall } from "./HelmUninstall.js";
  *   layout; a session ended is silent. An answer after the dialog unmounted,
  *   or for an organization no longer active, does nothing; each opening is
  *   a new session (`useOpeningKey`).
- * - "(else Default)" is gone from the body (D17d-1 Preflight ruling 29): a
- *   collector naming no group is refused since D17d-1 decision 5. On a
- *   Kubernetes-supervisor fleet (decision 23) the body is a pod's: deleting
+ * - The body has no "(else Default)": a collector naming no group is
+ *   refused. On a Kubernetes-supervisor fleet the body is a pod's: deleting
  *   the record forgets the collector, and a pod still running enrolls again
- *   (D17d-2 decision 25; Preflight ruling 31: then how to stop it, its
- *   group's quoted `helm uninstall` from the tab's groups, snapshotted at
- *   the opening; nothing when the groups are unread, its group isn't among
- *   them or its settings can't be read).
+ *   (then how to stop it, its group's quoted `helm uninstall` from the
+ *   tab's groups, snapshotted at the opening; nothing when the groups are
+ *   unread, its group isn't among them or its settings can't be read).
  * The name is text only, in the masked shell; no attribute holds it.
  */
 
 export const DELETE_COLLECTOR_FAILED_MESSAGE = "Failed to delete collector";
 
-/** What follows the name in Preflight ruling 4's body (D17d-1 Preflight ruling 29: no "(else Default)"). */
+/** What follows the name in the body (no "(else Default)"). */
 export const COLLECTOR_DELETE_CONSEQUENCES =
   "If the collector keeps polling, it enrolls again as a new collector: in the group it was installed into, unpinned, with no error history, and it is sent that group's published version if it has one. If that group has been deleted, it can't enroll again.";
 
-/** A Kubernetes fleet's body around the name (D17d-1 decision 23; Preflight ruling 29). */
+/** A Kubernetes fleet's body around the name. */
 export const KUBERNETES_COLLECTOR_DELETE_BEFORE = "Deleting the record just forgets";
 export const KUBERNETES_COLLECTOR_DELETE_AFTER = ": a pod still running enrolls again on its next poll.";
 
@@ -79,7 +75,7 @@ export interface DeleteCollectorDialogProps {
   groups?: readonly CollectorGroup[] | null | undefined;
   /** After the delete, a 404, or an unknown outcome: the grid reloads its page and the fleet. */
   onDeleted: () => void;
-  /** Where the focus goes once the dialog has closed (Radix's `onCloseAutoFocus`): the host gives it back to the opener (D14b Ruling 46). */
+  /** Where the focus goes once the dialog has closed (Radix's `onCloseAutoFocus`): the host gives it back to the opener. */
   onCloseAutoFocus?: ((event: Event) => void) | undefined;
 }
 

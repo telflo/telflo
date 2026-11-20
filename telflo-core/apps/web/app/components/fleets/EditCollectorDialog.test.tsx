@@ -64,8 +64,7 @@ import { pickerDate } from "./VersionOptionLabel.js";
 import { organizationVariable, variableGroup } from "~/test/variables.js";
 
 /*
- * "Edit collector" (D17b-1 decisions 8, 15, 26 and 32; Preflight rulings 5,
- * 6, 12 and 15): a pin changed without a rename sends no name (one PATCH),
+ * "Edit collector": a pin changed without a rename sends no name (one PATCH),
  * and "OK" is disabled until something changes. The picker's own tests are
  * in `CollectorPinPicker.test.tsx`.
  */
@@ -138,7 +137,7 @@ function serve() {
       if (api.configurationsHold !== null) await api.configurationsHold;
       const failure = api.configurationsFailures.shift();
       if (failure !== undefined) throw failure;
-      // No search (Ruling 35): a read never sends q.
+      // No search: a read never sends q.
       expect(query.q).toBeUndefined();
       const rows = api.configurations;
       const start = query.cursor === undefined ? 0 : Number(query.cursor);
@@ -304,11 +303,11 @@ describe("EditCollectorDialog's rename and pin", () => {
   });
 });
 
-describe("EditCollectorDialog's fields (decision 26; Preflight ruling 12)", () => {
+describe("EditCollectorDialog's fields", () => {
   it("opens with the title, the description, the UID, the Name, the Group and the Pin", async () => {
     const { user } = await renderEdit();
     const dialog = screen.getByRole("dialog");
-    // D16c (decision 9): the description and the Pin's choices name published versions only.
+    // The description and the Pin's choices name published versions only.
     expect(within(dialog).getByText(/Rename this collector/)).toHaveTextContent(
       /^Rename this collector, move it to another group, or pin it to a published version or a variable group\. Names must be unique within your organization; “Follow the group” clears its pin\.$/,
     );
@@ -402,7 +401,7 @@ describe("EditCollectorDialog's fields (decision 26; Preflight ruling 12)", () =
   });
 });
 
-describe("EditCollectorDialog's pin (decisions 8 and 26; D16b Ruling 37)", () => {
+describe("EditCollectorDialog's pin", () => {
   it("pins a following collector to a published version: a configuration chosen selects its newest version", async () => {
     const { user, onChanged } = await renderEdit();
     await settled();
@@ -490,15 +489,14 @@ describe("EditCollectorDialog's pin (decisions 8 and 26; D16b Ruling 37)", () =>
   });
 });
 
-/** "Follow the group" offered and not disabled (D16c decision 10: never refused); the Pin's list closed again. */
+/** "Follow the group" offered and not disabled (never refused); the Pin's list closed again. */
 async function expectFollowAllowed(user: User) {
   await user.click(combobox("Pin"));
   expect(await screen.findByRole("option", { name: "Follow the group" })).not.toHaveAttribute("aria-disabled");
   await user.keyboard("{Escape}");
 }
 
-// D16c (decision 10): the owner's Q18 refusal went with importing.
-describe("EditCollectorDialog's Follow the group (D16c decision 10)", () => {
+describe("EditCollectorDialog's Follow the group", () => {
   it("'Follow the group' is never refused: a pinned collector in a group with no published version unpins", async () => {
     const { user, onChanged } = await renderEdit(pinnedToV4());
     expect(screen.queryByText(/imported|couldn't be read/)).toBeNull();
@@ -512,7 +510,7 @@ describe("EditCollectorDialog's Follow the group (D16c decision 10)", () => {
   });
 });
 
-describe("EditCollectorDialog's hint (Preflight ruling 5)", () => {
+describe("EditCollectorDialog's hint", () => {
   it("says a new pin is sent on the next poll", async () => {
     const { user } = await renderEdit();
     await settled();
@@ -558,7 +556,6 @@ describe("EditCollectorDialog's hint (Preflight ruling 5)", () => {
   });
 });
 
-// D17d-1 decisions 4 and 23; Preflight rulings 25 and 27.
 describe("EditCollectorDialog on a Kubernetes-supervisor fleet", () => {
   const K8S = { groups: kubernetesGroups(), fleetType: "kubernetes-supervisor" } as const;
 
@@ -610,7 +607,7 @@ describe("EditCollectorDialog on a Kubernetes-supervisor fleet", () => {
   });
 });
 
-describe("EditCollectorDialog's picker reads (Preflight ruling 6)", () => {
+describe("EditCollectorDialog's picker reads", () => {
   it("reads the published configurations (100, no search) on opening, and the pinned configuration's versions", async () => {
     await renderEdit(pinnedToV4());
     await settled();
@@ -674,7 +671,7 @@ describe("EditCollectorDialog's picker reads (Preflight ruling 6)", () => {
     expect(screen.getAllByRole("option").map((option) => option.textContent)).toEqual(["checkout-otel"]);
   });
 
-  // D17b-2 Ruling 35 (the owner's): no search box; more than a page is reached by "Load more".
+  // No search box; more than a page is reached by "Load more".
   it("offers no configuration search box, and says when there is no published configuration", async () => {
     api.configurations = [];
     const { user } = await renderEdit();
@@ -702,7 +699,7 @@ describe("EditCollectorDialog's picker reads (Preflight ruling 6)", () => {
     await waitFor(() => expect(combobox("Version")).toHaveTextContent("@v4"));
   });
 
-  it("preselects the newest version once a failed versions read is tried again (decision 26)", async () => {
+  it("preselects the newest version once a failed versions read is tried again", async () => {
     const { user, onChanged } = await renderEdit();
     await settled();
     await choose(user, "Pin", "A published version");
@@ -758,7 +755,7 @@ describe("EditCollectorDialog's picker reads (Preflight ruling 6)", () => {
 
 });
 
-describe("EditCollectorDialog's refusals (decision 26)", () => {
+describe("EditCollectorDialog's refusals", () => {
   it.each([
     ["configuration_version_not_published", "This version isn't published: publish it before assigning or pinning it.", 409],
     ["configuration_version_not_found", "Version not found", 404],
@@ -833,7 +830,7 @@ describe("EditCollectorDialog's refusals (decision 26)", () => {
   });
 });
 
-describe("EditCollectorDialog's unknown outcome (decision 26)", () => {
+describe("EditCollectorDialog's unknown outcome", () => {
   it.each([
     ["a 503 fleets_unavailable", UNAVAILABLE],
     ["a 500", () => refusal("internal_error", "Something went wrong.", 500)],
@@ -970,7 +967,7 @@ describe("EditCollectorDialog while saving", () => {
   });
 });
 
-describe("EditCollectorDialog without the tab's groups (Preflight ruling 5)", () => {
+describe("EditCollectorDialog without the tab's groups", () => {
   it('reads the groups itself on opening: "Loading groups…", "Follow the group" allowed meanwhile', async () => {
     let release!: () => void;
     api.groupsHold = new Promise((resolve) => (release = resolve));
@@ -1092,7 +1089,7 @@ function mountWithTabGroups(row: Collector, initial: CollectorGroup[] | null, { 
   return { user: userEvent.setup(), setTabGroups: (groups: CollectorGroup[] | null) => act(() => setTabGroups(groups)) };
 }
 
-// The final reviews' findings (Ruling 29's Minor 1 and its nits): the dialog's own groups read, and a group the shown groups lost.
+// The dialog's own groups read, and a group the shown groups lost.
 describe("EditCollectorDialog when the tab's groups change while it is open", () => {
   it("reads the groups itself once a tab's answer drops the collector's group, never left on \"Loading groups…\"", async () => {
     const { setTabGroups } = mountWithTabGroups(collector({ groupId: GATEWAYS_GROUP_ID }), GROUPS());
@@ -1131,8 +1128,8 @@ describe("EditCollectorDialog when the tab's groups change while it is open", ()
   });
 });
 
-// The final reviews' nit: StrictMode's first run reads, its cleanup aborts the read, and the second reads again; the
-// first's failure must never show.
+// StrictMode's first run reads, its cleanup aborts the read, and the second
+// reads again; the first's failure must never show.
 describe("EditCollectorDialog under StrictMode", () => {
   it('never flashes "The groups couldn\'t be read." for the first run\'s aborted read', async () => {
     const pendingGroups: Array<(groups: { groups: CollectorGroup[] }) => void> = [];
@@ -1161,7 +1158,7 @@ describe("EditCollectorDialog under StrictMode", () => {
   });
 });
 
-// The final reviews' Minor 3: the picker's state lived in a child the Pin choice unmounts.
+// The picker's state outlives the child the Pin choice unmounts.
 describe("EditCollectorDialog's picker across Pin choices", () => {
   it("keeps the configuration chosen from a later page, and the pages read, when the Pin choice switches away and back", async () => {
     api.configurationsPage = 1;
@@ -1199,7 +1196,7 @@ function attributesHoldingBut(text: string, allowed: Element[]): string[] {
   return holders;
 }
 
-describe("EditCollectorDialog's privacy (decision 32; Preflight ruling 15)", () => {
+describe("EditCollectorDialog's privacy", () => {
   it("holds no collector, group or configuration name in an attribute, every Select open, but the Name's value", async () => {
     const collectorName = "canary-collector-91c2";
     const groupName = "canary-group-5d7e";
@@ -1239,7 +1236,7 @@ describe("EditCollectorDialog's privacy (decision 32; Preflight ruling 15)", () 
     await choose(user, "Version", /@v5/);
     check();
 
-    // The configuration named in the list, marked the group's (no search box to hold it: Ruling 35).
+    // The configuration named in the list, marked the group's (no search box to hold it).
     await user.click(combobox("Configuration"));
     expect(await screen.findByRole("option", { name: `${configurationName} (group default)` })).toBeInTheDocument();
     check();
@@ -1272,8 +1269,8 @@ describe("EditCollectorDialog's default ids", () => {
   });
 });
 
-// D20 (default 24; Q83; Preflight ruling 33; D17c-1 Ruling 66): the Pin's Variable group choice.
-describe("EditCollectorDialog's Variable group (default 24)", () => {
+// The Pin's Variable group choice.
+describe("EditCollectorDialog's Variable group", () => {
   const EU_ID = "7b000000-0000-4000-8000-0000000000e1";
   const US_ID = "7b000000-0000-4000-8000-0000000000e2";
   const VARIABLE_GROUPS = () => [variableGroup({ id: EU_ID, name: "eu-edge" }), variableGroup({ id: US_ID, name: "us-edge" })];
@@ -1362,7 +1359,7 @@ describe("EditCollectorDialog's Variable group (default 24)", () => {
     await waitFor(() => expect(apiClient.getVariableGroups).toHaveBeenCalledTimes(2));
   });
 
-  // D17c-1 Ruling 66's probe: the baseline is the collector as the dialog opened.
+  // The baseline is the collector as the dialog opened.
   it("keeps the collector it opened with when the parent reloads: Follow group still sends the change from the snapshot", async () => {
     const opened = collector({ pinnedVariableGroupId: EU_ID });
     const onChanged = vi.fn();
@@ -1399,7 +1396,7 @@ describe("EditCollectorDialog's Variable group (default 24)", () => {
     expect(api.requests).toEqual([{ pinnedVariableGroupId: null }]);
   });
 
-  it("holds no variable group's name in an attribute; its Select sits inside ph-no-capture (Q88)", async () => {
+  it("holds no variable group's name in an attribute; its Select sits inside ph-no-capture", async () => {
     const name = "canary-pinned-vg-77b";
     vi.mocked(apiClient.getVariableGroups).mockResolvedValue([variableGroup({ id: EU_ID, name })]);
     const { user } = await renderEdit(collector({ pinnedVariableGroupId: EU_ID }), { groups: BOUND_GROUPS() });
@@ -1416,9 +1413,8 @@ describe("EditCollectorDialog's Variable group (default 24)", () => {
   });
 });
 
-// D20 final review side 2, Minor 5 (Q86: the platform's dialogs show the names before Save too): the group dialogs'
-// "Variables used", for the published version the Pin chooses.
-describe("EditCollectorDialog's Variables used (Q86)", () => {
+// The group dialogs' "Variables used", for the published version the Pin chooses: the names show before Save.
+describe("EditCollectorDialog's Variables used", () => {
   /** Serves each version's text by id, and the organization's variables (the shared names). */
   function serveTexts(texts: Record<string, string>, defined: string[] = ["OTLP_EP"]) {
     vi.mocked(apiClient.getConfigurationVersion).mockImplementation(async (organizationId, configurationId, versionId) => {

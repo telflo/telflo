@@ -52,11 +52,11 @@ interface RuleEditorDialogProps {
   /** Where the focus goes as the dialog closes (Radix's onCloseAutoFocus): its opener's. */
   onCloseAutoFocus?: ((event: Event) => void) | undefined;
   /**
-   * The rule a new one starts from (Compare's "Create an OTTL rule", D15b
-   * Preflight ruling 12): OTTL condition mode with this context, Require and
-   * Condition, Name and Description empty; null or absent for the blank
-   * form. Ignored when editing (`rule`). Made once per opening, its identity
-   * kept while the dialog is open: a new one resets the form.
+   * The rule a new one starts from (Compare's "Create an OTTL rule"): OTTL
+   * condition mode with this context, Require and Condition, Name and
+   * Description empty; null or absent for the blank form. Ignored when editing
+   * (`rule`). Made once per opening, its identity kept while the dialog is
+   * open: a new one resets the form.
    */
   initial?: RulePrefill | null | undefined;
   /** The rule saved, with the API's answer: called inside the dialog's session (an answer after Escape calls nothing), just before it closes. */
@@ -131,7 +131,7 @@ const NO_RULE_PROBLEMS: readonly RuleProblem[] = [];
 
 /**
  * A refusal's problems: each of `details.problems`' `{field, message}` (the
- * evaluator's, D15a Ruling 46), else its message alone, about no field.
+ * evaluator's), else its message alone, about no field.
  */
 function ruleProblemsOf(error: ApiError): readonly RuleProblem[] {
   const { details } = error;
@@ -146,10 +146,10 @@ function ruleProblemsOf(error: ApiError): readonly RuleProblem[] {
 }
 
 /**
- * An unreadable rule's problems (400 `invalid_request`, D15a Ruling 56): each
- * of `details`' issues (the request schema's, Zod's: a text past 8,192
- * bytes, a context the pipeline's signal hasn't) with the field its path
- * names, else its message alone, about no field.
+ * An unreadable rule's problems (400 `invalid_request`): each of `details`'
+ * issues (the request schema's, Zod's: a text past 8,192 bytes, a context the
+ * pipeline's signal hasn't) with the field its path names, else its message
+ * alone, about no field.
  */
 function invalidRequestProblemsOf(error: ApiError): readonly RuleProblem[] {
   const { details } = error;
@@ -178,22 +178,22 @@ function countProblem(text: string, words: { notInteger: string; negative: strin
 const UNORDERED_BETWEEN_MESSAGE = "To can't be less than From";
 
 /**
- * Adding and editing a rule (D15a decisions 5, 6, 12 and 18): its four
- * modes — Match output text, Record count, Record attribute, OTTL condition —
- * their fields, words, hints and checks. Record count and Record attribute
- * are builders saving canonical OTTL (`rule-builder-shapes.ts`),
- * and such a rule reopens in its builder; any other OTTL opens in OTTL mode.
- * OTTL is typed in plain textareas and checked when saved (decision 5).
+ * Adding and editing a rule: its four modes — Match output text, Record
+ * count, Record attribute, OTTL condition — their fields, words, hints and
+ * checks. Record count and Record attribute are builders saving canonical
+ * OTTL (`rule-builder-shapes.ts`), and such a rule reopens in its builder;
+ * any other OTTL opens in OTTL mode. OTTL is typed in plain textareas and
+ * checked when saved.
  *
- * Differences (the Parity Notes):
+ * Differences:
  * - the API checks every OTTL and regex rule as it is saved, through the
- *   evaluator (decision 6): its refusal, "OTTL syntax error: …" or "Invalid
- *   regex: …" (400 `validation_rule_invalid`), shows as it words it, each
- *   problem under the field it names (`ruleProblemField`, Ruling 46), tied to
- *   that field and announced, and the dialog keeps the text; "Rules can't be checked right now. Try again shortly." (503)
- *   and the rate limit's words (429) are toasted, the dialog kept open.
- *   There is no OTTL lint in the browser, and no browser `RegExp` check
- *   (JavaScript's, not RE2);
+ *   evaluator: its refusal, "OTTL syntax error: …" or "Invalid regex: …" (400
+ *   `validation_rule_invalid`), shows as it words it, each problem under the
+ *   field it names (`ruleProblemField`), tied to that field and announced, and
+ *   the dialog keeps the text; "Rules can't be checked right now. Try again
+ *   shortly." (503) and the rate limit's words (429) are toasted, the dialog
+ *   kept open. There is no OTTL lint in the browser, and no browser `RegExp`
+ *   check (JavaScript's, not RE2);
  * - the OTTL contexts are always the pipeline's signal's
  *   (OTTL_CONTEXTS_BY_SIGNAL): the signal comes with the pipeline, never all
  *   seven before the pipelines load;
@@ -203,52 +203,51 @@ const UNORDERED_BETWEEN_MESSAGE = "To can't be less than From";
  *   count refuses one past 2,147,483,647 (the API's bound) and an empty one
  *   (never saved as 0), and each mode's
  *   counts keep Between's bounds in order;
- * - only the five kinds (decision 12): no retired rule types, and no silent
- *   rewrite of one as a text rule of its JSON;
+ * - only the five kinds: no retired rule types, and no silent rewrite of one
+ *   as a text rule of its JSON;
  * - Save sends the rule whole: a change sends its kind, target and pattern or
- *   OTTL with its name and description (D15a Ruling 38); an empty name or
- *   description is `''`, as the API keeps it, not null;
+ *   OTTL with its name and description; an empty name or description is `''`,
+ *   as the API keeps it, not null;
  * - the fields' ids come from `useId`; a form problem is tied to its field
  *   (`aria-describedby`, `aria-invalid`) and announced politely (a live
- *   region, Ruling 45); closing gives the focus back to the opener (Edit, Add
+ *   region); closing gives the focus back to the opener (Edit, Add
  *   Validation Rule);
  * - a builder rule reopens in its builder only on the context that builder
- *   saves (`recognizeBuilderRule`, Ruling 45), else in OTTL mode, its
- *   context kept: a builder would rewrite a `spanevent`, `metric` or counted
- *   `resource` rule's context silently;
+ *   saves (`recognizeBuilderRule`), else in OTTL mode, its context kept: a
+ *   builder would rewrite a `spanevent`, `metric` or counted `resource`
+ *   rule's context silently;
  * - a blank text is Go's `unicode.IsSpace` (`isBlankRuleText`), as the API's
  *   (U+0085 too, which JavaScript's `trim` keeps), and a pattern, condition
- *   or expression is trimmed of exactly that whitespace (`trimRuleText`,
- *   Ruling 56: JavaScript's `trim` would strip a U+FEFF the API keeps, and
+ *   or expression is trimmed of exactly that whitespace (`trimRuleText`:
+ *   JavaScript's `trim` would strip a U+FEFF the API keeps, and
  *   send `''` for a text the check let through); every field is disabled
  *   while a save is under way;
  * - a pattern, condition or expression past the API's 8,192 bytes of UTF-8
  *   (as the builder writes it, for Record attribute) is a form problem under
  *   its field, Add rule held, in the API's words ("The pattern is longer
- *   than 8,192 bytes."); an unreadable
- *   request's refusal (400 `invalid_request`) shows inline as a rule's does,
- *   each issue under the field its path names (`ottl.condition`, `pattern`,
- *   `name`, …), else the mode's main field, never the generic toast; a
- *   change to the name or the description clears the API's problems under
- *   it (Ruling 57), as a change to what the rule checks clears them all;
- *   Record attribute's too-long condition is under the key when the key
- *   alone makes it so, else under the value;
- * - a save's answer acts only on the dialog's session that sent it (Ruling
- *   56): one arriving after Escape, once the editor has opened again, or
- *   once the dialog has gone with its host (a version or organization left,
- *   Ruling 26), closes nothing and shows nothing (the card's list shows what
- *   the store kept); a rule or pipeline a teammate deleted (404) toasts the
- *   API's words and closes the editor, the store dropping it, as a delete
- *   does, even when the drop takes the card, and the editor, away;
- * - a new rule can start from Compare's "Create an OTTL rule" (D15b
- *   decision 6, Preflight ruling 12: `initial`): OTTL condition mode, the
- *   run's signal's context, the chip's Require and Condition, Name and
- *   Description empty, never through the builders' recognition; its save is
- *   the ordinary one, and `onSaved` hears of it. In the playground (D31-1)
- *   the editor never opens: every opener is locked at its button;
+ *   than 8,192 bytes."); an unreadable request's refusal (400
+ *   `invalid_request`) shows inline as a rule's does, each issue under the
+ *   field its path names (`ottl.condition`, `pattern`, `name`, …), else the
+ *   mode's main field, never the generic toast; a change to the name or the
+ *   description clears the API's problems under it, as a change to what the
+ *   rule checks clears them all; Record attribute's too-long condition is
+ *   under the key when the key alone makes it so, else under the value;
+ * - a save's answer acts only on the dialog's session that sent it: one
+ *   arriving after Escape, once the editor has opened again, or once the
+ *   dialog has gone with its host (a version or organization left), closes
+ *   nothing and shows nothing (the card's list shows what the store kept); a
+ *   rule or pipeline a teammate deleted (404) toasts the API's words and
+ *   closes the editor, the store dropping it, as a delete does, even when the
+ *   drop takes the card, and the editor, away;
+ * - a new rule can start from Compare's "Create an OTTL rule" (`initial`):
+ *   OTTL condition mode, the run's signal's context, the chip's Require and
+ *   Condition, Name and Description empty, never through the builders'
+ *   recognition; its save is the ordinary one, and `onSaved` hears of it. In
+ *   the playground the editor never opens: every opener is locked at its
+ *   button;
  * - the dialog's content sits in `ph-no-capture` (a portal, outside the
  *   panel's block), its inputs also masked (`maskAllInputs`): a rule's text
- *   is configuration text (ADR 0024).
+ *   is configuration text.
  */
 export function RuleEditorDialog({
   open,
@@ -309,13 +308,13 @@ export function RuleEditorDialog({
   const [ruleProblems, setRuleProblems] = useState<readonly RuleProblem[]>(NO_RULE_PROBLEMS);
   /**
    * The dialog's session: counted as it opens, closes, changes rule and
-   * unmounts. A save's answer acts only on the session that sent it (D15a
-   * Ruling 56): one that arrives after Escape, once the editor is open again
-   * (on another rule, or Add), or once the dialog has gone with its host (a
-   * version or organization left, Ruling 26), closes nothing, shows nothing,
-   * toasts nothing and tells `onSaved` nothing. The
-   * store keeps what the API answered all the same: an abandoned save that
-   * succeeded shows in the card's list, one refused leaves it as it was.
+   * unmounts. A save's answer acts only on the session that sent it: one that
+   * arrives after Escape, once the editor is open again (on another rule, or
+   * Add), or once the dialog has gone with its host (a version or organization
+   * left), closes nothing, shows nothing, toasts nothing and tells `onSaved`
+   * nothing. The store keeps what the API answered all the same: an abandoned
+   * save that succeeded shows in the card's list, one refused leaves it as it
+   * was.
    */
   const session = useRef(0);
 
@@ -328,11 +327,12 @@ export function RuleEditorDialog({
     const recordContext = recordContextForSignal(signal);
     // An ottl rule whose payload matches a builder-canonical shape, on the
     // context that builder saves, reopens in the friendly builder; anything
-    // else opens in raw OTTL mode, its context kept (Ruling 45).
+    // else opens in raw OTTL mode, its context kept.
     const ottl = rule?.kind === "ottl" ? rule.ottl : null;
     const recognized = ottl === null ? null : recognizeBuilderRule(ottl, signal);
-    // A new rule from Compare opens in OTTL condition mode as it was offered, never through the builders'
-    // recognition, which would put an `!= nil` or `== "info"` condition in Record attribute (Preflight ruling 12).
+    // A new rule from Compare opens in OTTL condition mode as it was offered,
+    // never through the builders' recognition, which would put an `!= nil` or
+    // `== "info"` condition in Record attribute.
     const prefill = rule === null ? initial : null;
     const nextMode: EditorMode =
       prefill !== null ? "ottl" : (recognized?.mode ?? (rule === null ? "match" : rule.kind === "ottl" ? "ottl" : "match"));
@@ -399,11 +399,13 @@ export function RuleEditorDialog({
     // Only on opening and a change of rule or prefill (the signal is the pipeline's, fixed for the card's life).
   }, [open, rule, initial]);
 
-  // Gone (its host unmounted: a version or organization left, its card dropped): a save's answer arriving
-  // after acts on nothing, in every host (Ruling 26, Ruling 56's meaning): no toast, no onSaved, no onOpenChange.
-  // The session moves a microtask after the unmount, so the answer that itself took the dialog away (a
-  // "validation pipeline not found" the store drops the card for, before it rethrows) still toasts: its
-  // continuation is already queued as React commits the store's change.
+  // Gone (its host unmounted: a version or organization left, its card
+  // dropped): a save's answer arriving after acts on nothing, in every host:
+  // no toast, no onSaved, no onOpenChange. The session moves a microtask after
+  // the unmount, so the answer that itself took the dialog away (a "validation
+  // pipeline not found" the store drops the card for, before it rethrows)
+  // still toasts: its continuation is already queued as React commits the
+  // store's change.
   useEffect(
     () => () => {
       queueMicrotask(() => {
@@ -413,7 +415,7 @@ export function RuleEditorDialog({
     [],
   );
 
-  /** The name or the description changed: the API's problems about that field no longer apply (Ruling 57); the others stay. */
+  /** The name or the description changed: the API's problems about that field no longer apply; the others stay. */
   const forgetProblemsAbout = (apiField: "name" | "description") =>
     setRuleProblems((problems) => {
       const kept = problems.filter((problem) => problem.field !== apiField);
@@ -601,13 +603,13 @@ export function RuleEditorDialog({
             : "ottl-condition";
 
   /**
-   * The field showing a problem the API names `apiField` (Ruling 46). OTTL
-   * mode: each its own (the condition, or a distinct rule's Row filter; the
-   * value expression; the count's value, Between's second value; the context;
-   * Require). Record count: the count's value, Between's second value
-   * (its condition is "true"). Record attribute: the condition is the
-   * operator's value where it has one (an unreadable number, a regex the
-   * parser compiles; the key goes in quoted), else the key; a distinct rule's
+   * The field showing a problem the API names `apiField`. OTTL mode: each its
+   * own (the condition, or a distinct rule's Row filter; the value
+   * expression; the count's value, Between's second value; the context;
+   * Require). Record count: the count's value, Between's second value (its
+   * condition is "true"). Record attribute: the condition is the operator's
+   * value where it has one (an unreadable number, a regex the parser
+   * compiles; the key goes in quoted), else the key; a distinct rule's
    * expression is the key; the count's fields; the context is the scope's;
    * Require. Anything else: the main field.
    */
@@ -661,9 +663,9 @@ export function RuleEditorDialog({
 
   /**
    * The form problem shown under the mode's fields (a quiet one isn't: Match
-   * output text's empty pattern holds Add rule), in a
-   * polite live region kept in place across the modes, so a problem that
-   * appears is announced (Ruling 45); tied to its field by aria-describedby.
+   * output text's empty pattern holds Add rule), in a polite live region
+   * kept in place across the modes, so a problem that appears is announced;
+   * tied to its field by aria-describedby.
    */
   const shownFormError = formError?.quiet === true ? null : formError;
 
@@ -682,7 +684,7 @@ export function RuleEditorDialog({
   /** What the rule checks, as the API takes it: the kind, the target, and the pattern or the OTTL. */
   const content = (): Pick<CreateValidationRuleRequest, "kind" | "target" | "pattern" | "ottl"> => {
     if (mode === "match") {
-      // Trimmed of Go's whitespace, as the API judges a blank (Ruling 56): JavaScript's trim would strip U+FEFF and keep U+0085.
+      // Trimmed of Go's whitespace, as the API judges a blank: JavaScript's trim would strip U+FEFF and keep U+0085.
       return { kind: combineMatchKind(negation, matchType), target: matchTarget, pattern: trimRuleText(matchInput) };
     }
     if (mode === "record_count") {
@@ -703,7 +705,7 @@ export function RuleEditorDialog({
   const handleSave = async () => {
     if (formError !== null || submitting) return;
     const request = { ...content(), name: name.trim(), description: description.trim() };
-    // This session's: an answer for it after the dialog closed or opened again is ignored (Ruling 56).
+    // This session's: an answer for it after the dialog closed or opened again is ignored.
     const sent = session.current;
     setSubmitting(true);
     setRuleProblems(NO_RULE_PROBLEMS);

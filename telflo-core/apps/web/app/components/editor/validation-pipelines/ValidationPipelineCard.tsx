@@ -18,7 +18,7 @@ interface ValidationPipelineCardProps {
   onDelete: (validationPipeline: ValidationPipeline, opener: HTMLElement) => void;
   /** Called as the rule editor, the regex library picker or a rule's delete confirmation shows (`useDialogShowing`): a Play doesn't switch subtabs under it. */
   onDialogShown?: (() => () => void) | undefined;
-  /** Where the focus goes when the card itself is gone as a dialog of its closes (its pipeline dropped, "not found"): the panel's "+ Pipeline" (Rulings 57, 59). */
+  /** Where the focus goes when the card itself is gone as a dialog of its closes (its pipeline dropped, "not found"): the panel's "+ Pipeline". */
   focusFallback?: (() => HTMLElement | null) | undefined;
 }
 
@@ -26,7 +26,7 @@ interface ValidationPipelineCardProps {
 const HELD =
   "aria-disabled:opacity-40 aria-disabled:cursor-not-allowed aria-disabled:hover:bg-transparent aria-disabled:hover:text-muted-foreground";
 
-/** A held rule's Edit's and Delete's title (D15a Ruling 57), as a held Play's ("Another run is in progress"). */
+/** A held rule's Edit's and Delete's title, as a held Play's ("Another run is in progress"). */
 const RULE_WRITE_HELD_TITLE = "A change to this rule is in progress";
 
 const ICON_BUTTON =
@@ -35,37 +35,34 @@ const ICON_BUTTON =
 /**
  * One validation pipeline: its card, buttons, words and empty state. The
  * header expands it to its rules, each with Edit and Delete, and "Add
- * Validation Rule" and "Add from regex library" (D15b's picker,
+ * Validation Rule" and "Add from regex library" (the picker,
  * `RegexLibraryPickerDialog`) under them. A card whose pipeline isn't in the
  * editor's text ("pipeline not found in current YAML") stays fully editable:
  * runs only pick its rules up once the pipeline is there again.
  *
- * Differences (the Parity Notes):
+ * Differences:
  * - the stale warning compares the pipeline's name with the editor's graph's
- *   pipelines, its current text's, as the runs test the text on screen
- *   (decision 18's correction);
- * - the rules are read each time the card mounts (Preflight ruling 26), not
- *   once on the first expand; a failed read shows inline with Retry
- *   ("Failed to load validation rules", or the API's words), not a toast;
+ *   pipelines, its current text's, as the runs test the text on screen;
+ * - the rules are read each time the card mounts, not once on the first
+ *   expand; a failed read shows inline with Retry ("Failed to load
+ *   validation rules", or the API's words), not a toast;
  * - the expand button and the buttons are siblings: Delete is never inside
  *   the expand button;
  * - each row's Edit and Delete are named by hidden text inside the panel's
  *   `ph-no-capture` block, "Edit rule 2: SSN guard" (the row's place, and the
- *   rule's name, else its summary; `aria-labelledby`, Preflight ruling 27),
- *   not all "Edit rule" and "Delete rule"; Delete
- *   validation pipeline is described by the pipeline's name
- *   (`aria-describedby`);
- * - a rule's delete is confirmed (decision 18; never at once);
+ *   rule's name, else its summary; `aria-labelledby`), not all "Edit rule"
+ *   and "Delete rule"; Delete validation pipeline is described by the
+ *   pipeline's name (`aria-describedby`);
+ * - a rule's delete is confirmed (never at once);
  * - closing the rule editor gives the focus back to its opener (Edit, Add
  *   Validation Rule), and closing the picker to "Add from regex library"; a
- *   rule deleted gives it to the next row's Edit, else the
- *   previous row's, else Add Validation Rule; a confirmation closed without a
- *   delete gives it back to the row's Delete; with neither there (the rules
- *   read again), the card's header (Ruling 56); with the card itself gone
- *   (its pipeline "not found", even under a rule's confirmation), the panel's
- *   "+ Pipeline" (Rulings 57, 59);
+ *   rule deleted gives it to the next row's Edit, else the previous row's,
+ *   else Add Validation Rule; a confirmation closed without a delete gives it
+ *   back to the row's Delete; with neither there (the rules read again), the
+ *   card's header; with the card itself gone (its pipeline "not found", even
+ *   under a rule's confirmation), the panel's "+ Pipeline";
  * - a rule's Edit and Delete are held while a change or delete of it is under
- *   way (the store's `ruleWritesInFlight`, Ruling 57), even once its editor
+ *   way (the store's `ruleWritesInFlight`), even once its editor
  *   was closed: reopened mid-save it would show the old text, and a plain
  *   Save would put it back. Held is `aria-disabled` (a click does nothing),
  *   titled "A change to this rule is in progress", and still focusable: the
@@ -73,11 +70,10 @@ const ICON_BUTTON =
  *   `disabled` button would drop to the page's body;
  * - the picker counts in the card's dialogs a Play doesn't switch subtabs
  *   under (`onDialogShown`), as the rule editor does;
- * - in the playground (D31-1 decisions 24 and 31), the pipeline's delete, a
- *   rule's Edit and delete, Add Validation Rule and Add from regex library
- *   open the sign-up prompt at their buttons (`useLockedAction`): no rule is
- *   saved and the regex library is never read;
- *   expanding the card reads its sample rules.
+ * - in the playground, the pipeline's delete, a rule's Edit and delete, Add
+ *   Validation Rule and Add from regex library open the sign-up prompt at
+ *   their buttons (`useLockedAction`): no rule is saved and the regex
+ *   library is never read; expanding the card reads its sample rules.
  */
 export function ValidationPipelineCard({ target, validationPipeline, onDelete, onDialogShown, focusFallback }: ValidationPipelineCardProps) {
   const locked = useLockedAction();
@@ -139,8 +135,8 @@ export function ValidationPipelineCard({ target, validationPipeline, onDelete, o
   /**
    * With the dialog's own target gone: Add Validation Rule; else, not there
    * (the rules being read again, after a failed first read), the card's
-   * header (Ruling 56); else, the card gone (its pipeline "not found"), the
-   * panel's fallback (Rulings 57, 59).
+   * header; else, the card gone (its pipeline "not found"), the
+   * panel's fallback.
    */
   const nearestFallback = (): HTMLElement | null => {
     const add = addRef.current;
@@ -173,7 +169,7 @@ export function ValidationPipelineCard({ target, validationPipeline, onDelete, o
    * After a delete: the row now at its place (its Edit), else the one
    * before, else `nearestFallback`. Closed without one (Cancel, Escape, the
    * card gone under it): back to the Delete that opened it, while it is
-   * there, else `nearestFallback` (Ruling 59).
+   * there, else `nearestFallback`.
    */
   const focusAfterDelete = (event: Event) => {
     const index = deletedAt.current;
@@ -277,7 +273,7 @@ export function ValidationPipelineCard({ target, validationPipeline, onDelete, o
                     {rules.map((rule, index) => {
                       const rowId = `${idPrefix}-rule-${rule.id}`;
                       const named = ruleNameOrSummary(rule);
-                      // A change or delete of it under way (Ruling 57): held until the API answers.
+                      // A change or delete of it under way: held until the API answers.
                       const held = isRuleWriteInFlight(ruleWrites, target, rule.id);
                       return (
                         <li key={rule.id} className="grid grid-cols-[1fr_auto] items-center gap-3 px-3 py-2">
@@ -287,7 +283,7 @@ export function ValidationPipelineCard({ target, validationPipeline, onDelete, o
                           >
                             {ruleDisplayName(rule)}
                           </span>
-                          {/* The buttons' names: hidden text inside the panel's ph-no-capture block, never an attribute (Preflight ruling 27). */}
+                          {/* The buttons' names: hidden text inside the panel's ph-no-capture block, never an attribute. */}
                           <span id={`${rowId}-edit`} className="sr-only">
                             Edit rule {index + 1}: {named}
                           </span>

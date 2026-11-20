@@ -27,10 +27,9 @@ import { BULK_DELETE_CONSEQUENCES, BulkDeleteDialog, DELETE_UNKNOWN_WORDS, delet
 import { COLLECTOR_DELETE_CONSEQUENCES, DELETE_COLLECTOR_FAILED_MESSAGE } from "./DeleteCollectorDialog.js";
 
 /*
- * "Delete collectors" (D17b-1 decisions 12, 27 and 28; Preflight rulings 4
- * and 13): the count and ruling 4's lines (no import warning: D16c), then the
- * selected collectors deleted one at a time through `runPacedWrites` (its
- * own tests pin the loop).
+ * "Delete collectors": the count and the consequence lines (no import
+ * warning), then the selected collectors deleted one at a time through
+ * `runPacedWrites` (its own tests pin the loop).
  */
 
 const refusal = (code: string, message: string, status: number, options: { retryAfterSeconds?: number } = {}) =>
@@ -139,15 +138,15 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-describe("BulkDeleteDialog (decisions 27 and 28)", () => {
-  it("says the count and Preflight ruling 4's lines, and no import warning", async () => {
+describe("BulkDeleteDialog", () => {
+  it("says the count and the consequence lines, and no import warning", async () => {
     const deletes = serveDeletes();
     await renderDelete();
     const dialog = screen.getByRole("alertdialog");
     expect(dialog).toHaveTextContent(`You are deleting the records of 3 collectors. ${BULK_DELETE_CONSEQUENCES}`);
-    // Ruling 4's words, for any of several: "a collector", where the single dialog's name the one.
+    // The consequence words, for any of several: "a collector", where the single dialog's name the one.
     expect(BULK_DELETE_CONSEQUENCES).toBe(COLLECTOR_DELETE_CONSEQUENCES.replace("If the collector keeps polling", "If a collector keeps polling"));
-    // D17d-1 Preflight ruling 29: a collector naming no group is refused (decision 5), so none enrolls into Default.
+    // A collector naming no group is refused, so none enrolls into Default.
     expect(BULK_DELETE_CONSEQUENCES).toBe(
       "If a collector keeps polling, it enrolls again as a new collector: in the group it was installed into, unpinned, with no error history, and it is sent that group's published version if it has one. If that group has been deleted, it can't enroll again.",
     );
@@ -159,7 +158,7 @@ describe("BulkDeleteDialog (decisions 27 and 28)", () => {
     expect(deletingWords(1)).toBe("You are deleting the record of 1 collector.");
   });
 
-  it("on a Kubernetes-supervisor fleet, says deleting a record just forgets it and a running pod enrolls again (D17d-1 decision 23)", async () => {
+  it("on a Kubernetes-supervisor fleet, says deleting a record just forgets it and a running pod enrolls again", async () => {
     const deletes = serveDeletes();
     await renderDelete(ROWS(), { fleetType: "kubernetes-supervisor" });
     const dialog = screen.getByRole("alertdialog", { name: "Delete collectors" });
@@ -337,7 +336,7 @@ describe("BulkDeleteDialog (decisions 27 and 28)", () => {
     expect(onChanged).not.toHaveBeenCalled();
   });
 
-  it("holds no collector name in an attribute: the confirmation, the run, the results (decision 32)", async () => {
+  it("holds no collector name in an attribute: the confirmation, the run, the results", async () => {
     const names = ["canary-collector-4f71", "canary-collector-5a82", "canary-collector-6b93"];
     const rows = ROWS().map((row, index) => ({ ...row, name: names[index]! }));
     const deletes = serveDeletes("hold", refusal("invalid_request", "The request was not valid.", 400), UNAVAILABLE());
@@ -356,7 +355,7 @@ describe("BulkDeleteDialog (decisions 27 and 28)", () => {
   });
 });
 
-// D17d-2 decision 25; Preflight rulings 20 and 31: the selected pods' groups' releases.
+// The selected pods' groups' releases.
 describe("BulkDeleteDialog's helm uninstall lines", () => {
   it("lists one quoted helm uninstall per distinct group among the selected, in the fleet's order, in one copy box; those it can't name left out", async () => {
     const groups = [
@@ -386,7 +385,7 @@ describe("BulkDeleteDialog's helm uninstall lines", () => {
     expect(expectTextOnlyInsideNoCapture("monitoring")).toBe(1);
   });
 
-  it("keeps the opening's uninstall lines when the tab's groups change under it (a poll: D17c-1 Ruling 66)", async () => {
+  it("keeps the opening's uninstall lines when the tab's groups change under it (a poll)", async () => {
     const opened = [collectorGroup(), gatewaysGroup({ annotations: kubernetesAnnotations({ namespace: "edge" }) })];
     const later = [collectorGroup(), gatewaysGroup({ annotations: kubernetesAnnotations({ namespace: "moved-namespace" }) })];
     const rows = ROWS(2).map((row) => ({ ...row, groupId: GATEWAYS_GROUP_ID }));

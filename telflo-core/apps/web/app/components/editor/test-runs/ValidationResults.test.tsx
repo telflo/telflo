@@ -1,13 +1,12 @@
 /**
- * A run's rules' results (D15a decisions 3, 8, 19 and 30; Preflight rulings
- * 5, 26 and 27): the Validation grid inside the results, a row per rule the
- * run copied, its Passed or Failed icon and its name, the count line, and
- * "Show test details": the rule, its advisory, and why it failed in each of
- * the four kinds of details or by its own error ("Not checked: …"
+ * A run's rules' results: the Validation grid inside the results, a row per
+ * rule the run copied, its Passed or Failed icon and its name, the count line,
+ * and "Show test details": the rule, its advisory, and why it failed in each
+ * of the four kinds of details or by its own error ("Not checked: …"
  * included); no grid for a run without rules; replay's rules (every rule's
- * text, snippet and sample inside `ph-no-capture`, none in an aria
- * attribute, of a rule only its error in an attribute, the row's tooltip,
- * inside the block).
+ * text, snippet and sample inside `ph-no-capture`, none in an aria attribute,
+ * of a rule only its error in an attribute, the row's tooltip, inside the
+ * block).
  *
  * Rendered as the Testing tab renders it, the selected run's detail in the
  * store (the runs, their polling and the viewers are TestRunsPanel.test's).
@@ -182,7 +181,7 @@ function detailRows(dialog: HTMLElement): [string, string][] {
     .map((label) => [label.textContent ?? "", label.nextElementSibling!.textContent ?? ""]);
 }
 
-describe("the Validation grid (decision 19)", () => {
+describe("the Validation grid", () => {
   it("shows a row per rule in the rules' order: its Passed or Failed icon and its name, the count line, 'Show test details' named by the rule", () => {
     show();
 
@@ -209,7 +208,7 @@ describe("the Validation grid (decision 19)", () => {
       'OTTL: any log: Int(attributes["zq-n"]) > 1',
       "Does not contain: zq-panic",
     ]);
-    // Each named by hidden text inside the block, its own (Preflight ruling 27), with a fixed title.
+    // Each named by hidden text inside the block, its own, with a fixed title.
     const buttons = within(pane).getAllByRole("button", { name: /^Show test details/ });
     expect(buttons).toHaveLength(8);
     expect(new Set(buttons.map((button) => button.getAttribute("aria-labelledby"))).size).toBe(8);
@@ -242,7 +241,7 @@ describe("the Validation grid (decision 19)", () => {
     expect(within(results()).queryByRole("button", { name: /Show test details/ })).toBeNull();
   });
 
-  it("lists only the rules that have a result: one with none is simply not listed (Ruling 49)", () => {
+  it("lists only the rules that have a result: one with none is simply not listed", () => {
     show(testRunFixture({ ...RUN, validationRules: RULES.slice(0, 3), validationResults: [RESULTS[0]!, RESULTS[2]!] }));
 
     expect(rows().map((row) => row.querySelector(".truncate")?.textContent)).toEqual(["Does not contain: zq-no-secrets", "OTTL: zq-env-prod"]);
@@ -250,7 +249,7 @@ describe("the Validation grid (decision 19)", () => {
     expect(within(results()).getByRole("button", { name: "Show test details for rule 2: zq-env-prod" })).toBeInTheDocument();
   });
 
-  it("shows a rule the time limit cut off as Failed, its words in the row's tooltip, as the run's status counts it (decision 30)", () => {
+  it("shows a rule the time limit cut off as Failed, its words in the row's tooltip, as the run's status counts it", () => {
     show();
 
     const row = rows()[5]!;
@@ -342,7 +341,7 @@ describe("Show test details", () => {
     expect(within(dialog).getAllByRole("listitem").map((item) => item.textContent)).toEqual(["zq-route-a", "zq-route-b"]);
   });
 
-  it("a rule's own error, 'Not checked' included, under Failure details (decision 3; not only in the tooltip)", async () => {
+  it("a rule's own error, 'Not checked' included, under Failure details (not only in the tooltip)", async () => {
     const user = show();
     let dialog = await openDetails(user, 6);
     expect(within(dialog).getByText("Failure details")).toBeInTheDocument();
@@ -364,7 +363,7 @@ describe("Show test details", () => {
     expect(within(dialog).queryByText("Failure details")).toBeNull();
   });
 
-  it("R1: a failed rule with no error, no detail and no advisory says so, never an empty Failure details (Ruling 56)", async () => {
+  it("a failed rule with no error, no detail and no advisory says so, never an empty Failure details", async () => {
     const user = show(testRunFixture({ ...RUN, validationRules: [RULES[7]!], validationResults: [result(8, {})] }));
     const dialog = await openDetails(user, 1);
 
@@ -373,7 +372,7 @@ describe("Show test details", () => {
     expect(within(dialog).queryByText("Advisory")).toBeNull();
   });
 
-  it("a failed rule's advisory: the failure's reason when it has no error or detail (an empty-text regex); beside its detail otherwise (Ruling 56)", async () => {
+  it("a failed rule's advisory: the failure's reason when it has no error or detail (an empty-text regex); beside its detail otherwise", async () => {
     const emptyMatches = "The pattern matched only empty text (3 times), so there is no match to show.";
     const truncated = "The output was truncated: only its first 10 MiB were checked.";
     const user = show(
@@ -398,7 +397,7 @@ describe("Show test details", () => {
     expect(within(dialog).getByText(sentence("7 of 10 elements matched; 3 did not. Showing the first 2."))).toBeInTheDocument();
   });
 
-  it("a failing none and a failing any rule's record_mismatch: their counts and misses (Ruling 49)", async () => {
+  it("a failing none and a failing any rule's record_mismatch: their counts and misses", async () => {
     const user = show(
       testRunFixture({
         ...RUN,
@@ -458,7 +457,7 @@ describe("Show test details", () => {
   });
 });
 
-describe("replay (ADR 0024; decision 21)", () => {
+describe("replay", () => {
   it("keeps every rule's text, snippet and sample inside ph-no-capture: no aria attribute carries one, and of a rule only its error is an attribute, the row's tooltip, inside the block", async () => {
     const markers: string[] = [];
     const scan = () => {

@@ -1,6 +1,5 @@
 /**
- * The Testing tab and its run dialog (D14a decisions 7, 16 to 21 and 23;
- * Preflight rulings 12, 14, 15 and 16): the subtab bar and Play, the
+ * The Testing tab and its run dialog: the subtab bar and Play, the
  * dialog's fields, defaults and checks, My Files (upload, paste, delete),
  * the fixture-shape question, the queue and its refusals, and replay's
  * rules (no file name or text in an attribute; the sample editor inside
@@ -99,7 +98,7 @@ function serveQueue() {
   return vi.spyOn(apiClient, "queueTestRun").mockImplementation(async () => ({ run: testRunFixture() }));
 }
 
-/** A file's head as the API's `GET …/test-files/:fileId/head` answers it (D14a Ruling 43). */
+/** A file's head as the API's `GET …/test-files/:fileId/head` answers it. */
 function serveHead(text: string) {
   return vi.spyOn(apiClient, "getTestFileHead").mockResolvedValue(new TextEncoder().encode(text));
 }
@@ -115,7 +114,7 @@ beforeEach(() => {
   fake.initMonaco = () => Promise.resolve();
   toastError = vi.spyOn(toast, "error");
   toastSuccess = vi.spyOn(toast, "success");
-  // The tab polls the version's runs (Task 10): the API here lists what the store holds, so a queued run stays.
+  // The tab polls the version's runs: the API here lists what the store holds, so a queued run stays.
   vi.spyOn(apiClient, "getTestRuns").mockImplementation(async () => ({ runs: useTestingStore.getState().runs }));
   // A file's head, for the fixture-shape check, unread unless a test serves one: the check is then skipped.
   vi.spyOn(apiClient, "getTestFileHead").mockRejectedValue(new ApiError("test_file_not_found", "Test file not found", { status: 404 }));
@@ -162,7 +161,7 @@ async function pasteSample(user: ReturnType<typeof userEvent.setup>, name: strin
 }
 
 describe("the tab", () => {
-  it("has three subtabs, Tests, Validation (D15a) and Suites (D14b), Tests shown, and Play, 'Configure and run'; the sources My Files, Templates and Paste Text; no Generate with AI", async () => {
+  it("has three subtabs, Tests, Validation and Suites, Tests shown, and Play, 'Configure and run'; the sources My Files, Templates and Paste Text; no Generate with AI", async () => {
     vi.spyOn(apiClient, "getTestSuites").mockResolvedValue({ suites: [] });
     const { user } = renderTab();
 
@@ -185,7 +184,7 @@ describe("the tab", () => {
     expect(within(dialog).queryByText(/generate/i)).toBeNull();
   });
 
-  it("holds Play while the person's own run on this version is queued or running (Preflight ruling 15), and with no version", () => {
+  it("holds Play while the person's own run on this version is queued or running, and with no version", () => {
     renderTab();
     const member = signedInMember(GROUP_ID).user.id;
 
@@ -261,7 +260,7 @@ describe("the run dialog: fields and defaults", () => {
     expect(runButton()).toBeEnabled();
   });
 
-  it("offers My Files, Templates and Paste Text as the file's sources (D14b Task 7)", async () => {
+  it("offers My Files, Templates and Paste Text as the file's sources", async () => {
     serveFiles([]);
     const { user } = renderTab();
     const dialog = await openDialog(user);
@@ -295,7 +294,7 @@ describe("running", () => {
       collectorVersion: "0.162.0",
     });
     expect(window.localStorage.getItem(LAST_RUN_DURATION_KEY)).toBe("20");
-    // The queued run holds Play (Preflight ruling 15).
+    // The queued run holds Play.
     expect(play()).toBeDisabled();
 
     // The next run opens where this one left off.
@@ -306,7 +305,7 @@ describe("running", () => {
     expect(screen.getByText("Selected File:")).toHaveTextContent("zq-old-upload");
   });
 
-  it("gives the focus back to 'Configure and run' when the dialog is cancelled, even when the click didn't focus it (D14b Ruling 38)", async () => {
+  it("gives the focus back to 'Configure and run' when the dialog is cancelled, even when the click didn't focus it", async () => {
     serveFiles([]);
     const { user } = renderTab();
     const configure = play();
@@ -321,7 +320,7 @@ describe("running", () => {
     await waitFor(() => expect(document.activeElement).toBe(configure));
   });
 
-  it("keeps the dialog open on a Run held since it opened (a start elsewhere): 'Another run is in progress', nothing queued (D14b Ruling 42)", async () => {
+  it("keeps the dialog open on a Run held since it opened (a start elsewhere): 'Another run is in progress', nothing queued", async () => {
     serveFiles([OLD_FILE]);
     const queue = serveQueue();
     const { user } = renderTab();
@@ -340,7 +339,7 @@ describe("running", () => {
     expect(queue).not.toHaveBeenCalled();
   });
 
-  it("moves the focus to the queued run's row as the dialog closes, not back to the held Play (Ruling 48's nit)", async () => {
+  it("moves the focus to the queued run's row as the dialog closes, not back to the held Play", async () => {
     serveFiles([OLD_FILE]);
     serveQueue();
     const { user } = renderTab();
@@ -369,7 +368,7 @@ describe("running", () => {
     expect(duration).toHaveAccessibleDescription(/^Must be an integer between 1 and 60\. How long the collector keeps running/);
   });
 
-  it("asks the fixture-shape question for a file from an earlier session, reading its head from the API (D14a Ruling 43)", async () => {
+  it("asks the fixture-shape question for a file from an earlier session, reading its head from the API", async () => {
     serveFiles([OLD_FILE]);
     const head = serveHead("2026-10-09 10:14:03 INFO order placed\n2026-10-09 10:14:05 WARN payment declined\n");
     const queue = serveQueue();
@@ -426,9 +425,9 @@ describe("running", () => {
     [429, "test_run_queue_full", "You have 50 test runs waiting already. Wait for some to finish."],
     [400, "collector_version_retired", "No longer offered. Pick a newer collector version."],
     [400, "collector_version_unknown", "That collector version isn't offered."],
-    // D20 Ruling 78: the queue's own code and the shared sentence for a text too long once the organization's
-    // variables are filled in (no longer the bare invalid_request, whose words the fallback would replace), and the
-    // family's words when the values couldn't be read.
+    // The queue's own code and the shared sentence for a text too long once the organization's variables are filled
+    // in (not the bare invalid_request, whose words the fallback would replace), and the family's words when the
+    // values couldn't be read.
     [400, "filled_in_too_long", TEST_RUN_FILLED_IN_TOO_LONG_MESSAGE],
     [503, "variables_unavailable", VARIABLES_UNAVAILABLE_MESSAGE],
   ])("shows a %i %s refusal by its message, keeps the dialog open and Run free", async (status, code, message) => {
@@ -464,7 +463,7 @@ describe("running", () => {
   });
 });
 
-describe("the dialog's slides (D14a Ruling 44)", () => {
+describe("the dialog's slides", () => {
   it("move the focus into the slot slid in, to its first control, and back to the main view's first control", async () => {
     serveFiles([OLD_FILE]);
     const { user } = renderTab();
@@ -512,7 +511,7 @@ describe("the dialog's slides (D14a Ruling 44)", () => {
     }
   });
 
-  it("clip the track's box rather than hide it, so it is no scroll container: Tab mid-slide can't scroll it (D14a Task 11, Ruling 47)", async () => {
+  it("clip the track's box rather than hide it, so it is no scroll container: Tab mid-slide can't scroll it", async () => {
     serveFiles([]);
     const { user } = renderTab();
     const dialog = await openDialog(user);
@@ -528,7 +527,7 @@ describe("the dialog's slides (D14a Ruling 44)", () => {
     expect(track.onscroll).toBeNull();
   });
 
-  it("focus without scrolling, so the clipping box never scrolls to the slot still sliding in (D14a Ruling 46)", () => {
+  it("focus without scrolling, so the clipping box never scrolls to the slot still sliding in", () => {
     const slot = document.createElement("div");
     slot.tabIndex = -1;
     slot.innerHTML = "<input />";
@@ -727,7 +726,7 @@ describe("Paste Text", () => {
     expect(runButton()).toBeEnabled();
   });
 
-  it("is plain text for the filelog pipeline, narrowed to the target (D14a Preflight ruling 14): the raw hint, saved as text", async () => {
+  it("is plain text for the filelog pipeline, narrowed to the target: the raw hint, saved as text", async () => {
     serveFiles([]);
     const { user } = renderTab();
     await openDialog(user);
@@ -800,7 +799,7 @@ describe("Paste Text", () => {
     expect(save).toHaveBeenCalledTimes(2);
   });
 
-  it("keeps the sample editor in a ph-no-capture block with Monaco's live region inside, word suggestions off, no path (ADR 0024)", async () => {
+  it("keeps the sample editor in a ph-no-capture block with Monaco's live region inside, word suggestions off, no path", async () => {
     serveFiles([]);
     const { user } = renderTab();
     await openDialog(user);
@@ -810,13 +809,13 @@ describe("Paste Text", () => {
     const block = editor.closest(".ph-no-capture");
     expect(block).not.toBeNull();
     const options = fake.props?.options as { ariaContainerElement?: HTMLElement; wordBasedSuggestions?: string };
-    // The shell's one replay-blocked host, shared by every Monaco (Ruling 48).
+    // The shell's one replay-blocked host, shared by every Monaco.
     expect(options.ariaContainerElement).toBe(monacoAriaHost());
     expect(options.ariaContainerElement!.closest(".ph-no-capture")).not.toBeNull();
     expect(options.wordBasedSuggestions).toBe("off");
     expect(fake.props).not.toHaveProperty("path");
     expect(fake.props).not.toHaveProperty("defaultPath");
-    // The store's theme: the member's default, Dark (D21 decision 27).
+    // The store's theme: the member's default, Dark.
     expect(fake.props?.theme).toBe("telflo-dark");
   });
 
@@ -835,7 +834,7 @@ describe("Paste Text", () => {
   });
 });
 
-describe("the fixture-shape check (decision 17)", () => {
+describe("the fixture-shape check", () => {
   const RAW_LINES = "2026-10-09 10:14:03 INFO order placed\n2026-10-09 10:14:05 WARN payment declined\n";
   const F001 =
     "Your fixture looks like raw text log lines, but the target pipeline uses an OTLP receiver. The sandbox OTLP/HTTP endpoint will reject each line as invalid JSON, so the run is likely to produce no output. Convert the fixture to OTLP-JSON to test this pipeline, or test a `file_log` (or `filelog`) receiver pipeline against this fixture as-is.";
@@ -874,7 +873,7 @@ describe("the fixture-shape check (decision 17)", () => {
     await waitFor(() => expect(queue).toHaveBeenCalledOnce());
     expect(queue.mock.calls[0]?.[3]).toMatchObject({ inputFileId: SAMPLE.id, pipeline: "logs/zqotlp", signal: "logs" });
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
-    // The focus goes to the queued run's row, not the held Play (Ruling 48's nit).
+    // The focus goes to the queued run's row, not the held Play.
     await waitFor(() => expect(document.activeElement).toHaveAttribute("aria-pressed", "true"));
   });
 
@@ -912,7 +911,7 @@ describe("the fixture-shape check (decision 17)", () => {
   });
 });
 
-describe("replay (ADR 0024; decision 23)", () => {
+describe("replay", () => {
   it("puts no file name, description, sample or pipeline name in any attribute, with every panel and popover shown", async () => {
     serveFiles([OLD_FILE, OTHER_FILE]);
     vi.spyOn(apiClient, "uploadTestFile");
@@ -943,7 +942,7 @@ describe("replay (ADR 0024; decision 23)", () => {
     await user.upload(picker, new File(["{}"], "zq-picked.json"));
     await screen.findByText("zq-picked.json");
     scan();
-    // Replay records a file input's value (the file's name) whatever maskAllInputs says: it is blocked (D14a Task 11).
+    // Replay records a file input's value (the file's name) whatever maskAllInputs says: it is blocked.
     expect(picker.closest(".ph-no-capture")).not.toBeNull();
     await user.click(screen.getByRole("button", { name: "Cancel" }));
     await user.click(await screen.findByRole("button", { name: "Cancel" }));

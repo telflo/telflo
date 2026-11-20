@@ -9,20 +9,17 @@ import type { OpeningRead } from "~/lib/hooks/use-opening-reads.js";
 import { VersionOptionLabel } from "./VersionOptionLabel.js";
 
 /*
- * The pin picker (D17b-1 decisions 7, 26 and 31; Preflight rulings 6, 12 and
- * 15; D17b-2 Ruling 35, the owner's), shared by Edit collector, bulk pin and
- * New/Edit group: two dependent Selects, Configuration then Version, a
- * configuration chosen selecting its newest version, "(group default)"
- * marking the group's assignment, over the platform's reads; a pin names a
- * published version only (D16c removed importing, and the fleet's imports
- * Select with it). In the D17b-1 Parity Notes:
+ * The pin picker, shared by Edit collector, bulk pin and New/Edit group:
+ * two dependent Selects, Configuration then Version, a configuration
+ * chosen selecting its newest version, "(group default)" marking the
+ * group's assignment, over the platform's reads; a pin names a published
+ * version only. Differences:
  *
  * - The Configuration Select lists the organization's published
  *   configurations, 100 a page (`filter=published`, newest update first, the
  *   API's order), with "Load more" below the Configuration Select while the
  *   API has a next page (each page resends the same filter: the cursor is
- *   positional). No search box (D17b-2 Ruling 35, the owner's, replacing
- *   D17b-1 Ruling 27's): no read sends `q`. The current pin's (or
+ *   positional). No search box: no read sends `q`. The current pin's (or
  *   assignment's) configuration and the configurations chosen are always
  *   offered. The Version Select reads one configuration's published versions
  *   (the versions route, highest number first), one read per configuration
@@ -31,21 +28,19 @@ import { VersionOptionLabel } from "./VersionOptionLabel.js";
  *   hang guard each, all aborted when the dialog closes); an answer for a
  *   first read or a configuration since replaced is dropped.
  * - The configurations chosen live in the dialog
- *   (`useConfigurationPickerKept`): a guard since Ruling 35, the list never
- *   dropping one now (its first page is read again only after a failed
- *   read).
- * - Privacy (decision 32): every Select's item values are ids, never names
- *   (Radix writes them into a hidden native `<select>` inside a form);
- *   configuration names and version labels are text only. The picker has
- *   no text input, so no attribute of it holds a name (Ruling 35 took the
- *   search box's named exception away).
+ *   (`useConfigurationPickerKept`): a guard, the list never dropping one (its
+ *   first page is read again only after a failed read).
+ * - Privacy: every Select's item values are ids, never names (Radix writes
+ *   them into a hidden native `<select>` inside a form); configuration names
+ *   and version labels are text only. The picker has no text input, so no
+ *   attribute of it holds a name.
  */
 
 /** A configuration read's failure, shown in place of the Selects and toasted by a failed "Load more". */
 export const CONFIGURATIONS_FAILED_MESSAGE = "Failed to load configurations";
 export const VERSIONS_FAILED_MESSAGE = "Failed to load versions";
 
-/** How many configurations a read asks for (Preflight ruling 6). */
+/** How many configurations a read asks for. */
 export const PICKER_PAGE_SIZE = 100;
 
 /** The group's assignment marker. */
@@ -65,7 +60,7 @@ export interface ConfigurationsRead {
   retry: () => void;
 }
 
-/** The organization's published configurations, read on opening (Preflight ruling 6). */
+/** The organization's published configurations, read on opening. */
 export function usePublishedConfigurations(open: boolean, read: OpeningRead, organizationId: string): ConfigurationsRead {
   const [state, setState] = useState<Omit<ConfigurationsRead, "loadMore" | "retry">>({
     status: "loading",
@@ -219,7 +214,7 @@ export interface ConfigurationVersionPickerProps {
   kept?: ConfigurationPickerKept | undefined;
 }
 
-/** The Configuration and Version Selects, with "Load more" below the Configuration Select (no search box: Ruling 35). */
+/** The Configuration and Version Selects, with "Load more" below the Configuration Select (no search box). */
 export function ConfigurationVersionPicker({
   configurations,
   versions,

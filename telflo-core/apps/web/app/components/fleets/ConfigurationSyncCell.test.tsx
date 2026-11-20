@@ -7,7 +7,7 @@ import {
   type DriftCounts,
 } from "./ConfigurationSyncCell.js";
 
-// The Configuration Sync column (D17a decisions 9 and 18, Preflight ruling 11).
+// The Configuration Sync column.
 
 const NONE: DriftCounts = { collectors: 0, inSync: 0, pending: 0, failed: 0, drifted: 0, unassigned: 0 };
 

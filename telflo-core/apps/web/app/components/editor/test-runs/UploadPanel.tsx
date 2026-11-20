@@ -21,14 +21,13 @@ function asDisplayName(name: string): string {
 }
 
 /**
- * Upload a test file to My Files (D14a decision 16). Differences (the
- * Parity Notes):
+ * Upload a test file to My Files. Differences:
  * - the file is checked as it is picked: one of the six extensions, up to
  *   10 MiB (`uploadRefusal`), said under the field, with OK held;
  * - a refusal shows the API's words (413, 415, 429), else
  *   "Failed to upload file" (`failureMessage`);
  * - the chosen file's name shows as text, not as a read-only input's value
- *   (an attribute; ADR 0024); the name field starts from it, cut to the
+ *   (an attribute); the name field starts from it, cut to the
  *   display name's 200 characters;
  * - kept mounted through the dialog's slides, and emptied each time it is
  *   shown (reset on `active`);
@@ -136,7 +135,7 @@ export function UploadPanel({ organizationId, active, onDone, onCancel }: Upload
           </div>
           {/* Blocked from replay (`ph-no-capture`): rrweb records a file
               input's value, "C:\fakepath\<the file's name>", as it changes,
-              whatever maskAllInputs says (D14a Task 11's privacy review). */}
+              whatever maskAllInputs says. */}
           <input
             ref={fileInputRef}
             type="file"

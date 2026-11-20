@@ -19,39 +19,37 @@ interface SuitesPanelProps {
   onPlayOne: (suite: TestSuite, definition: TestDefinition, opener: HTMLElement) => void;
   /** A card's Play all, in parallel or serially, with the button pressed. */
   onPlayAll: (suite: TestSuite, mode: PlayAllMode, opener: HTMLElement) => void;
-  /** Called as one of the subtab's dialogs shows; what it returns, as that dialog closes (`useDialogShowing`, D14b Ruling 50). */
+  /** Called as one of the subtab's dialogs shows; what it returns, as that dialog closes (`useDialogShowing`). */
   onDialogShown?: () => () => void;
 }
 
 /**
- * The Testing tab's Suites subtab (D14b decisions 1, 2, 5, 8 and 9;
- * Preflight rulings 18 and 19): its help, words, empty states and
- * confirmation. The version open in the editor's suites,
- * each a SuiteCard; + creates one (SuiteEditorDialog). Suites can be
- * created, renamed, described and deleted on any version, published or not
- * (decision 5), by anyone who can see them (decision 8).
+ * The Testing tab's Suites subtab: its help, words, empty states and
+ * confirmation. The version open in the editor's suites, each a SuiteCard;
+ * + creates one (SuiteEditorDialog). Suites can be created, renamed,
+ * described and deleted on any version, published or not, by anyone who can
+ * see them.
  *
- * Differences (the Parity Notes):
+ * Differences:
  * - the suites are read each time the subtab shows and when the version
- *   changes (Preflight ruling 18), not once a version; a failed read shows
- *   inline with Retry ("Failed to load test suites", or the API's words for
- *   a refusal), not a toast with no read again;
+ *   changes, not once a version; a failed read shows inline with Retry
+ *   ("Failed to load test suites", or the API's words for a refusal), not a
+ *   toast with no read again;
  * - Play one and the Play alls are the Testing tab's (`onPlayOne`,
  *   `onPlayAll`), held as every Play is (SuiteCard);
- * - in the playground (D31-1 decisions 24 and 31), every action that would
- *   change or run something is locked at its button (`useLockedAction`):
- *   Add suite opens the sign-up prompt, as SuiteCard's buttons do; the
- *   suites and their definitions read from the sample;
+ * - in the playground, every action that would change or run something is
+ *   locked at its button (`useLockedAction`): Add suite opens the sign-up
+ *   prompt, as SuiteCard's buttons do; the suites and their definitions read
+ *   from the sample;
  * - closing the suite dialog gives the focus back to its opener (Add suite,
  *   Edit suite), and a suite deleted gives it to the next card's header, else
- *   the previous one's, else Add suite (D14b Ruling 38), and a confirmation
- *   closed without a delete (Cancel, Escape) gives it back to the card's
- *   Delete suite (D14b Ruling 51), not to the page;
+ *   the previous one's, else Add suite, and a confirmation closed without a
+ *   delete (Cancel, Escape) gives it back to the card's Delete suite, not to
+ *   the page;
  * - while any of its dialogs shows, the tab knows (`onDialogShown`), and a
  *   Play doesn't switch to Tests, which would unmount the dialog and lose
- *   what was typed in it (D14b Ruling 50);
- * - nothing here sends an analytics event, and no name reaches an attribute
- *   (Preflight ruling 19).
+ *   what was typed in it;
+ * - nothing here sends an analytics event, and no name reaches an attribute.
  */
 export function SuitesPanel({ onPlayOne, onPlayAll, onDialogShown }: SuitesPanelProps) {
   const locked = useLockedAction();
@@ -134,7 +132,7 @@ export function SuitesPanel({ onPlayOne, onPlayAll, onDialogShown }: SuitesPanel
   /**
    * After a delete: the card now at its place, else the one before, else Add
    * suite. Closed without one (Cancel, Escape): back to the Delete suite that
-   * opened it, while it is there (Ruling 51: the confirmation has no Radix
+   * opened it, while it is there (the confirmation has no Radix
    * trigger, so Radix's own return would leave it on the page's body).
    */
   const focusAfterDelete = (event: Event) => {

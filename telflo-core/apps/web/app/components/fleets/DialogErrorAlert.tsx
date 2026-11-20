@@ -1,10 +1,9 @@
 import { AlertTriangle } from "lucide-react";
 
 /**
- * A dialog's inline error box (ADR 0018), with `role="alert"` so a screen
- * reader hears it when it appears. Nothing when there is no error, so a
- * dialog drops it in unconditionally. The create and rename dialogs show
- * their refusals here (D17a decision 28).
+ * A dialog's inline error box, with `role="alert"` so a screen reader hears
+ * it when it appears. Nothing when there is no error, so a dialog drops it in
+ * unconditionally. The create and rename dialogs show their refusals here.
  */
 export function DialogErrorAlert({ error }: { error: string | null }) {
   if (!error) return null;

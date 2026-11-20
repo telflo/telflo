@@ -32,10 +32,9 @@ import { PublishedVersionLink } from "./PublishedVersionLink.js";
 import { NO_PINNED_WORDS, VariableGroupLink } from "./VariableGroupLink.js";
 
 /*
- * A collector's details (D17b-1 decisions 22, 24, 25 and 32; Preflight
- * rulings 4, 11 and 17): a Dialog opened from the grid's Name button, the
+ * A collector's details: a Dialog opened from the grid's Name button, the
  * collector's name its title and "Collector details" its description, a
- * two-column grid of `DetailRow`s. In the D17b-1 Parity Notes:
+ * two-column grid of `DetailRow`s. Differences:
  *
  * - Shown at once from the grid's row, then refreshed from `GET
  *   …/collectors/{c}`; a 404 for the collector toasts "Collector not found",
@@ -51,40 +50,37 @@ import { NO_PINNED_WORDS, VariableGroupLink } from "./VariableGroupLink.js";
  *   one's reads reaches it.
  * - Rows: "UID"; Status from the server's `liveness` (Online, Warning,
  *   Unknown, Offline) and Configuration from its `drift` (In sync, …, Nothing
- *   assigned), as the grid's two columns (D17d-2 Ruling 55, the owner's Q58:
- *   Status had been the drift, the liveness a dot beside Last Seen), each
- *   with its meaning as text (a touch user sees no tooltip); Token by the
- *   opamp-server's rule (`CollectorTokenRow`); "Configuration name" (named so
- *   by Ruling 55, "Configuration" being the drift's row); Pin, Applied and
- *   Created (new); Last Seen's relative and full time as text, no dot. No
- *   collector-version drift colour (D19's).
- * - D20 (default 25): "Pinned variable group" (the collector's own, by name
- *   inside `ph-no-capture`, else "None: follows its group") and "Variable
- *   group" (the effective one: the pin's, else its group's, else
- *   "Organization values", opening each variable's value and where it comes
- *   from, `VariableGroupLink`), after Pin.
- * - Error (the controller's ruling after Task 5's review): the current
- *   apply's error (`effective.error`) in a `<pre>` inside `ph-no-capture`, at
- *   most 12rem tall and scrolling, focusable so a keyboard scrolls it (an
- *   apply error can run to kilobytes), named by the fixed "Error message"
- *   (never its text), else a dash. The error history keeps a collector's
- *   errors 30 days only, so a collector still failing an old apply would
- *   otherwise show "Failed" beside "No errors reported.".
+ *   assigned), as the grid's two columns, each with its meaning as text (a
+ *   touch user sees no tooltip); Token by the opamp-server's rule
+ *   (`CollectorTokenRow`); "Configuration name" (named so because
+ *   "Configuration" is the drift's row); Pin, Applied and Created (new); Last
+ *   Seen's relative and full time as text, no dot. No collector-version drift
+ *   colour.
+ * - "Pinned variable group" (the collector's own, by name inside
+ *   `ph-no-capture`, else "None: follows its group") and "Variable group"
+ *   (the effective one: the pin's, else its group's, else "Organization
+ *   values", opening each variable's value and where it comes from,
+ *   `VariableGroupLink`), after Pin.
+ * - Error: the current apply's error (`effective.error`) in a `<pre>` inside
+ *   `ph-no-capture`, at most 12rem tall and scrolling, focusable so a
+ *   keyboard scrolls it (an apply error can run to kilobytes), named by the
+ *   fixed "Error message" (never its text), else a dash. The error history
+ *   keeps a collector's errors 30 days only, so a collector still failing an
+ *   old apply would otherwise show "Failed" beside "No errors reported.".
  * - Then the error history and the reported attributes, each in
  *   `ph-no-capture` (new). Pin, Target Version and Effective Version show a
- *   published version as "{configurationName} @v{n}" (D17c-1 decision 46: the
- *   two version rows linked, the whole name, no tooltip) or their empty
- *   forms; no imported configuration (D16c decision 9: importing removed).
- *   Effective Version's meaning, the grid's Version tooltip's
- *   (`VERSION_MEANINGS`, D16c Ruling 21), is text under it, as Status's.
+ *   published version as "{configurationName} @v{n}" (the two version rows
+ *   linked, the whole name, no tooltip) or their empty forms; no imported
+ *   configuration. Effective Version's meaning, the grid's Version
+ *   tooltip's (`VERSION_MEANINGS`), is text under it, as Status's.
  * - No `title` attribute anywhere, and no collector, group or configuration
  *   name, address, attribute or error text in any attribute: text only, in
  *   the masked shell.
- * - On a Kubernetes-supervisor fleet (D17d-1 decision 23; Preflight ruling
- *   26): a **Node** row after UID, the reported `k8s.node.name`
- *   (`collectorNodeName`: an own key only) inside `ph-no-capture`, as the
- *   reported attributes, else a dash; the Group row names the Agent and the
- *   Cluster by their roles (`groupLabel`), a gateway by its name.
+ * - On a Kubernetes-supervisor fleet: a **Node** row after UID, the reported
+ *   `k8s.node.name` (`collectorNodeName`: an own key only) inside
+ *   `ph-no-capture`, as the reported attributes, else a dash; the Group row
+ *   names the Agent and the Cluster by their roles (`groupLabel`), a gateway
+ *   by its name.
  * - The footer's "Edit collector" closes the details and hands the
  *   collector to `onEdit`: the tab opens the edit dialog
  *   (`EditCollectorDialog`).
@@ -117,8 +113,7 @@ const DASH = <span className="text-muted-foreground">—</span>;
 /**
  * A published version reference: "{configurationName} @v{n}" linked to the
  * editor's version, the whole name and no tooltip (`PublishedVersionLink`
- * in a dialog: D17c-1 decision 46, Preflight ruling 32), or the deleted words
- * when the platform holds none.
+ * in a dialog), or the deleted words when the platform holds none.
  */
 function VersionReference({ version }: { version: PublishedVersion | null }) {
   if (version === null) return <span className="text-muted-foreground">{DELETED_VERSION_WORDS}</span>;
@@ -131,7 +126,7 @@ function TargetVersion({ resolution }: { resolution: Collector["resolution"] }) 
   return <VersionReference version={resolution.version} />;
 }
 
-/** Effective Version: what the collector was served (or found already running), its meaning under it (D16c Ruling 21). */
+/** Effective Version: what the collector was served (or found already running), its meaning under it. */
 function EffectiveVersion({ served }: { served: Collector["served"] }) {
   return (
     <>
@@ -141,7 +136,7 @@ function EffectiveVersion({ served }: { served: Collector["served"] }) {
   );
 }
 
-/** The Pin row's words (Preflight ruling 11): a version as "{configurationName} @v{n}", as the version rows (D17c-1 Preflight ruling 32). */
+/** The Pin row's words: a version as "{configurationName} @v{n}", as the version rows. */
 export function pinWords(pin: Collector["pin"]): string {
   if (pin === null) return "None: follows its group";
   if (pin.versionId === null || pin.version === null) return DELETED_VERSION_WORDS;
@@ -158,7 +153,7 @@ export function statusMeaning(liveness: Collector["liveness"]): string {
   return sentence(LIVENESS_MEANINGS[liveness]);
 }
 
-/** The Configuration row's meaning, as text: D17a's legend's, but for unassigned's (Preflight ruling 4). */
+/** The Configuration row's meaning, as text: the Configuration Sync legend's, but for unassigned's. */
 export function configurationMeaning(drift: Collector["drift"]): string {
   return sentence(drift === "unassigned" ? UNASSIGNED_COLLECTOR_MEANING : DRIFT_MEANINGS[drift]);
 }
@@ -179,7 +174,7 @@ export interface CollectorDetailsDialogProps {
   onCollectorGone: () => void;
   /** The footer's "Edit collector": the details close and the edit dialog opens. */
   onEdit?: ((collector: Collector) => void) | undefined;
-  /** Where the focus goes once the dialog has closed (Radix's `onCloseAutoFocus`): the host gives it back to the opener (D14b Ruling 46). */
+  /** Where the focus goes once the dialog has closed (Radix's `onCloseAutoFocus`): the host gives it back to the opener. */
   onCloseAutoFocus?: ((event: Event) => void) | undefined;
 }
 

@@ -20,12 +20,11 @@ import {
 import { pickerDate, VersionOptionLabel } from "./VersionOptionLabel.js";
 
 /*
- * The pin picker (D17b-1 decision 26; Preflight rulings 6 and 12) and its
- * version labels. Selecting a different configuration selects its newest
- * version in the dialog (once the versions route answers):
+ * The pin picker and its version labels. Selecting a different configuration
+ * selects its newest version in the dialog (once the versions route answers):
  * `EditCollectorDialog.test.tsx`'s "a configuration chosen selects its newest
  * version". The reads, their failures and "Load more" are tested through the
- * dialog too. No search box (D17b-2 Ruling 35, the owner's).
+ * dialog too. No search box.
  */
 
 const OTHER_ID = "c0ffee00-0000-4000-8000-000000000001";
@@ -136,7 +135,7 @@ describe("ConfigurationVersionPicker", () => {
     expect(screen.getByLabelText("Version")).toBeDisabled();
   });
 
-  // D17b-2 Ruling 35 (the owner's): more than a page is reached by "Load more" alone.
+  // More than a page is reached by "Load more" alone.
   it("offers no configuration search box", () => {
     const { container } = render(
       <ConfigurationVersionPicker
@@ -189,7 +188,7 @@ describe("ConfigurationVersionPicker", () => {
   });
 });
 
-describe("usePublishedConfigurations's Load more (Preflight ruling 6)", () => {
+describe("usePublishedConfigurations's Load more", () => {
   it("appends each configuration once: a page repeating one already shown (the cursor is positional) adds only the new", async () => {
     // A configuration updated between the pages moves in the API's order, so the next page can hold it again.
     const getConfigurations = vi
@@ -207,7 +206,7 @@ describe("usePublishedConfigurations's Load more (Preflight ruling 6)", () => {
     const { result } = renderHook(() => usePublishedConfigurations(true, read, GROUP_ID));
     await waitFor(() => expect(result.current.status).toBe("read"));
     expect(result.current.items.map((item) => item.id)).toEqual([CONFIGURATION_ID]);
-    // No search (Ruling 35): the first read sends no q, and the hook offers none.
+    // No search: the first read sends no q, and the hook offers none.
     expect(getConfigurations.mock.calls[0]![1]).toEqual({ filter: "published", limit: 100 });
     expect(result.current).not.toHaveProperty("search");
 

@@ -50,10 +50,9 @@ import {
 } from "./VariableGroupChoice.js";
 
 /*
- * "Edit collector" (D17b-1 decisions 8, 15, 26 and 32; Preflight rulings 5,
- * 6, 12 and 15; ADR 0018): a `max-w-md` dialog with a `<form>`, the
+ * "Edit collector": a `max-w-md` dialog with a `<form>`, the
  * title, "OK" disabled until something changes and "Saving…", with the pin
- * picker (`CollectorPinPicker.tsx`). In the D17b-1 Parity Notes:
+ * picker (`CollectorPinPicker.tsx`). Differences:
  *
  * - The description names the move and the published version; "UID:".
  * - Name (prefilled, at most 200 characters, trimmed before it is sent and
@@ -63,24 +62,22 @@ import {
  *   and **Pin**: "Follow the group", "A published version" (the
  *   Configuration and Version Selects), and, for a pin whose version the
  *   platform no longer holds, "A deleted configuration's version":
- *   preselected and never sent unless changed (D16b Ruling 37: it can't be
- *   sent back). No imported configuration (D16c removed importing).
- * - **Variable group** (D20 default 24; Q83), a Select: "Follow group
- *   (eu-edge)" first (the chosen group's variable group's name, "Follow group
- *   (Organization values)" for none), then the organization's variable
- *   groups, read at the opening (`VariableGroupChoice`); the collector's
- *   pinned one preselected. Independent of the pin (either, both or neither).
+ *   preselected and never sent unless changed (it can't be sent back). No
+ *   imported configuration.
+ * - **Variable group**, a Select: "Follow group (eu-edge)" first (the chosen
+ *   group's variable group's name, "Follow group (Organization values)" for
+ *   none), then the organization's variable groups, read at the opening
+ *   (`VariableGroupChoice`); the collector's pinned one preselected.
+ *   Independent of the pin (either, both or neither).
  * - **One `PATCH`** with only what changed (the name, `groupId`, the pin by
  *   its `kind` and `versionId`, or `null` to unpin, `pinnedVariableGroupId`
  *   or `null` to follow the group's): rename, move and pin
  *   land together or not at all.
- * - **The baseline** (D17c-1 Ruling 66; D20 Preflight ruling 33): the
- *   collector as the dialog opened, its pin and pinned variable group
- *   included, a snapshot, never the live prop: a field is sent only when it
- *   differs from the snapshot, and a parent's reload while it is open moves
- *   nothing.
- * - **"Follow the group" is never refused** (D16c decision 10: the owner's
- *   Q18 refusal went with importing). When the tab holds no groups (its
+ * - **The baseline**: the collector as the dialog opened, its pin and
+ *   pinned variable group included, a snapshot, never the live prop: a
+ *   field is sent only when it differs from the snapshot, and a parent's
+ *   reload while it is open moves nothing.
+ * - **"Follow the group" is never refused**. When the tab holds no groups (its
  *   read failed), or none that is the collector's (a group made since the
  *   tab's last groups read, the collector refreshed by the details, or a
  *   tab's answer since the opening that dropped it), the dialog reads them
@@ -91,27 +88,27 @@ import {
  *   hint and no "(group default)" marker show. A Group chosen that the
  *   groups shown no longer hold reads "A group no longer listed", never a
  *   blank trigger or an empty name.
- * - A hint says what saving does to what the collector runs (ruling 5).
- * - **"Variables used"** (D20 Q86; the group dialogs' part,
- *   `VariableGroupChoice`'s `VariablesUsed`): for "A published version",
- *   the chosen version's organization variables no variable defines, before
- *   Save, with "Saving is refused until they are defined on the Variables
- *   page." when the save would pin it (else "Define them on the Variables
- *   page.", the pin as it opened isn't sent again).
+ * - A hint says what saving does to what the collector runs.
+ * - **"Variables used"** (the group dialogs' part, `VariableGroupChoice`'s
+ *   `VariablesUsed`): for "A published version", the chosen version's
+ *   organization variables no variable defines, before Save, with "Saving
+ *   is refused until they are defined on the Variables page." when the save
+ *   would pin it (else "Define them on the Variables page.", the pin as it
+ *   opened isn't sent again).
  * - Refusals inline (`DialogErrorAlert`): a taken name, or a 400 naming
  *   `name`, under the Name; `configuration_version_not_published`,
- *   `configuration_version_not_found`, `collector_group_not_found`, a 429
- *   and the fleet refusals in the alert (D20: `variable_group_not_found`'s
- *   words; `variables_undefined`'s with its names, at most 100, then "… and N
- *   more"), else "Failed to update collector".
- *   `collector_not_found` toasts "Collector not found", closes and reloads;
- *   `fleet_not_found` toasts the API's words (`fleetRefusalMessage`),
- *   closes and reloads (the grid then shows "Fleet not found"). An unknown
- *   outcome (`isUnknownOutcome`: a 5xx, no connection, a reply that doesn't
- *   parse, the 30 s hang guard) shows the 503's words and keeps the dialog
- *   open: a retry is safe, a `PATCH` sets values; the dialog closed after
- *   one reloads. The organization's or the terms' refusal closes and
- *   revalidates the layout; a session ended is silent.
+ *   `configuration_version_not_found`, `collector_group_not_found`, a 429 and
+ *   the fleet refusals in the alert (`variable_group_not_found`'s words;
+ *   `variables_undefined`'s with its names, at most 100, then "… and N
+ *   more"), else "Failed to update collector". `collector_not_found` toasts
+ *   "Collector not found", closes and reloads; `fleet_not_found` toasts the
+ *   API's words (`fleetRefusalMessage`), closes and reloads (the grid then
+ *   shows "Fleet not found"). An unknown outcome (`isUnknownOutcome`: a 5xx,
+ *   no connection, a reply that doesn't parse, the 30 s hang guard) shows the
+ *   503's words and keeps the dialog open: a retry is safe, a `PATCH` sets
+ *   values; the dialog closed after one reloads. The organization's or the
+ *   terms' refusal closes and revalidates the layout; a session ended is
+ *   silent.
  * - Success toasts "Collector updated", closes, and reloads
  *   the grid's page and the fleet (`onChanged`).
  * - While saving: Cancel disabled, no X, Escape and outside clicks do
@@ -120,29 +117,28 @@ import {
  *   dialog unmounted, or for an organization no longer active, does
  *   nothing (`useStillCurrent`).
  *
- * On a Kubernetes-supervisor fleet (D17d-1 decisions 4 and 23; Preflight
- * rulings 25 and 27) the Group select and the hints name the Agent and the
- * Cluster by their roles (`groupLabel`: "It is sent Agent's published
- * version on its next poll."), listed Agent, Cluster, then the gateways;
- * and a muted canary note under the Pin select, which it describes
+ * On a Kubernetes-supervisor fleet the Group select and the hints name the
+ * Agent and the Cluster by their roles (`groupLabel`: "It is sent Agent's
+ * published version on its next poll."), listed Agent, Cluster, then the
+ * gateways; and a muted canary note under the Pin select, which it describes
  * (`aria-describedby`): a pin lasts only as long as the pod.
  *
- * Privacy (decision 32): names are text in the masked shell. The Name
- * input's `value` attribute holds the name (React writes a controlled
- * input's): the named exception, masked by replay's `maskAllInputs` (the
- * picker has no search box: Ruling 35). Every Select's item
- * values are ids or the fixed choices below, never a name.
+ * Privacy: names are text in the masked shell. The Name input's `value`
+ * attribute holds the name (React writes a controlled input's): the named
+ * exception, masked by replay's `maskAllInputs` (the picker has no search
+ * box). Every Select's item values are ids or the fixed choices below, never
+ * a name.
  */
 
 export const UPDATE_COLLECTOR_FAILED_MESSAGE = "Failed to update collector";
 
-/** The groups the dialog read itself couldn't be read (Preflight ruling 5). */
+/** The groups the dialog read itself couldn't be read. */
 export const GROUPS_UNREADABLE_WORDS = "The groups couldn't be read.";
 
 /** The Group chosen, once the groups shown no longer hold it (a tab's answer since): never an empty name or a blank trigger. */
 export const GROUP_NOT_LISTED_WORDS = "A group no longer listed";
 
-/** The hints (Preflight ruling 5): what saving leads to. */
+/** The hints: what saving leads to. */
 export const HINT_NEW_PIN = "It is sent this configuration on its next poll.";
 export const HINT_PIN_STILL_DECIDES = "Its pin still decides what it runs.";
 export function hintGroupVersion(groupName: string): string {
@@ -152,7 +148,7 @@ export function hintGroupNothing(groupName: string): string {
   return `${groupName} has no published version: it shows Nothing assigned and keeps running what it has.`;
 }
 
-/** The pin's canary note on a Kubernetes fleet (D17d-1 decision 4; Preflight ruling 27), bulk pin's too. */
+/** The pin's canary note on a Kubernetes fleet, bulk pin's too. */
 export const KUBERNETES_PIN_NOTE = "A rescheduled pod is a new collector: it follows its group again.";
 
 /** The Variable group Select's fixed choice: follow the group's (its item value, never an id). */
@@ -195,7 +191,7 @@ export interface EditCollectorDialogProps {
   fleetType?: FleetType;
   /** After an update, a 404 for the collector or the fleet, or closing after an unknown outcome: the grid reloads its page and the fleet. */
   onChanged: () => void;
-  /** Where the focus goes once the dialog has closed (Radix's `onCloseAutoFocus`): the host gives it back to the opener (D14b Ruling 46). */
+  /** Where the focus goes once the dialog has closed (Radix's `onCloseAutoFocus`): the host gives it back to the opener. */
   onCloseAutoFocus?: ((event: Event) => void) | undefined;
 }
 
@@ -223,8 +219,9 @@ function EditCollectorSession({
   const groupId = useId();
   const pinId = useId();
   const variableGroupSelectId = useId();
-  // The session's baseline is the collector as it opened, never the live prop (D17c-1 Ruling 66; Preflight ruling 33):
-  // a grid's reload while the dialog is open must not move what a field is compared against.
+  // The session's baseline is the collector as it opened, never the live prop:
+  // a grid's reload while the dialog is open must not move what a field is
+  // compared against.
   const [collector] = useState(liveCollector);
 
   const pin = collector?.pin ?? null;
@@ -247,7 +244,7 @@ function EditCollectorSession({
   const [error, setError] = useState<string | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
 
-  // The groups: the tab's when they hold the collector's, else the dialog's own read (Preflight ruling 5).
+  // The groups: the tab's when they hold the collector's, else the dialog's own read.
   const collectorGroupId = collector?.groupId ?? null;
   const tabHoldsGroup = tabGroups !== null && tabGroups.some((group) => group.id === collectorGroupId);
   const [ownGroups, setOwnGroups] = useState<GroupsRead>({ state: "idle" });
@@ -286,13 +283,13 @@ function EditCollectorSession({
   // The picker's configurations chosen, kept while the Pin choice switches away and back.
   const pickerKept = useConfigurationPickerKept();
 
-  // The pinned variable group (D20 default 24): the collector's as it opened, else "Follow group (…)".
+  // The pinned variable group: the collector's as it opened, else "Follow group (…)".
   const offeredVariableGroups = useOfferedVariableGroups(open, read, organizationId);
   const pinnedVariableGroupId = collector?.pinnedVariableGroupId ?? null;
   const [variableGroupChoice, setVariableGroupChoice] = useState<string>(pinnedVariableGroupId ?? FOLLOW_GROUP_CHOICE);
   const chosenVariableGroupId = variableGroupChoice === FOLLOW_GROUP_CHOICE ? null : variableGroupChoice;
   const [undefinedRefused, setUndefinedRefused] = useState<VariablesUndefinedDetails | null>(null);
-  // "Variables used" (Q86, the group dialogs' part): the published version the Pin chooses, before Save.
+  // "Variables used" (the group dialogs' part): the published version the Pin chooses, before Save.
   const references = useVersionReferences(
     read,
     organizationId,
@@ -300,7 +297,7 @@ function EditCollectorSession({
     choice === "version" ? versionId : null,
   );
 
-  // Only a read picks: after a failed read, "Try again"'s answer still preselects the newest (decision 26).
+  // Only a read picks: after a failed read, "Try again"'s answer still preselects the newest.
   if (pickNewest && versions.configurationId === configurationId && versions.status === "read") {
     setPickNewest(false);
     setVersionId(versions.versions[0]?.id ?? null);
@@ -340,7 +337,7 @@ function EditCollectorSession({
     return followGroupWords(named?.name ?? UNNAMED_VARIABLE_GROUP);
   })();
 
-  // The hint (Preflight ruling 5): none without groups, none for a rename alone.
+  // The hint: none without groups, none for a rename alone.
   const hint = ((): string | null => {
     if (groups === null || chosenGroup === null) return null;
     if (pinChanged && pinChange.request !== null) return HINT_NEW_PIN;

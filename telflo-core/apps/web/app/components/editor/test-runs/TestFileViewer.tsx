@@ -12,19 +12,17 @@ interface TestFileViewerProps {
 }
 
 /**
- * A read-only Monaco for a test file, the run's text or its logs (D14a
- * decisions 22 and 23). Differences:
+ * A read-only Monaco for a test file, the run's text or its logs. Differences:
  * - the person's theme and all four editor preferences, as every Monaco
- *   here (`useEditorPreferences`; D21 decisions 27 and 28), the tab size
- *   setting how wide a tab character shows; the themes are defined before
- *   mount (Preflight ruling 14), not Monaco's own themes;
+ *   here (`useEditorPreferences`), the tab size setting how wide a tab
+ *   character shows; the themes are defined before mount, not Monaco's
+ *   own themes;
  * - it mounts once initMonaco() has resolved (MonacoGate);
  * - JSON has its tokens only (initMonaco's mode configuration): no worker;
- * - replay (ADR 0024): the text is private, so the editor sits in a
- *   `ph-no-capture` block, Monaco's screen-reader live region in the
- *   shell's one replay-blocked host (`useAriaContainer`, Ruling 48),
- *   word-based suggestions off, and no `path` (Monaco writes it into
- *   a `data-uri` attribute).
+ * - replay: the text is private, so the editor sits in a `ph-no-capture`
+ *   block, Monaco's screen-reader live region in the shell's one
+ *   replay-blocked host (`useAriaContainer`), word-based suggestions off, and
+ *   no `path` (Monaco writes it into a `data-uri` attribute).
  */
 export function TestFileViewer({ value, language, className }: TestFileViewerProps) {
   const preferences = useEditorPreferences();

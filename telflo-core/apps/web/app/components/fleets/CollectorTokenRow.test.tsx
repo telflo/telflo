@@ -9,10 +9,10 @@ import {
   UNKNOWN_TOKEN_WORDS,
 } from "./CollectorTokenRow.js";
 
-// The Token row's rule (D17b-1 decision 25, Preflight ruling 11): the
-// opamp-server's `GetActiveRotate` (valid rotate tokens ordered
-// `do_refresh, created_at desc, id desc`) and `Token.ValidAt` (not revoked,
-// no expiry or one after now), checked in the rule's order.
+// The Token row's rule: the opamp-server's `GetActiveRotate` (valid rotate
+// tokens ordered `do_refresh, created_at desc, id desc`) and
+// `Token.ValidAt` (not revoked, no expiry or one after now), checked in the
+// rule's order.
 
 const NOW = Date.parse("2026-10-14T10:00:00.000Z");
 const at = (offsetMs: number) => new Date(NOW + offsetMs).toISOString();
@@ -24,7 +24,7 @@ const GREATER_ID = "00000000-0000-4000-8000-00000000000b";
 const defaultToken = (overrides: Parameters<typeof listedToken>[0] = {}) =>
   listedToken({ id: DEFAULT_TOKEN_ID, kind: "default", ...overrides });
 
-describe("collectorTokenWords (decision 25)", () => {
+describe("collectorTokenWords", () => {
   it("shows a dash for no token, and says a token the list doesn't hold is unknown", () => {
     expect(collectorTokenWords(null, [defaultToken()], NOW)).toBe("—");
     expect(collectorTokenWords(ROTATE_TOKEN_ID, [defaultToken()], NOW)).toBe(UNKNOWN_TOKEN_WORDS);

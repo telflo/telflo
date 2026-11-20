@@ -1,6 +1,5 @@
 /**
- * The Testing tab's Suites subtab (D14b Task 6: decisions 1, 2, 5, 8, 9 and
- * 25; Preflight rulings 16, 18 and 19): suites created, renamed, described
+ * The Testing tab's Suites subtab: suites created, renamed, described
  * and deleted (confirmed); definitions added from My Files, Upload and Paste,
  * and deleted (confirmed); the empty states, failed reads and their Retry;
  * the caps' words; a published version's suites editable; the definition
@@ -217,7 +216,7 @@ describe("the Suites subtab", () => {
 
     expect(await screen.findByText("No suites yet. Click + to create one.")).toBeInTheDocument();
     expect(listSuites).toHaveBeenCalledTimes(1);
-    // With the hang guard's signal (D14b Ruling 50).
+    // With the hang guard's signal.
     expect(listSuites).toHaveBeenCalledWith(...TARGET, { signal: expect.any(AbortSignal) });
 
     api.suites = [SUITE];
@@ -322,7 +321,7 @@ describe("suites", () => {
     expect(screen.getByText("zq-covers-logs")).toBeInTheDocument();
   });
 
-  it("toasts the API's words for the 101st suite (decision 25), keeping the dialog open", async () => {
+  it("toasts the API's words for the 101st suite, keeping the dialog open", async () => {
     const { createSuite } = serveApi();
     createSuite.mockRejectedValueOnce(new ApiError("test_suite_limit_reached", TEST_SUITE_LIMIT_MESSAGE, { status: 409 }));
     const { user } = await renderSuites();
@@ -387,7 +386,7 @@ describe("suites", () => {
     await user.click(within(confirm).getByRole("button", { name: "Delete" }));
     expect(await within(confirm).findByRole("button", { name: "Deleting..." })).toBeDisabled();
     expect(within(confirm).getByRole("button", { name: "Cancel" })).toBeDisabled();
-    // Still open while the API answers (Ruling 38: not merely the reference held above).
+    // Still open while the API answers (not merely the reference held above).
     expect(screen.getByRole("alertdialog", { name: "Delete test suite?" })).toBeInTheDocument();
 
     act(() => answer());
@@ -397,7 +396,7 @@ describe("suites", () => {
     expect(await screen.findByText("No suites yet. Click + to create one.")).toBeInTheDocument();
   });
 
-  it("is editable on a published version (decision 5): create, rename and delete", async () => {
+  it("is editable on a published version: create, rename and delete", async () => {
     serveApi();
     act(() =>
       useEditorStore.getState().load({ organizationId: GROUP_ID, configuration: MINE, version: versionFixture({ yamlContent: YAML, ...PUBLISHED_FIELDS }) }),
@@ -420,7 +419,7 @@ describe("suites", () => {
     expect(await screen.findByText("No suites yet. Click + to create one.")).toBeInTheDocument();
   });
 
-  it("shows Play all in parallel, Play all serially and Run test with fixed words, pressable while nothing holds Play (Task 7)", async () => {
+  it("shows Play all in parallel, Play all serially and Run test with fixed words, pressable while nothing holds Play", async () => {
     serveApi();
     api.suites = [SUITE];
     api.definitions = { [SUITE.id]: [DEFINITION] };
@@ -520,7 +519,7 @@ describe("a suite's definitions", () => {
     expect(within(cardSync("zq-smoke-tests")).getByText("zq-logs-only")).toBeInTheDocument();
   });
 
-  it("close the confirmation and leave the list when the API says it's gone already (404, another tab deleted it), with its words (Ruling 38)", async () => {
+  it("close the confirmation and leave the list when the API says it's gone already (404, another tab deleted it), with its words", async () => {
     const { deleteDefinition } = serveApi();
     deleteDefinition.mockRejectedValueOnce(new ApiError("test_definition_not_found", "Test configuration not found", { status: 404 }));
     api.suites = [SUITE];
@@ -537,7 +536,7 @@ describe("a suite's definitions", () => {
   });
 });
 
-describe("the definition dialog, 'New test configuration' (Preflight ruling 16)", () => {
+describe("the definition dialog, 'New test configuration'", () => {
   /** Expands the suite and opens its definition dialog. */
   async function openAdd(user: ReturnType<typeof userEvent.setup>) {
     await expand(user, "zq-smoke-tests");
@@ -569,7 +568,7 @@ describe("the definition dialog, 'New test configuration' (Preflight ruling 16)"
     expect(within(dialog).getByLabelText("Run duration (seconds)")).toHaveValue(12);
     expect(within(dialog).getByText("Selected File:")).toHaveTextContent("Selected File: None");
     expect(ok()).toBeDisabled();
-    // The sources, in order: My Files, Templates, Paste Text (D14b Task 7).
+    // The sources, in order: My Files, Templates, Paste Text.
     expect(
       within(main())
         .getAllByRole("button")
@@ -685,7 +684,7 @@ describe("the definition dialog, 'New test configuration' (Preflight ruling 16)"
     expect(useTestingStore.getState().selectedFile).toBeNull();
   });
 
-  it("toasts the API's words for a suite's 101st (decision 25), keeping the dialog open", async () => {
+  it("toasts the API's words for a suite's 101st, keeping the dialog open", async () => {
     const { createDefinition } = serveApi();
     createDefinition.mockRejectedValueOnce(new ApiError("test_definition_limit_reached", TEST_DEFINITION_LIMIT_MESSAGE, { status: 409 }));
     const { user } = await renderSuites();
@@ -726,7 +725,7 @@ describe("the definition dialog, 'New test configuration' (Preflight ruling 16)"
   });
 });
 
-describe("replay (Preflight ruling 19; ADR 0024)", () => {
+describe("replay", () => {
   it("puts no suite, definition or file name, nor a description, in any attribute, with every card, dialog and confirmation shown", async () => {
     serveApi();
     api.suites = [SUITE];
@@ -782,10 +781,9 @@ describe("replay (Preflight ruling 19; ADR 0024)", () => {
 });
 
 /*
- * D14b Task 7: Play one, Play all and the hold, from the cards (decisions 6,
- * 7, 10 and 11; Preflight rulings 13 to 15). The API queues each definition's
- * run with its breadcrumb and lists it from then on; a run ends when a test
- * says so.
+ * Play one, Play all and the hold, from the cards. The API queues each
+ * definition's run with its breadcrumb and lists it from then on; a run ends
+ * when a test says so.
  */
 
 /** The runs the API has queued, newest first, as they now stand. */
@@ -845,7 +843,7 @@ const RAW_HEAD = new TextEncoder().encode("zq raw line one\nzq raw line two\n");
 /** Another version of the configuration, for a switch mid-start. */
 const OTHER_VERSION = versionFixture({ id: "0199c000-0000-7000-8000-000000000077", yamlContent: YAML });
 
-describe("Play one, a definition's Run test (decision 10; Preflight rulings 13 and 14)", () => {
+describe("Play one, a definition's Run test", () => {
   beforeEach(() => {
     api.suites = [SUITE];
     api.definitions = { [SUITE.id]: [DEFINITION] };
@@ -915,7 +913,7 @@ describe("Play one, a definition's Run test (decision 10; Preflight rulings 13 a
     expect(queue).toHaveBeenCalledOnce();
   });
 
-  it("starts once for two Run test clicks before any re-render (both still pressable): beginStart's check refuses the second (Ruling 42)", async () => {
+  it("starts once for two Run test clicks before any re-render (both still pressable): beginStart's check refuses the second", async () => {
     api.definitions = { [SUITE.id]: [DEFINITION, SECOND_DEFINITION] };
     serveApi();
     const { queue, head } = serveRuns();
@@ -934,7 +932,7 @@ describe("Play one, a definition's Run test (decision 10; Preflight rulings 13 a
     expect(queue.mock.calls[0]![3]).toEqual({ definitionId: DEFINITION.id, yaml: YAML, collectorVersion: "0.162.0" });
   });
 
-  it("drops the question when its head answers after the version changed: no question, nothing queued, the hold released (Ruling 42)", async () => {
+  it("drops the question when its head answers after the version changed: no question, nothing queued, the hold released", async () => {
     serveApi();
     const { queue, head } = serveRuns();
     let answer!: (bytes: Uint8Array) => void;
@@ -955,7 +953,7 @@ describe("Play one, a definition's Run test (decision 10; Preflight rulings 13 a
     expect(screen.getByRole("tab", { name: "Suites" })).toHaveAttribute("aria-selected", "true");
   });
 
-  it("closes the question already showing when the version changes: nothing queued, the hold released, no Run Anyway left to queue on the version left (Ruling 45)", async () => {
+  it("closes the question already showing when the version changes: nothing queued, the hold released, no Run Anyway left to queue on the version left", async () => {
     serveApi();
     const { queue, head } = serveRuns();
     head.mockResolvedValue(RAW_HEAD);
@@ -977,7 +975,7 @@ describe("Play one, a definition's Run test (decision 10; Preflight rulings 13 a
     expect(screen.getByRole("tab", { name: "Suites" })).toHaveAttribute("aria-selected", "true");
   });
 
-  it("releases the hold when the panel collapses with the question showing, queuing nothing (the tab unmounted; Ruling 42)", async () => {
+  it("releases the hold when the panel collapses with the question showing, queuing nothing (the tab unmounted)", async () => {
     serveApi();
     const { queue, head } = serveRuns();
     head.mockResolvedValue(RAW_HEAD);
@@ -993,7 +991,7 @@ describe("Play one, a definition's Run test (decision 10; Preflight rulings 13 a
     expect(queue).not.toHaveBeenCalled();
   });
 
-  it("releases the hold when the panel collapses during the head read and the head then asks: no question, nothing queued (Ruling 42)", async () => {
+  it("releases the hold when the panel collapses during the head read and the head then asks: no question, nothing queued", async () => {
     serveApi();
     const { queue, head } = serveRuns();
     let answer!: (bytes: Uint8Array) => void;
@@ -1030,7 +1028,7 @@ describe("Play one, a definition's Run test (decision 10; Preflight rulings 13 a
   });
 });
 
-describe("Play all from a card (decisions 6, 7 and 10; Preflight rulings 13 to 15)", () => {
+describe("Play all from a card", () => {
   beforeEach(() => {
     api.suites = [SUITE];
     api.definitions = { [SUITE.id]: [DEFINITION, SECOND_DEFINITION, THIRD_DEFINITION] };
@@ -1049,7 +1047,7 @@ describe("Play all from a card (decisions 6, 7 and 10; Preflight rulings 13 to 1
     expect(queue.mock.calls.map((call) => call[3])).toEqual(
       [DEFINITION, SECOND_DEFINITION, THIRD_DEFINITION].map((definition) => ({ definitionId: definition.id, yaml: YAML, collectorVersion: "0.162.0" })),
     );
-    // No fixture-shape question for a Play all (decision 6).
+    // No fixture-shape question for a Play all.
     expect(head).not.toHaveBeenCalled();
     await waitFor(() => expect(document.activeElement).toBe(selectedRow()));
     expect(selectedRow()).toHaveTextContent("zq-smoke-tests › zq-logs-only");
@@ -1058,7 +1056,7 @@ describe("Play all from a card (decisions 6, 7 and 10; Preflight rulings 13 to 1
     }
   });
 
-  it("shows Tests only once the definitions are known not to be empty (Ruling 40): Suites while they are read; an empty suite's toast and a failed read leave the person on Suites", async () => {
+  it("shows Tests only once the definitions are known not to be empty: Suites while they are read; an empty suite's toast and a failed read leave the person on Suites", async () => {
     const { listDefinitions } = serveApi();
     const { queue } = serveRuns();
     const toastInfo = vi.spyOn(toast, "info");
@@ -1106,7 +1104,7 @@ describe("Play all from a card (decisions 6, 7 and 10; Preflight rulings 13 to 1
     expect(queue).toHaveBeenCalledTimes(3);
   });
 
-  it("starts one Play all for two clicks before any re-render (both buttons still pressable): the store's guard, not the subtab switch, refuses the second; the definitions read once (Ruling 42)", async () => {
+  it("starts one Play all for two clicks before any re-render (both buttons still pressable): the store's guard, not the subtab switch, refuses the second; the definitions read once", async () => {
     const { listDefinitions } = serveApi();
     const { queue } = serveRuns();
     await renderSuites();
@@ -1127,7 +1125,7 @@ describe("Play all from a card (decisions 6, 7 and 10; Preflight rulings 13 to 1
     expect(queue).toHaveBeenCalledTimes(3);
   });
 
-  it("drops the focus request of a Play all whose first run answers while Suites shows: keyboard to Tests later, the focus stays on the tab (Ruling 42)", async () => {
+  it("drops the focus request of a Play all whose first run answers while Suites shows: keyboard to Tests later, the focus stays on the tab", async () => {
     serveApi();
     const { queue } = serveRuns();
     const answers: Array<() => void> = [];
@@ -1146,7 +1144,7 @@ describe("Play all from a card (decisions 6, 7 and 10; Preflight rulings 13 to 1
     await waitFor(() => expect(useTestingStore.getState().playAll).toBeNull());
     expect(useTestingStore.getState().selectedRunId).not.toBeNull();
 
-    // Later, by the keyboard: the Tests tab takes the focus and keeps it (Home: Validation now sits between them, D15a).
+    // Later, by the keyboard: the Tests tab takes the focus and keeps it (Home: Validation now sits between them).
     act(() => screen.getByRole("tab", { name: "Suites" }).focus());
     await user.keyboard("{Home}");
     const tests = screen.getByRole("tab", { name: "Tests" });
@@ -1197,7 +1195,7 @@ describe("Play all from a card (decisions 6, 7 and 10; Preflight rulings 13 to 1
   });
 });
 
-describe("one hold over every Play (Preflight ruling 13)", () => {
+describe("one hold over every Play", () => {
   beforeEach(() => {
     api.suites = [SUITE];
     api.definitions = { [SUITE.id]: [DEFINITION] };
@@ -1273,7 +1271,7 @@ describe("one hold over every Play (Preflight ruling 13)", () => {
   });
 });
 
-describe("a definition from a template (D14b decision 13)", () => {
+describe("a definition from a template", () => {
   it("copies the template picked in the definition dialog's Templates step: the request names it by id", async () => {
     api.suites = [SUITE];
     const { createDefinition } = serveApi();
@@ -1312,12 +1310,12 @@ describe("a definition from a template (D14b decision 13)", () => {
       signal: "traces",
       durationSeconds: 5,
     });
-    // The run dialog's own choice is untouched (ruling 16).
+    // The run dialog's own choice is untouched.
     expect(useTestingStore.getState().selectedTemplate).toBeNull();
   });
 });
 
-describe("the Suites subtab's follow-ups (D14b Ruling 38)", () => {
+describe("the Suites subtab's focus, reads and refusals", () => {
   const SECOND_SUITE = testSuiteFixture({ id: "0199f000-0000-7000-8000-000000000002", name: "zq-second-suite", description: "" });
   const THIRD_SUITE = testSuiteFixture({ id: "0199f000-0000-7000-8000-000000000003", name: "zq-third-suite", description: "" });
   /** A card's header (its expand button). */
@@ -1400,7 +1398,7 @@ describe("the Suites subtab's follow-ups (D14b Ruling 38)", () => {
     await waitFor(() => expect(document.activeElement).toBe(within(cardSync("zq-smoke-tests")).getByRole("button", { name: "Add test configuration" })));
   });
 
-  it("moves the focus after a definition's delete to the next row's first button that can be pressed: Delete, while Run test is held (Ruling 42)", async () => {
+  it("moves the focus after a definition's delete to the next row's first button that can be pressed: Delete, while Run test is held", async () => {
     serveApi();
     const second = testDefinitionFixture({ id: "0199f100-0000-7000-8000-000000000002", name: "zq-second-definition" });
     api.suites = [SUITE];
@@ -1422,7 +1420,7 @@ describe("the Suites subtab's follow-ups (D14b Ruling 38)", () => {
     await waitFor(() => expect(document.activeElement).toBe(within(nextRow).getByRole("button", { name: "Delete test configuration" })));
   });
 
-  it("gives the focus back to the Delete that opened a confirmation closed without deleting: Cancel and Escape, a suite's and a definition's (Ruling 51)", async () => {
+  it("gives the focus back to the Delete that opened a confirmation closed without deleting: Cancel and Escape, a suite's and a definition's", async () => {
     const { deleteSuite, deleteDefinition } = serveApi();
     api.suites = [SUITE];
     api.definitions = { [SUITE.id]: [DEFINITION] };
@@ -1560,7 +1558,7 @@ describe("the Suites subtab's follow-ups (D14b Ruling 38)", () => {
   });
 });
 
-describe("the final fix wave (D14b Rulings 46, 47 and 50)", () => {
+describe("the question, the hold and the focus around a Play", () => {
   /** A matching head: an OTLP envelope on the OTLP logs pipeline, so no question. */
   const MATCHING_HEAD = new TextEncoder().encode('{"resourceLogs":[]}');
   /** A subtab's trigger; found while a modal dialog hides the rest from the accessibility tree too. */
@@ -1596,8 +1594,8 @@ describe("the final fix wave (D14b Rulings 46, 47 and 50)", () => {
     api.definitions = { [SUITE.id]: [DEFINITION] };
   });
 
-  describe("the question's hold (Ruling 47)", () => {
-    it("is released when the panel collapses in the same React batch as the question's head answering (the reviewer's probe)", async () => {
+  describe("the question's hold", () => {
+    it("is released when the panel collapses in the same React batch as the question's head answering", async () => {
       serveApi();
       const { queue, head } = serveRuns();
       let answer!: (bytes: Uint8Array) => void;
@@ -1629,8 +1627,8 @@ describe("the final fix wave (D14b Rulings 46, 47 and 50)", () => {
     });
   });
 
-  describe("the focus as the question closes (Rulings 46 and 50)", () => {
-    it("goes to the active subtab's trigger when the question closes as the version changes (Ruling 46)", async () => {
+  describe("the focus as the question closes", () => {
+    it("goes to the active subtab's trigger when the question closes as the version changes", async () => {
       serveApi();
       const { head } = serveRuns();
       head.mockResolvedValue(RAW_HEAD);
@@ -1662,8 +1660,8 @@ describe("the final fix wave (D14b Rulings 46, 47 and 50)", () => {
     });
   });
 
-  describe("no switch to Tests while a Suites dialog shows (Ruling 50 m1)", () => {
-    it("keeps the suite dialog and its typed text while a Play all's runs queue: the first selected, Suites still shown, the focus left in the dialog (the reviewer's P1)", async () => {
+  describe("no switch to Tests while a Suites dialog shows", () => {
+    it("keeps the suite dialog and its typed text while a Play all's runs queue: the first selected, Suites still shown, the focus left in the dialog", async () => {
       api.definitions = { [SUITE.id]: [DEFINITION, SECOND_DEFINITION] };
       const { listDefinitions } = serveApi();
       const { queue } = serveRuns();
@@ -1695,7 +1693,7 @@ describe("the final fix wave (D14b Rulings 46, 47 and 50)", () => {
       expect(document.activeElement).toBe(tab("Tests"));
     });
 
-    it("keeps the definition dialog and its typed name while a Play one's run queues, selected (the reviewer's P2)", async () => {
+    it("keeps the definition dialog and its typed name while a Play one's run queues, selected", async () => {
       serveApi();
       const { queue, head } = serveRuns();
       let answer!: (bytes: Uint8Array) => void;
@@ -1761,7 +1759,7 @@ describe("the final fix wave (D14b Rulings 46, 47 and 50)", () => {
     });
   });
 
-  describe("reads that never answer (Ruling 50 m2; fake timers, the hang guard)", () => {
+  describe("reads that never answer (fake timers, the hang guard)", () => {
     it("ends the suites' spinner after 10 s: 'Failed to load test suites' with Retry", async () => {
       vi.useFakeTimers();
       try {
@@ -1807,7 +1805,7 @@ describe("the final fix wave (D14b Rulings 46, 47 and 50)", () => {
       expect(user).toBeDefined();
     });
 
-    it("lets go of a Play all whose definitions read never answers after 10 s: not held, 'Failed to load test configurations', Retry on the card, nothing queued (the reviewer's P3)", async () => {
+    it("lets go of a Play all whose definitions read never answers after 10 s: not held, 'Failed to load test configurations', Retry on the card, nothing queued", async () => {
       const { listDefinitions } = serveApi();
       const { queue } = serveRuns();
       const { user } = await renderSuites();
@@ -1845,8 +1843,8 @@ describe("the final fix wave (D14b Rulings 46, 47 and 50)", () => {
     });
   });
 
-  describe("the focus after a Play that queued nothing (Ruling 50 m3)", () => {
-    it("goes to the Tests trigger when every definition of a Play all is refused: its button went with the switch (the reviewer's P4)", async () => {
+  describe("the focus after a Play that queued nothing", () => {
+    it("goes to the Tests trigger when every definition of a Play all is refused: its button went with the switch", async () => {
       api.definitions = { [SUITE.id]: [DEFINITION, SECOND_DEFINITION, THIRD_DEFINITION] };
       serveApi();
       const { queue } = serveRuns();
@@ -1974,7 +1972,7 @@ describe("the final fix wave (D14b Rulings 46, 47 and 50)", () => {
       suitesShown();
     });
 
-    it("stays where it fell when the Play all was stopped by a version switch during its definitions read, which answers after: no late jump (Ruling 52, the reviewer's Q1)", async () => {
+    it("stays where it fell when the Play all was stopped by a version switch during its definitions read, which answers after: no late jump", async () => {
       const { listDefinitions } = serveApi();
       const { queue } = serveRuns();
       let answer!: (value: { definitions: TestDefinition[] }) => void;
@@ -1999,7 +1997,7 @@ describe("the final fix wave (D14b Rulings 46, 47 and 50)", () => {
     });
   });
 
-  describe("a Play one whose version is left mid-read (Ruling 50's nit)", () => {
+  describe("a Play one whose version is left mid-read", () => {
     it("queues nothing though its input suits the pipeline: no question asked, the hold released", async () => {
       serveApi();
       const { queue, head } = serveRuns();

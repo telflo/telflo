@@ -6,7 +6,7 @@ import { useEffect } from "react";
  * `onDialogShown` is called as `open` turns true, and what it returns as
  * `open` turns false or the dialog's owner unmounts. A Play doesn't switch
  * to the Tests subtab while one shows, as the switch would unmount the
- * dialog and lose what the person typed in it (D14b Ruling 50).
+ * dialog and lose what the person typed in it.
  */
 export function useDialogShowing(open: boolean, onDialogShown: (() => () => void) | undefined): void {
   useEffect(() => (open && onDialogShown !== undefined ? onDialogShown() : undefined), [open, onDialogShown]);

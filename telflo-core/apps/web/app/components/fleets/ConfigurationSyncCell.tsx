@@ -2,11 +2,9 @@ import type { Collector, FleetSummary } from "@telflo/contracts";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "~/components/ui/tooltip.js";
 
 /*
- * The fleet list's Configuration Sync column (D17a decisions 9 and 18,
- * Preflight ruling 11), named for the spec's section 3.12, which bans
+ * The fleet list's Configuration Sync column, named in full, never
  * `config`. State-aware text, never a second fraction beside Online's,
- * from the summary's drift counts as the server reckons them. In the D17a
- * Parity Notes:
+ * from the summary's drift counts as the server reckons them. Differences:
  * - "all in sync" only when every collector is in sync (never when nothing
  *   is assigned); otherwise the non-zero counts in a fixed order, failed,
  *   drifted, pending, unassigned, in sync ("1 failed", a middle dot, "3 in
@@ -21,9 +19,8 @@ export type DriftCounts = Pick<FleetSummary, "collectors" | "inSync" | "pending"
 
 /**
  * What each drift state means, as the legend says it; a collector's
- * Configuration (`CollectorConfigurationCell`, D17b-1's Status until D17d-2
- * Ruling 55) reuses them, with its own words for unassigned (D17b-1
- * Preflight ruling 4).
+ * Configuration (`CollectorConfigurationCell`) reuses them, with its own words
+ * for unassigned.
  */
 export const DRIFT_MEANINGS: Record<Collector["drift"], string> = {
   failed: "failed to apply its configuration",

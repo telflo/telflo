@@ -35,14 +35,13 @@ import { VERSION_MEANINGS } from "./CollectorsTable.js";
 import { ERROR_HISTORY_FAILED_MESSAGE } from "./CollectorErrorHistory.js";
 import { TOKENS_FAILED_WORDS } from "./CollectorTokenRow.js";
 
-// A collector's details (D17b-1 decisions 22, 24, 25 and 32; Preflight
-// rulings 4, 11 and 17): every row's label, in order, with its value (Status
-// the liveness and Configuration the drift, as the grid's columns: D17d-2
-// Ruling 55; the configuration's name in "Configuration name"); the IP
-// precedence; "Edit collector" in the footer closing the details for the edit
-// dialog. Its Node row is a Kubernetes fleet's (D17d-1, below); Variable
-// Group (D20's), the collector-version drift colour (D19's), the nested error
-// dialog and the read-only grids' missing footer don't apply.
+// A collector's details: every row's label, in order, with its value (Status
+// the liveness and Configuration the drift, as the grid's columns; the
+// configuration's name in "Configuration name"); the IP precedence; "Edit
+// collector" in the footer closing the details for the edit dialog. Its Node
+// row is a Kubernetes fleet's (below); Variable Group, the collector-version
+// drift colour, the nested error dialog and the read-only grids' missing
+// footer don't apply.
 
 const NOW = Date.parse("2026-10-14T10:00:00.000Z");
 const DAY_MS = 86_400_000;
@@ -87,7 +86,7 @@ interface RenderOptions {
   groups?: CollectorGroup[] | null;
   /** A route loader, to count the layout's revalidations. */
   loader?: () => null;
-  /** Leaves `onEdit` out, as the grid does until Task 6 wires it. */
+  /** Leaves `onEdit` out. */
   withoutEdit?: boolean;
   /** The fleet's type; left out, the dialog's default (a server fleet). */
   fleetType?: FleetType;
@@ -162,7 +161,7 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-describe("CollectorDetailsDialog's rows (decision 24)", () => {
+describe("CollectorDetailsDialog's rows", () => {
   it("lists every row in its order, with its value", async () => {
     renderDetails();
     await settled();
@@ -201,7 +200,7 @@ describe("CollectorDetailsDialog's rows (decision 24)", () => {
     expect(rowValue("Pinned variable group")).toHaveTextContent(/^None: follows its group$/);
     expect(within(rowValue("Variable group")).getByRole("button", { name: "Organization values" })).toBeInTheDocument();
     const editorPath = `/editor/${publishedVersion().configurationId}/${publishedVersion().versionId}`;
-    // D17c-1 decision 46: "{configurationName} @v{n}", the whole name, no tooltip.
+    // "{configurationName} @v{n}", the whole name, no tooltip.
     expect(within(rowValue("Target Version")).getByRole("link", { name: "checkout-otel @v4" })).toHaveAttribute("href", editorPath);
     expect(within(rowValue("Effective Version")).getByRole("link", { name: "checkout-otel @v4" })).toHaveAttribute("href", editorPath);
     expect(rowValue("Target Version")).toHaveTextContent(/^checkout-otel @v4$/);
@@ -209,7 +208,7 @@ describe("CollectorDetailsDialog's rows (decision 24)", () => {
     expect(rowValue("Applied")).toHaveTextContent("Applied 59 minutes ago");
     expect(rowValue("Collector")).toHaveTextContent("v0.162.0");
     expect(rowValue("Error")).toHaveTextContent(/^—$/);
-    // How long ago and the full time, no dot and no window (Ruling 55: the liveness is Status's).
+    // How long ago and the full time, no dot and no window (the liveness is Status's).
     expect(rowValue("Last Seen")).toHaveTextContent(new RegExp(`^5 seconds ago${formatDateTime("2026-10-14T09:59:55.000Z")}$`));
     expect(rowValue("Last Seen").querySelector("[aria-hidden='true']")).toBeNull();
     expect(rowValue("Created")).toHaveTextContent(formatDateTime("2026-10-13T09:00:00.000Z"));
@@ -259,7 +258,7 @@ describe("CollectorDetailsDialog's rows (decision 24)", () => {
       "Nothing assigned",
       "No pin, and no published version on its group; it keeps running what it has: its own file, or the last published version it was sent.",
     ],
-  ] as const)("shows the %s drift's words and its meaning as text in the Configuration row (Ruling 55)", async (drift, words, meaning) => {
+  ] as const)("shows the %s drift's words and its meaning as text in the Configuration row", async (drift, words, meaning) => {
     api.getCollector.mockReturnValue(new Promise(() => undefined));
     renderDetails(collector({ drift }));
     await settled();
@@ -277,7 +276,7 @@ describe("CollectorDetailsDialog's rows (decision 24)", () => {
     ["warning", "Warning", "Last seen 1–2 minutes ago.", "bg-warn"],
     ["unknown", "Unknown", "Last seen 2–5 minutes ago.", "bg-muted-foreground/40"],
     ["offline", "Offline", "Not seen for over 5 minutes.", "bg-fail"],
-  ] as const)("shows the %s liveness's words, its dot and its window as text in the Status row (Ruling 55)", async (liveness, words, meaning, dot) => {
+  ] as const)("shows the %s liveness's words, its dot and its window as text in the Status row", async (liveness, words, meaning, dot) => {
     api.getCollector.mockReturnValue(new Promise(() => undefined));
     renderDetails(collector({ liveness }));
     await settled();
@@ -345,11 +344,11 @@ describe("CollectorDetailsDialog's rows (decision 24)", () => {
     for (const label of ["Configuration name", "Target Version", "Applied"]) {
       expect(rowValue(label)).toHaveTextContent(/^—$/);
     }
-    // Effective Version's dash, its meaning under it (D16c Ruling 21).
+    // Effective Version's dash, its meaning under it.
     expect(rowValue("Effective Version")).toHaveTextContent(/^—Nothing sent yet: it runs its own file\.$/);
   });
 
-  // D16c Ruling 21: the grid's Version tooltip's meaning, as text under the value (a touch user sees no tooltip), as Status's.
+  // The grid's Version tooltip's meaning, as text under the value (a touch user sees no tooltip), as Status's.
   it.each([
     ["a published version served", collector().served, "checkout-otel @v4", "Running: the last published version it was sent."],
     [
@@ -378,7 +377,7 @@ describe("CollectorDetailsDialog's rows (decision 24)", () => {
     expect(meaning).toBe(VERSION_MEANINGS[served === null ? "nothing" : served.version === null ? "deleted" : "version"]);
   });
 
-  // D16c (decision 9): no imported section and no "View YAML", whatever the collector runs.
+  // No imported section and no "View YAML", whatever the collector runs.
   it.each([
     ["following its group", collector()],
     ["pinned to a published version", collector({ pin: { kind: "version", versionId: publishedVersion().versionId, publishedVersionId: PUBLISHED_VERSION_ID, version: publishedVersion() } })],
@@ -406,7 +405,7 @@ describe("CollectorDetailsDialog's rows (decision 24)", () => {
   });
 });
 
-describe("CollectorDetailsDialog's Error row (the controller's ruling)", () => {
+describe("CollectorDetailsDialog's Error row", () => {
   it("shows the current apply's error in a <pre> inside ph-no-capture, in no attribute", async () => {
     const message = "canary-apply-error-6d\n  at the otlp receiver";
     const row = collector({ drift: "failed", effective: { sha256: sha256Of("a"), status: "failed", error: message, at: new Date(NOW - 60_000).toISOString() } });
@@ -417,8 +416,8 @@ describe("CollectorDetailsDialog's Error row (the controller's ruling)", () => {
     expect(shown.tagName).toBe("PRE");
     expect(shown.textContent).toBe(message);
     expect(shown.className).toBe("max-h-48 overflow-y-auto whitespace-pre-wrap break-words font-mono text-xs");
-    // A scrollable region a keyboard can reach (Ruling 26: an 8 KiB error made the dialog three viewports tall),
-    // named by fixed words, never the error's text (the final fix wave).
+    // A scrollable region a keyboard can reach (an 8 KiB error would make the dialog three viewports tall),
+    // named by fixed words, never the error's text.
     expect(shown).toHaveAttribute("tabindex", "0");
     expect(shown).toHaveAttribute("aria-label", "Error message");
     // A group, so the fixed name counts (ARIA 1.2 names no role-less <pre>), and no landmark (axe's landmark-unique).
@@ -440,7 +439,7 @@ describe("CollectorDetailsDialog's Error row (the controller's ruling)", () => {
   });
 });
 
-describe("CollectorDetailsDialog's refresh (Preflight ruling 11)", () => {
+describe("CollectorDetailsDialog's refresh", () => {
   it("shows the row at once, then the collector as the read answers it", async () => {
     const read = held<Collector>();
     api.getCollector.mockReturnValue(read.promise);
@@ -536,7 +535,7 @@ describe("CollectorDetailsDialog's refresh (Preflight ruling 11)", () => {
   });
 });
 
-describe("CollectorDetailsDialog's Token row (decision 25)", () => {
+describe("CollectorDetailsDialog's Token row", () => {
   async function tokenWordsFor(tokenId: string | null, tokens: EnrollmentTokenListed[]): Promise<string> {
     api.getEnrollmentTokens.mockResolvedValue({ tokens });
     renderDetails(collector({ enrollmentTokenId: tokenId }));
@@ -596,7 +595,7 @@ function errorsFrom(from: number, count: number): CollectorError[] {
 
 const errorSection = () => within(dialog()).getByRole("heading", { name: "Error history" }).parentElement!;
 
-describe("CollectorDetailsDialog's error history (decision 24)", () => {
+describe("CollectorDetailsDialog's error history", () => {
   it("reads 20 a page, newest first, each its time and its message in a <pre>, with Load more until the last", async () => {
     api.getCollectorErrors.mockImplementation(async (_organizationId, _fleetId, _collectorId, query = {}) =>
       query.cursor === undefined ? { errors: errorsFrom(1, 20), nextCursor: "page-2" } : { errors: errorsFrom(21, 5), nextCursor: null },
@@ -611,8 +610,8 @@ describe("CollectorDetailsDialog's error history (decision 24)", () => {
     const first = within(errorSection()).getByText("error number 1");
     expect(first.tagName).toBe("PRE");
     expect(first).toHaveClass("max-h-48", "overflow-y-auto", "whitespace-pre-wrap", "break-words", "font-mono", "text-xs");
-    // Each message is bounded and scrolls, and a keyboard can reach it to scroll it.
-    // Each named by fixed words, never the error's text (the final fix wave).
+    // Each message is bounded and scrolls, and a keyboard can reach it to
+    // scroll it. Each named by fixed words, never the error's text.
     for (const pre of errorSection().querySelectorAll("pre")) {
       expect(pre).toHaveAttribute("tabindex", "0");
       expect(pre).toHaveAttribute("aria-label", "Error message");
@@ -671,7 +670,7 @@ describe("CollectorDetailsDialog's error history (decision 24)", () => {
 
 const attributesSection = () => within(dialog()).getByRole("heading", { name: "Reported attributes" }).parentElement!;
 
-describe("CollectorDetailsDialog's reported attributes (decision 24)", () => {
+describe("CollectorDetailsDialog's reported attributes", () => {
   it("lists them sorted by key in code units, not by locale", async () => {
     const attributes = { "b.key": "2", "B.key": "1", "\u00e9.key": "4", "a.key": "3", "Z.key": "0" };
     renderDetails(collector({ reported: { collectorVersion: null, ip: null, hostIp: null, attributes } }));
@@ -775,7 +774,7 @@ describe("CollectorDetailsDialog's reads: aborted on close, hang guards, one ope
   });
 });
 
-describe("CollectorDetailsDialog's footer (the edit hand-off; Preflight ruling 17)", () => {
+describe("CollectorDetailsDialog's footer (the edit hand-off)", () => {
   it('"Edit collector" closes the details and hands the collector to the edit dialog', async () => {
     renderDetails();
     await settled();
@@ -796,7 +795,7 @@ describe("CollectorDetailsDialog's footer (the edit hand-off; Preflight ruling 1
   });
 });
 
-describe("CollectorDetailsDialog's privacy (decisions 13 and 32)", () => {
+describe("CollectorDetailsDialog's privacy", () => {
   it("holds no name, address, attribute or error text in any attribute, and the private text only inside ph-no-capture", async () => {
     const name = "canary-collector-7e1d";
     const groupName = "canary-group-04af";
@@ -851,7 +850,7 @@ describe("CollectorDetailsDialog's privacy (decisions 13 and 32)", () => {
   });
 });
 
-// D17d-1 decision 23; Preflight ruling 26: a Kubernetes fleet's collector's Node, and its group by role.
+// A Kubernetes fleet's collector's Node, and its group by role.
 describe("CollectorDetailsDialog on a Kubernetes-supervisor fleet", () => {
   const withAttributes = (attributes: Record<string, string> | null) => collector({ reported: { ...collector().reported, attributes } });
 

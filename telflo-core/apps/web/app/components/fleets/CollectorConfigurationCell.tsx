@@ -4,16 +4,13 @@ import { StatusDot } from "./CollectorStatusCell.js";
 import { DRIFT_MEANINGS } from "./ConfigurationSyncCell.js";
 
 /*
- * A collector's Configuration (D17b-1 decisions 11 and 22, Preflight
- * rulings 4 and 10; the grid's Status column until D17d-2 Ruling 55, the
- * owner's Q58, made Status the liveness): a dot and words from the server's
- * `drift`, never computed in the browser. Its meaning, D17a's Configuration
- * Sync legend's (`DRIFT_MEANINGS`) but for unassigned's (Preflight ruling
- * 4), is tooltip text on a focusable trigger and screen-reader text (a
- * tooltip never shows on touch), never a `title` or an `aria-label`.
- * Applying counts as pending (the opamp-server counts it so), and a stale
- * collector is the Status column's Offline (`CollectorStatusCell`). Fixed
- * words only.
+ * A collector's Configuration: a dot and words from the server's `drift`,
+ * never computed in the browser. Its meaning, the Configuration Sync legend's
+ * (`DRIFT_MEANINGS`) but for unassigned's, is tooltip text on a focusable
+ * trigger and screen-reader text (a tooltip never shows on touch), never a
+ * `title` or an `aria-label`. Applying counts as pending (the opamp-server
+ * counts it so), and a stale collector is the Status column's Offline
+ * (`CollectorStatusCell`). Fixed words only.
  */
 
 type Drift = Collector["drift"];
@@ -27,7 +24,7 @@ export const COLLECTOR_CONFIGURATION_LABELS: Record<Drift, string> = {
   unassigned: "Nothing assigned",
 };
 
-/** What "Nothing assigned" means for a collector (Preflight ruling 4); the list's legend keeps "no configuration assigned". */
+/** What "Nothing assigned" means for a collector; the list's legend keeps "no configuration assigned". */
 export const UNASSIGNED_COLLECTOR_MEANING =
   "no pin, and no published version on its group; it keeps running what it has: its own file, or the last published version it was sent.";
 

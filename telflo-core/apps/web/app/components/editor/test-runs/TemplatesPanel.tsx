@@ -32,33 +32,31 @@ function presentValues(templates: TestTemplate[], valueOf: (template: TestTempla
 }
 
 /**
- * The run dialog's and the definition dialog's Templates step (D14b
- * decision 13; Preflight rulings 12, 17 and 19): the product-wide sample
- * inputs, filtered by receiver type and signal, each
+ * The run dialog's and the definition dialog's Templates step: the
+ * product-wide sample inputs, filtered by receiver type and signal, each
  * viewed, downloaded or picked. Highlight a row and OK picks it.
  *
- * Differences (the Parity Notes):
+ * Differences:
  * - read afresh each time the step shows (the store's `loadTemplates`),
  *   not once a session; a session that ended toasts
  *   nothing;
  * - receiver types show by their palette labels ("File Log"), the raw value
  *   as a fallback, in the filter and the details, and signals by their
- *   words ("Traces", "Logs", "Metrics"; D14b Ruling 40), not "traces"; each
- *   filter offers the values present, sorted by label;
- *   the filters are labelled (`aria-labelledby`);
+ *   words ("Traces", "Logs", "Metrics"), not "traces"; each filter offers
+ *   the values present, sorted by label; the filters are labelled
+ *   (`aria-labelledby`);
  * - a download is the template's bytes, named by its original file name
  *   with its extension (not the display name without one),
  *   through a detached anchor (`downloadBlob`): the name never reaches the
  *   page, a URL or an attribute;
- * - no template name reaches an attribute (ADR 0024): the Download, Show
- *   details and View contents buttons are named by hidden text, through
+ * - no template name reaches an attribute: the Download, Show details and
+ *   View contents buttons are named by hidden text, through
  *   `aria-labelledby`, never the name in an `aria-label`; their titles stay
- *   fixed words; the viewer is
- *   `ph-no-capture` (FileViewerDialog);
- * - in the playground (D31-1 decision 12), the sample's templates are listed
- *   and picked (read for the editor's organization, `loadTemplates`), and a
- *   template's View contents and Download open the sign-up prompt at their
- *   buttons (`useLockedAction`), never reaching signed-in routes.
+ *   fixed words; the viewer is `ph-no-capture` (FileViewerDialog);
+ * - in the playground, the sample's templates are listed and picked (read
+ *   for the editor's organization, `loadTemplates`), and a template's View
+ *   contents and Download open the sign-up prompt at their buttons
+ *   (`useLockedAction`), never reaching signed-in routes.
  */
 export function TemplatesPanel({ onDone, onCancel, onSelectTemplate }: TemplatesPanelProps) {
   const templates = useTestingStore((state) => state.templates);
@@ -199,7 +197,7 @@ export function TemplatesPanel({ onDone, onCancel, onSelectTemplate }: Templates
                       isSelected ? "bg-accent border-l-brand" : "border-l-transparent hover:bg-accent/50"
                     }`}
                   >
-                    {/* The name in text, which replay masks, never in an attribute (ADR 0024). */}
+                    {/* The name in text, which replay masks, never in an attribute. */}
                     <span id={downloadLabelId} className="sr-only">
                       Download {template.name}
                     </span>

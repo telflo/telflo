@@ -19,13 +19,12 @@ import { FLEET_WRITE_TIMEOUT_MS, fleetRefusalMessage, isFleetGone, isUnknownOutc
 import { useOpeningKey } from "~/lib/hooks/use-opening-key.js";
 
 /*
- * "Archive fleet" and "Unarchive fleet" (D17a decisions 3, 26 and 28;
- * Preflight rulings 4 and 14): an AlertDialog in the delete dialog's markup
- * (`DeleteConfirmationDialog.tsx`), with ruling 4's words, which say what the
- * server does: an archived fleet's collectors are refused (403) from their
- * next poll, within the token cache's 10 seconds, and its tokens can't be
- * rotated. Each is a PATCH of the fleet's `status`, with D7's
- * `DeleteConfigurationDialog` pattern for a write under way:
+ * "Archive fleet" and "Unarchive fleet": an AlertDialog in the delete dialog's
+ * markup (`DeleteConfirmationDialog.tsx`), with words that say what the server
+ * does: an archived fleet's collectors are refused (403) from their next poll,
+ * within the token cache's 10 seconds, and its tokens can't be rotated. Each
+ * is a PATCH of the fleet's `status`, with the `DeleteConfigurationDialog`
+ * pattern for a write under way:
  *
  * - "Archive" / "Archiving…", "Unarchive" / "Unarchiving…". While it is under
  *   way Cancel is disabled and Escape does nothing (an AlertDialog has no X
@@ -33,7 +32,7 @@ import { useOpeningKey } from "~/lib/hooks/use-opening-key.js";
  *   (`preventDefault`) until the API answers.
  * - Success closes and reloads (`onChanged`): the list re-reads its pages,
  *   the fleet's page its fleet, whose badge then says so.
- * - Refusals toast (decision 28). An outcome the API leaves unknown (a 503
+ * - Refusals toast. An outcome the API leaves unknown (a 503
  *   `fleets_unavailable`, a 5xx, no connection, a reply that doesn't parse)
  *   toasts and closes and reloads, as the change may have been made; the
  *   request carries the 30 s hang guard, whose abort toasts the 503's words
@@ -67,7 +66,7 @@ export interface ArchiveFleetDialogProps {
   organizationId: string;
   /** After the change, or an answer that leaves it unknown, or a 404 for the fleet: the list reloads, or the page reads the fleet again. */
   onChanged: () => void;
-  /** Where the focus goes once the dialog has closed (Radix's `onCloseAutoFocus`): the page gives it back to the opener (D14b Ruling 46). */
+  /** Where the focus goes once the dialog has closed (Radix's `onCloseAutoFocus`): the page gives it back to the opener. */
   onCloseAutoFocus?: ((event: Event) => void) | undefined;
 }
 

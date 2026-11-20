@@ -23,9 +23,9 @@ import { BulkMoveDialog, MOVE_COLLECTOR_FAILED_MESSAGE, MOVE_UNKNOWN_WORDS } fro
 import { GROUPS_UNREADABLE_WORDS } from "./EditCollectorDialog.js";
 
 /*
- * "Move collectors" (D17b-1 decisions 12 and 27; Preflight ruling 13): the
- * selected collectors moved one at a time through `runPacedWrites` (its own
- * tests pin the loop: `lib/paced-writes.test.ts`).
+ * "Move collectors": the selected collectors moved one at a time through
+ * `runPacedWrites` (its own tests pin the loop:
+ * `lib/paced-writes.test.ts`).
  */
 
 const refusal = (code: string, message: string, status: number, options: { retryAfterSeconds?: number } = {}) =>
@@ -139,7 +139,7 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-describe("BulkMoveDialog (decision 27)", () => {
+describe("BulkMoveDialog", () => {
   it("opens with the count, a Group Select of ids, and Move disabled until a group is chosen", async () => {
     const moves = serveMoves();
     const { user } = await renderMove();
@@ -176,7 +176,6 @@ describe("BulkMoveDialog (decision 27)", () => {
     expect(onChanged).not.toHaveBeenCalled();
   });
 
-  // D17d-1 decision 23; Preflight ruling 25.
   it("on a Kubernetes-supervisor fleet, names the Agent and the Cluster by role, listed Agent, Cluster, then the gateways, and moves by id", async () => {
     const moves = serveMoves();
     const { user } = await renderMove(ROWS(1), kubernetesGroups(), { fleetType: "kubernetes-supervisor" });
@@ -444,7 +443,7 @@ describe("BulkMoveDialog (decision 27)", () => {
     expect(screen.getByRole("button", { name: "Move 3" })).toBeDisabled();
   });
 
-  it("holds no collector or group name in an attribute: the Select open and chosen, the run, the results (decision 32)", async () => {
+  it("holds no collector or group name in an attribute: the Select open and chosen, the run, the results", async () => {
     const names = ["canary-collector-1c4e", "canary-collector-2d5f", "canary-collector-3e60"];
     const groupName = "canary-group-77ab";
     const rows = ROWS().map((row, index) => ({ ...row, name: names[index]! }));

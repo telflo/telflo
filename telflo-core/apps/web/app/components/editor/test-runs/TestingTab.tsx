@@ -28,7 +28,7 @@ import { TestRunsPanel } from "./TestRunsPanel.js";
 const TOOLBAR_BTN_CLASS =
   "inline-flex items-center justify-center w-8 h-8 rounded-md text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent transition-colors";
 
-/** The tab's subtabs, in order: Tests, Validation (D15a), Suites (D14b). */
+/** The tab's subtabs, in order: Tests, Validation, Suites. */
 export type TestingSubtab = "tests" | "validation" | "suites";
 
 /** A run the fixture-shape check asked about, queued only on "Run Anyway". */
@@ -42,22 +42,21 @@ interface PendingRun {
   release: () => void;
   /** Once queued: Play one shows the Tests subtab first; every run's row then takes the focus. */
   afterQueue: () => void;
-  /** The button pressed (Play, ↺, Run test): the focus goes back to it when nothing is queued (D14b Ruling 50). */
+  /** The button pressed (Play, ↺, Run test): the focus goes back to it when nothing is queued. */
   opener: HTMLElement | null;
 }
 
 /** How the question last closed, for where its dialog sends the focus. */
 interface ClosedQuestion {
-  /** Run Anyway (the queue's answer moves the focus), Cancel (back to the button pressed), or the editor left its version (D14b Ruling 46). */
+  /** Run Anyway (the queue's answer moves the focus), Cancel (back to the button pressed), or the editor left its version. */
   how: "confirmed" | "cancelled" | "left";
   opener: HTMLElement | null;
 }
 
 /**
- * The first SNIFF_BYTES of an input, read from one of the API's heads (D14a
- * Rulings 43 and 46: 64 KiB, never the whole input), aborted after 10 s as
- * the tab's other reads are; null when it can't be read (the check is then
- * skipped).
+ * The first SNIFF_BYTES of an input, read from one of the API's heads (64
+ * KiB, never the whole input), aborted after 10 s as the tab's other reads
+ * are; null when it can't be read (the check is then skipped).
  */
 async function headOf(read: (signal: AbortSignal) => Promise<Uint8Array>): Promise<Uint8Array | null> {
   const controller = new AbortController();
@@ -71,7 +70,7 @@ async function headOf(read: (signal: AbortSignal) => Promise<Uint8Array>): Promi
   }
 }
 
-/** The question to ask before queuing, if the input's head doesn't suit the pipeline (decision 17); null when it does or can't be read. */
+/** The question to ask before queuing, if the input's head doesn't suit the pipeline; null when it does or can't be read. */
 function adviceFor(head: Uint8Array | null, yaml: string, signal: TestRunSignal, pipeline: string): MismatchAdvisory | null {
   return head === null ? null : detectFixtureMismatch({ yamlConfig: yaml, signalType: signal, targetPipeline: pipeline, fixtureHead: head });
 }
@@ -82,90 +81,84 @@ function currentUserId(): string | null {
 }
 
 /**
- * The editor's Testing tab (D14a decisions 10, 16 to 21; Preflight rulings
- * 12, 14 and 15; D14b Preflight ruling 14): the run's preflight and
- * queueing, the re-run, the subtab bar, the dialogs, the toolbar, and the
- * version's runs and their results under it (TestRunsPanel), polled while
- * the tab is mounted (the store's `watchRuns`); and the Suites subtab
+ * The editor's Testing tab: the run's preflight and queueing, the re-run,
+ * the subtab bar, the dialogs, the toolbar, and the version's runs and
+ * their results under it (TestRunsPanel), polled while the tab is mounted
+ * (the store's `watchRuns`); and the Suites subtab
  * (`../test-suites/SuitesPanel.tsx`), with Play one here, Play all's loops
  * in `lib/test-suites/play-all.ts`; and between them the Validation subtab
- * (`../validation-pipelines/ValidationPipelinesPanel.tsx`, D15a).
+ * (`../validation-pipelines/ValidationPipelinesPanel.tsx`).
  *
- * A composed panel tab (D8), kept mounted, disabled with Configuration
- * (routes/editor.tsx). Differences (the Parity Notes):
+ * A composed panel tab, kept mounted, disabled with Configuration
+ * (routes/editor.tsx). Differences:
  * - three subtabs, "Tests", "Validation" and "Suites". The subtab shown is
  *   the tab's state (controlled), so a Play from Suites can switch to Tests;
  *   the Validation and Suites subtabs mount each time they show, and read
  *   their pipelines and suites afresh;
  * - a run is queued by the API (`queueTestRun`) with the raw text, which the
- *   API substitutes organization variables into (Preflight ruling 12), the
- *   pin on screen and the pipeline's name and signal; the API queues it and
- *   its dispatcher starts it in turn (decision 1);
+ *   API substitutes organization variables into, the pin on screen and the
+ *   pipeline's name and signal; the API queues it and its dispatcher starts
+ *   it in turn;
  * - the fixture-shape check narrows to the target pipeline, and reads the
  *   head this tab kept of a file it uploaded or saved, or the API's head of a
- *   file from an earlier session (`headFor`, D14a Ruling 43);
+ *   file from an earlier session (`headFor`);
  * - ↺ re-runs a run the person can see, a teammate's included, through the
  *   run's own copy of its input (`sourceRunId`), with the run's pipeline,
  *   signal and duration and the CURRENT raw text, which the API substitutes
- *   organization variables into as for any run (decision 18), never the text
- *   unsubstituted with the person's own file re-read.
- *   The fixture-shape check reads the first 64 KiB of the run's input, from
- *   the API's head of it (`…/files/input/head`, D14a Ruling 46);
+ *   organization variables into as for any run, never the text
+ *   unsubstituted with the person's own file re-read. The fixture-shape
+ *   check reads the first 64 KiB of the run's input, from the API's head of
+ *   it (`…/files/input/head`);
  * - every Play ("Configure and run", ↺, a definition's Run test, both Play
- *   alls) is held, and titled "Another run is in progress", while the
- *   person's own run on this version is queued or running (Preflight ruling
- *   15), while a Play all on it is under way, and while a single run is
- *   starting, from its click, and during a head read (D14b Preflight ruling
- *   13: `selectIsPlayHeld`), not while just any polled run is in flight;
+ *   alls) is held, and titled "Another run is in progress", while the person's
+ *   own run on this version is queued or running, while a Play all on it is
+ *   under way, and while a single run is starting, from its click, and during
+ *   a head read (`selectIsPlayHeld`), not while just any polled run is in
+ *   flight;
  * - a definition's Run test (Play one) asks the fixture-shape question from
  *   the head of the definition's own input (`…/input/head`), and switches to
- *   the Tests subtab once its run is queued, so a cancelled question stays
- *   on Suites (D14b Preflight ruling 14), never switched first; a
- *   Play all switches once its definitions are known not to be empty (D14b
- *   Ruling 40), and asks nothing (decision 6);
+ *   the Tests subtab once its run is queued, so a cancelled question stays on
+ *   Suites, never switched first; a Play all switches once its definitions are
+ *   known not to be empty, and asks nothing;
  * - neither switches to Tests while one of the Suites subtab's dialogs shows
  *   (the suite dialog, the definition dialog, either delete confirmation),
  *   or one of the Validation subtab's (New validation pipeline, the rule
- *   editor, either delete confirmation; D15a): the switch would unmount it,
- *   losing what was typed in it. The run is still queued and selected, and
- *   the request to focus its row dropped (D14b Ruling 50); the rule editor
- *   Compare's chip opens (D15b) shows on Tests, where a Play's switch goes,
- *   and is held beside the results (TestRunResults), so a Play all's answer
- *   selecting its run leaves it open: it isn't counted here;
+ *   editor, either delete confirmation): the switch would unmount it, losing
+ *   what was typed in it. The run is still queued and selected, and the
+ *   request to focus its row dropped; the rule editor Compare's chip opens
+ *   shows on Tests, where a Play's switch goes, and is held beside the
+ *   results (TestRunResults), so a Play all's answer selecting its run
+ *   leaves it open: it isn't counted here;
  * - a run from a template reads the template's head (`…/file/head`) for the
  *   question;
  * - once a run is queued (Run, Run Anyway, ↺, Run test, a Play all's
  *   first), the focus goes to its row, selected, never lost on the disabled
- *   Play or ↺ (D14a Ruling 48's nit);
- *   only while the Tests subtab shows it: a request made while Suites
- *   shows is dropped, and the list serves or drops one the first time it
- *   renders after it, so none waits to pull the focus to a row later (D14b
- *   Ruling 42);
+ *   Play or ↺; only while the Tests subtab shows it: a request made while
+ *   Suites shows is dropped, and the list serves or drops one the first
+ *   time it renders after it, so none waits to pull the focus to a row
+ *   later;
  * - a fixture-shape question whose head answers once the editor has left
- *   its version (another version, configuration or organization) is
- *   dropped with its hold: no question, nothing queued (D14b Ruling 42, as
- *   D14a Ruling 46 drops answers for a version left behind); one already
- *   showing when the editor leaves its version closes with its hold, so
- *   Run Anyway can't queue on a version no longer open (D14b Ruling 45), and
- *   the focus goes to the active subtab's trigger (D14b Ruling 46); a head
+ *   its version (another version, configuration or organization) is dropped
+ *   with its hold: no question, nothing queued (as any answer for a version
+ *   left behind is dropped); one already showing when the editor leaves its
+ *   version closes with its hold, so Run Anyway can't queue on a version no
+ *   longer open, and the focus goes to the active subtab's trigger; a head
  *   that answers once the editor has left queues nothing either, though its
- *   input suits the pipeline (D14b Ruling 50);
+ *   input suits the pipeline;
  * - a Play that queued nothing (every definition refused, an empty suite, a
  *   failed read, a refused or failed Play one or ↺, a cancelled question)
  *   gives the focus back to the button pressed when it is still there and
  *   can be pressed, else to the active subtab's trigger, where it was lost
  *   to the body (the button held, or unmounted by the switch to Tests); only
- *   while the focus is lost, never from where the person has put it since
- *   (D14b Ruling 50);
- * - nothing here sends an analytics event (Preflight ruling 16);
- * - in the playground (D31-1 decisions 24 and 31; Preflight ruling 9), the
- *   run dialog opens on the sample's templates, and its
- *   Run is the locked action: nothing is remembered or queued, the dialog
- *   closes, and the sign-up prompt opens once it has (its close's focus
- *   return, so the closing dialog's focus trap never holds the prompt's
- *   focus, with no fixed wait). ↺, Compare and the
- *   Suites' and Validation subtabs' actions are locked at their own buttons;
- *   the runs, their details and files are read from the sample.
+ *   while the focus is lost, never from where the person has put it since;
+ * - nothing here sends an analytics event;
+ * - in the playground, the run dialog opens on the sample's templates, and
+ *   its Run is the locked action: nothing is remembered or queued, the
+ *   dialog closes, and the sign-up prompt opens once it has (its close's
+ *   focus return, so the closing dialog's focus trap never holds the
+ *   prompt's focus, with no fixed wait). ↺, Compare and the Suites' and
+ *   Validation subtabs' actions are locked at their own buttons; the runs,
+ *   their details and files are read from the sample.
  */
 export function TestingTab() {
   const locked = useLockedAction();
@@ -196,7 +189,7 @@ export function TestingTab() {
    * The question showing, if any: the panel collapsing releases its hold.
    * Set with the state (`setQuestion`), not from a render, so a tab
    * unmounting in the same batch as the question's head answering still
-   * releases it (D14b Ruling 47).
+   * releases it.
    */
   const pendingRef = useRef<PendingRun | null>(null);
   /** How the question last closed: its dialog's focus reads it. */
@@ -205,8 +198,9 @@ export function TestingTab() {
   const validationTriggerRef = useRef<HTMLButtonElement>(null);
   const suitesTriggerRef = useRef<HTMLButtonElement>(null);
   /**
-   * How many of the Suites and Validation subtabs' dialogs show: a Play doesn't switch to Tests while any does (D14b Ruling
-   * 50); a Play all under way would otherwise tear a rule editor away once the person has moved to Validation.
+   * How many of the Suites and Validation subtabs' dialogs show: a Play doesn't switch to Tests
+   * while any does; a Play all under way would otherwise tear a rule editor away once the person
+   * has moved to Validation.
    */
   const suitesDialogs = useRef(0);
   /** The button a Play that queued nothing gives the focus back to, once the tab has rendered the hold's release. */
@@ -257,7 +251,7 @@ export function TestingTab() {
     setSubtab(next);
   };
 
-  /** A Play's switch to Tests: none once the tab has gone, nor while a Suites dialog shows, as it would unmount it (D14b Ruling 50). */
+  /** A Play's switch to Tests: none once the tab has gone, nor while a Suites dialog shows, as it would unmount it. */
   const showTestsForPlay = () => {
     if (!mounted.current || suitesDialogs.current > 0) return;
     showSubtab("tests");
@@ -280,9 +274,8 @@ export function TestingTab() {
   /**
    * After a Play that queued nothing: the focus back to the button pressed
    * when it is still there and can be pressed, else to the active subtab's
-   * trigger; only while the focus is lost (D14b Ruling 50). A button in a
-   * subtab no longer shown isn't there: its panel may not have unmounted
-   * yet, but is going.
+   * trigger; only while the focus is lost. A button in a subtab no longer
+   * shown isn't there: its panel may not have unmounted yet, but is going.
    */
   const giveFocusBack = (opener: HTMLElement | null) => {
     if (!mounted.current || !focusLost(opener)) return;
@@ -312,7 +305,7 @@ export function TestingTab() {
    * Moves the focus to the selected run's row once it has rendered (the
    * Tests subtab may only now be showing); nothing once the tab has gone,
    * nor while Suites shows: a request made there would wait and pull the
-   * focus to the row whenever Tests next showed (D14b Ruling 42).
+   * focus to the row whenever Tests next showed.
    */
   const requestFocus = () => {
     if (!mounted.current || subtabRef.current !== "tests") return;
@@ -330,7 +323,7 @@ export function TestingTab() {
   /**
    * Shows the Tests subtab, then the selected run's row takes the focus;
    * while a Suites dialog shows, neither: the request is dropped, as Suites
-   * still shows (D14b Ruling 50).
+   * still shows.
    */
   const showQueued = () => {
     if (!mounted.current) return;
@@ -340,8 +333,7 @@ export function TestingTab() {
 
   // A question showing when the editor leaves its version (another version,
   // configuration or organization) closes, queuing nothing, and its hold
-  // goes with it (D14b Ruling 45); the focus to the active subtab's trigger
-  // (D14b Ruling 46).
+  // goes with it; the focus to the active subtab's trigger.
   useEffect(() => {
     if (pendingRun === null || isOpen(useEditorStore.getState(), pendingRun.target)) return;
     closedQuestion.current = { how: "left", opener: null };
@@ -350,7 +342,7 @@ export function TestingTab() {
   }, [pendingRun, organizationId, configurationId, versionId]);
 
   // The version's runs, polled while any is queued or running; stopped on
-  // unmount and when the version changes (Preflight ruling 15).
+  // unmount and when the version changes.
   useEffect(() => {
     if (organizationId === null || configurationId === null || versionId === null) return;
     return useTestingStore.getState().watchRuns({ organizationId, configurationId, versionId });
@@ -378,12 +370,12 @@ export function TestingTab() {
    * anything is awaited: "held" when Play is held (a second click among
    * them). `start` reads the input's head and answers the request and the
    * question to ask, if any; the run is queued then ("queued"), or the
-   * question shown ("asked"), which keeps the hold until it is answered.
-   * A start whose head answers once the editor has left the target is
-   * dropped with the hold, nothing queued, the question asked or not
-   * ("dropped": D14b Rulings 42 and 50), and so is a question nobody can
-   * answer, the panel having collapsed during the head read. Rejects as the
-   * queue did. `opener` is the button pressed.
+   * question shown ("asked"), which keeps the hold until it is answered. A
+   * start whose head answers once the editor has left the target is dropped
+   * with the hold, nothing queued, the question asked or not ("dropped"),
+   * and so is a question nobody can answer, the panel having collapsed
+   * during the head read. Rejects as the queue did. `opener` is the button
+   * pressed.
    */
   const startRun = async (
     target: RunTarget,
@@ -397,8 +389,8 @@ export function TestingTab() {
     let asking = false;
     try {
       const { request, advisory } = await start();
-      // Left mid-read: nothing queues on a version no longer open (D14b Ruling 50). For a question, this
-      // is belt and braces: the effect above would close one shown for a version left (D14b Ruling 45).
+      // Left mid-read: nothing queues on a version no longer open. For a question, this is belt and
+      // braces: the effect above would close one shown for a version left.
       if (!isOpen(useEditorStore.getState(), target)) return "dropped";
       if (advisory !== null) {
         if (!mounted.current) return "dropped";
@@ -416,7 +408,7 @@ export function TestingTab() {
   // The dialog's Run: the run's snapshot from the editor as it is now, the
   // fixture-shape check, then the queue (or the check's question first).
   const handleRun = async ({ input, pipelineName, durationSeconds }: RunTestValues) => {
-    // The playground's lock (D31-1 decision 31): nothing remembered, nothing queued; the dialog closes, then the prompt.
+    // The playground's lock: nothing remembered, nothing queued; the dialog closes, then the prompt.
     if (locked) {
       lockedRun.current = true;
       return;
@@ -448,8 +440,8 @@ export function TestingTab() {
   };
 
   // A row's ↺: the run's input, pipeline, signal and duration against the
-  // text as it is now (decision 18), with the fixture-shape check. Nothing
-  // queued: the focus back to the ↺ pressed (D14b Ruling 50).
+  // text as it is now, with the fixture-shape check. Nothing
+  // queued: the focus back to the ↺ pressed.
   const handleRerun = async (run: TestRunSummary, opener: HTMLElement) => {
     try {
       const { target, yaml, collectorVersion } = currentVersion();
@@ -480,11 +472,10 @@ export function TestingTab() {
     }
   };
 
-  // A definition's Run test (Play one, D14b decision 10): queued from the
-  // definition with the text and pin as they are now, after the
-  // fixture-shape question on the definition's own input; the Tests subtab
-  // shows once it is queued. Nothing queued: the focus back to the Run test
-  // pressed (D14b Ruling 50).
+  // A definition's Run test (Play one): queued from the definition with the
+  // text and pin as they are now, after the fixture-shape question on the
+  // definition's own input; the Tests subtab shows once it is queued.
+  // Nothing queued: the focus back to the Run test pressed.
   const handlePlayOne = async (suite: TestSuite, definition: TestDefinition, opener: HTMLElement) => {
     try {
       const { target, yaml, collectorVersion } = currentVersion();
@@ -510,12 +501,11 @@ export function TestingTab() {
     }
   };
 
-  // A card's Play all (D14b decision 10): the text, pin, version and suite
-  // as they are at the click; the loop is the store's, so the panel
-  // collapsing doesn't stop it. The Tests subtab shows once the definitions
-  // are read and there is one (D14b Ruling 40): an empty
-  // suite's toast or a failed read leaves the person on Suites; so does a
-  // Suites dialog showing (D14b Ruling 50). Nothing queued: the focus back
+  // A card's Play all: the text, pin, version and suite as they are at the
+  // click; the loop is the store's, so the panel collapsing doesn't stop
+  // it. The Tests subtab shows once the definitions are read and there is
+  // one: an empty suite's toast or a failed read leaves the person on
+  // Suites; so does a Suites dialog showing. Nothing queued: the focus back
   // to the Play all pressed, else the active subtab's trigger.
   const handlePlayAll = (suite: TestSuite, mode: PlayAllMode, opener: HTMLElement) => {
     let current: ReturnType<typeof currentVersion>;
@@ -619,9 +609,9 @@ export function TestingTab() {
             focusAfterQueue();
             return;
           }
-          // Cancelled: back to the button that opened it, explicitly, as a click
-          // doesn't focus a button in every browser (D14b Ruling 38). With a
-          // question to ask, its dialog takes the focus.
+          // Cancelled: back to the button that opened it, explicitly, as a
+          // click doesn't focus a button in every browser. With a question to
+          // ask, its dialog takes the focus.
           if (pendingRef.current === null && playRef.current?.disabled === false) playRef.current.focus();
         }}
       />
@@ -643,7 +633,7 @@ export function TestingTab() {
             .then(resume.afterQueue, (error: unknown) => {
               const message = failureMessage(error, resume.fallback);
               if (message !== null) toast.error(message);
-              // Refused: nothing queued, the focus back to the button pressed, released first (D14b Ruling 50).
+              // Refused: nothing queued, the focus back to the button pressed, released first.
               resume.release();
               requestFocusBack(resume.opener);
             })
@@ -656,7 +646,7 @@ export function TestingTab() {
           closedQuestion.current = null;
           // Run Anyway: the queue's answer moves it (to the run's row, or back to the button pressed).
           if (closed === null || closed.how === "confirmed") return;
-          // The editor left the version: the button pressed went with it; the active subtab's trigger (D14b Ruling 46).
+          // The editor left the version: the button pressed went with it; the active subtab's trigger.
           if (closed.how === "left") {
             if (focusLost(null)) activeTrigger()?.focus();
             return;

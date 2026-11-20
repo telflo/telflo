@@ -24,13 +24,12 @@ import { UploadPanel } from "./UploadPanel.js";
 /*
  * The test configuration panel, shared by the run dialog (RunTestDialog.tsx)
  * and the definition dialog (test-suites/CreateTestConfigurationDialog.tsx),
- * so D14a's fixes hold in both (D14b Preflight ruling 16).
+ * so its fixes hold in both.
  */
 
 /**
- * The input the panel has chosen (D14b Preflight ruling 16): one of the
- * person's files, by its id and the name it showed, or a template, by its id
- * and its name.
+ * The input the panel has chosen: one of the person's files, by its id and
+ * the name it showed, or a template, by its id and its name.
  */
 export type { SelectedTestInput };
 
@@ -51,9 +50,9 @@ export interface TestConfigurationValues {
 type WizardStep = "main" | "my-files" | "templates" | "paste" | "upload";
 
 interface TestConfigurationPanelProps {
-  /** The duration it opens with: the remembered one (decision 20). */
+  /** The duration it opens with: the remembered one. */
   initialDurationSeconds: number;
-  /** The input it opens with: the run dialog's remembered file or template; none for a definition (D14b Preflight ruling 16). */
+  /** The input it opens with: the run dialog's remembered file or template; none for a definition. */
   initialInput: SelectedTestInput | null;
   /** The pipeline it opens with, by name: the remembered one, else (or when the text no longer has it) the first. */
   initialPipelineName: string | null;
@@ -77,11 +76,10 @@ const FOCUSABLE =
   'button:not([disabled]), input:not([disabled]):not([type="hidden"]):not([tabindex="-1"]), select:not([disabled]), textarea:not([disabled]), [href], [tabindex]:not([tabindex="-1"])';
 
 /**
- * Focuses `slot`'s first control, else `slot` itself (D14a Ruling 44): the
- * dialog's slides call it. Without scrolling (D14a Ruling 46): the slot is
- * still off to the side while the track's transform slides it in, and
- * Firefox and WebKit would scroll the clipping box to show it, leaving the
- * slid-in panel part hidden.
+ * Focuses `slot`'s first control, else `slot` itself: the dialog's slides
+ * call it. Without scrolling: the slot is still off to the side while the
+ * track's transform slides it in, and Firefox and WebKit would scroll the
+ * clipping box to show it, leaving the slid-in panel part hidden.
  */
 export function focusIntoSlot(slot: HTMLElement): void {
   (slot.querySelector<HTMLElement>(FOCUSABLE) ?? slot).focus({ preventScroll: true });
@@ -98,19 +96,18 @@ function slotOf(step: WizardStep): 0 | 1 | 2 {
  * sub-panel (My Files, Templates or Paste) and the upload panel, reached
  * from My Files.
  *
- * Differences (the Parity Notes):
+ * Differences:
  * - a template picked and deleted before the submit gets the API's words,
- *   leaves the selection, and the templates are read again (D14b Preflight
- *   ruling 17), as a file deleted does; the templates step reads them
- *   afresh each time it shows (TemplatesPanel);
- * - it writes no choice to the store: what it opens with comes in its
- *   props, and what it chose goes out through `onSubmit`, so the definition dialog
- *   leaves the run dialog's remembered file and pipeline as they were
- *   (D14b Preflight ruling 16), never writing its choice into the shared
- *   selection on a submit;
+ *   leaves the selection, and the templates are read again, as a file deleted
+ *   does; the templates step reads them afresh each time it shows
+ *   (TemplatesPanel);
+ * - it writes no choice to the store: what it opens with comes in its props,
+ *   and what it chose goes out through `onSubmit`, so the definition dialog
+ *   leaves the run dialog's remembered file and pipeline as they were, never
+ *   writing its choice into the shared selection on a submit;
  * - the name fields' ids, as every id here, come from `useId`, never fixed
  *   (`test-config-name`); they take no more than the API keeps
- *   (`maxLength`, D14b Ruling 38);
+ *   (`maxLength`);
  * - the pipelines are the canvas's (`graph.pipelines`), chosen by name, the
  *   last one run first, else the first;
  * - My Files are read each time the dialog opens, and a file deleted (here,
@@ -118,17 +115,16 @@ function slotOf(step: WizardStep): 0 | 1 | 2 {
  * - the duration must be a whole number of seconds, 1-60: 1.5 is never cut
  *   to 1 and run;
  * - a slot slid out of view is inert and hidden from assistive technology,
- *   never reachable by Tab; and a slide moves the focus
- *   into the slot slid in, to its first control, else to the slot itself
- *   (D14a Ruling 44), never left on the button that slid, now hidden (the
- *   browser would drop it to `<body>`); the focus never
- *   scrolls the track's clipping box (D14a Ruling 46), and the box clips
+ *   never reachable by Tab; and a slide moves the focus into the slot slid
+ *   in, to its first control, else to the slot itself, never left on the
+ *   button that slid, now hidden (the browser would drop it to `<body>`);
+ *   the focus never scrolls the track's clipping box, and the box clips
  *   (`overflow: clip`), so it is no scroll container and a control reached
- *   by Tab mid-slide can't scroll it either (Ruling 47);
+ *   by Tab mid-slide can't scroll it either;
  * - the upload panel stays mounted through its slides to and from My Files,
  *   and starts empty each time it is shown;
- * - the pipeline's and the file's names show as text only (ADR 0024): the
- *   select's values are the pipelines' opaque ids.
+ * - the pipeline's and the file's names show as text only: the select's
+ *   values are the pipelines' opaque ids.
  */
 export function TestConfigurationPanel({
   initialDurationSeconds,
@@ -164,8 +160,8 @@ export function TestConfigurationPanel({
   const slots = useRef<(HTMLDivElement | null)[]>([null, null, null]);
   const slid = useRef(false);
 
-  // A slide moves the focus into the slot slid in (D14a Ruling 44): its first
-  // control, else the slot itself. Not as the dialog opens: Radix focuses it.
+  // A slide moves the focus into the slot slid in: its first control, else
+  // the slot itself. Not as the dialog opens: Radix focuses it.
   useEffect(() => {
     if (!slid.current) {
       slid.current = true;
@@ -281,13 +277,13 @@ export function TestConfigurationPanel({
   return (
     // The track moves by its transform, never by scrolling: a browser that
     // scrolls this clipping box to show a control focused by Tab while a
-    // slide is still under way (WebKit and Firefox did, D14a Task 11's
-    // browser tests) would leave the slot slid in part hidden. So the box
-    // clips (`overflow: clip`) rather than hides: it is no scroll container,
-    // and nothing can scroll it, in any of the three browsers (Ruling 47).
-    // Not being one, its minimum width as the dialog's grid item would be its
-    // content's, and the paste editor (automaticLayout) and the box would
-    // widen each other without end: `min-w-0` keeps it the dialog's width.
+    // slide is still under way (WebKit and Firefox did, in browser tests)
+    // would leave the slot slid in part hidden. So the box clips
+    // (`overflow: clip`) rather than hides: it is no scroll container, and
+    // nothing can scroll it, in any of the three browsers. Not being one, its
+    // minimum width as the dialog's grid item would be its content's, and the
+    // paste editor (automaticLayout) and the box would widen each other
+    // without end: `min-w-0` keeps it the dialog's width.
     <div className="overflow-clip min-w-0 h-[26rem]" data-run-dialog-track="">
       <div className={`flex w-[300%] h-full transition-transform duration-300 ${translateClass}`}>
         {/* The main view */}
@@ -368,7 +364,7 @@ export function TestConfigurationPanel({
                 onChange={(event) => setDurationText(event.target.value)}
                 aria-invalid={!durationValid}
                 aria-describedby={durationValid ? `${labelId}-duration-help` : `${labelId}-duration-error ${labelId}-duration-help`}
-                // A typed value: replay never records the field (D31-1 decision 39, Ruling 301).
+                // A typed value: replay never records the field.
                 className="font-mono ph-no-capture"
               />
               <p id={`${labelId}-duration-help`} className="text-[11px] text-muted-foreground">
@@ -406,7 +402,7 @@ export function TestConfigurationPanel({
               </button>
               <button
                 type="button"
-                // A pasted sample is saved as a file: locked in the playground (D31-1 decision 12).
+                // A pasted sample is saved as a file: locked in the playground.
                 onClick={(event) => (locked ? locked("save a pasted sample", event.currentTarget) : setStep("paste"))}
                 className={`${optionBtnClass} flex-1 flex items-center justify-between gap-2`}
               >

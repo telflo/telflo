@@ -14,18 +14,16 @@ import { PublishedVersionLink } from "./PublishedVersionLink.js";
 import { VariableGroupLink } from "./VariableGroupLink.js";
 
 /*
- * A server fleet's collectors grid (D17b-1 decisions 21–23, 27 and 32;
- * Preflight rulings 10 and 17): plain table markup with the fleet list's
- * classes (`FleetsTable`; no @tanstack/react-table, decision 5). In the
- * D17b-1 Parity Notes:
- * - a selection column first (decision 27): a checkbox per row and one in
- *   the header for the page, the selection the tab's;
+ * A server fleet's collectors grid: plain table markup with the fleet list's
+ * classes (`FleetsTable`; no @tanstack/react-table). Differences:
+ * - a selection column first: a checkbox per row and one in the header for
+ *   the page, the selection the tab's;
  * - "Group", "Version" (the version served);
- * - "Variable group" (D20 default 25): the collector's pinned variable group,
- *   else its group's, else "Organization values" (a dash while the groups are
- *   unread and it has no pin), a button opening each variable's value and
- *   where it comes from (`VariableGroupLink`: the pin's override, then the
- *   group's, then the organization's);
+ * - "Variable group": the collector's pinned variable group, else its
+ *   group's, else "Organization values" (a dash while the groups are unread
+ *   and it has no pin), a button opening each variable's value and where it
+ *   comes from (`VariableGroupLink`: the pin's override, then the group's,
+ *   then the organization's);
  * - Name and Last seen sort, server-side: `aria-sort` on the sorted header
  *   only, none for the API's default (newest first);
  * - Status from the server's `liveness` (Online, Warning, Unknown, Offline:
@@ -33,17 +31,15 @@ import { VariableGroupLink } from "./VariableGroupLink.js";
  *   `drift` (In sync, Pending pickup, Apply failed, Drifted, Nothing
  *   assigned: `CollectorConfigurationCell`), each a dot and words with its
  *   meaning as tooltip and screen-reader text; Last seen how long ago as
- *   plain text, its full time the tooltip (`LastSeenCell`). D17d-2 Ruling
- *   55 (the owner's Q58): Status had been the drift, the liveness only a dot
- *   beside Last seen, so a collector gone unseen still showed a green "In
- *   sync". Configuration sits after Status, before Version: Status keeps its
+ *   plain text, its full time the tooltip (`LastSeenCell`). Status is the
+ *   liveness, so a collector gone unseen never shows a green "In sync".
+ *   Configuration sits after Status, before Version: Status keeps its
  *   place, and the sync sits beside the version it is about;
- * - Version, centred: "{configurationName} @v{n}" linked to the editor
- *   for a published version served (`PublishedVersionLink`, as the Groups
- *   tab's: D17c-1 decisions 7 and 46), "Deleted configuration" for a published
- *   version the platform no longer holds, a dash for nothing served (no
- *   "Imported": D16c removed importing); each form's meaning
- *   (`VERSION_MEANINGS`, D16c Ruling 21: it is what the collector runs,
+ * - Version, centred: "{configurationName} @v{n}" linked to the editor for
+ *   a published version served (`PublishedVersionLink`, as the Groups
+ *   tab's), "Deleted configuration" for a published version the platform
+ *   no longer holds, a dash for nothing served (no "Imported"); each
+ *   form's meaning (`VERSION_MEANINGS`: it is what the collector runs,
  *   which a pin or a group's version doesn't change until it is sent) as
  *   tooltip text on a focusable trigger and screen-reader text, as Status,
  *   Configuration and Last seen; the version's one tooltip holds its full
@@ -51,17 +47,16 @@ import { VariableGroupLink } from "./VariableGroupLink.js";
  * - no collector, group or fleet name, IP address or version label in an
  *   attribute (no `title`, no `aria-label`): each row's buttons and checkbox
  *   are named by `aria-labelledby` pointing at hidden text ("Edit {name}",
- *   D17a's `FleetRowActions` pattern), whose ids hold the table's `useId` and
+ *   the `FleetRowActions` pattern), whose ids hold the table's `useId` and
  *   the collector's id; the names are text in the masked shell.
- * A Kubernetes-supervisor fleet's grid (D17d-1 decision 23; Preflight
- * ruling 25; Ruling 66, the owner's Q49): its Group column, where a server
+ * A Kubernetes-supervisor fleet's grid: its Group column, where a server
  * fleet's is, shows the role's badge ("Agent", "Cluster" or "Gateway", from
  * the collector's group by `collectorGroupRole`), then a gateway's name (the
  * Agent and the Cluster their badge alone), as the Groups tab; a dash while
- * the groups are unread.
- * The Name button opens the details (`onOpen`), the row actions the edit
- * and delete dialogs (`onEdit`, `onDelete`); the checkboxes the tab's
- * selection, whose bar (`CollectorsSelectionBar`) opens the bulk actions.
+ * the groups are unread. The Name button opens the details (`onOpen`), the
+ * row actions the edit and delete dialogs (`onEdit`, `onDelete`); the
+ * checkboxes the tab's selection, whose bar (`CollectorsSelectionBar`) opens
+ * the bulk actions.
  */
 
 const HEAD_BASE_CLASS =
@@ -88,9 +83,9 @@ export function servedForm(served: Collector["served"]): ServedForm {
 }
 
 /**
- * What each form means (D16c Ruling 21): what the collector runs, as the
- * grid's Version tooltip and the details' Effective Version row say it.
- * Fixed words: never a name, label or id (ADR 0024).
+ * What each form means: what the collector runs, as the grid's Version
+ * tooltip and the details' Effective Version row say it. Fixed words: never a
+ * name, label or id.
  */
 export const VERSION_MEANINGS: Record<ServedForm, string> = {
   version: "Running: the last published version it was sent.",
@@ -101,14 +96,14 @@ export const VERSION_MEANINGS: Record<ServedForm, string> = {
 const TRIGGER_FOCUS_CLASS = "rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40";
 
 /**
- * Version: what was served, its meaning (D16c Ruling 21) as tooltip text and
- * screen-reader text, never a `title` or an `aria-label` (D17b-1 Preflight
- * ruling 10: a tooltip never shows on touch). The "{configurationName} @v{n}"
- * link is the trigger itself (`PublishedVersionLink`: its tooltip the full
- * text, then the meaning), still a link that goes to the editor; its
- * screen-reader copy sits beside it, so the link's name stays the version.
- * The dash and "Deleted configuration" are focusable spans, as Status's and
- * Configuration's, their copy inside.
+ * Version: what was served, its meaning as tooltip text and screen-reader
+ * text, never a `title` or an `aria-label` (a tooltip never shows on
+ * touch). The "{configurationName} @v{n}" link is the trigger itself
+ * (`PublishedVersionLink`: its tooltip the full text, then the meaning),
+ * still a link that goes to the editor; its screen-reader copy sits beside
+ * it, so the link's name stays the version. The dash and "Deleted
+ * configuration" are focusable spans, as Status's and Configuration's,
+ * their copy inside.
  */
 function VersionCell({ served }: { served: Collector["served"] }) {
   const meaning = VERSION_MEANINGS[servedForm(served)];

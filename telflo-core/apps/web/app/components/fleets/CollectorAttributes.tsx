@@ -1,10 +1,9 @@
 /*
- * A collector's details' reported attributes (D17b-1 decisions 13 and 24,
- * Preflight ruling 11): what the collector reported of itself (its
- * description's identifying and non-identifying attributes; at most 16 KiB of
- * jsonb, or 256 keys when the opamp-server cut a larger set), as a key/value
- * list sorted by key. The section is `ph-no-capture`, so session replay
- * records none of it; no key or value reaches an attribute.
+ * A collector's details' reported attributes: what the collector reported of
+ * itself (its description's identifying and non-identifying attributes; at
+ * most 16 KiB of jsonb, or 256 keys when the opamp-server cut a larger set),
+ * as a key/value list sorted by key. The section is `ph-no-capture`, so
+ * session replay records none of it; no key or value reaches an attribute.
  */
 
 /** The keys in code-unit order (`Array.prototype.sort`'s, not `localeCompare`'s), so the order is the same in every browser and locale. */
