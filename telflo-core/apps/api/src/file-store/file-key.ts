@@ -1,9 +1,9 @@
 import { Readable } from "node:stream";
 import { InvalidFileKeyError, TEST_RUN_FILE_NAMES, type FileKey } from "./file-store.js";
 
-// What every file store shares (D23-1 decision 17): a key's layout, checked
-// before any backend call, and how a write reads its content, so an abort
-// ends a write the same way in each store. The local disk joins a key's
+// What every file store shares: a key's layout, checked before any backend
+// call, and how a write reads its content, so an abort ends a write the same
+// way in each store. The local disk joins a key's
 // segments into a path under its root; an object store names its object by
 // `fileKeyName`.
 
@@ -26,9 +26,7 @@ function canonicalId(value: unknown, field: string): string {
 
 /**
  * The key's path under the root. Pure: it checks every id and name, and
- * touches no file. The kinds' layouts are D14a decision 3's, D14b
- * detail 18's for a definition's input, and D23-2 decision 30's for a logo
- * and a library file.
+ * touches no file. The kinds' layouts are FileKey's (file-store.ts).
  */
 export function keyPath(key: FileKey): KeyPath {
   switch (key.kind) {

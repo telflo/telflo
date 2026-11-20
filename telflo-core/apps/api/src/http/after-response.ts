@@ -1,9 +1,8 @@
 import type { FastifyBaseLogger } from "fastify";
 
 /**
- * Schedules work to run after the response (D3 decision 2). The route
- * replies without waiting, so nothing the response waits for depends on
- * what the work finds.
+ * Schedules work to run after the response. The route replies without
+ * waiting, so nothing the response waits for depends on what the work finds.
  */
 export type RunAfterResponse = (task: () => Promise<void>) => void;
 
@@ -39,10 +38,10 @@ export interface CollectingRunner {
 }
 
 /**
- * For tests. `run` only queues: nothing starts until `settle()` (D3
- * Preflight ruling 4), so a test can assert that nothing was sent, written or
- * audited when a 202 arrives. A runner that started tasks would let a route
- * that awaited its work pass the same test.
+ * For tests. `run` only queues: nothing starts until `settle()`, so a test
+ * can assert that nothing was sent, written or audited when a 202 arrives.
+ * A runner that started tasks would let a route that awaited its work pass
+ * the same test.
  */
 export function createCollectingRunner(): CollectingRunner {
   const queue: Array<() => Promise<void>> = [];

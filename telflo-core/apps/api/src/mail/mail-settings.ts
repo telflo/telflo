@@ -2,10 +2,10 @@
 export const MAIL_TRANSPORTS = ["smtp", "sendgrid"] as const;
 
 /**
- * TELFLO_SMTP_TLS's values (D36-1 decision 30): `starttls` (the default)
- * upgrades a plain connection and refuses a relay that can't, `implicit`
- * opens TLS from the start (port 465's), `none` sends in cleartext
- * (development relays only; smtp-mailer.ts's interlocks).
+ * TELFLO_SMTP_TLS's values: `starttls` (the default) upgrades a plain
+ * connection and refuses a relay that can't, `implicit` opens TLS from the
+ * start (port 465's), `none` sends in cleartext (development relays only;
+ * smtp-mailer.ts's interlocks).
  */
 export const SMTP_TLS_MODES = ["starttls", "implicit", "none"] as const;
 export type SmtpTlsMode = (typeof SMTP_TLS_MODES)[number];

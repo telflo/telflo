@@ -168,7 +168,7 @@ describe("loadSettings", () => {
       );
     });
 
-    it("reads TELFLO_SMTP_TLS: starttls when unset or empty, each mode, and refuses another naming the modes (D36-1 decision 30)", () => {
+    it("reads TELFLO_SMTP_TLS: starttls when unset or empty, each mode, and refuses another naming the modes", () => {
       const tlsOf = (value: string | undefined) => {
         const { transport } = loadSettings(value === undefined ? complete : { ...complete, TELFLO_SMTP_TLS: value }).mail;
         return transport.kind === "smtp" ? transport.tls : undefined;
@@ -516,7 +516,7 @@ describe("loadSettings", () => {
     );
   });
 
-  describe("sales inquiries (D4 decision 4, D36-1 decision 25)", () => {
+  describe("sales inquiries", () => {
     it("have no address by default, and none is needed while they are off", () => {
       expect(loadSettings(complete).salesInquiryTo).toBe("");
       expect(loadSettings({ ...complete, TELFLO_SALES_INQUIRY_TO: "" }).salesInquiryTo).toBe("");
@@ -553,7 +553,7 @@ describe("loadSettings", () => {
     );
   });
 
-  describe("the site (D36-1 decision 27; the contracts' parseSiteSettings)", () => {
+  describe("the site (the contracts' parseSiteSettings)", () => {
     const SAAS = {
       TELFLO_REGISTRATION: "open",
       TELFLO_PLAYGROUND: "true",
@@ -618,8 +618,8 @@ describe("loadSettings", () => {
       expect(message.includes("cnry")).toBe(false);
     });
 
-    // Preflight ruling 19 (Q251): the development stack runs the open source's defaults unless the
-    // environment compose reads sets a value; the web gets the same variables as the API.
+    // The development stack runs the open source's defaults unless the environment compose reads
+    // sets a value; the web gets the same variables as the API.
     it("compose's API and web environments take every site variable by interpolation, with the open source's defaults", () => {
       const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../../..");
       const compose = parseYaml(readFileSync(resolve(repositoryRoot, "docker-compose.yml"), "utf8")) as {
@@ -645,7 +645,7 @@ describe("loadSettings", () => {
       }
       const api = compose.services["api"]!.environment!;
       expect(api.TELFLO_SALES_INQUIRY_TO).toBe("${TELFLO_SALES_INQUIRY_TO:-}");
-      // Mailpit takes plain SMTP (decision 30: development sets none).
+      // Mailpit takes plain SMTP (development sets none).
       expect(api.TELFLO_SMTP_TLS).toBe("none");
       // The defaults, as compose fills them in with nothing set, load.
       const filled = Object.fromEntries(
@@ -674,7 +674,7 @@ describe("loadSettings", () => {
       expect(loadSettings(opamp).opampServer).toEqual({ url: "http://opamp-server:51235", secret });
     });
 
-    it("refuses to start with neither, naming both variables (D11b decision 8)", () => {
+    it("refuses to start with neither, naming both management variables", () => {
       const { TELFLO_OPAMP_MANAGEMENT_URL: _url, TELFLO_OPAMP_MANAGEMENT_SECRET: _secret, ...rest } = opamp;
       expect(messageOf(rest)).toBe(
         `${BOTH_REQUIRED}; missing: TELFLO_OPAMP_MANAGEMENT_URL, TELFLO_OPAMP_MANAGEMENT_SECRET`,
@@ -739,7 +739,7 @@ describe("loadSettings", () => {
     });
 
     it.each(["http://user:url-password@opamp-server:51235", "https://url-user@opamp.internal.example", "http://:url-password@host"])(
-      "refuses a URL carrying a user name or password, without quoting it (Ruling 55)",
+      "refuses a management URL carrying a user name or password, without quoting it",
       (url) => {
         const message = messageOf({ ...opamp, TELFLO_OPAMP_MANAGEMENT_URL: url });
         expect(message).toBe("Environment variable TELFLO_OPAMP_MANAGEMENT_URL must not carry a user name or password");
@@ -753,7 +753,7 @@ describe("loadSettings", () => {
       expect(settings.opampServer.url).toBe("https://opamp.internal.example");
     });
   });
-  describe("the collector validator (D13b decision 12)", () => {
+  describe("the collector validator", () => {
     const secret = complete.TELFLO_OTELCOL_VALIDATOR_SECRET;
     const BOTH_REQUIRED =
       "Environment variables TELFLO_OTELCOL_VALIDATOR_URL and TELFLO_OTELCOL_VALIDATOR_SECRET are both required (the collector validator)";
@@ -836,7 +836,7 @@ describe("loadSettings", () => {
     });
 
     it.each(["http://user:url-password@otelcol-validator:8001", "https://url-user@validator.internal.example", "http://:url-password@host"])(
-      "refuses a URL carrying a user name or password, without quoting it (Ruling 55)",
+      "refuses a validator URL carrying a user name or password, without quoting it",
       (url) => {
         const message = messageOf({ ...complete, TELFLO_OTELCOL_VALIDATOR_URL: url });
         expect(message).toBe("Environment variable TELFLO_OTELCOL_VALIDATOR_URL must not carry a user name or password");
@@ -850,7 +850,7 @@ describe("loadSettings", () => {
       expect(settings.otelcolValidator.url).toBe("https://validator.internal.example");
     });
   });
-  describe("the collector tester (D14a decision 30)", () => {
+  describe("the collector tester", () => {
     const secret = complete.TELFLO_OTELCOL_TESTING_SECRET;
     const BOTH_REQUIRED =
       "Environment variables TELFLO_OTELCOL_TESTING_URL and TELFLO_OTELCOL_TESTING_SECRET are both required (the collector tester)";
@@ -940,13 +940,13 @@ describe("loadSettings", () => {
       expect(settings.otelcolTesting.url).toBe("https://tester.internal.example");
     });
 
-    it("accepts the native development URL, through the forwarder (Preflight ruling 4)", () => {
+    it("accepts the native development URL, through the forwarder", () => {
       expect(loadSettings({ ...complete, TELFLO_OTELCOL_TESTING_URL: "http://127.0.0.1:51237" }).otelcolTesting.url).toBe(
         "http://127.0.0.1:51237",
       );
     });
   });
-  describe("the OTTL evaluator (D15a detail 26)", () => {
+  describe("the OTTL evaluator", () => {
     const secret = complete.TELFLO_OTTL_EVALUATOR_SECRET;
     const BOTH_REQUIRED =
       "Environment variables TELFLO_OTTL_EVALUATOR_URL and TELFLO_OTTL_EVALUATOR_SECRET are both required (the OTTL evaluator)";
@@ -1032,13 +1032,13 @@ describe("loadSettings", () => {
       expect(settings.ottlEvaluator.url).toBe("https://evaluator.internal.example");
     });
 
-    it("accepts the native development URL, through its forwarder (Preflight ruling 13)", () => {
+    it("accepts the native development URL, through its forwarder", () => {
       expect(loadSettings({ ...complete, TELFLO_OTTL_EVALUATOR_URL: "http://127.0.0.1:51238" }).ottlEvaluator.url).toBe(
         "http://127.0.0.1:51238",
       );
     });
   });
-  describe("the test runs' dispatcher (D14a decisions 1, 12 and 30)", () => {
+  describe("the test runs' dispatcher", () => {
     function messageOf(env: NodeJS.ProcessEnv): string {
       try {
         loadSettings(env);
@@ -1055,14 +1055,14 @@ describe("loadSettings", () => {
       ).toEqual({ runsPerTester: 4, downFailAfterSeconds: 600 });
     });
 
-    it("reads both when set (the browser tests' 16, Preflight ruling 20)", () => {
+    it("reads both when set (the browser tests' 16)", () => {
       expect(
         loadSettings({ ...complete, TELFLO_TEST_RUNS_PER_TESTER: "16", TELFLO_TESTING_DOWN_FAIL_AFTER_SECONDS: "1" }).testRuns,
       ).toEqual({ runsPerTester: 16, downFailAfterSeconds: 1 });
       expect(loadSettings({ ...complete, TELFLO_TEST_RUNS_PER_TESTER: "1" }).testRuns.runsPerTester).toBe(1);
     });
 
-    it("takes at most 64 runs per tester (Ruling 38)", () => {
+    it("takes at most 64 runs per tester", () => {
       expect(loadSettings({ ...complete, TELFLO_TEST_RUNS_PER_TESTER: "64" }).testRuns.runsPerTester).toBe(64);
     });
 
@@ -1072,7 +1072,7 @@ describe("loadSettings", () => {
       );
     });
 
-    it("takes at most a day for the down rule (Ruling 41)", () => {
+    it("takes at most a day for the down rule", () => {
       expect(loadSettings({ ...complete, TELFLO_TESTING_DOWN_FAIL_AFTER_SECONDS: "86400" }).testRuns.downFailAfterSeconds).toBe(86_400);
     });
 
@@ -1082,7 +1082,7 @@ describe("loadSettings", () => {
       );
     });
   });
-  describe("the file store (D14a decision 2; D23-1 decisions 15 and 36)", () => {
+  describe("the file store", () => {
     function messageOf(env: NodeJS.ProcessEnv): string {
       try {
         loadSettings(env);
@@ -1092,7 +1092,7 @@ describe("loadSettings", () => {
       throw new Error("loadSettings did not throw");
     }
 
-    // compose's values (Preflight ruling 17), beside the complete environment's root.
+    // compose's values, beside the complete environment's root.
     const s3: Record<string, string> = {
       ...complete,
       TELFLO_FILE_STORE: "s3",
@@ -1141,7 +1141,7 @@ describe("loadSettings", () => {
         expect(loadSettings({ ...complete, TELFLO_FILE_STORE_ROOT: root }).fileStore).toEqual({ kind: "local", root });
       });
 
-      it("ignores every S3 value, even invalid ones: compose sets them for every install (Preflight ruling 17)", () => {
+      it("ignores every S3 value, even invalid ones: compose sets them for every install", () => {
         const env = {
           ...complete,
           TELFLO_FILE_STORE: "local",
@@ -1315,8 +1315,8 @@ describe("loadSettings", () => {
         );
       });
 
-      // Ruling 121: no refusal shows the value, which a mistyped or pasted endpoint may fill with a user name
-      // and password (encoded or not) or a presigned URL's signature. Every check on the value is a boolean.
+      // No refusal shows the value, which a mistyped or pasted endpoint may fill with a user name and
+      // password (encoded or not) or a presigned URL's signature. Every check on the value is a boolean.
       it.each([
         ["a user name", "http://canaryuser@objects.example.test:9000"],
         ["a user name and password", "http://canaryuser:canarypw@objects.example.test:9000"],
@@ -1379,10 +1379,10 @@ describe("loadSettings", () => {
       );
     });
 
-    // D23-1 decisions 15 and 34: the S3 client's keys are the AWS SDK's
-    // default chain's, so loadSettings never reads an AWS_* variable, and no
-    // key can reach a setting or an error. The canaries are made here and
-    // never printed: every assertion on them is a boolean (D22 lesson 3).
+    // The S3 client's keys are the AWS SDK's default chain's, so loadSettings
+    // never reads an AWS_* variable, and no key can reach a setting or an
+    // error. The canaries are made here and never printed: every assertion on
+    // them is a boolean.
     describe("never reads an AWS_* variable", () => {
       const canaries = {
         AWS_ACCESS_KEY_ID: `canary-key-id-${randomUUID()}`,
@@ -1459,8 +1459,8 @@ describe("loadSettings", () => {
       });
     });
 
-    // Preflight ruling 17: compose sets the S3 values for every install, and they load as its bucket under s3.
-    // Ruling 114: .env.example's test-server keys are compose's development-only anchors (compared, never shown).
+    // Compose sets the S3 values for every install, and they load as its bucket under s3.
+    // .env.example's test-server keys are compose's development-only anchors (compared, never shown).
     it("compose's S3 values load under s3, and .env.example's test server is compose's object store", () => {
       const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../../..");
       const read = (path: string) => readFileSync(resolve(repositoryRoot, path), "utf8");
@@ -1496,7 +1496,7 @@ describe("loadSettings", () => {
     });
   });
 
-  describe("installing collectors (D17c-1 decision 34, Preflight ruling 9)", () => {
+  describe("installing collectors", () => {
     function messageOf(env: Record<string, string>): string {
       try {
         loadSettings(env);
@@ -1570,7 +1570,7 @@ describe("loadSettings", () => {
       expect(messageOf({ ...complete, TELFLO_OPAMP_AGENT_PUBLIC_URL: url })).toMatch(/^Environment variable TELFLO_OPAMP_AGENT_PUBLIC_URL must be/);
     });
 
-    // D18 decision 9: the platform's own image, when unset or empty.
+    // The platform's own image, when unset or empty.
     it("defaults the image repository to the platform's own, ghcr.io/telflo/telflo/collector, when unset or empty", () => {
       for (const env of [complete, { ...complete, TELFLO_COLLECTOR_IMAGE_REPOSITORY: "" }]) {
         expect(loadSettings(env).install.collectorImageRepository).toBe("ghcr.io/telflo/telflo/collector");
@@ -1598,7 +1598,7 @@ describe("loadSettings", () => {
       );
     });
 
-    // D17d-2 decision 16, Preflight ruling 6; D18 decisions 9 and 10: the Helm chart's reference and version.
+    // The Helm chart's reference and version.
     it("defaults the Helm chart to the platform's own, oci://ghcr.io/telflo/telflo/charts/supervisor-collector 0.1.0, when unset or empty", () => {
       for (const env of [complete, { ...complete, TELFLO_HELM_CHART_REFERENCE: "", TELFLO_HELM_CHART_VERSION: "" }]) {
         const install = loadSettings(env).install;
@@ -1640,7 +1640,7 @@ describe("loadSettings", () => {
     });
   });
 
-  describe("quick-deploy links (D17c-2 decision 24, Preflight rulings 6 to 8)", () => {
+  describe("quick-deploy links", () => {
     function messageOf(env: Record<string, string>): string {
       try {
         loadSettings(env);
@@ -1727,8 +1727,8 @@ describe("loadSettings", () => {
       for (const value of Object.values(env)) expect(message).not.toContain(value);
     });
 
-    // Preflight ruling 7: no production mode refuses the development key; compose and .env.example carry one
-    // fixed value, public and development-only, as every development secret of theirs.
+    // No production mode refuses the development key; compose and .env.example carry one fixed value,
+    // public and development-only, as every development secret of theirs.
     it("compose's API environment and .env.example carry the same development-only key, which loads, and their URLs", () => {
       const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../../..");
       const read = (path: string) => readFileSync(resolve(repositoryRoot, path), "utf8");
@@ -1748,10 +1748,9 @@ describe("loadSettings", () => {
     });
   });
 
-  // The library link's keys are secrets (D23-2 decisions 46 and 59): every
-  // check on a message or a key below is a boolean, so a failing test prints
-  // no key.
-  describe("the library link's keys (D23-2 decision 46, Preflight ruling 12)", () => {
+  // The library link's keys are secrets: every check on a message or a key
+  // below is a boolean, so a failing test prints no key.
+  describe("the library link's keys", () => {
     const CURRENT = "TELFLO_LIBRARY_LINK_SIGNING_KEY";
     const PREVIOUS = "TELFLO_LIBRARY_LINK_SIGNING_KEYS_PREVIOUS";
     const previousOne = "settings-test-only-previous-library-key-one";
@@ -1835,8 +1834,8 @@ describe("loadSettings", () => {
       }
     });
 
-    // Preflight ruling 12: compose and .env.example carry one fixed key, public and development-only, as
-    // quick-deploy's; compared as a boolean, never shown.
+    // Compose and .env.example carry one fixed key, public and development-only, as quick-deploy's;
+    // compared as a boolean, never shown.
     it("compose's API environment and .env.example carry the same development-only key, which loads", () => {
       const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../../..");
       const read = (path: string) => readFileSync(resolve(repositoryRoot, path), "utf8");

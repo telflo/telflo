@@ -24,25 +24,22 @@ import { UNCALLED_OTELCOL_VALIDATOR } from "../testing/otelcol-validator.js";
 import { UNCALLED_FILE_STORE } from "../testing/file-store.js";
 import { UNCALLED_TESTING } from "../testing/otelcol-testing.js";
 
-// The opamp-server every server needs (D11b decision 8): this file's own fake.
+// The opamp-server every server needs: this file's own fake.
 const opamp = useFakeOpampServer();
 
 /**
- * D2a decision 9, scaled down: the production numbers are 30, 150 and 10,
- * and these tests prove the same behavior with 3, 2 and 3. The per-address
- * email limit (D3 decision 6) keeps its production 5, so "the 6th request"
- * is literally the sixth. The invitation limit (D6 decision 6) keeps its
- * production numbers too; its tests are with the invitation endpoints', and
- * so do the sales inquiries' (D4 decision 4), the validations' (D13b
- * decision 12), the flow lint's (D12 decision 6), the test files' and
- * runs' (D14a decision 19), the fleet routes' (D16b Preflight ruling 12)
- * and the public download's (D17c-2 decision 9, public-download.test.ts),
- * with theirs, and the public logo read's (D23-2 decision 48, with the
- * organization routes') and the library's (D23-2 decision 48, with the
- * library routes'), and the anonymous validations' (D27 decision 24, with
- * the anonymous validate's), and D29's product-admin writes, deletes and
- * feedback (with their routes'), and the open flow read's (D31-1 decision
- * 19, with the flows routes'). The token check's (D22 decision 36) keeps its production
+ * The per-IP and per-email limits, scaled down: the production numbers are
+ * 30, 150 and 10, and these tests prove the same behavior with 3, 2 and 3.
+ * The per-address email limit keeps its production 5, so "the 6th request"
+ * is literally the sixth. The invitation limit keeps its production numbers
+ * too; its tests are with the invitation endpoints', and so do the sales
+ * inquiries', the validations', the flow lint's, the test files' and runs',
+ * the fleet routes' and the public download's (public-download.test.ts),
+ * with theirs, and the public logo read's (with the organization routes')
+ * and the library's (with the library routes'), and the anonymous
+ * validations' (with the anonymous validate's), and the product-admin
+ * writes, deletes and feedback (with their routes'), and the open flow
+ * read's (with the flows routes'). The token check's keeps its production
  * 30, tested here through the real server.
  * Every server here is fresh, so each test starts with empty buckets.
  */
@@ -169,7 +166,7 @@ describe("rate limits", () => {
       "password-reset-requests": { url: "/api/v1/auth/password-reset-requests", payload: { email } },
       "password-resets": { url: "/api/v1/auth/password-resets", payload: { token: "not-a-real-token", password } },
       "verification-emails": { url: "/api/v1/auth/verification-emails", payload: { email } },
-      // D2c decision 7: GET navigations, in the same bucket. No provider is
+      // The OIDC routes: GET navigations, in the same bucket. No provider is
       // configured here, so the start answers 404 and the callback redirects
       // with oauth_failed; both still count.
       "oidc-start": { method: "GET" as const, url: "/api/v1/auth/oidc/google" },
@@ -209,7 +206,7 @@ describe("rate limits", () => {
 
   /**
    * The callback is a navigation: a 429 there is a redirect to sign-in, with
-   * the limit's Retry-After (D2c Preflight minor).
+   * the limit's Retry-After.
    */
   function expectCallbackRateLimited(response: LightMyRequestResponse): void {
     expect(response.statusCode).toBe(302);
@@ -219,20 +216,21 @@ describe("rate limits", () => {
     expect(Number(response.headers["retry-after"])).toBeGreaterThan(0);
   }
 
-  describe("the shared per-IP bucket for the identity routes (D2a decision 9, D3 decision 6, D2c decision 7)", () => {
+  describe("the shared per-IP bucket for the identity routes", () => {
     const mixes: IdentityRoute[][] = [
       ["register", "verify-email", "sign-in", "register"],
       ["sign-in", "register", "verify-email", "sign-in"],
       ["verify-email", "sign-in", "register", "verify-email"],
       ["register", "register", "sign-in", "verify-email"],
-      // D3's three routes, each alone, then with each other and D2a's.
+      // The password-reset and verification-email routes, each alone, then
+      // with each other and the sign-in, register and verify-email routes.
       ["password-reset-requests", "password-reset-requests", "password-reset-requests", "password-reset-requests"],
       ["password-resets", "password-resets", "password-resets", "password-resets"],
       ["verification-emails", "verification-emails", "verification-emails", "verification-emails"],
       ["password-reset-requests", "password-resets", "verification-emails", "password-reset-requests"],
       ["sign-in", "password-reset-requests", "register", "password-resets"],
       ["verification-emails", "verify-email", "password-resets", "sign-in"],
-      // D2c's start and callback, GETs, alone, together and with the POSTs.
+      // The OIDC start and callback, GETs, alone, together and with the POSTs.
       ["oidc-start", "oidc-start", "oidc-start", "oidc-start"],
       ["oidc-callback", "oidc-callback", "oidc-callback", "oidc-callback"],
       ["oidc-start", "oidc-callback", "oidc-start", "oidc-callback"],
@@ -360,7 +358,7 @@ describe("rate limits", () => {
       }
     }
 
-    it("never counts a successful sign-in: max + 1 in a row all succeed (D2a Ruling 13)", async () => {
+    it("never counts a successful sign-in: max + 1 in a row all succeed", async () => {
       const server = await serverWith();
       const email = await verifiedEmail();
 
@@ -452,7 +450,7 @@ describe("rate limits", () => {
     });
   });
 
-  describe("the password change shares sign-in's per-email budget (D21 decision 35, Preflight ruling 9)", () => {
+  describe("the password change shares sign-in's per-email budget", () => {
     const WRONG_PASSWORD = "not-the-right-password";
     const NEW_PASSWORD = "a-brand-new-sufficiently-long-password";
     const MAX = SMALL_LIMITS.signInPerEmail.max;
@@ -605,7 +603,7 @@ describe("rate limits", () => {
     });
   });
 
-  describe("email requests per address (D3 decision 6)", () => {
+  describe("email requests per address", () => {
     const MAX = SMALL_LIMITS.emailPerAddress.max;
 
     /**
@@ -751,7 +749,7 @@ describe("rate limits", () => {
     });
   });
 
-  describe("the token check's failures per IP (D22 decision 36, Preflight ruling 11)", () => {
+  describe("the token check's failures per IP", () => {
     const WHOAMI = "/api/public/v1/whoami";
     const PROXY = "10.0.0.2";
 

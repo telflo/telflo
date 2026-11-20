@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { requiredEnvVarNames } from "./env-var-names.js";
 
-// D17c-1 decisions 24 and 38, Preflight ruling 14: the references found,
-// the five exclusions, and the collector's `$$` escape.
+// The references found, the five exclusions, and the collector's `$$`
+// escape.
 
 describe("requiredEnvVarNames", () => {
   it("finds bare ${env:…} references, each once, in first-appearance order", () => {

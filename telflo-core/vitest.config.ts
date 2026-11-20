@@ -28,24 +28,24 @@ export default defineConfig({
         "**/vitest.setup.ts",
         "vitest.global-setup.ts",
         "e2e/**",
-        // The stack smoke test's entry point (D11a Preflight ruling 12): it
+        // The stack smoke test's entry point: it
         // runs only inside the compose stack. Its sequence, runStackSmoke, is
         // tested against the fake.
         "apps/api/src/opamp-server/stack-smoke.ts",
-        // The CLI's bin entry (D27 Preflight ruling 5): three lines (the
+        // The CLI's bin entry: three lines (the
         // shebang, the import, `await main(process.argv)`); `main` and `run`
         // are tested in program.test.ts.
         "apps/cli/src/index.ts",
-        // The CLI's integration harness and its helpers (D27 Preflight
-        // ruling 4): test support, never built or packed, not product code.
+        // The CLI's integration harness and its helpers: test support, never
+        // built or packed, not product code.
         "apps/cli/tests/**",
       ],
       thresholds: {
-        // Raised on 2026-09-25 at D2a's final review, which measured 97.06%
-        // statements, 93.5% branches, 92.7% functions, 97.06% lines (with
-        // **dist/, **build/ and vitest.setup.ts excluded, see the `exclude`
-        // comment above), each set a little below its measurement so the
-        // gate fails on real regressions rather than on incidental jitter.
+        // Set from a measurement of 97.06% statements, 93.5% branches, 92.7%
+        // functions and 97.06% lines (with **dist/, **build/ and
+        // vitest.setup.ts excluded, see the `exclude` comment above), each a
+        // little below its measurement so the gate fails on real regressions
+        // rather than on incidental jitter.
         // This is a floor that ratchets up as coverage improves, not an
         // aspirational target: raise these numbers when measured coverage
         // genuinely rises, never lower them to make a red build green.

@@ -19,8 +19,8 @@ import { createLocalDiskFileStore } from "./local-disk-file-store.js";
 
 // Every call into node:fs/promises, from these tests and from the store,
 // is counted, so a test can show that a refused key reached no filesystem
-// call at all (Preflight ruling 11: each id is checked first). The
-// contract suite reads it as the store's backend calls.
+// call at all (each id is checked first). The contract suite reads it as the
+// store's backend calls.
 const filesystem = vi.hoisted(() => ({ calls: 0 }));
 
 vi.mock("node:fs/promises", async (importOriginal) => {
@@ -91,8 +91,7 @@ function deferred(): { promise: Promise<void>; resolve: () => void } {
 
 const NEVER = new Promise<never>(() => {});
 
-// The cases every store passes (D23-1 decision 27), each on a fresh,
-// empty temporary root.
+// The cases every store passes, each on a fresh, empty temporary root.
 describeFileStoreContract("LocalDiskFileStore", async () => {
   const fresh = await realpath(await mkdtemp(join(tmpdir(), "telflo-file-store-contract-")));
   return {
@@ -149,17 +148,17 @@ describe("LocalDiskFileStore, on the disk", () => {
       ],
       ["a test template", { kind: "test-template", templateId: TEMPLATE }, `global/test-templates/${TEMPLATE}`],
       [
-        "a test definition's input (D14b detail 18)",
+        "a test definition's input",
         definitionInput(),
         `organizations/${ORGANIZATION_A}/test-definition-inputs/${DEFINITION_INPUT}`,
       ],
       [
-        "an organization's logo (D23-2 decision 30)",
+        "an organization's logo",
         { kind: "organization-logo", organizationId: ORGANIZATION_A, logoId: LOGO },
         `organizations/${ORGANIZATION_A}/logos/${LOGO}`,
       ],
       [
-        "a library file (D23-2 decision 30)",
+        "a library file",
         { kind: "library-file", fileId: LIBRARY_FILE },
         `global/library-files/${LIBRARY_FILE}`,
       ],
@@ -354,7 +353,7 @@ describe("LocalDiskFileStore, on the disk", () => {
       expect(files.every((file) => file.startsWith(`organizations/${ORGANIZATION_A}/`) || file.startsWith(`organizations/${ORGANIZATION_B}/`))).toBe(true);
     });
 
-    it("two organizations' definition inputs never share a directory, even with the same input id (D14b detail 18)", async () => {
+    it("two organizations' definition inputs never share a directory, even with the same input id", async () => {
       for (const organization of [ORGANIZATION_A, ORGANIZATION_B]) {
         await store.write(definitionInput(organization), chunks(`${organization} definition input`), { maxBytes: MAX });
       }
@@ -461,7 +460,7 @@ describe("LocalDiskFileStore, on the disk", () => {
     });
   });
 
-  describe("a FIFO at a key's path (D14a Ruling 25)", () => {
+  describe("a FIFO at a key's path", () => {
     it("is never opened for reading (which would block), copied or written over, and remove takes it away", async () => {
       const directory = join(root, "organizations", ORGANIZATION_A, "test-runs", RUN);
       await mkdir(directory, { recursive: true });
@@ -481,7 +480,7 @@ describe("LocalDiskFileStore, on the disk", () => {
     });
   });
 
-  describe("a filesystem failure the store doesn't handle carries no path or id (D14a Ruling 25)", () => {
+  describe("a filesystem failure the store doesn't handle carries no path or id", () => {
     /**
      * A FileStoreError keeping the call's code and syscall, and nothing that
      * names the root, a key's ids or any path: not in its message, its

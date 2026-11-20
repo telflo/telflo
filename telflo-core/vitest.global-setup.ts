@@ -7,8 +7,8 @@ import { dropFailingInsertLeftovers, restoreRevokedGrantLeftovers } from "@telfl
 
 // vitest globalSetup: creates the test database if it is missing, migrates it
 // to the latest migration as the tables' owner, and provisions the API's login
-// role (D5 decision 1), before any test worker starts. Tests never use
-// the development database (see packages/db/src/test-database.ts).
+// role, before any test worker starts. Tests never use the development
+// database (see packages/db/src/test-database.ts).
 //
 // Declared in the globalSetup of every package whose tests touch the database
 // (packages/db, apps/api), so a single-package run (`npm test -w @telflo/db`)
@@ -26,7 +26,7 @@ import { dropFailingInsertLeftovers, restoreRevokedGrantLeftovers } from "@telfl
 // Once migrated, the database loses any withFailingInsert trigger a killed
 // run left behind (withFailingInsert refuses one it finds, since it can't
 // tell a leftover from a nested call), and gets back any grant a killed run
-// had revoked for a moment (D21 Ruling 83).
+// had revoked for a moment.
 //
 // So run one suite at a time against a test database: a second vitest run
 // starting beside one already running would drop that run's live

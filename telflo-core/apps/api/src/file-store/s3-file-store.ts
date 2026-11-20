@@ -14,34 +14,33 @@ import {
   type S3FileStoreSettings,
 } from "./file-store.js";
 
-// The S3 FileStore (ADR 0012; D23-1 decisions 8-11 and 18-26): one bucket,
-// any S3-protocol server (AWS, or SeaweedFS in development and tests), each
-// object named `<prefix><fileKeyName(key)>`, a key's ids checked before any
-// request (file-key.ts).
+// The S3 FileStore: one bucket, any S3-protocol server (AWS, or SeaweedFS in
+// development and tests), each object named `<prefix><fileKeyName(key)>`, a
+// key's ids checked before any request (file-key.ts).
 //
 // A write is read into memory up to its maxBytes (at most MAX_BUFFERED_BYTES),
 // hashed as it comes, then sent as one PutObject carrying its length and
 // SHA-256, which the server checks: a PUT replaces an object atomically, so
-// the file appears whole or not at all. A copy is a read, then a write
-// (Q156). Encryption at rest is the bucket's own default: no header is set.
+// the file appears whole or not at all. A copy is a read, then a write.
+// Encryption at rest is the bucket's own default: no header is set.
 //
 // Credentials come only from the AWS SDK's default chain (the standard
 // `AWS_*` variables, the shared files, web identity, container and instance
 // roles): the client is given none, and Telflo's settings hold none.
 //
-// It logs nothing: no key, no bytes, no name, and the client has no logger
-// (ADR 0024; D23-1 decision 34). Its errors are the interface's own: an S3
-// error, its message, `$response` and `stack` quote the bucket, the object's
-// name (which holds the key's ids), the server's text, the endpoint or the
-// request's signature, so none of it is kept, only a token-shaped code and
-// the operation's fixed name (FileStoreError; decision 22).
+// It logs nothing: no key, no bytes, no name, and the client has no logger.
+// Its errors are the interface's own: an S3 error, its message, `$response`
+// and `stack` quote the bucket, the object's name (which holds the key's
+// ids), the server's text, the endpoint or the request's signature, so none
+// of it is kept, only a token-shaped code and the operation's fixed name
+// (FileStoreError).
 
-/** The most bytes one write may hold in memory (D23-1 decision 18). Every caller's maxBytes is far below it. */
+/** The most bytes one write may hold in memory. Every caller's maxBytes is far below it. */
 export const MAX_BUFFERED_BYTES = 64 * 1024 * 1024;
 
 type S3Operation = "PutObject" | "GetObject" | "DeleteObject";
 
-/** A code that is a name and nothing else: no space, slash or text (D23-1 decision 22). */
+/** A code that is a name and nothing else: no space, slash or text. */
 const ERROR_CODE = /^[A-Za-z][A-Za-z0-9.]{0,63}$/;
 
 /** Names that say nothing: the SDK's base class and its fallbacks for a reply with no code. */
@@ -80,15 +79,14 @@ function isNoSuchKey(error: unknown): boolean {
 function noop(): void {}
 
 /**
- * The client, built once per store (D23-1 decision 24; Preflight rulings 9
- * and 10). No `credentials`: the SDK's default chain resolves them on the
- * first request. No `logger`. `ignoreConfiguredEndpointUrls`: only Telflo's
- * setting picks the endpoint, never `AWS_ENDPOINT_URL*` or a config file's
- * `endpoint_url`. The timeouts and attempts bound an operation against a
- * server that never answers to about 12.3 s, so the dispatcher's two
- * answer-file writes fit its 30-second reserve; `throwOnRequestTimeout`, or a
- * request timeout only warns on `console`. No socket timeout: it would cut a
- * body a slow reader paused.
+ * The client, built once per store. No `credentials`: the SDK's default chain
+ * resolves them on the first request. No `logger`.
+ * `ignoreConfiguredEndpointUrls`: only Telflo's setting picks the endpoint,
+ * never `AWS_ENDPOINT_URL*` or a config file's `endpoint_url`. The timeouts
+ * and attempts bound an operation against a server that never answers to about
+ * 12.3 s, so the dispatcher's two answer-file writes fit its 30-second
+ * reserve; `throwOnRequestTimeout`, or a request timeout only warns on
+ * `console`. No socket timeout: it would cut a body a slow reader paused.
  */
 function createClient(settings: S3FileStoreSettings): S3Client {
   return new S3Client({
@@ -107,12 +105,12 @@ function createClient(settings: S3FileStoreSettings): S3Client {
 
 /**
  * Checks before `listen` (index.ts) that the API can use its bucket, then
- * returns the store (D23-1 decision 23): it writes an empty probe, asks for a
- * name that doesn't exist (which must answer NoSuchKey: without
- * `s3:ListBucket`, S3 answers a missing key with AccessDenied, and every "not
- * found" would become a failure), then removes the probe. Probe names begin
- * with `.`, which no key's name does. Each failure names the bucket, the
- * prefix, the step and the code only.
+ * returns the store: it writes an empty probe, asks for a name that doesn't
+ * exist (which must answer NoSuchKey: without `s3:ListBucket`, S3 answers a
+ * missing key with AccessDenied, and every "not found" would become a
+ * failure), then removes the probe. Probe names begin with `.`, which no
+ * key's name does. Each failure names the bucket, the prefix, the step and
+ * the code only.
  */
 export async function createS3FileStore(settings: S3FileStoreSettings): Promise<IFileStore> {
   const client = createClient(settings);
@@ -178,19 +176,19 @@ export async function createS3FileStore(settings: S3FileStoreSettings): Promise<
 
 /**
  * How long a read's body may send nothing while its reader is asking for
- * bytes (D23-1 Ruling 125). The client's request timeout ends at the reply's
- * headers and there is no socket timeout (decision 24, which would cut a
- * reader who paused), so a body that stalls after its headers would
- * otherwise wait forever. A reader that stops asking is never cut.
+ * bytes. The client's request timeout ends at the reply's headers and there is
+ * no socket timeout (which would cut a reader who paused), so a body that
+ * stalls after its headers would otherwise wait forever. A reader that stops
+ * asking is never cut.
  */
 export const READ_IDLE_TIMEOUT_MS = 10_000;
 
 /**
- * The SDK's body as the store's own stream (D23-1 decision 19; Preflight
- * ruling 4): the body's bytes, re-emitted; any error of the body (a reset
- * quotes the SDK's text, a checksum mismatch both digests) replaced by a
- * FileStoreError with its code; destroying it destroys the body, which frees
- * the socket. Not `stream.pipeline`, which would forward the body's error.
+ * The SDK's body as the store's own stream: the body's bytes, re-emitted; any
+ * error of the body (a reset quotes the SDK's text, a checksum mismatch both
+ * digests) replaced by a FileStoreError with its code; destroying it destroys
+ * the body, which frees the socket. Not `stream.pipeline`, which would forward
+ * the body's error.
  *
  * The idle timer (READ_IDLE_TIMEOUT_MS) runs only while the stream waits for
  * the body on its reader's behalf: armed each time the stream asks for more
@@ -295,7 +293,7 @@ function s3FileStore(client: S3Client, bucket: string, prefix: string): IFileSto
             Bucket: bucket,
             Key: name,
             Body: body,
-            // Always: without it the SDK warns on `console` (Preflight ruling 11).
+            // Always: without it the SDK warns on `console`.
             ContentLength: body.byteLength,
             // The SDK then sends this checksum alone; the server refuses a body that doesn't match it.
             ChecksumSHA256: digest.toString("base64"),

@@ -39,12 +39,11 @@ import type { OpampServerClient } from "../opamp-server/client.js";
 import type { AppSettings } from "../settings.js";
 
 /*
- * `telflo-admin bootstrap --email <email> --organization <name>` (D36-1
- * decisions 37 and 54, Preflight ruling 3, Q266): the site's first product
- * admin, on a site where nobody can register. Run in the API's pod
- * (`kubectl exec deploy/telflo-api -- telflo-admin bootstrap …`) with the
- * API's settings and its database role (telflo_platform); it sends no email
- * (its mailer refuses). In order:
+ * `telflo-admin bootstrap --email <email> --organization <name>`: the site's
+ * first product admin, on a site where nobody can register. Run in the
+ * API's pod (`kubectl exec deploy/telflo-api -- telflo-admin bootstrap …`)
+ * with the API's settings and its database role (telflo_platform); it sends
+ * no email (its mailer refuses). In order:
  *   1. refused when a product admin exists, as migration 043's function
  *      answers it (the flag is never read here);
  *   2. refused when an account, live or deleted, has the email;
@@ -58,7 +57,7 @@ import type { AppSettings } from "../settings.js";
  *   5. a set-password link, the password reset's token (stored hashed, 60
  *      minutes, used once; completing it sets the password and confirms the
  *      email), printed once as stdout's last line, after a fixed line;
- *      never mailed (decision 54, Q266: Q257's mailed form is gone).
+ *      never mailed.
  * The opamp-server registers both organizations before the command ends
  * (best effort: a miss heals on first use).
  *
@@ -132,8 +131,8 @@ function readOptions(
 
 /**
  * `bootstrap`'s options (`--email`, `--organization`); a refusal names the
- * problem in fixed words, never the value. Any other option, `--print-link`
- * (gone with Q266: the link is always printed) among them, is refused.
+ * problem in fixed words, never the value. Any other option is refused,
+ * `--print-link` among them (the link is always printed).
  */
 export function parseBootstrapArguments(args: readonly string[]): ParsedBootstrapArguments {
   const values = readOptions(args, { email: { type: "string" }, organization: { type: "string" } });
@@ -169,7 +168,7 @@ export type ParsedResetLinkArguments = { kind: "reset-link"; input: { email: str
 /**
  * `reset-link`'s one option, `--email`, read as bootstrap reads it. A
  * reserved domain's address isn't refused here: it reaches the lookup and
- * gets "no live account", as an unknown address does (Q258).
+ * gets "no live account", as an unknown address does.
  */
 export function parseResetLinkArguments(args: readonly string[]): ParsedResetLinkArguments {
   const values = readOptions(args, { email: { type: "string" } });
@@ -195,10 +194,10 @@ export interface BootstrapDependencies {
 }
 
 /**
- * The only mailer the commands have (decision 54, Q266): they print their
- * link and send nothing, so a site without a reachable relay still gets
- * it. The organization and reset services take a mailer; this one refuses
- * every send, so no email can leave even if something tried to send one.
+ * The only mailer the commands have: they print their link and send nothing,
+ * so a site without a reachable relay still gets it. The organization and
+ * reset services take a mailer; this one refuses every send, so no email can
+ * leave even if something tried to send one.
  */
 export const REFUSING_MAILER: IMailer = {
   send: async () => {
@@ -243,7 +242,7 @@ function organizationTransactions(db: Kysely<Database>): WithOrganizationTransac
     );
 }
 
-/** The password reset's service as the commands use it (Preflight ruling 3, decision 54): its mailer refuses. */
+/** The password reset's service as the commands use it: its mailer refuses. */
 function passwordResets(deps: Pick<BootstrapDependencies, "db" | "settings" | "now">, users: ReturnType<typeof createUserRepository>) {
   return createPasswordResetService({
     users,
@@ -288,10 +287,10 @@ export async function bootstrapFirstProductAdmin(input: BootstrapInput, deps: Bo
     },
   });
 
-  // The probe (Ruling 353): the definer called with a random uuid in a
-  // transaction that always rolls back, briefly holding its global advisory
-  // lock and leaving no lock, audit row or change; the answer comes from
-  // the refusal's HINT, so the flag is never read.
+  // The probe: the definer called with a random uuid in a transaction that
+  // always rolls back, briefly holding its global advisory lock and leaving
+  // no lock, audit row or change; the answer comes from the refusal's HINT,
+  // so the flag is never read.
   if (await productAdminExists(db, now())) {
     err(BOOTSTRAP_MESSAGES.productAdminExists);
     return 1;
@@ -378,7 +377,7 @@ export async function bootstrapFirstProductAdmin(input: BootstrapInput, deps: Bo
         context: { userId: user.id, organizationId: personal.id, role: "admin" },
         email: user.email,
         // The function above made the account the first product admin, committed:
-        // the product admins' switch never refuses it (D36-1 decision 51).
+        // the product admins' switch never refuses it.
         isProductAdmin: true,
       },
       input.organization,
@@ -393,8 +392,8 @@ export async function bootstrapFirstProductAdmin(input: BootstrapInput, deps: Bo
     code = 1;
   }
 
-  // The password reset's token (Preflight ruling 3, decision 54, Q266):
-  // its link, its 60 minutes, its single use and its audit row (`returned`).
+  // The password reset's token: its link, its 60 minutes, its single use
+  // and its audit row (`returned`).
   // Never mailed: held here, printed last, and goes nowhere else.
   let link: string | undefined;
   try {
@@ -422,15 +421,14 @@ export async function bootstrapFirstProductAdmin(input: BootstrapInput, deps: Bo
 }
 
 /**
- * `telflo-admin reset-link --email <email>` (D36-1 decision 54, Q258): a
- * fresh set-password link for a live person's account, printed as
- * `bootstrap` prints one: the password reset's token (hashed,
- * 60 minutes, used once, the account's earlier links consumed), the fixed
- * line, then the link as stdout's last line; no email (its mailer refuses),
- * whatever the registration mode or the mail settings. The way back when
- * the bootstrap's printed link was lost or expired;
- * it works for any person's account, as anyone who can run it (exec in the
- * API's pod) can already reach the database as the API's role.
+ * `telflo-admin reset-link --email <email>`: a fresh set-password link for a
+ * live person's account, printed as `bootstrap` prints one: the password
+ * reset's token (hashed, 60 minutes, used once, the account's earlier links
+ * consumed), the fixed line, then the link as stdout's last line; no email
+ * (its mailer refuses), whatever the registration mode or the mail settings.
+ * The way back when the bootstrap's printed link was lost or expired; it
+ * works for any person's account, as anyone who can run it (exec in the API's
+ * pod) can already reach the database as the API's role.
  *
  * An address with no live person's account, a service account's or a
  * deleted account's included, is refused (exit 1) in fixed words before

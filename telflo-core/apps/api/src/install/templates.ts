@@ -5,12 +5,12 @@ import { INSTALL_METHODS, type InstallMethod } from "@telflo/contracts";
 import { templateProblem } from "./render.js";
 
 /*
- * The install templates, read from a directory at run time (D17c-1
- * decisions 6, 17 and 36; Preflight ruling 12): TELFLO_INSTALL_TEMPLATES_DIR
- * holds `linux/all-in-one/` and `linux/own-binary/`, the default set in the
- * repository's install-templates/ and in the API's image, replaced by an
- * operator's directory: a Kubernetes ConfigMap or volume in SaaS, a
- * customer's directory air-gapped, a minikube `hostPath`.
+ * The install templates, read from a directory at run time:
+ * TELFLO_INSTALL_TEMPLATES_DIR holds `linux/all-in-one/` and
+ * `linux/own-binary/`, the default set in the repository's
+ * install-templates/ and in the API's image, replaced by an operator's
+ * directory: a Kubernetes ConfigMap or volume in SaaS, a customer's
+ * directory air-gapped, a minikube `hostPath`.
  *
  * Read again on every render, never cached, so a ConfigMap's swap or an
  * edit applies at the next one. The root's realpath is resolved once; on
@@ -19,21 +19,20 @@ import { templateProblem } from "./render.js";
  * link there) is read through `..data` resolved FIRST, once per read: the
  * directory it names (`..<timestamp>`, inside the method directory) is the
  * one listed and read, so a kubelet swap during a read never mixes two
- * versions, drops a key just added or refuses one just removed (Ruling 62;
- * the flat links beside it aren't read). An entry whose name starts with
- * `.` is skipped (kubelet's `..data` and `..<timestamp>`, `.DS_Store`). A
- * symbolic link is followed only when its realpath stays inside the
- * method directory.
- * Each entry, and a link's target, must be a regular file by lstat before
- * it is opened (a directory, a FIFO or a device is never opened), then is
- * opened `O_RDONLY | O_NOFOLLOW | O_NONBLOCK` on its resolved path and
- * fstat'ed as one again, at most 32
- * of them, each at most 256 KiB of UTF-8, named `^[A-Za-z0-9._-]{1,100}$`,
- * and every placeholder its method's and placed where its quoting holds
- * (render.ts). A refusal names the relative path (and a line), never the
- * template's text. Each file's mode in the bundle is from a fixed list
- * (a ConfigMap loses modes): start_supervisor.sh 0700 (it holds the values
- * typed for the configuration's variables, and runs as root), any other
+ * versions, drops a key just added or refuses one just removed (the flat
+ * links beside it aren't read). An entry whose name starts with `.` is
+ * skipped (kubelet's `..data` and `..<timestamp>`, `.DS_Store`). A
+ * symbolic link is followed only when its realpath stays inside the method
+ * directory. Each entry, and a link's target, must be a regular file by
+ * lstat before it is opened (a directory, a FIFO or a device is never
+ * opened), then is opened `O_RDONLY | O_NOFOLLOW | O_NONBLOCK` on its
+ * resolved path and fstat'ed as one again, at most 32 of them, each at
+ * most 256 KiB of UTF-8, named `^[A-Za-z0-9._-]{1,100}$`, and every
+ * placeholder its method's and placed where its quoting holds (render.ts).
+ * A refusal names the relative path (and a line), never the template's
+ * text. Each file's mode in the bundle is from a fixed list (a ConfigMap
+ * loses modes): start_supervisor.sh 0700 (it holds the values typed for
+ * the configuration's variables, and runs as root), any other
  * 0644. The templates are the operator's own code, run as root on a host:
  * these checks keep Telflo's values where their quoting holds, not a
  * template's own commands safe.
@@ -170,7 +169,7 @@ export function createInstallTemplateLoader(root: string): InstallTemplateLoader
       }
       if (!directory.startsWith(realRoot + sep)) throw new InstallTemplatesError(method, relative, "outside the directory");
       // A ConfigMap mounted flat here: its `..data` resolved first, once, and the directory it names listed and
-      // read (Ruling 62): a swap after this line leaves this read on one version, its keys and their text alike.
+      // read: a swap after this line leaves this read on one version, its keys and their text alike.
       const data = await realpath(join(directory, "..data")).catch(() => undefined);
       if (data !== undefined && !data.startsWith(directory + sep)) throw new InstallTemplatesError(method, relative, "outside the directory");
       const listed = data ?? directory;
@@ -191,9 +190,9 @@ export function createInstallTemplateLoader(root: string): InstallTemplateLoader
 }
 
 /**
- * The start-up check (decision 36): both methods' sets present, readable,
- * within bounds and with no unknown or misplaced placeholder. Throws
- * InstallTemplatesError naming the setting and the file, never its text.
+ * The start-up check: both methods' sets present, readable, within bounds and
+ * with no unknown or misplaced placeholder. Throws InstallTemplatesError
+ * naming the setting and the file, never its text.
  */
 export async function checkInstallTemplates(loader: InstallTemplateLoader): Promise<void> {
   for (const method of INSTALL_METHODS) await loader.load(method);

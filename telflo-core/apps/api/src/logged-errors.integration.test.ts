@@ -18,7 +18,7 @@ import { UNCALLED_OTELCOL_VALIDATOR } from "./testing/otelcol-validator.js";
 import { UNCALLED_FILE_STORE } from "./testing/file-store.js";
 import { UNCALLED_TESTING } from "./testing/otelcol-testing.js";
 
-// The opamp-server every server needs (D11b decision 8): this file's own fake.
+// The opamp-server every server needs: this file's own fake.
 const opamp = useFakeOpampServer();
 
 const PASSWORD = "a-sufficiently-long-password";
@@ -27,8 +27,8 @@ const PASSWORD = "a-sufficiently-long-password";
  * A Postgres error's DETAIL names the values of the row that failed: "Key
  * (token_hash)=(…) already exists", "Failing row contains (…)". The error
  * handler logs the error in full, so the server's logger drops `detail` and
- * `where` from every logged error, whatever the table (D6 Preflight ruling
- * 4), and keeps the code and the constraint, which name no values.
+ * `where` from every logged error, whatever the table, and keeps the code
+ * and the constraint, which name no values.
  *
  * Postgres leaves the detail out on its own for a table whose row-level
  * security applies to the role (organization_invitations,

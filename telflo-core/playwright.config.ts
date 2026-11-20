@@ -18,26 +18,23 @@ import {
   e2eWebEnv,
 } from "./e2e/support/environment.js";
 
-// Browser tests (D2b decision 8): Chromium, Firefox and WebKit against their
-// own API (28080), web dev server (23100) and database (telflo_platform_e2e_test),
-// with the fake OpenID Provider (127.0.0.1:28090, another site from the web
-// app's localhost) behind the Google button (D2c), and the OpenAPI-checked
-// fake opamp-server (127.0.0.1:28085), collector validator
-// (127.0.0.1:28086), collector tester (127.0.0.1:28087) and OTTL evaluator
-// (127.0.0.1:28089) as the API's (D11b decision 8, D13b decision 17, D14a
-// Task 6, D15a Task 5; a contract violation fails the run, see
-// global-setup.ts). A second web dev server
-// (23101) has a PostHog key whose host is a local stub (127.0.0.1:28095) that
-// records what it is sent: only the analytics tests use them (D4 Preflight
-// ruling 8), and nothing leaves the machine.
-// Two API and web pairs (D36-1 decision 48, Preflight ruling 16): the
-// default one (28080, 23100) runs the open source's defaults; the SaaS's
-// (28081, 23102) its values, for the specs of open registration, the Terms,
-// the playground and the anonymous reads (support/saas.ts). Both share the
-// database, Mailpit, the fakes and the file store. Playwright starts the
-// servers one after another, in this order: each API prepares the database
-// before it listens, and the SaaS pair's API is up before the analytics web
-// server, which proxies to it, starts.
+// Browser tests: Chromium, Firefox and WebKit against their own API (28080),
+// web dev server (23100) and database (telflo_platform_e2e_test), with the
+// fake OpenID Provider (127.0.0.1:28090, another site from the web app's
+// localhost) behind the Google button, and the OpenAPI-checked fake
+// opamp-server (127.0.0.1:28085), collector validator (127.0.0.1:28086),
+// collector tester (127.0.0.1:28087) and OTTL evaluator (127.0.0.1:28089) as
+// the API's (a contract violation fails the run, see global-setup.ts). A
+// second web dev server (23101) has a PostHog key whose host is a local stub
+// (127.0.0.1:28095) that records what it is sent: only the analytics tests
+// use them, and nothing leaves the machine.
+// Two API and web pairs: the default one (28080, 23100) runs the open
+// source's defaults; the SaaS's (28081, 23102) its values, for the specs of
+// open registration, the Terms, the playground and the anonymous reads
+// (support/saas.ts). Both share the database, Mailpit, the fakes and the file
+// store. Playwright starts the servers one after another, in this order: each
+// API prepares the database before it listens, and the SaaS pair's API is up
+// before the analytics web server, which proxies to it, starts.
 // The E2E environment is set in e2e/support/environment.ts, never read from
 // .env beyond where Postgres and Mailpit are.
 //
@@ -47,11 +44,11 @@ const isCi = Boolean(process.env.CI);
 
 /**
  * Specs that change a global setting other specs depend on: the product
- * admins' switch "Only product admins can create organizations" (D36-1
- * decision 51; organizations.e2e.ts and organization-logos.e2e.ts create
- * organizations as ordinary accounts, under the baseline global-setup.ts
- * sets: off, where a fresh install has it on, Q259). They run alone, after
- * every other spec (the `*-exclusive` projects below).
+ * admins' switch "Only product admins can create organizations"
+ * (organizations.e2e.ts and organization-logos.e2e.ts create organizations
+ * as ordinary accounts, under the baseline global-setup.ts sets: off, where
+ * a fresh install has it on). They run alone, after every other spec (the
+ * `*-exclusive` projects below).
  */
 const EXCLUSIVE_SPECS = ["**/organization-creation.e2e.ts"];
 
@@ -74,10 +71,10 @@ export default defineConfig({
   // setting other specs depend on (EXCLUSIVE_SPECS), one browser at a time:
   // each exclusive project waits for all three browsers' projects and for
   // the exclusive project before it, so nothing else runs while one turns a
-  // global row on (D36-1 fix wave, Ruling 360: race-free by construction,
-  // not by timing). As Playwright runs dependencies, a failure in an
-  // earlier project skips the exclusive ones. To run one alone, pass its
-  // project with --no-deps (e.g. --project chromium-exclusive --no-deps).
+  // global row on (race-free by construction, not by timing). As Playwright
+  // runs dependencies, a failure in an earlier project skips the exclusive
+  // ones. To run one alone, pass its project with --no-deps (e.g. --project
+  // chromium-exclusive --no-deps).
   projects: [
     { name: "chromium", testIgnore: EXCLUSIVE_SPECS, use: { ...devices["Desktop Chrome"] } },
     { name: "firefox", testIgnore: EXCLUSIVE_SPECS, use: { ...devices["Desktop Firefox"] } },

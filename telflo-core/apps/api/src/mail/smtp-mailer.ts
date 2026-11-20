@@ -31,9 +31,9 @@ export interface SmtpTimeouts {
 }
 
 /**
- * The production bounds (D36-1 Preflight ruling 29). nodemailer's own
- * defaults are 2 minutes, 30 seconds and 10 minutes, and a STARTTLS client
- * pointed at an implicit-TLS port waits out the greeting timeout.
+ * The production bounds. nodemailer's own defaults are 2 minutes, 30 seconds
+ * and 10 minutes, and a STARTTLS client pointed at an implicit-TLS port waits
+ * out the greeting timeout.
  */
 export const SMTP_TIMEOUTS: SmtpTimeouts = { connection: 10_000, greeting: 10_000, socket: 60_000 };
 
@@ -89,7 +89,7 @@ function sendErrorOf(error: unknown): SmtpSendError {
   );
 }
 
-/** D36-1 decision 38: how each TELFLO_SMTP_TLS mode opens the connection. */
+/** How each TELFLO_SMTP_TLS mode opens the connection. */
 function tlsOptionsOf(mode: SmtpTlsMode): { secure: boolean; requireTLS?: true; ignoreTLS?: true } {
   switch (mode) {
     case "starttls":
@@ -109,7 +109,7 @@ function tlsOptionsOf(mode: SmtpTlsMode): { secure: boolean; requireTLS?: true; 
 
 /**
  * Mail through an SMTP relay: Mailpit in development (`tls: none`), the
- * customer's or provider's relay elsewhere (D36-1 decisions 38–40).
+ * customer's or provider's relay elsewhere.
  *
  * - `starttls` (the default) upgrades a plain connection and refuses a relay
  *   that can't; `implicit` opens TLS from the start; `none` sends in
@@ -125,7 +125,7 @@ function tlsOptionsOf(mode: SmtpTlsMode): { secure: boolean; requireTLS?: true; 
  *   allowInsecureTransport, so verification and reset links never cross a
  *   network in cleartext silently;
  * - a login with `none` is refused unless the host is loopback, override or
- *   not (D36 Ruling 346): it would put the relay's credentials on the wire.
+ *   not: it would put the relay's credentials on the wire.
  *
  * nodemailer logs nothing (no logger, no debug), and a failed send throws an
  * SmtpSendError (fixed words), never nodemailer's error.

@@ -29,13 +29,11 @@ import {
 } from "./file-store.js";
 import { createS3FileStore, MAX_BUFFERED_BYTES, READ_IDLE_TIMEOUT_MS } from "./s3-file-store.js";
 
-// S3FileStore (D23-1 decisions 18-28) against the S3 test server, the pinned
-// SeaweedFS (Preflight ruling 1), and against loopback stubs for what
-// SeaweedFS can't answer (a 403 for a missing key, a 500, a 503, a reset, a
-// listener that never answers; Preflight ruling 8).
+// S3FileStore against the S3 test server, the pinned SeaweedFS, and against
+// loopback stubs for what SeaweedFS can't answer (a 403 for a missing key, a
+// 500, a 503, a reset, a listener that never answers).
 //
-// Secrets in this file's output (D23-1 decision 34, D22 lesson 3, ruled as a
-// class): the test server's keys come from the environment and are never
+// Secrets in this file's output, as a class: the test server's keys come from the environment and are never
 // printed; anything that could hold a key or a secret (an error, its
 // message, a request) is only ever looked at through booleans, never
 // toEqual, toContain or a message comparison that would print it.
@@ -52,7 +50,7 @@ function testServer(): {
   const endpoint = process.env.TELFLO_TEST_S3_ENDPOINT ?? "";
   const accessKeyId = process.env.TELFLO_TEST_S3_ACCESS_KEY_ID ?? "";
   const secretAccessKey = process.env.TELFLO_TEST_S3_SECRET_ACCESS_KEY ?? "";
-  // Loudly, never a silent skip (D23-1 decision 28). Names only.
+  // Loudly, never a silent skip. Names only.
   if (endpoint === "" || accessKeyId === "" || secretAccessKey === "") {
     throw new Error(
       "The S3 tests need TELFLO_TEST_S3_ENDPOINT, TELFLO_TEST_S3_ACCESS_KEY_ID and TELFLO_TEST_S3_SECRET_ACCESS_KEY " +
@@ -144,7 +142,7 @@ async function removeObjectsUnder(prefix: string): Promise<void> {
 }
 
 beforeAll(async () => {
-  // The bucket the setup creates if missing (D23-1 decision 28).
+  // The bucket the setup creates if missing.
   await withTestClient(async (client) => {
     try {
       await client.send(new CreateBucketCommand({ Bucket: TEST_BUCKET }));
@@ -179,7 +177,7 @@ function spyOnRequests(): {
   };
 }
 
-// --- The contract (D23-1 decision 27) ------------------------------------
+// --- The contract --------------------------------------------------------
 
 describeFileStoreContract("S3FileStore", async () => {
   useTestKeys();
@@ -285,7 +283,7 @@ function secretsAndIds(): string[] {
 
 /**
  * The error is the store's own FileStoreError, holding the code and the
- * operation only (D23-1 decision 22). Booleans: the error is never printed.
+ * operation only. Booleans: the error is never printed.
  */
 function expectStoreError(error: unknown, code: string | undefined, operation: string): void {
   expect(error instanceof FileStoreError, "a FileStoreError").toBe(true);
@@ -301,7 +299,7 @@ function expectStoreError(error: unknown, code: string | undefined, operation: s
   expect("cause" in storeError, "no cause").toBe(false);
 }
 
-// --- Loopback stubs (Preflight ruling 8) ---------------------------------
+// --- Loopback stubs ------------------------------------------------------
 
 /** Text only a stub's replies hold. */
 const SERVER_TEXT = `stub-server-text-${randomUUID()}`;
@@ -507,7 +505,7 @@ function refusalText(problem: string, where: string, operation: string, code: st
 
 const LIST_ADVICE = ". A missing file must answer NoSuchKey: grant the API's role s3:ListBucket on the bucket.";
 
-// --- S3's own cases (D23-1 decision 28) ----------------------------------
+// --- S3's own cases ------------------------------------------------------
 
 describe("S3FileStore, on the S3 test server", () => {
   let stub: Stub;
@@ -516,7 +514,7 @@ describe("S3FileStore, on the S3 test server", () => {
     return () => stub.close();
   });
 
-  describe("the startup check (D23-1 decision 23)", () => {
+  describe("the startup check", () => {
     it("passes: a probe written, a missing name answered NoSuchKey, the probe removed, all under the prefix", async () => {
       useTestKeys();
       const settings = settingsFor();
@@ -599,7 +597,7 @@ describe("S3FileStore, on the S3 test server", () => {
       expect(holdsAny(error, [...secretsAndIds(), `127.0.0.1:${port}`, String(port)])).toBe(false);
     });
 
-    describe("against a loopback stub (Preflight ruling 8)", () => {
+    describe("against a loopback stub", () => {
       it("refuses a missing key answered 403 AccessDenied (no s3:ListBucket), telling to grant it, and removes its probe", async () => {
         stub.requests.length = 0;
         useTestKeys();
@@ -658,7 +656,7 @@ describe("S3FileStore, on the S3 test server", () => {
     });
   });
 
-  describe("the server's and the network's failures map to codes only (D23-1 decision 22; a loopback stub)", () => {
+  describe("the server's and the network's failures map to codes only (a loopback stub)", () => {
     {
       it.each([
         ["a 500", "stub-500", "InternalError"],
@@ -716,7 +714,7 @@ describe("S3FileStore, on the S3 test server", () => {
     }
   });
 
-  describe("writes (D23-1 decision 18)", () => {
+  describe("writes", () => {
     let store: IFileStore;
     let settings: S3FileStoreSettings;
     let requests: ReturnType<typeof spyOnRequests>;
@@ -821,7 +819,7 @@ describe("S3FileStore, on the S3 test server", () => {
     });
   });
 
-  describe("reads (D23-1 decision 19)", () => {
+  describe("reads", () => {
     let settings: S3FileStoreSettings;
     let requests: ReturnType<typeof spyOnRequests>;
 
@@ -854,7 +852,7 @@ describe("S3FileStore, on the S3 test server", () => {
     });
   });
 
-  describe("the prefix (D23-1 decision 25)", () => {
+  describe("the prefix", () => {
     const prefixes: string[] = [];
     afterEach(async () => {
       for (const prefix of prefixes.splice(0)) await removeObjectsUnder(prefix);
@@ -882,7 +880,7 @@ describe("S3FileStore, on the S3 test server", () => {
     });
   });
 
-  describe("the timeouts (D23-1 decision 24, Preflight ruling 9)", () => {
+  describe("the timeouts", () => {
     it("two writes against a listener that never answers give up inside the dispatcher's 30-second reserve, three attempts each", async () => {
       const listener = await startQuietListener();
       try {
@@ -927,7 +925,7 @@ describe("S3FileStore, on the S3 test server", () => {
     });
   });
 
-  describe("the endpoint is Telflo's setting alone (D23-1 decision 24, Preflight ruling 10)", () => {
+  describe("the endpoint is Telflo's setting alone", () => {
     /** A loopback server that records any request it gets, and answers none usefully. */
     async function startCanary(): Promise<{ endpoint: string; requests: () => number; close: () => Promise<void> }> {
       let requests = 0;
@@ -1036,7 +1034,7 @@ describe("S3FileStore, on the S3 test server", () => {
     });
   });
 
-  describe("a read's backpressure and a copy's clean-up (D23-1 decisions 19 and 20)", () => {
+  describe("a read's backpressure and a copy's clean-up", () => {
     let settings: S3FileStoreSettings;
     let send: MockInstance<S3Client["send"]>;
 
@@ -1111,7 +1109,7 @@ describe("S3FileStore, on the S3 test server", () => {
     });
   });
 
-  describe("a read's idle timeout (Ruling 125; READ_IDLE_TIMEOUT_MS)", () => {
+  describe("a read's idle timeout (READ_IDLE_TIMEOUT_MS)", () => {
     // Real time: the timer runs beside real sockets, which fake timers would
     // also stop. Each of these waits about ten seconds (slow by design).
     let send: MockInstance<S3Client["send"]> | undefined;
@@ -1225,7 +1223,7 @@ describe("S3FileStore, on the S3 test server", () => {
     }, 30_000);
   });
 
-  describe("the factory (D23-1 decision 26)", () => {
+  describe("the factory", () => {
     it("builds S3FileStore from s3 settings, running the startup check", async () => {
       useTestKeys();
       const settings = settingsFor();
@@ -1254,7 +1252,7 @@ describe("S3FileStore, on the S3 test server", () => {
     });
   });
 
-  describe("the client (D23-1 decision 24; source pins, as D22's)", () => {
+  describe("the client (source pins)", () => {
     const source = readFileSync(join(workspaceRoot, "apps/api/src/file-store/s3-file-store.ts"), "utf8");
     /** The code without its comments and with its white space folded, so a pin reads only what runs. */
     const code = source
@@ -1285,7 +1283,7 @@ describe("S3FileStore, on the S3 test server", () => {
       expect(/socketTimeout/.test(code), "no socket timeout").toBe(false);
     });
 
-    it("sets no encryption header (the bucket's default, D23-1 decision 11)", () => {
+    it("sets no encryption header (the bucket's default)", () => {
       expect(/ServerSideEncryption|SSEKMS|SSECustomer/.test(code)).toBe(false);
     });
 
@@ -1307,7 +1305,7 @@ describe("S3FileStore, on the S3 test server", () => {
   });
 });
 
-// --- The tests' environment (D23-1 decision 28, Preflight ruling 10) ------
+// --- The tests' environment -----------------------------------------------
 
 const CHAIN_VARIABLES = [
   "AWS_ACCESS_KEY_ID",

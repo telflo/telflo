@@ -9,18 +9,17 @@ export default tseslint.config(
       "**/coverage/**",
       "**/node_modules/**",
       "**/.react-router/**",
-      // Swagger UI, vendored unchanged for the API reference page (D25
-      // decision 49; docs/third-party-assets.md): another project's built
-      // files, never edited here.
+      // Swagger UI, vendored unchanged for the API reference page
+      // (docs/third-party-assets.md): another project's built files, never
+      // edited here.
       "apps/api/src/modules/public-api/docs/swagger-ui/**",
     ],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
-    // The API reference page's start (D25 decision 49): a classic script
-    // the browser runs after the vendored bundle, which defines
-    // SwaggerUIBundle.
+    // The API reference page's start: a classic script the browser runs
+    // after the vendored bundle, which defines SwaggerUIBundle.
     files: ["apps/api/src/modules/public-api/docs/init.js"],
     languageOptions: {
       sourceType: "script",
@@ -29,10 +28,10 @@ export default tseslint.config(
   },
   {
     rules: {
-      // Spec §3.12: no default exports except where a framework requires them.
+      // No default exports except where a framework requires them.
       "no-restricted-syntax": [
         "error",
-        { selector: "ExportDefaultDeclaration", message: "No default exports (spec §3.12). Use a named export." },
+        { selector: "ExportDefaultDeclaration", message: "No default exports. Use a named export." },
       ],
       "@typescript-eslint/consistent-type-imports": "error",
       "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
@@ -45,10 +44,9 @@ export default tseslint.config(
     // @telflo/db/testing (packages/db/src/testing.ts) is still in the build
     // context, but is for tests alone, so production code may not import it
     // either. Tests, test support itself and the browser tests may import
-    // both (D2c Ruling 5).
+    // both.
     // The CLI's integration harness (apps/cli/tests/) is test support too:
-    // it imports the API's, and is never built or packed (D27 Preflight
-    // ruling 4).
+    // it imports the API's, and is never built or packed.
     files: ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}"],
     ignores: ["**/*.test.{ts,tsx}", "**/testing/**", "**/testing.ts", "**/test-database.ts", "apps/cli/tests/**"],
     rules: {
@@ -58,7 +56,7 @@ export default tseslint.config(
           patterns: [
             {
               group: ["**/testing", "**/testing/*", "**/testing.js", "@telflo/db/testing"],
-              message: "Test support never ships (D2c Ruling 5): import it only from tests or e2e/.",
+              message: "Test support never ships: import it only from tests or e2e/.",
             },
           ],
         },
@@ -66,9 +64,9 @@ export default tseslint.config(
     },
   },
   {
-    // The CLI ships alone (D27 decision 13, Preflight ruling 3): an `npm
-    // pack` tarball installs with no workspace beside it, so its code
-    // imports nothing from a workspace package at run time. `import type`
+    // The CLI ships alone: an `npm pack` tarball installs with no workspace
+    // beside it, so its code imports nothing from a workspace package at run
+    // time. `import type`
     // only: the inline `import { type X }` leaves `import {} from …` under
     // verbatimModuleSyntax, a runtime import. scripts/check-cli-package.sh
     // searches the built dist/ too. Tests may import the workspaces.
@@ -82,7 +80,7 @@ export default tseslint.config(
             {
               group: ["@telflo/*"],
               allowTypeImports: true,
-              message: "The CLI ships alone (D27 decision 13): import type from a workspace package, never a value.",
+              message: "The CLI ships alone: import type from a workspace package, never a value.",
             },
           ],
         },

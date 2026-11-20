@@ -16,17 +16,16 @@ import { UNCALLED_OTELCOL_VALIDATOR } from "../testing/otelcol-validator.js";
 import { TEST_RATE_LIMITS } from "./rate-limits.js";
 
 /*
- * D25 Ruling 186 on the real server: a tf_ token sent in User-Agent never
- * reaches an audit row or a session row. The security review's probe (a
- * public fleet create with "ci-runner <its own write token>") and a
- * sign-in. Tokens are built at run time; every check of a stored value is a
- * boolean canary.
+ * On the real server: a tf_ token sent in User-Agent never reaches an audit
+ * row or a session row. A public fleet create with "ci-runner <its own write
+ * token>" and a sign-in. Tokens are built at run time; every check of a stored
+ * value is a boolean canary.
  */
 
 const opamp = useFakeOpampServer();
 const PASSWORD = "a-sufficiently-long-password";
 
-describe("a credential in User-Agent is never stored (D25 Ruling 186)", () => {
+describe("a credential in User-Agent is never stored", () => {
   let db: Kysely<Database>;
   let ownerDb: Kysely<Database>;
   let server: FastifyInstance;
@@ -63,7 +62,7 @@ describe("a credential in User-Agent is never stored (D25 Ruling 186)", () => {
     ...(await ownerDb.selectFrom("sessions").select("user_agent").execute()).map((row) => row.user_agent),
   ];
 
-  it("the review's probe: POST /api/public/v1/fleets with User-Agent \"ci-runner <write token>\" stores [redacted] in fleet.created's row", async () => {
+  it("a public fleet create: POST /api/public/v1/fleets with User-Agent \"ci-runner <write token>\" stores [redacted] in fleet.created's row", async () => {
     const admin = await createUserWithOrganization(ownerDb);
     const { organization } = await addMembership(ownerDb, { userId: admin.user.id, role: "admin" });
     const at = new Date(Date.now() - 60_000);

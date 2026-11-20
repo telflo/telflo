@@ -15,7 +15,7 @@ export class AppError extends Error {
   /**
    * Response headers the error handler sets with the envelope: a 429's
    * `retry-after`, when the limit is checked where the reply isn't at hand
-   * (D6 Preflight ruling 11's mail limit, in the service).
+   * (the mail limit, in the service).
    */
   readonly headers?: Readonly<Record<string, string | number>> | undefined;
 
@@ -36,9 +36,9 @@ export class AppError extends Error {
 }
 
 /**
- * Every response leaving this API uses the one error envelope
- * (Global Constraints). Unexpected errors are logged in full and reported
- * generically, so internal detail never reaches a client.
+ * Every response leaving this API uses the one error envelope. Unexpected
+ * errors are logged in full and reported generically, so internal detail
+ * never reaches a client.
  */
 export function registerErrorHandling(server: FastifyInstance): void {
   server.setNotFoundHandler(sendNotFound);
@@ -50,7 +50,7 @@ export function registerErrorHandling(server: FastifyInstance): void {
       // learns nothing more, but the failure must still reach the logs.
       if (error.statusCode >= 500) request.log.error({ err: error }, "server error");
       if (error.headers) void reply.headers(error.headers);
-      // The public surface's refusals in fixed words carry `{ path, message }` (D25 Ruling 187); the browser's keep their shape.
+      // The public surface's refusals in fixed words carry `{ path, message }`; the browser's keep their shape.
       const details = error.details && isPublicRequest(request) ? publicRefusalDetails(error.details) : error.details;
       void reply.status(error.statusCode).send({
         error: { code: error.code, message: error.message, ...(details ? { details } : {}) },
@@ -74,7 +74,7 @@ export function registerErrorHandling(server: FastifyInstance): void {
         error: {
           code: "invalid_request",
           message: "The request was not valid.",
-          // The public surface's details name places and codes only (D25 Ruling 175); the browser's keep Zod's issues.
+          // The public surface's details name places and codes only; the browser's keep Zod's issues.
           details: isPublicRequest(request) ? publicValidationDetails(error.validation) : error.validation,
         },
       });
@@ -124,20 +124,20 @@ function isPublicRequest(request: FastifyRequest): boolean {
 const SCHEMA_KEY = /^[A-Za-z][A-Za-z0-9]{0,63}$/;
 const UNKNOWN_KEY = "<unknown>";
 
-/** One issue of a public 400's details (D25 Ruling 175): where, and Zod's code, never a value. */
+/** One issue of a public 400's details: where, and Zod's code, never a value. */
 export interface PublicValidationIssue {
   path: Array<string | number>;
   code: string;
 }
 
 /**
- * A Zod validation failure's details for the public surface (D25 decision
- * 20, Ruling 175): each issue's path (the field's keys and indexes) and
- * Zod's code, nothing else. No message, `received`, `params` or `keys`,
- * so no value the caller sent, an enum's, an unknown key's name or a
- * pasted `tf_` token, comes back in an error. An unrecognized key is
- * named UNKNOWN_KEY, and so is any path segment that isn't a schema's
- * camelCase key (belt and braces: a record's key would be the caller's).
+ * A Zod validation failure's details for the public surface: each issue's
+ * path (the field's keys and indexes) and Zod's code, nothing else. No
+ * message, `received`, `params` or `keys`, so no value the caller sent, an
+ * enum's, an unknown key's name or a pasted `tf_` token, comes back in an
+ * error. An unrecognized key is named UNKNOWN_KEY, and so is any path
+ * segment that isn't a schema's camelCase key (belt and braces: a record's
+ * key would be the caller's).
  */
 export function publicValidationDetails(validation: readonly unknown[]): PublicValidationIssue[] {
   return validation.map((item) => {
@@ -151,7 +151,7 @@ export function publicValidationDetails(validation: readonly unknown[]): PublicV
   });
 }
 
-/** One entry of a public refusal's details in the routes' and services' own fixed words (D25 Ruling 187). */
+/** One entry of a public refusal's details in the routes' and services' own fixed words. */
 export interface PublicRefusalIssue {
   path: Array<string | number>;
   message: string;
@@ -168,14 +168,14 @@ function fieldDetailIssue(item: unknown): PublicRefusalIssue | undefined {
 }
 
 /**
- * An AppError's details as the public surface answers them (D25 Ruling
- * 187): a 400 `invalid_request` carries exactly one of two shapes, Zod's
- * issues as `{ path, code }` (publicValidationDetails, Ruling 175) or a
- * route's or a service's own refusal as `{ path, message }`, the message
- * its fixed words. The fleets area's entries (fieldDetail: a Zod-like
- * issue, which the browser's screens read) become `{ path, message }`;
- * every other entry and every non-array details object (a rule's index,
- * a validation's errors) is left as it is.
+ * An AppError's details as the public surface answers them: a 400
+ * `invalid_request` carries exactly one of two shapes, Zod's issues as
+ * `{ path, code }` (publicValidationDetails) or a route's or a service's
+ * own refusal as `{ path, message }`, the message its fixed words. The
+ * fleets area's entries (fieldDetail: a Zod-like issue, which the browser's
+ * screens read) become `{ path, message }`; every other entry and every
+ * non-array details object (a rule's index, a validation's errors) is left
+ * as it is.
  */
 export function publicRefusalDetails(details: unknown): unknown {
   if (!Array.isArray(details)) return details;
@@ -184,12 +184,11 @@ export function publicRefusalDetails(details: unknown): unknown {
 
 /**
  * The 404 for a request no route matched, in the envelope: the root's, and
- * the public surface's plugin's after its token check (D25 Preflight ruling
- * 3: the root's words). The URL as the request log spells it (D17c-2
- * Preflight ruling 11): a mistyped quick-deploy link's reply never echoes
- * its secret, nor an OIDC callback's, a fleet route's or a public route's
- * query, whoever reads the reply on its way back (a proxy's or a client's
- * log).
+ * the public surface's plugin's after its token check (the root's words).
+ * The URL as the request log spells it: a mistyped quick-deploy link's
+ * reply never echoes its secret, nor an OIDC callback's, a fleet route's or
+ * a public route's query, whoever reads the reply on its way back (a
+ * proxy's or a client's log).
  */
 export function sendNotFound(request: FastifyRequest, reply: FastifyReply): void {
   void reply.status(404).send({
@@ -202,15 +201,15 @@ export function sendNotFound(request: FastifyRequest, reply: FastifyReply): void
  * before any route or hook ran — a malformed percent-escape
  * (FST_ERR_BAD_URL, 400), a parameter over `maxParamLength`
  * (FST_ERR_MAX_PARAM_LENGTH, 414), a failed async constraint (500).
- * Fastify's own reply quotes the path, which may hold a quick-deploy
- * link's secret (D17c-2) or a library link (D23-2 decision 47): this one
- * answers generic words and logs the error's code only, never its message
- * (which quotes the path) or the URL. On a path that may hold either
- * (request-log.ts' urlMayHoldPublicLinkSecret), the words are
- * the public route's plain text with its headers (no-store, nosniff,
- * no-referrer: D17c-2 Ruling 36), as its own refusals; elsewhere the
- * envelope, `no-store` on a path under `/api/public/v1` (D25 Ruling 187). The request's own log line goes through the request log's
- * redaction (request-log.ts).
+ * Fastify's own reply quotes the path, which may hold a quick-deploy link's
+ * secret or a library link: this one answers generic words and logs the
+ * error's code only, never its message (which quotes the path) or the URL.
+ * On a path that may hold either (request-log.ts'
+ * urlMayHoldPublicLinkSecret), the words are the public route's plain text
+ * with its headers (no-store, nosniff, no-referrer), as its own refusals;
+ * elsewhere the envelope, `no-store` on a path under `/api/public/v1`. The
+ * request's own log line goes through the request log's redaction
+ * (request-log.ts).
  */
 export function respondToFrameworkError(error: FastifyError, request: FastifyRequest, reply: FastifyReply): void {
   const isServerError = !(typeof error.statusCode === "number" && error.statusCode >= 400 && error.statusCode < 500);
@@ -223,7 +222,7 @@ export function respondToFrameworkError(error: FastifyError, request: FastifyReq
     void sendPlainTextRefusal(reply, statusCode, message);
     return;
   }
-  // The public surface's replies are never cached (D25 Ruling 185), its router's refusals included (Ruling 187).
+  // The public surface's replies are never cached, its router's refusals included.
   if (isPublicPath(request.url)) void reply.header("cache-control", "no-store");
   void reply.status(statusCode).send({ error: { code, message } });
 }

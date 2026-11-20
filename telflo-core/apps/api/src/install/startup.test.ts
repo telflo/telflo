@@ -5,10 +5,10 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-// D17c-1 decision 36: the API refuses to start on a broken template set,
-// naming the setting and the file, never its text. index.ts is run for
-// real (it exits before it opens a connection: the check comes first);
-// e2e/start-api.ts, which never runs index.ts, makes the same check.
+// The API refuses to start on a broken template set, naming the setting and
+// the file, never its text. index.ts is run for real (it exits before it
+// opens a connection: the check comes first); e2e/start-api.ts, which never
+// runs index.ts, makes the same check.
 
 const API = fileURLToPath(new URL("../..", import.meta.url));
 const WORKSPACE = fileURLToPath(new URL("../../../..", import.meta.url));

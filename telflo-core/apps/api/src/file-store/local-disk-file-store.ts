@@ -16,30 +16,29 @@ import {
   type IFileStore,
 } from "./file-store.js";
 
-// The local-disk FileStore (ADR 0012; D14a decision 2, Preflight ruling 11):
-// a directory on a mounted volume, compose's `file-store`. Every path
-// is built from a key's ids, each checked to be a canonical lower-case UUID
-// before any filesystem call, under the root as it resolved at start. A
-// directory on the way that is a symbolic link, or resolves anywhere but
-// where it should, is refused, and files are opened with O_NOFOLLOW.
+// The local-disk FileStore: a directory on a mounted volume, compose's
+// `file-store`. Every path is built from a key's ids, each checked to be a
+// canonical lower-case UUID before any filesystem call, under the root as it
+// resolved at start. A directory on the way that is a symbolic link, or
+// resolves anywhere but where it should, is refused, and files are opened with
+// O_NOFOLLOW.
 //
-// What that holds, and what it doesn't (D14a Ruling 25): each check is
-// true of the disk when it runs, but Node has no openat(2) or
-// RESOLVE_BENEATH to make a check and the open, rename or unlink after it
-// one step. So a directory swapped for a symbolic link between the two can
-// still land a file outside the root, or read or remove one there. Swapping
-// it needs write access inside the root, and only the API's own user has
-// that: compose's `file-store` volume is the API's alone (0700, owned
-// by `node`), the tester never mounts it, and nothing else runs as that
-// user. Short of a writer inside the root, nothing is read or written
-// outside it.
+// What that holds, and what it doesn't: each check is true of the disk when
+// it runs, but Node has no openat(2) or RESOLVE_BENEATH to make a check and
+// the open, rename or unlink after it one step. So a directory swapped for
+// a symbolic link between the two can still land a file outside the root,
+// or read or remove one there. Swapping it needs write access inside the
+// root, and only the API's own user has that: compose's `file-store` volume
+// is the API's alone (0700, owned by `node`), the tester never mounts it,
+// and nothing else runs as that user. Short of a writer inside the root,
+// nothing is read or written outside it.
 //
 // It logs nothing: a key's ids, a file's bytes and any name stay out of the
-// logs (ADR 0024). Its errors carry no ids and no paths but the root's: a
-// filesystem call's own error names its path, so any the store doesn't
-// handle itself is rethrown as a FileStoreError, keeping only its code and
-// syscall (fsCall). A read stream's errors come from read(2) on a file
-// already open, and name no path.
+// logs. Its errors carry no ids and no paths but the root's: a filesystem
+// call's own error names its path, so any the store doesn't handle itself
+// is rethrown as a FileStoreError, keeping only its code and syscall
+// (fsCall). A read stream's errors come from read(2) on a file already
+// open, and name no path.
 
 const DIRECTORY_MODE = 0o700;
 const FILE_MODE = 0o600;
@@ -52,7 +51,7 @@ function errorCode(error: unknown): string | undefined {
  * One filesystem call of the store's own work. Its failure is rethrown as a
  * FileStoreError with the same `code` and `syscall`, so the code checks
  * below still read it, and nothing that names a path (Node's message,
- * `path`, `dest`) leaves the store (D14a Ruling 25).
+ * `path`, `dest`) leaves the store.
  */
 async function fsCall<Result>(call: () => Promise<Result>): Promise<Result> {
   try {
@@ -136,7 +135,7 @@ function localDiskFileStore(root: string): IFileStore {
     // fails unless that check does: it is the second of two. No key the
     // store's interface takes reaches it (keyPath joins only checked ids and
     // fixed names), so no test does: defence in depth, should keyPath ever
-    // be loosened (D14a Ruling 25).
+    // be loosened.
     const fromRoot = relative(root, file);
     if (fromRoot === "" || fromRoot.startsWith(`..${sep}`) || fromRoot === ".." || isAbsolute(fromRoot)) {
       throw new UnsafeFilePathError("The file key names a path outside the file store's root.");

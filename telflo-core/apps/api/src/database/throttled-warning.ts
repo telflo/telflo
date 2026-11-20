@@ -1,10 +1,10 @@
 /*
- * A warning for a database call a background loop repeats (D14a Ruling 40):
- * the dispatcher's claim every second, the reaper's rules and the health
- * monitor's row every 5 s. While the database is down each would log a line
- * per try; instead the first failure is logged, then at most one a minute
- * while the failures last (with how many were left out), and one line when
- * a call succeeds again.
+ * A warning for a database call a background loop repeats: the dispatcher's
+ * claim every second, the reaper's rules and the health monitor's row every
+ * 5 s. While the database is down each would log a line per try; instead
+ * the first failure is logged, then at most one a minute while the failures
+ * last (with how many were left out), and one line when a call succeeds
+ * again.
  */
 
 /** At most one failure line a minute while failures last. */

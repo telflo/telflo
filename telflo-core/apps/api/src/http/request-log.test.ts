@@ -43,11 +43,11 @@ describe("loggedRequestUrl", () => {
     ["a run of slashes after it", "/api/v1/auth/oidc///google/callback?code=c&state=s"],
     ["a doubled slash and a percent-encoded segment", "/api/v1//auth/%6Fidc/google/callback?code=c&state=s"],
     ["an encoded doubled slash", "/api/v1/auth/%2F%2Foidc/google/callback?code=c&state=s"],
-  ])("drops the OIDC callback's query with %s, which matches no route (D16b Ruling 37)", (_label, url) => {
+  ])("drops the OIDC callback's query with %s, which matches no route", (_label, url) => {
     expect(loggedRequestUrl(url, undefined)).toBe(url.slice(0, url.indexOf("?")));
   });
 
-  it("drops the configurations list's query, whose q is usually a configuration's name (D7 Preflight ruling 4)", () => {
+  it("drops the configurations list's query, whose q is usually a configuration's name", () => {
     const route = "/api/v1/organizations/:organizationId/configurations";
     expect(loggedRequestUrl("/api/v1/organizations/o-1/configurations?q=Payments%20gateway&mine=true", route)).toBe(
       "/api/v1/organizations/o-1/configurations",
@@ -73,7 +73,7 @@ describe("loggedRequestUrl", () => {
     ["an encoded doubled slash", "/api/v1/organizations/o-1/%2F%2Fconfigurations?q=secret"],
     ["a percent-encoded segment and a doubled slash", "/api/v1//organizations/o-1/%63onfigurations?q=secret"],
     ["a doubled slash and an encoded slash in the organization", "/api/v1/organizations/o-1%2Fx//configurations?q=secret"],
-  ])("drops the list's query with %s, which matches no route (D16b Ruling 30)", (_label, url) => {
+  ])("drops the list's query with %s, which matches no route", (_label, url) => {
     expect(loggedRequestUrl(url, undefined)).toBe(url.slice(0, url.indexOf("?")));
   });
 
@@ -84,7 +84,7 @@ describe("loggedRequestUrl", () => {
     ["the configurations list", "/api/v1/organizations/o-1/configurations#q=CANARY-Q", "/api/v1/organizations/:organizationId/configurations", "/api/v1/organizations/o-1/configurations"],
     ["a `#` before a `?`", "/api/v1/organizations/o-1/fleets#q=CANARY-Q?x=1", undefined, "/api/v1/organizations/o-1/fleets"],
     ["a `?` before a `#`", "/api/v1/organizations/o-1/fleets?q=CANARY-Q#x", undefined, "/api/v1/organizations/o-1/fleets"],
-  ])("drops the query of %s when a raw `#` starts it, as the router reads one (D16b Ruling 40)", (_label, url, route, logged) => {
+  ])("drops the query of %s when a raw `#` starts it, as the router reads one", (_label, url, route, logged) => {
     expect(loggedRequestUrl(url, route)).toBe(logged);
   });
 
@@ -110,7 +110,7 @@ describe("loggedRequestUrl", () => {
     expect(loggedRequestUrl("/api/v1/auth/me#x=1", undefined)).toBe("/api/v1/auth/me#x=1");
   });
 
-  describe("under an organization's fleets (D16b Preflight ruling 16)", () => {
+  describe("under an organization's fleets", () => {
     it.each([
       ["the fleet list", "/api/v1/organizations/o-1/fleets?cursor=abc&status=active", "/api/v1/organizations/:organizationId/fleets"],
       ["one fleet", "/api/v1/organizations/o-1/fleets/f-1?x=1", "/api/v1/organizations/:organizationId/fleets/:fleetId"],
@@ -131,7 +131,7 @@ describe("loggedRequestUrl", () => {
       ["an encoded slash", "/api/v1/organizations/o-1%2Ffleets?q=edge-01"],
       ["an encoded slash after it", "/api/v1/organizations/o-1/fleets%2Ff-1?q=edge-01"],
       ["a malformed escape elsewhere", "/api/v1/organizations/o-%ZZ/%66leets?q=edge-01"],
-      // D16b Ruling 30: runs of slashes, which match no route.
+      // Runs of slashes, which match no route.
       ["a doubled slash before the organizations", "/api/v1//organizations/o-1/fleets/f-1/collectors?q=edge-01"],
       ["a doubled slash before the fleets", "/api/v1/organizations/o-1//fleets/f-1/collectors?q=edge-01"],
       ["a run of slashes after them", "/api/v1/organizations/o-1/fleets///f-1/collectors?q=edge-01"],
@@ -154,7 +154,7 @@ describe("loggedRequestUrl", () => {
       );
     });
   });
-  describe("under product administration (D29 decision 41, Preflight ruling 9)", () => {
+  describe("under product administration", () => {
     it.each([
       ["the Users search", "/api/v1/product-admin/users?q=person%40example.com&cursor=abc", "/api/v1/product-admin/users"],
       ["a user's delete", "/api/v1/product-admin/users/u-1?q=person%40example.com", "/api/v1/product-admin/users/:userId"],
@@ -198,22 +198,21 @@ describe("loggedRequestUrl", () => {
 });
 
 /*
- * D25 Ruling 173 (after decision 47 and Rulings 167 and 171): under the
- * public prefix, in any spelling http/public-path.ts reads, the log holds
- * the matched route's pattern or PUBLIC_UNMATCHED_URL: never the path as
- * sent (a pipeline's name, route 14) or the query. Booleans for the
- * marker, so a failure prints none.
+ * Under the public prefix, in any spelling http/public-path.ts reads, the
+ * log holds the matched route's pattern or PUBLIC_UNMATCHED_URL: never the
+ * path as sent (a pipeline's name) or the query. Booleans for the marker,
+ * so a failure prints none.
  */
-describe("loggedRequestUrl: the public surface, by allowlist (D25 Ruling 173)", () => {
+describe("loggedRequestUrl: the public surface, by allowlist", () => {
   const MARKER = "marker-pipeline-name";
   const VERSION = "/api/public/v1/configurations/c-1/versions/2";
   const PIPELINE_ROUTE = "/api/public/v1/configurations/:configurationId/versions/:versionNumber/validation-pipelines/*";
 
   it.each([
     ["a plugin route with a query", `/api/public/v1/configurations?q=${MARKER}&cursor=abc`, "/api/public/v1/configurations"],
-    ["route 14 with a name", `${VERSION}/validation-pipelines/traces/${MARKER}?x=${MARKER}`, PIPELINE_ROUTE],
-    ["route 14 with an encoded slash", `${VERSION}/validation-pipelines/traces%2F${MARKER}`, PIPELINE_ROUTE],
-    ["route 14's list", `${VERSION}/validation-pipelines?q=${MARKER}`, "/api/public/v1/configurations/:configurationId/versions/:versionNumber/validation-pipelines"],
+    ["the pipeline route with a name", `${VERSION}/validation-pipelines/traces/${MARKER}?x=${MARKER}`, PIPELINE_ROUTE],
+    ["the pipeline route with an encoded slash", `${VERSION}/validation-pipelines/traces%2F${MARKER}`, PIPELINE_ROUTE],
+    ["the pipeline route's list", `${VERSION}/validation-pipelines?q=${MARKER}`, "/api/public/v1/configurations/:configurationId/versions/:versionNumber/validation-pipelines"],
     ["an open route", `/api/public/v1/health?x=${MARKER}`, "/api/public/v1/health"],
     ["the prefix itself", `/api/public/v1?x=${MARKER}`, "/api/public/v1"],
   ])("logs %s as its route's pattern", (_label, url, route) => {
@@ -235,15 +234,15 @@ describe("loggedRequestUrl: the public surface, by allowlist (D25 Ruling 173)", 
     ["a parent segment", `/api/x/../public/v1/whoami?q=${MARKER}`],
     ["a leading dot segment", `/./api/public/v1/nope?q=${MARKER}`],
     ["an encoded dot segment", `/api/%2E/public/v1/whoami?q=${MARKER}`],
-    ["route 14's name in mixed case", `/API/Public/V1/configurations/c-1/versions/2/Validation-Pipelines/${MARKER}`],
-    ["route 14's name after an encoded letter", `${VERSION}/validation%2Dpipelines/${MARKER}`],
-    ["route 14's name after a ;-parameter", `${VERSION}/validation-pipelines;x/traces/${MARKER}`],
-    ["route 14's name after an encoded slash", `${VERSION}%2Fvalidation-pipelines/${MARKER}`],
-    // Ruling 173's three: a character that grows in lower case, an absolute-form target, a double encoding.
+    ["the pipeline route's name in mixed case", `/API/Public/V1/configurations/c-1/versions/2/Validation-Pipelines/${MARKER}`],
+    ["the pipeline route's name after an encoded letter", `${VERSION}/validation%2Dpipelines/${MARKER}`],
+    ["the pipeline route's name after a ;-parameter", `${VERSION}/validation-pipelines;x/traces/${MARKER}`],
+    ["the pipeline route's name after an encoded slash", `${VERSION}%2Fvalidation-pipelines/${MARKER}`],
+    // Three more: a character that grows in lower case, an absolute-form target, a double encoding.
     ["after characters that grow in lower case", `${VERSION}/${"%C4%B0".repeat(25)}validation%2Dpipelines/${MARKER}`],
     ["an absolute-form target", `http://x/api/public/v1/nope?name=${MARKER}`],
     ["an absolute-form target in upper case", `http://x/API/public/v1/nope?name=${MARKER}`],
-    ["an absolute-form target to route 14", `http://x${VERSION}/validation-pipelines;x/${MARKER}`],
+    ["an absolute-form target to the pipeline route", `http://x${VERSION}/validation-pipelines;x/${MARKER}`],
     ["a double encoding", `${VERSION}/validation%252Dpipelines/${MARKER}`],
     ["a doubly encoded prefix", `/api/%2570ublic/v1/${MARKER}`],
   ])("logs %s, matched by no route, as the fixed unmatched URL", (_label, url) => {
@@ -263,12 +262,10 @@ describe("loggedRequestUrl: the public surface, by allowlist (D25 Ruling 173)", 
 });
 
 /*
- * D17c-2 decisions 2 and 28, Preflight ruling 11: the public download's/*
- * D31-1 decisions 19 and 40 (Preflight ruling 2): the open flow read's
- * request line holds its route's pattern only, never the slug as sent nor
- * a query, matched or not.
+ * The open flow read's request line holds its route's pattern only, never the
+ * slug as sent nor a query, matched or not.
  */
-describe("loggedRequestUrl: the open flow read, by its routes' patterns (D31-1 decision 19)", () => {
+describe("loggedRequestUrl: the open flow read, by its routes' patterns", () => {
   const MARKER = "marker-flow-slug";
 
   it.each([
@@ -297,7 +294,7 @@ describe("loggedRequestUrl: the open flow read, by its routes' patterns (D31-1 d
     ["a parent segment", `/api/v1/x/../published-flows/${MARKER}`, PUBLISHED_FLOW_ROUTE],
     ["a malformed escape", `/api/v1/published-flows/${MARKER}%`, PUBLISHED_FLOW_ROUTE],
     ["another method's list (no route)", `/api/v1/published-flows?q=${MARKER}`, PUBLISHED_FLOWS_ROUTE],
-    // Ruling 286: a target that starts under the prefix, whatever its dot segments resolve to.
+    // A target that starts under the prefix, whatever its dot segments resolve to.
     ["a `..` resolving outside the prefix", `/api/v1/published-flows/${MARKER}/../../x?q=${MARKER}`, PUBLISHED_FLOW_ROUTE],
     ["a `..` right after the prefix", `/api/v1/published-flows/../${MARKER}`, PUBLISHED_FLOW_ROUTE],
     ["a `..` resolving outside, in upper case", `/API/V1/PUBLISHED-FLOWS/../../${MARKER}`, PUBLISHED_FLOW_ROUTE],
@@ -329,14 +326,14 @@ describe("loggedRequestUrl: the open flow read, by its routes' patterns (D31-1 d
 });
 
 /*
- * Ruling 287's invariant, as a class: for a request no route matched, a
- * path that starts under `/api/v1/published-flows` (the end, `/` or `;`
- * next) as sent or after any round of decoding (up to public-path.ts's
- * three), runs of slashes made one, case aside, is logged by a pattern:
- * every spelling of the prefix crossed with every tail. Booleans for the
- * marker, so a failure prints none.
+ * The invariant, as a class: for a request no route matched, a path that
+ * starts under `/api/v1/published-flows` (the end, `/` or `;` next) as sent
+ * or after any round of decoding (up to public-path.ts's three), runs of
+ * slashes made one, case aside, is logged by a pattern: every spelling of the
+ * prefix crossed with every tail. Booleans for the marker, so a failure
+ * prints none.
  */
-describe("loggedRequestUrl: the open flow read's invariant, every spelling of the prefix with every tail (Ruling 287)", () => {
+describe("loggedRequestUrl: the open flow read's invariant, every spelling of the prefix with every tail", () => {
   const MARKER = "marker-flow-slug";
   const LETTERS = "published";
   /** `%XX` for a character, `%25XX` for it encoded twice, `%2525XX` three times. */
@@ -358,7 +355,7 @@ describe("loggedRequestUrl: the open flow read's invariant, every spelling of th
     ["its slashes encoded twice", "/api%252Fv1%252Fpublished-flows"],
     ["its slashes doubled", "//api//v1//published-flows"],
     ["its slashes doubled and encoded twice", "/api%252F%252Fv1/published-flows"],
-    // The third round, pinned (Ruling 290): DECODING_ROUNDS at 2 fails these.
+    // The third round, pinned: DECODING_ROUNDS at 2 fails these.
     ["its p encoded three times", `/api/v1/${thrice("p")}ublished-flows`],
   ];
   const TAILS = [
@@ -368,11 +365,11 @@ describe("loggedRequestUrl: the open flow read's invariant, every spelling of th
     `;${MARKER}`,
     `%2F${MARKER}`,
     `%252F${MARKER}%252F..%252F..%252Fx`,
-    // A decoded `?` or `#` is the path's, a boundary (Ruling 290).
+    // A decoded `?` or `#` is the path's, a boundary.
     `%3F${MARKER}`,
     `%23${MARKER}`,
     `%3F${MARKER}/../../x`,
-    // The third round, pinned (Ruling 290).
+    // The third round, pinned.
     `%25252F${MARKER}%25252F..%25252F..%25252Fx`,
   ];
   const TABLE = PREFIXES.flatMap(([label, prefix]) => TAILS.map((tail) => [label, tail, `${prefix}${tail}`] as const));
@@ -402,7 +399,7 @@ describe("loggedRequestUrl: the open flow read's invariant, every spelling of th
   });
 });
 
-describe("a real Fastify's log lines and the 404's reply for the open flow read (D31-1 decision 19)", () => {
+describe("a real Fastify's log lines and the 404's reply for the open flow read", () => {
   const MARKER = "marker-flow-slug";
   const lines: string[] = [];
   let server: FastifyInstance;
@@ -460,15 +457,15 @@ describe("a real Fastify's log lines and the 404's reply for the open flow read 
       socket.on("error", reject);
     });
 
-  // Ruling 286: literal dot segments and `;`, which `inject` might resolve before Fastify sees them.
+  // Literal dot segments and `;`, which `inject` might resolve before Fastify sees them.
   it.each([
     `/api/v1/published-flows/${MARKER}/../../x?q=${MARKER}`,
     `/api/v1/published-flows/../${MARKER}`,
     `/api/v1/published-flows;${MARKER}`,
-    // Ruling 287: encoded twice, then escaping.
+    // Encoded twice, then escaping.
     `/api/v1/published-flows%252F${MARKER}%252F..%252F..%252Fx`,
     `/api/v1/%2570ublished-flows/${MARKER}/../../x`,
-    // Ruling 290: a decoded `?` after the prefix.
+    // A decoded `?` after the prefix.
     `/api/v1/published-flows%3F${MARKER}/../../x`,
   ])("logs and answers %s, sent over a raw socket, by the slug's pattern only", async (target) => {
     const reply = await sendRaw(target);
@@ -480,10 +477,9 @@ describe("a real Fastify's log lines and the 404's reply for the open flow read 
 });
 
 /*
- * D17c-2 decisions 2 and 28, Preflight ruling 11: the public download's
- * path ends in a quick-deploy link's secret, a credential. Whatever the
- * spelling, the request's log lines (and the 404's reply) hold a fixed
- * redaction, never the secret.
+ * The public download's path ends in a quick-deploy link's secret, a
+ * credential. Whatever the spelling, the request's log lines (and the 404's
+ * reply) hold a fixed redaction, never the secret.
  */
 const SECRET = "tqd_CANARYCANARYCANARYCANARYCANARYCANARYCANARY0";
 const SECRET_BODY = SECRET.slice("tqd_".length);
@@ -512,7 +508,7 @@ const SECRET_SPELLINGS: readonly (readonly [string, string, string | undefined])
   ["in a path that only names the secret", `/api/v1/x/${SECRET}`, undefined],
 ];
 
-describe("loggedRequestUrl: a quick-deploy link's secret (D17c-2 decision 28, Preflight ruling 11)", () => {
+describe("loggedRequestUrl: a quick-deploy link's secret", () => {
   it.each(SECRET_SPELLINGS)("logs a URL %s as the fixed redaction", (_label, url, route) => {
     const logged = loggedRequestUrl(url, route);
     expect(logged).toBe(REDACTED_QUICK_DEPLOY_URL);
@@ -551,7 +547,7 @@ describe("loggedRequestUrl: a quick-deploy link's secret (D17c-2 decision 28, Pr
  * spells it, by `inject` and over a raw socket (whose request line Fastify
  * reads as sent: no client resolves its dot segments first).
  */
-describe("a real Fastify's log lines and the 404's reply (D17c-2 Preflight ruling 11)", () => {
+describe("a real Fastify's log lines and the 404's reply", () => {
   const lines: string[] = [];
   let server: FastifyInstance;
 
@@ -639,13 +635,12 @@ describe("a real Fastify's log lines and the 404's reply (D17c-2 Preflight rulin
 });
 
 /*
- * D22 decision 40 (Preflight ruling 14): an API token never belongs in a
- * URL, but one pasted there is cut from the request's log lines and the
- * 404's reply: a URL any spelling of which (as sent, percent-decoded once,
- * runs of slashes made one) holds `tf_`, case aside, is logged as
- * REDACTED_API_TOKEN_URL, its query and all. The canary is built here, at
- * run time (Preflight ruling 32), and every assertion compares booleans,
- * so a failure prints none of it (decision 48).
+ * An API token never belongs in a URL, but one pasted there is cut from the
+ * request's log lines and the 404's reply: a URL any spelling of which (as
+ * sent, percent-decoded once, runs of slashes made one) holds `tf_`, case
+ * aside, is logged as REDACTED_API_TOKEN_URL, its query and all. The canary is
+ * built here, at run time, and every assertion compares booleans, so a failure
+ * prints none of it.
  */
 const API_TOKEN_BODY = `${"CANARYTF".repeat(5)}CAN`;
 const API_TOKEN = `tf_${API_TOKEN_BODY}`;
@@ -671,7 +666,7 @@ const API_TOKEN_SPELLINGS: readonly (readonly [string, string, string | undefine
   ["after an encoded slash", `/api/public/v1%2F${API_TOKEN}`, undefined],
 ];
 
-describe("loggedRequestUrl: an API token (D22 decision 40, Preflight ruling 14)", () => {
+describe("loggedRequestUrl: an API token", () => {
   it.each(API_TOKEN_SPELLINGS)("logs a URL holding tf_ %s as the fixed redaction, query and all", (_label, url, route) => {
     const logged = loggedRequestUrl(url, route);
     expect(logged === REDACTED_API_TOKEN_URL).toBe(true);
@@ -692,7 +687,7 @@ describe("loggedRequestUrl: an API token (D22 decision 40, Preflight ruling 14)"
 
   it("a URL holding a quick-deploy secret and tf_ is the quick-deploy redaction, holding neither", () => {
     const logged = loggedRequestUrl(`/api/v1/quick-deploy/${SECRET}?t=${API_TOKEN}`, QUICK_DEPLOY_ROUTE);
-    // A boolean: were both rules to fail, toBe's diff would print the built canary (Ruling 99).
+    // A boolean: were both rules to fail, toBe's diff would print the built canary.
     expect(logged === REDACTED_QUICK_DEPLOY_URL).toBe(true);
   });
 });
@@ -702,7 +697,7 @@ describe("loggedRequestUrl: an API token (D22 decision 40, Preflight ruling 14)"
  * handling and a stand-in for /whoami: neither the request's log lines nor
  * the 404's reply hold the token, by `inject` and over a raw socket.
  */
-describe("a real Fastify's log lines and the 404's reply hold no API token (D22 decision 40)", () => {
+describe("a real Fastify's log lines and the 404's reply hold no API token", () => {
   const lines: string[] = [];
   let server: FastifyInstance;
 
@@ -741,7 +736,7 @@ describe("a real Fastify's log lines and the 404's reply hold no API token (D22 
     expect(response.body.includes(API_TOKEN_BODY)).toBe(false);
   });
 
-  it("the 404's reply for a path holding tf_ echoes the redaction; for /api/public/v1/nope, the fixed unmatched URL (D25 Ruling 173)", async () => {
+  it("the 404's reply for a path holding tf_ echoes the redaction; for /api/public/v1/nope, the fixed unmatched URL", async () => {
     const holding = await server.inject({ method: "GET", url: `/api/public/v1/${API_TOKEN}` });
     expect(holding.statusCode).toBe(404);
     expect(holding.body === JSON.stringify({ error: { code: "not_found", message: "No route for GET /[redacted]" } })).toBe(true);
@@ -778,13 +773,12 @@ describe("a real Fastify's log lines and the 404's reply hold no API token (D22 
 });
 
 /*
- * Ruling 105, by the invariant "no logged field holding a client-supplied
- * value carries a tf_ token": beside the URL, the request log's fields a
- * client writes, the Accept-Version header, the host (Host, or
- * X-Forwarded-Host once proxy hops are trusted) and the address
- * (X-Forwarded-For's once they are), are REDACTED_FIELD when any spelling
- * the URL's rule checks holds tf_. Booleans only, so a failure prints no
- * canary (Ruling 99).
+ * By the invariant "no logged field holding a client-supplied value carries
+ * a tf_ token": beside the URL, the request log's fields a client writes,
+ * the Accept-Version header, the host (Host, or X-Forwarded-Host once proxy
+ * hops are trusted) and the address (X-Forwarded-For's once they are), are
+ * REDACTED_FIELD when any spelling the URL's rule checks holds tf_.
+ * Booleans only, so a failure prints no canary.
  */
 /** [label, a field's value holding tf_]: as spelt, upper and mixed case, each letter encoded, all three, beside a malformed escape. */
 const API_TOKEN_FIELD_SPELLINGS: readonly (readonly [string, string])[] = [
@@ -799,7 +793,7 @@ const API_TOKEN_FIELD_SPELLINGS: readonly (readonly [string, string])[] = [
   ["beside a malformed escape", `${API_TOKEN}%`],
 ];
 
-describe("loggedClientField: a client's text in a logged field (D22 decision 40, Ruling 105)", () => {
+describe("loggedClientField: a client's text in a logged field", () => {
   it.each(API_TOKEN_FIELD_SPELLINGS)("is the fixed redaction for a value holding tf_ %s", (_label, value) => {
     expect(loggedClientField(value) === REDACTED_FIELD).toBe(true);
     expect(loggedClientField([`1.0`, value]) === REDACTED_FIELD).toBe(true);
@@ -813,7 +807,7 @@ describe("loggedClientField: a client's text in a logged field (D22 decision 40,
   });
 });
 
-describe("a real Fastify's log lines hold no API token in a client-supplied field (Ruling 105)", () => {
+describe("a real Fastify's log lines hold no API token in a client-supplied field", () => {
   const lines: string[] = [];
   let server: FastifyInstance;
 
@@ -876,15 +870,13 @@ describe("a real Fastify's log lines hold no API token in a client-supplied fiel
 });
 
 /*
- * D23-2 decisions 45 and 47, Preflight ruling 10: the library link's public
- * route ends in a link, a credential. Whatever the spelling, the request's
- * log lines (and the 404's reply) hold a fixed redaction, never the link;
- * every client-supplied logged field holding `tll_` is REDACTED_FIELD
- * (Ruling 128's class rule). The canary is built here, at run time, and is
- * visibly fake (no key signed it); every assertion compares booleans, so a
- * failure prints none of it (decision 59). A redaction test accepts any
- * redacted form (decision 61): a real link's random part could hold `tqd_`
- * or `tf_`.
+ * The library link's public route ends in a link, a credential. Whatever the
+ * spelling, the request's log lines (and the 404's reply) hold a fixed
+ * redaction, never the link; every client-supplied logged field holding `tll_`
+ * is REDACTED_FIELD (the class rule). The canary is built here, at run time,
+ * and is visibly fake (no key signed it); every assertion compares booleans,
+ * so a failure prints none of it. A redaction test accepts any redacted form:
+ * a real link's random part could hold `tqd_` or `tf_`.
  */
 const LINK_BODY = `${"LLCANARY".repeat(8)}LLCANAR`;
 const LINK = `tll_${LINK_BODY}`;
@@ -921,7 +913,7 @@ const LINK_SPELLINGS: readonly (readonly [string, string, string | undefined])[]
   ["in an organization's path", `/api/v1/organizations/${LINK}`, "/api/v1/organizations/:organizationId"],
 ];
 
-describe("loggedRequestUrl: a library link (D23-2 decision 47, Preflight ruling 10)", () => {
+describe("loggedRequestUrl: a library link", () => {
   it.each(LINK_SPELLINGS)("logs a URL %s as the fixed redaction", (_label, url, route) => {
     const logged = loggedRequestUrl(url, route);
     expect(logged === REDACTED_LIBRARY_LINK_URL).toBe(true);
@@ -959,7 +951,7 @@ describe("loggedRequestUrl: a library link (D23-2 decision 47, Preflight ruling 
  * handling and a stand-in for the link's route: neither the request's log
  * lines nor the 404's reply hold the link, by `inject` and over a raw socket.
  */
-describe("a real Fastify's log lines and the 404's reply hold no library link (D23-2 decision 47)", () => {
+describe("a real Fastify's log lines and the 404's reply hold no library link", () => {
   const lines: string[] = [];
   let server: FastifyInstance;
 
@@ -1051,7 +1043,7 @@ const LINK_FIELD_SPELLINGS: readonly (readonly [string, string])[] = [
   ["beside a malformed escape", `${LINK}%`],
 ];
 
-describe("loggedClientField: a library link in a logged field (D23-2 decision 47, Ruling 128)", () => {
+describe("loggedClientField: a library link in a logged field", () => {
   it.each(LINK_FIELD_SPELLINGS)("is the fixed redaction for a value holding tll_ %s", (_label, value) => {
     expect(loggedClientField(value) === REDACTED_FIELD).toBe(true);
     expect(loggedClientField(["1.0", value]) === REDACTED_FIELD).toBe(true);
@@ -1063,7 +1055,7 @@ describe("loggedClientField: a library link in a logged field (D23-2 decision 47
   });
 });
 
-describe("a real Fastify's log lines hold no library link in a client-supplied field (Ruling 128)", () => {
+describe("a real Fastify's log lines hold no library link in a client-supplied field", () => {
   const lines: string[] = [];
   let server: FastifyInstance;
 

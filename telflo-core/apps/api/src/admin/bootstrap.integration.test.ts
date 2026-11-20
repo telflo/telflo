@@ -32,18 +32,17 @@ import {
 } from "./bootstrap.js";
 
 /*
- * `telflo-admin bootstrap`'s paths (D36-1 decisions 37 and 54, Preflight
- * ruling 3, Q266) against the test database as the API's role and the
- * test's own Mailpit: the first admin made, with its group organization,
- * and its set-password link printed once as stdout's last line, never
- * mailed (the Mailpit stays empty and the commands' refusing mailer is
- * never called), and on no other line, log or audit row; refused (exit 1,
- * nothing changed) when a product admin exists or the address is taken;
- * the account kept and exit 1 when the link can't be made. Tokens and
- * links are checked with boolean canaries only; nothing here prints one.
- * `telflo-admin reset-link` (Q258) is tested here too: the same link, for
- * a live person. The first admin's first sign-in lands in the
- * bootstrap's organization (Q265).
+ * `telflo-admin bootstrap`'s paths against the test database as the API's
+ * role and the test's own Mailpit: the first admin made, with its group
+ * organization, and its set-password link printed once as stdout's last
+ * line, never mailed (the Mailpit stays empty and the commands' refusing
+ * mailer is never called), and on no other line, log or audit row; refused
+ * (exit 1, nothing changed) when a product admin exists or the address is
+ * taken; the account kept and exit 1 when the link can't be made. Tokens
+ * and links are checked with boolean canaries only; nothing here prints
+ * one. `telflo-admin reset-link` is tested here too: the same link, for a
+ * live person. The first admin's first sign-in lands in the bootstrap's
+ * organization.
  */
 
 const opamp = useFakeOpampServer();
@@ -192,7 +191,7 @@ describe("telflo-admin bootstrap", () => {
     resets: await ownerDb.selectFrom("password_reset_tokens").selectAll().orderBy("id").execute(),
   });
 
-  it("makes the first product admin: the account (no password, unconfirmed, no Terms), the flag, the group organization with it as admin, the audit trail, and the set-password link printed once as stdout's last line, never mailed; the link sets the password, confirms the email, signs in (landing in the bootstrap's organization, Q265) and works once", async () => {
+  it("makes the first product admin: the account (no password, unconfirmed, no Terms), the flag, the group organization with it as admin, the audit trail, and the set-password link printed once as stdout's last line, never mailed; the link sets the password, confirms the email, signs in (landing in the bootstrap's organization) and works once", async () => {
     const { result, stray } = await capturingStrayOutput(() => run());
 
     expect(result.code).toBe(0);
@@ -213,7 +212,7 @@ describe("telflo-admin bootstrap", () => {
     expect(isLinkShaped(stray) || stray.includes(token)).toBe(false);
     expect([...result.out, ...result.err].some((line) => line.includes(ORGANIZATION))).toBe(false);
 
-    // Never mailed (Q266).
+    // Never mailed.
     await expectNoMail();
 
     const user = await ownerDb.selectFrom("users").selectAll().executeTakeFirstOrThrow();
@@ -273,7 +272,7 @@ describe("telflo-admin bootstrap", () => {
 
     // Through the API's own routes, their log captured: the password set,
     // the email confirmed, a sign-in that lands in the bootstrap's
-    // organization (Q265: no earlier session, so the newest membership),
+    // organization (no earlier session, so the newest membership),
     // and the link refused a second time.
     const logLines: string[] = [];
     const { server, runner } = serverLogging(logLines);
@@ -400,7 +399,7 @@ describe("telflo-admin bootstrap", () => {
     expect(await flagHolders()).toHaveLength(1);
   });
 
-  it("two bootstraps for different addresses started together leave exactly one product admin: one succeeds, the other is refused 'admin exists' and leaves no account behind (Ruling 353)", async () => {
+  it("two bootstraps for different addresses started together leave exactly one product admin: one succeeds, the other is refused 'admin exists' and leaves no account behind", async () => {
     // Both are held at the function's advisory lock until both wait there, then let go together, so
     // each passes its first check and they race for the account's transaction, where the lock decides.
     let release!: () => void;
@@ -464,7 +463,7 @@ describe("telflo-admin bootstrap", () => {
     expect(waiting).toBe(2);
   });
 
-  it("works whatever the registration mode (it doesn't read it), and with the product admins' switch at a fresh install's default, on (Q259): the first admin creates the organization", async () => {
+  it("works whatever the registration mode (it doesn't read it), and with the product admins' switch at a fresh install's default, on: the first admin creates the organization", async () => {
     for (const registration of ["open", "invite-only", "closed"] as const) {
       await truncateAll(ownerDb);
       await sql`update site_settings set organization_creation = default`.execute(ownerDb);
@@ -505,7 +504,7 @@ describe("telflo-admin bootstrap", () => {
     }
   };
 
-  describe("reset-link (D36-1 decision 54, Q258)", () => {
+  describe("reset-link", () => {
     const PERSON = "person@example.com";
 
     /** Runs `telflo-admin reset-link`; answers its exit code and every line it printed. */

@@ -51,7 +51,7 @@ try {
 export interface AppSettings {
   /**
    * TELFLO_DATABASE_URL: the API's own login role, a member of
-   * telflo_platform_runtime, which row-level security constrains (D5 decision 1).
+   * telflo_platform_runtime, which row-level security constrains.
    * Never the tables' owner: TELFLO_MIGRATION_DATABASE_URL names that, and
    * only `npm run db:migrate` and test setup read it, never the API. The URL
    * carries a password; never log it.
@@ -72,62 +72,57 @@ export interface AppSettings {
    * address. 0 trusts none, so `request.ip` is the socket peer.
    */
   trustProxyHops: number;
-  /** The configured OIDC providers (D2c decision 2); empty when none is. */
+  /** The configured OIDC providers; empty when none is. */
   oidcProviders: OidcProviderSettings[];
   /**
-   * The site's switches and links (D36-1 decision 27; the contracts'
-   * parseSiteSettings, which the web's root loader reads the same
-   * variables with): registration, the playground, the anonymous reads, the
-   * sales inquiries, the docs link and the Terms.
+   * The site's switches and links (the contracts' parseSiteSettings, which the
+   * web's root loader reads the same variables with): registration, the
+   * playground, the anonymous reads, the sales inquiries, the docs link and
+   * the Terms.
    */
   site: SiteSettings;
   /**
-   * TELFLO_SALES_INQUIRY_TO: where the sales inquiries go (D4 decision 4),
-   * required while TELFLO_SALES_INQUIRY is true (D36-1 decision 25); ""
-   * when unset. There is no default address.
+   * TELFLO_SALES_INQUIRY_TO: where the sales inquiries go, required while
+   * TELFLO_SALES_INQUIRY is true; "" when unset. There is no default
+   * address.
    */
   salesInquiryTo: string;
   /**
-   * The opamp-server's management API (D11a decision 12), required since
-   * D11b (decision 8): the platform publishes through it.
+   * The opamp-server's management API, required: the platform publishes
+   * through it.
    */
   opampServer: OpampServerSettings;
-  /**
-   * The collector validator (D13b decision 12), required: the editor's
-   * checks go through it.
-   */
+  /** The collector validator, required: the editor's checks go through it. */
   otelcolValidator: OtelcolValidatorSettings;
   /**
-   * Where the platform keeps its files (D14a decisions 2 and 3): test inputs
-   * and runs' files, on the local disk or in an S3-protocol bucket
-   * (TELFLO_FILE_STORE, D23-1 decision 15). index.ts checks before listening
-   * that the root exists and can be written, or that the bucket can be
-   * written, read and told a missing file in (createFileStore); loading
-   * settings touches no file and no network.
+   * Where the platform keeps its files: test inputs and runs' files, on the
+   * local disk or in an S3-protocol bucket (TELFLO_FILE_STORE). index.ts
+   * checks before listening that the root exists and can be written, or that
+   * the bucket can be written, read and told a missing file in
+   * (createFileStore); loading settings touches no file and no network.
    */
   fileStore: FileStoreSettings;
   /**
-   * The collector tester (D14a decisions 1 and 30), required: the test runs'
-   * dispatcher sends each run to it, and its health monitor asks it.
+   * The collector tester, required: the test runs' dispatcher sends each run
+   * to it, and its health monitor asks it.
    */
   otelcolTesting: OtelcolTestingSettings;
-  /** How test runs are dispatched (D14a decisions 1, 12 and 30). */
+  /** How test runs are dispatched. */
   testRuns: TestRunSettings;
   /**
-   * The OTTL evaluator (D15a decisions 2 and 6, detail 26), required: a
-   * rule's save is checked through it, a run's rules are evaluated by it,
-   * and its health monitor asks it.
+   * The OTTL evaluator, required: a rule's save is checked through it, a
+   * run's rules are evaluated by it, and its health monitor asks it.
    */
   ottlEvaluator: OttlEvaluatorSettings;
-  /** Installing collectors (D17c-1 decision 34, Preflight ruling 9). */
+  /** Installing collectors. */
   install: InstallSettings;
-  /** Quick-deploy links (D17c-2 decision 24, Preflight rulings 6 to 8). */
+  /** Quick-deploy links. */
   quickDeploy: QuickDeploySettings;
-  /** The library's Copy curl links (D23-2 decisions 45 and 46, Preflight ruling 12). */
+  /** The library's Copy curl links. */
   library: LibrarySettings;
 }
 
-/** The library's settings (D23-2 decision 46). */
+/** The library's settings. */
 export interface LibrarySettings {
   /**
    * TELFLO_LIBRARY_LINK_SIGNING_KEY (required) and
@@ -144,7 +139,7 @@ export interface LibraryLinkSigningKeys {
   previous: Buffer[];
 }
 
-/** Where a quick-deploy link points, and the keys that seal the values typed with it (D17c-2 decision 24). */
+/** Where a quick-deploy link points, and the keys that seal the values typed with it. */
 export interface QuickDeploySettings {
   /**
    * TELFLO_PUBLIC_API_URL (required): the API's base URL as a host running
@@ -160,7 +155,7 @@ export interface QuickDeploySettings {
   keyRing: QuickDeployKeyRing;
 }
 
-/** What an install writes into its command and its bundle, and where the bundle's templates are (D17c-1 decision 34). */
+/** What an install writes into its command and its bundle, and where the bundle's templates are. */
 export interface InstallSettings {
   /**
    * TELFLO_OPAMP_AGENT_PUBLIC_URL (required): the agent endpoint collectors
@@ -169,9 +164,9 @@ export interface InstallSettings {
    */
   agentPublicUrl: string;
   /**
-   * TELFLO_COLLECTOR_IMAGE_REPOSITORY (default ghcr.io/telflo/telflo/collector,
-   * the platform's own image; D18 decision 9): the container install's image,
-   * tagged by the collector version.
+   * TELFLO_COLLECTOR_IMAGE_REPOSITORY (default
+   * ghcr.io/telflo/telflo/collector, the platform's own image): the container
+   * install's image, tagged by the collector version.
    */
   collectorImageRepository: string;
   /** TELFLO_OPAMP_ALLOW_INSECURE_CONNECTIONS (default false): whether a collector may connect without TLS checks (a dev endpoint's plain http). */
@@ -179,12 +174,12 @@ export interface InstallSettings {
   /**
    * TELFLO_HELM_CHART_REFERENCE (default
    * oci://ghcr.io/telflo/telflo/charts/supervisor-collector, the platform's
-   * own chart; D18 decision 9): the chart a Kubernetes group's `helm upgrade
-   * --install` names (D17d-2 decision 16; a mirror's in an air-gapped
-   * network), HELM_CHART_REFERENCE_PATTERN's form.
+   * own chart; a mirror's in an air-gapped network): the chart a Kubernetes
+   * group's `helm upgrade --install` names, HELM_CHART_REFERENCE_PATTERN's
+   * form.
    */
   helmChartReference: string;
-  /** TELFLO_HELM_CHART_VERSION (default 0.1.0; D18 decision 10): the chart's exact version, `x.y.z`. */
+  /** TELFLO_HELM_CHART_VERSION (default 0.1.0): the chart's exact version, `x.y.z`. */
   helmChartVersion: string;
   /**
    * TELFLO_INSTALL_TEMPLATES_DIR (default /etc/telflo/install-templates, the
@@ -194,7 +189,7 @@ export interface InstallSettings {
   templatesDirectory: string;
 }
 
-/** Where the OTTL evaluator is, and its shared secret (D15a detail 26; the tester's rules). */
+/** Where the OTTL evaluator is, and its shared secret (the tester's rules). */
 export interface OttlEvaluatorSettings {
   /** TELFLO_OTTL_EVALUATOR_URL: an http(s) URL, with no trailing slash. */
   url: string;
@@ -202,7 +197,7 @@ export interface OttlEvaluatorSettings {
   secret: string;
 }
 
-/** Where the collector tester is, and its shared secret (D14a decision 30; the validator's rules). */
+/** Where the collector tester is, and its shared secret (the validator's rules). */
 export interface OtelcolTestingSettings {
   /** TELFLO_OTELCOL_TESTING_URL: an http(s) URL, with no trailing slash. */
   url: string;
@@ -210,22 +205,21 @@ export interface OtelcolTestingSettings {
   secret: string;
 }
 
-/** The test runs' dispatcher and its down rule (D14a decisions 1, 12 and 30). */
+/** The test runs' dispatcher and its down rule. */
 export interface TestRunSettings {
   /**
    * TELFLO_TEST_RUNS_PER_TESTER: at most this many runs at once, across
-   * every API process (default 4, the tester's own cap; 1 to 64, D14a
-   * Ruling 38).
+   * every API process (default 4, the tester's own cap; 1 to 64).
    */
   runsPerTester: number;
   /**
    * TELFLO_TESTING_DOWN_FAIL_AFTER_SECONDS: waiting runs fail once the
-   * tester has been down this long (default 600, decision 12; 1 to 86,400).
+   * tester has been down this long (default 600; 1 to 86,400).
    */
   downFailAfterSeconds: number;
 }
 
-/** Where the collector validator is, and its shared secret (D13b decisions 11 and 12; ADR 0026's pattern). */
+/** Where the collector validator is, and its shared secret. */
 export interface OtelcolValidatorSettings {
   /** TELFLO_OTELCOL_VALIDATOR_URL: an http(s) URL, with no trailing slash. */
   url: string;
@@ -233,7 +227,7 @@ export interface OtelcolValidatorSettings {
   secret: string;
 }
 
-/** Where the opamp-server's management API is, and its shared secret (D11a decision 12). */
+/** Where the opamp-server's management API is, and its shared secret. */
 export interface OpampServerSettings {
   /** TELFLO_OPAMP_MANAGEMENT_URL: an http(s) URL, with no trailing slash. */
   url: string;
@@ -241,7 +235,7 @@ export interface OpampServerSettings {
   secret: string;
 }
 
-/** One OIDC provider, from settings (D2c decision 2). */
+/** One OIDC provider, from settings. */
 export interface OidcProviderSettings {
   /** The URL segment: `/api/v1/auth/oidc/<id>`. */
   id: string;
@@ -422,10 +416,10 @@ function oidcProviders(env: NodeJS.ProcessEnv): OidcProviderSettings[] {
 }
 
 /**
- * A service URL never carries a user name or password (Ruling 55): fetch
- * refuses such a URL, so every call would fail as a network error, and the
- * credentials would sit in a setting the errors and logs treat as harmless.
- * The message names the variable, never the value.
+ * A service URL never carries a user name or password: fetch refuses such a
+ * URL, so every call would fail as a network error, and the credentials
+ * would sit in a setting the errors and logs treat as harmless. The message
+ * names the variable, never the value.
  */
 function refuseUrlCredentials(name: string, url: URL): void {
   if (url.username !== "" || url.password !== "") {
@@ -436,12 +430,12 @@ function refuseUrlCredentials(name: string, url: URL): void {
 const MINIMUM_OPAMP_MANAGEMENT_SECRET_BYTES = 32;
 
 /**
- * The opamp-server's management API (D11a decision 12): both its URL and its
- * secret are required (D11b decision 8), and either missing refuses to boot,
- * the error naming both. "" means unset, as for every setting. The URL must
- * be http or https, and the secret at least 32 bytes. The errors name
- * variables, never values: the secret is a key to every organization's
- * publications, and a URL can carry credentials.
+ * The opamp-server's management API: both its URL and its secret are
+ * required, and either missing refuses to boot, the error naming both. ""
+ * means unset, as for every setting. The URL must be http or https, and
+ * the secret at least 32 bytes. The errors name variables, never values:
+ * the secret is a key to every organization's publications, and a URL can
+ * carry credentials.
  *
  * Exported for the stack smoke test (stack-smoke.ts), which reads only
  * these two variables.
@@ -480,12 +474,11 @@ export function opampServerSettings(env: NodeJS.ProcessEnv): OpampServerSettings
 const MINIMUM_OTELCOL_VALIDATOR_SECRET_BYTES = 32;
 
 /**
- * The collector validator (D13b decision 12): both its URL and its secret
- * are required, as the opamp-server's are, and either missing refuses to
- * boot, the error naming both. "" means unset. The URL must be http or
- * https, and the secret at least 32 bytes. The errors name variables, never
- * values: the secret lets anyone run the validator's collectors, and a URL
- * can carry credentials.
+ * The collector validator: both its URL and its secret are required, as the
+ * opamp-server's are, and either missing refuses to boot, the error naming
+ * both. "" means unset. The URL must be http or https, and the secret at
+ * least 32 bytes. The errors name variables, never values: the secret lets
+ * anyone run the validator's collectors, and a URL can carry credentials.
  */
 export function otelcolValidatorSettings(env: NodeJS.ProcessEnv): OtelcolValidatorSettings {
   const urlName = "TELFLO_OTELCOL_VALIDATOR_URL";
@@ -521,12 +514,12 @@ export function otelcolValidatorSettings(env: NodeJS.ProcessEnv): OtelcolValidat
 const MINIMUM_OTELCOL_TESTING_SECRET_BYTES = 32;
 
 /**
- * The collector tester (D14a decision 30): both its URL and its secret are
- * required, with the validator's rules, and either missing refuses to boot,
- * the error naming both. "" means unset. The URL must be http or https and
- * carry no user name or password, and the secret at least 32 bytes. The
- * errors name variables, never values: the secret lets anyone run the
- * tester's collectors, and a URL can carry credentials.
+ * The collector tester: both its URL and its secret are required, with the
+ * validator's rules, and either missing refuses to boot, the error naming
+ * both. "" means unset. The URL must be http or https and carry no user
+ * name or password, and the secret at least 32 bytes. The errors name
+ * variables, never values: the secret lets anyone run the tester's
+ * collectors, and a URL can carry credentials.
  */
 export function otelcolTestingSettings(env: NodeJS.ProcessEnv): OtelcolTestingSettings {
   const urlName = "TELFLO_OTELCOL_TESTING_URL";
@@ -562,13 +555,12 @@ export function otelcolTestingSettings(env: NodeJS.ProcessEnv): OtelcolTestingSe
 const MINIMUM_OTTL_EVALUATOR_SECRET_BYTES = 32;
 
 /**
- * The OTTL evaluator (D15a detail 26): both its URL and its secret are
- * required, with the tester's rules, and either missing refuses to boot, the
- * error naming both. "" means unset. The URL must be http or https and carry
- * no user name or password, and the secret at least 32 bytes (the
- * evaluator's own minimum, Preflight ruling 12). The errors name variables,
- * never values: the secret lets anyone have rules checked against any text,
- * and a URL can carry credentials.
+ * The OTTL evaluator: both its URL and its secret are required, with the
+ * tester's rules, and either missing refuses to boot, the error naming both.
+ * "" means unset. The URL must be http or https and carry no user name or
+ * password, and the secret at least 32 bytes (the evaluator's own minimum).
+ * The errors name variables, never values: the secret lets anyone have rules
+ * checked against any text, and a URL can carry credentials.
  */
 export function ottlEvaluatorSettings(env: NodeJS.ProcessEnv): OttlEvaluatorSettings {
   const urlName = "TELFLO_OTTL_EVALUATOR_URL";
@@ -602,24 +594,24 @@ export function ottlEvaluatorSettings(env: NodeJS.ProcessEnv): OttlEvaluatorSett
 }
 
 /**
- * The most runs at once a deployment may ask for (D14a Ruling 38): each one
- * holds a collector of about 180 MiB in the tester and up to 20 MiB of
- * files in the API's memory while it is answered, so a typo (400 for 4)
- * refuses to boot rather than ask that of either.
+ * The most runs at once a deployment may ask for: each one holds a collector
+ * of about 180 MiB in the tester and up to 20 MiB of files in the API's
+ * memory while it is answered, so a typo (400 for 4) refuses to boot rather
+ * than ask that of either.
  */
 export const MAXIMUM_TEST_RUNS_PER_TESTER = 64;
 
 /**
- * The longest the down rule may wait, a day (Ruling 41): the reaper passes
- * it to Postgres as an integer number of seconds.
+ * The longest the down rule may wait, a day: the reaper passes it to Postgres
+ * as an integer number of seconds.
  */
 export const MAXIMUM_TESTING_DOWN_FAIL_AFTER_SECONDS = 86_400;
 
 /**
- * The dispatcher's settings (D14a decision 30), both optional: N runs at
- * once (default 4, matching the tester's cap; at most 64; the browser tests
- * run 16, so parallel workers don't queue behind each other, Preflight
- * ruling 20), and the down rule's 10 minutes (decision 12).
+ * The dispatcher's settings, both optional: N runs at once (default 4,
+ * matching the tester's cap; at most 64; the browser tests run 16, so
+ * parallel workers don't queue behind each other), and the down rule's 10
+ * minutes.
  */
 function testRunSettings(env: NodeJS.ProcessEnv): TestRunSettings {
   return {
@@ -634,7 +626,7 @@ function testRunSettings(env: NodeJS.ProcessEnv): TestRunSettings {
   };
 }
 
-/** TELFLO_FILE_STORE's values (D23-1 decision 15): the local disk, the default, or an S3-protocol bucket. */
+/** TELFLO_FILE_STORE's values: the local disk, the default, or an S3-protocol bucket. */
 export const FILE_STORE_KINDS = ["local", "s3"] as const;
 
 /** An S3 bucket name: 3 to 63 lower-case letters, digits, dots and hyphens, a letter or digit at each end (and no `..`, checked apart). */
@@ -647,18 +639,17 @@ const MAXIMUM_FILE_STORE_PREFIX_LENGTH = 256;
 const S3_REGION_PATTERN = /^[a-z0-9-]{1,32}$/;
 
 /**
- * The file store (D23-1 decision 15), chosen by TELFLO_FILE_STORE: absent or
- * "" is `local`. Only the chosen kind's variables are read, as
- * mailTransport's are: compose sets the root and every S3 value for every
- * install (Preflight ruling 17), so the local disk ignores the S3 values and
- * S3 ignores the root. loadSettings reads only the environment and touches
- * no file and no network: createFileStore checks the root or the bucket as
- * the API starts. Paths, bucket names, prefixes and regions are no secret,
- * so the errors show them; an endpoint's refusal never shows it, since a
- * mistyped one may hold a credential (fileStoreEndpoint). No AWS_* variable is ever read here:
- * the S3 client's credentials are the AWS SDK's default chain's alone
- * (decisions 24 and 34), so no key passes through Telflo's settings or
- * their errors.
+ * The file store, chosen by TELFLO_FILE_STORE: absent or "" is `local`.
+ * Only the chosen kind's variables are read, as mailTransport's are: compose
+ * sets the root and every S3 value for every install, so the local disk
+ * ignores the S3 values and S3 ignores the root. loadSettings reads only
+ * the environment and touches no file and no network: createFileStore
+ * checks the root or the bucket as the API starts. Paths, bucket names,
+ * prefixes and regions are no secret, so the errors show them; an
+ * endpoint's refusal never shows it, since a mistyped one may hold a
+ * credential (fileStoreEndpoint). No AWS_* variable is ever read here: the
+ * S3 client's credentials are the AWS SDK's default chain's alone, so no
+ * key passes through Telflo's settings or their errors.
  */
 function fileStoreSettings(env: NodeJS.ProcessEnv): FileStoreSettings {
   const name = "TELFLO_FILE_STORE";
@@ -682,11 +673,11 @@ function fileStoreSettings(env: NodeJS.ProcessEnv): FileStoreSettings {
 }
 
 /**
- * TELFLO_FILE_STORE_ROOT (D14a decision 2, Preflight ruling 11): required,
- * and an absolute path, so the root never depends on the directory the API
- * was started from. Whether it exists and can be written is checked as the
- * API starts (createFileStore), not here: loadSettings reads only the
- * environment. A path is no secret, so the error shows it.
+ * TELFLO_FILE_STORE_ROOT: required, and an absolute path, so the root
+ * never depends on the directory the API was started from. Whether it
+ * exists and can be written is checked as the API starts
+ * (createFileStore), not here: loadSettings reads only the environment. A
+ * path is no secret, so the error shows it.
  */
 function fileStoreRoot(env: NodeJS.ProcessEnv): string {
   const name = "TELFLO_FILE_STORE_ROOT";
@@ -697,7 +688,7 @@ function fileStoreRoot(env: NodeJS.ProcessEnv): string {
   return root;
 }
 
-/** TELFLO_FILE_STORE_BUCKET (D23-1 decision 15): required, an S3 bucket name. */
+/** TELFLO_FILE_STORE_BUCKET: required, an S3 bucket name. */
 function fileStoreBucket(env: NodeJS.ProcessEnv): string {
   const name = "TELFLO_FILE_STORE_BUCKET";
   const bucket = required(env, name);
@@ -710,11 +701,11 @@ function fileStoreBucket(env: NodeJS.ProcessEnv): string {
 }
 
 /**
- * TELFLO_FILE_STORE_PREFIX (D23-1 decision 15): optional, "" (none) when
- * absent or "". Otherwise segments of lower-case letters, digits and ._-,
- * each beginning with a letter or digit, separated by `/`; one trailing `/`
- * is allowed and always stored (`acme` and `acme/` are the same prefix), and
- * the stored prefix is at most 256 characters.
+ * TELFLO_FILE_STORE_PREFIX: optional, "" (none) when absent or "". Otherwise
+ * segments of lower-case letters, digits and ._-, each beginning with a letter
+ * or digit, separated by `/`; one trailing `/` is allowed and always stored
+ * (`acme` and `acme/` are the same prefix), and the stored prefix is at most
+ * 256 characters.
  */
 function fileStorePrefix(env: NodeJS.ProcessEnv): string {
   const name = "TELFLO_FILE_STORE_PREFIX";
@@ -735,7 +726,7 @@ function fileStorePrefix(env: NodeJS.ProcessEnv): string {
   return prefix;
 }
 
-/** TELFLO_FILE_STORE_S3_REGION (D23-1 decision 15): required, 1 to 32 lower-case letters, digits and hyphens. */
+/** TELFLO_FILE_STORE_S3_REGION: required, 1 to 32 lower-case letters, digits and hyphens. */
 function fileStoreRegion(env: NodeJS.ProcessEnv): string {
   const name = "TELFLO_FILE_STORE_S3_REGION";
   const region = required(env, name);
@@ -748,26 +739,26 @@ function fileStoreRegion(env: NodeJS.ProcessEnv): string {
 }
 
 /**
- * An endpoint's whole text, before it is parsed (Ruling 121): a lower-case
- * http or https scheme, a host of dot-separated letter-digit-hyphen labels
- * (so an internationalized name must be given in its punycode `xn--` form)
- * or a bracketed IPv6 address, an optional port of digits, an optional
- * trailing `/`. Nothing else: no whitespace, backslash, `@`, `%`, `?`, `#`
- * or path, so no user name, password, encoded character, query (a pasted
- * presigned URL's signature) or fragment gets through.
+ * An endpoint's whole text, before it is parsed: a lower-case http or
+ * https scheme, a host of dot-separated letter-digit-hyphen labels (so an
+ * internationalized name must be given in its punycode `xn--` form) or a
+ * bracketed IPv6 address, an optional port of digits, an optional trailing
+ * `/`. Nothing else: no whitespace, backslash, `@`, `%`, `?`, `#` or path,
+ * so no user name, password, encoded character, query (a pasted presigned
+ * URL's signature) or fragment gets through.
  */
 const S3_ENDPOINT_PATTERN =
   /^https?:\/\/(?:[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?)*|\[[0-9A-Fa-f:.]+\])(?::([0-9]{1,5}))?\/?$/;
 
 /**
- * TELFLO_FILE_STORE_S3_ENDPOINT (D23-1 decision 15, Ruling 121): optional,
- * undefined (AWS's own endpoint for the region) when absent or "".
- * Otherwise an http or https origin, a host and an optional port from 1 to
- * 65535 (S3_ENDPOINT_PATTERN, then the URL parser, which also checks a
- * bracketed address is IPv6), stored as its origin (`http://127.0.0.1:51240`).
- * Unlike the other file-store settings, a refusal never shows the value: a
- * mistyped or pasted endpoint may hold a user name and password, encoded or
- * not, or a presigned URL's signature. It names the variable and the rule only.
+ * TELFLO_FILE_STORE_S3_ENDPOINT: optional, undefined (AWS's own endpoint for
+ * the region) when absent or "". Otherwise an http or https origin, a host and
+ * an optional port from 1 to 65535 (S3_ENDPOINT_PATTERN, then the URL parser,
+ * which also checks a bracketed address is IPv6), stored as its origin
+ * (`http://127.0.0.1:51240`). Unlike the other file-store settings, a refusal
+ * never shows the value: a mistyped or pasted endpoint may hold a user name
+ * and password, encoded or not, or a presigned URL's signature. It names the
+ * variable and the rule only.
  */
 function fileStoreEndpoint(env: NodeJS.ProcessEnv): string | undefined {
   const name = "TELFLO_FILE_STORE_S3_ENDPOINT";
@@ -795,20 +786,19 @@ function fileStoreEndpoint(env: NodeJS.ProcessEnv): string | undefined {
 
 /** The image's own copy of the install templates (the Dockerfile's). */
 export const DEFAULT_INSTALL_TEMPLATES_DIR = "/etc/telflo/install-templates";
-/** The platform's own collector image (D18 decision 9; `scripts/build-collector-image.sh`'s default). */
+/** The platform's own collector image (`scripts/build-collector-image.sh`'s default). */
 export const DEFAULT_COLLECTOR_IMAGE_REPOSITORY = "ghcr.io/telflo/telflo/collector";
 
 /**
- * Installing collectors (D17c-1 decision 34, Preflight ruling 9). The agent
- * endpoint is required and http(s) or ws(s) with a host, an optional port and
- * a plain path (AGENT_ENDPOINT_PATTERN: no user name, query, fragment,
- * space, quote, `$` or brace, since it is written into scripts and YAML).
- * The image repository has COLLECTOR_IMAGE_REPOSITORY_PATTERN's form; the
- * insecure flag "true" or
- * "false"; the Helm chart's reference and version (D17d-2 decision 16)
- * HELM_CHART_REFERENCE_PATTERN's and HELM_CHART_VERSION_PATTERN's forms; the
- * templates directory an absolute path. Paths and URLs are no
- * secret, so the errors show them.
+ * Installing collectors. The agent endpoint is required and http(s) or
+ * ws(s) with a host, an optional port and a plain path
+ * (AGENT_ENDPOINT_PATTERN: no user name, query, fragment, space, quote, `$`
+ * or brace, since it is written into scripts and YAML). The image
+ * repository has COLLECTOR_IMAGE_REPOSITORY_PATTERN's form; the insecure
+ * flag "true" or "false"; the Helm chart's reference and version
+ * HELM_CHART_REFERENCE_PATTERN's and HELM_CHART_VERSION_PATTERN's forms;
+ * the templates directory an absolute path. Paths and URLs are no secret,
+ * so the errors show them.
  */
 function installSettings(env: NodeJS.ProcessEnv): InstallSettings {
   const urlName = "TELFLO_OPAMP_AGENT_PUBLIC_URL";
@@ -847,9 +837,9 @@ function installSettings(env: NodeJS.ProcessEnv): InstallSettings {
 }
 
 /**
- * An optional setting of a fixed form (D17d-2 decision 16, Preflight ruling
- * 6): unset or empty is `fallback`; any other value must match `pattern`,
- * and its refusal names the variable and the value (no secret).
+ * An optional setting of a fixed form: unset or empty is `fallback`; any other
+ * value must match `pattern`, and its refusal names the variable and the value
+ * (no secret).
  */
 function patterned(env: NodeJS.ProcessEnv, name: string, fallback: string, pattern: RegExp, form: string): string {
   const raw = env[name];
@@ -859,15 +849,15 @@ function patterned(env: NodeJS.ProcessEnv, name: string, fallback: string, patte
 }
 
 /**
- * Quick-deploy links (D17c-2 decision 24, Preflight rulings 6 to 8). The
- * public API URL is required: `http` or `https`, a host name or a bracketed
- * address, an optional port (at most 65535) and a path of plain segments,
- * no user name, query, fragment or `%` (QUICK_DEPLOY_PUBLIC_API_URL_PATTERN:
- * the link lands in a curl config's "…" and a shell's '…'); a trailing `/`
- * is removed first. A bracketed host must be a real IPv6 address (node:net's
- * isIPv6 of what the brackets hold: the pattern takes any run of hex digits,
- * `:` and `.`). A URL is no secret, so its error shows it. The key ring
- * is quickDeployKeyRing's, whose errors name the variable, never a key.
+ * Quick-deploy links. The public API URL is required: `http` or `https`, a
+ * host name or a bracketed address, an optional port (at most 65535) and a
+ * path of plain segments, no user name, query, fragment or `%`
+ * (QUICK_DEPLOY_PUBLIC_API_URL_PATTERN: the link lands in a curl config's
+ * "…" and a shell's '…'); a trailing `/` is removed first. A bracketed host
+ * must be a real IPv6 address (node:net's isIPv6 of what the brackets hold:
+ * the pattern takes any run of hex digits, `:` and `.`). A URL is no secret,
+ * so its error shows it. The key ring is quickDeployKeyRing's, whose errors
+ * name the variable, never a key.
  */
 function quickDeploySettings(env: NodeJS.ProcessEnv): QuickDeploySettings {
   const urlName = "TELFLO_PUBLIC_API_URL";
@@ -893,19 +883,18 @@ function quickDeploySettings(env: NodeJS.ProcessEnv): QuickDeploySettings {
 
 export const LIBRARY_LINK_SIGNING_KEY_NAME = "TELFLO_LIBRARY_LINK_SIGNING_KEY";
 export const LIBRARY_LINK_SIGNING_KEYS_PREVIOUS_NAME = "TELFLO_LIBRARY_LINK_SIGNING_KEYS_PREVIOUS";
-/** The fewest bytes a library link's key holds (decision 46). */
+/** The fewest bytes a library link's key holds. */
 export const LIBRARY_LINK_SIGNING_KEY_MINIMUM_BYTES = 32;
-/** The most previous keys the library keeps (decision 46). */
+/** The most previous keys the library keeps. */
 export const LIBRARY_LINK_SIGNING_KEYS_PREVIOUS_MAXIMUM = 8;
 
 /**
- * The library link's keys (D23-2 decision 46, Preflight ruling 12). The
- * current key is required and trimmed (a key read from a mounted secret
- * file often ends in a newline, as quick-deploy's); the previous keys are
- * split on `,`, each trimmed, empty entries dropped, at most 8. Each key is
- * at least 32 bytes of UTF-8, and none equals another or the current one.
- * Every error names the variable and the rule, never a value: the keys are
- * secrets.
+ * The library link's keys. The current key is required and trimmed (a key
+ * read from a mounted secret file often ends in a newline, as
+ * quick-deploy's); the previous keys are split on `,`, each trimmed, empty
+ * entries dropped, at most 8. Each key is at least 32 bytes of UTF-8, and
+ * none equals another or the current one. Every error names the variable
+ * and the rule, never a value: the keys are secrets.
  */
 function librarySettings(env: NodeJS.ProcessEnv): LibrarySettings {
   const currentName = LIBRARY_LINK_SIGNING_KEY_NAME;
@@ -941,12 +930,12 @@ function librarySettings(env: NodeJS.ProcessEnv): LibrarySettings {
 }
 
 /**
- * TELFLO_SALES_INQUIRY_TO (D4 decision 4, D36-1 decision 25): absent or ""
- * is none, which only an install with TELFLO_SALES_INQUIRY off may have
- * (the inquiries need somewhere to go; there is no default address).
- * Anything else must be one address the contracts' email schema accepts,
- * so a typo or a list fails at boot rather than at the first inquiry. The
- * errors name the variables, never the value.
+ * TELFLO_SALES_INQUIRY_TO: absent or "" is none, which only an install
+ * with TELFLO_SALES_INQUIRY off may have (the inquiries need somewhere to
+ * go; there is no default address). Anything else must be one address the
+ * contracts' email schema accepts, so a typo or a list fails at boot
+ * rather than at the first inquiry. The errors name the variables, never
+ * the value.
  */
 function salesInquiryTo(env: NodeJS.ProcessEnv, site: SiteSettings): string {
   const name = "TELFLO_SALES_INQUIRY_TO";
@@ -962,7 +951,7 @@ function salesInquiryTo(env: NodeJS.ProcessEnv, site: SiteSettings): string {
   return parsed.data;
 }
 
-/** TELFLO_SMTP_TLS (D36-1 decision 30): unset or "" is starttls. */
+/** TELFLO_SMTP_TLS: unset or "" is starttls. */
 function smtpTls(env: NodeJS.ProcessEnv): SmtpTlsMode {
   const name = "TELFLO_SMTP_TLS";
   const raw = env[name];
@@ -974,10 +963,10 @@ function smtpTls(env: NodeJS.ProcessEnv): SmtpTlsMode {
 }
 
 /**
- * TELFLO_SMTP_USERNAME and TELFLO_SMTP_PASSWORD (D36-1 decisions 30 and
- * 38): both set is a login, neither is none, one without the other refuses
- * to boot (a half-configured login would fail every message instead of
- * failing here). "" is unset. The errors name the variables, never a value.
+ * TELFLO_SMTP_USERNAME and TELFLO_SMTP_PASSWORD: both set is a login, neither
+ * is none, one without the other refuses to boot (a half-configured login
+ * would fail every message instead of failing here). "" is unset. The errors
+ * name the variables, never a value.
  */
 function smtpLogin(env: NodeJS.ProcessEnv): SmtpLogin | null {
   const usernameName = "TELFLO_SMTP_USERNAME";
@@ -995,13 +984,13 @@ function smtpLogin(env: NodeJS.ProcessEnv): SmtpLogin | null {
 const PEM_CERTIFICATE = /-----BEGIN CERTIFICATE-----\r?\n[A-Za-z0-9+/=\r\n]+-----END CERTIFICATE-----/g;
 
 /**
- * TELFLO_SMTP_CA_FILE (D36-1 decision 30): absent or "" is none. Otherwise
- * an absolute path, read once here, at boot (the one file settings read): one
- * or more PEM certificates and nothing else (no private key, no other block,
- * no stray text), each one a certificate node:crypto parses. Its text is
- * the CA the SMTP connection alone trusts (smtp-mailer.ts, `tls.ca`; never
- * NODE_EXTRA_CA_CERTS). The errors name the variable and the rule, never
- * the file's text.
+ * TELFLO_SMTP_CA_FILE: absent or "" is none. Otherwise an absolute path, read
+ * once here, at boot (the one file settings read): one or more PEM
+ * certificates and nothing else (no private key, no other block, no stray
+ * text), each one a certificate node:crypto parses. Its text is the CA the
+ * SMTP connection alone trusts (smtp-mailer.ts, `tls.ca`; never
+ * NODE_EXTRA_CA_CERTS). The errors name the variable and the rule, never the
+ * file's text.
  */
 function smtpCa(env: NodeJS.ProcessEnv): string | null {
   const name = "TELFLO_SMTP_CA_FILE";

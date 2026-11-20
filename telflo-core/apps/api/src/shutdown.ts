@@ -1,11 +1,11 @@
 /*
- * The API's shutdown (D14a Preflight ruling 7): until D14a it had no signal
- * handler, so `docker stop` waited its 10 s and killed it, mid-request and
- * mid-run. On SIGTERM or SIGINT, index.ts now closes the server (no new
- * connections; the test runs' background work stops in its onClose, the
- * dispatcher finishing each run it aborts) and then exits. Should closing
- * hang, a hard exit follows after SHUTDOWN_GRACE_MS, inside compose's 10 s;
- * what that cuts short, the reaper fails later.
+ * The API's shutdown: without a signal handler, `docker stop` would wait
+ * its 10 s and kill it, mid-request and mid-run. On SIGTERM or SIGINT,
+ * index.ts closes the server (no new connections; the test runs' background
+ * work stops in its onClose, the dispatcher finishing each run it aborts)
+ * and then exits. Should closing hang, a hard exit follows after
+ * SHUTDOWN_GRACE_MS, inside compose's 10 s; what that cuts short, the
+ * reaper fails later.
  */
 
 /** How long a shutdown may take before the process exits regardless. */
@@ -60,6 +60,6 @@ export function installShutdownHandlers(options: ShutdownOptions): void {
   };
   // `on`, never `once`: a second signal while shutting down must find this
   // handler, or Node's default would end the process at once, before the
-  // aborted runs are finished (Ruling 41). The hard exit still bounds it.
+  // aborted runs are finished. The hard exit still bounds it.
   for (const signal of SHUTDOWN_SIGNALS) options.signals.on(signal, shutDown);
 }

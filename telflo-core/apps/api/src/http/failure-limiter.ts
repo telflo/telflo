@@ -35,8 +35,7 @@ export interface FailureLimiter {
    * Takes back one failure recorded in the key's current window. With
    * `windowStartedAt` (what `recordFailure` returned), only while that same
    * window is the key's live one: a failure counted in a window that has
-   * ended is never taken from the next one, however close the two are
-   * (D14a Ruling 45).
+   * ended is never taken from the next one, however close the two are.
    */
   refund(key: string, windowStartedAt?: number): void;
   /** Forgets the key: its count starts again from zero. */
@@ -51,9 +50,9 @@ interface Window {
 }
 
 /**
- * A fixed-window failure counter, in memory, per API process (D2a
- * Ruling 13). Unlike @fastify/rate-limit it can check without counting, so
- * a caller counts only the outcomes it means to limit. Every operation is
+ * A fixed-window failure counter, in memory, per API process.
+ * Unlike @fastify/rate-limit it can check without counting, so a caller
+ * counts only the outcomes it means to limit. Every operation is
  * synchronous, so a check and the count that follows it never interleave
  * with another request's.
  *

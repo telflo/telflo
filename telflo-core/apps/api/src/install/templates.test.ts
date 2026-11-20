@@ -9,11 +9,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { InstallMethod } from "@telflo/contracts";
 import { checkInstallTemplates, createInstallTemplateLoader, InstallTemplatesError } from "./templates.js";
 
-// D17c-1 decisions 6, 17 and 36, Preflight ruling 12: the templates read
-// from a directory on every render: a plain directory (compose's bind
-// mount, a minikube hostPath), a Kubernetes ConfigMap (kubelet's
-// `..data` layout, its swap), one mounted flat at a method's directory;
-// each bad entry refused naming its relative path, never its text.
+// The templates read from a directory on every render: a plain directory
+// (compose's bind mount, a minikube hostPath), a Kubernetes ConfigMap
+// (kubelet's `..data` layout, its swap), one mounted flat at a method's
+// directory; each bad entry refused naming its relative path, never its text.
 
 const REPOSITORY_TEMPLATES = fileURLToPath(new URL("../../../../../install-templates", import.meta.url));
 /** Text no refusal may quote. */
@@ -22,9 +21,9 @@ const CANARY = "template-text-canary-7f3a";
 /**
  * Every path the loader opens (fs/promises' open, wrapped), and a hook run
  * just before an open: what a test does between one file's read and the
- * next (Ruling 51: lstat before open; ..data once per render). And a hook
- * run just after a directory is listed or a `..data` resolved, whichever
- * the loader does first: what a test does between the two (Ruling 62).
+ * next (lstat before open; ..data once per render). And a hook run just
+ * after a directory is listed or a `..data` resolved, whichever the loader
+ * does first: what a test does between the two.
  */
 const opened = vi.hoisted(() => ({
   paths: [] as string[],
@@ -248,7 +247,7 @@ describe("the install template loader", () => {
     expect((await createInstallTemplateLoader(root).load("all-in-one")).every((file) => file.text.endsWith("# v2\n"))).toBe(true);
   });
 
-  it("lists the ..data it resolved first, though kubelet swaps it between the two: no key dropped, no key refused (Ruling 62)", async () => {
+  it("lists the ..data it resolved first, though kubelet swaps it between the two: no key dropped, no key refused", async () => {
     const root = join(base, "flat-list");
     const directory = join(root, "linux", "all-in-one");
     // v1 holds old.md, which v2 removes; v2 adds extra.md.

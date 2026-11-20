@@ -28,7 +28,7 @@ const readContext = async (db: Kysely<Database>) => {
   return rows[0]!;
 };
 
-describe("the database context (D5 decision 2)", () => {
+describe("the database context", () => {
   /** The API's own role, which row-level security constrains. */
   let db: Kysely<Database>;
   /** The tables' owner: fixtures, truncation and reading rows back. */
@@ -164,7 +164,7 @@ describe("the database context (D5 decision 2)", () => {
     });
   });
 
-  it("sets the product admin's context in withProductAdminContext: the setting on, the caller, no organization, READ COMMITTED; and leaves nothing behind (D29 decision 17)", async () => {
+  it("sets the product admin's context in withProductAdminContext: the setting on, the caller, no organization, READ COMMITTED; and leaves nothing behind", async () => {
     const caller = "0190a5b0-0000-7000-8000-000000000009";
     const readProductAdmin = async (connection: Kysely<Database>) => ({
       ...(await readContext(connection)),

@@ -11,21 +11,18 @@ import { UNCALLED_OTELCOL_VALIDATOR } from "./testing/otelcol-validator.js";
 import { UNCALLED_FILE_STORE } from "./testing/file-store.js";
 import { UNCALLED_TESTING } from "./testing/otelcol-testing.js";
 
-// The opamp-server every server needs (D11b decision 8): this file's own fake.
+// The opamp-server every server needs: this file's own fake.
 const opamp = useFakeOpampServer();
 
 /**
- * Finding 1 of the D1 final review: with no CORS plugin registered, a
- * browser's preflight `OPTIONS` for a cross-origin, credentialed request
- * 404s and the real request never leaves the browser — invisible to
- * `server.inject()`-based tests and to curl, both of which skip the
- * browser's own CORS enforcement entirely. These tests exercise the
- * headers a browser actually checks, via the same `server.inject()`
- * mechanism the rest of this suite uses (it runs requests through Fastify's
- * real hook chain, including the `@fastify/cors` plugin, without opening a
- * socket) — so this is the evidence the finding asked for at the test
- * layer. See also the manual cross-origin curl walkthrough in
- * final-review-fix-report.md for the second, browser-shaped form of proof.
+ * With no CORS plugin registered, a browser's preflight `OPTIONS` for a
+ * cross-origin, credentialed request 404s and the real request never leaves
+ * the browser — invisible to `server.inject()`-based tests and to curl, both
+ * of which skip the browser's own CORS enforcement entirely. These tests
+ * exercise the headers a browser actually checks, via the same
+ * `server.inject()` mechanism the rest of this suite uses (it runs requests
+ * through Fastify's real hook chain, including the `@fastify/cors` plugin,
+ * without opening a socket).
  */
 describe("CORS", () => {
   let server: FastifyInstance;
@@ -93,9 +90,8 @@ describe("CORS", () => {
   it("answers the preflight OPTIONS for the register route with 2xx and the allowed origin", async () => {
     // This is the exact request a browser sends before POST
     // /api/v1/auth/register, because api-client.ts sets
-    // content-type: application/json, which forces a preflight. Before this
-    // fix it 404'd (no route registered for OPTIONS), which is the concrete
-    // failure mode finding 1 describes.
+    // content-type: application/json, which forces a preflight. Without the
+    // CORS plugin it 404s (no route registered for OPTIONS).
     const response = await server.inject({
       method: "OPTIONS",
       url: "/api/v1/auth/register",
@@ -112,8 +108,8 @@ describe("CORS", () => {
   });
 
   it("allows the CSRF header in the preflight for a state-changing request", async () => {
-    // Without it, a cross-origin client (ADR 0017's escape hatch) could send
-    // no POST or DELETE at all: every one must carry x-telflo-csrf.
+    // Without it, a cross-origin client could send no POST or DELETE at all:
+    // every one must carry x-telflo-csrf.
     const response = await server.inject({
       method: "OPTIONS",
       url: "/api/v1/auth/sessions",

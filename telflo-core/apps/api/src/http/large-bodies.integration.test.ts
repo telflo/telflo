@@ -15,7 +15,7 @@ import { UNCALLED_OTELCOL_VALIDATOR } from "../testing/otelcol-validator.js";
 import { UNCALLED_FILE_STORE } from "../testing/file-store.js";
 import { UNCALLED_TESTING } from "../testing/otelcol-testing.js";
 
-// The opamp-server every server needs (D11b decision 8): this file's own fake.
+// The opamp-server every server needs: this file's own fake.
 const opamp = useFakeOpampServer();
 
 const csrfHeaders = { [CSRF_HEADER_NAME]: CSRF_HEADER_VALUE };
@@ -39,7 +39,7 @@ interface LargeBodyRoute {
   method: "POST" | "PATCH";
   /** The path, for the signed-in person's organization (ids the route never reaches: every case is refused first). */
   path: (organizationId: string) => string;
-  /** The route's own bodyLimit (decision 42's routes). */
+  /** The route's own bodyLimit. */
   limit: number;
   /** A body the route's schema accepts, so the role check (after validation) is what answers. */
   valid: () => Record<string, unknown>;
@@ -51,11 +51,10 @@ const version = randomUUID();
 const flow = randomUUID();
 
 /**
- * D36-1 decision 42's routes (Preflight ruling 9): the configurations
- * create, a version's save and create, a version's validation, the flows'
- * product-admin writes with a body (create, change, lint) and the test-runs
- * queue. Each runs `authenticate` in `onRequest`, before Fastify reads the
- * body.
+ * The routes with a body limit of their own: the configurations create, a
+ * version's save and create, a version's validation, the flows' product-admin
+ * writes with a body (create, change, lint) and the test-runs queue. Each runs
+ * `authenticate` in `onRequest`, before Fastify reads the body.
  */
 const ROUTES: LargeBodyRoute[] = [
   {
@@ -153,7 +152,7 @@ function accessCookie(response: LightMyRequestResponse): string {
   return line.slice("telflo_access=".length, line.indexOf(";"));
 }
 
-describe("large bodies are refused before parsing when unauthenticated (D36-1 decision 42)", () => {
+describe("large bodies are refused before parsing when unauthenticated", () => {
   let databases: TestDatabases;
   let server: FastifyInstance;
   let passwordHash: string;

@@ -6,11 +6,11 @@ import { createTestCertificates, startSmtpRelay, type SmtpRelay, type SmtpRelayM
 import { createMailer } from "./create-mailer.js";
 import { createSmtpMailer, SmtpSendError, type SmtpMailerSettings } from "./smtp-mailer.js";
 
-// D36-1 decisions 38 and 40: real connections, through the real nodemailer,
-// to an in-process relay (../testing/smtp-relay.ts) with a CA and a server
-// certificate made at test time. The client dials 127.0.0.1 (the
-// certificate's IP SAN): "localhost" would send nodemailer to DNS first.
-// Short waits, so a broken case fails fast rather than at production's bounds.
+// Real connections, through the real nodemailer, to an in-process relay
+// (../testing/smtp-relay.ts) with a CA and a server certificate made at test
+// time. The client dials 127.0.0.1 (the certificate's IP SAN): "localhost"
+// would send nodemailer to DNS first. Short waits, so a broken case fails fast
+// rather than at production's bounds.
 
 const TIMEOUTS = { connection: 3_000, greeting: 3_000, socket: 3_000 };
 const message = { to: "recipient@example.test", subject: `relay test ${randomUUID()}`, text: "Hello", html: "<p>Hello</p>" };
@@ -125,7 +125,7 @@ describe("SMTP through a real relay", () => {
       expect([relay.received.length, relay.authAttempts()]).toEqual([0, 0]);
     });
 
-    it(`refuses a certificate the trusted CA issued for another host (${mode}): the host-name check, before any login (Ruling 349)`, async () => {
+    it(`refuses a certificate the trusted CA issued for another host (${mode}): the host-name check, before any login`, async () => {
       const relay = await relayOf(mode, true, "foreign");
       const error = await failureOf(mailerFor(relay, { tls: mode, login, ca: certificates.caPem }).send(message));
 

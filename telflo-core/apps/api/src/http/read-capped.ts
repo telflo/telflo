@@ -1,6 +1,6 @@
-// Reading a reply from an internal service under a size cap (D16b Preflight
-// ruling 2; docs/conventions/security.md, "Calling an internal service from
-// an endpoint"). The validator's, the evaluator's, the tester's and the
+// Reading a reply from an internal service under a size cap
+// (docs/conventions/security.md, "Calling an internal service from an
+// endpoint"). The validator's, the evaluator's, the tester's and the
 // opamp-server's clients each read their replies with it, so no service, nor
 // anything between it and the platform, can make the API hold more of a
 // reply than its client allows.

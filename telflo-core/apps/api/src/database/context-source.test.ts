@@ -44,7 +44,7 @@ describe("the database context's boundaries", () => {
     expect(sources).toContain("apps/api/src/modules/sessions/authenticate.ts");
   });
 
-  it("names telflo.user_id and telflo.organization_id only in context.ts, migrations and tests (D5 decision 2)", () => {
+  it("names telflo.user_id and telflo.organization_id only in context.ts, migrations and tests", () => {
     const offenders = productionSources().filter(
       (path) =>
         path !== "apps/api/src/database/context.ts" &&
@@ -54,7 +54,7 @@ describe("the database context's boundaries", () => {
     expect(offenders).toEqual([]);
   });
 
-  it("names telflo.dispatcher only in context.ts and migrations (D14a Preflight ruling 8)", () => {
+  it("names telflo.dispatcher only in context.ts and migrations", () => {
     const offenders = productionSources().filter(
       (path) =>
         path !== "apps/api/src/database/context.ts" &&
@@ -65,7 +65,7 @@ describe("the database context's boundaries", () => {
     expect(read("apps/api/src/database/context.ts")).toMatch(/telflo\.dispatcher/);
   });
 
-  it("calls withDispatcherContext only from the dispatcher's files and the tester's and the evaluator's health monitors (D14a Preflight ruling 8, Ruling 23; D15a Preflight ruling 23)", () => {
+  it("calls withDispatcherContext only from the dispatcher's files and the tester's and the evaluator's health monitors", () => {
     const callers = productionSources().filter(
       (path) =>
         path !== "apps/api/src/database/context.ts" &&
@@ -73,10 +73,11 @@ describe("the database context's boundaries", () => {
         /\bwithDispatcherContext\b/.test(read(path)),
     );
     // Named at all, called or imported (an alias would hide a call). The
-    // migration's comments name it; nothing there runs it. The dispatcher claims, finishes and releases; the reaper reaps and
-    // fails waiting runs; the monitors write otelcol_testing_mark (decision
-    // 12) and ottl_evaluator_mark (D15a Preflight ruling 23). Nothing else in
-    // modules/test-runs/, which answers members' requests, may reach them.
+    // migration's comments name it; nothing there runs it. The dispatcher
+    // claims, finishes and releases; the reaper reaps and fails waiting runs;
+    // the monitors write otelcol_testing_mark and ottl_evaluator_mark. Nothing
+    // else in modules/test-runs/, which answers members' requests, may reach
+    // them.
     expect(callers.sort()).toEqual([
       "apps/api/src/modules/test-runs/dispatcher.ts",
       "apps/api/src/modules/test-runs/reaper.ts",
@@ -85,7 +86,7 @@ describe("the database context's boundaries", () => {
     ]);
   });
 
-  it("names telflo.product_admin only in context.ts and migrations (D29 decision 17, Preflight ruling 2)", () => {
+  it("names telflo.product_admin only in context.ts and migrations", () => {
     const offenders = productionSources().filter(
       (path) =>
         path !== "apps/api/src/database/context.ts" &&
@@ -96,7 +97,7 @@ describe("the database context's boundaries", () => {
     expect(read("apps/api/src/database/context.ts")).toMatch(/telflo\.product_admin/);
   });
 
-  it("calls withProductAdminContext only from modules/product-admin/repositories/system-repository.ts (D29 decisions 17 and 19, Preflight ruling 2)", () => {
+  it("calls withProductAdminContext only from modules/product-admin/repositories/system-repository.ts", () => {
     const callers = productionSources().filter(
       (path) =>
         path !== "apps/api/src/database/context.ts" &&
@@ -109,7 +110,7 @@ describe("the database context's boundaries", () => {
     expect(callers).toEqual(["apps/api/src/modules/product-admin/repositories/system-repository.ts"]);
   });
 
-  it("names assert_product_admin and the product-admin functions only in system-repository.ts and the migrations (D29 decisions 18 and 19, Preflight ruling 2)", () => {
+  it("names assert_product_admin and the product-admin functions only in system-repository.ts and the migrations", () => {
     const repository = "apps/api/src/modules/product-admin/repositories/system-repository.ts";
     const offenders = productionSources().filter(
       (path) =>
@@ -122,16 +123,15 @@ describe("the database context's boundaries", () => {
     expect(read(repository)).toMatch(/product_admin_list_users/);
   });
 
-  it("names is_product_admin only in the files that read the flag for a request, the SystemRepository and feedback's recipients, and migrations (D29 decisions 19 and 26, Rulings 257 and 258)", () => {
+  it("names is_product_admin only in the files that read the flag for a request, the SystemRepository and feedback's recipients, and migrations", () => {
     const namers = productionSources().filter(
       (path) => !path.startsWith("packages/db/migrations/") && /is_product_admin/.test(read(path)),
     );
     // The exact list. The session check reads the flag on each request
     // (authenticate.ts, session-repository.ts; the contract and the schema
     // type it); the SystemRepository reads it in its functions' rows; and
-    // decision 26's recipients, a plain query on users outside the
-    // product-admin context (decision 12's first named exception), are read
-    // in feedback-repository.ts alone. Any other code reading who is a
+    // feedback's recipients, a plain query on users outside the product-admin
+    // context, are read in feedback-repository.ts alone. Any other code reading who is a
     // product admin across organizations would be a path past the audited
     // one.
     expect(namers.sort()).toEqual([
@@ -144,7 +144,7 @@ describe("the database context's boundaries", () => {
     ]);
   });
 
-  it("calls withOrganizationContext only from the public download's files, modules/quick-deploy/ (D17c-2 Preflight ruling 9), and the public logo read (D23-2 Preflight ruling 7)", () => {
+  it("calls withOrganizationContext only from the public download's files, modules/quick-deploy/, and the public logo read", () => {
     const callers = productionSources().filter(
       (path) => path !== "apps/api/src/database/context.ts" && /\bwithOrganizationContext\b/.test(read(path)),
     );
@@ -169,14 +169,14 @@ describe("the database context's boundaries", () => {
     ]);
   });
 
-  it("calls createAuthContext only from authenticate.ts (D5 decision 4)", () => {
+  it("calls createAuthContext only from authenticate.ts", () => {
     const callers = productionSources().filter(
       (path) => path !== "apps/api/src/database/context.ts" && /\bcreateAuthContext\s*\(/.test(read(path)),
     );
     expect(callers).toEqual(["apps/api/src/modules/sessions/authenticate.ts"]);
   });
 
-  it("names createApiTokenContext only in modules/public-api/authenticate-api-token.ts (D22 decision 37, Ruling 100)", () => {
+  it("names createApiTokenContext only in modules/public-api/authenticate-api-token.ts", () => {
     const callers = productionSources().filter(
       (path) => path !== "apps/api/src/database/context.ts" && /\bcreateApiTokenContext\b/.test(read(path)),
     );
@@ -187,7 +187,7 @@ describe("the database context's boundaries", () => {
     expect(read("apps/api/src/database/context.ts")).toMatch(/\bexport function createApiTokenContext\b/);
   });
 
-  it("names createApiTokenStore only in modules/public-api/authenticate-api-token.ts, which defines it, and routes.ts (D22 Ruling 100)", () => {
+  it("names createApiTokenStore only in modules/public-api/authenticate-api-token.ts, which defines it, and routes.ts", () => {
     const callers = productionSources().filter((path) => /\bcreateApiTokenStore\b/.test(read(path)));
     // Named at all, called or imported. Its findLive is the definer lookup
     // by a hash (the pin below): another module holding the store would
@@ -198,7 +198,7 @@ describe("the database context's boundaries", () => {
     ]);
   });
 
-  it("calls findLiveApiTokenByHash only from modules/public-api/authenticate-api-token.ts (D22 decision 37, Preflight ruling 9)", () => {
+  it("calls findLiveApiTokenByHash only from modules/public-api/authenticate-api-token.ts", () => {
     const callers = productionSources().filter(
       (path) =>
         path !== "apps/api/src/modules/service-accounts/repositories/api-token-repository.ts" &&
@@ -212,7 +212,7 @@ describe("the database context's boundaries", () => {
     expect(callers).toEqual(["apps/api/src/modules/public-api/authenticate-api-token.ts"]);
   });
 
-  it("names claimPublicSurface only in route-guard.ts, which defines it, plugin.ts and open-routes.ts (D25 Ruling 164)", () => {
+  it("names claimPublicSurface only in route-guard.ts, which defines it, plugin.ts and open-routes.ts", () => {
     const callers = productionSources().filter((path) => /\bclaimPublicSurface\b/.test(read(path)));
     // Named at all, called or imported: a plugin that claimed a surface
     // would have its routes verified for /api/public/v1 with no check.
@@ -223,7 +223,7 @@ describe("the database context's boundaries", () => {
     ]);
   });
 
-  it("calls setNotFoundHandler only in errors.ts (the root's) and public-api/plugin.ts, and names publicNotFoundOptions only there and in route-guard.ts (D25 Ruling 166)", () => {
+  it("calls setNotFoundHandler only in errors.ts (the root's) and public-api/plugin.ts, and names publicNotFoundOptions only there and in route-guard.ts", () => {
     // Another not-found handler under /api/public/v1 would answer with no token check; the verification refuses any but
     // the plugin's own at request time, and this keeps a second one from being written at all.
     // In code: route-guard.ts' comments name it, to say who may call it.
@@ -234,7 +234,7 @@ describe("the database context's boundaries", () => {
     expect(namers.sort()).toEqual(["apps/api/src/modules/public-api/plugin.ts", "apps/api/src/modules/public-api/route-guard.ts"]);
   });
 
-  it("keeps route-guard.ts' surface and verification symbols its own: unique symbols, never exported (D25 Ruling 164)", () => {
+  it("keeps route-guard.ts' surface and verification symbols its own: unique symbols, never exported", () => {
     const guard = read("apps/api/src/modules/public-api/route-guard.ts");
     expect(guard).toMatch(/^const SURFACE = Symbol\("telflo\.publicApiSurface"\);$/m);
     expect(guard).toMatch(/^const VERIFIED = Symbol\("telflo\.publicApiVerifiedRoute"\);$/m);
@@ -255,7 +255,7 @@ describe("the database context's boundaries", () => {
     expect(others).toEqual([]);
   });
 
-  it("names find_live_api_token_by_hash only in api-token-repository.ts and the migrations (D22 Preflight ruling 9)", () => {
+  it("names find_live_api_token_by_hash only in api-token-repository.ts and the migrations", () => {
     const repository = "apps/api/src/modules/service-accounts/repositories/api-token-repository.ts";
     const offenders = productionSources().filter(
       (path) =>
