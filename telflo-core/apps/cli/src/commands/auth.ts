@@ -1,5 +1,5 @@
 /*
- * `telflo login`, `whoami` and `logout` (D27 decisions 8, 14, 15 and 19).
+ * `telflo login`, `whoami` and `logout`.
  *
  * The server is `--server`, else `TELFLO_SERVER`, else the stored login's;
  * with none, login asks for its URL at a terminal (the origin rules of
@@ -71,11 +71,11 @@ async function loginServer(flag: string | undefined, env: NodeJS.ProcessEnv): Pr
   return serverOrigin(await ask(SERVER_PROMPT));
 }
 
-/** The token: stdin's line when stdin isn't a terminal, else the terminal's (decision 19). */
+/** The token: stdin's line when stdin isn't a terminal, else the terminal's. */
 async function readToken(server: string, browser: boolean): Promise<string> {
   if (!stdinIsTerminal()) return readLine();
-  // The browser flow (decision 20): the `127.0.0.1` listener and the browser
-  // opened on `<server>/cli-auth#…`, racing a hidden prompt (login-browser.ts).
+  // The browser flow: the `127.0.0.1` listener and the browser opened on
+  // `<server>/cli-auth#…`, racing a hidden prompt (login-browser.ts).
   if (browser) return browserLoginToken(server);
   return readHidden(PASTE_PROMPT(server));
 }
@@ -104,7 +104,7 @@ async function pickAtTerminal(items: readonly PublicOrganization[]): Promise<Pub
   }
 }
 
-/** The organization the login acts in (decision 15). */
+/** The organization the login acts in. */
 async function chooseOrganization(
   client: ApiClient,
   who: WhoAmIResponse,
@@ -128,7 +128,7 @@ async function chooseOrganization(
   return pickAtTerminal(items);
 }
 
-/** `telflo login` (decision 19). */
+/** `telflo login`. */
 export async function login(options: LoginOptions, env: NodeJS.ProcessEnv = process.env): Promise<void> {
   // The organization's id is checked before anything is asked.
   const requested = options.org === undefined ? organizationFromEnvironment(env) : requireId(options.org, "organization (--org)");
@@ -177,7 +177,7 @@ export async function whoami(env: NodeJS.ProcessEnv = process.env): Promise<void
   );
 }
 
-/** `telflo logout`: the file removed; a token can't be revoked from the terminal (decision 14). */
+/** `telflo logout`: the file removed; a token can't be revoked from the terminal. */
 export function logout(env: NodeJS.ProcessEnv = process.env): void {
   const removed = deleteCredentials(env);
   const stillSet = env.TELFLO_TOKEN !== undefined && env.TELFLO_TOKEN !== "";

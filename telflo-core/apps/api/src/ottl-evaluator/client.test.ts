@@ -21,18 +21,17 @@ import {
   type ValidateRuleResult,
 } from "./client.js";
 
-// The platform's client for the OTTL evaluator (D15a decisions 2, 3 and 6,
-// detail 27; plan Preflight rulings 5, 9, 11 and 14; Ruling 33), against the
-// OpenAPI-checked fake, and against a hand-made fetch for what the fake
-// can't be pushed to answer.
+// The platform's client for the OTTL evaluator, against the OpenAPI-checked
+// fake, and against a hand-made fetch for what the fake can't be pushed to
+// answer.
 //
 // The first block is the client's 17 cases. What a rule's shape allows is
 // the evaluator's to check, for every rule, at Save and at a run alike:
 // those checks are services/ottl-evaluator's Go tests
 // (internal/rules/check_test.go; the records' unwrap in output_test.go), and
 // their cases here test the client's half: it sends the rule as it is, and
-// passes the evaluator's answer for that rule through. D25 Task 3 added
-// lint's block.
+// passes the evaluator's answer for that rule through. The last block is
+// lint's.
 
 let fake: FakeOttlEvaluator;
 let client: OttlEvaluatorClient;
@@ -143,7 +142,7 @@ function evaluated(result: EvaluateRulesResult) {
   return result.results;
 }
 
-describe("the client's cases (Preflight ruling 14)", () => {
+describe("the client's cases", () => {
   it("test_maps_pass_and_fail_with_misses: sends the signal and every rule by id, maps a pass and a failure's record misses", async () => {
     const rules = [ottlRule(0), ottlRule(1, { condition: `severity_text == "${fakeOttlEvaluatorMarker("fail")}"` })];
 
@@ -189,7 +188,7 @@ describe("the client's cases (Preflight ruling 14)", () => {
     expect(results[2]).toEqual(passedResult(ruleId(2)));
   });
 
-  it("test_unreachable_service_fails_sent_rules_only: nothing listening is unavailable for the whole request (the run ends Error, decision 3)", async () => {
+  it("test_unreachable_service_fails_sent_rules_only: nothing listening is unavailable for the whole request (the run ends Error)", async () => {
     const unreachable = createOttlEvaluatorClient({ url: await closedUrl(), secret: "s".repeat(32) });
 
     expect(await unreachable.evaluate(evaluation([ottlRule(0), textRule(1, "contains_text", "x")]))).toEqual({
@@ -333,7 +332,7 @@ describe("the client's cases (Preflight ruling 14)", () => {
     });
   });
 
-  it("test_distinct_condition_is_optional: no condition, or an empty one, is left out, never sent as \"\" (Ruling 33)", async () => {
+  it("test_distinct_condition_is_optional: no condition, or an empty one, is left out, never sent as \"\"", async () => {
     const distinct = { quantifier: "distinct", expression: 'attributes["route"]', count: { operator: "lte", value: 5 } };
     const absent = ottlRule(0, distinct);
     delete (absent.ottl as Record<string, unknown>).condition;
@@ -494,7 +493,7 @@ describe("evaluate", () => {
     expect(results).toEqual([passedResult(ruleId(0))]);
   });
 
-  it("busy (503 evaluator_busy) is its own answer, not logged, so the dispatcher may try once more (Preflight ruling 11)", async () => {
+  it("busy (503 evaluator_busy) is its own answer, not logged, so the dispatcher may try once more", async () => {
     const log = recordingLog();
     const logged = createOttlEvaluatorClient({ url: fake.url, secret: fake.secret, log });
     fake.nextFault("evaluator_busy");
@@ -626,7 +625,7 @@ describe("evaluate", () => {
     expect(await pending).toEqual({ kind: "unavailable", reason: "aborted" });
   });
 
-  describe("an answer is read up to 6 MiB (Ruling 33's note)", () => {
+  describe("an answer is read up to 6 MiB", () => {
     const body = JSON.stringify({ ottlVersion: "v0.162.0", results: [passedResult(ruleId(0))] });
 
     it("is 6 MiB by default", () => {
@@ -731,7 +730,7 @@ describe("evaluate", () => {
   });
 });
 
-describe("validate (decision 6; Ruling 33)", () => {
+describe("validate", () => {
   const valid = (result: ValidateRuleResult) => result;
 
   it("a rule the evaluator takes is valid; the request is the contract's, with no id", async () => {
@@ -824,7 +823,7 @@ describe("validate (decision 6; Ruling 33)", () => {
   });
 });
 
-describe("lint (D25 Task 3)", () => {
+describe("lint", () => {
   it("sends the contract's request, an empty list left out, and answers each text's verdict in order, by kind and index", async () => {
     const result = await client.lint({
       context: "datapoint",
@@ -906,7 +905,7 @@ describe("lint (D25 Task 3)", () => {
     expect(log.lines[0]!.details).toEqual({ operation: "lint", reason: "server_error", status: 500, code: "internal_error" });
   });
 
-  it("reads an answer up to 6 MiB; one byte over is oversized_reply, logged (Ruling 168)", async () => {
+  it("reads an answer up to 6 MiB; one byte over is oversized_reply, logged", async () => {
     expect(MAX_OTTL_EVALUATOR_LINT_REPLY_BYTES).toBe(6 * 1024 * 1024);
     const answer = JSON.stringify({ ottlVersion: "v0.162.0", items: [{ kind: "condition", index: 0, valid: true }] });
     // JSON takes trailing whitespace: the same answer padded to the cap, then one byte past it.

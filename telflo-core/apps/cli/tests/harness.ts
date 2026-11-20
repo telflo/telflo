@@ -1,11 +1,11 @@
 /*
- * The CLI's integration harness (D27 decision 33, Preflight rulings 4 and
- * 22): the real API (`buildServer`) on the agent's test database, served on
- * `127.0.0.1:<free port>`, for the CLI's client to call through the real
- * `fetch`. Its opamp-server is the file's fake; the validator, the tester
- * and the file store are UNCALLED unless the file passes its own fakes
- * (`overrides`), as the api's own integration tests do. Every log line at
- * info and above is kept, so a test can show that none holds a token.
+ * The CLI's integration harness: the real API (`buildServer`) on the
+ * agent's test database, served on `127.0.0.1:<free port>`, for the CLI's
+ * client to call through the real `fetch`. Its opamp-server is the file's
+ * fake; the validator, the tester and the file store are UNCALLED unless
+ * the file passes its own fakes (`overrides`), as the api's own
+ * integration tests do. Every log line at info and above is kept, so a
+ * test can show that none holds a token.
  *
  * Test support only: never built or packed. Tokens are made at run time by
  * the db's own helpers and never printed (boolean canaries only).

@@ -1,8 +1,7 @@
 // @vitest-environment node
-// D33-1 decision 13, Preflight ruling 15: the web server never writes a
-// request's URL or path. React Router hands every server error to the
-// entry's handleError. Captured output is searched for a unique marker in
-// the request's URL (boolean canaries).
+// The web server never writes a request's URL or path. React Router hands
+// every server error to the entry's handleError. Captured output is
+// searched for a unique marker in the request's URL (boolean canaries).
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { UNSAFE_ErrorResponseImpl } from "react-router";
 import type { EntryContext } from "react-router";

@@ -1,9 +1,9 @@
 /*
- * `telflo flows list|get|pull` (D27 decision 26): Telflo's prebuilt collector configurations, on routes
- * 24-25 (`authorName`, `distribution`, `sourceUrl`). Every server string in
- * a human line goes through `terminalText` (Ruling 237), line by line for
- * the description and the YAML `get` shows; `pull` writes the YAML byte
- * for byte (data, not a message).
+ * `telflo flows list|get|pull`: Telflo's prebuilt collector configurations, on
+ * routes 24-25 (`authorName`, `distribution`, `sourceUrl`). Every server
+ * string in a human line goes through `terminalText`, line by line for the
+ * description and the YAML `get` shows; `pull` writes the YAML byte for byte
+ * (data, not a message).
  */
 
 import type { Command } from "commander";
@@ -14,7 +14,7 @@ import { describePin } from "../pin.js";
 import { writeOutputFile } from "./config.js";
 
 export const NO_FLOWS_MESSAGE = "No flows.";
-/** A text of several lines, each through `terminalText`, its newlines and tabs kept (Ruling 239: YAML and Markdown indent with them). */
+/** A text of several lines, each through `terminalText`, its newlines and tabs kept (YAML and Markdown indent with them). */
 function terminalLines(text: string): string {
   return text
     .split("\n")

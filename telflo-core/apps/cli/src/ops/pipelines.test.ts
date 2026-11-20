@@ -6,7 +6,7 @@ import { ApiClient } from "../api.js";
 import { EXIT } from "../output.js";
 import { latestVersionNumber, listValidationPipelines, replaceApiOwnedRules } from "./pipelines.js";
 
-/* A version's validation pipelines: route 13's list, route 14's replace (D27 decision 27). */
+/* A version's validation pipelines: route 13's list, route 14's replace. */
 
 const SERVER = "https://telflo.example";
 const CONFIGURATION = "0b7e8a9c-1d2e-4f30-8a4b-5c6d7e8f9a0b";

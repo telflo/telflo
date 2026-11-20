@@ -9,11 +9,10 @@ import { NO_SERVER_MESSAGE } from "../server.js";
 import { CONFIG_NEEDS_LOGIN_MESSAGE, SIGN_IN_TO_VALIDATE_MESSAGE, VALIDATION_FAILED_MESSAGE } from "./validate.js";
 
 /*
- * telflo validate (D27 decision 26) against a stand-in API: logged in on
- * route 15, logged out on the anonymous route (no token, no organization),
- * --config's pin, and the exit codes (0, 4, 2 for a 400 about the request,
- * 1 for a 503). Tokens are made at run time and checked with boolean
- * canaries only.
+ * telflo validate against a stand-in API: logged in on route 15, logged
+ * out on the anonymous route (no token, no organization), --config's pin,
+ * and the exit codes (0, 4, 2 for a 400 about the request, 1 for a 503).
+ * Tokens are made at run time and checked with boolean canaries only.
  */
 
 const SERVER = "https://telflo.example";
@@ -143,7 +142,7 @@ describe("telflo validate, logged in (route 15)", () => {
     expect(html.stderr).toBe("error: Unexpected reply (HTTP 400).\n");
   });
 
-  it("keeps a logged-in 404 as the API's refusal, never the anonymous route's sign-in words (D36-1 Preflight ruling 8)", async () => {
+  it("keeps a logged-in 404 as the API's refusal, never the anonymous route's sign-in words", async () => {
     store();
     routes({ "POST /validate": { status: 404, json: envelope("not_found", "No route for POST /api/public/v1/validate") } });
     const result = await cli(["--json", "validate", file]);
@@ -152,7 +151,7 @@ describe("telflo validate, logged in (route 15)", () => {
     expect(JSON.parse(result.stderr)).toMatchObject({ error: { code: "not_found", status: 404 } });
   });
 
-  it("keeps a 401 as exit 3 with Run telflo login. (Ruling 243)", async () => {
+  it("keeps a 401 as exit 3 with Run telflo login.", async () => {
     store();
     routes({ "POST /validate": { status: 401, json: envelope("invalid_api_token", "Missing or invalid API token") } });
     const result = await cli(["validate", file]);
@@ -186,7 +185,7 @@ describe("telflo validate, logged in (route 15)", () => {
   });
 });
 
-describe("server strings in human lines (Ruling 237)", () => {
+describe("server strings in human lines", () => {
   it("strips control characters from the verdict's version and errors, and from --config's pin", async () => {
     store();
     const ESCAPE = "\u001b[2J\u0007";
@@ -231,7 +230,7 @@ describe("telflo validate, not logged in (the anonymous route)", () => {
     expect(fake.calls[0]?.url.origin).toBe("http://127.0.0.1:4100");
   });
 
-  it("refuses --config without a login (exit 3), before any request; a usage error first is exit 2 (Ruling 249)", async () => {
+  it("refuses --config without a login (exit 3), before any request; a usage error first is exit 2", async () => {
     routes({});
     const result = await cli(["validate", file, "--config", ID]);
     expect(result.code).toBe(3);
@@ -247,7 +246,7 @@ describe("telflo validate, not logged in (the anonymous route)", () => {
     expect(fake.calls).toHaveLength(0);
   });
 
-  it("says to log in (exit 3) when the server doesn't validate without one: its anonymous route answers 404 (D36-1 decision 31, Preflight ruling 8)", async () => {
+  it("says to log in (exit 3) when the server doesn't validate without one: its anonymous route answers 404", async () => {
     vi.stubEnv("TELFLO_SERVER", "https://telflo.example.com");
     routes({ "POST /validate/anonymous": { status: 404, json: envelope("not_found", "No route for POST /api/public/v1/validate/anonymous") } });
     const result = await cli(["validate", file]);

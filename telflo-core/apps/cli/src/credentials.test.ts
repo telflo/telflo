@@ -20,9 +20,9 @@ import {
 import { ExitError } from "./output.js";
 
 /*
- * The credentials file (D27 decision 14, Rulings 232): its folder, its
- * modes, its refusals. Every file is in a temporary folder; the token is
- * made at run time and checked with boolean canaries only.
+ * The credentials file: its folder, its modes, its refusals. Every file is in
+ * a temporary folder; the token is made at run time and checked with boolean
+ * canaries only.
  */
 
 const posix = process.platform !== "win32";
@@ -63,7 +63,7 @@ afterEach(() => {
   rmSync(root, { recursive: true, force: true });
 });
 
-describe("the folder (decision 9, Ruling 232)", () => {
+describe("the folder", () => {
   it("is TELFLO_CLI_CONFIG_DIR, else XDG_CONFIG_HOME/telflo, else ~/.config/telflo", () => {
     expect(configDir({ TELFLO_CLI_CONFIG_DIR: "/a", XDG_CONFIG_HOME: "/b" })).toBe("/a");
     expect(configDir({ TELFLO_CLI_CONFIG_DIR: "", XDG_CONFIG_HOME: "/b" })).toBe(join("/b", "telflo"));
@@ -81,7 +81,7 @@ describe("the folder (decision 9, Ruling 232)", () => {
   });
 });
 
-describe("saving (decision 14)", () => {
+describe("saving", () => {
   it("round-trips the file", () => {
     const stored = credentials();
     saveCredentials(stored, env);
@@ -124,7 +124,7 @@ describe("saving (decision 14)", () => {
   });
 });
 
-describe("loading (decision 14)", () => {
+describe("loading", () => {
   it("answers null when there is no file", () => {
     expect(loadCredentials(env)).toBeNull();
     expect(storedServer(env)).toBeUndefined();
@@ -236,7 +236,7 @@ describe("loading (decision 14)", () => {
   });
 });
 
-describe("deleting (decision 14)", () => {
+describe("deleting", () => {
   it("removes the file and says whether there was one", () => {
     saveCredentials(credentials(), env);
     expect(deleteCredentials(env)).toBe(true);

@@ -28,19 +28,19 @@ import {
 } from "./organization-scope.js";
 
 /*
- * The resource registry (D5 decision 5; spec §3.7 item 3): every application
- * table, declared once as `organization`, `global` or `system`.
- * cross-tenant.integration.test.ts generates organization B's attempts on
- * organization A's rows from it, so a new organization resource gets its
- * isolation tests by being registered, and fails the suite by not being.
+ * The resource registry: every application table, declared once as
+ * `organization`, `global` or `system`. cross-tenant.integration.test.ts
+ * generates organization B's attempts on organization A's rows from it,
+ * so a new organization resource gets its isolation tests by being
+ * registered, and fails the suite by not being.
  * docs/conventions/testing.md says how to register one.
  */
 
 /**
  * Whom an entry's operations act for: the organization the repository is
  * scoped to, and the user in it. The configuration repositories show that
- * user's drafts and every published configuration (D11b decision 1); the
- * others are scoped by the organization alone.
+ * user's drafts and every published configuration; the others are scoped
+ * by the organization alone.
  */
 export type OrganizationResourceContext = Pick<AuthContext, "organizationId" | "userId">;
 
@@ -108,13 +108,12 @@ type OrganizationResourceBase<Table extends OrganizationScopedTable> = Organizat
   /** The column the repository addresses a row by, as `seed` returns it and the operations take it. */
   keyColumn: keyof Database[Table] & string;
   /**
-   * Inserts one row in the organization as the owner, with whatever it
-   * needs, and returns its key. The organization is a live group
-   * organization with a member of its own, `userId`, as whom the suite acts
-   * in A's context; anyone else the row needs, the seed creates. The row is
-   * one that member can see: a configuration's is published (D11b Preflight
-   * ruling 7), since another member's draft is invisible to them by design,
-   * and a test file is `userId`'s own (D14a decision 7).
+   * Inserts one row in the organization as the owner, with whatever it needs,
+   * and returns its key. The organization is a live group organization with a
+   * member of its own, `userId`, as whom the suite acts in A's context; anyone
+   * else the row needs, the seed creates. The row is one that member can see:
+   * a configuration's is published, since another member's draft is invisible
+   * to them by design, and a test file is `userId`'s own.
    */
   seed(ownerDb: Kysely<Database>, organizationId: string, userId: string): Promise<string>;
 };
@@ -146,18 +145,17 @@ export interface GlobalResource {
   reason: string;
   /**
    * Set when the table has row-level security of another kind than an
-   * organization's (D25 Preflight ruling 2): a person's own rows, on the
-   * context's user (personal_api_tokens). Absent: none.
+   * organization's: a person's own rows, on the context's user
+   * (personal_api_tokens). Absent: none.
    */
   hasRowLevelSecurity?: true;
 }
 
 /**
- * A table only the product's own administration reaches (D29 decision 21):
- * no organization owns it and it has no row-level security; the API's role
- * holds no SELECT on it, and reads it only through the product-admin
- * functions, in the product admin's database context, from the
- * SystemRepository.
+ * A table only the product's own administration reaches: no organization
+ * owns it and it has no row-level security; the API's role holds no SELECT
+ * on it, and reads it only through the product-admin functions, in the
+ * product admin's database context, from the SystemRepository.
  */
 export interface SystemResource {
   kind: "system";
@@ -334,8 +332,8 @@ const quickDeployLinks: OrganizationResource<"quick_deploy_links"> = {
 };
 
 /**
- * A service account in `organizationId`, as the owner, in the shape D22's
- * create writes (decision 27), in one transaction: a user of kind service
+ * A service account in `organizationId`, as the owner, in the shape the
+ * service-account create writes, in one transaction: a user of kind service
  * at the reserved domain, verified and password-less; its service_accounts
  * row, unless `withRow` is false; and its one contributor membership, which
  * the membership invariant needs at commit. Its id is `userId` when given.
@@ -424,8 +422,8 @@ const serviceAccounts: OrganizationResource<"service_accounts"> = {
 /**
  * The service account every seeded token is made on: the repository reaches
  * an account's tokens only (it has no organization-wide list), so the seed
- * makes A's account with this id, and B's context names it as A's does
- * (D22 Preflight ruling 17). A fresh test database holds no such user.
+ * makes A's account with this id, and B's context names it as A's does.
+ * A fresh test database holds no such user.
  */
 const REGISTRY_SERVICE_ACCOUNT_ID = "0192a6b0-0000-7000-8000-0000000005ac";
 
@@ -445,9 +443,9 @@ function liveApiToken(organizationId: string, serviceAccountUserId: string): Ins
 /*
  * The operations reach the registry account's tokens not revoked, since
  * those are what the repository lists, reads and revokes: `update` is "Last
- * used", the token check's one write (D22 decision 38), which the check
- * makes in the token's own context; `remove` revokes, the repository's soft
- * removal. An admin never changes a token otherwise.
+ * used", the token check's one write, which the check makes in the token's
+ * own context; `remove` revokes, the repository's soft removal. An admin
+ * never changes a token otherwise.
  */
 const apiTokens: OrganizationResource<"api_tokens"> = {
   kind: "organization",
@@ -484,10 +482,9 @@ const apiTokens: OrganizationResource<"api_tokens"> = {
 
 /**
  * A configuration's columns, created by `createdByUserId` in
- * `organizationId`, built for the catalogue's default distribution (D13a),
- * read as the API reads it. The table has no default for the timestamps
- * (the API writes them from its clock) or the distribution, so they are
- * written here.
+ * `organizationId`, built for the catalogue's default distribution, read as
+ * the API reads it. The table has no default for the timestamps (the API
+ * writes them from its clock) or the distribution, so they are written here.
  */
 async function configurationRow(
   ownerDb: Kysely<Database>,
@@ -511,7 +508,7 @@ async function configurationRow(
  * those are what the repository lists, reads and changes: `update` renames
  * and `remove` deletes softly. `list` is the first page at its largest. The
  * seed is another member's configuration with a published version 1, which
- * A's own member can see (D11b decision 1, Preflight ruling 7).
+ * A's own member can see.
  */
 const configurations: OrganizationResource<"configurations"> = {
   kind: "organization",
@@ -542,14 +539,14 @@ const configurations: OrganizationResource<"configurations"> = {
 };
 
 /**
- * The configuration each seeded version belongs to, by the version's id.
- * The suite hands the operations only the version's key, but the
- * repository addresses a version through its configuration. For B's
- * attempt to test the repository's own filter, the call must carry A's real
- * configuration id: looked up from the version in B's context, it wouldn't
- * be found, and the repository would be asked about nothing (D8 Preflight
- * ruling 9). So `seed` records the pair, and `read` and `update` pass it.
- * Module-level: the entry's `seed` and `operations` share nothing else.
+ * The configuration each seeded version belongs to, by the version's id. The
+ * suite hands the operations only the version's key, but the repository
+ * addresses a version through its configuration. For B's attempt to test the
+ * repository's own filter, the call must carry A's real configuration id:
+ * looked up from the version in B's context, it wouldn't be found, and the
+ * repository would be asked about nothing. So `seed` records the pair, and
+ * `read` and `update` pass it. Module-level: the entry's `seed` and
+ * `operations` share nothing else.
  */
 const configurationOfSeededVersion = new Map<string, string>();
 
@@ -561,10 +558,10 @@ function seededConfigurationOf(versionId: string): string {
 }
 
 /**
- * A configuration's version, with empty YAML, as D8's create writes a
- * version 1: a draft, every publish column null, pinned to the catalogue's
- * default version of its default distribution (D13a), which every seeded
- * configuration is built for.
+ * A configuration's version, with empty YAML, as the configuration's
+ * create writes a version 1: a draft, every publish column null, pinned to
+ * the catalogue's default version of its default distribution, which every
+ * seeded configuration is built for.
  */
 async function draftVersionRow(
   ownerDb: Kysely<Database>,
@@ -592,7 +589,7 @@ async function draftVersionRow(
  * A configuration in `organizationId`, created by a new member of it, with
  * its version 1 published by them, as the owner (the API's role can't insert
  * a published version, migration 021): a configuration every member of the
- * organization can see (D11b decision 1).
+ * organization can see.
  */
 async function seedPublishedConfiguration(
   ownerDb: Kysely<Database>,
@@ -620,8 +617,8 @@ async function seedPublishedConfiguration(
 
 /**
  * A published configuration's draft version 2, as the owner: a version every
- * member can see and save (D11b decisions 1 and 2), unlike the published
- * version 1, which can't be changed.
+ * member can see and save, unlike the published version 1, which can't be
+ * changed.
  */
 async function seedDraftOfPublished(
   ownerDb: Kysely<Database>,
@@ -637,15 +634,14 @@ async function seedDraftOfPublished(
 }
 
 /*
- * The first child table (D8 decision 13). A version is reached only through
- * its live configuration, so `read` and `update` name A's configuration
- * with A's version (see configurationOfSeededVersion). `list` goes through
- * the scope itself, as the tenant row's does: the repository has no list,
- * and every version id the context can select shows a lost filter every
- * time. `update` saves the text "changed". There is no remove: a version is
- * deleted with its configuration (decision 3). The seed, the key, is the
- * draft version 2 of another member's published configuration (D11b
- * Preflight ruling 7): A's member can see and save it.
+ * The first child table. A version is reached only through its live
+ * configuration, so `read` and `update` name A's configuration with A's
+ * version (see configurationOfSeededVersion). `list` goes through the scope
+ * itself, as the tenant row's does: the repository has no list, and every
+ * version id the context can select shows a lost filter every time. `update`
+ * saves the text "changed". There is no remove: a version is deleted with its
+ * configuration. The seed, the key, is the draft version 2 of another member's
+ * published configuration: A's member can see and save it.
  */
 const configurationVersions: OrganizationResource<"configuration_versions"> = {
   kind: "organization",
@@ -662,7 +658,7 @@ const configurationVersions: OrganizationResource<"configuration_versions"> = {
     const { configurationId, createdByUserId } = await seedPublishedConfiguration(ownerDb, organizationId);
     return draftVersionRow(ownerDb, organizationId, configurationId, createdByUserId, 2);
   },
-  removeUnsupported: "A version is deleted with its configuration; D8 has no delete of its own (spec decision 3).",
+  removeUnsupported: "A version is deleted with its configuration; it has no delete of its own.",
   operations(transaction, context) {
     const versions = createConfigurationVersionRepository(transaction, context);
     const scope = createOrganizationScope(transaction, context);
@@ -693,8 +689,7 @@ interface SeededSelection {
  * The person, configuration and version of each seeded selection, by the
  * selection's id: the repository addresses a selection by person and
  * configuration, never by id, so `read` and `update` look A's real ids up
- * here, as configurationOfSeededVersion does for a version (D8 Preflight
- * ruling 9; D10 Preflight ruling 1).
+ * here, as configurationOfSeededVersion does for a version.
  */
 const seededSelections = new Map<string, SeededSelection>();
 
@@ -708,7 +703,7 @@ function seededSelectionOf(selectionId: string): SeededSelection {
 /**
  * A member of `organizationId`, a configuration they created and published
  * (version 1), and its draft version 2, which the selection names, as the
- * owner (D11b Preflight ruling 7).
+ * owner.
  */
 async function seedSelectableVersion(ownerDb: Kysely<Database>, organizationId: string): Promise<SeededSelection> {
   const { configurationId, createdByUserId, versionId } = await seedDraftOfPublished(ownerDb, organizationId);
@@ -731,15 +726,15 @@ function selectionRow(
 }
 
 /*
- * A table with a composite key into a child table (D10 decision 3): a
- * selection names a configuration and one of its versions. The repository
- * addresses it by person and configuration, so `read` and `update` pass
- * A's real ids (see seededSelections). `read` is `find`; `update` records
- * the seeded version again at a fresh time, so A's row changes visibly
- * (it was seeded in 2000), and in B's context the read before the upsert
- * finds nothing and writes nothing. `list` goes through the scope itself:
- * the repository has no list. There is no remove: a selection goes with
- * its configuration, its version or its person.
+ * A table with a composite key into a child table: a selection names a
+ * configuration and one of its versions. The repository addresses it by
+ * person and configuration, so `read` and `update` pass A's real ids (see
+ * seededSelections). `read` is `find`; `update` records the seeded
+ * version again at a fresh time, so A's row changes visibly (it was
+ * seeded in 2000), and in B's context the read before the upsert finds
+ * nothing and writes nothing. `list` goes through the scope itself: the
+ * repository has no list. There is no remove: a selection goes with its
+ * configuration, its version or its person.
  */
 const configurationVersionSelections: OrganizationResource<"configuration_version_selections"> = {
   kind: "organization",
@@ -760,7 +755,7 @@ const configurationVersionSelections: OrganizationResource<"configuration_versio
   async rowToInsert(ownerDb, organizationId) {
     return selectionRow(organizationId, await seedSelectableVersion(ownerDb, organizationId), new Date());
   },
-  removeUnsupported: "A selection goes with its configuration or its person (spec decision 3).",
+  removeUnsupported: "A selection goes with its configuration or its person.",
   operations(transaction, context) {
     const selections = createConfigurationVersionSelectionRepository(transaction, context);
     const scope = createOrganizationScope(transaction, context);
@@ -793,12 +788,11 @@ function testInputFileRow(organizationId: string, ownerUserId: string): Insertab
 }
 
 /*
- * A person's test file (D14a decision 7): visible to its owner alone, so
- * the seed is the file of A's own member (`userId`), whom the suite acts
- * as. `list`, `read` and `remove` are the repository's own (listOwn,
- * findOwn, removeOwn), narrowed to the context's user, so a lost
- * organization filter shows A's row every time. A file never changes: no
- * update.
+ * A person's test file: visible to its owner alone, so the seed is the file
+ * of A's own member (`userId`), whom the suite acts as. `list`, `read` and
+ * `remove` are the repository's own (listOwn, findOwn, removeOwn), narrowed
+ * to the context's user, so a lost organization filter shows A's row every
+ * time. A file never changes: no update.
  */
 const testInputFiles: OrganizationResource<"test_input_files"> = {
   kind: "organization",
@@ -817,7 +811,7 @@ const testInputFiles: OrganizationResource<"test_input_files"> = {
   async rowToInsert(ownerDb, organizationId) {
     return testInputFileRow(organizationId, await seedMember(ownerDb, organizationId));
   },
-  updateUnsupported: "A test file never changes: it is uploaded, read and deleted (D14a decision 16).",
+  updateUnsupported: "A test file never changes: it is uploaded, read and deleted.",
   operations(transaction, context) {
     const files = createTestInputFileRepository(transaction, context);
     return {
@@ -861,12 +855,11 @@ async function testRunRow(
 }
 
 /*
- * A test run (D14a decisions 8 and 27): the seed is a run A's own member
- * (`userId`) queued on another member's published configuration, which
- * every member can see (D11b Preflight ruling 7). A run changes only
- * through the dispatcher's functions (D14a Preflight ruling 8) and is never
- * deleted (decision 9), so there is neither an update nor a remove. `read`
- * is the repository's `find`; `list` goes through the scope itself, as the
+ * A test run: the seed is a run A's own member (`userId`) queued on
+ * another member's published configuration, which every member can see. A
+ * run changes only through the dispatcher's functions and is never
+ * deleted, so there is neither an update nor a remove. `read` is the
+ * repository's `find`; `list` goes through the scope itself, as the
  * versions' does: the repository lists one version's runs, and every run
  * id the context can select shows a lost filter every time.
  */
@@ -896,8 +889,8 @@ const testRuns: OrganizationResource<"test_runs"> = {
     );
   },
   updateUnsupported:
-    "A run changes only through the dispatcher's functions (D14a Preflight ruling 8); the API's role updates no row.",
-  removeUnsupported: "A run is never deleted (D14a decision 9); it goes only with its organization.",
+    "A run changes only through the dispatcher's functions; the API's role updates no row.",
+  removeUnsupported: "A run is never deleted; it goes only with its organization.",
   operations(transaction, context) {
     const runs = createTestRunRepository(transaction, context);
     const scope = createOrganizationScope(transaction, context);
@@ -946,9 +939,9 @@ function testDefinitionInputRow(
 }
 
 /**
- * Another member's published configuration in `organizationId`, a suite on
- * its version 1 and an unused input, all theirs, as the owner (D11b
- * Preflight ruling 7): what every member of the organization can see.
+ * Another member's published configuration in `organizationId`, a suite on its
+ * version 1 and an unused input, all theirs, as the owner: what every member
+ * of the organization can see.
  */
 async function seedSuiteAndInput(
   ownerDb: Kysely<Database>,
@@ -998,13 +991,12 @@ function testDefinitionRow(
 }
 
 /*
- * A configuration version's test suite (D14b decision 8): the seed is
- * another member's suite on their published configuration, which every
- * member can see (D11b Preflight ruling 7). `read`, `update` (a rename)
- * and `remove` (the suite's definitions go with it) are its repository's
- * (D14b Task 3); `list` goes through the scope itself, as the runs' does:
- * the repository lists one version's suites, and every suite id the
- * context can select shows a lost filter every time.
+ * A configuration version's test suite: the seed is another member's
+ * suite on their published configuration, which every member can see.
+ * `read`, `update` (a rename) and `remove` (the suite's definitions go
+ * with it) are its repository's; `list` goes through the scope itself, as
+ * the runs' does: the repository lists one version's suites, and every
+ * suite id the context can select shows a lost filter every time.
  */
 const testSuites: OrganizationResource<"test_suites"> = {
   kind: "organization",
@@ -1039,11 +1031,10 @@ const testSuites: OrganizationResource<"test_suites"> = {
 };
 
 /*
- * A definition's input (D14b decisions 1 and 4): the seed is an input no
- * definition names yet, on another member's published configuration. An
- * input never changes. `remove` is the reference count's free (Preflight
- * ruling 7): it deletes the input only while no definition names it.
- * `read` and `remove` are its repository's (D14b Task 3: find, freeUnused);
+ * A definition's input: the seed is an input no definition names yet, on
+ * another member's published configuration. An input never changes. `remove`
+ * is the reference count's free: it deletes the input only while no definition
+ * names it. `read` and `remove` are its repository's (find, freeUnused);
  * `list` goes through the scope itself, since the repository lists none.
  */
 const testDefinitionInputs: OrganizationResource<"test_definition_inputs"> = {
@@ -1059,7 +1050,7 @@ const testDefinitionInputs: OrganizationResource<"test_definition_inputs"> = {
     const { configurationId } = await seedPublishedConfiguration(ownerDb, organizationId);
     return testDefinitionInputRow(organizationId, configurationId);
   },
-  updateUnsupported: "A definition's input never changes: it is copied once, shared, and freed (D14b decision 4).",
+  updateUnsupported: "A definition's input never changes: it is copied once, shared, and freed.",
   operations(transaction, context) {
     const inputs = createTestDefinitionInputRepository(transaction, context);
     const scope = createOrganizationScope(transaction, context);
@@ -1075,11 +1066,10 @@ const testDefinitionInputs: OrganizationResource<"test_definition_inputs"> = {
 };
 
 /*
- * A suite's test configuration (D14b decisions 2 and 9): the seed is
- * another member's definition in their suite on their published
- * configuration. A definition is created and deleted, never changed.
- * `read` and `remove` are its repository's (D14b Task 3); `list` goes
- * through the scope itself, as the suites' does.
+ * A suite's test configuration: the seed is another member's definition in
+ * their suite on their published configuration. A definition is created and
+ * deleted, never changed. `read` and `remove` are its repository's; `list`
+ * goes through the scope itself, as the suites' does.
  */
 const testDefinitions: OrganizationResource<"test_definitions"> = {
   kind: "organization",
@@ -1099,7 +1089,7 @@ const testDefinitions: OrganizationResource<"test_definitions"> = {
   async rowToInsert(ownerDb, organizationId) {
     return testDefinitionRow(organizationId, await seedSuiteAndInput(ownerDb, organizationId));
   },
-  updateUnsupported: "A definition is created and deleted, never changed (D14b decision 2).",
+  updateUnsupported: "A definition is created and deleted, never changed.",
   operations(transaction, context) {
     const definitions = createTestDefinitionRepository(transaction, context);
     const scope = createOrganizationScope(transaction, context);
@@ -1136,8 +1126,8 @@ function validationPipelineRow(
 
 /**
  * Another member's published configuration in `organizationId` and a
- * validation pipeline on its version 1, theirs, as the owner (D11b Preflight
- * ruling 7): what every member of the organization can see.
+ * validation pipeline on its version 1, theirs, as the owner: what every
+ * member of the organization can see.
  */
 async function seedValidationPipeline(
   ownerDb: Kysely<Database>,
@@ -1177,13 +1167,12 @@ function validationRuleRow(
 }
 
 /*
- * A configuration version's validation pipeline (D15a decision 12): the seed
- * is another member's, on their published configuration, which every member
- * can see (D11b Preflight ruling 7). It is created and deleted, never
- * changed (Preflight ruling 16). `read` and `remove` are its repository's
- * (D15a Task 6); `list` goes through the scope itself, as the suites' does:
- * the repository lists one version's pipelines, and every pipeline id the
- * context can select shows a lost filter every time.
+ * A configuration version's validation pipeline: the seed is another member's,
+ * on their published configuration, which every member can see. It is created
+ * and deleted, never changed. `read` and `remove` are its repository's; `list`
+ * goes through the scope itself, as the suites' does: the repository lists one
+ * version's pipelines, and every pipeline id the context can select shows a
+ * lost filter every time.
  */
 const validationPipelines: OrganizationResource<"validation_pipelines"> = {
   kind: "organization",
@@ -1201,7 +1190,7 @@ const validationPipelines: OrganizationResource<"validation_pipelines"> = {
     );
     return validationPipelineRow(organizationId, configurationId, publishedVersionId, createdByUserId);
   },
-  updateUnsupported: "A validation pipeline is created and deleted, never changed (D15a Preflight ruling 16).",
+  updateUnsupported: "A validation pipeline is created and deleted, never changed.",
   operations(transaction, context) {
     const pipelines = createValidationPipelineRepository(transaction, context);
     const scope = createOrganizationScope(transaction, context);
@@ -1216,12 +1205,11 @@ const validationPipelines: OrganizationResource<"validation_pipelines"> = {
 };
 
 /*
- * A validation pipeline's rule (D15a decision 12): the seed is another
- * member's rule in their validation pipeline on their published
- * configuration. `update` renames it, which the editor's save does among
- * its changes; `remove` deletes it. `read`, `update` and `remove` are its
- * repository's (D15a Task 6); `list` goes through the scope itself, as the
- * pipelines' does.
+ * A validation pipeline's rule: the seed is another member's rule in
+ * their validation pipeline on their published configuration. `update`
+ * renames it, which the editor's save does among its changes; `remove`
+ * deletes it. `read`, `update` and `remove` are its repository's; `list`
+ * goes through the scope itself, as the pipelines' does.
  */
 const validationRules: OrganizationResource<"validation_rules"> = {
   kind: "organization",
@@ -1316,7 +1304,7 @@ export const resourceRegistry: readonly RegisteredResource[] = [
     kind: "global",
     table: "test_templates",
     reason:
-      "Product-wide sample test inputs (D14b decision 3, ADR 0008): every organization picks from the same " +
+      "Product-wide sample test inputs: every organization picks from the same " +
       "templates, written only by product admins, which the API decides. A definition or a run made from one " +
       "keeps its own copy in its organization.",
   },
@@ -1324,14 +1312,14 @@ export const resourceRegistry: readonly RegisteredResource[] = [
     kind: "global",
     table: "library_files",
     reason:
-      "Telflo's own helper files (D23-2 decision 19): every member reads them, only product admins write them, " +
+      "Telflo's own helper files: every member reads them, only product admins write them, " +
       "which the API decides.",
   },
   {
     kind: "global",
     table: "test_regex",
     reason:
-      "The regex library (D15b decision 7, ADR 0008): every organization picks from the same named patterns, " +
+      "The regex library: every organization picks from the same named patterns, " +
       "written only by product admins, which the API decides. A rule made from one copies the regex into its " +
       "organization; nothing references an entry.",
   },
@@ -1339,21 +1327,21 @@ export const resourceRegistry: readonly RegisteredResource[] = [
     kind: "global",
     table: "otelcol_testing_state",
     reason:
-      "The tester's health (D14a decision 12): one row, since one tester serves every organization. The API's " +
+      "The tester's health: one row, since one tester serves every organization. The API's " +
       "role reads it and changes it only through the dispatcher's otelcol_testing_mark.",
   },
   {
     kind: "global",
     table: "ottl_evaluator_state",
     reason:
-      "The OTTL evaluator's health (D15a Preflight ruling 23): one row, since one evaluator serves every " +
+      "The OTTL evaluator's health: one row, since one evaluator serves every " +
       "organization. The API's role reads it and changes it only through the dispatcher's ottl_evaluator_mark.",
   },
   {
     kind: "global",
     table: "site_settings",
     reason:
-      "The site's settings a product admin changes (D36-1 decision 51): one row, who may create an organization. " +
+      "The site's settings a product admin changes: one row, who may create an organization. " +
       "The API's role reads it and changes it only through product admins' definer function, which the SystemRepository calls.",
   },
   {
@@ -1379,14 +1367,14 @@ export const resourceRegistry: readonly RegisteredResource[] = [
   {
     kind: "global",
     table: "user_settings",
-    reason: "A person's own preferences (D21 decision 18): belongs to the user, not to an organization.",
+    reason: "A person's own preferences: belongs to the user, not to an organization.",
   },
   {
     kind: "global",
     table: "personal_api_tokens",
     hasRowLevelSecurity: true,
     reason:
-      "A person's own API tokens (D25 decision 27): they belong to the user, not to an organization, which each " +
+      "A person's own API tokens: they belong to the user, not to an organization, which each " +
       "request names (X-Telflo-Org) and the person's membership there decides. Row-level security on the " +
       "context's user shows a person their own tokens only.",
   },
@@ -1395,7 +1383,7 @@ export const resourceRegistry: readonly RegisteredResource[] = [
     table: "sessions",
     reason:
       "A user's sign-in. active_organization_id is the organization it acts in, which the switch changes after a " +
-      "membership check (D5 decision 10); the session belongs to the user.",
+      "membership check; the session belongs to the user.",
   },
   {
     kind: "global",
@@ -1406,21 +1394,21 @@ export const resourceRegistry: readonly RegisteredResource[] = [
     kind: "global",
     table: "collector_distributions",
     reason:
-      "The collector catalogue's distributions (D13a decision 12, ADR 0008): every organization picks from the same " +
+      "The collector catalogue's distributions: every organization picks from the same " +
       "ones. Written only by the migration step's sync; the API's role may only read it.",
   },
   {
     kind: "global",
     table: "collector_versions",
     reason:
-      "The collector catalogue's versions (D13a decision 12, ADR 0008): every organization pins the same ones. " +
+      "The collector catalogue's versions: every organization pins the same ones. " +
       "Written only by the migration step's sync; the API's role may only read it.",
   },
   {
     kind: "global",
     table: "flows",
     reason:
-      "Prebuilt collector configurations (D12 decision 2, ADR 0008): every organization, and every signed-out " +
+      "Prebuilt collector configurations: every organization, and every signed-out " +
       "visitor, reads the same published flows. Only a product admin writes them, which the API decides; a " +
       "configuration created from one keeps its own copy in its organization.",
   },
@@ -1428,7 +1416,7 @@ export const resourceRegistry: readonly RegisteredResource[] = [
     kind: "system",
     table: "user_feedback",
     reason:
-      "\"Contact us\" messages (D29 decision 22): a person sends one from any organization, and only product admins " +
+      "\"Contact us\" messages: a person sends one from any organization, and only product admins " +
       "read and handle them, across every organization. The API's role may only insert (the sender's request); " +
       "reads and changes go through the product-admin functions.",
   },
@@ -1436,7 +1424,7 @@ export const resourceRegistry: readonly RegisteredResource[] = [
     kind: "system",
     table: "user_deletion_records",
     reason:
-      "Who a deleted person was (D29 decisions 4 and 23): written once by the delete function, read only by an " +
+      "Who a deleted person was: written once by the delete function, read only by an " +
       "operator's SQL. The API's role holds nothing on it.",
   },
   {
@@ -1444,7 +1432,7 @@ export const resourceRegistry: readonly RegisteredResource[] = [
     table: "audit_events",
     reason:
       "Append-only; every module writes it, with the organization an event happened in where there is one, and no " +
-      "API path reads it yet. The deliverable that shows an organization its audit log registers it as an " +
+      "API path reads it yet. Nothing shows an organization its audit log, so it isn't registered as an " +
       "organization resource.",
   },
 ];

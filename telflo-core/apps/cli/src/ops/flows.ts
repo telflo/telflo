@@ -1,8 +1,8 @@
 /*
- * The flows' calls (D27 decision 26), on
- * D25's routes 24-25 with its names: `authorName`, `distribution`,
- * `collectorVersion`, `sourceUrl`. Flows are Telflo's published starting
- * points, not an organization's. Nothing here prints or writes a file.
+ * The flows' calls, on routes 24-25 with the public API's names:
+ * `authorName`, `distribution`, `collectorVersion`, `sourceUrl`. Flows are
+ * Telflo's published starting points, not an organization's. Nothing here
+ * prints or writes a file.
  */
 
 import type { PublicFlow, PublicFlowDetail, PublicFlows } from "@telflo/contracts";

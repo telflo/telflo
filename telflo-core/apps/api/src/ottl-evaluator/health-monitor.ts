@@ -12,19 +12,19 @@ import {
 } from "../otelcol-testing/health-monitor.js";
 import type { OttlEvaluatorClient, OttlEvaluatorHealthResult } from "./client.js";
 
-// The OTTL evaluator's health (D15a decision 15, Preflight ruling 23): a
-// second instance of the tester's monitor (createServiceHealthMonitor, with
-// every rule the tester's has: down after two failed checks 5 s apart, up at
-// the first success, up wins, a write only when the shared row disagrees),
-// over its own shared row, ottl_evaluator_state (migration 030), written
-// through ottl_evaluator_mark in the dispatcher's context.
+// The OTTL evaluator's health: a second instance of the tester's monitor
+// (createServiceHealthMonitor, with every rule the tester's has: down after
+// two failed checks 5 s apart, up at the first success, up wins, a write only
+// when the shared row disagrees), over its own shared row,
+// ottl_evaluator_state (migration 030), written through ottl_evaluator_mark in
+// the dispatcher's context.
 //
-// It only says whether the evaluator is known down: queuing (Task 7) refuses
-// a run that would carry rules while it is (decision 15, 503
-// `rules_unavailable`), reading the shared row (isOttlEvaluatorKnownDown), not
-// this process's view, since another process may have seen it go down first.
-// Unlike the tester's, nothing else follows from it: no waiting run fails,
-// and a run without rules runs as before.
+// It only says whether the evaluator is known down: queuing refuses a run that
+// would carry rules while it is (503 `rules_unavailable`), reading the shared
+// row (isOttlEvaluatorKnownDown), not this process's view, since another
+// process may have seen it go down first. Unlike the tester's, nothing else
+// follows from it: no waiting run fails, and a run without rules runs as
+// before.
 //
 // Nothing here logs the secret, a rule, an output or a log: it holds none of
 // them.
@@ -90,7 +90,7 @@ export async function readOttlEvaluatorDownSince(db: Kysely<Database>): Promise<
   return row?.down_since ?? null;
 }
 
-/** Whether the evaluator is known down (decision 15): queuing refuses a run with rules while it is. */
+/** Whether the evaluator is known down: queuing refuses a run with rules while it is. */
 export async function isOttlEvaluatorKnownDown(db: Kysely<Database>): Promise<boolean> {
   return (await readOttlEvaluatorDownSince(db)) !== null;
 }

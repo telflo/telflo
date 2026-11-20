@@ -15,7 +15,7 @@ import { createOrganizationScope, type OrganizationScope } from "./organization-
  * security exempts: nothing but the scope stands between these queries and
  * the other organization's rows.
  */
-describe("the organization scope (D5 decision 5)", () => {
+describe("the organization scope", () => {
   /** The tables' owner, which row-level security doesn't constrain. */
   let ownerDb: Kysely<Database>;
   let databases: TestDatabases;

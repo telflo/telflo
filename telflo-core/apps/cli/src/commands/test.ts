@@ -1,17 +1,16 @@
 /*
- * `telflo test` (D27 decision 27): a
- * spec's sample and OTTL rules run in the sandbox on a text (`-f`) or a
- * stored version (`--config [--version]`), on routes 26-28.
+ * `telflo test`: a spec's sample and OTTL rules run in the sandbox on a text
+ * (`-f`) or a stored version (`--config [--version]`), on routes 26-28.
  *
- * - The spec's rules are converted and checked first (`test-spec-file.ts`,
- *   Preflight ruling 6): exit 2 naming the rule's index and field. The
- *   server's own refusal of a rule (400 `invalid_request` at `rules.N…`, or
- *   `validation_rule_invalid` with its `ruleIndex`) is named the same way.
+ * - The spec's rules are converted and checked first (`test-spec-file.ts`):
+ *   exit 2 naming the rule's index and field. The server's own refusal of a
+ *   rule (400 `invalid_request` at `rules.N…`, or `validation_rule_invalid`
+ *   with its `ruleIndex`) is named the same way.
  * - `--save` replaces the version's API-owned rules on the spec's pipeline
  *   (route 14, no pipeline `name`), then runs the saved rules; `--saved`
  *   runs them as they are. Saved rules' results are matched by id, named
- *   from route 14's reply or route 13 (Preflight ruling 7); inline rules'
- *   by position, named from the spec.
+ *   from route 14's reply or route 13; inline rules' by position, named
+ *   from the spec.
  * - `succeeded` exits 0; `failed` and `validation_failed` exit 4; a run
  *   that hasn't ended by the deadline (`--timeout`, else the run's duration
  *   and 120 s) exits 1. `--saved` with no saved rules is the API's 422
@@ -20,9 +19,9 @@
  *   doesn't offer (400 `collector_version_unknown`, `…_retired`,
  *   `collector_distribution_unknown`) is exit 2, as validate's.
  *
- * A run's text, sample and rules are configuration text (Q168): sent in the
- * body only, never printed in a message. Results' names, errors and
- * advisories are printed in the human table, flattened to one line.
+ * A run's text, sample and rules are configuration text: sent in the body
+ * only, never printed in a message. Results' names, errors and advisories are
+ * printed in the human table, flattened to one line.
  */
 
 import { writeFileSync } from "node:fs";
@@ -71,10 +70,10 @@ export function positiveInteger(what: string): (value: string) => number {
 }
 
 /**
- * Server text (or a spec's) as one line for the terminal (Ruling 237): C0
- * and C1 control characters out (no escape sequence reaches the
- * terminal), long text cut. Every server string printed outside `--json`
- * goes through it; `--output` writes the run's output as it is.
+ * Server text (or a spec's) as one line for the terminal: C0 and C1 control
+ * characters out (no escape sequence reaches the terminal), long text cut.
+ * Every server string printed outside `--json` goes through it; `--output`
+ * writes the run's output as it is.
  */
 export function cell(text: string | null | undefined): string {
   if (text === null || text === undefined) return "";
@@ -105,9 +104,9 @@ export interface NamedResult extends ValidationRuleResult {
 }
 
 /**
- * Results named: inline rules' by position from the spec (their ids are
- * fresh per run); saved rules' by id from the saved pipeline (Preflight
- * ruling 7). An unnamed rule is `rule N`.
+ * Results named: inline rules' by position from the spec (their ids are fresh
+ * per run); saved rules' by id from the saved pipeline. An unnamed rule is
+ * `rule N`.
  */
 export function nameResults(
   results: readonly ValidationRuleResult[] | null,
@@ -176,7 +175,7 @@ export function configurationRefusalOf(error: unknown): ApiError | undefined {
 /**
  * A 400 naming a collector the catalogue doesn't offer (`--collector-version`,
  * `--distribution`, the spec's or the pin's): a usage error, exit 2, as
- * validate's (a deliberate mapping, Ruling 243: its code and status kept).
+ * validate's (a deliberate mapping: its code and status kept).
  */
 export function collectorRefusalOf(error: unknown): ExitError | undefined {
   if (!(error instanceof ApiError) || error.status !== 400 || !COLLECTOR_REFUSED_CODES.has(error.code ?? "")) return undefined;

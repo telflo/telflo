@@ -14,10 +14,9 @@ import {
   type ValidatorUnavailableReason,
 } from "./client.js";
 
-// The platform's client for the collector validator (D13b decisions 11 and
-// 12, Preflight ruling 18, Ruling 32), against the OpenAPI-checked fake, and
-// against a hand-made fetch for what the fake can't be pushed to answer.
-// Every failure is `unavailable`, never a throw.
+// The platform's client for the collector validator, against the
+// OpenAPI-checked fake, and against a hand-made fetch for what the fake can't
+// be pushed to answer. Every failure is `unavailable`, never a throw.
 
 let fake: FakeOtelcolValidator;
 let client: OtelcolValidatorClient;
@@ -58,7 +57,7 @@ async function closedUrl(): Promise<string> {
 }
 
 describe("the collector validator's client", () => {
-  it("waits 20 s by default (Ruling 32: a queued check's 5 s and its 12 s deadline)", () => {
+  it("waits 20 s by default (a queued check's 5 s and its 12 s deadline)", () => {
     expect(DEFAULT_OTELCOL_VALIDATOR_TIMEOUT_MS).toBe(20_000);
   });
 
@@ -116,7 +115,7 @@ describe("the collector validator's client", () => {
     });
   });
 
-  describe("the organization's values (D20 decisions 13 and 27; platform choice P2)", () => {
+  describe("the organization's values", () => {
     it("sends them in the body, by name, in their order; a variable named __proto__ like any other", async () => {
       const values = new Map([
         ["HOST", "a$b.example"],
@@ -150,7 +149,7 @@ describe("the collector validator's client", () => {
       for (const request of requests) expect(request.organizationVariables).toBeUndefined();
     });
 
-    it("sends a text and 150 values at their longest unescaped (Q104), under the validator's 2 MiB, and the fake takes them", async () => {
+    it("sends a text and 150 values at their longest unescaped, under the validator's 2 MiB, and the fake takes them", async () => {
       const values = new Map(
         Array.from({ length: 150 }, (_, index) => [`V${String(index).padStart(3, "0")}${"_".repeat(124)}`, "\u{1F680}".repeat(1024)]),
       );
@@ -177,7 +176,7 @@ describe("the collector validator's client", () => {
     });
   });
 
-  describe("every failure is unavailable (Preflight ruling 18)", () => {
+  describe("every failure is unavailable", () => {
     it.each<[FakeOtelcolValidatorFault, ValidatorUnavailableReason, number]>([
       ["invalid_request", "invalid_request", 400],
       ["not_found", "not_found", 404],
@@ -275,7 +274,7 @@ describe("the collector validator's client", () => {
       expect(await odd.validate(CHECK)).toEqual({ kind: "unavailable", reason: "malformed_reply", status: 200 });
     });
 
-    describe("a reply is read up to a cap (Ruling 55)", () => {
+    describe("a reply is read up to a cap", () => {
       const VALID = JSON.stringify({ valid: true, errors: [], requirements: [], distribution: CHECK.distribution, version: CHECK.version });
 
       it("caps it at 4 MiB by default", () => {

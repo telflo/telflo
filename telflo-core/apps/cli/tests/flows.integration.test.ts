@@ -7,10 +7,9 @@ import { deleteCredentials } from "../src/credentials.js";
 import { runCli, serviceAccountWithToken, useApiServer, type CliRun } from "./harness.js";
 
 /*
- * telflo flows list|get|pull against the real API in process (D27
- * decisions 26 and 33): the published flows with D25's names, a hidden
- * flow's 404 in the envelope's words (exit 1). Tokens are checked with
- * boolean canaries only.
+ * telflo flows list|get|pull against the real API in process: the published
+ * flows with the public API's names, a hidden flow's 404 in the envelope's
+ * words (exit 1). Tokens are checked with boolean canaries only.
  */
 
 const api = useApiServer();

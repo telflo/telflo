@@ -6,19 +6,19 @@ import {
   type ValidatorValidationError,
 } from "./schemas.js";
 
-// The platform's client for the collector validator (D13b decisions 11 and
-// 12; the contract is services/otelcol-validator/openapi.yaml), mirroring the
-// opamp-server's (opamp-server/client.ts): an injected fetch, one timer over
-// the request and the reading of its reply, the shared secret as a Bearer
-// token, redirects never followed.
+// The platform's client for the collector validator (the contract is
+// services/otelcol-validator/openapi.yaml), mirroring the opamp-server's
+// (opamp-server/client.ts): an injected fetch, one timer over the request
+// and the reading of its reply, the shared secret as a Bearer token,
+// redirects never followed.
 //
-// Unlike the opamp-server's, it never throws for an answer (Preflight ruling
-// 18): every failure is `unavailable`, with a reason the caller logs. A
-// timeout, a network error, a 401 (the validator doesn't take the
-// platform's secret), a 404 or 409 (the catalogue and the validator's
-// disagree), a 400 or 413, a 503 (busy, or the version isn't baked in), any
-// other status, an answer its schema refuses and one over the size cap are
-// all the same to the person: their text wasn't checked.
+// Unlike the opamp-server's, it never throws for an answer: every failure is
+// `unavailable`, with a reason the caller logs. A timeout, a network error, a
+// 401 (the validator doesn't take the platform's secret), a 404 or 409 (the
+// catalogue and the validator's disagree), a 400 or 413, a 503 (busy, or the
+// version isn't baked in), any other status, an answer its schema refuses and
+// one over the size cap are all the same to the person: their text wasn't
+// checked.
 //
 // The secret, the Authorization header and the text are never logged and
 // never put in a result: this module logs nothing, and a result names a
@@ -34,9 +34,8 @@ export interface ValidateRequest {
   yaml: string;
   /**
    * The organization's values the text references, by name, which the
-   * validator fills in before its checks (D20 decisions 13 and 27; platform
-   * choice P2). Configuration text: never logged. Left out or empty, the
-   * body holds `yaml` alone.
+   * validator fills in before its checks. Configuration text: never logged.
+   * Left out or empty, the body holds `yaml` alone.
    */
   organizationVariables?: ReadonlyMap<string, string> | undefined;
 }
@@ -70,7 +69,7 @@ export type ValidatorUnavailableReason =
   | "unexpected_status"
   /** A 200 whose body isn't what openapi.yaml documents, or answers another collector. A deployment to fix. */
   | "malformed_reply"
-  /** A reply (a 200 or a 503) over MAX_OTELCOL_VALIDATOR_REPLY_BYTES, never read past the cap (Ruling 69). */
+  /** A reply (a 200 or a 503) over MAX_OTELCOL_VALIDATOR_REPLY_BYTES, never read past the cap. */
   | "oversized_reply";
 
 export type ValidateResult =
@@ -98,28 +97,25 @@ export interface OtelcolValidatorClientOptions {
   fetch?: typeof fetch;
   /** Tests only; MAX_OTELCOL_VALIDATOR_REPLY_BYTES by default. */
   maxReplyBytes?: number;
-  /** How long a check may take, reading the reply included. Default 20,000 (Ruling 32). */
+  /** How long a check may take, reading the reply included. Default 20,000. */
   timeoutMs?: number;
 }
 
 /**
- * Ruling 32: a check the validator queues waits up to 5 s for a slot, then
- * runs under a 12 s deadline (the collector's 10 s and 2 s of margin), so
- * the platform waits 20 s before it gives up.
+ * A check the validator queues waits up to 5 s for a slot, then runs under
+ * a 12 s deadline (the collector's 10 s and 2 s of margin), so the platform
+ * waits 20 s before it gives up.
  */
 export const DEFAULT_OTELCOL_VALIDATOR_TIMEOUT_MS = 20_000;
 
 /**
- * The most of a reply the client reads (Ruling 55): 4 MiB. Since Rulings 69
- * and 71 the validator bounds its answer (services/otelcol-validator,
- * `app/runner.py`'s `bounded`): at most 201 errors (200 and one saying more
- * were reported), each message 4 KiB and path 1 KiB, and at most 200
- * requirements of at most 6,270 bytes each, so an answer is at most
- * 2,290,356 bytes (about 2.18 MiB). Before that, a text naming 20,000
- * organization variables answered 5.1 MiB of requirements, and a multi-line
- * key aliased into many pipelines 4.61 MiB of errors. A longer reply is
- * `oversized_reply`, the rest never read: the text wasn't checked, as for
- * any other failure.
+ * The most of a reply the client reads: 4 MiB. The validator bounds its
+ * answer (services/otelcol-validator, `app/runner.py`'s `bounded`): at most
+ * 201 errors (200 and one saying more were reported), each message 4 KiB
+ * and path 1 KiB, and at most 200 requirements of at most 6,270 bytes each,
+ * so an answer is at most 2,290,356 bytes (about 2.18 MiB). A longer reply
+ * is `oversized_reply`, the rest never read: the text wasn't checked, as
+ * for any other failure.
  */
 export const MAX_OTELCOL_VALIDATOR_REPLY_BYTES = 4 * 1024 * 1024;
 
@@ -137,9 +133,8 @@ const STATUS_REASONS: Readonly<Record<number, ValidatorUnavailableReason>> = {
  * never by assignment, so a variable named `__proto__` (the server's grammar
  * allows it) is a key like any other. Sent unescaped (JSON.stringify writes
  * every character as itself): 150 values of 1,024 four-byte characters are
- * 600 KiB (Q104), and with a text of 262,144 characters at their longest
- * about 1.4 MB, under the validator's 2 MiB (D20 Preflight ruling 30,
- * re-derived on Q104).
+ * 600 KiB, and with a text of 262,144 characters at their longest about
+ * 1.4 MB, under the validator's 2 MiB.
  */
 function requestBody(request: ValidateRequest): string {
   const values = request.organizationVariables;

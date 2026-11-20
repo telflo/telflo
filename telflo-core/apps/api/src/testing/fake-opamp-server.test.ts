@@ -4,12 +4,12 @@ import type { AddressInfo } from "node:net";
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import { startFakeOpampServer, type FakeOpampServer } from "./fake-opamp-server.js";
 
-// The fake opamp-server's own contract checks (D11a Tasks 7 and 10b): it must
-// catch a request that breaks vendor/opamp-server/openapi.yaml, and a
-// reply of its own that does, or the client's tests against it prove
-// nothing; and it must answer in the real server's order (Ruling 33): the
-// path's ids, then the organization, then the query or the body. These
-// tests send raw requests, shaped as the client's are, then broken.
+// The fake opamp-server's own contract checks: it must catch a request that
+// breaks vendor/opamp-server/openapi.yaml, and a reply of its own that does,
+// or the client's tests against it prove nothing; and it must answer in the
+// real server's order: the path's ids, then the organization, then the query
+// or the body. These tests send raw requests, shaped as the client's are,
+// then broken.
 
 let fake: FakeOpampServer;
 /** Registered in beforeAll: the organization the publication requests use unless they say otherwise. */
@@ -107,7 +107,7 @@ describe("the fake opamp-server's request validation", () => {
   });
 
   it.each([
-    ["null, as the platform sent it before D13a", null, "/collector must be object"],
+    ["null", null, "/collector must be object"],
     ["an empty object", {}, "/collector must have required property 'distribution'; /collector must have required property 'version'"],
     ["without its version", { distribution: "otelcol-contrib" }, "/collector must have required property 'version'"],
     [
@@ -130,7 +130,7 @@ describe("the fake opamp-server's request validation", () => {
       { distribution: "a".repeat(65), version: "0.162.0" },
       "/collector/distribution must NOT have more than 64 characters",
     ],
-  ])("refuses a collector %s as a contract violation, as the real server would (400, D13a decision 7)", async (_label, collector, violation) => {
+  ])("refuses a collector %s as a contract violation, as the real server would (400)", async (_label, collector, violation) => {
     const response = await publish({ ...aBody(), collector });
 
     expect(response.status).toBe(400);
@@ -138,7 +138,7 @@ describe("the fake opamp-server's request validation", () => {
     expect(fake.takeViolations()).toEqual([`postPublication request body: ${violation}`]);
   });
 
-  it("stores the collector, answers it, and compares it for the same id (D13a decision 7)", async () => {
+  it("stores the collector, answers it, and compares it for the same id", async () => {
     const body = aBody();
     const url = publicationUrl();
 
@@ -283,7 +283,7 @@ describe("the fake opamp-server's request validation", () => {
     ]);
   });
 
-  it("answers the browser tests' control port's paths (D17a Preflight ruling 6, D17b-1 Preflight ruling 3, D17b-2 Preflight ruling 5) as undocumented routes, enrolling, recording, seeding and adding nothing", async () => {
+  it("answers the browser tests' control port's paths as undocumented routes, enrolling, recording, seeding and adding nothing", async () => {
     const created = await fetch(`${fake.url}/api/v1/organizations/${registered}/fleets`, {
       method: "POST",
       headers: { authorization: `Bearer ${fake.secret}`, "content-type": "application/json" },
@@ -303,7 +303,7 @@ describe("the fake opamp-server's request validation", () => {
     const collectorPath = `/organizations/${registered}/collectors/${collector.id}`;
     const errorsPath = `${collectorPath}/errors`;
     const tokenEventsPath = `/organizations/${registered}/fleets/${fleetId}/token-events`;
-    // The control port's former imports path (D16c removed importing): a plain 404 too.
+    // An imports path, which the control port doesn't have: a plain 404 too.
     const importsPath = `/organizations/${registered}/fleets/${fleetId}/imports`;
     const enroll = { name: "edge-control-b", reported: { ip: "10.0.0.7" } };
     const change = { lastSeenAt: "2026-10-03T14:02:11.000Z", reported: { collectorVersion: "0.162.0" } };
@@ -354,9 +354,9 @@ describe("the fake opamp-server's request validation", () => {
     expect(await response.text()).toBe("ok");
   });
 
-  // D11a Ruling 31: as the server does (Ruling 30), a publishedAt that is a
-  // date-time in the text but an instant outside the years 0001 to 9999 in
-  // UTC is a 400 naming the field, and no violation: the file allows it.
+  // As the server does, a publishedAt that is a date-time in the text but
+  // an instant outside the years 0001 to 9999 in UTC is a 400 naming the
+  // field, and no violation: the file allows it.
   it.each([
     "9999-12-31T23:59:59-01:00",
     "0000-01-01T00:00:00+01:00",
@@ -493,7 +493,7 @@ describe("the fake opamp-server's registry", () => {
   });
 });
 
-describe("the fake opamp-server's in-use publications (D16a decision 31)", () => {
+describe("the fake opamp-server's in-use publications", () => {
   const remove = (url: string) => fetch(url, { method: "DELETE", headers: { authorization: `Bearer ${fake.secret}` } });
   const inUse = (message: string) => ({ error: { code: "publication_in_use", message } });
 
@@ -533,7 +533,7 @@ describe("the fake opamp-server's in-use publications (D16a decision 31)", () =>
     );
   });
 
-  it("keys publications and marks by organization: another organization's POST of the same id is 409, and nothing of one reaches the other (Ruling 34)", async () => {
+  it("keys publications and marks by organization: another organization's POST of the same id is 409, and nothing of one reaches the other", async () => {
     const other = randomUUID();
     expect((await post({ id: other, name: "Other" })).status).toBe(201);
     const id = randomUUID();
@@ -561,7 +561,7 @@ describe("the fake opamp-server's in-use publications (D16a decision 31)", () =>
     expect((await remove(publicationUrl(registered, id))).status).toBe(204);
   });
 
-  it("serves the fleet model's routes (D16b): an organization's limits read unset, with no violation", async () => {
+  it("serves the fleet model's routes: an organization's limits read unset, with no violation", async () => {
     const response = await get(`${fake.url}/api/v1/organizations/${registered}/limits`);
 
     expect(response.status).toBe(200);

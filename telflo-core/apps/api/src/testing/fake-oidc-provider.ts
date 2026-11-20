@@ -3,15 +3,15 @@ import { createServer, type IncomingMessage, type ServerResponse } from "node:ht
 import type { AddressInfo } from "node:net";
 import { exportJWK, generateKeyPair, SignJWT, type CryptoKey } from "jose";
 
-// A real OpenID Provider on loopback, for tests only: vitest (Tasks 2 and 3)
-// and the browser tests (Task 6). Built on node:http and jose alone. It never
-// ships: .dockerignore leaves apps/api/src/testing out of the images, and a
-// lint rule keeps production code from importing it (D2c Ruling 5).
+// A real OpenID Provider on loopback, for tests only: vitest and the
+// browser tests. Built on node:http and jose alone. It never ships:
+// .dockerignore leaves apps/api/src/testing out of the images, and a lint
+// rule keeps production code from importing it.
 //
 // It serves discovery, a JWKS, /authorize and /token, as Google does for the
 // authorization-code flow with PKCE:
 // - /authorize signs someone in either through a small HTML form (browser
-//   tests fill it in, so parallel tests never share an identity; Ruling 4)
+//   tests fill it in, so parallel tests never share an identity)
 //   or, for vitest, through the one-shot identity set by nextSignIn();
 // - /token accepts client_secret_post only (the registry pins it), checks
 //   the PKCE verifier, and makes each code single use;

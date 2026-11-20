@@ -1,18 +1,17 @@
 /*
- * A `telflo test` spec file (D27 decisions 11 and 27, Preflight ruling 6):
- * the older Telflo CLI's YAML as it is, its rules converted to the
- * platform's OTTL rule `{ kind: "ottl", target: "output", name?, ottl:
- * { context, quantifier, condition?, expression?, count? } }` and checked
- * first as the API would (`CreateValidationRuleRequestSchema` and
- * `OTTL_CONTEXTS_BY_SIGNAL`), so a bad rule is exit 2 naming its index and
- * field before anything is sent.
+ * A `telflo test` spec file: the older Telflo CLI's YAML as it is, its rules
+ * converted to the platform's OTTL rule `{ kind: "ottl", target: "output",
+ * name?, ottl: { context, quantifier, condition?, expression?, count? } }`
+ * and checked first as the API would (`CreateValidationRuleRequestSchema`
+ * and `OTTL_CONTEXTS_BY_SIGNAL`), so a bad rule is exit 2 naming its index
+ * and field before anything is sent.
  *
  * The constants are the contracts' own, copied (the CLI imports nothing from
  * a workspace at run time); each has a drift test importing the contracts.
  *
- * A spec's sample and rules are configuration text (Q168): no message here
- * quotes them, nor a key or a path the file names; a YAML error names its
- * line and column only.
+ * A spec's sample and rules are configuration text: no message here quotes
+ * them, nor a key or a path the file names; a YAML error names its line and
+ * column only.
  */
 
 import { readFileSync, statSync } from "node:fs";
@@ -153,12 +152,12 @@ function ruleCount(value: unknown, index: number): RuleCount {
 }
 
 /**
- * One spec rule as the platform's OTTL rule, checked as the API checks it
- * (Preflight ruling 6): the context one of the seven and allowed for the
- * signal; `condition` required but for `distinct` (its optional filter);
- * `expression` for `distinct` only; `count` for `count` and `distinct`
- * only; a name of at most 200 code points; no other key. Exit 2 names the
- * rule's index and field.
+ * One spec rule as the platform's OTTL rule, checked as the API checks it:
+ * the context one of the seven and allowed for the signal; `condition`
+ * required but for `distinct` (its optional filter); `expression` for
+ * `distinct` only; `count` for `count` and `distinct` only; a name of at
+ * most 200 code points; no other key. Exit 2 names the rule's index and
+ * field.
  */
 export function convertRule(raw: unknown, index: number, signal: TestSignal): TestRule {
   if (!isRecord(raw)) fail(`${rulePlace(index)} must be a mapping.`);

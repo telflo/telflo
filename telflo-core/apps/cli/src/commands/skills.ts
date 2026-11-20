@@ -1,6 +1,6 @@
 /*
- * `telflo skills install [--project | --global]` (D27 decision 29): copies the `telflo-cli` agent skill
- * the package ships (`skills/telflo-cli/`, beside `dist/`) into
+ * `telflo skills install [--project | --global]`: copies the `telflo-cli`
+ * agent skill the package ships (`skills/telflo-cli/`, beside `dist/`) into
  * `./.claude/skills/` (the default) or `~/.claude/skills/`.
  *
  * It writes only under the folder it names. A previous copy is removed
@@ -48,9 +48,9 @@ export function skillTarget(root: string): string {
 }
 
 /**
- * Removes what is at `path`, never following a link (Ruling 249): a link
- * (a dangling one too: `existsSync` and `rmSync`'s `force` see none) or a
- * file is unlinked; only a real folder is removed with what it holds.
+ * Removes what is at `path`, never following a link: a link (a dangling one
+ * too: `existsSync` and `rmSync`'s `force` see none) or a file is unlinked;
+ * only a real folder is removed with what it holds.
  */
 export function removeEarlierCopy(path: string): void {
   let entry: Stats;

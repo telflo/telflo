@@ -7,9 +7,9 @@ import { fakeFetch } from "../../tests/fake-fetch.js";
 import { parseVersionNumber, pullConfiguration, pushConfiguration } from "./configurations.js";
 
 /*
- * The configurations' calls (D27 decision 26) beyond what the command
- * tests reach: the version number's parser against the contract (a drift
- * test, Preflight ruling 23) and a push with no versions at all.
+ * The configurations' calls beyond what the command tests reach: the version
+ * number's parser against the contract (a drift test) and a push with no
+ * versions at all.
  */
 
 const SERVER = "https://telflo.example";

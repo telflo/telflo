@@ -1,9 +1,9 @@
 /*
- * OTTL lint's request and rendering (D27 decision 26), on route 16 with D25's names: `valueExpressions`,
- * `ottlVersion`, an item's kind `valueExpression`. Two modes: a collector
- * configuration's YAML (every OTTL expression in it), or expressions
- * against one context. Nothing here prints; the expressions and the YAML
- * are configuration text and never reach an error's message.
+ * OTTL lint's request and rendering, on route 16 with the public API's names:
+ * `valueExpressions`, `ottlVersion`, an item's kind `valueExpression`. Two
+ * modes: a collector configuration's YAML (every OTTL expression in it), or
+ * expressions against one context. Nothing here prints; the expressions and
+ * the YAML are configuration text and never reach an error's message.
  */
 
 import type { PublicOttlLintRequest, PublicOttlLintResponse } from "@telflo/contracts";
@@ -74,7 +74,7 @@ export async function lintOttl(client: ApiClient, body: PublicOttlLintRequest): 
   return client.request<PublicOttlLintResponse>("POST", "/ottl/lint", { body });
 }
 
-/** The verdict as the terminal shows it: each item, what was skipped, and a summary; every reply string through `terminalText` (Ruling 237). */
+/** The verdict as the terminal shows it: each item, what was skipped, and a summary; every reply string through `terminalText`. */
 export function renderLint(result: PublicOttlLintResponse): string {
   const lines: string[] = [];
   for (const item of result.items) {

@@ -2,21 +2,20 @@ import { OTTL_CONTEXTS, VALIDATION_RULE_TARGETS } from "@telflo/contracts";
 import { z } from "zod";
 
 // The OTTL evaluator's answers, as zod schemas, one for each schema in
-// services/ottl-evaluator/openapi.yaml the platform reads (D15a decisions 2
-// and 15; plan Preflight ruling 5). Unknown fields are stripped rather than
-// refused, unlike the file's `additionalProperties: false`, as the
-// validator's and the tester's are (otelcol-validator/schemas.ts,
-// otelcol-testing/schemas.ts): a field the evaluator adds later must not
-// break a platform that hasn't learned it. The fake
-// (testing/fake-ottl-evaluator.ts) checks the evaluator's side of the
+// services/ottl-evaluator/openapi.yaml the platform reads. Unknown fields are
+// stripped rather than refused, unlike the file's
+// `additionalProperties: false`, as the validator's and the tester's are
+// (otelcol-validator/schemas.ts, otelcol-testing/schemas.ts): a field the
+// evaluator adds later must not break a platform that hasn't learned it. The
+// fake (testing/fake-ottl-evaluator.ts) checks the evaluator's side of the
 // contract strictly, against the file itself.
 //
 // A result also keeps the file's prose: an error means `passed` is false and
 // `detail` null; a rule that passed has no detail. So whatever the client
 // returns passes the contracts' strict ValidationRuleResultSchema, which a
-// run's detail serialises with (Task 7). An answer these refuse is a
-// malformed answer, which the client reports as unavailable, never as the
-// rules' own results. D25 Task 3 added the lint's answer (LintAnswer).
+// run's detail serialises with. An answer these refuse is a malformed
+// answer, which the client reports as unavailable, never as the rules' own
+// results. The lint's answer is LintAnswer.
 
 /** How many code points `text` holds, as JSON Schema's `maxLength` counts (zod's `max` counts UTF-16 units). */
 function codePointLength(text: string): number {
@@ -143,7 +142,7 @@ export const validateAnswerSchema = z
     path: ["problems"],
   });
 
-/** openapi.yaml's LintItem's kinds (D25 Task 3). */
+/** openapi.yaml's LintItem's kinds. */
 export const OTTL_LINT_KINDS = ["condition", "statement", "valueExpression"] as const;
 
 /** openapi.yaml's LintItem: `error` there exactly when the text isn't valid. */

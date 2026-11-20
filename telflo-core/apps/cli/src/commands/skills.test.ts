@@ -15,7 +15,7 @@ import {
   skillTarget,
 } from "./skills.js";
 
-/* telflo skills install (D27 decision 29): the shipped skill copied under the folder named, and only there. */
+/* telflo skills install: the shipped skill copied under the folder named, and only there. */
 
 const SKILL_FILES = ["SKILL.md", "references/commands.md", "references/testing.md"];
 
@@ -36,7 +36,7 @@ describe("the shipped skill", () => {
     expect(readFileSync(join(source, "SKILL.md"), "utf8").startsWith("---\nname: telflo-cli\n")).toBe(true);
   });
 
-  it("names D27's login and variables, not the older CLI's", () => {
+  it("names this CLI's login and variables, not the older CLI's", () => {
     const text = SKILL_FILES.map((file) => readFileSync(join(skillsSourceDir(), file), "utf8")).join("\n");
     for (const gone of [
       "TELFLO_API_TOKEN",
@@ -112,7 +112,7 @@ describe("installSkills", () => {
     expect(existsSync(join(root, "telflo-cli", "SKILL.md"))).toBe(true);
   });
 
-  it("removes a dangling link at <root>/telflo-cli, then installs (Ruling 249)", () => {
+  it("removes a dangling link at <root>/telflo-cli, then installs", () => {
     const root = join(dir, "root");
     mkdirSync(root);
     symlinkSync(join(dir, "gone"), join(root, "telflo-cli"));

@@ -3,7 +3,7 @@ import { ApiClient } from "../api.js";
 import { fakeFetch } from "../../tests/fake-fetch.js";
 import { getFlowYaml } from "./flows.js";
 
-/* A flow's YAML (D27 decision 26). */
+/* A flow's YAML. */
 
 describe("getFlowYaml", () => {
   it("ends the YAML in a newline once, with the pin", async () => {

@@ -13,39 +13,35 @@ import {
   type OttlEvaluatorResult,
 } from "./schemas.js";
 
-// The platform's client for the OTTL evaluator (D15a decisions 2, 3 and 6;
-// detail 27; the contract is services/ottl-evaluator/openapi.yaml; plan
-// Preflight rulings 5, 8, 9 and 11), as the tester's
+// The platform's client for the OTTL evaluator (the contract is
+// services/ottl-evaluator/openapi.yaml), as the tester's
 // (otelcol-testing/client.ts): an injected fetch, one timer over the request
 // and the reading of its reply, the shared secret as a Bearer token,
 // redirects never followed, the reply read up to a cap.
 //
 // It never throws for anything the evaluator does or doesn't answer:
 // - evaluate (a run's rules, after the tester answered): `evaluated`, one
-//   result per rule in the request's order, matched by id (a missing, extra
-//   or repeated id is no answer: `unavailable`); `busy` for 503
-//   `evaluator_busy`, so the dispatcher may try once more (Preflight ruling
-//   11); every other failure `unavailable`, with a reason (decision 3: the
-//   run ends Error, `rules_unavailable`);
-// - validate (one rule, at Save; decision 6): `valid`, or `invalid` with the
-//   evaluator's problems as it words them (D15a Ruling 33: Save shows them
-//   as they are); `busy`; `unavailable`;
-// - lint (D25 Task 3: the public API's OTTL lint): `linted`, one verdict
-//   per text in the request's order (the conditions, then the statements,
-//   then the value expressions), matched by kind and index (a missing,
-//   extra or misplaced item is no answer: `unavailable`); `busy`;
+//   result per rule in the request's order, matched by id (a missing, extra or
+//   repeated id is no answer: `unavailable`); `busy` for 503 `evaluator_busy`,
+//   so the dispatcher may try once more; every other failure `unavailable`,
+//   with a reason (the run ends Error, `rules_unavailable`);
+// - validate (one rule, at Save): `valid`, or `invalid` with the evaluator's
+//   problems as it words them (Save shows them as they are); `busy`;
 //   `unavailable`;
+// - lint (the public API's OTTL lint): `linted`, one verdict per text in
+//   the request's order (the conditions, then the statements, then the value
+//   expressions), matched by kind and index (a missing, extra or misplaced
+//   item is no answer: `unavailable`); `busy`; `unavailable`;
 // - health: `up` or `down`, for the health monitor.
 //
 // The request is built from what the platform holds: the tester's output
 // object as it answered it but for `bytesOnDisk` (`{base64, truncated}`, the
-// contract's Output), the stored log, and each rule's kind, target and
-// pattern or OTTL (a run's snapshot, or a save's). A condition or an
-// expression that is empty is left out, never sent as `""` (Ruling 33's
-// note). A request the contract would refuse (a count that isn't an
-// integer, a repeated id, more than 200 rules, …) is never sent: it is
-// `unavailable`, `invalid_request`, since one bad rule would otherwise have
-// the evaluator refuse every rule.
+// contract's Output), the stored log, and each rule's kind, target and pattern
+// or OTTL (a run's snapshot, or a save's). A condition or an expression that
+// is empty is left out, never sent as `""`. A request the contract would
+// refuse (a count that isn't an integer, a repeated id, more than 200 rules,
+// …) is never sent: it is `unavailable`, `invalid_request`, since one bad rule
+// would otherwise have the evaluator refuse every rule.
 //
 // The secret, the Authorization header, the output, the log and every rule's
 // text are never logged and never put in a result. The only lines it logs
@@ -97,7 +93,7 @@ export interface ValidateRuleRequest {
   rule: Omit<OttlEvaluatorRule, "id">;
 }
 
-/** OTTL texts to parse-check against one context (openapi.yaml's LintRequest; D25 Task 3). */
+/** OTTL texts to parse-check against one context (openapi.yaml's LintRequest). */
 export interface LintTextsRequest {
   context: OttlContext;
   conditions?: readonly string[] | undefined;
@@ -152,7 +148,7 @@ export interface OttlEvaluatorUnavailable {
   code?: OttlEvaluatorErrorCode;
 }
 
-/** 503 `evaluator_busy`: every slot stayed taken. The dispatcher may try once more (Preflight ruling 11). */
+/** 503 `evaluator_busy`: every slot stayed taken. The dispatcher may try once more. */
 export interface OttlEvaluatorBusy {
   kind: "busy";
 }
@@ -165,7 +161,7 @@ export type EvaluateRulesResult =
 
 export type ValidateRuleResult =
   | { kind: "valid" }
-  /** The evaluator's problems, each worded as a run's rule error would be (Ruling 33). */
+  /** The evaluator's problems, each worded as a run's rule error would be. */
   | { kind: "invalid"; problems: OttlEvaluatorProblem[] }
   | OttlEvaluatorBusy
   | OttlEvaluatorUnavailable;
@@ -189,7 +185,7 @@ export interface OttlEvaluatorClient {
   evaluate(request: EvaluateRulesRequest, options?: { signal?: AbortSignal; timeoutMs?: number }): Promise<EvaluateRulesResult>;
   /** Checks one rule as a run would, at Save. Never throws for anything the evaluator does or doesn't answer. */
   validate(request: ValidateRuleRequest, options?: { signal?: AbortSignal }): Promise<ValidateRuleResult>;
-  /** Parse-checks up to 200 OTTL texts against one context (D25 Task 3). Never throws for anything the evaluator does or doesn't answer. */
+  /** Parse-checks up to 200 OTTL texts against one context. Never throws for anything the evaluator does or doesn't answer. */
   lint(request: LintTextsRequest, options?: { signal?: AbortSignal }): Promise<LintTextsResult>;
   /** Asks GET /health (no secret). Never throws. */
   health(options?: { signal?: AbortSignal }): Promise<OttlEvaluatorHealthResult>;
@@ -214,19 +210,19 @@ export interface OttlEvaluatorClientOptions {
 }
 
 /**
- * An evaluation's one timer (Preflight ruling 11): the evaluator's own hard
- * limit (its child is killed at 25 s, after a 20 s deadline), the 5 s it may
- * wait for a slot, and room to carry up to 36 MiB both ways. A caller may
- * shorten it (the dispatcher's lease left, less 5 s), never lengthen it.
+ * An evaluation's one timer: the evaluator's own hard limit (its child is
+ * killed at 25 s, after a 20 s deadline), the 5 s it may wait for a slot,
+ * and room to carry up to 36 MiB both ways. A caller may shorten it (the
+ * dispatcher's lease left, less 5 s), never lengthen it.
  */
 export const OTTL_EVALUATOR_EVALUATE_TIMEOUT_MS = 40_000;
 
-/** A save's check (Preflight ruling 11): the evaluator kills a validation at 2 s, after waiting up to 1 s for a slot. */
+/** A save's check: the evaluator kills a validation at 2 s, after waiting up to 1 s for a slot. */
 export const OTTL_EVALUATOR_VALIDATE_TIMEOUT_MS = 5_000;
 
 /**
- * A lint's timer (D25 Task 3): the evaluator kills a lint at 10 s, after
- * waiting up to 1 s for a slot, and its body is at most 10 MiB.
+ * A lint's timer: the evaluator kills a lint at 10 s, after waiting up to 1 s
+ * for a slot, and its body is at most 10 MiB.
  */
 export const OTTL_EVALUATOR_LINT_TIMEOUT_MS = 15_000;
 
@@ -234,10 +230,10 @@ export const OTTL_EVALUATOR_LINT_TIMEOUT_MS = 15_000;
 export const OTTL_EVALUATOR_HEALTH_TIMEOUT_MS = 5_000;
 
 /**
- * The most of an evaluation's answer the client reads (D15a Ruling 33's
- * note): 6 MiB. 200 results at their bounds, each message 4 KiB and five
- * matches of 200 + 40 + 40 bytes with a 200-byte path, are about 4.9 MiB
- * once JSON escapes control characters (the Task 2 review's n2).
+ * The most of an evaluation's answer the client reads: 6 MiB. 200 results at
+ * their bounds, each message 4 KiB and five matches of 200 + 40 + 40 bytes
+ * with a 200-byte path, are about 4.9 MiB once JSON escapes control
+ * characters.
  */
 export const MAX_OTTL_EVALUATOR_REPLY_BYTES = 6 * 1024 * 1024;
 
@@ -377,8 +373,8 @@ const lintRequestSchema = z
 /**
  * The rule as the contract takes it: a text or regex rule's pattern, or an
  * OTTL rule's OTTL with an empty condition or expression left out (never
- * `""`, Ruling 33's note). A field a kind doesn't take is left out, so the
- * request check refuses a rule whose kind and fields disagree.
+ * `""`). A field a kind doesn't take is left out, so the request check
+ * refuses a rule whose kind and fields disagree.
  */
 function contractRule(rule: Omit<OttlEvaluatorRule, "id">): Record<string, unknown> {
   if (rule.kind !== "ottl") {

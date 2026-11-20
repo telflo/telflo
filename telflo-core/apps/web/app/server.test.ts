@@ -1,10 +1,9 @@
 // @vitest-environment node
-// The web app's own server, ../server.mjs (D33-1 decisions 13 and 27,
-// Preflight ruling 14). It lives in app/ because the web project's tests are
-// found there. createApp is driven with a stub request handler and
-// temporary folders: the same files and headers react-router-serve served,
-// and no line on stdout or stderr per request (a unique marker in each URL
-// is searched for: boolean canaries).
+// The web app's own server, ../server.mjs. It lives in app/ because the web
+// project's tests are found there. createApp is driven with a stub request
+// handler and temporary folders: the same files and headers react-router-serve
+// served, and no line on stdout or stderr per request (a unique marker in each
+// URL is searched for: boolean canaries).
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import http from "node:http";
 import type { AddressInfo } from "node:net";
@@ -165,7 +164,7 @@ describe("the web server", () => {
   });
 
   it("refuses a path or query that doesn't decode before anything else sees it, writing nothing", async () => {
-    // Ruling 326: React Router's decodePath warns with the raw path, reachable
+    // React Router's decodePath warns with the raw path, reachable
     // through the manifest route's `paths` query.
     for (const target of [
       `/${marker}/%E0%A4%A`,
@@ -203,7 +202,7 @@ describe("the web server", () => {
   });
 });
 
-describe("the console.warn filter (Ruling 327)", () => {
+describe("the console.warn filter", () => {
   it("drops React Router's undecodable-path warning and passes every other call through unchanged", () => {
     const original = vi.fn();
     const target = { warn: original };

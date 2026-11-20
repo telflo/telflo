@@ -1,7 +1,7 @@
 import { randomBytes } from "node:crypto";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-// No browser is ever started: the opener is a stand-in (D27 decision 20).
+// No browser is ever started: the opener is a stand-in.
 vi.mock("../browser.js", () => ({ openBrowser: vi.fn(() => true) }));
 
 import { envelope, routedFetch, type FakeFetch } from "../../tests/fake-fetch.js";
@@ -27,10 +27,9 @@ import {
 } from "./auth.js";
 
 /*
- * login, whoami and logout (D27 decisions 8, 14, 15, 19 and 20) against a
- * stand-in API (and, for the browser flow, the real loopback listener).
- * Tokens are made at run time; what the CLI wrote is checked for them with
- * boolean canaries only.
+ * login, whoami and logout against a stand-in API (and, for the browser
+ * flow, the real loopback listener). Tokens are made at run time; what the
+ * CLI wrote is checked for them with boolean canaries only.
  */
 
 const SERVER = "https://telflo.example";
@@ -64,7 +63,7 @@ function holdsToken(...texts: string[]): boolean {
 
 /**
  * runCli, then the token canary (a boolean) at once: every later assertion
- * on what the CLI wrote can't print a token when it fails (Ruling 237).
+ * on what the CLI wrote can't print a token when it fails.
  */
 async function cli(args: readonly string[], options?: Parameters<typeof runCli>[1]): ReturnType<typeof runCli> {
   const result = await runCli(args, options);
@@ -83,7 +82,7 @@ afterEach(() => {
   vi.unstubAllEnvs();
 });
 
-describe("telflo login from stdin (decision 19)", () => {
+describe("telflo login from stdin", () => {
   it("checks the token with /whoami, takes the one organization and writes the file", async () => {
     api();
     const result = await cli(["login", "--server", SERVER], { input: `${token}\n` });
@@ -116,7 +115,7 @@ describe("telflo login from stdin (decision 19)", () => {
     expect(holdsToken(result.stdout)).toBe(false);
   });
 
-  it("warns once on stderr when TELFLO_TOKEN is set (it shadows the login just stored); JSON with --json (Ruling 249)", async () => {
+  it("warns once on stderr when TELFLO_TOKEN is set (it shadows the login just stored); JSON with --json", async () => {
     api();
     const shadow = `tf_${randomBytes(32).toString("base64url")}`;
     vi.stubEnv("TELFLO_TOKEN", shadow);
@@ -186,7 +185,7 @@ describe("telflo login from stdin (decision 19)", () => {
     expect(holdsToken(result.stderr)).toBe(false);
   });
 
-  it("redacts a token typed as the server's host from the unreachable words (Ruling 237)", async () => {
+  it("redacts a token typed as the server's host from the unreachable words", async () => {
     vi.stubGlobal("fetch", async () => {
       throw new TypeError("fetch failed");
     });
@@ -200,7 +199,7 @@ describe("telflo login from stdin (decision 19)", () => {
     expect(JSON.parse(json.stderr)).toMatchObject({ error: { message: "Couldn't reach https://tf_….invalid." } });
   });
 
-  it("strips control characters from a token's and an organization's names (Ruling 237)", async () => {
+  it("strips control characters from a token's and an organization's names", async () => {
     fake = routedFetch({
       "GET /whoami": { json: { kind: "person", tokenName: "lap\u001b]0;pwned\u0007top", access: "write", organizationId: null } },
       "GET /orgs": { json: { items: [{ ...personalOrganization, name: "Ada\u001b[2J\u009b's" }], nextCursor: null } },
@@ -217,7 +216,7 @@ describe("telflo login from stdin (decision 19)", () => {
     expect(JSON.parse((await cli(["--json", "whoami"])).stdout).tokenName).toBe("lap\u001b]0;pwned\u0007top");
   });
 
-  it("strips them from a service account's organization id when /orgs doesn't name it (Ruling 242)", async () => {
+  it("strips them from a service account's organization id when /orgs doesn't name it", async () => {
     fake = routedFetch({
       "GET /whoami": { json: { kind: "service_account", tokenName: "robot", access: "read", organizationId: `${OWN}\u001b[2J` } },
       "GET /orgs": { json: { items: [], nextCursor: null } },
@@ -254,7 +253,7 @@ describe("telflo login from stdin (decision 19)", () => {
   });
 });
 
-describe("the organization (decision 15)", () => {
+describe("the organization", () => {
   it("takes a service account's own, named from /orgs", async () => {
     api({ kind: "service_account" });
     const result = await cli(["login", "--server", SERVER], { input: token });
@@ -321,7 +320,7 @@ describe("the organization (decision 15)", () => {
   });
 });
 
-describe("telflo login at a terminal (decision 19)", () => {
+describe("telflo login at a terminal", () => {
   it("asks for the server's URL when none is set (no default server), then for the token", async () => {
     api();
     const stdin = fakeStdin({ tty: true });
@@ -368,7 +367,7 @@ describe("telflo login at a terminal (decision 19)", () => {
     expect(stdin.rawModes).toEqual([true, false]);
   });
 
-  it("without --no-browser opens the browser on /cli-auth and takes the page's handoff (decision 20)", async () => {
+  it("without --no-browser opens the browser on /cli-auth and takes the page's handoff", async () => {
     api();
     const stdin = fakeStdin({ tty: true });
     const running = cli(["login", "--server", SERVER], { stdin });
@@ -386,7 +385,7 @@ describe("telflo login at a terminal (decision 19)", () => {
     expect(stdin.rawModes).toEqual([true, false]);
   });
 
-  it("without --no-browser an empty Enter is ignored: the prompt keeps waiting, the page's handoff still logs in (Ruling 249)", async () => {
+  it("without --no-browser an empty Enter is ignored: the prompt keeps waiting, the page's handoff still logs in", async () => {
     api();
     const stdin = fakeStdin({ tty: true });
     const running = cli(["login", "--server", SERVER], { stdin });
@@ -531,7 +530,7 @@ describe("telflo whoami", () => {
   });
 });
 
-describe("telflo logout (decision 14)", () => {
+describe("telflo logout", () => {
   it("removes the file and says a token is revoked on the web", async () => {
     saveCredentials({ version: 1, server: SERVER, token, kind: "person", tokenName: "laptop", organizationId: PERSONAL });
     const result = await cli(["logout"]);

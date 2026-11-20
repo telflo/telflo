@@ -1,5 +1,5 @@
 /*
- * What the CLI writes, and how it ends (D27 decisions 18 and 30).
+ * What the CLI writes, and how it ends.
  *
  * Exit codes, kept from the older Telflo CLI: 0 OK, 1 an API or network failure, 2 a usage
  * error, 3 an authentication or access refusal, 4 a check that found a
@@ -30,7 +30,7 @@ export class ExitError extends Error {
     readonly exitCode: ExitCode,
     /** A stable code for `--json` (an envelope's, or the CLI's own); the exit code's name when absent. */
     readonly code?: string,
-    /** The HTTP status of the API's refusal this ending rewords (Ruling 239), for `--json`'s `status`; null when absent. */
+    /** The HTTP status of the API's refusal this ending rewords, for `--json`'s `status`; null when absent. */
     readonly status?: number,
   ) {
     super(message);
@@ -51,7 +51,7 @@ const PROCESS_IO: Io = {
   stderr: (text) => void process.stderr.write(text),
 };
 
-/** Any write failure but a closed pipe (Ruling 247): fixed words, never the error's own text. */
+/** Any write failure but a closed pipe: fixed words, never the error's own text. */
 export const WRITE_FAILED_MESSAGE = "error: The CLI couldn't write its output.";
 
 /** A stream the CLI writes to, as far as `guardOutputStreams` needs one. */
@@ -62,12 +62,11 @@ interface WritableStream {
 }
 
 /**
- * The bin's guard on its own stdout and stderr (Ruling 247). A closed pipe
+ * The bin's guard on its own stdout and stderr. A closed pipe
  * (EPIPE: `telflo config list | head -1`) ends the CLI quietly with exit 0:
- * the reader took what it wanted, which is no failure (a shell's
- * `pipefail` would report 141 as one). Any other write error prints fixed
- * words on stderr when it can, and exits 1. Node's own stack is never
- * printed.
+ * the reader took what it wanted, which is no failure (a shell's `pipefail`
+ * would report 141 as one). Any other write error prints fixed words on
+ * stderr when it can, and exits 1. Node's own stack is never printed.
  */
 export function guardOutputStreams(
   streams: { stdout: WritableStream; stderr: WritableStream } = { stdout: process.stdout, stderr: process.stderr },
@@ -149,11 +148,11 @@ const CONTROL_CHARACTERS = /[\u0000-\u001f\u007f-\u009f]/g;
 const CONTROL_CHARACTERS_BUT_NEWLINE = /[\u0000-\u0009\u000b-\u001f\u007f-\u009f]/g;
 
 /**
- * A server's string made safe for the terminal (Ruling 237): every C0 and
- * C1 control character and DEL removed, so a name holding an escape
- * sequence (ESC, BEL, an OSC) can't drive the terminal. For every human
- * line holding a server string (token, organization, configuration names);
- * JSON output needs none (JSON escapes them).
+ * A server's string made safe for the terminal: every C0 and C1 control
+ * character and DEL removed, so a name holding an escape sequence (ESC, BEL,
+ * an OSC) can't drive the terminal. For every human line holding a server
+ * string (token, organization, configuration names); JSON output needs none
+ * (JSON escapes them).
  */
 export function terminalText(text: string): string {
   return text.replace(CONTROL_CHARACTERS, "");
@@ -194,10 +193,10 @@ export const READ_ONLY_TOKEN_MESSAGE = "This token is read-only: it can't make c
 export const UNEXPECTED_FAILURE_MESSAGE = "Something went wrong in the CLI.";
 
 /**
- * How an error ends the CLI (decision 18): 401 and 403 exit 3 (a 401 adds
- * "Run telflo login."; `insufficient_access` says the token is read-only),
- * every other API error 1; an ExitError keeps its own code. Any other error
- * is fixed words, exit 1: its message is never shown.
+ * How an error ends the CLI: 401 and 403 exit 3 (a 401 adds "Run telflo
+ * login."; `insufficient_access` says the token is read-only), every other
+ * API error 1; an ExitError keeps its own code. Any other error is fixed
+ * words, exit 1: its message is never shown.
  */
 export function endingOf(error: unknown): Ending {
   if (error instanceof ExitError) {
@@ -219,8 +218,8 @@ export function endingOf(error: unknown): Ending {
 /**
  * Writes an error's ending to stderr (`{ "error": { code, message, status } }`
  * with `--json`) and returns its exit code. Every message goes through
- * `withoutTokens` (Ruling 237: an envelope quoting a bearer, an origin
- * typed from a token), and the human line loses its control characters.
+ * `withoutTokens` (an envelope quoting a bearer, an origin typed from a
+ * token), and the human line loses its control characters.
  */
 export function reportError(error: unknown): ExitCode {
   const ending = endingOf(error);

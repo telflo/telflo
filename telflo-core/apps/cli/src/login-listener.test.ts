@@ -16,9 +16,9 @@ import {
 } from "./login-listener.js";
 
 /*
- * The login listener (D27 decision 20, Ruling 234) against real loopback
- * requests: what it accepts, every refusal (403 or 404, no body, the wait
- * kept), `Access-Control-Allow-Origin` on every reply, the preflight, ten
+ * The login listener against real loopback requests: what it accepts,
+ * every refusal (403 or 404, no body, the wait kept),
+ * `Access-Control-Allow-Origin` on every reply, the preflight, ten
  * refusals, the five minutes. Tokens are made at run time and checked with
  * boolean canaries only.
  */
@@ -68,7 +68,7 @@ describe("the state and the page's address", () => {
   });
 });
 
-describe("the listener accepts the page's answer (decision 20)", () => {
+describe("the listener accepts the page's answer", () => {
   it("binds 127.0.0.1, takes { state, token } with a 204 naming the server's origin, then stops", async () => {
     const started = await start();
     expect(started.address).toBe("127.0.0.1");
@@ -150,7 +150,7 @@ describe("the listener accepts the page's answer (decision 20)", () => {
   });
 });
 
-describe("the preflight (decision 20, Preflight ruling 11)", () => {
+describe("the preflight", () => {
   const preflight = (port: number, extra: Record<string, string> = {}) =>
     sendToListener(port, {
       method: "OPTIONS",

@@ -1,11 +1,10 @@
-// This is React Router's default server entry, revealed with `react-router
-// reveal entry.server` (7.18.4). It differs from the default in three ways.
-// It adds `handleError` below. A streaming render error is logged through
-// `handleError` instead of `console.error`. Two `let`s are `const`, as the
-// lint asks. The first two follow D33-1 decision 13 and Preflight ruling 15.
-// The web server's stdout and stderr never hold a request's URL or path.
-// React Router's default `handleError` writes `No route matches URL
-// "<path>"` for every 404.
+// This is React Router's default server entry, revealed with
+// `react-router reveal entry.server` (7.18.4). It differs from the default
+// in three ways. It adds `handleError` below. A streaming render error is
+// logged through `handleError` instead of `console.error`. Two `let`s are
+// `const`, as the lint asks. The first two keep a request's URL or path out
+// of the web server's stdout and stderr. React Router's default
+// `handleError` writes `No route matches URL "<path>"` for every 404.
 import { PassThrough } from "node:stream";
 
 import type { AppLoadContext, EntryContext, HandleErrorFunction } from "react-router";

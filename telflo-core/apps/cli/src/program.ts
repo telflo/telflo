@@ -1,17 +1,17 @@
 /*
- * The `telflo` command (D27 decisions 11, 18 and 30): the root's `--json`
- * and `-V, --cli-version` (not `--version`: `config pull`, `deploy` and
- * `test` own a `--version <n>`), every area's commands, and how a run ends.
+ * The `telflo` command: the root's `--json` and `-V, --cli-version` (not
+ * `--version`: `config pull`, `deploy` and `test` own a `--version <n>`),
+ * every area's commands, and how a run ends.
  *
- * Program.ts creates the `config` command and hands it to Task 4a's
- * `registerConfigCommands` and Task 4c's `registerConfigRulesCommand`
- * (Preflight ruling 22), so no two areas edit one file.
+ * Program.ts creates the `config` command and hands it to
+ * `registerConfigCommands` and `registerConfigRulesCommand`, so each area
+ * keeps its subcommands in its own file.
  *
  * Commander's own messages (a usage error) go through `withoutTokens`: the
  * CLI takes no token on argv, and one typed there anyway is not echoed.
- * With `--json` (Ruling 254) commander writes nothing itself: its usage
- * error is the CLI's `{ "error": { "code": "usage_error", … } }` on stderr,
- * so stderr stays JSON only even when the parse fails before any action.
+ * With `--json` commander writes nothing itself: its usage error is the
+ * CLI's `{ "error": { "code": "usage_error", … } }` on stderr, so stderr
+ * stays JSON only even when the parse fails before any action.
  */
 
 import { Command, CommanderError } from "commander";
@@ -113,8 +113,8 @@ export async function run(argv: readonly string[], io?: Partial<Io>): Promise<Ex
 
 /**
  * The bin's entry (`index.ts`): its streams guarded (a closed pipe ends it
- * quietly, Ruling 247), then the run's code as the process's exit code, its
- * streams left to drain.
+ * quietly), then the run's code as the process's exit code, its streams left
+ * to drain.
  */
 let guarded = false;
 

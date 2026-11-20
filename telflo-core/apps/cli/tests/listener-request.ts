@@ -1,8 +1,8 @@
 /*
- * Real loopback requests to the login listener (D27 decisions 20 and 32),
- * through node:http so a test sets `Host` and `Origin` as a browser (or any
- * local process) would. Test support only: never built or packed. A body
- * may hold a token: tests check what they send with boolean canaries only.
+ * Real loopback requests to the login listener, through node:http so a
+ * test sets `Host` and `Origin` as a browser (or any local process) would.
+ * Test support only: never built or packed. A body may hold a token: tests
+ * check what they send with boolean canaries only.
  */
 
 import { request } from "node:http";

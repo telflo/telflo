@@ -8,12 +8,12 @@ import { LINT_FAILED_MESSAGE, YAML_INVALID_MESSAGE } from "../src/commands/ottl.
 import { runCli, serviceAccountWithToken, useApiServer, type CliRun } from "./harness.js";
 
 /*
- * telflo ottl lint against the real API in process (D27 decisions 26 and
- * 33), the OTTL evaluator the api's OpenAPI-checked fake: a configuration's
- * every expression, expressions against a context (each kind), an invalid
- * one (exit 4), a YAML that doesn't parse (422: its errors, exit 4) and
- * the not-logged-in exit 3. Tokens are checked with boolean canaries only;
- * no log line holds an expression.
+ * telflo ottl lint against the real API in process, the OTTL evaluator the
+ * api's OpenAPI-checked fake: a configuration's every expression,
+ * expressions against a context (each kind), an invalid one (exit 4), a
+ * YAML that doesn't parse (422: its errors, exit 4) and the not-logged-in
+ * exit 3. Tokens are checked with boolean canaries only; no log line holds
+ * an expression.
  */
 
 const evaluator = useFakeOttlEvaluator();

@@ -1,11 +1,10 @@
 /*
- * `telflo config rules <id> [--version <n>]` (D27 decision 27, route 13),
- * added to the `config` command `program.ts`
- * creates (Preflight ruling 22): the validation pipelines saved on a
+ * `telflo config rules <id> [--version <n>]` (route 13), added to the
+ * `config` command `program.ts` creates: the validation pipelines saved on a
  * version (default the latest), what `telflo test --saved` runs and the
  * Validation tab shows. Rules' names and texts are configuration text:
  * printed for the person who asked, each server string one line without
- * control characters (`cell`, Ruling 237), never in a message.
+ * control characters (`cell`), never in a message.
  */
 
 import type { Command } from "commander";

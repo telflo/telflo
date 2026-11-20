@@ -10,7 +10,7 @@ import {
   SERVER_NOT_HTTPS_MESSAGE,
 } from "./server.js";
 
-/* The server rule (D27 decision 12): an origin only, HTTPS except loopback. */
+/* The server rule: an origin only, HTTPS except loopback. */
 
 function refusalOf(input: string): ExitError {
   try {
@@ -22,7 +22,7 @@ function refusalOf(input: string): ExitError {
   throw new Error("the server was accepted");
 }
 
-describe("serverOrigin (decision 12)", () => {
+describe("serverOrigin", () => {
   it.each([
     ["https://telflo.example.com", "https://telflo.example.com"],
     ["https://telflo.example.com/", "https://telflo.example.com"],
@@ -78,7 +78,7 @@ describe("serverOrigin (decision 12)", () => {
   );
 });
 
-describe("chooseServer (decision 12)", () => {
+describe("chooseServer", () => {
   it("takes the flag, then TELFLO_SERVER, then the stored server", () => {
     const env = { TELFLO_SERVER: "https://env.example" };
     expect(chooseServer("https://flag.example", env, "https://stored.example")).toBe("https://flag.example");

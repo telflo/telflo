@@ -7,11 +7,10 @@ import { fileURLToPath } from "node:url";
 import Ajv2020, { type ErrorObject, type ValidateFunction } from "ajv/dist/2020.js";
 import { parse as parseYaml } from "yaml";
 
-// The OTTL evaluator in memory, for tests only (D15a Task 5; plan Preflight
-// ruling 28). Built on node:http, as the fake tester is
-// (fake-otelcol-testing.ts). It never ships: .dockerignore leaves
-// apps/api/src/testing out of the images, and a lint rule keeps production
-// code from importing it.
+// The OTTL evaluator in memory, for tests only. Built on node:http, as the
+// fake tester is (fake-otelcol-testing.ts). It never ships: .dockerignore
+// leaves apps/api/src/testing out of the images, and a lint rule keeps
+// production code from importing it.
 //
 // It checks the contract both ways: every request it receives and every
 // reply it sends is validated against services/ottl-evaluator/openapi.yaml,
@@ -41,16 +40,16 @@ import { parse as parseYaml } from "yaml";
 //   couldn't answer).
 //
 // Validate also refuses an OTTL context the signal doesn't allow, in the
-// evaluator's words. Lint (D25 Task 3) answers each text by the same
-// markers in it: none, valid; `invalid`, "OTTL syntax error: …"; `busy` and
-// `unavailable`, the whole request; and a text calling one of the transform
-// processor's own functions (FAKE_OTTL_EVALUATOR_UNDEFINED_FUNCTIONS), which
-// the real evaluator doesn't register, "OTTL syntax error: undefined
-// function "<name>"", in its words. Its health is setHealth()'s: `up` (200) by default,
-// `down` (the connection reset, as an evaluator that isn't there). The
-// API's tests push other answers with nextFault, a queue: each evaluate or
-// validate request takes the first fault waiting, if any; clearFaults()
-// drops those not taken.
+// evaluator's words. Lint answers each text by the same markers in it: none,
+// valid; `invalid`, "OTTL syntax error: …"; `busy` and `unavailable`, the
+// whole request; and a text calling one of the transform processor's own
+// functions (FAKE_OTTL_EVALUATOR_UNDEFINED_FUNCTIONS), which the real
+// evaluator doesn't register, "OTTL syntax error: undefined function
+// "<name>"", in its words. Its health is setHealth()'s: `up` (200) by default,
+// `down` (the connection reset, as an evaluator that isn't there). The API's
+// tests push other answers with nextFault, a queue: each evaluate or validate
+// request takes the first fault waiting, if any; clearFaults() drops those not
+// taken.
 
 /** A fixed, public test credential: 32 bytes and more. */
 export const FAKE_OTTL_EVALUATOR_SECRET = "telflo-fake-ottl-evaluator-secret-0123456789";
@@ -65,7 +64,7 @@ export type FakeOttlEvaluatorMarker = (typeof FAKE_OTTL_EVALUATOR_MARKERS)[numbe
 /**
  * The transform processor's own functions, which the real evaluator's lint
  * doesn't register: a lint text calling one is "undefined function", as
- * there (D25 Task 3; TRANSFORM_CUSTOM_FUNCTIONS).
+ * there (TRANSFORM_CUSTOM_FUNCTIONS).
  */
 export const FAKE_OTTL_EVALUATOR_UNDEFINED_FUNCTIONS: ReadonlySet<string> = new Set([
   "convert_sum_to_gauge",

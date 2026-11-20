@@ -6,9 +6,9 @@ import { spawn } from "node:child_process";
 import { browserCommand, openBrowser } from "./browser.js";
 
 /*
- * Opening the browser (D27 decision 20): the URL one
- * argument on macOS and Linux, quoted and verbatim for cmd.exe on Windows.
- * Nothing is ever started: `spawn` is a stand-in.
+ * Opening the browser: the URL one argument on macOS and Linux, quoted and
+ * verbatim for cmd.exe on Windows. Nothing is ever started: `spawn` is a
+ * stand-in.
  */
 
 const URL = "https://telflo.example/cli-auth#state=abc&port=54321&host=ada-laptop";

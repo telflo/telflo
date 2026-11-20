@@ -1,7 +1,7 @@
 @import "tailwindcss";
 /* Every font is self-hosted via Fontsource and bundled with the app — none is
-   fetched from a font CDN, so the page renders identically when air-gapped
-   (ADR 0018). */
+   fetched from a font CDN, so the page renders identically when
+   air-gapped. */
 /* Base and marketing body text. */
 @import "@fontsource-variable/inter";
 /* App surfaces (.tf-app, below): auth screens and, later, the product. */
@@ -647,9 +647,8 @@ html.dark body {
 }
 
 /* Navy's floor outside `.tf-app` (the page behind a short screen, an
-   overscroll): its own background, not Dark's slate (D21 Preflight ruling
-   22, B6). Navy carries `dark` too; this follows the rule above, so it wins
-   at equal specificity. */
+   overscroll): its own background, not Dark's slate. Navy carries `dark`
+   too; this follows the rule above, so it wins at equal specificity. */
 html.navy,
 html.navy body {
   background-color: #0c1524;
@@ -667,8 +666,8 @@ html.dark body.tf-app {
 }
 
 /* Navy's default border colour. It must follow the `html.dark` rule above,
-   which it ties on specificity; earlier, Navy's borders were Dark's slate
-   (D21 Preflight ruling 22, B2). Dark keeps its own. */
+   which it ties on specificity, or Navy's borders would be Dark's slate.
+   Dark keeps its own. */
 @layer base {
   html.navy .tf-app *,
   html.navy .tf-app *::before,
@@ -775,7 +774,7 @@ html.dark body.tf-app {
   color: var(--color-gray-400);
 }
 /* Its link, in Light as Dark's below: the theme's muted text, not xyflow's
-   #999 (D21 Preflight ruling 22, B7). */
+   #999. */
 .tf-app .react-flow__attribution a {
   color: var(--color-muted-foreground);
 }
@@ -809,7 +808,7 @@ html.navy .react-flow__background pattern line {
 
 /* The Controls and the MiniMap take the theme's tokens: Dark's values
    (#171b21, #262c34, #98a1ac, #222831), and Navy's own rather than Dark's
-   carbon (D21 Preflight ruling 22, B1). */
+   carbon. */
 html.dark .react-flow__controls {
   background-color: var(--color-card);
   border-color: var(--color-border);

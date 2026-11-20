@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { decidePushAction, latestVersion } from "./push.js";
 
-/* config push's choice (D27 decision 26). */
+/* config push's choice. */
 
 describe("decidePushAction", () => {
   it("patches a draft latest in place", () => {

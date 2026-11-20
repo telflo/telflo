@@ -6,11 +6,11 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from
 import { startFakeOpampServer, type FakeOpampServer } from "./fake-opamp-server.js";
 import { choose, variableReferences } from "./fake-opamp-server-variables.js";
 
-// The fake opamp-server's organization variables (D20 Task 9): the 11
-// routes, the bindings on groups and pins, the undefined check and drift,
-// as the Go server answers them (Tasks 3 to 6), through a plain HTTP client,
-// every request and reply checked against vendor/opamp-server/openapi.yaml
-// (afterEach reads the violations). The clock is the fake's `now`.
+// The fake opamp-server's organization variables: the 11 routes, the
+// bindings on groups and pins, the undefined check and drift, as the Go
+// server answers them, through a plain HTTP client, every request and
+// reply checked against vendor/opamp-server/openapi.yaml (afterEach reads
+// the violations). The clock is the fake's `now`.
 
 let fake: FakeOpampServer;
 const BASE = Date.parse("2026-10-20T09:00:00.000Z");
@@ -174,7 +174,7 @@ describe("the names a published version references (orgvariables.References)", (
   });
 });
 
-describe("a publish (Ruling 51)", () => {
+describe("a publish", () => {
   it("refuses a live reference to a name over 128 characters, 400 naming yaml and never the name, writing nothing", async () => {
     const organizationId = await anOrganization();
     const long = `A${"B".repeat(128)}`;
@@ -218,7 +218,7 @@ describe("variables", () => {
     expect([taken.status, code(taken)]).toEqual([409, "variable_name_taken"]);
   });
 
-  it("answers another organization's id variable_conflict only when the name is free and the limit isn't reached (Ruling 59)", async () => {
+  it("answers another organization's id variable_conflict only when the name is free and the limit isn't reached", async () => {
     const mine = await anOrganization();
     const theirs = await anOrganization();
     const theirVariable = await aVariable(theirs, "REGION");
@@ -269,7 +269,7 @@ describe("variables", () => {
     expect([taken.status, code(taken)]).toEqual([409, "variable_name_taken"]);
   });
 
-  it("deletes a variable with its overrides, reset rows included, moving the counter on (Ruling 63)", async () => {
+  it("deletes a variable with its overrides, reset rows included, moving the counter on", async () => {
     const organizationId = await anOrganization();
     const variable = await aVariable(organizationId, "REGION");
     const kept = await aVariable(organizationId, "KEPT");
@@ -283,7 +283,7 @@ describe("variables", () => {
 
     expect((await call("DELETE", `/organizations/${organizationId}/variables/${variable.id}`)).status).toBe(204);
 
-    // Ruling 63: a delete moves the counter on once.
+    // A delete moves the counter on once.
     expect(revisionOf(organizationId)).toBe(revision + 1);
 
     const overrides = fake.snapshotOf(organizationId).variableGroupOverrides as { variableId: string }[];
@@ -292,7 +292,7 @@ describe("variables", () => {
     expect([missing.status, code(missing)]).toEqual([404, "variable_not_found"]);
   });
 
-  it("holds at most 150 variables (Q104) and 100 variable groups (Q90)", async () => {
+  it("holds at most 150 variables and 100 variable groups", async () => {
     const organizationId = await anOrganization();
     for (let n = 0; n < 150; n++) await aVariable(organizationId, `V_${n}`);
     for (let n = 0; n < 100; n++) await aVariableGroup(organizationId);
@@ -410,7 +410,7 @@ async function aUsedWorld(names = ["REGION"]) {
   return { organizationId, fleetId, defaultGroupId, variables, assigned, pinned, unused, collectorId: collector.id };
 }
 
-describe("the guards (decision 6, Q102)", () => {
+describe("the guards", () => {
   it("refuses a used variable's delete and rename 409 with what uses it, ids and counts only; a value change never", async () => {
     const world = await aUsedWorld();
     const variable = world.variables[0] as Variable;
@@ -500,7 +500,7 @@ describe("the guards (decision 6, Q102)", () => {
   });
 });
 
-describe("the undefined check and the bindings' targets (decision 7)", () => {
+describe("the undefined check and the bindings' targets", () => {
   async function anUndefinedWorld(count: number) {
     const organizationId = await anOrganization();
     const { fleetId, defaultGroupId } = await aFleet(organizationId);
@@ -563,7 +563,7 @@ describe("the undefined check and the bindings' targets (decision 7)", () => {
     }
   });
 
-  it("sets and clears a group's and a pin's variable group, and a bulk pin leaves what it isn't given as it is (Q103)", async () => {
+  it("sets and clears a group's and a pin's variable group, and a bulk pin leaves what it isn't given as it is", async () => {
     const organizationId = await anOrganization();
     const { fleetId, defaultGroupId } = await aFleet(organizationId);
     const one = await aVariableGroup(organizationId);
@@ -591,7 +591,7 @@ describe("the undefined check and the bindings' targets (decision 7)", () => {
   });
 });
 
-describe("drift by the served-variables marker (decisions 12 and 34; Choose's three levels)", () => {
+describe("drift by the served-variables marker (Choose's three levels)", () => {
   /**
    * A collector of a group bound to `groupLevel`, pinned to `pinLevel` (both
    * variable groups), running a published version referencing REGION and
@@ -659,7 +659,7 @@ describe("drift by the served-variables marker (decisions 12 and 34; Choose's th
     await anOverride(organizationId, world.groupLevel.id, world.region.id, "eu-group-2");
     expect(await world.drift()).toBe("inSync");
 
-    // A Reset of the pin's override is seen (its row above the source counts, Q100).
+    // A Reset of the pin's override is seen (its row above the source counts).
     await call("DELETE", `/organizations/${organizationId}/variable-groups/${world.pinLevel.id}/overrides/${world.region.id}`, { actor: null });
     expect(await world.drift()).toBe("pending");
     world.serve();
@@ -693,7 +693,7 @@ describe("drift by the served-variables marker (decisions 12 and 34; Choose's th
     expect(await world.drift()).toBe("inSync");
   });
 
-  it("carries the old group's setting's stamp on a move between groups of the same variable group (Ruling 60)", async () => {
+  it("carries the old group's setting's stamp on a move between groups of the same variable group", async () => {
     const world = await aServedCollector();
     const shared = await aVariableGroup(world.organizationId);
     // A group already using the shared variable group, its setting stamped before the collector's last poll…

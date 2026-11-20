@@ -4,7 +4,7 @@ export default defineConfig({
   test: {
     name: "cli",
     // Unit tests beside their modules; the integration tests and their
-    // harness in tests/ (D27 Preflight ruling 4).
+    // harness in tests/.
     include: ["src/**/*.test.ts", "tests/**/*.integration.test.ts"],
     fileParallelism: false,
     // The integration tests run the real API on the agent's test database:

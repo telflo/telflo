@@ -9,9 +9,9 @@ import {
   type IFileStore,
 } from "../file-store/file-store.js";
 
-// The cases every file store passes (D23-1 decision 27), written against
-// IFileStore alone: nothing here knows whether the store keeps its files on
-// a disk or in a bucket. A store's test file calls it once, at the top:
+// The cases every file store passes, written against IFileStore alone:
+// nothing here knows whether the store keeps its files on a disk or in a
+// bucket. A store's test file calls it once, at the top:
 //
 //   describeFileStoreContract("LocalDiskFileStore", async () => {
 //     const root = ...; // a fresh, empty place for this one test
@@ -86,9 +86,9 @@ const KEYS: [string, FileKey][] = [
   ["a run's output", testRun("output")],
   ["a run's decoded input", testRun("decoded-input")],
   ["a test template", testTemplate()],
-  ["a test definition's input (D14b detail 18)", definitionInput()],
-  ["an organization's logo (D23-2 decision 30)", organizationLogo()],
-  ["a library file (D23-2 decision 30)", libraryFile()],
+  ["a test definition's input", definitionInput()],
+  ["an organization's logo", organizationLogo()],
+  ["a library file", libraryFile()],
 ];
 
 function sha256(content: string | Uint8Array): string {
@@ -133,11 +133,11 @@ function countedReadable(...parts: string[]): { source: Readable; reads: () => n
 }
 
 /**
- * The cases of D23-1 decision 27, for one store. `setup` runs before each
+ * The file store contract's cases, for one store. `setup` runs before each
  * test and gives it a fresh, empty store; its `cleanUp` runs after it.
  */
 export function describeFileStoreContract(name: string, setup: () => Promise<FileStoreUnderTest>): void {
-  describe(`${name}: the file store contract (D23-1 decision 27)`, () => {
+  describe(`${name}: the file store contract`, () => {
     let underTest: FileStoreUnderTest | undefined;
     let store: IFileStore;
 
@@ -531,7 +531,7 @@ export function describeFileStoreContract(name: string, setup: () => Promise<Fil
         expect(await readBytes(store, testInput())).toEqual(BYTES);
       });
 
-      it("copies a person's input or a template into a definition's input, and that into a run's (D14b)", async () => {
+      it("copies a person's input or a template into a definition's input, and that into a run's", async () => {
         await store.write(testInput(), chunks("from my files\n"), { maxBytes: MAX });
         await store.write(testTemplate(), chunks("from a template\n"), { maxBytes: MAX });
         const otherInput = definitionInput(ORGANIZATION_A, FILE);
@@ -545,7 +545,7 @@ export function describeFileStoreContract(name: string, setup: () => Promise<Fil
 
         expect(await readText(store, testRun("input"))).toBe("from my files\n");
         expect(await readText(store, otherInput)).toBe("from a template\n");
-        // The person's file can go: the definition keeps its own copy (D14b decision 1).
+        // The person's file can go: the definition keeps its own copy.
         await store.remove(testInput());
         expect(await readText(store, definitionInput())).toBe("from my files\n");
         expect(await readText(store, testTemplate())).toBe("from a template\n");
@@ -622,7 +622,7 @@ export function describeFileStoreContract(name: string, setup: () => Promise<Fil
         expect(await readText(store, definitionInput())).toBe("the definition's input");
       });
 
-      it("a logo, a library file, a template and a definition input with the same id never collide (D23-2 decision 30)", async () => {
+      it("a logo, a library file, a template and a definition input with the same id never collide", async () => {
         const sameId = LOGO;
         const keys: FileKey[] = [
           organizationLogo(ORGANIZATION_A, sameId),

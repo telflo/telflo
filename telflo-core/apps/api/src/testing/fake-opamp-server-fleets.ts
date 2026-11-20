@@ -1,37 +1,34 @@
 import { randomBytes, randomUUID } from "node:crypto";
 
-// The fake opamp-server's fleet model (D16b Task 1; plan Preflight ruling 4;
-// D16a decision 31), for tests only: fake-opamp-server.ts loads the contract,
-// checks every request and reply against it, keeps the organizations and the
-// publications, and hands this module the 25 operations of the fleet model
-// (D16a's, 23 once D16c removed importing; D17b-2 added the token events,
-// D17c-1 a new default token), once a request's path ids are
-// read and its organization is found
-// registered. It never ships (.dockerignore leaves apps/api/src/testing out of
-// the images; a lint rule keeps production code from importing it).
+// The fake opamp-server's fleet model, for tests only: fake-opamp-server.ts
+// loads the contract, checks every request and reply against it, keeps the
+// organizations and the publications, and hands this module the 25 operations
+// of the fleet model, once a request's path ids are read and its organization
+// is found registered. It never ships (.dockerignore leaves
+// apps/api/src/testing out of the images; a lint rule keeps production code
+// from importing it).
 //
-// Ported from the opamp-server's Go, at 26c6df1 (D16a; the paths are its
-// own repository's since D26):
+// Ported from the opamp-server's Go, at 26c6df1 (the paths are its own
+// repository's):
 // - management/fleets.go, fleets_request.go,
 //   collector_groups.go, enrollment_tokens.go, collectors.go, limits.go and
 //   usage.go: each route's check order (the path's ids, the
 //   organization, the query or the body, the fleet, the child, then the
 //   409s and 422s), its messages and its replies;
-// - store/memorydb/memorydb.go and each store's
-//   memory.go (fleets, collectorgroups, enrollmenttokens, collectors,
-//   publications' Usage): the semantics. A fleet's create
-//   (idempotent by id, label and type; fleet_conflict across
-//   organizations), its Default group and two tokens; rotation's grace (the
-//   old token's expiry the earlier of its own and graceEndsAt, doRefresh set;
-//   the current rotate token the newest valid one without doRefresh first);
-//   reveal and revoke; collectors.LivenessAt and DriftOf at the injected
-//   clock; the list's sorts (names as UTF-8 bytes), q, groupId and cursors
-//   that carry their sort and order; the Default group's 409s and a group's
-//   delete deleting its collectors and their errors (D17d-1 decision 3); the
-//   collector PATCH all or nothing, checked
-//   in the order collector, group, pin target, name; the bulk pin's sorted,
-//   deduplicated updated and notFound; usage newest first, its
-//   groups by fleet then group; and the cascades.
+// - store/memorydb/memorydb.go and each store's memory.go (fleets,
+//   collectorgroups, enrollmenttokens, collectors, publications' Usage): the
+//   semantics. A fleet's create (idempotent by id, label and type;
+//   fleet_conflict across organizations), its Default group and two tokens;
+//   rotation's grace (the old token's expiry the earlier of its own and
+//   graceEndsAt, doRefresh set; the current rotate token the newest valid one
+//   without doRefresh first); reveal and revoke; collectors.LivenessAt and
+//   DriftOf at the injected clock; the list's sorts (names as UTF-8 bytes),
+//   q, groupId and cursors that carry their sort and order; the Default
+//   group's 409s and a group's delete deleting its collectors and their
+//   errors; the collector PATCH all or nothing, checked in the order
+//   collector, group, pin target, name; the bulk pin's sorted, deduplicated
+//   updated and notFound; usage newest first, its groups by fleet then group;
+//   and the cascades.
 //
 // Bearers are random: standard base64 of 134 random bytes (180 characters),
 // the shape of the real AES-256-GCM bearer, fresh on each reveal. Nothing
@@ -40,17 +37,16 @@ import { randomBytes, randomUUID } from "node:crypto";
 // The time is the fake's `now` option, so tests move the clock to put a
 // collector on each step of the liveness ladder.
 //
-// D20 (Task 9) adds the bindings, ported from store/collectorgroups and
-// store/collectors at D20 Task 5: a group's variable group and a
-// collector's pinned one, each checked the organization's (422
-// variable_group_not_found) and stamped with the organization's counter
-// when it changes (a collector also on a move between groups whose variable
-// groups differ, else carrying the old group's setting's stamp, Ruling 60);
-// an assignment or a pin of a published version referencing names no
-// variable has refused (422 variables_undefined, with the names); and drift
-// by the served published version and the served-variables marker against
-// the wanted stamp (DriftOf). The variables themselves are
-// fake-opamp-server-variables.ts's.
+// The bindings are ported from store/collectorgroups and store/collectors:
+// a group's variable group and a collector's pinned one, each checked the
+// organization's (422 variable_group_not_found) and stamped with the
+// organization's counter when it changes (a collector also on a move
+// between groups whose variable groups differ, else carrying the old
+// group's setting's stamp); an assignment or a pin of a published version
+// referencing names no variable has refused (422 variables_undefined, with
+// the names); and drift by the served published version and the
+// served-variables marker against the wanted stamp (DriftOf). The variables
+// themselves are fake-opamp-server-variables.ts's.
 
 // ---------------------------------------------------------------------------
 // What fake-opamp-server.ts shares with this module.
@@ -95,10 +91,10 @@ export const DATE_TIME_PATTERN =
   /^(\d{4})-(\d{2})-(\d{2})[Tt](\d{2}):(\d{2}):(\d{2})(\.\d+)?([Zz]|([+-])(\d{2}):(\d{2}))$/;
 
 /**
- * An RFC 3339 date-time as whole milliseconds since the epoch, truncated
- * (D11a Ruling 27: the server keeps times at milliseconds); NaN for a leap
- * second, which Go's time.Parse refuses. Only for a value the contract's
- * date-time format accepted.
+ * An RFC 3339 date-time as whole milliseconds since the epoch, truncated (the
+ * server keeps times at milliseconds); NaN for a leap second, which Go's
+ * time.Parse refuses. Only for a value the contract's date-time format
+ * accepted.
  */
 export function toMilliseconds(value: string): number {
   const match = DATE_TIME_PATTERN.exec(value) as RegExpExecArray;
@@ -108,9 +104,9 @@ export function toMilliseconds(value: string): number {
 }
 
 /**
- * The instants a stored time may be (D11a Ruling 30): from
- * 0001-01-01T00:00:00Z up to, not including, the year 10000. setUTCFullYear
- * for the first, since Date.UTC maps the years 0 to 99 to 1900 to 1999.
+ * The instants a stored time may be: from 0001-01-01T00:00:00Z up to, not
+ * including, the year 10000. setUTCFullYear for the first, since Date.UTC
+ * maps the years 0 to 99 to 1900 to 1999.
  */
 export const EARLIEST_INSTANT = (() => {
   const earliest = new Date(0);
@@ -133,7 +129,7 @@ export interface ModelPublication {
   version: { id: string; number: number; label: string | null };
   /** Whole milliseconds. */
   publishedAt: number;
-  /** The names its live `${org:NAME}` references name, as Put stored them (D20 decision 30). */
+  /** The names its live `${org:NAME}` references name, as Put stored them. */
   names: string[];
 }
 
@@ -157,7 +153,7 @@ export interface FleetModelOptions {
   publicationsOf(organizationId: string, configurationId: string): ModelPublication[];
   /** Whether markPublicationInUse marked the organization's publication: one phantom pinned collector. */
   isMarkedInUse(organizationId: string, id: string): boolean;
-  /** The organization's variables (D20). */
+  /** The organization's variables. */
   variables: FleetVariables;
 }
 
@@ -188,8 +184,8 @@ export interface EnrollCollectorOptions {
   name?: string;
   /**
    * One of the fleet's groups; default its Default group (seeding only: the
-   * real agent door refuses a collector naming no group, D17d-1 decision 5,
-   * and the fake has no agent door).
+   * real agent door refuses a collector naming no group, and the fake has
+   * no agent door).
    */
   groupId?: string;
   /** One of the fleet's tokens it authenticated with; default the fleet's valid default token (all revoked: its newest). */
@@ -210,9 +206,9 @@ export interface CollectorStateChanges {
    * What it was last served: a published version (sha256 defaults to its,
    * at to now), or `kind: null` for a hash whose published version is
    * gone; null clears it. `variablesStamp` is the served-variables marker
-   * the poll records (D20 decision 12): by default, as a poll serving now
-   * would, the collector's wanted stamp for a published version, and none
-   * for `kind: null`; a number (or null for none) sets it.
+   * the poll records: by default, as a poll serving now would, the
+   * collector's wanted stamp for a published version, and none for
+   * `kind: null`; a number (or null for none) sets it.
    */
   served?:
     | { kind: "publication"; id: string; sha256?: string; at?: Date | null; variablesStamp?: number | null }
@@ -300,9 +296,9 @@ interface StoredGroup {
   name: string;
   isDefault: boolean;
   assignedPublicationId: string | null;
-  /** The client's own data (D17c-1 decision 30), in its canonical form (keys sorted), or null. */
+  /** The client's own data, in its canonical form (keys sorted), or null. */
   annotations: JsonObject | null;
-  /** D20: the variable group its collectors use, or null, and its setting's stamp (null until first set). */
+  /** The variable group its collectors use, or null, and its setting's stamp (null until first set). */
   variableGroupId: string | null;
   variableGroupStamp: number | null;
   createdAt: number;
@@ -321,7 +317,7 @@ interface StoredToken {
   createdAt: number;
 }
 
-/** A pin or a served pointer: a published version, the one kind since D16c. */
+/** A pin or a served pointer: a published version, the one kind. */
 interface Ref {
   kind: "publication";
   id: string;
@@ -335,12 +331,12 @@ interface StoredCollector {
   instanceUid: string;
   name: string;
   pinned: Ref | null;
-  /** D20: a variable group pinned on it, or null; the stamp of its pin's setting or of a move (null until first stamped). */
+  /** A variable group pinned on it, or null; the stamp of its pin's setting or of a move (null until first stamped). */
   pinnedVariableGroupId: string | null;
   pinnedVariableGroupStamp: number | null;
   /** ref null once the published version it names is deleted (the hash stays). */
   served: { ref: Ref | null; sha256: string; at: number | null } | null;
-  /** D20: the served-variables marker, the newest stamp it was served with, or null for none (0). */
+  /** The served-variables marker, the newest stamp it was served with, or null for none (0). */
   servedVariablesStamp: number | null;
   effective: { sha256: string; status: "applied" | "applying" | "failed"; error: string | null; at: number } | null;
   reported: {
@@ -416,13 +412,13 @@ const MESSAGE_DEFAULT_TOKEN_EXISTS = "The fleet already has a valid default toke
 const MESSAGE_COLLECTOR_NOT_FOUND = "The fleet has no collector with this id.";
 const MESSAGE_COLLECTOR_NAME_TAKEN = "Another of the organization's collectors has this name.";
 const MESSAGE_CURSOR = "cursor isn't one this API gave.";
-// D20 (management/variables.go).
+// management/variables.go's messages.
 const MESSAGE_VARIABLE_GROUP_NOT_FOUND = "The organization holds no variable group with this id.";
 const MESSAGE_VARIABLES_UNDEFINED = "The published version references organization variables that aren't defined.";
 
 const fleetNotFound = (): Reply => errorReply(404, "fleet_not_found", MESSAGE_FLEET_NOT_FOUND);
 
-/** The bearer reply's header (Ruling 35). */
+/** The bearer reply's header. */
 const NO_STORE = { "content-type": "application/json", "cache-control": "no-store" };
 
 /** A name, label or group name: the contract's pattern (Go's unicode.IsSpace at the ends, no unicode.IsControl). */
@@ -614,17 +610,17 @@ interface Resolution {
   from: "pinnedPublication" | "groupPublication";
   id: string;
   sha256: string;
-  /** D20: the marker the collector must have been served at least (WantedStamp). */
+  /** The marker the collector must have been served at least (WantedStamp). */
   wanted: number;
 }
 
 /**
- * collectors.DriftOf (D20 decisions 12 and 34): Pending when it was never
- * served, or served another published version than the resolved one, or
- * its served-variables marker is below the wanted stamp, or it hasn't
- * reported since; then Failed, or applied: InSync on the served hash (the
- * filled-in bytes'), else Drifted. The served hash is never compared with
- * the published version's own.
+ * collectors.DriftOf: Pending when it was never served, or served another
+ * published version than the resolved one, or its served-variables marker
+ * is below the wanted stamp, or it hasn't reported since; then Failed, or
+ * applied: InSync on the served hash (the filled-in bytes'), else
+ * Drifted. The served hash is never compared with the published version's
+ * own.
  */
 function driftOf(resolved: Resolution | undefined, c: StoredCollector): string {
   const { served, effective } = c;
@@ -732,14 +728,14 @@ function sortedKeys(value: Json): Json {
 }
 
 /**
- * The canonical annotations (CanonicalAnnotations, D17c-1 decision 30), or
- * undefined when the server refuses them (400): an object jsonb keeps as
- * written, whose canonical text (each number as written) is at most 16384
- * bytes; stored and answered with every object's keys sorted. The fake
- * stores and answers the parsed value (a number's text as JSON.stringify
- * writes it: 1.50 answers 1.5), since its replies are plain JSON values
- * checked by ajv. Like the memory store, the fake doesn't count Postgres's
- * jsonb text (its table's check).
+ * The canonical annotations (CanonicalAnnotations), or undefined when the
+ * server refuses them (400): an object jsonb keeps as written, whose
+ * canonical text (each number as written) is at most 16384 bytes; stored
+ * and answered with every object's keys sorted. The fake stores and
+ * answers the parsed value (a number's text as JSON.stringify writes it:
+ * 1.50 answers 1.5), since its replies are plain JSON values checked by
+ * ajv. Like the memory store, the fake doesn't count Postgres's jsonb text
+ * (its table's check).
  */
 function canonicalAnnotations(value: Json, asWritten: WrittenJson | undefined): JsonObject | undefined {
   if (value === null || typeof value !== "object" || Array.isArray(value) || asWritten === undefined || !keepsAsWritten(asWritten)) {
@@ -901,9 +897,9 @@ export function createFleetModel(options: FleetModelOptions): FleetModel {
   }
 
   /**
-   * checkDefined (D20 decision 7): 422 variables_undefined, with the names,
-   * for a published version referencing names no variable of the
-   * organization has; nothing to check for an unpin.
+   * checkDefined: 422 variables_undefined, with the names, for a published
+   * version referencing names no variable of the organization has; nothing to
+   * check for an unpin.
    */
   function undefinedRefused(organizationId: string, publicationId: string | null): Reply | undefined {
     if (publicationId === null) return undefined;
@@ -919,7 +915,7 @@ export function createFleetModel(options: FleetModelOptions): FleetModel {
    * stampsCollector: a collector's pinned variable group changing, or a
    * move between groups whose variable groups differ, is stamped with the
    * counter's next value; else a move carries the old group's setting's
-   * stamp (carriedStamp, Ruling 60). Called after every check.
+   * stamp (carriedStamp). Called after every check.
    */
   function restamp(c: StoredCollector, nextGroupId: string, nextPinned: string | null): void {
     const current = groupOf(c.organizationId, c.fleetId, c.groupId);
@@ -960,9 +956,9 @@ export function createFleetModel(options: FleetModelOptions): FleetModel {
   }
 
   /**
-   * RotateStates (D17a Preflight ruling 2): null without a valid rotate
-   * token; else the current one's expiry, the latest expiry among the other
-   * valid tokens in their grace, and how many are valid.
+   * RotateStates: null without a valid rotate token; else the current one's
+   * expiry, the latest expiry among the other valid tokens in their grace,
+   * and how many are valid.
    */
   function rotateTokenOf(fleet: StoredFleet, now: number): JsonObject | null {
     const current = currentRotate(fleet.organizationId, fleet.id, now);
@@ -1269,10 +1265,10 @@ export function createFleetModel(options: FleetModelOptions): FleetModel {
   }
 
   /**
-   * checkLinks (D20 Task 5's order): what next newly names, a published
-   * version the organization's (422), a variable group the organization's
-   * (422), the new published version's names defined (422
-   * variables_undefined); then the name unique in the fleet (409).
+   * checkLinks, in its order: what next newly names, a published version
+   * the organization's (422), a variable group the organization's (422),
+   * the new published version's names defined (422 variables_undefined);
+   * then the name unique in the fleet (409).
    */
   function groupLinksRefused(current: StoredGroup | undefined, g: StoredGroup, self: string): Reply | undefined {
     const newPublication =
@@ -1382,8 +1378,8 @@ export function createFleetModel(options: FleetModelOptions): FleetModel {
     const group = groupOf(request.organizationId, fleetId, groupId);
     if (group === undefined) return childNotFound(request, fleetId, "collector_group_not_found", MESSAGE_GROUP_NOT_FOUND);
     if (group.isDefault) return errorReply(409, "collector_group_is_default", MESSAGE_GROUP_IS_DEFAULT);
-    // D17d-1 decision 3 (store/collectorgroups' Delete): the group's
-    // collectors and their error history go with it, in one step.
+    // As store/collectorgroups' Delete does: the group's collectors and their
+    // error history go with it, in one step.
     for (const c of [...collectors.values()]) {
       if (c.organizationId === request.organizationId && c.fleetId === fleetId && c.groupId === groupId) removeCollector(c.id);
     }
@@ -1446,7 +1442,7 @@ export function createFleetModel(options: FleetModelOptions): FleetModel {
     if (fleet.status !== "active") return errorReply(409, "fleet_archived", MESSAGE_FLEET_ARCHIVED);
     const predecessor = currentRotate(request.organizationId, fleetId, now);
     if (predecessor !== undefined) {
-      // A rotation never lengthens a token's life (Ruling 33).
+      // A rotation never lengthens a token's life.
       predecessor.expiresAt =
         predecessor.expiresAt !== null && predecessor.expiresAt < graceEndsAt ? predecessor.expiresAt : graceEndsAt;
       predecessor.doRefresh = true;
@@ -1479,10 +1475,10 @@ export function createFleetModel(options: FleetModelOptions): FleetModel {
 
   /**
    * enrollment_tokens.go's issueDefaultEnrollmentToken and the store's
-   * IssueDefault (D17c-1 decision 29): the body, the fleet, archived, then a
-   * valid default token (a default token never expires, so valid is not
-   * revoked) answers 409; else a new default token, an `issued` event and
-   * its bearer.
+   * IssueDefault: the body, the fleet, archived, then a valid default
+   * token (a default token never expires, so valid is not revoked)
+   * answers 409; else a new default token, an `issued` event and its
+   * bearer.
    */
   function issueDefaultEnrollmentToken(request: FleetRequest, fleetId: string): Reply {
     const body = bodyOf(request);
@@ -1608,8 +1604,8 @@ export function createFleetModel(options: FleetModelOptions): FleetModel {
     // checkOptions: a cursor of another sort or order is a 400, before the fleet is read.
     if (cursor !== undefined && (cursor.sort !== sort || cursor.order !== order)) return invalidRequest(MESSAGE_CURSOR);
     if (fleetOf(organizationId, fleetId) === undefined) {
-      // As Postgres answers (Ruling 38): a page after a cursor is read
-      // without checking the fleet (empty); a first page checks it.
+      // As Postgres answers: a page after a cursor is read without checking
+      // the fleet (empty); a first page checks it.
       return cursor === undefined ? fleetNotFound() : jsonReply(200, { collectors: [], nextCursor: null });
     }
     const q = query.get("q")?.toLowerCase() ?? "";
@@ -1634,8 +1630,8 @@ export function createFleetModel(options: FleetModelOptions): FleetModel {
     const body = bodyOf(request);
     if (isReply(body)) return body;
     const ids = [...new Set((body.collectorIds as string[]).map((id) => id.toLowerCase()))].sort(compareIds);
-    // D20 (Q103): at least one of `pin` and `pinnedVariableGroupId`; one
-    // left out leaves each collector's as it is.
+    // At least one of `pin` and `pinnedVariableGroupId`; one left out leaves
+    // each collector's as it is.
     const pinGiven = "pin" in body;
     const ref = refOf(body.pin);
     const variableGroupGiven = "pinnedVariableGroupId" in body;
@@ -1691,7 +1687,7 @@ export function createFleetModel(options: FleetModelOptions): FleetModel {
     const { organizationId } = request;
     // All of them or none, checked in the Postgres store's order: the
     // collector, the group, the pin's target, the pinned variable group, the
-    // pin's names defined (every pin, D20 Task 5), the name; then the stamp.
+    // pin's names defined (every pin), the name; then the stamp.
     const c = collectorOf(organizationId, fleetId, collectorId);
     if (c === undefined) return childNotFound(request, fleetId, "collector_not_found", MESSAGE_COLLECTOR_NOT_FOUND);
     const groupId = typeof body.groupId === "string" ? body.groupId.toLowerCase() : undefined;
@@ -1792,7 +1788,7 @@ export function createFleetModel(options: FleetModelOptions): FleetModel {
     return jsonReply(200, { ...stored });
   }
 
-  /** The collector groups bound to, and the collectors pinned on, the organization's variable group (D20). */
+  /** The collector groups bound to, and the collectors pinned on, the organization's variable group. */
   function variableGroupUses(organizationId: string, variableGroupId: string) {
     return {
       groups: [...groups.values()]

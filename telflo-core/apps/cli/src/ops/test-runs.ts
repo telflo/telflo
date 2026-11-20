@@ -1,14 +1,14 @@
 /*
- * Test runs (D27 decision 27, routes 26-28): the queue's body, the target
- * (a text or a stored version) and its collector, the poll, the output.
- * Data only: `commands/test.ts` prints and decides the exit codes.
+ * Test runs (routes 26-28): the queue's body, the target (a text or a stored
+ * version) and its collector, the poll, the output. Data only:
+ * `commands/test.ts` prints and decides the exit codes.
  *
- * - The create and the output wait 120 s (decision 16), every poll 30 s.
- * - Polling: every second, five times slower after ten
- *   polls, so a long run stays inside the 60 requests a minute per token;
- *   until an ended status or the deadline. A 429 while polling is the
- *   client's: retried after its `Retry-After` (decision 17).
- * - The run's text, sample and rules are configuration text (Q168): in the
+ * - The create and the output wait 120 s, every poll 30 s.
+ * - Polling: every second, five times slower after ten polls, so a long
+ *   run stays inside the 60 requests a minute per token; until an ended
+ *   status or the deadline. A 429 while polling is the client's: retried
+ *   after its `Retry-After`.
+ * - The run's text, sample and rules are configuration text: in the
  *   body only, never a URL or a message.
  */
 
@@ -156,7 +156,7 @@ export function getTestRun(client: ApiClient, runId: string): Promise<PublicTest
   return client.request<PublicTestRun>("GET", `/test-runs/${segment(runId)}`);
 }
 
-/** Route 28: the run's output, its bytes exactly (Ruling 238: written to `--output` as they are). */
+/** Route 28: the run's output, its bytes exactly (written to `--output` as they are). */
 export function getTestRunOutput(client: ApiClient, runId: string): Promise<Buffer> {
   return client.request<Buffer>("GET", `/test-runs/${segment(runId)}/output`, { bytes: true, timeoutMs: LONG_TIMEOUT_MS });
 }

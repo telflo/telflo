@@ -19,8 +19,7 @@ import {
 } from "./deploy.js";
 
 /*
- * `telflo deploy`'s decision and calls (D27 decision 28), on collector
- * groups: ids compared
+ * `telflo deploy`'s decision and calls, on collector groups: ids compared
  * through canonicalIdOf, the ambiguity's error listing ids only.
  */
 
@@ -64,7 +63,7 @@ async function refusalOf(promise: Promise<unknown>): Promise<ExitError> {
   throw new Error("expected a refusal");
 }
 
-describe("KUBERNETES_ROLES (Preflight ruling 23)", () => {
+describe("KUBERNETES_ROLES", () => {
   it("matches the contracts'", () => {
     expect(KUBERNETES_ROLES).toEqual(CONTRACTS_KUBERNETES_ROLES);
   });
@@ -89,13 +88,13 @@ describe("resolveDeployTarget", () => {
     expect(resolveDeployTarget([groupOf(G1, "c1")], "c1")).toEqual({ kind: "create" });
   });
 
-  it("none serving it, no --name: the fleet's Default group when it serves nothing (Ruling 248), its id canonical", () => {
+  it("none serving it, no --name: the fleet's Default group when it serves nothing, its id canonical", () => {
     const unassignedDefault = { ...groupOf(G1.toUpperCase(), null, "Default"), isDefault: true };
     expect(resolveDeployTarget([unassignedDefault, groupOf(G2, OTHER_CONFIG)], CONFIG)).toEqual({ kind: "update", id: G1 });
     // --name asks for a new group: the Default group is left alone.
     expect(resolveDeployTarget([unassignedDefault], CONFIG, undefined, { name: "gw" })).toEqual({ kind: "create" });
     expect(resolveDeployTarget([unassignedDefault], CONFIG, undefined, { name: "" })).toEqual({ kind: "create" });
-    // A role but node asks for a new group too (Ruling 254); --role node alone may still go to the Default group.
+    // A role but node asks for a new group too; --role node alone may still go to the Default group.
     for (const role of ["cluster", "gateway"] as const) {
       expect(resolveDeployTarget([unassignedDefault], CONFIG, undefined, { role })).toEqual({ kind: "create" });
     }
@@ -171,7 +170,7 @@ describe("deployConfiguration", () => {
     expect(calls).toHaveLength(1);
   });
 
-  it("a new fleet's first deploy: no --group, no --name, the version goes to its unassigned Default group (Ruling 248)", async () => {
+  it("a new fleet's first deploy: no --group, no --name, the version goes to its unassigned Default group", async () => {
     const { client, calls } = clientOf({
       [`GET /configurations/${CONFIG}`]: { json: configuration },
       [`GET /fleets/${FLEET}/groups`]: { json: { items: [{ ...groupOf(G1, null, "Default"), isDefault: true }], nextCursor: null } },
@@ -183,7 +182,7 @@ describe("deployConfiguration", () => {
     expect(result).toMatchObject({ action: "updated", id: G1, isDefault: true, configurationId: CONFIG });
   });
 
-  it("a role but node without --name on a new fleet asks for --name (exit 2), never the Default group (Ruling 254)", async () => {
+  it("a role but node without --name on a new fleet asks for --name (exit 2), never the Default group", async () => {
     const { client, calls } = clientOf({
       [`GET /fleets/${FLEET}/groups`]: { json: { items: [{ ...groupOf(G1, null, "Default"), isDefault: true }], nextCursor: null } },
     });

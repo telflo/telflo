@@ -2,15 +2,15 @@ import { CONFIGURATION_VALIDATION_REQUIREMENT_CATEGORIES } from "@telflo/contrac
 import { z } from "zod";
 
 // The collector validator's answers, as zod schemas, one for each schema in
-// services/otelcol-validator/openapi.yaml the platform reads (D13b decision
-// 11). Unknown fields are stripped rather than refused, unlike the file's
+// services/otelcol-validator/openapi.yaml the platform reads. Unknown fields
+// are stripped rather than refused, unlike the file's
 // `additionalProperties: false`, as the opamp-server's are: a field the
-// validator adds later must not break a platform that hasn't learned it.
-// The fake (testing/fake-otelcol-validator.ts) checks the validator's side
-// of the contract strictly, against the file itself.
+// validator adds later must not break a platform that hasn't learned it. The
+// fake (testing/fake-otelcol-validator.ts) checks the validator's side of the
+// contract strictly, against the file itself.
 //
 // An answer these refuse is a malformed answer, which the client reports as
-// unavailable (Preflight ruling 18), never as the text's own result.
+// unavailable, never as the text's own result.
 
 /** openapi.yaml's componentPath: `::`-separated, keeping the whole id; null when it names nothing. */
 const componentPath = z.string().nullable();
@@ -21,7 +21,7 @@ export const validationErrorSchema = z.object({
   componentPath,
 });
 
-/** openapi.yaml's Requirement: one of the nine categories (D13b decision 7). */
+/** openapi.yaml's Requirement: one of the nine categories. */
 export const requirementSchema = z.object({
   category: z.enum(CONFIGURATION_VALIDATION_REQUIREMENT_CATEGORIES),
   title: z.string().min(1),

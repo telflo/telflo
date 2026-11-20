@@ -7,18 +7,17 @@ import { parse as parseYaml } from "yaml";
 import { loadSettings } from "../settings.js";
 
 // The OTTL evaluator's development secret lives in three places that must
-// agree (D15a Preflight ruling 12, as the collector tester's): the file the
-// evaluator reads (docker/ottl-evaluator/development-secret, through
-// compose's `secrets:`), the compose anchor the API's environment takes it
-// from (x-ottl-evaluator-secret), and .env.example's line for the native
-// API. A drift would leave the API refused with 401 on every check. Compose's
-// lockdown of the evaluator and its wiring to the API are checked here too
-// (Preflight ruling 13): its own internal network, which the API joins and
-// only the forwarder publishes, `depends_on` healthy, and the API's
-// environment (TELFLO_OTTL_EVALUATOR_URL, and the secret taken from the
-// anchor), which loadSettings reads (D15a Task 5), as the tester's test does.
-// D15a Task 3's follow-up (the controller's Ruling 34) pins the rest of the
-// lockdown: the thread and memory limits, the grace period serve's shutdown
+// agree, as the collector tester's do: the file the evaluator reads
+// (docker/ottl-evaluator/development-secret, through compose's `secrets:`),
+// the compose anchor the API's environment takes it from
+// (x-ottl-evaluator-secret), and .env.example's line for the native API. A
+// drift would leave the API refused with 401 on every check. Compose's
+// lockdown of the evaluator and its wiring to the API are checked here too:
+// its own internal network, which the API joins and only the forwarder
+// publishes, `depends_on` healthy, and the API's environment
+// (TELFLO_OTTL_EVALUATOR_URL, and the secret taken from the anchor), which
+// loadSettings reads, as the tester's test does. The rest of the lockdown is
+// pinned too: the thread and memory limits, the grace period serve's shutdown
 // needs, and serve's GOMAXPROCS.
 
 const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../../../..");
@@ -82,7 +81,7 @@ describe("the OTTL evaluator's development secret and compose wiring", () => {
     expect(compose.networks["ottl-evaluator"]).toEqual({ internal: true });
   });
 
-  it("its threads, memory and stop are bounded as measured (Rulings 33 and 34)", () => {
+  it("its threads, memory and stop are bounded as measured", () => {
     // pids_limit counts threads: serve and its 4 evaluation + 8 validation
     // children at once, with headroom; serve's GOMAXPROCS keeps its own
     // threads from growing with the host's CPUs (the children get 2).
@@ -115,8 +114,7 @@ describe("the OTTL evaluator's development secret and compose wiring", () => {
 
   it("the API's compose environment loads, with the evaluator's settings", () => {
     // Compose interpolates `${…}` from its own environment; unset, each is
-    // empty, or its `:-` or `-` default (the agent endpoint's, D17c-1; the
-    // site's, D36-1).
+    // empty, or its `:-` or `-` default.
     const environment = Object.fromEntries(
       Object.entries(api.environment ?? {}).map(([name, value]) => [
         name,

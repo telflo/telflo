@@ -47,9 +47,8 @@ import {
 
 /*
  * A test spec (the older Telflo CLI's YAML) and its rules converted to the
- * platform's OTTL rule and checked as the API would (D27 decision 27,
- * Preflight rulings 6 and 23): the older CLI's spec tests where they still
- * hold, and drift tests against @telflo/contracts.
+ * platform's OTTL rule and checked as the API would: the older CLI's spec
+ * tests where they still hold, and drift tests against @telflo/contracts.
  */
 
 let dir: string;
@@ -211,7 +210,7 @@ describe("parseTestSpec (the older CLI's YAML)", () => {
 
 const COUNT = { operator: "gte", value: 1 };
 
-describe("convertRule (Preflight ruling 6)", () => {
+describe("convertRule", () => {
   it("converts each quantifier's rule, a name trimmed, an empty name left out", () => {
     expect(convertRule({ name: "  each  ", context: "log", quantifier: "all", condition: "body != nil" }, 0, "logs")).toEqual({
       kind: "ottl",
@@ -321,7 +320,7 @@ describe("convertRule (Preflight ruling 6)", () => {
   });
 });
 
-describe("drift: the CLI's copies of the contracts' constants (Preflight ruling 23)", () => {
+describe("drift: the CLI's copies of the contracts' constants", () => {
   it("signals, contexts by signal, quantifiers and count operators", () => {
     expect([...TEST_SIGNALS]).toEqual([...TEST_RUN_SIGNALS]);
     expect([...RULE_CONTEXTS]).toEqual([...OTTL_CONTEXTS]);

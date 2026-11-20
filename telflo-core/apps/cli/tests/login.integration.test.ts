@@ -8,10 +8,10 @@ import { deleteCredentials, loadCredentials } from "../src/credentials.js";
 import { addGroupOrganization, personWithToken, runCli, serviceAccountWithToken, useApiServer } from "./harness.js";
 
 /*
- * login, whoami, org list and org use against the real API in process
- * (D27 decisions 15, 19 and 33): a personal token and a service account's,
- * made by the db's helpers at run time. Tokens are checked with boolean
- * canaries only: what the CLI wrote, and every line the API logged.
+ * login, whoami, org list and org use against the real API in process: a
+ * personal token and a service account's, made by the db's helpers at run
+ * time. Tokens are checked with boolean canaries only: what the CLI wrote,
+ * and every line the API logged.
  */
 
 const api = useApiServer();
@@ -22,7 +22,7 @@ function holdsAnyToken(...texts: string[]): boolean {
   return texts.some((text) => tokens.some((token) => text.includes(token)));
 }
 
-/** runCli, then the token canary (a boolean) before anything compares what it wrote (Ruling 237). */
+/** runCli, then the token canary (a boolean) before anything compares what it wrote. */
 async function cli(args: readonly string[], options?: Parameters<typeof runCli>[1]): ReturnType<typeof runCli> {
   const result = await runCli(args, options);
   expect(holdsAnyToken(result.stdout, result.stderr)).toBe(false);
@@ -42,7 +42,7 @@ afterEach(() => {
   expect(holdsAnyToken(...api.logLines)).toBe(false);
 });
 
-describe("telflo login from stdin (decision 19)", () => {
+describe("telflo login from stdin", () => {
   it("logs in with a personal token, its one organization taken", async () => {
     const person = await personWithToken(api.ownerDb);
     tokens.push(person.token);
@@ -121,7 +121,7 @@ describe("telflo login from stdin (decision 19)", () => {
   });
 });
 
-describe("telflo org list and org use (decision 15)", () => {
+describe("telflo org list and org use", () => {
   it("lists the person's organizations and switches the stored one", async () => {
     const person = await personWithToken(api.ownerDb);
     tokens.push(person.token);
@@ -145,7 +145,7 @@ describe("telflo org list and org use (decision 15)", () => {
   });
 });
 
-describe("X-Telflo-Org, for a person's token only (decision 15)", () => {
+describe("X-Telflo-Org, for a person's token only", () => {
   /** The real fetch, recording each request's X-Telflo-Org. */
   function recordingFetch(calls: Array<Pick<RecordedCall, "url" | "headers">>): typeof fetch {
     return (async (input: Parameters<typeof fetch>[0], init?: RequestInit) => {

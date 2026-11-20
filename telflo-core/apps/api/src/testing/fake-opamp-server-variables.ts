@@ -15,28 +15,28 @@ import {
   type Reply,
 } from "./fake-opamp-server-fleets.js";
 
-// The fake opamp-server's organization variables (D20 Task 9), for tests
-// only: an organization's variables, its variable groups and their
-// overrides, behind the 11 routes of openapi.yaml's `variables` and
-// `variable groups` tags. fake-opamp-server.ts checks every request and
-// reply against the contract and hands this module the 11 operations once
-// a request's path ids are read and its organization is found registered;
-// the fleet model (fake-opamp-server-fleets.ts) reads the bindings' checks
-// and stamps from it. It never ships (.dockerignore leaves apps/api/src/testing
-// out of the images; a lint rule keeps production code from importing it).
+// The fake opamp-server's organization variables, for tests only: an
+// organization's variables, its variable groups and their overrides, behind
+// the 11 routes of openapi.yaml's `variables` and `variable groups` tags.
+// fake-opamp-server.ts checks every request and reply against the contract and
+// hands this module the 11 operations once a request's path ids are read and
+// its organization is found registered; the fleet model
+// (fake-opamp-server-fleets.ts) reads the bindings' checks and stamps from it.
+// It never ships (.dockerignore leaves apps/api/src/testing out of the images;
+// a lint rule keeps production code from importing it).
 //
-// Ported from the opamp-server's Go at D20 Tasks 3 to 6:
+// Ported from the opamp-server's Go:
 // - management/variables.go and variables_request.go: each route's check
 //   order (the path's ids, the organization, the body, then the store's
 //   answers), its fixed messages and its replies;
 // - store/variables/memory.go: the semantics, each check before any change
 //   (the id in the organization, the name, the limit, another
 //   organization's id; the guards), then the counter's bump and the writes;
-//   an override's Reset keeping its row with no value (a reset row, Q100),
+//   an override's Reset keeping its row with no value (a reset row),
 //   ignored when filling in, never counted or answered, revived as new
 //   (201) by a later override; the same value again changing nothing (200);
 // - store/variableuse: the guards' details, at most 100 entries with exact
-//   totals (Q102; the controller's (a));
+//   totals;
 // - store/orgvariables: References (render.go's scanner: a live
 //   `${org:NAME}` is opened by a `$` an even run of `$` precedes) and Choose
 //   (stamps.go: each variable read from the pin's variable group's override
@@ -44,24 +44,24 @@ import {
 //   greatest among the rows read down to the first with a value).
 //
 // Every write that can change a collector's filled-in text moves the
-// organization's counter on once (Ruling 63) and stamps the row that
-// changed with it (Q91, Q100): a variable's create, value change, rename and
-// delete (the delete stamps nothing: its row is gone), an override's set,
-// change or Reset, and (the fleet model's) a group's or a pin's
-// variable-group setting and a move. A description, a variable group's
-// create, name, description or delete, the same value again and a refused
-// write move nothing. A variable group's own row has no stamp; its
-// changedBy and changedAt move, for display only.
+// organization's counter on once and stamps the row that changed with it:
+// a variable's create, value change, rename and delete (the delete stamps
+// nothing: its row is gone), an override's set, change or Reset, and (the
+// fleet model's) a group's or a pin's variable-group setting and a move.
+// A description, a variable group's create, name, description or delete,
+// the same value again and a refused write move nothing. A variable
+// group's own row has no stamp; its changedBy and changedAt move, for
+// display only.
 //
-// A value, a name and a description are configuration text (Q88): no
-// message here quotes one. There are no secrets: nothing is masked.
+// A value, a name and a description are configuration text: no message here
+// quotes one. There are no secrets: nothing is masked.
 
-/** The most variables (Q104; Q90's 500 lowered) and variable groups (Q90) an organization may have. */
+/** The most variables and variable groups an organization may have. */
 export const MAX_VARIABLES = 150;
 export const MAX_VARIABLE_GROUPS = 100;
-/** The most entries a guard's details list (Q102): each with its exact total. */
+/** The most entries a guard's details list: each with its exact total. */
 export const MAX_LISTED = 100;
-/** A variable's name: at most 128 characters (Ruling 51). */
+/** A variable's name: at most 128 characters. */
 export const MAX_VARIABLE_NAME_LENGTH = 128;
 
 // The fixed messages (management/variables.go). None quotes a value.
@@ -188,7 +188,7 @@ interface StoredOverride {
   organizationId: string;
   variableGroupId: string;
   variableId: string;
-  /** Null for a reset row (Q100). */
+  /** Null for a reset row. */
   value: string | null;
   changedBy: Actor | null;
   changedAt: number;
@@ -391,7 +391,7 @@ export function createVariablesModel(options: VariablesModelOptions): VariablesM
     const value = body.value as string;
     const text = description(body.description);
     // The store's order: the id in the organization, the name, the limit,
-    // then another organization's id (Ruling 59's edges).
+    // then another organization's id.
     const existing = variableOf(organizationId, id);
     if (existing !== undefined) {
       if (existing.name === name && existing.value === value && existing.description === text) {
@@ -455,7 +455,7 @@ export function createVariablesModel(options: VariablesModelOptions): VariablesM
     if (current === undefined) return errorReply(404, "variable_not_found", MESSAGE_VARIABLE_NOT_FOUND);
     const uses = usedBy(organizationId, current.name);
     if (uses !== undefined) return withDetails(409, "variable_in_use", MESSAGE_VARIABLE_IN_USE, uses);
-    // Ruling 63: the counter moves on (the poll's cache is keyed by it), with no stamp: the row is gone.
+    // The counter moves on (the poll's cache is keyed by it), with no stamp: the row is gone.
     bump(organizationId);
     variables.delete(variableId);
     // Its overrides, reset rows included, go with it (on delete cascade).
@@ -577,7 +577,7 @@ export function createVariablesModel(options: VariablesModelOptions): VariablesM
     const value = body.value as string;
     const key = overrideKey(variableGroupId, variableId);
     const existing = overrides.get(key);
-    // New when there is no row, or a reset one (preflight item 15).
+    // New when there is no row, or a reset one.
     const created = existing === undefined || existing.value === null;
     if (!created && existing.value === value) return jsonReply(200, overrideJson(existing));
     const actor = decodeActor(body.actor);
@@ -606,7 +606,7 @@ export function createVariablesModel(options: VariablesModelOptions): VariablesM
     if (existing === undefined || existing.value === null) return noContent();
     const actor = decodeActor(body.actor);
     const at = nowMs();
-    // The row is kept with no value and the Reset's stamp (Q100).
+    // The row is kept with no value and the Reset's stamp.
     existing.value = null;
     existing.stamp = bump(request.organizationId);
     existing.changedBy = actor;

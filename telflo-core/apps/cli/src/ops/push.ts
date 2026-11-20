@@ -1,10 +1,9 @@
 /*
- * What `telflo config push` does with a configuration's versions
- * (D27 decision 26; Preflight ruling 22: this file
- * keeps `decidePushAction` only, `resolveDeployTarget` is `ops/deploy.ts`').
- * The latest version decides: a draft is edited in place (a published
- * version never changes), a published latest means the text becomes a new
- * version.
+ * What `telflo config push` does with a configuration's versions (this
+ * file keeps `decidePushAction` only, `resolveDeployTarget` is
+ * `ops/deploy.ts`'). The latest version decides: a draft is edited in
+ * place (a published version never changes), a published latest means the
+ * text becomes a new version.
  */
 
 import type { PublicConfigurationVersionSummary } from "@telflo/contracts";

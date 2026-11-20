@@ -1,8 +1,7 @@
 /*
- * A command's input text (a configuration's YAML, a spec, a sample): a
- * file, or stdin for `-`. Shared by the command
- * areas (Preflight ruling 22); the text is configuration text and is never
- * printed or logged here.
+ * A command's input text (a configuration's YAML, a spec, a sample): a file,
+ * or stdin for `-`. Shared by the command areas; the text is configuration
+ * text and is never printed or logged here.
  */
 
 import { readFileSync } from "node:fs";

@@ -3,13 +3,12 @@ import { PUBLIC_API_PREFIX } from "../modules/public-api/plugin.js";
 import { publicApiDocument, type PublicApiDocument } from "../modules/public-api/openapi/document.js";
 
 /*
- * The public surface's OpenAPI document, for tests (D25 decision 49,
- * Preflight ruling 19): every reply a public-route integration test
- * receives is checked against the document with ajv 2020, as
- * opamp-server/schemas-bounds.test.ts checks the opamp-server's (strict,
- * every error, union types; the document's components under one `$id`);
- * and the routes the server registers are mapped onto the document's
- * operations for the coverage test.
+ * The public surface's OpenAPI document, for tests: every reply a public-route
+ * integration test receives is checked against the document with ajv 2020, as
+ * opamp-server/schemas-bounds.test.ts checks the opamp-server's (strict, every
+ * error, union types; the document's components under one `$id`); and the
+ * routes the server registers are mapped onto the document's operations for
+ * the coverage test.
  */
 
 const SCHEMAS_ID = "https://api.telflo.invalid/public/v1/openapi.json";
@@ -38,9 +37,9 @@ export function documentedOperations(document: PublicApiDocument = publicApiDocu
 }
 
 /**
- * A Fastify route's URL as the document spells it (Preflight ruling 19):
- * the prefix dropped, `:param` → `{param}`, and the wildcard `*` (route
- * 14's pipeline name, which holds `/`) → `{pipeline}`.
+ * A Fastify route's URL as the document spells it: the prefix dropped,
+ * `:param` → `{param}`, and the wildcard `*` (route 14's pipeline name, which
+ * holds `/`) → `{pipeline}`.
  */
 export function documentPathOf(routeUrl: string): string {
   const path = routeUrl.startsWith(PUBLIC_API_PREFIX) ? routeUrl.slice(PUBLIC_API_PREFIX.length) : routeUrl;

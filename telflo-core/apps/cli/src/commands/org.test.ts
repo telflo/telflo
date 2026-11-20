@@ -5,7 +5,7 @@ import { runCli } from "../../tests/run-cli.js";
 import { deleteCredentials, loadCredentials, saveCredentials, type TokenKind } from "../credentials.js";
 import { ORG_USE_NOT_ONE_OF_THEM_MESSAGE, ORG_USE_SERVICE_ACCOUNT_MESSAGE, ORG_USE_WITH_ENVIRONMENT_TOKEN_MESSAGE } from "./org.js";
 
-/* telflo org list and telflo org use (D27 decisions 10 and 15). */
+/* telflo org list and telflo org use. */
 
 const SERVER = "https://telflo.example";
 const PERSONAL = "0b7e8a9c-1d2e-4f30-8a4b-5c6d7e8f9a0b";
@@ -23,7 +23,7 @@ function store(kind: TokenKind = "person"): void {
   saveCredentials({ version: 1, server: SERVER, token, kind, tokenName: "laptop", organizationId: PERSONAL });
 }
 
-/** runCli, then the token canary (a boolean) before anything compares what it wrote (Ruling 237). */
+/** runCli, then the token canary (a boolean) before anything compares what it wrote. */
 async function cli(args: readonly string[]): ReturnType<typeof runCli> {
   const result = await runCli(args);
   expect(result.stdout.includes(token) || result.stderr.includes(token)).toBe(false);
@@ -75,7 +75,7 @@ describe("telflo org list", () => {
     expect(fake.calls.map((call) => call.headers.get("x-telflo-org"))).toEqual([null, null]);
   });
 
-  it("strips control characters from the names it prints (Ruling 237)", async () => {
+  it("strips control characters from the names it prints", async () => {
     fake = routedFetch({ "GET /orgs": { json: { items: [{ ...organizations[1], name: "Ac\u001b]0;x\u0007me\u009b" }], nextCursor: null } } });
     vi.stubGlobal("fetch", fake.fetch);
     store();

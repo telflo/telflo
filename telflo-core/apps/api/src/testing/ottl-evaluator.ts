@@ -3,10 +3,10 @@ import { createOttlEvaluatorClient, type OttlEvaluatorClient } from "../ottl-eva
 import type { OttlEvaluatorHealthMonitor } from "../ottl-evaluator/health-monitor.js";
 import { startFakeOttlEvaluator, type FakeOttlEvaluator } from "./fake-ottl-evaluator.js";
 
-// The OTTL evaluator's fake for a test file (D15a Task 5), as
-// useFakeOtelcolTesting is for the tester (otelcol-testing.ts). A test file
-// about validation rules or their runs starts the OpenAPI-checked fake
-// (fake-ottl-evaluator.ts) and uses its client. One fake per file:
+// The OTTL evaluator's fake for a test file, as useFakeOtelcolTesting is
+// for the tester (otelcol-testing.ts). A test file about validation rules
+// or their runs starts the OpenAPI-checked fake (fake-ottl-evaluator.ts)
+// and uses its client. One fake per file:
 //
 //   const evaluator = useFakeOttlEvaluator();
 //   ...
@@ -18,12 +18,11 @@ import { startFakeOttlEvaluator, type FakeOttlEvaluator } from "./fake-ottl-eval
 // platform sent it a request (or it sent a reply) that broke the contract
 // and no test read the violation. Tests that inspect or steer the fake read
 // `evaluator.fake`. Before each test, the faults a test queued and its
-// requests didn't take are dropped, so they never answer the next test's
-// (D15a Ruling 41).
+// requests didn't take are dropped, so they never answer the next test's.
 //
 // Every other test server's `testing` (UNCALLED_TESTING) carries
 // UNCALLED_OTTL_EVALUATOR, which fails a test that reaches the evaluator
-// (its lint too, since D25 Task 3).
+// (its lint too).
 
 export interface FakeOttlEvaluatorForFile {
   /** The file's fake; read it inside a hook or a test, once it has started. */
