@@ -5,7 +5,7 @@ fixed number of slots (a bounded wait), start the check's child process
 (`python -m app.check`, its own process group, the allowlisted environment,
 the request on its stdin), and hold the slot until the check has ended. The
 child has one hard deadline, `deadline_seconds` (the collector's time limit
-plus `DEADLINE_MARGIN_SECONDS`): past it, or when the request is cancelled,
+plus `DEADLINE_MARGIN_SECONDS`): past it, or when the request is canceled,
 the whole group is killed (SIGKILL) and the child reaped, and a check the
 deadline ends answers invalid, `Validation timed out after {n}s`. However
 the check ends, the service then waits, at most about a second, for the
@@ -17,7 +17,7 @@ answer (JSON) and nothing else: no YAML parsing, no stderr classifying.
 
 **The child's half** (`check_text`, in the child): the pre-processing (the
 organization's values filled in first; then the text's requirements and
-errors, the provider neutralisation, the Datadog insert, the `${env:}`
+errors, the provider neutralization, the Datadog insert, the `${env:}`
 placeholders; every parse bounded by `app/bounded_yaml.py`), the collector
 subprocess (no shell, an allowlisted environment, the check's directory as
 its working directory, its own time limit, capped stderr) and the stderr
@@ -91,7 +91,7 @@ logger = logging.getLogger(__name__)
 # 256 KB × 8 slots keeps the worst case at 2 MB. Truncation appends a marker
 # so the bound is visible, not a silent cut. The cut can fall inside a line,
 # and a partial line can hold part of a path the scrub can no longer
-# recognise (the check's directory), so the kept output ends at its
+# recognize (the check's directory), so the kept output ends at its
 # last complete line before the marker.
 _STDERR_MAX_BYTES = 256 * 1024
 _STDERR_TRUNCATION_MARKER = b"\n[stderr truncated by validator]\n"
@@ -138,7 +138,7 @@ UNCHECKED_MESSAGE = "Config references configuration provider(s) that could not 
 # A text PyYAML can't read as one document is answered invalid and never
 # reaches the collector: the collector would otherwise decode and expand a
 # reference a YAML escape hid, or read a second document the validator never
-# neutralised. Only PyYAML's own problem and line are reported — never any of
+# neutralized. Only PyYAML's own problem and line are reported — never any of
 # the text.
 UNREADABLE_MESSAGE = "The configuration can't be read as YAML: {problem}"
 # The opamp-server's message for a text its fill-in takes over 1 MiB
@@ -154,7 +154,7 @@ FILLED_IN_TOO_LONG_MESSAGE = "The configuration with its organization variables 
 # with the parse cache cleared) takes 0.37 s for a realistic
 # 262,144-character configuration (the largest the service takes), 2.1 s for
 # the worst text found (a flow sequence of about 131,000 one-character items)
-# and 3.5 s for that text with one reference to neutralise (the backstop then
+# and 3.5 s for that text with one reference to neutralize (the backstop then
 # composes it a second time). So the margin holds for realistic texts but not
 # for the worst one with a collector that uses its whole limit: such a check
 # answers at the deadline (`Validation timed out after 12s`) rather than at
@@ -328,7 +328,7 @@ async def _stop(transport: asyncio.SubprocessTransport, pipes: _Pipes) -> None:
         transport.kill()
     except ProcessLookupError:
         pass  # it exited on its own meanwhile
-    # Shield the shared futures: a reap cancelled while it awaits them (a
+    # Shield the shared futures: a reap canceled while it awaits them (a
     # dropped task) must not cancel the futures themselves, or a later reap
     # of the same process would raise CancelledError at once and never close
     # the transport. The kill already landed, so the process still exits and
@@ -372,7 +372,7 @@ async def run_collector(
     the file is always removed. Its stderr is kept up to `_STDERR_MAX_BYTES`
     and the rest dropped as it arrives; its stdout goes nowhere.
 
-    However the run ends (its time limit, or the awaiting task cancelled), a
+    However the run ends (its time limit, or the awaiting task canceled), a
     collector still running is killed and reaped before the temporary file is
     removed and before the caller can release its slot, and the reap waits
     for its exit only, never for its pipes."""
@@ -412,7 +412,7 @@ async def run_collector(
             return RunOutcome(kind="crashed", returncode=returncode, stderr=stderr_text)
         return RunOutcome(kind="failed", returncode=returncode, stderr=stderr_text)
     finally:
-        # Cancelled while the collector runs (a server shutdown, a dropped
+        # Canceled while the collector runs (a server shutdown, a dropped
         # task): it must not outlive the check. Otherwise this only closes
         # what the run left open.
         if transport is not None and pipes is not None:
@@ -445,7 +445,7 @@ class _Prepared:
     env_requirements: list[dict]
     scanned_requirements: list[dict]
     scanned_errors: list[dict]
-    # For the backstop on the rerun's text: what was neutralised,
+    # For the backstop on the rerun's text: what was neutralized,
     # and the requirements a refusal keeps.
     neutralized: list[str] = field(default_factory=list)
     organization_requirements: list[dict] = field(default_factory=list)
@@ -455,7 +455,7 @@ def _prepare(
     yaml_content: str, directory: str | None = None, organization_variables: Mapping[str, str] | None = None
 ) -> _Prepared | ValidationResult:
     """The pre-processing: the organization's values filled in first, then
-    the text's requirements and errors, the provider neutralisation, the
+    the text's requirements and errors, the provider neutralization, the
     Datadog insert, the fail-closed backstop on the result and the `${env:}`
     placeholders. Synchronous and CPU-bound (YAML parses and walks), run in
     the check's child under its deadline. Returns the answer itself when the
@@ -497,7 +497,7 @@ def _prepare_text(
 ) -> _Prepared | ValidationResult:
     # The organization's values FIRST: every cleanup and check below reads
     # the text the collector would be served, so a value that adds YAML
-    # structure (`x, headers: {…}` in a flow mapping) is parsed, neutralised
+    # structure (`x, headers: {…}` in a flow mapping) is parsed, neutralized
     # and checked like the rest of the text. The references are read from the
     # text as written, as the opamp-server's fill-in reads them; the
     # filled-in length is counted before anything is built, and over 1 MiB
@@ -531,7 +531,7 @@ def _prepare_text(
     scanned_requirements = text_requirements(yaml_content)
     scanned_errors = text_errors(yaml_content)
 
-    # Neutralise non-``env`` confmap providers before the collector sees the
+    # Neutralize non-``env`` confmap providers before the collector sees the
     # text: it would otherwise expand ``${file:...}`` / ``${http:...}`` at
     # load time and echo host files and secrets back through its messages.
     # Detection is on the DECODED keys and values, and each reference is
@@ -548,7 +548,7 @@ def _prepare_text(
     # Datadog exporters get a placeholder ``hostname`` so the constructor
     # skips cloud hostname detection, the last rewrite before the run — a
     # fixed value this inserts, carrying none of the text, on the spliced
-    # text so it and the neutralisation never disagree.
+    # text so it and the neutralization never disagree.
     yaml_content = _inject_datadog_hostname_placeholder(yaml_content)
 
     # Fail closed, on the exact text the collector will read, after every
@@ -594,7 +594,7 @@ def _backstop(
     """Run the fail-closed check on the exact text a collector run reads (the
     first run's and the rerun's, after every splice and insert). None when
     the run may go ahead; otherwise the refusal (the collector isn't run),
-    naming the schemes neutralised and any that survived, and keeping the
+    naming the schemes neutralized and any that survived, and keeping the
     organization variables' requirements. Both should be impossible: every
     splice is total and adds no structure."""
     if not _still_references(yaml_content):
@@ -966,7 +966,7 @@ def _repoint(
     overflow, so every value is met); None when there is nothing
     to repoint or no check directory.
     A scalar several components reach through one anchor is spliced once, by
-    its start index, as the provider neutralisation dedupes its splices (two
+    its start index, as the provider neutralization dedupes its splices (two
     splices of one span would leave the text unreadable)."""
     if directory is None:
         return None
@@ -1195,7 +1195,7 @@ async def _end_check(child: tuple[asyncio.SubprocessTransport, _Pipes] | None, d
     finally:
         # Off the event loop: a large directory takes a while,
         # and the loop serves every other request meanwhile. Waited for, never
-        # cancelled (a cancellation of the wait leaves the removal running),
+        # canceled (a cancellation of the wait leaves the removal running),
         # so it isn't left half done; how it ended is read after.
         removing = asyncio.ensure_future(asyncio.to_thread(_remove_directory, directory))
         while not removing.done():

@@ -305,7 +305,7 @@ run_case "guard: gateway.extraRoutes' path checked without the schema (no leadin
   "gateway.extraRoutes[0].path must be at most 200 characters: a leading / then letters, digits and ._~/-" "home/" prefix "$SKIP"
 run_case "guard: gateway.extraRoutes' match checked without the schema" extra_refused \
   "gateway.extraRoutes[0].match must be exact or prefix" /home/ regex "$SKIP"
-# No empty, . or .. segment (inert, as nginx matches the normalised path,
+# No empty, . or .. segment (inert, as nginx matches the normalized path,
 # but refused so the guard reads plainly); a segment that only starts with
 # a dot is a name.
 M_SEGMENT="gateway.extraRoutes[0].path must hold no empty, . or .. segment (nginx matches the normalised path)"

@@ -84,7 +84,7 @@ async def stop(transport: asyncio.SubprocessTransport, pipes: Pipes) -> None:
         transport.kill()
     except ProcessLookupError:
         pass  # it exited on its own meanwhile
-    # Shielded: a reap cancelled while it waits must not cancel the shared
+    # Shielded: a reap canceled while it waits must not cancel the shared
     # futures, or a later reap of the same process would never close the
     # transport.
     await asyncio.shield(pipes.exited)
@@ -116,7 +116,7 @@ def exit_code(returncode: int) -> int:
 def complete_lines(output: bytes) -> bytes:
     """`output` up to and including its last line break: a cut output's
     partial last line dropped (nothing when no line was complete), so a cut
-    never leaves part of a path the scrub can no longer recognise."""
+    never leaves part of a path the scrub can no longer recognize."""
     return output[: output.rfind(b"\n") + 1]
 
 

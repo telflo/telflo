@@ -521,7 +521,7 @@ user and password).
 gateway.extraRoutes. The schema's checks repeated (a render with
 --skip-schema-validation must not write anything else into nginx's
 configuration; a port a number, never text), no empty, . or .. segment in a
-path (nginx matches the normalised path, so such a route would only look
+path (nginx matches the normalized path, so such a route would only look
 like a hole), then the shadow guard: no route may take a path the platform
 answers. React Router matches without case, so the comparison is in lower
 case: a prefix / is refused; and for each platform root R

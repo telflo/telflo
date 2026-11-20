@@ -20,10 +20,10 @@ licenses.
   secret and the request's shape, runs each request's work in a child
   process under its limits, and writes the answer.
 
-Pinned to contrib **v0.162.0**, the catalogue's default collector version
+Pinned to contrib **v0.162.0**, the catalog's default collector version
 (`catalog/distributions/otelcol-contrib.json` at the repository's root):
 `TestOTTLVersionIsTheCatalogueDefault` fails when `go.mod`'s `pkg/ottl` and the
-catalogue's default differ, so they move together.
+catalog's default differ, so they move together.
 
 ## API
 

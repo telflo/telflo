@@ -1,4 +1,4 @@
-"""The neutraliser in a run, on the fake path: a canary file stands for a
+"""The neutralizer in a run, on the fake path: a canary file stands for a
 file a run must never read (the secret's, another run's), and each text below
 references it in one of the forms a collector decodes and expands: a plain
 value, a `\\x24` escape, a `\\u`-escaped dollar, an escaped line break, a
@@ -127,7 +127,7 @@ CANARIES: list[tuple[str, str]] = [
     ("a flow mapping", 'processors: {{attributes: {{actions: [{{key: k, value: "${{file:{c}}}"}}]}}}}\n'),
     ("a triple dollar", "a: $$${{file:{c}}}\n"),
 ]
-# Refused before any collector (C-000), the reference neutralised all the same.
+# Refused before any collector (C-000), the reference neutralized all the same.
 DUPLICATE_KEYS: list[tuple[str, str]] = [
     ("duplicate keys, the reference first", "a: ${{file:{c}}}\na: clean\n"),
     ("duplicate keys, the reference last", "a: clean\na: ${{file:{c}}}\n"),

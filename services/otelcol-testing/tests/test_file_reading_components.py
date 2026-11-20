@@ -8,7 +8,7 @@ the text could read another run's files or the tester's and pass them on.
   processor left with no detectors is removed and unwired, as R-101 and
   R-103 do (which now match both spellings too).
 - C-005: a ``geoip`` processor is refused (its database is a file; the
-  catalogue knows it by that one spelling).
+  catalog knows it by that one spelling).
 
 - C-006: any other processor setting whose key ends in ``_file`` or ``_path``
   and holds a value, at any depth, is refused.
@@ -270,7 +270,7 @@ def test_a_geoip_processor_outside_the_pipeline_under_test_is_refused_too() -> N
 
 
 def test_the_catalogue_knows_each_refused_processor_by_one_spelling() -> None:
-    """If the catalogue ever renames geoip, schema or remotetap, C-005 must
+    """If the catalog ever renames geoip, schema or remotetap, C-005 must
     learn the new name."""
     catalogue = DEFAULT_CATALOG_DIR / "otelcol-contrib.json"
     renamed = json.loads(catalogue.read_text())["renamedTypes"]

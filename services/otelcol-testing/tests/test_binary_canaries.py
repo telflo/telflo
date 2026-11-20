@@ -1,4 +1,4 @@
-"""The neutraliser's canaries on the real collectors (marked `binary`), on
+"""The neutralizer's canaries on the real collectors (marked `binary`), on
 every offered version the image holds: a canary file stands for a file a run
 must never read (the secret's, another run's), readable by the collector's
 user, and each text references it in one of the forms the collector's confmap
@@ -7,7 +7,7 @@ field.
 
 - The instrument first: given a live `${file:…}` (with no tester in
   between), the version's `validate` reads the canary into its error (as an
-  unrecognised log level), so a reference that reached a run's collector
+  unrecognized log level), so a reference that reached a run's collector
   would put the canary in the answer.
 - Values (a plain value, a `\\x24` escape, a `\\u`-escaped dollar, an escaped
   line break, a tagged scalar, an alias, a flow mapping, a triple dollar) sit

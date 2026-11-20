@@ -1,4 +1,4 @@
-"""Confmap provider neutralisation: every non-`env` provider reference is
+"""Confmap provider neutralization: every non-`env` provider reference is
 replaced with a placeholder before the collector sees the text, with
 parity-aware escaping, and the caller refuses to run the collector if one
 survives. References are found on the decoded keys and values of a text PyYAML
@@ -137,7 +137,7 @@ def _neutralize_str(value: str, placeholder: str) -> tuple[str, list[str]]:
 
 
 # ---------------------------------------------------------------------------
-# Neutralisation by splice
+# Neutralization by splice
 #
 # The escape bypass: a YAML double-quoted escape (`"\x24{file:…}"`,
 # `"${file:…}"`, an escaped line break between `$` and `{`) hides a live
@@ -150,8 +150,8 @@ def _neutralize_str(value: str, placeholder: str) -> tuple[str, list[str]]:
 #
 # The fix detects references on the DECODED keys and scalar values — PyYAML's
 # composed nodes, whose `.value` is what the collector's confmap layer reads —
-# and neutralises each by replacing EXACTLY that node's source span with a
-# double-quoted rendering of its neutralised value. Every other byte stays
+# and neutralizes each by replacing EXACTLY that node's source span with a
+# double-quoted rendering of its neutralized value. Every other byte stays
 # as sent: no whole-document re-dump, so nothing drifts. An alias (`*a`) is
 # not a node of its own in the composed tree (the composer shares the
 # anchored node), so the anchor's node is spliced once and the alias follows.
@@ -223,8 +223,8 @@ def apply_splices(text: str, splices: list[tuple[int, int, str]]) -> str:
 
 
 def _collect_provider_splices(text: str, root: Node) -> tuple[list[tuple[int, int, str]], list[str]]:
-    """Every splice that neutralises a live non-`env` reference in a decoded
-    key or scalar value under `root`, and the schemes neutralised. Splices are
+    """Every splice that neutralizes a live non-`env` reference in a decoded
+    key or scalar value under `root`, and the schemes neutralized. Splices are
     deduped by their start index, so a node reached through several aliases is
     spliced once; a container reached through several aliases is walked once."""
     splices: dict[int, tuple[int, int, str]] = {}
@@ -271,7 +271,7 @@ def neutralize_providers(text: str, root: Node | None) -> tuple[str, list[str]]:
     scalar value with a type-shaped placeholder, by splicing the node's source
     span. Returns `(rewritten_text, schemes_neutralized)`; `root` is the
     composed document (`bounded_yaml.single_node`), or `None` for an empty
-    document (nothing to neutralise)."""
+    document (nothing to neutralize)."""
     if root is None:
         return text, []
     splices, schemes = _collect_provider_splices(text, root)
@@ -291,13 +291,13 @@ def live_nonenv_schemes(text: str, root: Node | None) -> list[str]:
 
 
 def _neutralize_disallowed_providers(yaml_content: str) -> tuple[str, list[str]]:
-    """Compose `yaml_content` and neutralise it (`neutralize_providers`) in
+    """Compose `yaml_content` and neutralize it (`neutralize_providers`) in
     one call; the tests' entry point (the runner composes once and calls
     `neutralize_providers` itself). Returns `(rewritten_yaml,
     schemes_neutralized)`.
 
     There is no raw-text fallback: a text PyYAML can't read as one document
     raises `YAMLError` here, and the runner answers such a text invalid before
-    anything is neutralised, so it never reaches the collector. `TooDeep` /
+    anything is neutralized, so it never reaches the collector. `TooDeep` /
     `TooManyAliases` propagate, as every parsing entry point's do."""
     return neutralize_providers(yaml_content, yaml.single_node(yaml_content))

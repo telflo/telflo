@@ -37,7 +37,7 @@ DEADLINE_MARGIN_SECONDS = 2
 # is bounded). Not an environment setting.
 DEFAULT_SLOT_WAIT_SECONDS = 5.0
 DEFAULT_BINARY_DIR = Path("/opt/otelcol")
-# Run from the checkout, the catalogue is the repository's own
+# Run from the checkout, the catalog is the repository's own
 # (services/otelcol-validator/app/settings.py -> <repo>/catalog/distributions).
 # The image sets OTELCOL_CATALOG_DIR to the copy it carries.
 DEFAULT_CATALOG_DIR = Path(__file__).resolve().parents[3] / "catalog" / "distributions"

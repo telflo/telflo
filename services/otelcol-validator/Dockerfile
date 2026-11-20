@@ -8,10 +8,10 @@
 #   docker run --rm --network none telflo-otelcol-validator-test pytest -m binary -q
 #
 # OTELCOL_VERSIONS picks the collectors it bakes in: `all` (the default,
-# every offered version in catalog/), `default` (the catalogue's default
+# every offered version in catalog/), `default` (the catalog's default
 # version), or a comma-separated list of offered versions. A name the
-# catalogue doesn't offer, or a download whose sha256 isn't the catalogue's,
-# fails the build. A version the catalogue offers but the image doesn't hold
+# catalog doesn't offer, or a download whose sha256 isn't the catalog's,
+# fails the build. A version the catalog offers but the image doesn't hold
 # answers 503 `version_unavailable`.
 #
 # Stages: download (the collectors and tini, each checked, with Python's
@@ -20,8 +20,8 @@
 # development lock and the tests). The default target is the runtime.
 #
 # The image mirrors the repository's layout under /app (the service in
-# /app/services/otelcol-validator, the catalogue in /app/catalog/distributions),
-# so the service's default catalogue directory (app/settings.py, three
+# /app/services/otelcol-validator, the catalog in /app/catalog/distributions),
+# so the service's default catalog directory (app/settings.py, three
 # directories above its package) is the copy the image carries.
 
 # python:3.12-slim (Debian trixie), pinned by its index digest (a reviewed
@@ -51,7 +51,7 @@ RUN case "$TARGETARCH" in \
  && python download-binaries.py file \
       --url "https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini-${TARGETARCH}" \
       --sha256 "$sha256" --dest /out/tini --mode 755
-# The catalogue and the build argument come after tini, so changing either
+# The catalog and the build argument come after tini, so changing either
 # downloads only the collectors again.
 COPY catalog/distributions/ ./catalog/distributions/
 ARG OTELCOL_VERSIONS=all
@@ -114,7 +114,7 @@ COPY --from=staging /staging/serviceaccount/ /var/run/secrets/kubernetes.io/serv
 COPY --from=download /out/tini /usr/local/bin/tini
 
 # The collectors before the Python dependencies: the largest layer changes
-# only with the catalogue or OTELCOL_VERSIONS. Owned by root, read-only to
+# only with the catalog or OTELCOL_VERSIONS. Owned by root, read-only to
 # the service. Each must run here and say its own version.
 # Under emulation (a cross-platform build: the other processor type's stage)
 # Go binaries crash at random (QEMU, both ways), so the "run and say its

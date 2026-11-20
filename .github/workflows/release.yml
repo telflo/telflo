@@ -26,7 +26,7 @@ on:
 
 permissions: {}
 
-# One release at a time, never cancelled part way: two runs can't race
+# One release at a time, never canceled part way: two runs can't race
 # between a publish's "is it there?" and its push. A newer run waiting for
 # the group cancels an older waiting one (GitHub's rule): push one release
 # tag at a time (docs/releasing.md).
@@ -39,7 +39,7 @@ jobs:
   # .gitleaksignore doesn't list; a tag that isn't v<x.y.z>, isn't
   # annotated, doesn't match charts/telflo/Chart.yaml at its commit, isn't
   # on main, or whose version is already published; then the collector
-  # artefacts the release points at must exist, and the default collector's
+  # artifacts the release points at must exist, and the default collector's
   # image is kept for the smokes. The full history (fetch-depth 0) brings
   # every tag; one the checkout holds as lightweight is asked of GitHub's
   # API with this job's read-only token.

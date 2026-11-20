@@ -50,8 +50,8 @@ EXPECTED_REFUSALS: dict[str, tuple[str, list[dict]]] = {
 
 
 def test_the_fixture_is_for_the_offered_versions() -> None:
-    """The fixture's versions are the catalogue's offered ones (the web's
-    test checks it against the catalogue too: a stale fixture is refreshed
+    """The fixture's versions are the catalog's offered ones (the web's
+    test checks it against the catalog too: a stale fixture is refreshed
     there)."""
     for case in CASES:
         assert case["distribution"] == DISTRIBUTION

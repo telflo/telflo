@@ -73,7 +73,7 @@
 # text. kubectl's stderr from both commands goes to the temporary folder and
 # is never printed (a failing apply can echo its patch); a failure prints a
 # fixed message naming the Secret, with a fixed hint when its cause is
-# recognised. The secrets file and the token file are refused when their
+# recognized. The secrets file and the token file are refused when their
 # mode lets anyone but their owner read them. The temporary folder is
 # removed on every exit.
 #

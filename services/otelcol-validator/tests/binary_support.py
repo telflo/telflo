@@ -1,6 +1,6 @@
 """What the binary tests share (marked `binary`, run inside the image with
-`pytest -m binary`): where the collectors and the catalogue are, which
-versions the catalogue offers, and running a check on one of them.
+`pytest -m binary`): where the collectors and the catalog are, which
+versions the catalog offers, and running a check on one of them.
 
 An offered version the image doesn't hold is skipped, unless the image was
 built to hold it: the `test` target sets `OTELCOL_EXPECTED_VERSIONS` to its
@@ -36,7 +36,7 @@ def version_key(version: str) -> tuple[int, ...]:
 
 
 def _default_version(catalog_dir: Path = CATALOG_DIR) -> str:
-    """The catalogue's default version of the distribution among its offered
+    """The catalog's default version of the distribution among its offered
     rows, as the image's download script picks it (never a deprecated row;
     catalog.py reads no default: the service never needs one)."""
     for path in sorted(catalog_dir.glob("*.json")):

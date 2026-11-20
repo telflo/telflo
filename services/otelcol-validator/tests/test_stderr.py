@@ -357,7 +357,7 @@ def test_classify_cause_keeps_the_component_path() -> None:
 
 
 # ---------------------------------------------------------------------------
-# A requirement pattern recognises only the collector's own phrasing, never
+# A requirement pattern recognizes only the collector's own phrasing, never
 # text it echoes from the configuration
 # ---------------------------------------------------------------------------
 
@@ -600,7 +600,7 @@ def test_a_root_path_phrase_the_text_holds_is_an_error() -> None:
 
 
 # Bypasses, recorded on both real collectors: the collector's own
-# substitution (`$${y}` printed as `${y}`, `${env:Y}` and a neutralised
+# substitution (`$${y}` printed as `${y}`, `${env:Y}` and a neutralized
 # `${file:}` printed as the validator's placeholder), and texts PyYAML
 # refused that the collector reads (a second document, a `=` or date-like
 # value) with the phrase spelt by a YAML escape. Each would answer valid

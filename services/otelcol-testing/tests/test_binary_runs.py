@@ -7,7 +7,7 @@ on each version), syslog's push, a collector that fails to start, a fully
 rejected replay, a UTF-16 input, the 10 MiB output cap (R-006), and a run
 killed at a lowered deadline leaving no process and no workspace behind.
 
-kwok's tests are test_binary_kwok.py's, the neutraliser's canaries
+kwok's tests are test_binary_kwok.py's, the neutralizer's canaries
 test_binary_canaries.py's, the image's own checks test_binary_image.py's.
 """
 

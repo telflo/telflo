@@ -43,7 +43,7 @@ api_labels() {
   done
   no_path "$1" "$API_D.spec.selector.matchLabels.app.kubernetes.io/version" && no_path "$1" "$API_D.spec.selector.matchLabels.helm.sh/chart"
 }
-each_profile "API: pods labelled app.kubernetes.io/name telflo and app.kubernetes.io/component api, selected by both (no version in a selector)" api_labels
+each_profile "API: pods labeled app.kubernetes.io/name telflo and app.kubernetes.io/component api, selected by both (no version in a selector)" api_labels
 api_management_from() { # every label management.from names is on the API's pods, with its value
   local np="NetworkPolicy/telflo-opamp-server-management.spec.ingress[0].from[0].podSelector.matchLabels" lines
   lines="$(awk -v p="$np." 'index($0, p) == 1 { print substr($0, length(p) + 1) }' "$L")"
@@ -86,7 +86,7 @@ api_dockerfile() {
     [ -f "$REPO_DIR/telflo-core/apps/api/src/admin/telflo-admin.ts" ] &&
     eq "$L" "$API_C.workingDir" '"/app/apps/api"' && eq "$L" "$API_M.workingDir" '"/app/packages/db"'
 }
-run_case "API: the image's start (node dist/index.js in /app/apps/api, uid 1000, the catalogue at /catalog), dist/migrate.js and the migrations in /app/packages/db and the telflo-admin shim, compiled, no tsx, as telflo-core/Dockerfile's api stage has them" api_dockerfile
+run_case "API: the image's start (node dist/index.js in /app/apps/api, uid 1000, the catalog at /catalog), dist/migrate.js and the migrations in /app/packages/db and the telflo-admin shim, compiled, no tsx, as telflo-core/Dockerfile's api stage has them" api_dockerfile
 
 # The url_safe checks, exactly (as the flattened listing's JSON: toJson writes
 # & and > as their \u escapes).

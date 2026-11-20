@@ -7,7 +7,7 @@ stderr and absolute workspace paths never reach the person.
 - **kwok's kubeconfig** (`<kubeconfig>`), which a Kubernetes processor's
   errors name.
 - **The service's own directories** (`<tester>`): its code, the collectors'
-  directory, the catalogue, and its home (where kwok keeps its cluster).
+  directory, the catalog, and its home (where kwok keeps its cluster).
   A directory of fewer than two path segments (`/`, `/root`) is left alone:
   replacing it would mangle the person's own data.
 - **The shared secret's exact value**, current and previous (`<redacted>`),
@@ -18,7 +18,7 @@ stderr and absolute workspace paths never reach the person.
 The replacement is targeted (only paths the tester itself passes to a run
 can appear), rather than a broad sweep that could redact a
 person's own `/tmp/…` strings. Secrets go first, then the longest paths, so
-a replacement never leaves a recognisable part of a longer one behind.
+a replacement never leaves a recognizable part of a longer one behind.
 """
 
 from __future__ import annotations

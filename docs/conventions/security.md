@@ -355,8 +355,8 @@ its route and the gateway allow the same 5 MiB.
   version's number only; the dialog, banner and toasts name only the version
   number.
 
-**The collector catalogue** (migrations 023 and 024).
-- **The collector catalogue's tables are global.** `collector_distributions`
+**The collector catalog** (migrations 023 and 024).
+- **The collector catalog's tables are global.** `collector_distributions`
   and `collector_versions` belong to no organization: no organization
   column, no row-level security, and every organization reads the same rows.
   Migration 009's default privileges would give `telflo_platform_runtime`
@@ -365,7 +365,7 @@ its route and the gateway allow the same 5 MiB.
   checks it. The resource registry declares them `kind: "global"`, so the
   cross-tenant suite knows they are global on purpose.
 - **Only the migration step writes them.** Its sync reads
-  `catalog/distributions/*.json`, refuses the whole catalogue if any file
+  `catalog/distributions/*.json`, refuses the whole catalog if any file
   fails the validator (download URLs only under upstream's
   `open-telemetry/opentelemetry-collector-releases/releases/download/`,
   naming their own version and platform; sha256 64 lowercase hex; no
@@ -373,7 +373,7 @@ its route and the gateway allow the same 5 MiB.
   an advisory lock, with parameters (never SQL built from the file). It
   never deletes: a row the files no longer list rolls the sync back. The
   API process never reads the files (a source-scanning test fails on an
-  API source naming `catalog/`), only the tables. The catalogue endpoint
+  API source naming `catalog/`), only the tables. The catalog endpoint
   (`GET /api/v1/collector-distributions`) needs a session but not the
   current terms, since it holds no one's data, and leaves out the
   binaries and images.
@@ -385,7 +385,7 @@ its route and the gateway allow the same 5 MiB.
   version's pin honest: `(configuration_id, collector_distribution)` →
   `configurations (id, collector_distribution)` keeps it the
   configuration's own distribution, and `(collector_distribution,
-  collector_version)` → `collector_versions` keeps it a catalogue version
+  collector_version)` → `collector_versions` keeps it a catalog version
   (23503 otherwise, for the owner too). Migration 024 indexes the first
   key's lookups.
 - **A published version's collector version is immutable**, like its
@@ -401,10 +401,10 @@ its route and the gateway allow the same 5 MiB.
   configuration's create only an offered distribution
   (`400 collector_distribution_unknown`); a pin already on a version is kept
   even once its version is deprecated.
-- **Nothing private in the catalogue UI's attributes:** the list's
-  distribution tag's tooltip is fixed text carrying the catalogue's label of
+- **Nothing private in the catalog UI's attributes:** the list's
+  distribution tag's tooltip is fixed text carrying the catalog's label of
   the distribution, and the pickers' values, labels and the deprecated pin's
-  tooltip are the catalogue's own text, which is the same for everyone.
+  tooltip are the catalog's own text, which is the same for everyone.
 
 **Product admins and flows** (migration 026).
 - **Product admin is a flag only the tables' owner sets.**
@@ -1107,7 +1107,7 @@ whose fleets a request reaches. What they add to the pattern:
   variables (each name one the facts offer, each value 1–4,096 characters
   with no control character and no lone surrogate, for every install; the
   contract's `.strict()` schema, then the facts' names), the settings, the
-  group's id and the catalogue's URLs and sha256 (each checked again
+  group's id and the catalog's URLs and sha256 (each checked again
   against its allow-list), never a string the browser built for a script
   (a bundle never pastes the browser's substitutions into a script run as
   root). It answers `application/gzip` as an `attachment` named by the
@@ -1190,7 +1190,7 @@ whose fleets a request reaches. What they add to the pattern:
 - **Every reply is read under a cap**, by one shared reader
   (`apps/api/src/http/read-capped.ts`: a `Content-Length` over the cap
   refused before reading, else the body counted as it streams and the read
-  cancelled past the cap), which the validator's, the evaluator's and the
+  canceled past the cap), which the validator's, the evaluator's and the
   tester's clients use too. The opamp-server client's caps are four
   classes, each above its operations' worst documented reply as the real
   server encodes it: S 64 KiB, M 1 MiB, U 4 MiB (the unpaged groups,
@@ -1374,7 +1374,7 @@ unauthenticated download follows it:
   its audit row), no CORS of its own (never `*`); `exposeHeadRoute: false` (a `HEAD` would have run the handler).
 - **Limited before anything is read**: a per-IP limit as the route's
   `onRequest` hook (`rateLimiters.quickDeployPerIp`, 30 a minute on
-  `request.ip`, the trusted hops honoured: every request counts, an
+  `request.ip`, the trusted hops honored: every request counts, an
   unknown or malformed secret's included), then a per-key limit on the
   thing the secret found, keyed by its id, never by the secret
   (`createPerKeyLimiter`, 60 a minute per link, bounded in memory), then a
@@ -1436,7 +1436,7 @@ unauthenticated download follows it:
   cause is the link's own data, at error when it is the operator's**
   (`source` `"choices"` for a Linux link's paths, variables, arch, or
   method and executable pairing and a Helm link's `collectorEnv` fields;
-  `"operator"` for the catalogue's binaries and allow-lists, the
+  `"operator"` for the catalog's binaries and allow-lists, the
   templates, the endpoint, the group's id, the collector version and the
   quoted values, and every Helm field but `collectorEnv`'s: the image, the
   endpoint, the group's id and settings, the token); any other error
@@ -1557,7 +1557,7 @@ writes no request's URL or path ("Kubernetes", below).
 - **The gateway** (`docker/gateway/default.conf`): `access_log` with its
   own `log_format telflo`, the image's `main` but for two fields. The
   request field is `"METHOD /api/v1/quick-deploy/[redacted] PROTOCOL"` for
-  a request whose decoded, normalised `$uri` holds `/quick-deploy/` (or
+  a request whose decoded, normalized `$uri` holds `/quick-deploy/` (or
   ends in it) or `tqd_`, or whose raw request line holds `tqd_` with any
   of its letters percent-encoded once or not; the referer field is
   `[redacted]` for a Referer holding either (a page opened from a link
@@ -1624,8 +1624,8 @@ and answers it, and a person may hold 16 at once in each organization. **A
 path spelt with a `/./` dot segment, a backslash, another letter case, a
 double-encoded slash or a `%23` keeps its query in the API's request log**
 (accepted): such a path matches no route (the router is case-sensitive and
-decodes once), the rules above don't normalise it, and a browser
-normalises dot segments and backslashes before it sends a request while
+decodes once), the rules above don't normalize it, and a browser
+normalizes dot segments and backslashes before it sends a request while
 nothing in the platform builds the other three, so only a client crafting
 the path sends one. A raw `#` in a request target does reach a route (the
 router ends the path at a `#` as at a `?`), so the request log cuts there
@@ -1765,7 +1765,7 @@ and the systemd unit's text lines fail for their own reasons ("No match.",
 "Command not found."; checked with a real tcsh and csh through a pty);
 fish isn't checked (not installed). curl retries only a transient failure
 (`--retry 3`: a timeout, `408`, `429`, `500`, `502`, `503` or `504`,
-honouring `Retry-After`), never a refusal (`404`, `409`, `410`); each try
+honoring `Retry-After`), never a refusal (`404`, `409`, `410`); each try
 counts toward the per-IP and per-link limits. A refused reveal on the
 Quick Deploy screen reads the tokens again and says "This link's token was
 revoked: make a new link." when another valid default token exists, never
@@ -1809,7 +1809,7 @@ Cluster's by its role (stable across its first Assign), never a name, and
 their buttons are named through `aria-labelledby` pointing at hidden text
 ("More about {Agent | Cluster | the gateway's name}", "Assign …", "Edit
 …", "Delete …"); the Group column's role badges have help popovers
-labelled by fixed words ("What is an Agent?", "What is a Cluster?", "What
+labeled by fixed words ("What is an Agent?", "What is a Cluster?", "What
 is a Gateway?", since `HelpPopover` puts its label in an `aria-label` and
 a `title`), and the Agent's line under Volumes is fixed words; a volume's
 Remove is named by its number ("Remove volume {n}"), the rows' ids are
@@ -1967,8 +1967,8 @@ afterwards.
   committed). The chart refuses, in every mode, uncommitted changes in
   `charts/supervisor-collector`, the contracts' `helm.ts` or the script
   itself; the image's `--build-oci` and `--push-oci` refuse changes in
-  `docker/collector-image`, the catalogue or the build script (its
-  `revision` label is HEAD), and any catalogue but the repository's. Both
+  `docker/collector-image`, the catalog or the build script (its
+  `revision` label is HEAD), and any catalog but the repository's. Both
   count untracked files even where the repository's
   `status.showUntrackedFiles` is `no` (`git status --porcelain
   --untracked-files=all`), and refuse an input flagged assume-unchanged or
@@ -2000,7 +2000,7 @@ hash to its tree entry (`git hash-object --no-filters -t blob` equal to the
 `ls-tree` sha), else the script refuses ("doesn't hash to its tree entry:
 refused (a local substitution of git objects)"): a replaced or tampered
 object is refused, never published. The image's build arguments come from
-HEAD's catalogue blob too. A swapped tree object is the one thing the
+HEAD's catalog blob too. A swapped tree object is the one thing the
 scripts don't check; `git fsck --no-dangling` sees it.
 
 **The chart's `checksum/token` annotation** is the sha256 of the rendered
@@ -2012,8 +2012,8 @@ again restarts the group's pods.
 
 **The packages are the platform's alone:** the old registry paths
 `ghcr.io/telflo/collector` and
-`oci://ghcr.io/telflo/charts/telflo-supervisor-collector` belong to an
-earlier Telflo and are never written by the platform's scripts, which
+`oci://ghcr.io/telflo/charts/telflo-supervisor-collector` aren't this
+repository's and are never written by the platform's scripts, which
 refuse them (above); the platform's are under `ghcr.io/telflo/telflo/`.
 
 **A variable named by a YAML word** (`ON`, `yes`, `null`) is offered for
@@ -2105,7 +2105,7 @@ static gate) holds the workflow files themselves.
   version and every other value reach a script only through `env:`, never
   pasted into a script's text (where a crafted value would run as shell);
   the tag only after `verify-tag.sh`'s pattern check, a collector version
-  only one the catalogue offers.
+  only one the catalog offers.
 - **The publish job's registry files.** Before it logs in, the job points
   `DOCKER_CONFIG` and `HELM_REGISTRY_CONFIG` at files under `runner.temp`,
   so the logins write the token there, as plain `auths` with no credential
@@ -2165,7 +2165,7 @@ static gate) holds the workflow files themselves.
   version's content digest with the file's sha256 first.
   `scripts/release/pull-back.sh` compares once more before the GitHub
   Release is made.
-- **One run at a time.** The workflow's concurrency group, never cancelled
+- **One run at a time.** The workflow's concurrency group, never canceled
   part way, keeps two runs of a version from both passing the "absent" check
   before either pushes. GitHub keeps one pending run per group: a newer one
   cancels an older waiting one, which must then be re-run by hand, so
@@ -2176,7 +2176,7 @@ static gate) holds the workflow files themselves.
 - **No secret is a build argument**: the provenance attestation (`mode=max`)
   records every build argument, and publishes it with the image. The only
   ones are `VERSION` and `REVISION` (and, for a collector image, the
-  catalogue's download URLs and sums).
+  catalog's download URLs and sums).
 - **No secret in a log, an artifact or the Release**: the smokes make their
   secrets at run time in 0700/0600 folders of `$RUNNER_TEMP`, never print
   them and write the bootstrap's set-password link to a 0600 file; all three
@@ -2222,7 +2222,7 @@ scalar (` #`, `: `): quote the reference.
 
 **Values are filled in before every cleanup and check**: filling them in
 after the tester's rewrites would circumvent the cleanup. The test-run
-tester and the validator each run their provider neutraliser, checks and
+tester and the validator each run their provider neutralizer, checks and
 backstop on the filled-in text, so a value that adds YAML structure is
 seen like the rest:
 
@@ -2546,7 +2546,7 @@ read sent before a save never overwrites that save's answer. A `/me` answer
 is applied only when its read is the newest applied so far
 (`highestReadApplied`), so an older read answered after a newer one never
 overwrites it; React Router aborts a stale navigation's loader today, so
-this is defence in depth (`apps/web/app/lib/stores/user-store.ts:67-110`,
+this is defense in depth (`apps/web/app/lib/stores/user-store.ts:67-110`,
 `:250-270`).
 
 **The limits of numbering at sending.** The numbers give the order the
@@ -2880,7 +2880,7 @@ removed membership, a deleted organization): `{ "error": { "code":
 so a caller can't tell them apart.
 
 **The failure limit:** `RATE_LIMITS.apiTokenFailuresPerIp`, 30 failures per
-5 minutes, keyed by `request.ip` (which honours `TELFLO_TRUST_PROXY_HOPS`),
+5 minutes, keyed by `request.ip` (which honors `TELFLO_TRUST_PROXY_HOPS`),
 never by the token; in memory per API process, as every limit
 (`createApiTokenFailureLimiter`, `apps/api/src/http/rate-limits.ts`). An
 address is blocked while its settled failures and its attempts in flight
@@ -3400,7 +3400,7 @@ work, so its risk is the validator's CPU.
   both levels checked before either is recorded): per address (`request.ip`)
   10 a minute and 1 in flight; across every anonymous caller 120 a minute
   and 4 in flight. The count is taken after the body is parsed and checked,
-  before the catalogue's reads. **The counts are each API process's own**
+  before the catalog's reads. **The counts are each API process's own**
   (in memory), so the totals grow with replicas, and `request.ip` is the
   caller's only when `TELFLO_TRUST_PROXY_HOPS` matches the proxies in front
   of the API: otherwise every caller behind the gateway shares one address's
@@ -3850,7 +3850,7 @@ product" below.)*
   fetch only of a playground page; and a web-origin HTML answer or
   redirect outside the playground's pages is outside whatever its path or
   type), and analytics go to PostHog's origin only, per consent. No `/me`,
-  no refresh, no configuration, fleet, testing, rules, regex, catalogue or
+  no refresh, no configuration, fleet, testing, rules, regex, catalog or
   organization read, no write: the sample workspace answers every reused
   reader in the browser (`apps/web/app/lib/workspace-reads.ts`). The
   browser specs record every request against this exact list
@@ -3869,7 +3869,7 @@ product" below.)*
     exactly as an unknown one (no existence leak), whoever asks.
   - **What it answers** (`PublishedFlowSchema`, strict): a published flow
     in full, YAML included, but its id, `published`, `sortOrder` and
-    `createdAt`. Flows are Telflo's catalogue content, public once
+    `createdAt`. Flows are Telflo's catalog content, public once
     published; nothing of an organization's is there.
   - **Never from a cache**: every reply, the 200s, the 404 and the 429,
     carries `Cache-Control: no-store` (a route `onSend`), so a flow hidden
@@ -4084,7 +4084,7 @@ with `telflo-admin bootstrap`:
     the organization's lock, where its type is read: after the request's
     role and the per-inviter mail limit (which counts it, as every refusal
     past the role), before anything is written, so no row, no audit row
-    and no email. Listing and cancelling stay open, so leftover
+    and no email. Listing and canceling stay open, so leftover
     invitations can be cleared. The mode is the API's settings
     (`site.registration`, fixed per process); `mayInviteFrom` in the
     contracts is the one rule the API and the web share. The web hides
@@ -4214,7 +4214,7 @@ with `telflo-admin bootstrap`:
   the list (the site serves its own). Deliberate breaks: a root dropped
   from the list, the `/R.` rule or the lower-casing removed, the mode 0644
   (each fails its case). **Residues:** the routed Service receives the
-  request's URI as sent, unnormalised, and must check it itself; `/home`
+  request's URI as sent, unnormalized, and must check it itself; `/home`
   answers nginx's absolute 301 (as `/api` does); a `^~` route takes its
   paths ahead of the gateway's regex locations (`/home/quick-deploy/…`
   reaches the site, its access line still redacted); the Service's own

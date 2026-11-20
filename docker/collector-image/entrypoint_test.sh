@@ -197,7 +197,7 @@ check "a padded group id is taken as typed" 'reads_back telflo.collector_group_i
 
 # --- 9c. each of the 25 runes Go's TrimSpace removes is blank by itself ------
 # (the list in entrypoint.sh's comment): refused with the same words, nothing
-# written. Its neighbour U+200B (zero width space, not white space to Go) is
+# written. Its neighbor U+200B (zero width space, not white space to Go) is
 # a value, written as typed, and so is a space rune followed by a byte that
 # isn't UTF-8 (Go decodes the byte as U+FFFD: not white space). Every case
 # runs under the caller's locale and again under LC_ALL=C.UTF-8 (the image

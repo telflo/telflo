@@ -103,10 +103,10 @@
 # the platform checks a version's text with the real collector of the
 # version's pin: a valid text answers `valid`, a text
 # naming an unknown component `invalid` with that component's path. The
-# configuration's version 1 is pinned to the catalogue's default version,
+# configuration's version 1 is pinned to the catalog's default version,
 # the one the image always holds (every offered one by default; CI's stack
 # job and the throwaway gate stacks build it with OTELCOL_VERSIONS=default,
-# the catalogue's default only). The collector tester: it answers
+# the catalog's default only). The collector tester: it answers
 # /testing/v1/health through its forwarder's published port (the tester
 # itself sits only on an internal network) and refuses a run without the
 # secret there; and through the gateway, a real run: a small OTLP logs
@@ -187,7 +187,7 @@
 # stack's own published 51234. Before any step, the agent URL this script
 # polls (TELFLO_OPAMP_AGENT_HOST_URL) must be the agent port the stack
 # publishes (`docker compose port opamp-server 51234`), and the smoke
-# collector's binary (docker/smoke-collector) the catalogue's default
+# collector's binary (docker/smoke-collector) the catalog's default
 # version, the one the validator image always holds: a run against either
 # fails at once, naming what to change.
 # The fleet model through the platform: in the group organization, after its
@@ -224,7 +224,7 @@
 # Installing: in that fleet, after its token history and while its published
 # version is assigned, a group with that version and a read-only mount; its
 # install facts read through the platform (no-store, no bearer, this stack's
-# endpoint, the image of the catalogue's default version); the container
+# endpoint, the image of the catalog's default version); the container
 # install run from the facts in the local ghcr.io/telflo/telflo/collector
 # image (`--pull never`; without it these steps are skipped, saying why), its
 # bearer from a reveal passed only through the environment, enrolling in the
@@ -733,11 +733,11 @@ if [ "$agent_url_port" != "$published_agent_port" ] ||
 fi
 
 # The smoke collector (docker/smoke-collector) copies its collector out of
-# the stack's validator image, which always holds the catalogue's default
+# the stack's validator image, which always holds the catalog's default
 # version (CI's stack job and the throwaway gate stacks build it with
 # OTELCOL_VERSIONS=default), and runs it under the supervisor image of the
 # same version (its FROM tag): all three must name the same version.
-step "the smoke collector's collector and supervisor are the catalogue's default version"
+step "the smoke collector's collector and supervisor are the catalog's default version"
 repo_dir="$(dirname "$0")/.."
 catalog_default=$(jq -r '[.versions[] | select(.default == true) | .version] | if length == 1 then .[0] else empty end' \
   "$repo_dir/catalog/distributions/otelcol-contrib.json")
@@ -3636,7 +3636,7 @@ qd_refused() {
 # published version is still assigned: a group "install-i" with that version
 # and one read-only mount; the install's facts read through the platform; the
 # container install run from them in the collector image built locally
-# (scripts/build-collector-image.sh <the catalogue's default>, never pulled:
+# (scripts/build-collector-image.sh <the catalog's default>, never pulled:
 # `--pull never`), with the bearer of a reveal; the All In One bundle
 # downloaded, unpacked into a fresh directory, and run in that image as root
 # (it downloads otelcol-contrib and the supervisor for the image's arch from

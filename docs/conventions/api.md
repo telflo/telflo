@@ -141,12 +141,12 @@ is a secret (`docs/conventions/security.md`).
   no `Authorization` header counts nothing, and a success takes back only
   its own count. A refused organization doesn't count.
 - **The anonymous validate's limits:** per client address (`request.ip`,
-  which honours `TELFLO_TRUST_PROXY_HOPS`) 10 a minute and 1 in flight;
+  which honors `TELFLO_TRUST_PROXY_HOPS`) 10 a minute and 1 in flight;
   across every anonymous caller 120 a minute and 4 in flight, so the
   validator keeps room for signed-in validations. One limiter checks both
   levels before recording either; the count is taken after the body is
   parsed and checked (a malformed or oversized body isn't counted), before
-  the catalogue's reads. A refusal is `429 rate_limited` with
+  the catalog's reads. A refusal is `429 rate_limited` with
   `Retry-After`. The counts are each API process's own (in memory), so the
   totals grow with replicas; behind a proxy the API needs
   `TELFLO_TRUST_PROXY_HOPS`, or every caller shares the proxy's address.

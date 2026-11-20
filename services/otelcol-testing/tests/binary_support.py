@@ -1,7 +1,7 @@
 """What the binary and kwok tests share (`tests/test_binary_*.py`, marked
 `binary` or `kwok`, run inside the image with `pytest -m "binary or kwok"`
-under `--network none`): where the collectors and the catalogue are, which
-versions the catalogue offers, the tester's app over the image's collectors,
+under `--network none`): where the collectors and the catalog are, which
+versions the catalog offers, the tester's app over the image's collectors,
 and running one test through it.
 
 An offered version the image doesn't hold is skipped, unless the image was
@@ -34,7 +34,7 @@ OFFERED = CATALOG.offered_versions(DISTRIBUTION)
 
 
 def _default_version(catalog_dir: Path = CATALOG_DIR) -> str:
-    """The catalogue's default offered version, as the image's download
+    """The catalog's default offered version, as the image's download
     script picks it (catalog.py reads no default: the service never needs
     one)."""
     for path in sorted(catalog_dir.glob("*.json")):
@@ -78,7 +78,7 @@ def require(version: str) -> Path:
 
 def image_settings(**overrides: object):
     """The tests' settings (conftest's secret), over the image's collectors
-    and catalogue."""
+    and catalog."""
     return make_settings(BINARY_DIR, catalog_dir=CATALOG_DIR, **overrides)
 
 

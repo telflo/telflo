@@ -18,7 +18,7 @@ about 3 × `MAX_DEPTH` frames, far below Python's limit of 1,000.
 **Aliases**. An alias is cheap to write and expensive to walk:
 `a1: &a1 [*a0, *a0, …]` nested seven deep is 462 bytes and expands to ten
 million nodes, and the validator's walks (requirements, placeholders,
-provider neutralisation) visit every expanded node. Each document is
+provider neutralization) visit every expanded node. Each document is
 composed first and its expanded size counted from the node graph (each
 distinct node once, so counting is linear in the text); a document whose
 aliases add more than `MAX_ALIAS_NODES` nodes raises `TooManyAliases` before
@@ -249,7 +249,7 @@ def single_node(text: str) -> Node | None:
     and no value is built: a node's `.value` is the scalar's decoded string
     (escapes resolved, `${file:…}` hidden behind a YAML escape made
     visible), exactly what the collector's confmap layer reads. Used by the
-    provider neutralisation, which detects and splices references by node
+    provider neutralization, which detects and splices references by node
     position without ever re-dumping the document.
 
     Raises `YAMLError` for a text PyYAML can't read as one document (a scanner

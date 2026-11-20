@@ -128,7 +128,7 @@ def test_the_bomb_is_refused_by_the_loader_and_is_not_a_yaml_error() -> None:
 def test_what_one_caller_changes_no_other_caller_sees() -> None:
     """The last texts' documents are kept for the check's other steps;
     each caller gets its own copy, so one step changing its document in place
-    (the provider neutralisation does) can't change what the next step
+    (the provider neutralization does) can't change what the next step
     reads."""
     first = bounded_yaml.safe_load(ANCHORED)
     first["processors"]["memory_limiter"]["limit_mib"] = 1
@@ -152,7 +152,7 @@ def test_no_module_but_the_loader_imports_yaml() -> None:
     bound. `import yaml` (any form) and `from yaml import …` (the package
     root, which exposes `load` / `safe_load`) are forbidden; the node *types*
     `from yaml.nodes import …` carry no parser and are allowed, as the
-    neutraliser walks composed nodes. providers.py binds the loader as `yaml`
+    neutralizer walks composed nodes. providers.py binds the loader as `yaml`
     (its functions stay verbatim)."""
     allowed_from = {"yaml.nodes", "yaml.events", "yaml.constructor"}
     offenders = []

@@ -1,6 +1,6 @@
 """`file_log`, filelog's name from collector 0.149.0.
 
-The catalogue renamed the `filelog` receiver to `file_log`
+The catalog renamed the `filelog` receiver to `file_log`
 (catalog/distributions/otelcol-contrib.json's `renamedTypes`), and every
 version the platform offers knows it by both names. The same text with either
 spelling takes the same strategy, the same checks and the same mutations,
@@ -225,7 +225,7 @@ def test_either_spelling_runs_the_same_with_the_same_mutations(client: TestClien
     assert [_respelt(m["message"], "file_log") for m in file_log["mutations"]] == [
         _respelt(m["message"], "filelog") for m in filelog["mutations"]
     ]
-    # The receiver is synthesised under its own key, the operators kept, the
+    # The receiver is synthesized under its own key, the operators kept, the
     # file source and storage replaced.
     assert _respelt(file_log["mutatedYaml"], "file_log") == _respelt(filelog["mutatedYaml"], "filelog")
     assert "file_log" in file_log["mutatedYaml"] and "otlp/test_in" not in file_log["mutatedYaml"]
@@ -315,7 +315,7 @@ def test_either_spelling_with_a_container_operator_gets_the_same_r008_advisory(t
         "filelog": {"receiver": "filelog", "kind": "filelog"},
         "file_log": {"receiver": "file_log", "kind": "filelog"},
     }
-    # The synthesised receiver reads the container-shaped path, under its own key.
+    # The synthesized receiver reads the container-shaped path, under its own key.
     text, _ = results["file_log"]
     assert "  file_log:\n" in text
     assert _respelt(text, "file_log") == _respelt(results["filelog"][0], "filelog")

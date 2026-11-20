@@ -1,7 +1,7 @@
 """The backstop checks what the collector reads, splices land where the
 scalar is, and neither run sets a name it shouldn't.
 
-The fail-closed re-check runs whether or not the neutraliser changed
+The fail-closed re-check runs whether or not the neutralizer changed
 something, on the text the collector reads (after the Datadog insert) and on
 the rerun's text (after the file_storage directory splice); splices are
 tested after a non-ASCII character, on CRLF text and inside a flow
@@ -10,7 +10,7 @@ names (a text shapes those names through `${env:NAME}`).
 
 libyaml leaves a leading byte-order mark out of its marks' indexes, so on a
 text that starts with one every splice would land one character early (the
-backstop would refuse the neutraliser's output; the rerun's directory
+backstop would refuse the neutralizer's output; the rerun's directory
 splice would reach the collector corrupted). `bounded_yaml.mark_offset`
 corrects it.
 """
@@ -235,7 +235,7 @@ _DIRECTORY_STDERR = (
     "no such file or directory. You can enable the create_directory option to automatically create it\n"
 )
 
-# No provider reference (so nothing is neutralised), a Datadog
+# No provider reference (so nothing is neutralized), a Datadog
 # exporter that gets the hostname insert, and a file_storage directory the
 # rerun repoints.
 _RERUN_CONFIG = """\
@@ -300,7 +300,7 @@ async def test_the_backstop_checks_exactly_what_each_run_reads(
 async def test_an_insert_the_backstop_refuses_never_reaches_the_collector(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """A text with nothing to neutralise whose last rewrite (the Datadog
+    """A text with nothing to neutralize whose last rewrite (the Datadog
     insert, here made to misbehave) leaves a live reference: refused."""
     collector = _Collector()
     monkeypatch.setattr(runner, "run_collector", collector)
@@ -334,7 +334,7 @@ async def test_a_rerun_text_the_backstop_refuses_never_reaches_the_collector(
     assert len(collector.texts) == 1  # the first run only
     assert result.valid is False
     assert result.outcome == "refused"
-    # The organization variable was neutralised on the first pass, and the
+    # The organization variable was neutralized on the first pass, and the
     # file reference survived the splice: both named, as today's refusal does.
     assert result.errors == [
         {"message": runner.REFUSED_PROVIDERS_MESSAGE.format(schemes="file:, org:"), "componentPath": None}
@@ -534,7 +534,7 @@ def _recording_backstop(monkeypatch: pytest.MonkeyPatch) -> list[str]:
 @pytest.mark.parametrize(
     ("text", "checked"),
     [
-        ("receivers:\n  otlp: {}\n", False),  # nothing neutralised, nothing inserted
+        ("receivers:\n  otlp: {}\n", False),  # nothing neutralized, nothing inserted
         (f'exporters:\n  otlp:\n    value: "{CANARY}"\n', True),  # a splice
         ("exporters:\n  datadog:\n    api:\n      key: abc\n", True),  # the insert
     ],

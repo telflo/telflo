@@ -147,8 +147,8 @@ collector and the supervisor don't use it).
 ## Tags
 
 - `ghcr.io/telflo/telflo/collector:<version>`: one tag per collector
-  version the catalogue offers, each with that version's OpAMP supervisor.
-  The binaries are pinned by sha256 in the catalogue, so a tag always holds
+  version the catalog offers, each with that version's OpAMP supervisor.
+  The binaries are pinned by sha256 in the catalog, so a tag always holds
   the same binaries.
 - **0.159.0, 0.160.0, 0.161.0 and 0.162.0**, each for `linux/amd64` and
   `linux/arm64`, are built again under this name by the collector
@@ -209,7 +209,7 @@ This directory is the source of `ghcr.io/telflo/telflo/collector`.
   `bash docker/collector-image/entrypoint_test.sh` (the entrypoint) and
   `bash docker/collector-image/build-collector-image_test.sh` (the build
   script's checks).
-- **A local build** of one catalogue version, for the machine's platform,
+- **A local build** of one catalog version, for the machine's platform,
   loaded into the local Docker engine:
 
   ```bash
@@ -224,7 +224,7 @@ This directory is the source of `ghcr.io/telflo/telflo/collector`.
   base, apt's `curl` and `ca-certificates`, and the two binaries.
 - **Publishing** is the collector workflow's
   (`.github/workflows/collector.yml`), started by hand from `main` with
-  `collector_version` (a version the catalogue offers, or `all`) and
+  `collector_version` (a version the catalog offers, or `all`) and
   `publish` (false by default: build and test only; true is the maintainers'
   go-ahead), as `docs/releasing.md` says. Each version goes through this
   directory's build script twice:
@@ -254,18 +254,18 @@ This directory is the source of `ghcr.io/telflo/telflo/collector`.
   `ghcr.io/telflo/telflo/collector` (the older registry paths
   `ghcr.io/telflo/collector` and `ghcr.io/telflo/platform/collector` can't
   be named), a
-  catalogue other than the repository's, a checkout that isn't this
+  catalog other than the repository's, a checkout that isn't this
   repository's own (a copy nested in another repository), uncommitted or
-  untracked changes in this directory, the catalogue, the build script or
+  untracked changes in this directory, the catalog, the build script or
   the release's `oci.sh`, `tools.sh` and `tools.lock` (the `revision`
   label must describe the image), an input flagged assume-unchanged or
   skip-worktree, and a caller's `DOCKER_CONFIG` whose `config.json` could
   make Docker consult a credential helper. `--build-oci` builds from the
   commit itself: HEAD's raw blobs of this directory, each checked against
   its tree entry's hash (a symlink or submodule refused), written into a
-  temporary directory, with HEAD's catalogue for the build arguments. The
+  temporary directory, with HEAD's catalog for the build arguments. The
   scripts never create a builder or log in to a registry: the push uses
   the caller's `DOCKER_CONFIG` (the workflow's job token;
   `docs/conventions/security.md`, "The release pipeline").
   `scripts/build-collector-image.sh --list-offered` prints the versions
-  the catalogue offers, newest first (the workflow's `all`).
+  the catalog offers, newest first (the workflow's `all`).

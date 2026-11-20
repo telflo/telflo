@@ -1,5 +1,5 @@
 """Shared fixtures: settings with a known secret (from a file, as the service
-reads it), the test catalogue, fake collectors (scripts standing in for
+reads it), the test catalog, fake collectors (scripts standing in for
 `otelcol-contrib`, as the validator's conftest has), and a request body.
 
 `write_fake_collector` writes the fake that behaves as a collector does for the

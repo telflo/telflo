@@ -190,7 +190,7 @@ const HAS = "${{ needs.check.outputs.has == 'true' }}";
 const PUBLISH_HAS = "${{ inputs.publish && needs.check.outputs.has == 'true' }}";
 // The one status function the workflows hold: the chart job runs with publish when the check
 // passed and the publish passed, or the publish was skipped because nothing was to be built (a
-// chart-only bump); never after a failed or cancelled test or publish.
+// chart-only bump); never after a failed or canceled test or publish.
 const CHART_IF =
   "${{ !cancelled() && inputs.publish && needs.check.result == 'success' && (needs.publish.result == 'success' || (needs.publish.result == 'skipped' && needs.check.outputs.has == 'false')) }}";
 const STATUS_FUNCTION = /\b(always|failure|cancelled|success)\s*\(/g;

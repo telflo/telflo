@@ -5,19 +5,19 @@ nothing it fetches reaches a layer unchecked, and no tarball is left behind.
 
     download-binaries.py collectors --catalog DIR --versions SPEC --arch ARCH --dest DIR
 
-reads the collector catalogue (`catalog/distributions/*.json`, the
+reads the collector catalog (`catalog/distributions/*.json`, the
 `otelcol-contrib` distribution) and, for each version SPEC names, fetches
 upstream's `otelcol-contrib_<version>_linux_<arch>.tar.gz`, checks its sha256
-against the catalogue's, and extracts the one file `otelcol-contrib` to
+against the catalog's, and extracts the one file `otelcol-contrib` to
 `DIR/v<version>/otelcol-contrib` (the validator's layout, `app/catalog.py`),
 deleting the tarball as it goes. SPEC is the build argument
 `OTELCOL_VERSIONS`:
 
     all          every offered (not deprecated) version, the default
-    default      the catalogue's default version
-    0.162.0,...  those versions, each of which the catalogue must offer
+    default      the catalog's default version
+    0.162.0,...  those versions, each of which the catalog must offer
 
-A name the catalogue doesn't offer (a deprecated or an unknown version), an
+A name the catalog doesn't offer (a deprecated or an unknown version), an
 empty entry, a download whose sha256 differs, or a URL that isn't upstream's
 release of that version and platform stops the build.
 
@@ -46,7 +46,7 @@ from pathlib import Path
 
 DISTRIBUTION = "otelcol-contrib"
 UPSTREAM = "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/"
-# Docker's TARGETARCH values the catalogue has a Linux collector for.
+# Docker's TARGETARCH values the catalog has a Linux collector for.
 ARCHITECTURES = ("amd64", "arm64")
 MEMBER = "otelcol-contrib"
 SHA256_RE = re.compile(r"[0-9a-f]{64}")
@@ -72,7 +72,7 @@ class BuildError(Exception):
 
 
 def load_distribution(catalog_dir: Path) -> dict:
-    """The `otelcol-contrib` distribution's file from the catalogue."""
+    """The `otelcol-contrib` distribution's file from the catalog."""
     files = sorted(catalog_dir.glob("*.json"))
     if not files:
         raise BuildError(f"the catalogue {catalog_dir} holds no distribution file")
@@ -95,7 +95,7 @@ def load_distribution(catalog_dir: Path) -> dict:
 
 def select_versions(document: dict, spec: str, arch: str) -> list[tuple[str, str, str]]:
     """`(version, url, sha256)` for each version `spec` names, in the
-    catalogue's order for `all` and in `spec`'s order for a list."""
+    catalog's order for `all` and in `spec`'s order for a list."""
     if arch not in ARCHITECTURES:
         raise BuildError(
             f"no collector for linux/{arch}: the catalogue has linux_{' and linux_'.join(ARCHITECTURES)}"

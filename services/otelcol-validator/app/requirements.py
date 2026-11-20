@@ -7,7 +7,7 @@ adds on its own.
   `Unresolved organization variable: X`; a name over 128 characters, which no
   variable can have, has its own row; the legacy `$orgvar:X` form, which
   nothing fills in, reports `Unsupported: write ${org:X}`.
-- The non-`env` confmap providers the validator neutralised.
+- The non-`env` confmap providers the validator neutralized.
 - What `validate` passes but the collector refuses at start: the text names
   TLS files, the file exporter's directory, or components that need the
   cluster's API. The validator reads the text only; it never opens a path.
@@ -43,7 +43,7 @@ def live_organization_references(text: str) -> list[str]:
     support.
 
     Case-sensitive on the ``${org:`` prefix: ``${ORG:X}`` is not an
-    organization variable, even though the neutraliser still classifies it as
+    organization variable, even though the neutralizer still classifies it as
     a foreign scheme via ``scheme.lower()`` — that is a separate, correct
     concern (nothing not `env:` reaches the collector).
 

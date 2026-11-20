@@ -16,7 +16,7 @@ internal service that runs untrusted configurations.
   `{"yaml": "…", "organizationVariables": {"NAME": "value", …}}` (the
   values optional: at most 150 of at most 1,024 characters, the opamp-server's bounds): `200 {valid, errors: [{message, componentPath}],
   requirements: [{category, title, description, componentPath}],
-  distribution, version}`. A distribution or version the catalogue doesn't
+  distribution, version}`. A distribution or version the catalog doesn't
   list is 404, a deprecated version 409 `version_retired`, an offered version
   whose collector isn't here 503 `version_unavailable`, all before the body is
   read; a malformed path or body 400; a body over 2 MiB 413 (refused while it
@@ -50,7 +50,7 @@ within the 4 MiB the platform reads.
 | `OTELCOL_VALIDATOR_MAX_CONCURRENCY` | `8` | Collectors run at once (each holds about 80 MB). |
 | `OTELCOL_VALIDATE_TIMEOUT` | `10` | Seconds one `validate` may run. A whole check may run 2 s more (its deadline: 12 s by default); with the longest wait for a slot (5 s) and ending the check (at most about 1 s), a request answers within about 18 s, inside the platform's 20-second limit on its call. |
 | `OTELCOL_BINARY_DIR` | `/opt/otelcol` | Holds `v<version>/otelcol-contrib` for each version baked in. |
-| `OTELCOL_CATALOG_DIR` | the repository's `catalog/distributions` | The catalogue the validator reads (the image sets its own copy). |
+| `OTELCOL_CATALOG_DIR` | the repository's `catalog/distributions` | The catalog the validator reads (the image sets its own copy). |
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | unset | When set, `telemetry.py` exports the service's own traces, logs and runtime metrics. |
 
 The secrets are kept only as SHA-256 digests and compared in constant time.
@@ -66,7 +66,7 @@ answer on its stdout. The service's event loop only starts it and reads its
 answer: it never parses the text or the collector's output.
 
 The child has one hard deadline, `OTELCOL_VALIDATE_TIMEOUT` plus 2 seconds
-(12 s by default). At the deadline, or when the request is cancelled, the
+(12 s by default). At the deadline, or when the request is canceled, the
 service kills the child's whole process group (SIGKILL: the child and its
 collector) and reaps the child; a check the deadline ends is invalid,
 `Validation timed out after 12s`. However a check ends, the service then waits
@@ -92,7 +92,7 @@ In the child, the organization's values are filled in FIRST
 (`app/org_variables.py`, the opamp-server's fill-in ported and held to its
 corpus): each live `${org:NAME}` with a value is replaced by it, every `$` of
 the value doubled, and every step below reads the filled-in text, so a value
-that adds YAML structure is parsed, neutralised and checked like the rest. The
+that adds YAML structure is parsed, neutralized and checked like the rest. The
 filled-in length is counted first: over 1 MiB of UTF-8 the text is invalid
 with `The configuration with its organization variables filled in is over 1
 MiB.` (the opamp-server never serves it), and nothing is built. Measured: a
@@ -121,7 +121,7 @@ is deployment hardening, left for later. Then, on the filled-in text:
    `The configuration can't be read as YAML: <PyYAML's problem> (line N)` and
    a null path, and the collector is never run: the collector would otherwise
    decode an escape that hides a reference, or load a second document the
-   validator never neutralised.
+   validator never neutralized.
 1. Organization variables: one row, `Organization variables filled in`, names
    the names filled in; a `${org:X}` left (no value) is reported as
    `Unresolved organization variable: X`, found on the **decoded** keys and
@@ -132,7 +132,7 @@ is deployment hardening, left for later. Then, on the filled-in text:
 2. Every non-`env` confmap provider (`${file:…}`, `${http:…}`, …) is
    detected on the **decoded** keys and scalar values — PyYAML's composed
    nodes, whose value is what the collector's confmap layer reads — and
-   neutralised by replacing **only that node's source span** with a
+   neutralized by replacing **only that node's source span** with a
    double-quoted rendering of its placeholder (parity-aware escaping and
    typed placeholders). Every other byte stays as sent:
    no whole-document re-dump, so an escape (`"\x24{file:…}"`) can't hide
@@ -169,7 +169,7 @@ is deployment hardening, left for later. Then, on the filled-in text:
    check's directory, killed after `OTELCOL_VALIDATE_TIMEOUT` seconds;
    stderr capped at 256 KB. A cut output ends at its last complete line
    before the truncation marker, so no part of a path the scrub below can't
-   recognise survives the cut.
+   recognize survives the cut.
 6. Its stderr is read by stage (resolve, unmarshal, validate, build;
    `app/stderr.py`), each error with its causes; an error is a deployment
    requirement only when every cause matches a requirement template whole (see
@@ -198,7 +198,7 @@ is deployment hardening, left for later. Then, on the filled-in text:
    API, and an error for a tail_sampling OTTL policy with no conditions.
 
 `validate` creates every component without starting it, so constructors run;
-the protection is the neutralisation above. Further hardening, and a review of
+the protection is the neutralization above. Further hardening, and a review of
 PyYAML's decoding against the collector's yaml.v3, are open work.
 
 ## Requirements
@@ -256,7 +256,7 @@ path <path> could not be read: open <path>: …`, recorded as
   deadline and its process group) and the child's half (the steps above).
 - `app/check.py`: the check's child process, `python -m app.check`.
 - `app/stderr.py`: the collector's output and the requirement templates.
-- `app/providers.py`: the confmap provider neutralisation (detected on
+- `app/providers.py`: the confmap provider neutralization (detected on
   decoded nodes, spliced by source span; parity-aware escaping and linear
   brace matching).
 - `app/bounded_yaml.py`: the one YAML loader, nesting and alias expansion
@@ -289,7 +289,7 @@ python3.12 -m venv .venv
 - a smoke check and the real requirement outputs
   (`tests/test_binary_smoke.py`);
 - the collector's renames (`tests/test_binary_renames.py`: every rename the
-  catalogue's `renamedTypes` lists; catalog/README.md says what to do when
+  catalog's `renamedTypes` lists; catalog/README.md says what to do when
   a version adds one);
 - the palette's defaults (`tests/test_binary_palette.py`): each text of
   `tests/fixtures/palette-defaults.json`, what a drop of each palette entry
@@ -356,18 +356,18 @@ The build argument `OTELCOL_VERSIONS` picks the collectors it bakes in:
 | Value | Bakes | Size (arm64) |
 |---|---|---|
 | `all` (the default) | every version `catalog/distributions/otelcol-contrib.json` offers (not deprecated) | 1.68 GB with four (0.159.0–0.162.0) |
-| `default` | the catalogue's default version only | 571 MB |
-| `0.162.0,0.160.0` | those versions, each of which the catalogue must offer | |
+| `default` | the catalog's default version only | 571 MB |
+| `0.162.0,0.160.0` | those versions, each of which the catalog must offer | |
 
 The download stage runs `scripts/download-binaries.py` (Python's standard
 library: no curl or jq): for each version, upstream's
 `otelcol-contrib_<version>_linux_<arch>.tar.gz` (Docker's `TARGETARCH`,
-amd64 or arm64), its sha256 checked against the catalogue's, the one file
+amd64 or arm64), its sha256 checked against the catalog's, the one file
 `otelcol-contrib` extracted to `/opt/otelcol/v<version>/otelcol-contrib` and
-the tarball deleted in the same step. A version the catalogue doesn't offer,
+the tarball deleted in the same step. A version the catalog doesn't offer,
 an empty entry or a sha256 that doesn't match fails the build; each baked
 collector must then run in the image and print its own version. The image
-always carries the whole catalogue, so a version it offers but the image
+always carries the whole catalog, so a version it offers but the image
 doesn't hold answers 503 `version_unavailable` (the editor shows the check
 as unavailable). Each collector is 363 to 380 MB unpacked (arm64). A
 download that fails in transfer (a network error, or a connection closed
@@ -381,7 +381,7 @@ What else is in it:
   openssl); the hash-pinned runtime lock only, as wheels, before which a
   check fails the build unless PyYAML has libyaml (`yaml.CSafeLoader`);
 - the service as uid 10001 (`otelcol-validator`), never root, in
-  `/app/services/otelcol-validator`, with the catalogue in
+  `/app/services/otelcol-validator`, with the catalog in
   `/app/catalog/distributions` (`OTELCOL_CATALOG_DIR`) and the collectors in
   `/opt/otelcol` (`OTELCOL_BINARY_DIR`), both read-only to it;
 - tini (v0.19.0, MIT, its sha256 pinned) as PID 1, which reaps the

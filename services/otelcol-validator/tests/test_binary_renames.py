@@ -2,14 +2,14 @@
 deselected by default, run inside the image with `pytest -m binary`).
 
 For every offered version whose `otelcol-contrib` is under
-OTELCOL_BINARY_DIR, and every rename the catalogue's `renamedTypes` lists
-(read from the catalogue itself, never a copy): the current name passes from
+OTELCOL_BINARY_DIR, and every rename the catalog's `renamedTypes` lists
+(read from the catalog itself, never a copy): the current name passes from
 `since` on and fails as an unknown type before it (only where an offered
 version predates `since`: today the aws_s3 receiver on 0.159.0-0.161.0); the
 old name passes on every offered version. Each text is the smallest one
 found that the collector accepts for that component.
 
-A rename the catalogue gains needs its configuration below
+A rename the catalog gains needs its configuration below
 (`test_every_rename_has_a_configuration` says which), and its `since`
 checked: catalog/README.md, "Adding a collector version".
 """
@@ -26,7 +26,7 @@ pytestmark = pytest.mark.binary
 
 
 def _renamed_types() -> list[dict]:
-    """Contrib's `renamedTypes`, as its catalogue file lists them."""
+    """Contrib's `renamedTypes`, as its catalog file lists them."""
     for path in sorted(CATALOG_DIR.glob("*.json")):
         document = json.loads(path.read_text(encoding="utf-8"))
         if document.get("distribution") == DISTRIBUTION:

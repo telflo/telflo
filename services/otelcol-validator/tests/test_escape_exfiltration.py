@@ -1,4 +1,4 @@
-"""The exfiltration defence and the requirements-only rerun, against the real
+"""The exfiltration defense and the requirements-only rerun, against the real
 collectors (marked `binary`, deselected by default; run inside the image with
 `pytest -m binary`).
 

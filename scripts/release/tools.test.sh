@@ -288,17 +288,17 @@ ci_empty_refused() {
   [ "$?" = 2 ] && grep -q 'refused: TELFLO_TOOLS_PLATFORM set' "$c.out"
 }
 run_case "CI=true: TELFLO_TOOLS_PLATFORM set but empty: refused too" ci_empty_refused
-not_ci() { # <CI value>: the self-test's settings honoured
+not_ci() { # <CI value>: the self-test's settings honored
   : >"$tmp/curl.log"
   PATH="$tmp/bin:$PATH" HOME="$tmp/home" CI="$1" TELFLO_TOOLS_DIR="$c/.tools" TELFLO_TOOLS_LOCK="$tmp/tools.lock" \
     TELFLO_TOOLS_PLATFORM=test-plat bash "$TOOLS_SH" fetch good >"$c.out" 2>&1
   [ "$?" = 0 ] && [ -x "$c/.tools/good/v1.0.0/good" ]
 }
-run_case "CI='' (not a workflow): the settings honoured" not_ci ""
+run_case "CI='' (not a workflow): the settings honored" not_ci ""
 fresh
-run_case "CI=false: the settings honoured" not_ci false
+run_case "CI=false: the settings honored" not_ci false
 fresh
-run_case "CI=0: the settings honoured" not_ci 0
+run_case "CI=0: the settings honored" not_ci 0
 
 # --- usage -------------------------------------------------------------------------------
 fresh

@@ -28,7 +28,7 @@ from enum import Enum
 from typing import Any
 
 # The receiver types the tester feeds through their own operator chain, by
-# every name they go by, each to its strategy's kind. The catalogue renamed
+# every name they go by, each to its strategy's kind. The catalog renamed
 # `filelog` to `file_log` from collector 0.149.0
 # (catalog/distributions/otelcol-contrib.json's `renamedTypes`; the old name
 # still works, deprecated), so a text may spell it either way and both take

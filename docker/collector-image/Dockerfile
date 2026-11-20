@@ -2,7 +2,7 @@
 # per collector version (ghcr.io/telflo/telflo/collector:<version>).
 #
 # The base image is pinned by its index digest, and the build arguments
-# are fed from the collector catalogue.
+# are fed from the collector catalog.
 #
 # Generic by design: no fleet secrets, endpoints or EXPOSE statements are
 # baked in. A collector's identity arrives in environment variables at run

@@ -1,6 +1,6 @@
 """Regression tests for the validator's hardened pre-spawn primitives.
 
-The subprocess environment allowlist, the confmap provider neutralisation
+The subprocess environment allowlist, the confmap provider neutralization
 (its triple-dollar bypass fix), and the `${org:…}` pseudo-scheme's
 reporting.
 """

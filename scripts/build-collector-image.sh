@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Builds telflo's collector image (docker/collector-image: otelcol-contrib and
-# the OpAMP supervisor) for one collector version of the catalogue.
+# the OpAMP supervisor) for one collector version of the catalog.
 #
 #   scripts/build-collector-image.sh <version> [--platform linux/amd64|linux/arm64]
 #   scripts/build-collector-image.sh <version> --build-oci <dir> --builder <name> [--no-attest]
@@ -19,7 +19,7 @@
 # this platform's); the Dockerfile
 # checks each download against its sha256.
 #
-# --list-offered prints the versions the catalogue offers (not deprecated,
+# --list-offered prints the versions the catalog offers (not deprecated,
 # each entry checked as above), newest first, one a line: the versions the
 # collector workflow's `all` builds.
 #
@@ -69,13 +69,13 @@
 #     ghcr.io/telflo/telflo/collector: they name only that repository
 #     (the older registry paths ghcr.io/telflo/collector and
 #     ghcr.io/telflo/platform/collector can't be reached);
-#   - a catalogue other than the repository's (TELFLO_COLLECTOR_CATALOGUE);
+#   - a catalog other than the repository's (TELFLO_COLLECTOR_CATALOGUE);
 #   - a tree that isn't a git checkout of this repository (its git toplevel
 #     isn't this repository's root, e.g. a copy inside another repository);
 #   - an input flagged assume-unchanged or skip-worktree (git status would
 #     not see its changes);
 #   - uncommitted changes in the image's inputs (docker/collector-image, the
-#     catalogue, this script, scripts/release's oci.sh, tools.sh and
+#     catalog, this script, scripts/release's oci.sh, tools.sh and
 #     tools.lock): the revision label must describe the image;
 #   - a DOCKER_CONFIG the caller set whose config.json (its content never
 #     printed) is missing or can't be read, isn't JSON, has no "auths" object
@@ -97,7 +97,7 @@
 # written into a temporary directory (no ignored or untracked file of the
 # working tree reaches the image; no local attribute, filter or line-ending
 # setting alters them; a symlink or submodule is refused), its build arguments
-# come from HEAD's catalogue blob: the downloads' URLs and sums, the only
+# come from HEAD's catalog blob: the downloads' URLs and sums, the only
 # build arguments (never a secret: the provenance attestation records them).
 #
 # crane is scripts/release/tools.sh's checked one, else `crane` on PATH (a
@@ -107,7 +107,7 @@
 # apt's curl and ca-certificates from Debian's mirrors, and the two binaries
 # from GitHub.
 #
-# TELFLO_COLLECTOR_CATALOGUE names another catalogue file (the script's tests,
+# TELFLO_COLLECTOR_CATALOGUE names another catalog file (the script's tests,
 # docker/collector-image/build-collector-image_test.sh, use it); its values
 # are checked the same way. bash 3.2 compatible (macOS's /bin/bash).
 set -euo pipefail
@@ -133,7 +133,7 @@ SOURCE_URL="https://github.com/telflo/telflo"
 IMAGE_INPUTS=(docker/collector-image catalog/distributions/otelcol-contrib.json scripts/build-collector-image.sh
   scripts/release/oci.sh scripts/release/tools.sh scripts/release/tools.lock)
 
-# The catalogue's own formats (telflo-core's catalogue.ts) and the platform's
+# The catalog's own formats (telflo-core's catalogue.ts) and the platform's
 # TELFLO_COLLECTOR_IMAGE_REPOSITORY rule.
 VERSION_RE='^[0-9]+\.[0-9]+\.[0-9]+$'
 SHA256_RE='^[a-f0-9]{64}$'
@@ -286,11 +286,11 @@ while [ $# -gt 0 ]; do
   esac
 done
 
-# The catalogue's reader: `list` prints the offered versions newest first;
+# The catalog's reader: `list` prints the offered versions newest first;
 # `entry <version>` refuses an unknown or deprecated version and prints the
 # version's eight values, one a line, in a fixed order. Every offered entry
 # (in `list`) or the version's entry (in `entry`) is refused when a value
-# isn't the catalogue's format. -I: nothing from the current directory or
+# isn't the catalog's format. -I: nothing from the current directory or
 # the environment is imported.
 read_catalogue() { # list | entry <version>
   [ -f "$CATALOGUE" ] || fail "the catalogue is missing: $CATALOGUE"
@@ -459,7 +459,7 @@ fi
 # DOCKER_CONFIG once checked, else a temporary one holding no login (Docker
 # and crane would otherwise consult the macOS keychain's credential helper, or
 # ~/.docker). Everything they publish comes from HEAD: the build context is
-# HEAD's docker/collector-image and the build arguments HEAD's catalogue, both
+# HEAD's docker/collector-image and the build arguments HEAD's catalog, both
 # written into the temporary directory.
 tmp=""
 cleanup() { if [ -n "$tmp" ]; then rm -rf "$tmp"; fi; }

@@ -1,7 +1,7 @@
 """Each run is its own process group under one budget, as the validator's
 checks are: the run's child and its collector are killed together at the
 run's deadline (57 + d s), when the request's budget (64 + d s) runs out,
-when the request is cancelled and when the client goes away; the workspace is
+when the request is canceled and when the client goes away; the workspace is
 removed before the slot is released; at most the cap's runs hold slots, and a
 request that finds none within 5 s answers 503 `tester_busy`. The event loop
 parses nothing.
@@ -204,7 +204,7 @@ def test_the_service_kills_at_57_plus_d_and_the_request_at_64_plus_d(binary_dir:
 
 def test_the_requests_budget_kills_the_group_and_answers_timed_out(binary_dir: Path, tmp_path: Path, record: Path) -> None:
     """The request's budget (lowered to d, the run's deadline left far off)
-    runs out: the run is cancelled, its whole group killed, and the answer
+    runs out: the run is canceled, its whole group killed, and the answer
     is 200 `failed`, `timed_out`."""
     _stubborn(binary_dir, record)
     settings = make_settings(binary_dir, request_budget_base_seconds=0, run_deadline_base_seconds=600)
@@ -450,7 +450,7 @@ def test_the_cap_defaults_to_four_slots(binary_dir: Path) -> None:
 
 def test_the_service_process_never_parses_the_text(binary_dir: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Every parse and splice, broken in the service's process: the run still
-    neutralises (R-105), so they all ran in the child."""
+    neutralizes (R-105), so they all ran in the child."""
 
     def forbidden(*args, **kwargs):
         raise AssertionError("ran in the service's process")

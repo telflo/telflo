@@ -164,7 +164,7 @@ jobs:
   # The OTTL evaluator (services/ottl-evaluator), written as if it were its
   # own repository, with no Postgres: it touches nothing outside the service
   # but the platform's license policy and, for one test, the collector
-  # catalogue (pkg/ottlassert's TestOTTLVersionIsTheCatalogueDefault reads
+  # catalog (pkg/ottlassert's TestOTTLVersionIsTheCatalogueDefault reads
   # catalog/), and runs no npm.
   ottl-evaluator:
     runs-on: ubuntu-latest
@@ -237,7 +237,7 @@ jobs:
   # The collector validator (services/otelcol-validator), written as if it
   # were its own repository, like the OTTL evaluator's job: it touches
   # nothing outside the service but the platform's license policy, the
-  # collector catalogue (catalog/, which its image carries, so the image
+  # collector catalog (catalog/, which its image carries, so the image
   # builds from the repository's root) and, for one guard, the web's corpus
   # (tests/test_builder_texts.py reads telflo-core's
   # apps/web/app/lib/graph/corpus/ to check the binary tests' copies of its
@@ -290,7 +290,7 @@ jobs:
           df -h /
       # The `test` target is the runtime image plus the development lock and
       # the tests, with every offered collector (each checked against the
-      # catalogue's sha256 while it builds).
+      # catalog's sha256 while it builds).
       - name: Build the test image with every offered collector
         working-directory: .
         run: |
@@ -303,9 +303,9 @@ jobs:
 
   # The collector tester (services/otelcol-testing), written as the
   # validator's job is: it touches nothing outside the service but the
-  # platform's license policy, the collector catalogue (its image carries
+  # platform's license policy, the collector catalog (its image carries
   # catalog/, so it builds from the repository's root), and the validator's
-  # files it shares (the neutraliser's three modules, whose identity test
+  # files it shares (the neutralizer's three modules, whose identity test
   # reads ../otelcol-validator/app; the lock its own is compiled against;
   # the downloader its image runs), and runs no npm.
   otelcol-testing:
@@ -368,13 +368,13 @@ jobs:
 
   # Keeps docker-compose.yml evergreen: builds every image from
   # source, starts the whole stack from an empty database, and drives a real
-  # registration through the gateway. A component that is ported without
-  # being wired into the stack, or that breaks it, fails here.
+  # registration through the gateway. A component that isn't wired into
+  # the stack, or that breaks it, fails here.
   stack:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
-      # The validator's and the tester's images bake only the catalogue's
+      # The validator's and the tester's images bake only the catalog's
       # default collector here: the otelcol-validator and otelcol-testing jobs
       # check every version.
       OTELCOL_VERSIONS: default

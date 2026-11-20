@@ -16,7 +16,7 @@ app.kubernetes.io/component api, exactly what the opamp-server chart's
 networkPolicy.management.from selects.
 
 Two containers, each with only its own credentials:
-- migrate, an init container: the migrations, the catalogue's sync and
+- migrate, an init container: the migrations, the catalog's sync and
   telflo_platform's provisioning, as telflo_platform_owner (never a Helm hook). Each
   takes an advisory lock, so pods starting together wait for each other.
   It holds the owner's URL, which no other container of the platform does,
@@ -126,7 +126,7 @@ spec:
       initContainers:
         # node runs the compiled migrate.js directly, never `npm run` (npm
         # reaches its registry and writes ~/.npm), and writes nothing. The
-        # image carries the catalogue at /catalog, where packages/db finds it.
+        # image carries the catalog at /catalog, where packages/db finds it.
         - name: migrate
           image: {{ $image | quote }}
           imagePullPolicy: {{ $pullPolicy | quote }}

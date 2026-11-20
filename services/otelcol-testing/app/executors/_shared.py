@@ -16,7 +16,7 @@ The rules:
    another run (or any outgoing connection) could take the port in. Each
    run leases a port from a range below
    the kernels' ephemeral ranges (so no outgoing connection is ever given
-   one) with a lock file that every run's child honours, held until the run
+   one) with a lock file that every run's child honors, held until the run
    ends; the probe socket that proves the port free is released just before
    the collector starts.
 3. **The informer wait verifies the cluster** (``_wait_for_pod_listable``):

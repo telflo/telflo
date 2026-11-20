@@ -8,7 +8,7 @@
 # archives' digest files, <dir>/<name>.digest), the chart's reference, version
 # and package sha256 (the .tgz, whose own Chart.yaml must be the chart telflo
 # at <v>), the collector versions and the supervisor-collector chart version
-# the release was checked against (the catalogue's offered versions and the
+# the release was checked against (the catalog's offered versions and the
 # contracts' DEFAULT_HELM_CHART_VERSION), and links to the Quick start,
 # docs/kubernetes.md and docs/compose.md at the tag. No date, nothing read
 # from the network. Exit 0 written; 1 an input missing or wrong; 2 usage.

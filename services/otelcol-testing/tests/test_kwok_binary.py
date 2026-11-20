@@ -100,8 +100,8 @@ def test_resolve_raises_when_kwokctl_not_executable(tmp_path: Path) -> None:
 def test_resolve_picks_up_stray_kube_apiserver_on_darwin(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """On platforms without an upstream kube-apiserver build, the resolver
     normally returns None — but if a contributor manually copied one in,
-    surface it rather than ignoring it. (Rewritten: the platform is
-    monkeypatched, so the case runs on every host.)"""
+    surface it rather than ignoring it. (The platform is monkeypatched, so
+    the case runs on every host.)"""
     monkeypatch.setattr(kwok_binary_module.platform, "system", lambda: "Darwin")
     _make_layout(tmp_path, "0.7.0", include_kube_apiserver=False)
     assert FilesystemKwokBinaries(tmp_path).resolve("0.7.0").kube_apiserver is None

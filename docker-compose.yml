@@ -253,7 +253,7 @@ services:
   # this service knows the owner's URL.
   migrate:
     # The repository's root is the build context: this image also carries
-    # catalog/, the collector catalogue it syncs.
+    # catalog/, the collector catalog it syncs.
     build: { context: ., dockerfile: telflo-core/Dockerfile, target: api }
     image: telflo-api:dev
     # The API image's compiled migrate, as the chart's migrate init container
@@ -496,9 +496,9 @@ services:
   # configuration with `otelcol-contrib validate` of its pinned version. api
   # is its only caller; it is never behind the gateway. The repository's root
   # is its build context, so the image carries catalog/. It bakes every
-  # collector version the catalogue offers, unless OTELCOL_VERSIONS (in the
+  # collector version the catalog offers, unless OTELCOL_VERSIONS (in the
   # environment compose reads) names some: `default` bakes only the
-  # catalogue's default, as CI's stack job and the throwaway gate stacks do;
+  # catalog's default, as CI's stack job and the throwaway gate stacks do;
   # a version the image doesn't hold answers "unavailable". tini is the
   # image's PID 1 (it reaps the collectors a killed check leaves), so no
   # `init: true` here.

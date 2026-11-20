@@ -102,7 +102,7 @@ each_profile "API's policy: ingress from the gateway's and the web app's pods on
 each_profile "web's policy: ingress from the gateway's pods only, on 3000; egress not restricted by this policy" np_on_only_web
 
 # Postgres: the API's pods (the migrate init container's) and the
-# opamp-server's, labelled as that chart labels them: its name and this
+# opamp-server's, labeled as that chart labels them: its name and this
 # release, and component agent or management (since its 0.2.4, two
 # Deployments, each with its own migrate init container, and both
 # serve from the database).

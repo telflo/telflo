@@ -12,12 +12,12 @@ in-cluster one), each asserted in the service's and the collector's words
 (category, title, componentPath), so an upstream change is noticed.
 
 Each flow is checked on the version a copy of it gets: its pin while the
-catalogue offers it, else the distribution's default, the rule "Use this
+catalog offers it, else the distribution's default, the rule "Use this
 flow" follows (the web's `flowCopyPin`).
 So retiring a seeded pin moves its flow's check to the default, as it
 moves the copies, and nothing here needs editing; the fixture still holds
-the old pin, which must stay a version of the catalogue (offered or
-deprecated: the catalogue never deletes one). A version the image was
+the old pin, which must stay a version of the catalog (offered or
+deprecated: the catalog never deletes one). A version the image was
 built to hold but doesn't fails rather than skips (binary_support's
 rule), and every checked version is an offered one, so a flow
 is never skipped because its pin was retired.
@@ -98,14 +98,14 @@ def test_the_fixture_holds_every_listed_flow_once() -> None:
 
 
 def checked_version(flow: dict) -> str:
-    """The version `flow` is checked on: its pin while the catalogue offers
+    """The version `flow` is checked on: its pin while the catalog offers
     it, else the distribution's default, where a copy of it is created."""
     pin = flow["collectorVersion"]
     return pin if pin in OFFERED else _default_version()
 
 
 def test_every_pin_is_a_catalogue_version_and_every_checked_version_is_offered() -> None:
-    """A pin is the catalogue's, offered or deprecated (one it never listed is
+    """A pin is the catalog's, offered or deprecated (one it never listed is
     a broken seed, not a retirement); the version checked is offered, so the
     image holds it and nothing is skipped for a retired pin."""
     for flow in FLOWS:

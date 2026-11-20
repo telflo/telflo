@@ -1,5 +1,5 @@
 # The collector images and the supervisor-collector chart, started by hand
-# (docs/releasing.md): for one collector version the catalogue offers, or
+# (docs/releasing.md): for one collector version the catalog offers, or
 # `all` of them (one matrix job each), it builds
 # ghcr.io/telflo/telflo/collector:<version> for amd64 and arm64 with its
 # attestations, tests it, and only with `publish` copies the archive's bytes
@@ -29,13 +29,13 @@ on:
 
 permissions: {}
 
-# One collector run at a time, never cancelled part way.
+# One collector run at a time, never canceled part way.
 concurrency:
   group: collector
   cancel-in-progress: false
 
 jobs:
-  # Each version offered and not deprecated (the catalogue); with publish, a
+  # Each version offered and not deprecated (the catalog); with publish, a
   # published version is never pushed again: an x.y.z already published is
   # refused; `all` keeps the versions not yet published, and when none is
   # left the run has nothing to build or publish (has=false: every later job
@@ -210,8 +210,8 @@ jobs:
   # the check passed and the publish passed, or the publish was skipped
   # because there was no collector version to build (has == 'false': a chart
   # bump alone). Its if: holds the workflows' one status function (not
-  # cancelled: so a skipped publish doesn't skip it), allow-listed for this
-  # job only by check-workflows.sh; a failed or cancelled test
+  # canceled: so a skipped publish doesn't skip it), allow-listed for this
+  # job only by check-workflows.sh; a failed or canceled test
   # or publish still stops it.
   chart:
     if: ${{ !cancelled() && inputs.publish && needs.check.result == 'success' && (needs.publish.result == 'success' || (needs.publish.result == 'skipped' && needs.check.outputs.has == 'false')) }}

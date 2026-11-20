@@ -111,7 +111,7 @@
 # them: api and web from the repository's root (the root .dockerignore, an
 # allowlist) with telflo-core/Dockerfile's `api` or `web` target; the validator
 # and the tester from the root with their Dockerfiles' `runtime` target and
-# OTELCOL_VERSIONS=all (every version the catalogue offers); the evaluator from
+# OTELCOL_VERSIONS=all (every version the catalog offers); the evaluator from
 # its own folder. Each Dockerfile's VERSION and REVISION arguments (its version
 # and revision labels) are the version and HEAD: the only build arguments that
 # vary, and never a secret (the provenance attestation records every build

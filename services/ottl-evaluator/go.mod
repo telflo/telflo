@@ -1,5 +1,5 @@
 // Go 1.26.9, since pkg/ottl has needed Go 1.26 since v0.160.0. pkg/ottl
-// follows the catalogue's default collector version: pkg/ottlassert's
+// follows the catalog's default collector version: pkg/ottlassert's
 // TestOTTLVersionIsTheCatalogueDefault fails when they differ. Build with
 // GOTOOLCHAIN=local.
 //

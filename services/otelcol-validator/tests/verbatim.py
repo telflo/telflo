@@ -5,7 +5,7 @@ unterminated references.
 
 `_disallowed_confmap_schemes` is a raw-text scan: the service never scans the
 raw text (references are found on the decoded nodes, and a text PyYAML can't
-read never reaches the neutraliser), so it is kept here for the tests that
+read never reaches the neutralizer), so it is kept here for the tests that
 compare with it.
 """
 
@@ -112,7 +112,7 @@ def live_organization_references(text: str) -> list[str]:
     support.
 
     Case-sensitive on the ``${org:`` prefix: ``${ORG:X}`` is not an
-    organization variable, even though the neutraliser still classifies it as
+    organization variable, even though the neutralizer still classifies it as
     a foreign scheme via ``scheme.lower()`` — that is a separate, correct
     concern (nothing not `env:` reaches the collector).
 

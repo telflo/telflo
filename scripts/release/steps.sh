@@ -30,14 +30,14 @@
 #       and SHA256SUMS (`<sha256>  <name>` for both, sorted); refuses either
 #       existing
 #   steps.sh collector-archive --out <dir> [--registry <r>]
-#       the catalogue's default collector version's image index, as the
+#       the catalog's default collector version's image index, as the
 #       registry holds it (`crane pull --format oci` by its digest, every
 #       platform and attestation), into <dir>/collector-<v>.oci.tar and
 #       <dir>/collector-<v>.digest, the archive checked (oci.sh: both
 #       platforms, the version label); prints the version, and appends
 #       collector_version=<v> to $GITHUB_OUTPUT when that is set
 #   steps.sh collector-versions <x.y.z|all> [--publish true|false] [--registry <r>]
-#       the collector workflow's versions: <x.y.z> (offered by the catalogue)
+#       the collector workflow's versions: <x.y.z> (offered by the catalog)
 #       or every offered one. With --publish true each tag is asked of the
 #       registry (a published version is never pushed again): an explicit
 #       <x.y.z> already published is refused; `all` keeps the

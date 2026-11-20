@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # smoke-compose-install.sh's self-test: its refusals only.
 # Each case runs the smoke in a throwaway copy (the smoke, quick-start.sh,
-# version.sh, setup.sh and the catalogue at their places, and a README.md:
+# version.sh, setup.sh and the catalog at their places, and a README.md:
 # the real one, or one changed per case) and checks it exits 2 with the
 # refusal's words, before anything starts: no folder of the run's made (the
 # README's commands never ran), and no container, volume or network of the

@@ -68,9 +68,9 @@ bytes: a longer one is silently cut, and its `comment on` then names the cut
 one. `idx_publications_organization_id_configuration_id` predates the rule and
 keeps its name.
 
-**Exception: the collector catalogue's columns.** The columns of
+**Exception: the collector catalog's columns.** The columns of
 `collector_distributions` and `collector_versions` mirror the field names of
-the catalogue's files (`catalog/distributions/*.json`, a format other
+the catalog's files (`catalog/distributions/*.json`, a format other
 components share), snake_cased, so the boolean `deprecated` keeps its name
 rather than becoming `is_deprecated`. The files are read by other components
 too (the validator, the tester and the collector image's build), so the files'

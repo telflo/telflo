@@ -4,7 +4,7 @@ one YAML document, or still holds a live non-`env` reference in a decoded key
 or value, is refused, and no collector starts.
 
 The run's own order is checked in-process (`app.run.execute`, as the run's
-child calls it): a neutraliser that let a reference through, or a mutation
+child calls it): a neutralizer that let a reference through, or a mutation
 (the seam's) that brought one back, is caught here."""
 
 from __future__ import annotations
@@ -128,7 +128,7 @@ def test_a_neutraliser_that_lets_a_reference_through_is_caught(
 def test_a_mutation_that_brings_a_reference_back_is_caught(
     marked: tuple[Path, Path, Path], monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """The mutations run between the neutraliser and the backstop; one
+    """The mutations run between the neutralizer and the backstop; one
     that added a reference (here, the seam returning one) never runs."""
     binary, workspace, marker = marked
     monkeypatch.setattr(
@@ -142,7 +142,7 @@ def test_a_mutation_that_brings_a_reference_back_is_caught(
     assert answer["status"] == "failed"
     assert answer["error"]["code"] == "refused"
     assert answer["error"]["message"] == REFUSED_PROVIDERS_MESSAGE.format(schemes="file:")
-    # R-105's advisory still says what was neutralised.
+    # R-105's advisory still says what was neutralized.
     assert [m["id"] for m in answer["mutations"]] == ["R-105"]
     assert not marker.exists()
 

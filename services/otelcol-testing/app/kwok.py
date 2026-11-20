@@ -172,7 +172,7 @@ class KwokSupervisor:
     async def check_alive(self) -> KwokState:
         """kwok's state, the cluster's liveness re-checked first when it is
         ready. A probe already running is shared, not repeated;
-        a cancelled caller leaves it to finish."""
+        a canceled caller leaves it to finish."""
         if self.state is not KwokState.READY or self.cluster is None:
             return self.state
         probe = getattr(self.cluster, "is_alive", None)

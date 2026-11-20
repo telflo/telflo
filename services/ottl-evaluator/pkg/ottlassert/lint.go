@@ -39,7 +39,7 @@ type LintResult struct {
 // converters-only parsers (ParseCondition, ParseValueExpression).
 // Processor-specific custom functions are not registered, so a statement
 // using one will report an unknown-function error — callers that lint e.g.
-// filter processor conditions should treat those with judgement.
+// filter processor conditions should treat those with judgment.
 func Lint(c Context, conditions, statements, valueExpressions []string) (LintResult, error) {
 	set := componenttest.NewNopTelemetrySettings()
 	switch c {

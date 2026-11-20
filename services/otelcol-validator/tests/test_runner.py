@@ -159,7 +159,7 @@ async def test_the_collector_never_sees_the_validators_secret(
 
 async def test_a_file_provider_never_reaches_the_collector(binary_dir: Path) -> None:
     """The collector echoes the file it was given: no `${file:` survives,
-    whatever the dollar run (the neutralisation)."""
+    whatever the dollar run (the neutralization)."""
     binary = write_collector(binary_dir, "0.162.0", 'sed "s/^/Error: /" "${2#--config=}" >&2\nexit 1\n')
     text = (
         "exporters:\n"
@@ -276,7 +276,7 @@ async def test_a_key_named_like_a_requirement_is_an_error_end_to_end(binary_dir:
 
 
 # ---------------------------------------------------------------------------
-# A cancelled check kills and reaps its collector
+# A canceled check kills and reaps its collector
 # ---------------------------------------------------------------------------
 
 
@@ -307,7 +307,7 @@ def test_a_cancelled_check_kills_and_reaps_its_collector_before_it_lets_go(
     binary_dir: Path, tmp_path: Path
 ) -> None:
     """The collector writes its pid and its config path, then runs (`exec`,
-    so the pid is the collector's own) until killed. Cancelling the check
+    so the pid is the collector's own) until killed. Canceling the check
     (a server shutdown, a dropped request) must leave no collector behind:
     it is killed and reaped before its temporary file goes and before the
     slot is released, not only on its time limit. Run

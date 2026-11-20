@@ -58,7 +58,7 @@
 # shasum or sha256sum. Every image compose.yaml names (the five Telflo
 # images ghcr.io/telflo/telflo/<name>:<version>, Postgres, nginx, Mailpit
 # and the opamp-server at their pins) and the collector image
-# ghcr.io/telflo/telflo/collector:<the catalogue's default version> must
+# ghcr.io/telflo/telflo/collector:<the catalog's default version> must
 # already be in the local engine: it never pulls one, it refuses.
 #
 # The refusals (exit 2, before anything starts): usage; the project's name
@@ -892,7 +892,7 @@ while [ "$index" -le "$CMD_COUNT" ]; do
   index=$((index + 1))
 done
 
-step "nothing of the project left: no container, volume or network labelled $PROJECT, the README's folder gone"
+step "nothing of the project left: no container, volume or network labeled $PROJECT, the README's folder gone"
 cd "$WORK"
 left=$(project_leftovers)
 [ -z "$left" ] || fail "left of the project: $(printf '%s\n' "$left" | tr '\n' ';')"

@@ -466,8 +466,7 @@ def test_health_answers_while_a_check_is_busy_and_cancelling_it_kills_its_child(
     monkeypatch: pytest.MonkeyPatch, binary_dir: Path
 ) -> None:
     """The service stays responsive while a check's child is busy, and a
-    cancelled request ends the child at once (the first fix pass's thread
-    couldn't be stopped: the slot stayed held for as long as it ran)."""
+    canceled request ends the child at once and frees its slot."""
     _substitute_child(monkeypatch, "while True:\n    pass\n")
     write_collector(binary_dir, "0.162.0", "exit 0\n")
     app = create_app(make_settings(binary_dir))

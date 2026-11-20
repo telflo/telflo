@@ -9,9 +9,9 @@
 #
 # OTELCOL_VERSIONS picks the collectors it bakes in, as the validator's
 # image does: `all` (the default, every offered version in catalog/),
-# `default` (the catalogue's default version), or a comma-separated list of
-# offered versions. A name the catalogue doesn't offer, or a download whose
-# sha256 isn't the catalogue's, fails the build. A version the catalogue
+# `default` (the catalog's default version), or a comma-separated list of
+# offered versions. A name the catalog doesn't offer, or a download whose
+# sha256 isn't the catalog's, fails the build. A version the catalog
 # offers but the image doesn't hold answers 503 `version_unavailable`.
 #
 # Stages: download (the collectors, kwok's five binaries and tini, each
@@ -20,8 +20,8 @@
 # and the tests). The default target is the runtime.
 #
 # The image mirrors the repository's layout under /app (the service in
-# /app/services/otelcol-testing, the catalogue in /app/catalog/distributions),
-# so the service's default catalogue directory (app/settings.py, three
+# /app/services/otelcol-testing, the catalog in /app/catalog/distributions),
+# so the service's default catalog directory (app/settings.py, three
 # directories above its package) is the copy the image carries.
 #
 # It is meant to run as compose runs it (docker-compose.yml): a read-only root
@@ -52,7 +52,7 @@ ARG TINI_SHA256_AMD64=93dcc18adc78c65a028a84799ecf8ad40c936fdfc5f2a57b1acda5a811
 ARG TINI_SHA256_ARM64=07952557df20bfd2a95f9bef198b445e006171969499a1d361bd9e6f8e5e0e81
 WORKDIR /build
 # The validator's downloader, unchanged (fetch and check by sha256, the
-# catalogue's collectors); kwok's manifest and its own small script use it.
+# catalog's collectors); kwok's manifest and its own small script use it.
 COPY services/otelcol-validator/scripts/download-binaries.py ./
 RUN case "$TARGETARCH" in \
       amd64) sha256="$TINI_SHA256_AMD64" ;; \
@@ -68,7 +68,7 @@ RUN case "$TARGETARCH" in \
 COPY services/otelcol-testing/scripts/download-kwok.py ./
 COPY services/otelcol-testing/kwok/binaries.json ./kwok-binaries.json
 RUN python download-kwok.py --manifest kwok-binaries.json --arch "$TARGETARCH" --dest /out/kwok
-# The catalogue and the build argument come last, so changing either
+# The catalog and the build argument come last, so changing either
 # downloads only the collectors again.
 COPY catalog/distributions/ ./catalog/distributions/
 ARG OTELCOL_VERSIONS=all
@@ -101,7 +101,7 @@ RUN rm /usr/bin/openssl \
 COPY --from=download --chown=0:0 /out/tini /usr/local/bin/tini
 
 # kwok's binaries, then the collectors, before the Python dependencies: the
-# largest layer changes only with the catalogue or OTELCOL_VERSIONS. Owned
+# largest layer changes only with the catalog or OTELCOL_VERSIONS. Owned
 # by root (`--chown=0:0` explicitly: BuildKit's cache key for a COPY ignores
 # its files' owners, so a cached layer of another build, with an archive's
 # owner on etcd, could otherwise stand in), read-only to the service. Each
@@ -135,7 +135,7 @@ RUN if [ "${BUILDPLATFORM:-}" != "${TARGETPLATFORM:-}" ]; then \
 
 WORKDIR /app/services/otelcol-testing
 # The hash-pinned runtime lock only: wheels, no dependency outside the lock.
-# PyYAML's wheels carry libyaml, which the neutraliser's bounded reader needs
+# PyYAML's wheels carry libyaml, which the neutralizer's bounded reader needs
 # (CSafeLoader): checked here.
 COPY services/otelcol-testing/requirements.txt ./
 RUN pip install --require-hashes --no-deps --only-binary=:all: -r requirements.txt \
@@ -211,7 +211,7 @@ ENV OTELCOL_CONTEXT_CATALOG_DIR=/opt/context-catalog/distributions
 # collectors are written and run) go to a directory the service's user owns
 # and may execute from: not /tmp, which compose (and a `--read-only
 # --tmpfs /tmp` run) mounts noexec. pytest can't write its cache here, and
-# warnings fail the run (pytest.ini). The neutraliser's identity test
+# warnings fail the run (pytest.ini). The neutralizer's identity test
 # compares the copies with the validator's files, which this image doesn't
 # carry: it runs in the repository's suite only.
 RUN install -d -o 10001 -g 10001 -m 0700 /var/tmp/otelcol-testing-tests

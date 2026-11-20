@@ -181,7 +181,7 @@ def test_the_service_starts_from_the_environment(monkeypatch: pytest.MonkeyPatch
     monkeypatch.setenv("OTELCOL_BINARY_DIR", str(binary_dir))
     with TestClient(create_app()) as client:
         assert client.get("/health").status_code == 200
-        # The default catalogue is the repository's; nothing is held here.
+        # The default catalog is the repository's; nothing is held here.
         resp = client.post(VALIDATE_URL, json=BODY, headers=auth_headers())
         assert resp.status_code == 503
 

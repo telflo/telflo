@@ -6,7 +6,7 @@ pins and `go.sum` checks.
 
 - **OTTL**: `github.com/open-telemetry/opentelemetry-collector-contrib/pkg/ottl`
   (Apache-2.0), with `pdata` and `componenttest` from the OpenTelemetry
-  Collector (Apache-2.0). `pkg/ottl` follows the catalogue's default
+  Collector (Apache-2.0). `pkg/ottl` follows the catalog's default
   collector version (`catalog/distributions/otelcol-contrib.json`):
   `pkg/ottlassert`'s `TestOTTLVersionIsTheCatalogueDefault` fails when they
   differ.

@@ -302,7 +302,7 @@ def decode_input(encoded: str) -> bytes:
 async def _watch_disconnect(receive: Receive, handler: asyncio.Task) -> bool:
     """Once the body is read, the next message a server sends is the
     client's disconnect (or nothing until the answer is sent). On one, the
-    request's handler is cancelled, which kills the run's group."""
+    request's handler is canceled, which kills the run's group."""
     while True:
         message = await receive()
         if message["type"] == "http.disconnect":
@@ -332,7 +332,7 @@ def create_app(
 ) -> FastAPI:
     """The application. Settings are read from the environment at startup
     unless given (the tests give them); a missing, unreadable or short
-    secret, or an unreadable catalogue, stops the startup.
+    secret, or an unreadable catalog, stops the startup.
 
     ``kwok_starter`` brings kwok's cluster up (none by default: the tests'
     app); with ``exit_on_kwok_failure``, a cluster that fails every attempt

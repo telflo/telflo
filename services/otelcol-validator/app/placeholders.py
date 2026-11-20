@@ -188,7 +188,7 @@ _FIELD_HEURISTICS: list[tuple[re.Pattern, str]] = [
 # Lowercase alphanumeric only so the value is safe to embed inside a URL
 # without escaping.
 # The substring every placeholder this module injects carries, so a cause the
-# collector echoed from a placeholder can be recognised and never filed as a
+# collector echoed from a placeholder can be recognized and never filed as a
 # deployment requirement: a requirement's title would otherwise name the
 # validator's own placeholder, not the user's value.
 _PLACEHOLDER_MARKER = "otelvalidatorplaceholder"

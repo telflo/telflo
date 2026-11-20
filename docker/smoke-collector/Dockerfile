@@ -10,9 +10,9 @@
 # index digest, resolved on 2026-10-12): the collector binary is copied out
 # of the stack's own collector validator image (VALIDATOR_IMAGE, built from
 # services/otelcol-validator), which must hold v0.162.0, the supervisor's
-# own version: the catalogue's default today, which it always holds (CI's
+# own version: the catalog's default today, which it always holds (CI's
 # stack job and the throwaway gate stacks build it with
-# OTELCOL_VERSIONS=default). Move both together, with the catalogue's
+# OTELCOL_VERSIONS=default). Move both together, with the catalog's
 # default: scripts/smoke-test-stack.sh refuses to start while this COPY's
 # version or the supervisor's FROM tag isn't the default.
 #

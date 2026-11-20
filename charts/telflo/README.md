@@ -368,8 +368,8 @@ the entry's index):
   `app.kubernetes.io/component: gateway`. The gateway itself has no
   policy, so nothing holds its side back.
 - **Read the request's URI as sent.** `proxy_pass` names no URI, so the
-  Service receives the client's URI unchanged (nginx doesn't normalise it
-  first) and must normalise and check it itself.
+  Service receives the client's URI unchanged (nginx doesn't normalize it
+  first) and must normalize and check it itself.
 
 **`/home` without its slash** answers nginx's own 301 to `/home/` for a
 `prefix` `/home/` route, an absolute redirect built from the gateway's own
@@ -381,7 +381,7 @@ access line is still redacted). Both are known limits.
 
 ## Install
 
-1. **The namespace**, labelled for the restricted Pod Security level:
+1. **The namespace**, labeled for the restricted Pod Security level:
 
    ```sh
    kubectl --context <context> create namespace telflo
@@ -452,7 +452,7 @@ helm upgrade telflo oci://ghcr.io/telflo/telflo/charts/telflo --version <version
 ```
 
 Each new API pod runs `migrate` first, as at the install, as the `telflo`
-owner. Migrations, the catalogue's sync and the role's provisioning each
+owner. Migrations, the catalog's sync and the role's provisioning each
 take an advisory lock, so pods starting together wait for each other, and
 a run with no new migration migrates nothing. **Back up the database before
 every upgrade:** the migrations run as soon as the new pods start, and
@@ -518,7 +518,7 @@ never pulled):
   and `axllent/mailpit:v1.31`;
 - `ghcr.io/telflo/opamp-server` at `vendor/opamp-server/PIN`'s version
   and digest;
-- `ghcr.io/telflo/telflo/collector:<version>` at the catalogue's default
+- `ghcr.io/telflo/telflo/collector:<version>` at the catalog's default
   version (`catalog/distributions/otelcol-contrib.json`);
 - with `--images`, the five release images above; without it, the bases
   the Dockerfiles pin (only `node:24-bookworm-slim` and distroless's

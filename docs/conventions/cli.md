@@ -144,8 +144,7 @@ fails at once when the CLI is missing or its `-V` fails.
 ## Installing a build by hand (the walkthrough)
 
 Nothing is on npm yet: a person installs the tarball into a prefix of its
-own, because the older Telflo CLI, `telflo` 0.1.2 on npm, installs a
-`telflo` bin too:
+own, so it never replaces another `telflo` bin on the `PATH`:
 
 ```bash
 mkdir -p /tmp/telflo-cli-pack
@@ -165,10 +164,9 @@ npm install -g --prefix /tmp/telflo-cli-install /tmp/telflo-cli-pack/telflo-cli-
 
 ## Releasing
 
-Nothing is published yet: npm's `telflo` is still the older Telflo CLI
-(0.1.2), which its users' `npm install -g telflo` gets, and that package
-is maintained by one account (`anasmilhem`) only. **Each publish happens
-only on the maintainers' explicit yes.** No agent runs `npm publish`,
+Nothing is published yet, and npm's `telflo` package is maintained by one
+account (`anasmilhem`) only. **Each publish happens only on the
+maintainers' explicit yes.** No agent runs `npm publish`,
 `npm login`, `npm adduser`, `npm token`, `npm dist-tag` or any registry
 write, and `"private": true` stays until the maintainers say otherwise.
 The checklist, for a publish:

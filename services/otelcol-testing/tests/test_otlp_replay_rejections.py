@@ -269,9 +269,8 @@ def test_iter_payloads_ndjson_preserved_with_line_numbers() -> None:
 async def test_replay_utf16_pretty_document_now_succeeds(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """End-to-end of the reported bug: a UTF-16, pretty-printed single OTLP
-    document used to be rejected on every line. It must now be a single
-    accepted request with zero rejections."""
+    """End to end: a UTF-16, pretty-printed single OTLP document is one
+    accepted request with zero rejections, never rejected line by line."""
     import json as _json
 
     seen: list[str] = []

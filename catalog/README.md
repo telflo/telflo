@@ -1,4 +1,4 @@
-# The collector catalogue
+# The collector catalog
 
 The OpenTelemetry Collector distributions a configuration can be built for,
 and each distribution's collector versions. One hand-edited file per
@@ -6,7 +6,7 @@ distribution, `distributions/<distribution>.json`. Today there is one,
 `otelcol-contrib.json` (OpenTelemetry Collector Contrib).
 
 This README sits beside the files, not in `telflo-core/`, because the
-catalogue isn't the TypeScript workspace's: several components read the same
+catalog isn't the TypeScript workspace's: several components read the same
 files. The platform's migration step syncs them into the database, the
 collector validator's image and the testing image bake in the collectors
 they offer, and the collector image's build and publish scripts build one
@@ -18,10 +18,10 @@ image per offered version. Whoever edits a file starts here.
   `migrate` container) validates every file before it touches the
   database, then runs the migrations, then upserts the files into two
   tables, `collector_distributions` and `collector_versions`. An invalid
-  catalogue stops the step before anything is migrated or written. The API
+  catalog stops the step before anything is migrated or written. The API
   reads only the tables, never these files.
 - **The test databases** are synced the same way when the tests prepare
-  them, so a test run also refuses an invalid catalogue.
+  them, so a test run also refuses an invalid catalog.
 - **The collector validator's image** (`services/otelcol-validator/Dockerfile`,
   built from the repository's root) reads `otelcol-contrib.json` while it
   builds: it downloads the `linux_amd64` or `linux_arm64` collector of
@@ -34,7 +34,7 @@ image per offered version. Whoever edits a file starts here.
   (`scripts/build-collector-image.sh`) reads `otelcol-contrib.json`
   directly: the build takes a version's `linux_amd64` and `linux_arm64`
   `otelcolContrib` and `opampSupervisor` URLs and `sha256` (refusing an
-  unknown or deprecated version and any value that isn't the catalogue's
+  unknown or deprecated version and any value that isn't the catalog's
   format), and `build-collector-image.sh --list-offered` gives the collector
   workflow (`.github/workflows/collector.yml`) every offered version, newest
   first, for its `all`. An install's image is tagged by its group's
@@ -74,7 +74,7 @@ image per offered version. Whoever edits a file starts here.
   generator (`telflo-core/apps/web/scripts/generate-otelcol-schemas.ts`)
   refuses to run while its inputs
   (`telflo-core/apps/web/scripts/otelcol-schemas/inputs.json`) don't list
-  exactly the offered versions, and the catalogue rule test in the web's
+  exactly the offered versions, and the catalog rule test in the web's
   suite (`scripts/generate-otelcol-schemas.test.ts`) fails while
   `telflo-core/apps/web/public/schemas/<distribution>/` doesn't hold
   exactly one file per offered version.
@@ -174,8 +174,8 @@ and the OpAMP supervisor under separate tags, `v<version>` and
    name the new default.
 
 5. **Sync and check.** From `telflo-core/`, `npm run db:migrate` validates
-   the catalogue and syncs it into your development database; a second run
-   writes nothing. The catalogue's own test checks the committed files:
+   the catalog and syncs it into your development database; a second run
+   writes nothing. The catalog's own test checks the committed files:
    `npm test` runs it with everything else, or run just it with
    `npx vitest run packages/db/src/collector-catalogue/catalogue.test.ts`
    (with `npm run dev:services` up, as for every test run). The compose
@@ -213,7 +213,7 @@ and the OpAMP supervisor under separate tags, `v<version>` and
    `npm run generate:otelcol-schemas --workspace=@telflo/web` (it fetches
    upstream with `git`) and commit
    `apps/web/public/schemas/otelcol-contrib/v<version>.json`. The web's
-   catalogue rule test fails until the file exists, and its schema tests
+   catalog rule test fails until the file exists, and its schema tests
    check that every listed rename's old name is accepted by the new schema
    from its `since` (the schema's old names are the `deprecated_type` each
    built component's `metadata.yaml` gives). The
@@ -273,7 +273,7 @@ three of the comments they replaced had the wrong version.
 ## Retiring a version
 
 **Never delete a version, and never remove a distribution.** A
-configuration version may be pinned to it, and the sync refuses a catalogue
+configuration version may be pinned to it, and the sync refuses a catalog
 that drops a row the database holds, changing nothing. Instead, set
 `deprecated` true and give a `deprecatedNote` saying why (it becomes the
 tooltip). A deprecated version leaves the pickers; a version already pinned
@@ -283,7 +283,7 @@ version's collector the next time it is built, so a version pinned to it is
 no longer checked. Remove the version from
 `telflo-core/apps/web/scripts/otelcol-schemas/inputs.json` and run the
 generator, which deletes its schema: a version pinned to it gets syntax
-markers only in the YAML tab. The web's catalogue rule test fails until the
+markers only in the YAML tab. The web's catalog rule test fails until the
 file is gone.
 
 A flow pinned to it keeps its pin, and "Use this flow" and "Start from a
@@ -292,18 +292,18 @@ saying so in the dialog. The seeded flows' checks follow the same rule by
 themselves: the validator's binary test
 (`services/otelcol-validator/tests/test_binary_flows.py`) and the web's
 schema tests (`otelcol-schema-warnings.test.ts`, the ClickStack block of
-`otelcol-schema.test.ts`) check a flow on its pin while the catalogue offers
+`otelcol-schema.test.ts`) check a flow on its pin while the catalog offers
 it, else on the default, so nothing there needs editing, and the
 seeded-flows fixture keeps the old pin. Then re-pin the live flows on the
 version: in `/product-admin/flows` (a product admin), the table's Collector
-column marks each flow whose pin the catalogue no longer offers ("No longer
+column marks each flow whose pin the catalog no longer offers ("No longer
 offered"); edit each one and pick an offered version. Copies made before
 keep their own pins, as every configuration does.
 
 Migration 023 holds a copy of 0.162.0's row, for its backfill. It is never
 edited: the sync updates that row like any other.
 
-## A migration that needs a catalogue row
+## A migration that needs a catalog row
 
 The migrations run before the sync, so a migration can't count on the files'
 rows being in the tables yet: on a new database they aren't. A migration
@@ -312,8 +312,8 @@ and the sync then updates it from the file like any other.
 
 ## Switching to a branch with an older catalogue
 
-A database synced from a newer catalogue holds rows an older branch's files
-don't list, and the sync refuses that catalogue (`npm run db:migrate` and
+A database synced from a newer catalog holds rows an older branch's files
+don't list, and the sync refuses that catalog (`npm run db:migrate` and
 `npm test` fail, naming the rows) rather than deleting a row a configuration
 may be pinned to. It changes nothing, and nothing in the code works around
 it. To recover:

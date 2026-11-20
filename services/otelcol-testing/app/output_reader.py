@@ -2,7 +2,7 @@
 target) into the shape the run answers, with a hard byte cap.
 
 - **The answer's form** (``encode_output``): a single record unwrapped,
-  several as ``{"records": [...]}``, serialised compact
+  several as ``{"records": [...]}``, serialized compact
   (``ensure_ascii=False``, no spaces; the default separators add 8%, and
   escaping non-ASCII makes it two to three times longer). Past the 10 MiB
   cap, trailing records are dropped until it fits, and R-006 is added.

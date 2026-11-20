@@ -6,7 +6,7 @@
   S7 the merged sandbox environment, and S8 reads the modules that wire a
   kubeconfig;
 - S9 (8) and the ``org`` scheme test (1), against the validator's
-  neutraliser (`app/providers.py`, `app/neutralise.py`);
+  neutralizer (`app/providers.py`, `app/neutralise.py`);
 - none for S5 (storage upserts: the tester stores nothing); S4 (RE2 rules)
   is the OTTL evaluator's.
 
@@ -130,7 +130,7 @@ def test_scrub_stderr_redacts_input_log_path() -> None:
     just like input.data.  Test is separator-agnostic: the stderr text is built
     using the same f"{root}/{suffix}" pattern the scrubber uses internally so
     the string always matches on both Linux and Windows, and the assertion
-    normalises the output so the placeholder is always expressed with a forward
+    normalizes the output so the placeholder is always expressed with a forward
     slash."""
     workspace = Path("/tmp/otelcol-runs/abcd-1234")
     root = str(workspace)
@@ -332,7 +332,7 @@ def test_executors_do_not_log_kubeconfig_path_via_dict_access() -> None:
 
 # ---------------------------------------------------------------------------
 # S9 — confmap provider neutralization: the ``$$${scheme:...}`` triple-dollar
-# bypass (rewritten against the validator's neutraliser). confmap collapses
+# bypass (rewritten against the validator's neutralizer). confmap collapses
 # each ``$$`` to a literal ``$`` in one pass, so an ODD run of ``$`` before
 # ``{`` is a live expansion.
 # ---------------------------------------------------------------------------
@@ -382,7 +382,7 @@ def test_s9_env_provider_passes_through_at_any_parity() -> None:
 
 
 def test_s9_triple_dollar_in_processor_is_neutralized_end_to_end() -> None:
-    """A processor carrying the bypass has it neutralised in the mutated
+    """A processor carrying the bypass has it neutralized in the mutated
     config the collector actually runs, with an R-105 advisory raised."""
     yaml_config = (
         "receivers:\n"
@@ -408,7 +408,7 @@ def test_s9_triple_dollar_in_processor_is_neutralized_end_to_end() -> None:
 
 def test_s9_disallowed_provider_under_service_telemetry_is_neutralized() -> None:
     """A ``file:`` provider hidden in the collector's self-telemetry is
-    neutralised like any other; a same-block ``${env:...}`` survives."""
+    neutralized like any other; a same-block ``${env:...}`` survives."""
     text = (
         "service:\n"
         "  telemetry:\n"
@@ -431,7 +431,7 @@ def test_s9_disallowed_provider_under_service_telemetry_is_neutralized() -> None
 def test_s9_force_telemetry_off_removes_any_provider_defense_in_depth() -> None:
     """Defense in depth: R-004 replaces service.telemetry wholesale with
     ``metrics: {level: none}`` in the sandbox, so a provider hidden there never
-    reaches the collector even before the neutraliser's backstop."""
+    reaches the collector even before the neutralizer's backstop."""
     doc = {
         "service": {
             "telemetry": {
@@ -461,7 +461,7 @@ def test_s9_force_telemetry_off_removes_any_provider_defense_in_depth() -> None:
 # ---------------------------------------------------------------------------
 # `org` pseudo-scheme (rewritten). `${org:NAME}` is telflo's own token,
 # substituted by the platform before a run is queued; one that reaches the
-# tester is neutralised like any foreign scheme.
+# tester is neutralized like any foreign scheme.
 # ---------------------------------------------------------------------------
 
 

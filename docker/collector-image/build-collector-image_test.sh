@@ -213,14 +213,14 @@ run 0.162.0 --platform linux/arm64 --replace --dry-run
 check "--replace refused as an unknown option" "[ $rc -eq 2 ] && has 'unknown option: --replace' && has '--push-oci <dir>'"
 check "no docker or crane call for a refused argument" "[ ! -s '$logs/docker-calls.log' ] && no_crane"
 
-# --- 2. the catalogue's versions ---------------------------------------------
+# --- 2. the catalog's versions -----------------------------------------------
 run 9.9.9 --platform linux/arm64 --dry-run
 check "an unknown version refused" "[ $rc -eq 1 ] && has 'version 9.9.9 is not in the catalogue'"
 run 0.158.0 --platform linux/arm64 --dry-run
 check "a deprecated version refused" "[ $rc -eq 1 ] && has 'version 0.158.0 is deprecated'"
 check "nothing built for a refused version" "! has 'would build'"
 
-# --- 3. the catalogue's values are the build's arguments ----------------------
+# --- 3. the catalog's values are the build's arguments ------------------------
 expected="$(python3 -I - "$catalogue" 0.162.0 <<'PY'
 import json, sys
 entry = next(v for v in json.load(open(sys.argv[1]))["versions"] if v["version"] == sys.argv[2])
@@ -234,15 +234,15 @@ PY
 run 0.162.0 --platform linux/arm64 --dry-run
 check "a local build: one platform, the tag, desktop-linux, --load" \
   "[ $rc -eq 0 ] && has 'would build ghcr.io/telflo/telflo/collector:0.162.0 for linux/arm64 through builder desktop-linux (--load)'"
-check "the catalogue's eight URLs and sha256 passed as build args" \
+check "the catalog's eight URLs and sha256 passed as build args" \
   "[ \"\$(printf '%s\n' \"\$out\" | grep -E '^(OTELCOL|SUPERVISOR)_' | sort)\" = \"\$(printf '%s\n' \"\$expected\" | sort)\" ] && [ \$(printf '%s\n' \"\$expected\" | wc -l) -eq 8 ]"
 clear_logs
 out="$(env DOCKER_CONFIG="$tmp/docker" BUILDX_BUILDER=other-builder TELFLO_COLLECTOR_IMAGE_REPOSITORY=registry.example:5000/mirror/collector \
   "$shell" "$script" 0.161.0 --platform linux/amd64 --dry-run 2>&1)"; rc=$?
-check "BUILDX_BUILDER and the repository setting honoured" \
+check "BUILDX_BUILDER and the repository setting honored" \
   "[ $rc -eq 0 ] && has 'would build registry.example:5000/mirror/collector:0.161.0 for linux/amd64 through builder other-builder (--load)'"
 
-# --- 4. a catalogue whose values aren't the catalogue's formats ----------------
+# --- 4. a catalog whose values aren't the catalog's formats --------------------
 bad_catalogue() { # <python expression mutating entry `e`> -> path of a scratch copy
   python3 -I - "$catalogue" "$tmp/catalogue.json" "$1" <<'PY'
 import json, sys
@@ -536,7 +536,7 @@ out="$(env DOCKER_CONFIG="$tmp/docker" TELFLO_COLLECTOR_IMAGE_REPOSITORY=ghcr.io
 check "the older ghcr.io/telflo/collector still allowed for a local build" "[ $rc -eq 0 ] && has 'would build ghcr.io/telflo/collector:0.162.0'"
 clear_logs
 out="$(env DOCKER_CONFIG="$tmp/docker" TELFLO_COLLECTOR_CATALOGUE="$catalogue" "$shell" "$repo_script" 0.162.0 --build-oci "$oci_b" --builder owner-builder --dry-run 2>&1)"; rc=$?
-check "--build-oci refuses a catalogue other than the repository's" \
+check "--build-oci refuses a catalog other than the repository's" \
   "[ $rc -eq 1 ] && has \"reads only the repository's catalogue\" && [ ! -s '$logs/docker-calls.log' ]"
 
 # --push-oci refuses a --no-attest archive for ghcr.io, offline:
@@ -739,8 +739,8 @@ check "--build-oci refuses an input flagged skip-worktree, naming the flag" \
 git -C "$repo" update-index --no-skip-worktree catalog/distributions/otelcol-contrib.json
 check "the throwaway repository is clean again (no flag)" "[ -z \"\$(git -C '$repo' status --porcelain)\" ] && ! git -C '$repo' ls-files -v | grep -q '^[a-zS]'"
 
-# --build-oci takes its build arguments from HEAD's catalogue. A
-# working-tree catalogue that differs from HEAD's while git status sees it
+# --build-oci takes its build arguments from HEAD's catalog. A
+# working-tree catalog that differs from HEAD's while git status sees it
 # clean (the same size, mtime and inode; ctime ignored) must not be read.
 cat_path="$repo/catalog/distributions/otelcol-contrib.json"
 cp "$cat_path" "$tmp/saved-catalogue"
@@ -762,11 +762,11 @@ with open(path, "r+", encoding="utf-8") as handle:
 }
 same_size_rewrite "$cat_path" "$head_sha" "$other_sha"
 prun 0.162.0 --build-oci "$oci_b" --builder owner-builder --dry-run
-check "--build-oci's build arguments come from HEAD's catalogue, not the working tree's" \
+check "--build-oci's build arguments come from HEAD's catalog, not the working tree's" \
   "[ -z \"\$(git -C '$repo' status --porcelain)\" ] && grep -qF '$other_sha' '$cat_path' && [ $rc -eq 0 ] && printf '%s\n' \"\$argv_out\" | grep -qx 'OTELCOL_SHA256_AMD64=$head_sha' && ! printf '%s\n' \"\$argv_out\" | grep -qF '$other_sha'"
 same_size_rewrite "$cat_path" "$other_sha" "$head_sha"
 git -C "$repo" config --unset core.trustctime
-check "the catalogue is HEAD's again" "cmp -s '$cat_path' '$tmp/saved-catalogue' && [ -z \"\$(git -C '$repo' status --porcelain)\" ]"
+check "the catalog is HEAD's again" "cmp -s '$cat_path' '$tmp/saved-catalogue' && [ -z \"\$(git -C '$repo' status --porcelain)\" ]"
 
 # The image's inputs must be committed.
 dirty_case() { # <name> <path relative to the repo> <append|new>
@@ -778,7 +778,7 @@ dirty_case() { # <name> <path relative to the repo> <append|new>
 }
 dirty_case "--build-oci refuses a changed Dockerfile" docker/collector-image/Dockerfile append
 dirty_case "--build-oci refuses a new file in docker/collector-image" docker/collector-image/extra.txt new
-dirty_case "--build-oci refuses a changed catalogue" catalog/distributions/otelcol-contrib.json append
+dirty_case "--build-oci refuses a changed catalog" catalog/distributions/otelcol-contrib.json append
 dirty_case "--build-oci refuses a changed build script" scripts/build-collector-image.sh append
 echo "# a change" >>"$repo/NOTES.txt"
 prun 0.162.0 --build-oci "$oci_b" --builder owner-builder --dry-run
@@ -789,7 +789,7 @@ check "a local build with uncommitted inputs is allowed" "[ $rc -eq 0 ] && has '
 
 # --- 8. --list-offered ------------------------------------------------------------
 run --list-offered
-check "--list-offered: the catalogue's offered versions, newest first" \
+check "--list-offered: the catalog's offered versions, newest first" \
   "[ $rc -eq 0 ] && [ \"\$argv_out\" = \"\$(printf '0.162.0\n0.161.0\n0.160.0\n0.159.0')\" ]"
 run --list-offered --dry-run
 check "--list-offered with another argument refused" "[ $rc -eq 2 ] && has '--list-offered takes no other argument'"

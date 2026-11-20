@@ -215,7 +215,7 @@ def normalise(name: str) -> str:
 
 def lock_names(lock: Path) -> set[str]:
     """The packages a pip-compile lock pins (`name==version`, or
-    `name @ url`), normalised."""
+    `name @ url`), normalized."""
     names = set()
     for line in lock.read_text(encoding="utf-8").splitlines():
         match = re.match(r"^([A-Za-z0-9][A-Za-z0-9._-]*)(\[[^\]]*\])?\s*(==|@)", line)
@@ -243,7 +243,7 @@ def main(argv: list[str]) -> int:
     if not all(isinstance(package, dict) and isinstance(package.get("Name"), str) for package in report):
         print("ERROR: pip-licenses' report has an entry without a package name", file=sys.stderr)
         return 2
-    # One entry per package: a second under the same name (as normalised)
+    # One entry per package: a second under the same name (as normalized)
     # would replace the first, which would then go unchecked.
     reported: dict[str, dict] = {}
     duplicated = set()

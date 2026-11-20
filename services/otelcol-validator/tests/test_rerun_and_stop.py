@@ -7,7 +7,7 @@ once more with what the sandbox can meet — a fresh directory, a placeholder
 environment variable — and that run's errors are the answer's, the
 requirements staying from the first run.
 
-``_stop`` shields the shared futures so a reap cancelled midway
+``_stop`` shields the shared futures so a reap canceled midway
 doesn't break the next reap; a requirement whose captured variable holds the
 validator's placeholder or a line break is not emitted.
 """
@@ -305,7 +305,7 @@ def test_meet_requirements_splices_an_anchored_directory_once(tmp_path: Path) ->
 
 
 def test_stop_cancelled_once_still_ends_when_called_again() -> None:
-    """A reap cancelled while it awaits the shared `exited`/`finished` futures
+    """A reap canceled while it awaits the shared `exited`/`finished` futures
     must not cancel the futures themselves, so a second reap of the same
     process still reaps and closes it. Under a hang guard: a broken shield
     leaves the second `_stop` hung."""

@@ -5,10 +5,10 @@
 2. Make the run's workspace (a fresh directory, mode 0700), stage the input
    there, and start the run's child process (`python -m app.run_child`) in
    its own session and process group, with the allowlisted environment and
-   the request on its stdin. The child runs the neutraliser, the collector
+   the request on its stdin. The child runs the neutralizer, the collector
    and the rest (`app/run.py`); the collector is in the child's group.
 3. Wait for the child's answer under ONE deadline, 57 + d s (d the run's
-   duration). Past it, or when the request is cancelled (the client gone,
+   duration). Past it, or when the request is canceled (the client gone,
    the request's 64 + d s budget spent, a shutdown), the whole group is
    killed (SIGKILL), the child reaped while its pipes keep draining, and the
    rest of the group waited for (bounded).
@@ -63,7 +63,7 @@ MAX_ANSWER_BYTES = 32 * 1024 * 1024
 MAX_LOGS_BYTES = 256 * 1024
 LOGS_TRUNCATION_MARKER = "\n[logs truncated by the tester]\n"
 # The text the collector ran: the person's (262,144 characters at most),
-# each neutralised reference grown to its placeholder (`${f:x}`, 6
+# each neutralized reference grown to its placeholder (`${f:x}`, 6
 # characters, becomes 34) and the sandbox's swaps. Four times the text is
 # more than they add; the whole answer is still held to MAX_ANSWER_BYTES.
 MAX_MUTATED_YAML_CHARACTERS = 4 * 262_144
@@ -289,7 +289,7 @@ async def _end_run(child: tuple[asyncio.SubprocessTransport, processes.Pipes] | 
                     cancelled = True
             ending.result()
     finally:
-        # Off the event loop; waited for, never cancelled, so it isn't left
+        # Off the event loop; waited for, never canceled, so it isn't left
         # half done.
         removing = asyncio.ensure_future(asyncio.to_thread(processes.remove_directory, workspace))
         while not removing.done():

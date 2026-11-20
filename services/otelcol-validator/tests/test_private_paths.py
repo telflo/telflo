@@ -13,7 +13,7 @@ directories it holds.
 - The check's directory is removed off the event loop; a removal that fails
   is logged by the error's type, naming no path.
 - A collector output cut at the cap ends at its last complete line, so no
-  fragment of a path the scrub can't recognise survives.
+  fragment of a path the scrub can't recognize survives.
 """
 
 from __future__ import annotations

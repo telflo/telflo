@@ -527,7 +527,7 @@ class KwokCluster:
 async def _run(cmd: list[str], *, timeout: float = COMMAND_TIMEOUT_SECONDS) -> tuple[int, str, str]:
     """Run a command, capture stdout/stderr, return (returncode, stdout,
     stderr). The command gets the service's allowlisted environment and its
-    own process group; past ``timeout`` seconds (or when cancelled) the
+    own process group; past ``timeout`` seconds (or when canceled) the
     whole group is killed and the command fails (returncode -1)."""
     proc = await asyncio.create_subprocess_exec(
         *cmd,

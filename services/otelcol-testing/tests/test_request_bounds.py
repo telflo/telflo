@@ -1,7 +1,7 @@
 """The request's contract: a 16 MiB body refused (413) while it streams, a
 262,144-character text, a 10 MiB input, and 400 `invalid_request` for
 anything else the contract refuses, with nothing run.
-The catalogue's answers: an unknown version 400, a retired one 409, one this
+The catalog's answers: an unknown version 400, a retired one 409, one this
 tester doesn't hold 503."""
 
 from __future__ import annotations

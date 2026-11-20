@@ -192,7 +192,7 @@ def test_the_neutralisation_reads_each_character_a_bounded_number_of_times(meter
 # The whole pre-processing, in Python lines run in app/ (each regex and
 # string operation it calls is metered above, or is the YAML parser's). It
 # reads the text several times over (the organization variables, the
-# neutralisation's check, then the neutralisation, both over the brace
+# neutralization's check, then the neutralization, both over the brace
 # table): about 30 lines a character for the `${org:` and `${a:` texts.
 APP = str(Path(providers.__file__).parent)
 PER_CHARACTER_LINES = 40

@@ -20,7 +20,7 @@
 #             digest only; one already local isn't pulled again);
 # then the steps (the first failure stops the run; the end still runs):
 #   collector.yml: steps.sh builder (telflo-release, as its build job), then
-#   for every version the catalogue offers:
+#   for every version the catalog offers:
 #     build-collector-image.sh <v> --build-oci, load-images.sh --image
 #     collector, steps.sh collector-test, --push-oci to the registry,
 #     pull-back.sh --image collector --no-chart; then steps.sh chart-if-new
@@ -104,7 +104,7 @@
 # file in their place.
 #
 # A running rehearsal is marked: right after its checks it makes the volume
-# telflo-rehearse-run, and starts its registry, labelled with its work
+# telflo-rehearse-run, and starts its registry, labeled with its work
 # folder, its pid and that process's start time
 # (telflo.rehearse.work/.pid/.started). While that process runs, another
 # rehearsal refuses to start and --cleanup refuses to remove anything (exit
@@ -745,7 +745,7 @@ finish() {
 trap finish EXIT
 trap 'exit 130' INT TERM HUP
 
-# The marker: a volume labelled with this run's work folder, pid and start,
+# The marker: a volume labeled with this run's work folder, pid and start,
 # so another run refuses to start and --cleanup refuses to remove anything
 # while this one runs.
 docker volume create "${OWN_LABELS[@]}" "$MARKER" >/dev/null || { log "$PROGRAM: FAIL: the marker volume $MARKER couldn't be made"; exit 1; }

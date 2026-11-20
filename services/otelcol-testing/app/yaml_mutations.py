@@ -4,10 +4,10 @@ Its IDs and messages are stable:
 
 - **R-105 is not a walk here.** Every live non-``env`` confmap reference
   is spliced out of the text before this module ever sees it, on the decoded
-  keys and values (`app/neutralise.py`, the validator's neutraliser), and the
+  keys and values (`app/neutralise.py`, the validator's neutralizer), and the
   exact text these mutations produce is checked again before any collector
   reads it (the backstop). R-105's advisory is built there from the schemes
-  the neutraliser returns.
+  the neutralizer returns.
 - **R-106**: the ``consul``, ``openshift`` and ``docker`` resourcedetection
   detectors are stripped with their settings, since they query services the
   sandbox doesn't have and could read files named in the text. R-101, R-103
@@ -490,7 +490,7 @@ def rewrite_k8s_auth(
 
 
 # The resourcedetection processor's type, by both of its spellings: the
-# catalogue's `resource_detection` (since 0.153.0) and its deprecated
+# catalog's `resource_detection` (since 0.153.0) and its deprecated
 # `resourcedetection`, which every offered collector still accepts. R-101,
 # R-103 and R-106 strip detectors from either (matching the old spelling only
 # would let a `resource_detection` processor keep every detector).

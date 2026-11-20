@@ -238,7 +238,7 @@ def _valid_organization_variables(values: object) -> bool:
 def create_app(settings: Settings | None = None) -> FastAPI:
     """The application. Settings are read from the environment at startup
     unless given (the tests give them); a missing or short secret, or an
-    unreadable catalogue, stops the startup."""
+    unreadable catalog, stops the startup."""
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:

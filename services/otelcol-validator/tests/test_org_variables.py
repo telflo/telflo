@@ -97,8 +97,8 @@ def test_the_collector_reads_the_filled_in_text() -> None:
 
 def test_a_value_whose_yaml_escape_spells_a_provider_is_neutralised() -> None:
     """A value holds no live `$` (each is doubled), but a double-quoted
-    scalar decodes `\\x24` to `$`: filled in after the neutraliser, the
-    collector would read a live `${file:}`. Filled in first, the neutraliser
+    scalar decodes `\\x24` to `$`: filled in after the neutralizer, the
+    collector would read a live `${file:}`. Filled in first, the neutralizer
     sees it like any other decoded reference."""
     text = 'exporters:\n  otlp:\n    endpoint: "${org:EP}"\n'
 

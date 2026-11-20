@@ -148,7 +148,7 @@ value. The checksums force the rollout.
                           Secret's name (the fullname). A hash of the sealed
                           bearer, never the bearer. The include re-runs the
                           guards inside each workload.
-  checksum/collector-env  only when collectorEnv is set, as in 0.3.5.
+  checksum/collector-env  only when collectorEnv is set.
 Pre-indented to 6 spaces (pod template metadata).
 */}}
 {{- define "tsc.podChecksums" }}

@@ -391,7 +391,7 @@ STANDIN_OTHER_DIGEST=1 run --build-oci "$oci5" --builder owner-builder --image a
 check "a build whose metadata digest isn't the archive's index refused: no archive, no digest file" \
   "[ $rc -eq 1 ] && has \"index.json's entry is\" && [ -z \"\$(ls -A '$oci5')\" ]"
 STANDIN_LABEL_VERSION=9.9.9 run --build-oci "$oci5" --builder owner-builder --image api
-check "an archive whose images aren't labelled with the version refused" \
+check "an archive whose images aren't labeled with the version refused" \
   "[ $rc -eq 1 ] && has \"version label isn't 1.2.3\" && [ -z \"\$(ls -A '$oci5')\" ]"
 STANDIN_BUILDX=v0.8.2 run --build-oci "$oci5" --builder owner-builder --image api
 check "a buildx too old to attest refused (0.11 or later)" "[ $rc -eq 1 ] && has \"can't attest\" && nothing_built"
@@ -446,7 +446,7 @@ if $push_ok; then
   REG="$TR_REGISTRY"
   pr() { STANDIN_CRANE='' TEST_DOCKER_CONFIG="$TR_CONFIG" run --push-oci "$@"; }
   remote_of() { DOCKER_CONFIG="$TR_CONFIG" "$real_crane" digest "$REG/telflo/telflo/$1:1.2.3" 2>/dev/null; }
-  # The release's archives: fixtures labelled 1.2.3 and HEAD's revision.
+  # The release's archives: fixtures labeled 1.2.3 and HEAD's revision.
   rel="$tmp/release"; mkdir -p "$rel"
   for i in api web otelcol-validator otelcol-testing ottl-evaluator; do
     tr_fixture "$rel/$i.oci.tar" 1.2.3 "$rev" "A-$i" >"$rel/$i.digest"

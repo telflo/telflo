@@ -12,7 +12,7 @@ exit codes 0, -15 and 143 as a clean stop, a fully rejected replay as a
 failure), the stop, the scrubbed logs with the ``[replay]`` block and the
 output read:
 
-1. the neutraliser's bounded read and splices (`app/neutralise.py`); R-105's
+1. the neutralizer's bounded read and splices (`app/neutralise.py`); R-105's
    advisory comes from the schemes it found;
 2. **the seam** (``_prepare_strategy``): the text read with ruamel (a text
    it can't read, or one not shaped as a collector configuration, is C-000),
@@ -300,7 +300,7 @@ def _read_head(path: Path, size: int) -> bytes:
 
 def _prepare_strategy(request: RunRequest, text: str) -> Strategy | Refusal:
     """THE SEAM: compatibility, the strategy pick and the mutations, on the
-    neutralised text. Refusals are C-000 to C-006."""
+    neutralized text. Refusals are C-000 to C-006."""
     try:
         doc = compatibility.parse(text)
     except Exception as error:  # ruamel's: its problem and line only

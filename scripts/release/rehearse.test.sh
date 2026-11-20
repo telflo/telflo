@@ -537,7 +537,7 @@ check "a finishing run leaves alone an object whose labels name another running 
    && ! listed containers telflo-rehearse-stack-db-1 && ! listed volumes telflo-rehearse-run"
 kill "$live_pid" 2>/dev/null; wait "$live_pid" 2>/dev/null
 
-# A run that starts its own registry (no --registry): the container is labelled with the run's
+# A run that starts its own registry (no --registry): the container is labeled with the run's
 # work folder, pid and start time (the marker's labels), so while the run goes on it names a
 # running rehearsal; removed at the end.
 reset
@@ -560,7 +560,7 @@ reg_line="$(grep '^run -d --name telflo-rehearse-registry ' "$sd/docker.log" 2>/
 marker_pid="$(sed -n 's/^volume create .*--label telflo\.rehearse\.pid=\([0-9]*\) .*telflo-rehearse-run$/\1/p' "$sd/docker.log" | head -n 1)"
 check "a run starting its own registry: exit 0, the registry asked on 127.0.0.1" \
   "[ $rc -eq 0 ] && has 'PASS: every step' && grep -qE '^-fsS -o /dev/null http://127\\.0\\.0\\.1:[0-9]+/v2/\$' '$sd/curl.log' && ! grep -q UNEXPECTED '$sd/curl.log'"
-check "the registry container labelled with the run's work folder, pid (the marker's) and start time" \
+check "the registry container labeled with the run's work folder, pid (the marker's) and start time" \
   "printf '%s' \"\$reg_line\" | grep -qE '^run -d --name telflo-rehearse-registry --label telflo\\.rehearse\\.work=$tmp/w18 --label telflo\\.rehearse\\.pid=$marker_pid --label telflo\\.rehearse\\.started=.+ --pull never -p 127\\.0\\.0\\.1:[0-9]+:5000 ' \
    && [ -n '$marker_pid' ]"
 check "while the run went on, the registry's labels named a running rehearsal (pid alive, its start) and its work folder" \

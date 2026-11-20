@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Render tests for charts/telflo, modelled on the opamp-server chart's own
+# Render tests for charts/telflo, modeled on the opamp-server chart's own
 # (charts/opamp-server/tests/render-tests.sh at its first release). The
 # opamp-server's version is read from vendor/opamp-server/PIN, and the chart's
 # own from its Chart.yaml (through scripts/release/version.sh), never written
@@ -405,7 +405,7 @@ management_from() {
     no_path "$L" "$np[0].from[1]" && no_path "$L" "$np[1]" &&
     eq "$L" "$np[0].ports[0].port" 51235 && no_path "$L" "$np[0].ports[1]"
 }
-run_case "the management port admits only pods labelled app.kubernetes.io/name telflo, component api" management_from
+run_case "the management port admits only pods labeled app.kubernetes.io/name telflo, component api" management_from
 agent_open() {
   local np="NetworkPolicy/$OPAMP-agent.spec.ingress"
   no_path "$L" "$np[0].from" && eq "$L" "$np[0].ports[0].port" 51234 && no_path "$L" "$np[0].ports[1]" && no_path "$L" "$np[1]"

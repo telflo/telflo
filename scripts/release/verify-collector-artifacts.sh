@@ -5,7 +5,7 @@
 #
 #   scripts/release/verify-collector-artifacts.sh [--registry <r>]
 #
-# For every collector version the catalogue offers
+# For every collector version the catalog offers
 # (scripts/build-collector-image.sh --list-offered: not deprecated, every
 # value checked), <registry>/telflo/telflo/collector:<v> must be an image
 # index holding a linux/amd64 and a linux/arm64 image; and
@@ -14,7 +14,7 @@
 # helm.ts, read by its exact line) as a Helm chart. Each is read with `crane
 # manifest`: MANIFEST_UNKNOWN or NAME_UNKNOWN is missing ("run the collector
 # workflow for <version>"); any other answer can't tell
-# (a private package read without its login answers so). Every artefact is
+# (a private package read without its login answers so). Every artifact is
 # asked, then every problem named.
 #
 # --registry is ghcr.io (the default) or a loopback 127.0.0.1:<port> or

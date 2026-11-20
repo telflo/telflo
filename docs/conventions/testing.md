@@ -76,7 +76,7 @@ both places.
   `2026-01-01` with `/home/terms-of-service` and `/home/privacy-policy` (the
   API's tests import it as `TEST_TERMS_VERSION`,
   `apps/api/src/testing/site.ts`); and `TELFLO_SMTP_TLS=none` (Mailpit). So
-  the API and CLI tests of the switched routes keep their behaviour whatever
+  the API and CLI tests of the switched routes keep their behavior whatever
   a developer's `.env` says, and a test of the open-source defaults passes
   its own settings. The two `TELFLO_OPAMP_MANAGEMENT_*` settings are
   required, so it can't blank them: it sets placeholders instead, an address
@@ -250,7 +250,7 @@ run in parallel again without contending on the same tables. The shared
 database is the actual constraint; the worker count was never the problem,
 only the symptom.
 
-Tests now have their own database, separate from development, but it is
+Tests have their own database, separate from development, but it is
 still one database shared by every project. So the single-worker rule
 still holds. The next step is one database per project.
 
@@ -265,12 +265,12 @@ docker/collector-image/build-collector-image_test.sh` (the build script's
 checks, through its `--dry-run`, and its `--build-oci` and `--push-oci` with
 a `docker` stand-in and the real crane: "The publish scripts" below).
 
-To build it locally, for one version the catalogue offers and the Docker
+To build it locally, for one version the catalog offers and the Docker
 engine's platform, loaded into the local engine:
 `scripts/build-collector-image.sh 0.162.0` (or `--platform linux/amd64` /
 `linux/arm64`). The script reads the version's URLs and sha256 from
 `catalog/distributions/otelcol-contrib.json`, refuses an unknown or
-deprecated version and any value that isn't the catalogue's format, and
+deprecated version and any value that isn't the catalog's format, and
 builds through the Docker-driver builder `desktop-linux` (`BUILDX_BUILDER`
 overrides it; a `docker-container` builder is refused, since it would pull
 `moby/buildkit`). A build downloads the Debian base, apt's `curl` and
@@ -297,9 +297,10 @@ failed.
 
 **Why render tests and not `helm lint`**: Helm 4's `lint` only logs a
 template's `fail`, and passes with no values at all, so only a render
-proves a guard. The cases: the chart's earlier eight (its 0.3.5's,
-`collectorGroupId` added to the base values); every guard alone, failing with its own message
-and no value in the output; the names, with and without
+proves a guard. The cases: eight base cases (mounts' `readOnly`,
+`collectorEnv`, the token Secret, a render without values); every guard
+alone, failing with its own message and no value in the output; the
+names, with and without
 `fullnameOverride`, for the Agent and the Cluster (every object, reference
 and `hostPath` named after the override, none named `telflo-node` or
 `telflo-cluster`), two fleets' overrides naming disjoint sets, a gateway
@@ -312,7 +313,7 @@ different for two tokens and equal across endpoint, image, `collectorEnv`,
 namespace and release changes, and `checksum/collector-env`; each pod's
 identity variables, its mounts paired with its volumes and claims, and each
 ClusterRole's rules exactly (`HOST_IP` = `status.podIP` and the volume
-slug pinned as kept behaviour, so changing them is deliberate); the image's
+slug pinned, so changing them is deliberate); the image's
 `repository:tag`; `helm lint --strict` for each role with values.
 
 Run them after any change under `charts/supervisor-collector/`. A chart
@@ -377,8 +378,8 @@ all:
   inputs and HEAD's blobs; credentials; never a login.
 - `bash docker/collector-image/build-collector-image_test.sh`
   (`scripts/build-collector-image.sh`, "The collector image" above): the
-  arguments, the catalogue's versions and values (an unknown or
-  deprecated version, a value not in the catalogue's format), the exact
+  arguments, the catalog's versions and values (an unknown or
+  deprecated version, a value not in the catalog's format), the exact
   `docker buildx` argv of a local build, `--build-oci` and `--push-oci`
   on a committed copy of the image's inputs (the same rules as the
   platform's images, the repository always
@@ -429,7 +430,7 @@ any `helm` or `docker` call, naming the path, flag or variable:
   and a copy nested in another repository that ignores it (its git top
   level isn't its own).
 - **The image's build arguments**: taken from HEAD's
-  catalogue, not a working-tree catalogue `git status` sees as clean (an
+  catalog, not a working-tree catalog `git status` sees as clean (an
   edit of the same size, its `ctime` ignored).
 
 Run the publish scripts against GHCR only with `--dry-run`, and push only to
@@ -532,7 +533,7 @@ port). It removes its container and its files at the end. It is in the full
 suite's gates; run it after any change to `default.conf`.
 
 **The smoke's quick-deploy steps** run, with the platform's collector image
-on the machine (`ghcr.io/telflo/telflo/collector:<the catalogue's default
+on the machine (`ghcr.io/telflo/telflo/collector:<the catalog's default
 version>`, built locally or pulled from its published package by whoever
 runs the smoke: the smoke itself never pulls it; without it the install
 steps are skipped, a `SKIPPED` step saying so), only when the API's
@@ -845,7 +846,7 @@ Both pairs share `telflo_platform_e2e_test`, Mailpit, the fakes and the file sto
 Playwright starts its web servers one after another, and global setup's
 teardown waits for both APIs' after-response jobs. A new spec that needs
 open registration, the Terms, the playground or a read without signing in
-runs on the SaaS's pair; one that checks the open-source behaviour, on the
+runs on the SaaS's pair; one that checks the open-source behavior, on the
 default pair.
 
 ## The SMTP test relay

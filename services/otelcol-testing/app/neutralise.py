@@ -1,4 +1,4 @@
-"""The provider neutraliser's steps in a run, all in the run's child
+"""The provider neutralizer's steps in a run, all in the run's child
 process, before any collector starts:
 
 1. `bounded_yaml.single_node` reads the text as one YAML document before any
@@ -123,7 +123,7 @@ def neutralise(text: str) -> Neutralised | Refusal:
 
 def backstop(text: str, neutralised_schemes: list[str]) -> Refusal | None:
     """Step 4, on the exact text a collector is about to read: None when it
-    may run; otherwise the refusal, naming the schemes neutralised and any
+    may run; otherwise the refusal, naming the schemes neutralized and any
     that survived. Both refusals should be impossible: every splice is total
     and adds no structure."""
     try:

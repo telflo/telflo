@@ -198,7 +198,7 @@ order. Each `gh api` line runs with that admin's own GitHub CLI login.
    when it names another action or SHA.
 5. **The collector images first**: the collector workflow
    with `all` and `publish: true` (below), so `ghcr.io/telflo/telflo/
-   collector` holds every version the catalogue offers and the
+   collector` holds every version the catalog offers and the
    supervisor-collector chart 0.1.0 is published. The release's first job
    fails otherwise (`run the collector workflow for <version>`). After
    steps 1, 2 and 4 (the publish job runs in the `release` environment),
@@ -248,7 +248,7 @@ types with its attestations, and the supervisor-collector chart,
 `oci://ghcr.io/telflo/telflo/charts/supervisor-collector`, when its
 `Chart.yaml` version isn't published yet (a published chart version is
 never pushed again). It is started by hand, from `main`, with two inputs:
-- `collector_version`: a version the catalogue
+- `collector_version`: a version the catalog
   (`catalog/distributions/otelcol-contrib.json`) offers and hasn't
   deprecated, or `all` for every offered version, one job each;
 - `publish`: `false` by default (build and test only); `true` publishes,
@@ -263,7 +263,7 @@ and the run has no image to build or publish: the build, test and publish
 jobs are skipped, and the supervisor-collector chart's job still runs, so a
 chart version bump alone is published by `all` with `publish: true` (the
 chart job runs after a publish that passed, or one skipped because there
-was nothing to build, never after a failed or cancelled test or publish).
+was nothing to build, never after a failed or canceled test or publish).
 With `publish: false`, `all` builds and tests every offered version.
 
 ```sh
@@ -279,7 +279,7 @@ gh run watch -R telflo/telflo
 Run it, on a maintainer's yes each time (a run with `publish: false` still
 spends minutes):
 - before the first release, with `all` (above);
-- when the catalogue offers a new collector version, before any group's
+- when the catalog offers a new collector version, before any group's
   published version uses it (and before the next release, which checks
   every offered version);
 - when `charts/supervisor-collector/Chart.yaml`'s version is bumped (with
@@ -306,7 +306,7 @@ changes. Nothing it does reaches GitHub or GHCR. Its header
 **What it proves**, on the commit checked out:
 - the tag's check (`verify-tag.sh`) passes for `v<version>`, in a throwaway
   clone whose `main` is that commit, with a local annotated tag;
-- every collector version the catalogue offers builds for amd64 and arm64
+- every collector version the catalog offers builds for amd64 and arm64
   with its attestations, runs, is pushed and pulled back by digest; the
   supervisor-collector chart is published; the release's collector checks
   find them all;
@@ -383,11 +383,11 @@ scripts/release/rehearse.sh --cleanup --work <the run's folder>
 ```
 
 While a rehearsal is running (its marker volume `telflo-rehearse-run`
-and its registry are labelled with its work folder and process), another
+and its registry are labeled with its work folder and process), another
 one refuses to start and `--cleanup` refuses to remove anything. Neither a
 run's end nor `--cleanup` ever prunes, and neither removes anything but
 the `telflo-rehearse-*` names, the `telflo-release` builder the run made
-and the images its `rehearse.state` names; an object labelled for another
+and the images its `rehearse.state` names; an object labeled for another
 rehearsal that is running is left alone. The smokes' own objects carry no
 label: they are removed by their `telflo-rehearse-*` names, which no other
 run can hold while one runs. The private tools (`.tools/` and
@@ -417,7 +417,7 @@ step's output, already redacted, is in `<work>/logs/`, and all of it in
 - what the builds download, as on a runner: the Dockerfiles' base images
   by digest, npm, Go and Debian packages, and, for each collector version,
   the upstream otelcol-contrib and OpAMP supervisor releases (sha256-pinned
-  in the catalogue); inside the kind node, the chart's Postgres by digest.
+  in the catalog); inside the kind node, the chart's Postgres by digest.
 
 It never pulls or re-tags an image the smokes run by tag (`postgres:18`,
 `axllent/mailpit:v1.31`, `nginx:1.27-alpine` at the chart's digest,
@@ -484,7 +484,7 @@ step if one isn't there.
    ended. The workflow's runs share one concurrency group that never
    cancels a running one, but GitHub keeps only one *waiting* run per
    group: a newer tag's run cancels an older one still waiting, and that
-   cancelled run must be re-run by hand (Actions › the run › "Re-run all
+   canceled run must be re-run by hand (Actions › the run › "Re-run all
    jobs").
 
 4. **Follow the run** (`gh run watch -R telflo/telflo`). Its first job

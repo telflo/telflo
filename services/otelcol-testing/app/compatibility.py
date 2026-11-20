@@ -161,7 +161,7 @@ def _check_pinned_kube_config_path(
 # name another run's files or the tester's. `schema` fetches schema files
 # from URLs, `file://` included, which the sandbox can neither reach nor let
 # it open. `remotetap` starts its own server, on a port or a unix socket
-# path, which the sandbox doesn't run. The catalogue knows each by one
+# path, which the sandbox doesn't run. The catalog knows each by one
 # spelling (no rename; a test fails if that changes). Refused wherever
 # they're defined, as C-002 is, not only in the pipeline under test.
 _REFUSED_PROCESSORS: dict[str, str] = {
@@ -514,7 +514,7 @@ def _check_testable_receiver_constraints(
 # and lists alike. Every run's collector shares one user and one disk, so
 # such a path could name another run's files or the tester's.
 # resourcedetection's consul, openshift and docker settings are refused too,
-# though R-106 would strip them (defence in depth), and the same rule runs
+# though R-106 would strip them (defense in depth), and the same rule runs
 # again on the exact text each collector reads, over the node graph the
 # backstop's own reader composes (``final_file_settings``). Left to the
 # others here: a processor C-005 refuses outright (it keeps its own message)

@@ -86,7 +86,7 @@ asserting the absence of the secret and the YAML.
   files also reports a skip; that one doesn't count. The evaluator's tests
   need no database.
 - **The Go suite runs alone**: its tests start real child processes.
-- **A security-bearing test shows that it fails when its behaviour breaks.**
+- **A security-bearing test shows that it fails when its behavior breaks.**
   Usually that is a deliberate break, made and undone in a scratch copy.
   Where a check is itself a scan that a break must fool, **the break becomes
   a permanent detector test**: a test that applies the break and asserts the

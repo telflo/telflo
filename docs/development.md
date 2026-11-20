@@ -63,7 +63,7 @@ cp .env.example .env             # defaults already match docker-compose.yml's p
 npm run dev:services             # postgres (55432) + mailpit (SMTP 51025, UI 58025) + the opamp-server (51235; collectors poll 51234) + the collector validator (51236) + the collector tester (through its forwarder, 51237) + the OTTL evaluator (through its forwarder, 51238) + the object store (S3 on 51240) — waits until healthy
 mkdir -p ~/.telflo/file-store    # the file store's root; set TELFLO_FILE_STORE_ROOT in .env to it (docs/configuration.md)
                                  # and set TELFLO_INSTALL_TEMPLATES_DIR in .env to this checkout's install-templates/
-npm run db:migrate               # migrates as the owner, syncs the collector catalogue, then creates the API's own database role
+npm run db:migrate               # migrates as the owner, syncs the collector catalog, then creates the API's own database role
 
 npm run dev --workspace=apps/api # API on :8080
 npm run dev --workspace=apps/web # web on :53000, in another terminal
@@ -123,11 +123,11 @@ configuration with the collector version it is pinned to. `npm run
 dev:services` starts it and waits for its `/health` on
 `http://127.0.0.1:51236`. Its first start builds its image,
 `telflo-otelcol-validator:dev`, from the repository's root, with every
-collector version the catalogue offers (four today: about 1.7 GB, a few
+collector version the catalog offers (four today: about 1.7 GB, a few
 minutes); `OTELCOL_VERSIONS=default npm run dev:services` bakes only the
 default version (about 570 MB). The variable counts only when the image is
 built, and Compose reuses the image it has: to change what an existing one
-holds, or after a catalogue or service change, rebuild it from the
+holds, or after a catalog or service change, rebuild it from the
 repository root with `docker compose build otelcol-validator`
 (every offered version; prefix `OTELCOL_VERSIONS=default` for the lighter
 one), then run `npm run dev:services` again. The API requires it: it refuses
@@ -223,7 +223,7 @@ image (about 500 MB on disk); a failed pull, or another program on port
 The container install's image is built from
 `docker/collector-image/` (otelcol-contrib and the OpAMP supervisor, one tag
 per collector version), published as `ghcr.io/telflo/telflo/collector`
-for every collector version the catalogue offers, with the
+for every collector version the catalog offers, with the
 supervisor-collector chart (`charts/supervisor-collector/`). Both are
 published by the collector workflow, started by hand, never by a person's
 push. To build one image locally,
@@ -387,7 +387,7 @@ development default works on Docker Desktop with the stack's own published
 `OPAMP_SERVER_URL=http://opamp-server:51234/opamp/api/v1`, as CI's stack
 job does.
 
-With the collector image built locally for the catalogue's default version
+With the collector image built locally for the catalog's default version
 (`scripts/build-collector-image.sh <version>`; without it the install steps
 are skipped, saying why), the smoke test also installs collectors through
 the platform, and makes quick-deploy links whose Quick Deploy command it
@@ -446,9 +446,9 @@ The stack includes the collector validator, `otelcol-validator`,
 which the API container reaches as `http://otelcol-validator:8001`;
 Compose also publishes it on the host's `127.0.0.1:51236`, for the native
 API. `docker compose up --build` builds its image with every collector
-version the catalogue offers (four today, about 1.7 GB). For a lighter
+version the catalog offers (four today, about 1.7 GB). For a lighter
 stack, `OTELCOL_VERSIONS=default docker compose up --build --wait` bakes
-only the catalogue's default (about 570 MB), as CI's stack job does; a
+only the catalog's default (about 570 MB), as CI's stack job does; a
 version the image doesn't hold is answered as unavailable. The stack and
 `npm run dev:services` share the image (`telflo-otelcol-validator:dev`), so
 the next `docker compose up --build` without the variable, or `docker
@@ -566,7 +566,7 @@ telflo-core/             The TypeScript npm workspace: its own package.json,
     ├── db/              migrations, Kysely types, repository base
     └── tsconfig/        shared TS, ESLint, Vitest config
 services/                Go and Python services: otelcol-validator, otelcol-testing, ottl-evaluator; the opamp-server has its own repository
-catalog/                 The collector catalogue: distributions and versions, read by several components (catalog/README.md)
+catalog/                 The collector catalog: distributions and versions, read by several components (catalog/README.md)
 vendor/opamp-server/     The opamp-server's contract files (openapi.yaml, bootstrap.sql, the fill-in corpus), byte for byte its pinned release's, and PIN
 scripts/check-naming.sh  Repository-wide naming guard (bash; scans every file)
 scripts/check-licenses.mjs  License guard: shipped npm deps must be redistributable

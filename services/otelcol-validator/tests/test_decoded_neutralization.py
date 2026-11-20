@@ -4,7 +4,7 @@ re-dumped.
 A YAML escape (``"\\x24{file:…}"``, ``"\\u0024{file:…}"``, an escaped line
 break between ``$`` and ``{``, …) hides a live ``${file:…}`` from a raw-text
 scan, yet the collector decodes the escape and expands the reference and the
-file's contents come back in the error; and neutralising by re-dumping the
+file's contents come back in the error; and neutralizing by re-dumping the
 whole document would change untouched scalars' types (``1:30`` → 90, ``on`` →
 true), so a text would answer differently from how its raw form does.
 
@@ -69,7 +69,7 @@ def _prepared_text(text: str) -> str:
 
 
 # ---------------------------------------------------------------------------
-# Every escape form, in every scalar style, is detected and neutralised.
+# Every escape form, in every scalar style, is detected and neutralized.
 # ---------------------------------------------------------------------------
 
 

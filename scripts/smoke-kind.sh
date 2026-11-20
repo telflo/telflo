@@ -28,7 +28,7 @@
 # local Docker engine, the images it loads (nginx:1.27-alpine at the chart's
 # digest, axllent/mailpit:v1.31, ghcr.io/telflo/opamp-server at
 # vendor/opamp-server/PIN's version and digest, and
-# ghcr.io/telflo/telflo/collector:<the catalogue's default version>) and,
+# ghcr.io/telflo/telflo/collector:<the catalog's default version>) and,
 # without --images, the Dockerfiles' pinned bases; 10.5 GB free in Docker's
 # disk; a telflo-core with its node_modules (--core, default this tree's) for
 # the contracts' builders, and a built CLI (--cli, default
@@ -62,7 +62,7 @@
 #      the config digest on the classic store, the manifest digest on
 #      containerd's); the chart's own postgres:18 pinned by digest pulled
 #      inside the node, so the chart's default Postgres reference runs as is.
-#   5. the release's namespace (labelled pod-security.kubernetes.io/enforce=
+#   5. the release's namespace (labeled pod-security.kubernetes.io/enforce=
 #      restricted) and the collectors' namespace (no label: the collector
 #      chart's pods set no securityContext); the Mailpit fixture
 #      (smoke-kind/mailpit.yaml) in the release's.
@@ -87,7 +87,7 @@
 #  11. helm upgrade (a pod annotation on every component, so every pod
 #      restarts), every pod Ready again and new; the API's migrate init
 #      container migrated nothing (pgmigrations unchanged), re-provisioned
-#      telflo_platform, and Postgres's restart skipped its initialisation.
+#      telflo_platform, and Postgres's restart skipped its initialization.
 #  12. the static facts: the management Service ClusterIP; the namespace's
 #      label; every pod of the release non-root, every container's root
 #      read-only, no service-account token mounted (spec, and inside every
@@ -1092,7 +1092,7 @@ if called=$(helpers_called); then fail "a credential helper was called while the
 pass "$(echo "$LOADED" | wc -w | tr -d ' ') images loaded, each the host's image id ($ENGINE_STORE image store); postgres:18@${POSTGRES_DIGEST:0:19}… pulled in the node"
 
 # =====================================================================================================================
-step "the namespaces ($NS labelled pod-security.kubernetes.io/enforce=restricted; $NS_COLLECTORS unlabelled) and the Mailpit fixture"
+step "the namespaces ($NS labeled pod-security.kubernetes.io/enforce=restricted; $NS_COLLECTORS unlabeled) and the Mailpit fixture"
 kube create namespace "$NS" >"$LOGS/namespaces.log" 2>&1 || fail "creating $NS failed"
 kube label namespace "$NS" pod-security.kubernetes.io/enforce=restricted pod-security.kubernetes.io/enforce-version=latest >>"$LOGS/namespaces.log" 2>&1 ||
   fail "labelling $NS failed"
