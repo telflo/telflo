@@ -30,11 +30,9 @@ interface SuitesPanelProps {
  * described and deleted on any version, published or not, by anyone who can
  * see them.
  *
- * Differences:
  * - the suites are read each time the subtab shows and when the version
- *   changes, not once a version; a failed read shows inline with Retry
- *   ("Failed to load test suites", or the API's words for a refusal), not a
- *   toast with no read again;
+ *   changes; a failed read shows inline with Retry ("Failed to load test
+ *   suites", or the API's words for a refusal);
  * - Play one and the Play alls are the Testing tab's (`onPlayOne`,
  *   `onPlayAll`), held as every Play is (SuiteCard);
  * - in the playground, every action that would change or run something is

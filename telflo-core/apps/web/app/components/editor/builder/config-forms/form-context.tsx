@@ -112,11 +112,11 @@ import {
  */
 
 /**
- * A box in an `items-start` row beside a `text-sm` label and its
- * description: the label's first line is 20 px tall (`text-sm`
- * keeps its own line height in a `leading-none` block, as tailwind-merge
- * drops the Label's `leading-none`), so the 16 px box is moved down 2 px to
- * sit centred on it, not 2 px high.
+ * A box in an `items-start` row beside a `text-sm` label and its description:
+ * the label's first line is 20 px tall (`text-sm` keeps its own line height
+ * in a `leading-none` block, as tailwind-merge drops the Label's
+ * `leading-none`), so the 16 px box is moved down 2 px to sit centered on it,
+ * not 2 px high.
  */
 export const DESCRIBED_BOX = "mt-0.5";
 
@@ -714,7 +714,7 @@ export function BareTextField({
   multiline?: boolean;
   rows?: number;
   className?: string;
-  /** Clearing removes the key, as a labelled field's does, rather than writing `""` (time_parser's custom layout). */
+  /** Clearing removes the key, as a labeled field's does, rather than writing `""` (time_parser's custom layout). */
   emptyRemoves?: boolean;
 }) {
   const { text, unshowable, readOnly } = useTextField(path, multiline, (form, typed) => form.set(path, typed), !emptyRemoves);
@@ -1040,7 +1040,7 @@ export interface CheckboxSetItem {
  * boxes, not the collector's default, which `defaultHint` names as "Default
  * <hint>"); its first toggle writes `unsetShows` with the change, which for
  * none is the item alone. Items the list holds that aren't fixed ones show
- * after them, ticked, labelled with the item as text, so they can be unticked
+ * after them, ticked, labeled with the item as text, so they can be unticked
  * and are never lost. A list holding anything but plain scalars, or a value
  * that isn't a list, is read-only with `UNSHOWABLE_VALUE_MESSAGE`. Ids are
  * `<id>-<index>`, never an item.

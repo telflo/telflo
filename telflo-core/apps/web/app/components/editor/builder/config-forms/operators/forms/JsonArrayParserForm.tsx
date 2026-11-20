@@ -14,8 +14,8 @@ import { TimestampConfigSection } from "../shared/TimestampConfigSection.js";
  *   with a header (`docs/operators/json_array_parser.md`, `parse_to`), so
  *   the seed writes `body` (`operator-catalog.ts`); unset never shows
  *   `attributes` as the value. It is rootable (`helper/parser.go:35`).
- * Changed: unset Parse From shows the collector's `body`
- * (`helper/parser.go:26`); Header, cleared, removes its key.
+ * Unset Parse From shows the collector's `body` (`helper/parser.go:26`);
+ * Header, cleared, removes its key.
  */
 export function JsonArrayParserForm() {
   const opId = useOperatorId();

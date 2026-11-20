@@ -16,18 +16,17 @@ import { selectIsEditingLocked, useEditorStore } from "~/lib/stores/editor-store
  * static palette entry, never anything a person wrote
  * (`writePaletteDrag`).
  *
- * Only the components the open version's distribution supports: the
- * catalogue's `supportedComponents` for the configuration's distribution and
- * the pin on screen (a pick in the toolbar changes it at once, saved or not),
- * matched by `filterPaletteByAllowlist`. Every entry for Contrib (null), and
- * whenever the catalogue can't say (unread, failed, or a pin it no longer
- * offers): never an empty toolbox for want of the catalogue. A section left
- * with none is not shown. The filter is the toolbox's only: components already
- * on the canvas, or typed in the text, stay. The palette doesn't read the
- * catalogue itself; the editor page does (`useCollectorDistributions`). Inside
- * the playground it shows every component, as the signed-in palette does
- * before its catalogue answers: a catalogue this tab read on a signed-in page
- * is never applied there.
+ * Only the components the open version's distribution supports: the catalog's
+ * `supportedComponents` for the configuration's distribution and the pin on
+ * screen (a pick in the toolbar changes it at once, saved or not), matched by
+ * `filterPaletteByAllowlist`. Every entry for Contrib (null), and whenever the
+ * catalog can't say (unread, failed, or a pin it no longer offers): never an
+ * empty toolbox for want of the catalog. A section left with none is not
+ * shown. The filter is the toolbox's only: components already on the canvas,
+ * or typed in the text, stay. The palette doesn't read the catalog itself; the
+ * editor page does (`useCollectorDistributions`). Inside the playground it
+ * shows every component, as the signed-in palette does before its catalog
+ * answers: a catalog this tab read on a signed-in page is never applied there.
  *
  * Palette chips mirror the canvas node cards: quiet hairline chips on the
  * card surface, the component type carried only by the icon's tint (the

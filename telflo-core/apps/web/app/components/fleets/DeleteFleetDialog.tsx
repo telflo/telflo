@@ -19,12 +19,12 @@ import { fleetRefusalMessage, isFleetGone, isUnknownOutcome } from "~/lib/fleets
 import { useOpeningKey } from "~/lib/hooks/use-opening-key.js";
 
 /*
- * "Delete fleet": an AlertDialog with no typing to confirm, its
- * title and buttons ("Delete fleet", "Deleting..."). Differences:
+ * "Delete fleet": an AlertDialog with no typing to confirm, its title and
+ * buttons ("Delete fleet", "Deleting...").
  *
  * - The list says what the platform deletes: the fleet and its groups, its
  *   collectors and their error history, its tokens (their collectors refused,
- *   401, from their next poll); published versions stay. No word of imports.
+ *   401, from their next poll); published versions stay.
  * - Success toasts "Deleted fleet {label}" with no counts (the platform
  *   answers 204), then `onDeleted`: the list reloads, or the fleet's page
  *   goes to the list.

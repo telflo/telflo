@@ -25,10 +25,9 @@ import { COLLECTOR_UNINSTALL_WORDS, HelmUninstall } from "./HelmUninstall.js";
  * "Delete collector record": an AlertDialog, its title, "Delete" /
  * "Deleting...", the fallback "Failed to delete collector" and the toast
  * `Deleted record for {name}`, with `DeleteFleetDialog`'s pattern for a write
- * under way. Differences:
+ * under way.
  *
- * - The body says what a deleted collector becomes if it keeps polling, never
- *   "The collector itself is not affected"; no import warning.
+ * - The body says what a deleted collector becomes if it keeps polling.
  * - Escape does nothing while the delete is under way; Cancel is disabled;
  *   the action keeps the dialog open (`preventDefault`) until the API
  *   answers. A double click sends once.
@@ -43,8 +42,8 @@ import { COLLECTOR_UNINSTALL_WORDS, HelmUninstall } from "./HelmUninstall.js";
  *   layout; a session ended is silent. An answer after the dialog unmounted,
  *   or for an organization no longer active, does nothing; each opening is
  *   a new session (`useOpeningKey`).
- * - The body has no "(else Default)": a collector naming no group is
- *   refused. On a Kubernetes-supervisor fleet the body is a pod's: deleting
+ * - A collector naming no group is refused, so the body names no default
+ *   group. On a Kubernetes-supervisor fleet the body is a pod's: deleting
  *   the record forgets the collector, and a pod still running enrolls again
  *   (then how to stop it, its group's quoted `helm uninstall` from the
  *   tab's groups, snapshotted at the opening; nothing when the groups are

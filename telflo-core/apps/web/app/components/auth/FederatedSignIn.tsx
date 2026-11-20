@@ -113,7 +113,7 @@ export function FederatedSignInButtons({
   );
 }
 
-/** The labelled divider: a rule with small uppercase text over it. */
+/** The labeled divider: a rule with small uppercase text over it. */
 export function AuthDivider({ children }: { children: React.ReactNode }) {
   return (
     <div className="relative">

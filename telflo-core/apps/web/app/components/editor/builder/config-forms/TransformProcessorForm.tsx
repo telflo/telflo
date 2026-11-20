@@ -38,7 +38,7 @@ import { findPattern } from "~/lib/regex-library.js";
  *   `transform-trace-statement-2`, sortable `trace-group-0`), never a value.
  * - A text whose order is already refused (a group after a flat statement)
  *   shows its items as written, with dragging off and `REFUSED_ORDER_HINT`.
- * - Fixed: Add Statement holds a row that isn't in the text (never `""`, which
+ * - Add Statement holds a row that isn't in the text (never `""`, which
  *   doesn't parse, `config.go:145-205`); its first typing appends the
  *   statement at the list's end. A flat row emptied and left removes its item.
  *   Add Statement Group holds a card (never
@@ -51,20 +51,20 @@ import { findPattern } from "~/lib/regex-library.js";
  *   (`holdEmpty`); its only statement can't be removed (`keepLast`; never
  *   `statements: [""]`), Remove statement group removes the group. Removing a
  *   group's last condition removes `conditions`.
- * - Changed: a template's Add writes its statements as a group of their
- *   own, `- statements: [...]`, inserted before the list's first flat
- *   statement in one change (one undo entry), so its context is inferred
- *   alone and templates combine (appended as flat statements, T7 beside
- *   T5, T6 or T8 would make a group the collector can't infer,
- *   `pkg/ottl/context_inferrer.go`), with a toast. T2's patterns come
- *   from the regex library through `ottlString`; T10's copy says what it
- *   does; T11 matches with `IsMatch` (OTTL has no `contains`,
+ * - A template's Add writes its statements as a group of their own,
+ *   `- statements: [...]`, inserted before the list's first flat statement in
+ *   one change (one undo entry), so its context is inferred alone and
+ *   templates combine (appended as flat statements, T7 beside T5, T6 or T8
+ *   would make a group the collector can't infer,
+ *   `pkg/ottl/context_inferrer.go`), with a toast. T2's patterns come from
+ *   the regex library through `ottlString`; T10's copy says what it does; T11
+ *   matches with `IsMatch` (OTTL has no `contains`,
  *   `pkg/ottl/grammar.go:593`), case-sensitive, a literal match.
- * - Changed: Error Mode unset shows the collector's default, ignore
+ * - Error Mode unset shows the collector's default, ignore
  *   (`factory.go:174`), as filter's. A group's Error Mode Inherited removes
  *   its key.
- * - Changed: the placeholders are each signal's own (a span or
- *   metric path is refused by the other signals).
+ * - The placeholders are each signal's own (a span or metric path is refused
+ *   by the other signals).
  * - Strings are written as typed: statements, conditions and contexts never
  *   go through `EscapedTextField`.
  * - A group the form can't show (not a mapping) is a card with

@@ -9,21 +9,20 @@ import { SeverityConfigSection } from "../shared/SeverityConfigSection.js";
  * (`op-<index>-container-…`). The operator has no timestamp block, so the form
  * has the Severity section only.
  *
- * Kept: Container Format's "Auto-detect" removes `format` (the collector
- * detects the format when it is unset, `parser/container/config.go:63-73`),
- * and unset shows "Auto-detect" as its placeholder; a format outside the
- * three shows as written, `format: auto` included: the collector refuses
- * `auto` (`config.go:63-71`), so it isn't shown as Auto-detect. The
- * Auto-detect item's value is a fixed name the text's format never equals.
- * "Add Kubernetes metadata from file path" shows the collector's `true` when
- * unset (`config.go:42`) and writes `true` or `false`. Fixed: Max Log Size's
+ * Container Format's "Auto-detect" removes `format` (the collector detects
+ * the format when it is unset, `parser/container/config.go:63-73`), and
+ * unset shows "Auto-detect" as its placeholder; a format outside the three
+ * shows as written, `format: auto` included: the collector refuses `auto`
+ * (`config.go:63-71`), so it isn't shown as Auto-detect. The Auto-detect
+ * item's value is a fixed name the text's format never equals. "Add
+ * Kubernetes metadata from file path" shows the collector's `true` when
+ * unset (`config.go:42`) and writes `true` or `false`. Max Log Size's
  * default is the collector's 1 MiB (`config.go:25, 43`), shown as "Default
- * 1MiB" and the placeholder, and its description no longer says 0 is the
- * default: "Maximum bytes for recombined partial logs." (not "… (0 =
- * unlimited).", placeholder 0). It is a number field: a number is written
+ * 1MiB" and the placeholder, and its description is "Maximum bytes for
+ * recombined partial logs.". It is a number field: a number is written
  * plain, 0 included, and a size with a unit (`2MiB`, a `helper.ByteSize`,
- * `config.go:53`) as typed (never `parseInt`'s 2 for `2MiB`). Changed: unset
- * Parse From and Parse To show the collector's `body` and `attributes`
+ * `config.go:53`) as typed (never `parseInt`'s 2 for `2MiB`). Unset Parse
+ * From and Parse To show the collector's `body` and `attributes`
  * (`helper/parser.go:26-27`), Parse To rootable (`:35`).
  */
 

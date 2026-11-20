@@ -51,18 +51,18 @@ import { findDistribution, useCollectorDistributions } from "~/lib/stores/collec
  *   available right now.";
  * - the blank path's distribution is a dropdown (a real dropdown, built for
  *   several distributions, with one today): each option its mark, the
- *   catalogue's label and description, the default marked "Default", and the
- *   catalogue's default preselected; under its label, a note that it is
+ *   catalog's label and description, the default marked "Default", and the
+ *   catalog's default preselected; under its label, a note that it is
  *   locked once the configuration is created. No collector version is sent:
  *   the server gives version 1 the distribution's default. While the
- *   catalogue is unread nothing is offered, and a create then names no
- *   distribution, which is the catalogue's default on the server; a
- *   catalogue that couldn't be read says so, without naming its distribution
- *   (the page can't know it), and the create goes on. Reopening preselects
- *   the default again, so an abandoned pick never carries over;
+ *   catalog is unread nothing is offered, and a create then names no
+ *   distribution, which is the catalog's default on the server; a catalog
+ *   that couldn't be read says so, without naming its distribution (the
+ *   page can't know it), and the create goes on. Reopening preselects the
+ *   default again, so an abandoned pick never carries over;
  * - the flow path: the flow's name and summary prefilled, and in place of the
  *   dropdown the read-only `{mark} {short label} · collector v{version} — set
- *   by this flow`, with no lock note. A pin the catalogue no longer offers
+ *   by this flow`, with no lock note. A pin the catalog no longer offers
  *   moves the copy to the distribution's default version, which a sentence
  *   says; the copy is made by `createConfigurationFromFlow` (the flow's YAML,
  *   its graph, its pin and its slug);
@@ -93,11 +93,11 @@ export const CREATE_FAILED_MESSAGE = "Failed to create configuration";
 export const DISTRIBUTION_LOCK_NOTE =
   "Which collector build this configuration is for. This is locked once the configuration is created.";
 
-/** When the catalogue couldn't be read: the create goes on, on the server's default. */
+/** When the catalog couldn't be read: the create goes on, on the server's default. */
 export const DISTRIBUTION_UNAVAILABLE_NOTE =
   "The distribution list couldn't be loaded, so this configuration will be created on the default distribution.";
 
-/** The catalogue's default distribution, else its first; undefined for an empty or unread one. */
+/** The catalog's default distribution, else its first; undefined for an empty or unread one. */
 function defaultDistribution(distributions: readonly CollectorDistribution[] | null): CollectorDistribution | undefined {
   return distributions?.find((distribution) => distribution.isDefault) ?? distributions?.[0];
 }
@@ -129,7 +129,7 @@ export function CreateConfigurationDialog({ open, onOpenChange, organizationId }
   // Read when the dialog opens, so the start step can count them and the
   // browse step rarely waits.
   const flows = useFlowsWhenOpen(open);
-  /** The distribution picked; null until the catalogue has been read (then its default), and on each opening. */
+  /** The distribution picked; null until the catalog has been read (then its default), and on each opening. */
   const [pickedDistribution, setPickedDistribution] = useState<string | null>(null);
   const shownDistribution =
     findDistribution(distributions, pickedDistribution) ?? defaultDistribution(distributions);
@@ -374,9 +374,9 @@ export function CreateConfigurationDialog({ open, onOpenChange, organizationId }
 /**
  * The flow path's distribution: no choice, the flow was built for one, so a
  * read-only line in place of the dropdown, `{mark} {short label} · collector
- * v{version} — set by this flow`, the mark and label from the catalogue, else
+ * v{version} — set by this flow`, the mark and label from the catalog, else
  * from the id. The version is the one the copy gets: the flow's pin, or the
- * distribution's default when the catalogue no longer offers it, which the
+ * distribution's default when the catalog no longer offers it, which the
  * sentence under it says.
  */
 function FlowDistributionNote({
@@ -433,10 +433,10 @@ function StartOption({
 
 /**
  * The create's Distribution dropdown: the trigger shows the picked
- * distribution's mark and compact name; each option its mark, the
- * catalogue's label and description, the default marked. Every string is
- * the catalogue's (catalogue data may go anywhere); the options' values
- * are the distributions' ids.
+ * distribution's mark and compact name; each option its mark, the catalog's
+ * label and description, the default marked. Every string is the catalog's
+ * (catalog data may go anywhere); the options' values are the distributions'
+ * ids.
  */
 function DistributionField({
   distributions,

@@ -60,7 +60,7 @@ import type { ValueView } from "~/lib/graph/value-view.js";
  *   drops only `async`, silently, as the OpAMP switch drops
  *   `polling_interval`.
  *
- * Fixed:
+ * The fields:
  * - Listen Address has no default (it is required, `input/tcp/config.go:103-105`,
  *   `input/udp/config.go:86-88`): marked required, with the example
  *   "e.g. 0.0.0.0:54526" as its placeholder, not a value.

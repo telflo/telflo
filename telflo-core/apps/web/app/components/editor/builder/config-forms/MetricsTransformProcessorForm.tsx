@@ -25,7 +25,7 @@ import type { ValueView } from "~/lib/graph/value-view.js";
  * - The transforms are cards, not sortable, keyed by their items
  *   (`useCardKeys`, not by index); one transform starts expanded. The
  *   header is a button, "Collapse transform" / "Expand transform".
- * - Fixed: Add Transform holds a card that isn't in the text (never
+ * - Add Transform holds a card that isn't in the text (never
  *   `include: ""`, refused, `factory.go:70-72`). Its Metric typed writes
  *   `{include: <typed>, match_type: strict, action: update}`, the seed
  *   with what was typed; a match, action, name or aggregation chosen
@@ -35,21 +35,21 @@ import type { ValueView } from "~/lib/graph/value-view.js";
  *   `new_label` and `new_value`, `factory.go:122-127`); an action with no
  *   other field (Toggle int/double data type) chosen writes `{action}` at
  *   once. A transform's operations can be added once it is written.
- * - Changed: Action unset is blank, "Select action", with the hint
- *   "Required." (the collector has no default and refuses none,
- *   `factory.go:85-87`); Match Type unset is strict's placeholder and
- *   "Default strict" (`factory.go:145-147`).
- * - Changed: Action offers `group` (`config.go:158-172`).
- * - Changed: Combine writes `aggregation_type: sum` with it when the
- *   transform has none (`factory.go:97-99`), and Group writes
- *   `group_resource_labels: {}` when it has none (`factory.go:101-103`; `{}`
- *   is accepted), each with a toast.
- * - Changed: New Name says it is required for Insert and Combine while
- *   either is chosen (`factory.go:89-95`); the empty list's alert, false
- *   (no transform is accepted, `factory.go:34-36`), is an info line.
+ * - Action unset is blank, "Select action", with the hint "Required." (the
+ *   collector has no default and refuses none, `factory.go:85-87`); Match
+ *   Type unset is strict's placeholder and "Default strict"
+ *   (`factory.go:145-147`).
+ * - Action offers `group` (`config.go:158-172`).
+ * - Combine writes `aggregation_type: sum` with it when the transform has
+ *   none (`factory.go:97-99`), and Group writes `group_resource_labels: {}`
+ *   when it has none (`factory.go:101-103`; `{}` is accepted), each with a
+ *   toast.
+ * - New Name says it is required for Insert and Combine while either is
+ *   chosen (`factory.go:89-95`); the empty list's alert, false (no transform
+ *   is accepted, `factory.go:34-36`), is an info line.
  * - An operation's action change rebuilds it as `{action}`:
  *   the action is set and its other keys removed, in one change, so the
- *   item keeps its own lines and comments. The action select is labelled
+ *   item keeps its own lines and comments. The action select is labeled
  *   "Operation action". Removing the last
  *   operation removes `operations`; Scale is a
  *   number field (a number as typed, or a reference).

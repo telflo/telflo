@@ -34,7 +34,7 @@ export function collectorConfigurationMeaning(drift: Drift): string {
   return `${COLLECTOR_CONFIGURATION_LABELS[drift].toLowerCase()}: ${meaning}`;
 }
 
-/** The dot's colour: ok in sync, warning pending, fail failed or drifted, muted with nothing assigned. */
+/** The dot's color: ok in sync, warning pending, fail failed or drifted, muted with nothing assigned. */
 export const DRIFT_DOT_CLASSES: Record<Drift, string> = {
   inSync: "bg-ok",
   pending: "bg-warn",

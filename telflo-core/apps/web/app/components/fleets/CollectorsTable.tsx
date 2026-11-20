@@ -15,7 +15,7 @@ import { VariableGroupLink } from "./VariableGroupLink.js";
 
 /*
  * A server fleet's collectors grid: plain table markup with the fleet list's
- * classes (`FleetsTable`; no @tanstack/react-table). Differences:
+ * classes (`FleetsTable`; no @tanstack/react-table):
  * - a selection column first: a checkbox per row and one in the header for
  *   the page, the selection the tab's;
  * - "Group", "Version" (the version served);
@@ -27,23 +27,23 @@ import { VariableGroupLink } from "./VariableGroupLink.js";
  * - Name and Last seen sort, server-side: `aria-sort` on the sorted header
  *   only, none for the API's default (newest first);
  * - Status from the server's `liveness` (Online, Warning, Unknown, Offline:
- *   `CollectorStatusCell`), then a Configuration column (new) from its
- *   `drift` (In sync, Pending pickup, Apply failed, Drifted, Nothing
- *   assigned: `CollectorConfigurationCell`), each a dot and words with its
- *   meaning as tooltip and screen-reader text; Last seen how long ago as
- *   plain text, its full time the tooltip (`LastSeenCell`). Status is the
- *   liveness, so a collector gone unseen never shows a green "In sync".
- *   Configuration sits after Status, before Version: Status keeps its
- *   place, and the sync sits beside the version it is about;
- * - Version, centred: "{configurationName} @v{n}" linked to the editor for
+ *   `CollectorStatusCell`), then a Configuration column from its `drift`
+ *   (In sync, Pending pickup, Apply failed, Drifted, Nothing assigned:
+ *   `CollectorConfigurationCell`), each a dot and words with its meaning as
+ *   tooltip and screen-reader text; Last seen how long ago as plain text,
+ *   its full time the tooltip (`LastSeenCell`). Status is the liveness, so
+ *   a collector gone unseen never shows a green "In sync". Configuration
+ *   sits after Status, before Version: Status keeps its place, and the sync
+ *   sits beside the version it is about;
+ * - Version, centered: "{configurationName} @v{n}" linked to the editor for
  *   a published version served (`PublishedVersionLink`, as the Groups
- *   tab's), "Deleted configuration" for a published version the platform
- *   no longer holds, a dash for nothing served (no "Imported"); each
- *   form's meaning (`VERSION_MEANINGS`: it is what the collector runs,
- *   which a pin or a group's version doesn't change until it is sent) as
- *   tooltip text on a focusable trigger and screen-reader text, as Status,
- *   Configuration and Last seen; the version's one tooltip holds its full
- *   text, then its meaning;
+ *   tab's), "Deleted configuration" for a published version the platform no
+ *   longer holds, a dash for nothing served; each form's meaning
+ *   (`VERSION_MEANINGS`: it is what the collector runs, which a pin or a
+ *   group's version doesn't change until it is sent) as tooltip text on a
+ *   focusable trigger and screen-reader text, as Status, Configuration and
+ *   Last seen; the version's one tooltip holds its full text, then its
+ *   meaning;
  * - no collector, group or fleet name, IP address or version label in an
  *   attribute (no `title`, no `aria-label`): each row's buttons and checkbox
  *   are named by `aria-labelledby` pointing at hidden text ("Edit {name}",

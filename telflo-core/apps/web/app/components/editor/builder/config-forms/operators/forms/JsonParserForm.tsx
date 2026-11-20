@@ -9,8 +9,8 @@ import { TimestampConfigSection } from "../shared/TimestampConfigSection.js";
  * The `json_parser` operator's form, over the card's scope (the plug-in
  * contract in `./index.ts`). Ids are the card's (`op-<index>-json-…`).
  *
- * Changed: unset Parse From and Parse To show the collector's defaults,
- * `body` and `attributes` (`helper/parser.go:26-27`), as FieldSelector's
+ * Unset Parse From and Parse To show the collector's defaults, `body` and
+ * `attributes` (`helper/parser.go:26-27`), as FieldSelector's
  * placeholders and the hints' "Default …", not as values. Parse To is
  * rootable (`helper/parser.go:35`: a bare `attributes` is a field there).
  * Unset "Parse integers" shows unticked, the collector's `false`

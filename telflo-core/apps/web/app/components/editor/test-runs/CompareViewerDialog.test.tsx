@@ -258,7 +258,7 @@ async function openEditorFrom(chip: string) {
 }
 
 describe("Compare's footer", () => {
-  it("says 'Detected 3 candidate rules:' and offers each as a chip, in its words and order, a group labelled by that line, each titled 'Create an OTTL rule asserting this change'; the output's several batches and the NDJSON input read", async () => {
+  it("says 'Detected 3 candidate rules:' and offers each as a chip, in its words and order, a group labeled by that line, each titled 'Create an OTTL rule asserting this change'; the output's several batches and the NDJSON input read", async () => {
     const { dialog } = await openCompare();
 
     const line = within(dialog).getByText(/^Detected/);

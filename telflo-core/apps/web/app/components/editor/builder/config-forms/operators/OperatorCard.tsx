@@ -25,8 +25,6 @@ import type { ValueView } from "~/lib/graph/value-view.js";
  *   type's form (`OPERATOR_FORMS`), when it has one.
  * - Every id is the card's: `op-<index>-<field>` (the type forms
  *   take theirs from `useOperatorId`).
- *
- * Fixed:
  * - On Error offers the collector's four values, `send`, `send_quiet`,
  *   `drop`, `drop_quiet` (`helper/transformer.go:43-51, 214-224`), as "Send
  *   (continue)", "Send quietly (continue, debug log)", "Drop entry", "Drop

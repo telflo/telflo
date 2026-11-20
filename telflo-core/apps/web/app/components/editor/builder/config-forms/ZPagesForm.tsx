@@ -1,9 +1,9 @@
 import { TextField } from "./form-context.js";
 
 /*
- * The zPages extension's form, over the form's fields. Changed: the default
- * shown is the collector's, `localhost:55679` (zpages `createDefaultConfig`,
- * core v0.162.0), not `0.0.0.0:55679`.
+ * The zPages extension's form, over the form's fields. The default shown is
+ * the collector's, `localhost:55679` (zpages `createDefaultConfig`, core
+ * v0.162.0).
  */
 
 export function ZPagesForm() {

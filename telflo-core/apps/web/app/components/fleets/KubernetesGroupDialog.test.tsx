@@ -68,7 +68,7 @@ import {
  * replicas, volumes), the name and namespace rules (with the contracts' words
  * and limits), and the volumes' recipes and warnings
  * (`VolumesEditor.test.tsx`). `GroupDialog.test.tsx` covers the picker's and
- * the refusals' shared behaviour in depth; the cases here pin this dialog's
+ * the refusals' shared behavior in depth; the cases here pin this dialog's
  * own use of them.
  */
 

@@ -16,9 +16,8 @@ import { TLSInsecureCheckbox } from "./shared/TLSInsecureCheckbox.js";
  * compression outside gzip/none (zstd, snappy …) shows as an extra
  * option, as written.
  *
- * Changed: the TLS section is the client variant ("Customize TLS for OTLP
- * gRPC", no Client CA fields), and the `insecure` box says what it does
- * on gRPC.
+ * The TLS section is the client variant ("Customize TLS for OTLP gRPC", no
+ * Client CA fields), and the `insecure` box says what it does on gRPC.
  */
 
 const COMPRESSIONS = [

@@ -36,14 +36,12 @@ import type { ValuePath } from "~/lib/graph/text-edits.js";
  * - The drag overlay draws the dragged card's header only: a whole card
  *   would draw every field's id twice.
  *
- * Fixed: the input row names the receiver's source ("from file", "from
- * journal", "from syslog"; not "from file" for every receiver), and no arrow
- * is drawn after a router: a router sends each entry where its routes say
- * (`transformer/router/transformer.go:90-120`), never on to the next card or
- * to the output by position.
- * Changed: `operators` that isn't a list is read-only, with
- * `UNSHOWABLE_VALUE_MESSAGE` in place of the cards (no count; Add Operator
- * disabled).
+ * The input row names the receiver's source ("from file", "from journal",
+ * "from syslog"), and no arrow is drawn after a router: a router sends each
+ * entry where its routes say (`transformer/router/transformer.go:90-120`),
+ * never on to the next card or to the output by position. `operators` that
+ * isn't a list is read-only, with `UNSHOWABLE_VALUE_MESSAGE` in place of the
+ * cards (no count; Add Operator disabled).
  */
 
 export type OperatorSource = "file" | "journal" | "syslog";

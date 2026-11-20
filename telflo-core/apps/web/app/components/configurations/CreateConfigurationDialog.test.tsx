@@ -110,7 +110,7 @@ function pendingCreate() {
   return { createConfiguration, finish: () => finish() };
 }
 
-/** The Distribution dropdown, once the catalogue has been read. */
+/** The Distribution dropdown, once the catalog has been read. */
 function distributionField() {
   return screen.findByRole("combobox", { name: "Distribution" });
 }
@@ -172,7 +172,7 @@ describe("CreateConfigurationDialog", () => {
     expect(description).toHaveAttribute("maxlength", "500");
     expect(screen.getByRole("button", { name: "Create" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Cancel" })).toBeNull();
-    // The distribution is picked here, the catalogue's default preselected.
+    // The distribution is picked here, the catalog's default preselected.
     expect(await distributionField()).toHaveTextContent(/^Otel Contrib$/);
     expect(screen.getByText(DISTRIBUTION_LOCK_NOTE)).toBeInTheDocument();
     expect(screen.queryByText(/set by this flow/)).toBeNull();
@@ -535,7 +535,7 @@ describe("CreateConfigurationDialog", () => {
       expect(await distributionField()).toHaveTextContent(/^Otel Contrib$/);
     });
 
-    it("reads the catalogue once for the page, and again on reopening after a failure", async () => {
+    it("reads the catalog once for the page, and again on reopening after a failure", async () => {
       const read = vi
         .spyOn(apiClient, "getCollectorDistributions")
         .mockRejectedValueOnce(new ApiError("network_error", "Could not reach the server. Check your connection."))
@@ -729,7 +729,7 @@ describe("CreateConfigurationDialog", () => {
       expect(screen.getByLabelText("Description")).toHaveValue("");
     });
 
-    it("moves a copy of a flow on a pin the catalogue no longer offers to the default, and says so", async () => {
+    it("moves a copy of a flow on a pin the catalog no longer offers to the default, and says so", async () => {
       vi.spyOn(apiClient, "getFlows").mockResolvedValue({
         flows: [makeFlow({ collectorVersion: RETIRED_VERSION })],
       });
@@ -748,7 +748,7 @@ describe("CreateConfigurationDialog", () => {
       expect(createConfiguration.mock.calls[0]![1]).toMatchObject({ collectorVersion: "0.162.0" });
     });
 
-    it("sends the flow's pin with the catalogue unread, and toasts the API's refusal of it", async () => {
+    it("sends the flow's pin with the catalog unread, and toasts the API's refusal of it", async () => {
       vi.spyOn(apiClient, "getCollectorDistributions").mockRejectedValue(
         new ApiError("network_error", "Could not reach the server. Check your connection."),
       );
@@ -763,7 +763,7 @@ describe("CreateConfigurationDialog", () => {
       await browse(user);
       await user.click(await screen.findByRole("heading", { level: 3, name: TAIL_SAMPLING.name }));
 
-      // The mark and label from the id, with the catalogue unread.
+      // The mark and label from the id, with the catalog unread.
       expect(await screen.findByText(/set by this flow/)).toHaveTextContent(
         "Otel Contrib · collector v0.155.0 — set by this flow",
       );

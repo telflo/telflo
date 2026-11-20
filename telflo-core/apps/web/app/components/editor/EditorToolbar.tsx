@@ -46,10 +46,10 @@ export const RENAME_FAILED_MESSAGE = "Failed to update configuration";
  * below them (`VersionSelect`).
  *
  * How it behaves:
- * - the pencil also shows on keyboard focus, and is labelled "Rename
+ * - the pencil also shows on keyboard focus, and is labeled "Rename
  *   configuration";
  * - the name has no `title` (attributes aren't masked in replay), and the
- *   rename field is labelled with fixed text, "Configuration name";
+ *   rename field is labeled with fixed text, "Configuration name";
  * - Save is disabled while a save is under way, as well as while clean;
  * - a failed rename toasts the refusal's message, or "Failed to update
  *   configuration", and keeps the field open with what was typed. A 404

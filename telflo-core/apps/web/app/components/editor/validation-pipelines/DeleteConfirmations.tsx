@@ -20,13 +20,12 @@ import { ruleDisplayName } from "./validation-display.js";
  * pipeline confirmation, and one for a rule, which is never deleted at
  * once.
  *
- * Differences, as the Suites subtab's
- * (`../test-suites/DeleteConfirmations.tsx`): Delete keeps the dialog open,
- * its words "Deleting...", until the API answers, and a failure toasts the
- * API's words and keeps it open, not closed at the click; one already gone
- * ("not found": another tab deleted it) toasts the API's words and closes,
- * the item dropped; a session that ended toasts nothing. The pipeline's name
- * and the rule's are text in the description, inside the dialog's
+ * As the Suites subtab's (`../test-suites/DeleteConfirmations.tsx`): Delete
+ * keeps the dialog open, its words "Deleting...", until the API answers, and
+ * a failure toasts the API's words and keeps it open; one already gone ("not
+ * found": another tab deleted it) toasts the API's words and closes, the
+ * item dropped; a session that ended toasts nothing. The pipeline's name and
+ * the rule's are text in the description, inside the dialog's
  * `ph-no-capture` (the dialog is a portal, outside the panel's block), never
  * an attribute. Where the focus goes as it closes is the caller's
  * (`onCloseAutoFocus`): with no Radix trigger, Radix's own return would

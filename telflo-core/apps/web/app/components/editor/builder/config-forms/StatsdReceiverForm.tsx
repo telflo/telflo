@@ -29,28 +29,28 @@ import type { ValueView } from "~/lib/graph/value-view.js";
  *
  * - Transport is native radios (`RadioField`), with the collector's full set
  *   (`internal/transport/transport.go:17- 25`): udp, udp4, udp6, tcp, tcp4,
- *   tcp6 and unixgram, not just UDP, TCP and Unix Socket. Unset shows udp,
- *   the collector's default (`factory.go:40-43`).
- * - Changed (as netflow's scheme switch): a transport switch sets the endpoint
- *   to the transport's default (`localhost:8125`, or
+ *   tcp6 and unixgram. Unset shows udp, the collector's default
+ *   (`factory.go:40-43`).
+ * - As netflow's scheme switch does, a transport switch sets the endpoint to
+ *   the transport's default (`localhost:8125`, or
  *   `/var/run/statsd-receiver.sock` for a Unix socket) only while the endpoint
  *   is unset or one of those; an endpoint of the person's own is kept.
- * - Fixed: Unix Socket writes `socket_permissions` plain, `0622`, and only
- *   when the text has none, never the string `"0622"`, which the collector
- *   refuses: the field is an `os.FileMode` (`config.go:34`) and confmap has no
+ * - Unix Socket writes `socket_permissions` plain, `0622`, and only when the
+ *   text has none, never the string `"0622"`, which the collector refuses: the
+ *   field is an `os.FileMode` (`config.go:34`) and confmap has no
  *   string-to-number hook. Plain `0622` is octal to the collector's YAML
  *   reader (mode 0o622, the default, `factory.go:24`). Socket Permissions is a
  *   number field: what is typed is written plain when it reads as a number
  *   (`0644`). While the text holds a quoted number, a hint says so and
  *   retyping the same characters writes them plain (`NumberField`'s
  *   `writeSame`, as docker_stats' API Version).
- * - Changed: Observer Type switched away from histogram removes the mapping's
+ * - Observer Type switched away from histogram removes the mapping's
  *   `histogram` block, and away from summary its `summary` block, in the same
  *   change, with a toast: the collector refuses either beside another
  *   observer (`config.go:90-105`).
- * - Changed: unset shows the collector's defaults as placeholders and
- *   "Default" hints: Endpoint localhost:8125 (`factory.go:21`), Aggregation
- *   Interval 60s (`:22`), Socket Permissions 0622 (`:24`), Max Size 160
+ * - Unset shows the collector's defaults as placeholders and "Default"
+ *   hints: Endpoint localhost:8125 (`factory.go:21`), Aggregation Interval
+ *   60s (`:22`), Socket Permissions 0622 (`:24`), Max Size 160
  *   (`internal/parser/ statsd_parser.go:254-256` with go-expohisto's
  *   default), Percentiles 0, 10, 50, 90, 95, 100
  *   (`internal/parser/metric_translator.go:20`). Cleared fields remove their

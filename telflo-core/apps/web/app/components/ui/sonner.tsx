@@ -7,10 +7,10 @@ type ToasterProps = Omit<React.ComponentProps<typeof Sonner>, "theme"> & {
   theme: Theme
 }
 
-// sonner's own unlayered rules set each toast's colours from its
-// `--normal-*` variables and beat the utility classes below, in every theme.
-// So the toasts take the app's popover tokens through those variables, set
-// on the toaster.
+// sonner's own unlayered rules set each toast's colors from its `--normal-*`
+// variables and beat the utility classes below, in every theme. So the
+// toasts take the app's popover tokens through those variables, set on the
+// toaster.
 const APP_TOKENS = {
   "--normal-bg": "var(--color-popover)",
   "--normal-text": "var(--color-popover-foreground)",

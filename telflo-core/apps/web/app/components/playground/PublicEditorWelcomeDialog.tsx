@@ -35,7 +35,7 @@ function markPublicEditorWelcomeDone(): void {
 /*
  * The public editor's WelcomeDialog: "Welcome to Telflo", Start from Scratch
  * or Use a Template, and "Skip tour" (the editor tour is the choice's second
- * half). It honours its "done" flag, so it shows only until a choice is made:
+ * half). It honors its "done" flag, so it shows only until a choice is made:
  * one localStorage word, `telflo-public-editor-welcome-done`, read after
  * mount (the page renders on the server too) and written once a choice is
  * made, both in effects. Until a choice it can't be dismissed: no close

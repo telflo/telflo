@@ -251,7 +251,7 @@ describe("CollectorsTable's columns", () => {
   });
 
   describe("Version: what was served", () => {
-    it("centres the column, its header and its cells", () => {
+    it("centers the column, its header and its cells", () => {
       renderTable([collector(), collector({ id: "c6d7e8f9-0a1b-4c2d-b3e4-f5a6b7c8d9e0", name: "web-02", served: null })]);
       const header = screen.getAllByRole("columnheader").find((each) => each.textContent === "Version")!;
       expect(header).toHaveClass("text-center");

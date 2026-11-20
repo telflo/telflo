@@ -7,13 +7,12 @@ import type { OttlContext, OttlQuantifier, TestRunSignal, ValidationRuleCount, V
  *
  * These exact strings are load-bearing two ways here: the ottl-evaluator runs
  * them, and recognizeBuilderShapes parses them back into the builder's
- * fields. Change them only in lockstep. (No migration converts the retired
- * record_count and record_attribute rows: the retired kinds are gone.)
+ * fields. Change them only in lockstep.
  *
- * Differences: the types are the platform's contracts' (`ValidationRuleOttl`,
+ * The types are the platform's contracts' (`ValidationRuleOttl`,
  * `ValidationRuleCount`); the builder's scope and operator are this file's
- * own, not a retired `record_attribute` rule type's; the editor recognizes a
- * rule through recognizeBuilderRule, which also checks its context (new).
+ * own; the editor recognizes a rule through recognizeBuilderRule, which also
+ * checks its context.
  *
  * The string escaping is ottlStringLiteral's. Escaping only `\` and `"` would
  * put a control character into the literal raw, and writing numbers with

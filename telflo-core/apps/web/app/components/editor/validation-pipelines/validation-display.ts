@@ -7,14 +7,11 @@ import type { ValidationRule, ValidationRuleCount, ValidationRuleKind, Validatio
  * `Record<ValidationRuleKind, string>`, so a new kind is flagged wherever
  * it is missed.
  *
- * Differences: only the five kinds: the nine retired ones (the JSON match,
- * record count, record attribute, cardinality and the diff kinds), and
- * their summaries, aren't ported. A rule's OTTL is the contracts'
- * structured `ottl`, not a JSON string, so an unreadable payload can't
- * happen; and one display name serves a rule and a run's frozen copy of it
- * (`ValidationRuleSnapshot` has the same fields). The texts these return
- * are configuration text: shown as text inside `ph-no-capture`, never put
- * in an attribute outside it.
+ * A rule's OTTL is the contracts' structured `ottl`, so an unreadable payload
+ * can't happen; and one display name serves a rule and a run's frozen copy of
+ * it (`ValidationRuleSnapshot` has the same fields). The texts these return
+ * are configuration text: shown as text inside `ph-no-capture`, never put in
+ * an attribute outside it.
  */
 
 /** What these helpers read of a rule, or of a run's copy of one. */

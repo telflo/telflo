@@ -13,7 +13,7 @@ export const DISTRIBUTION_LOCKED_TOOLTIP = "Set when this configuration was crea
 /** The name of the mark that holds a deprecated pin's note (its tooltip): fixed text. */
 export const DEPRECATION_NOTE_LABEL = "Deprecation note";
 
-/** How a collector version is shown: `v0.162.0`, and `v0.155.0 (deprecated)` for a pin the catalogue retired. */
+/** How a collector version is shown: `v0.162.0`, and `v0.155.0 (deprecated)` for a pin the catalog retired. */
 export function collectorVersionText(version: string, deprecated: boolean): string {
   return `v${version}${deprecated ? " (deprecated)" : ""}`;
 }
@@ -33,9 +33,9 @@ export function collectorVersionText(version: string, deprecated: boolean): stri
  *   at creation)" (the version picker's lock's pattern), takes the focus,
  *   and on hover or focus its tooltip says "Set when this configuration was
  *   created."
- * - The version is a dropdown of the versions the catalogue offers for the
+ * - The version is a dropdown of the versions the catalog offers for the
  *   distribution, newest first (the API's order), each `v0.162.0` with its
- *   catalogue label (where it says more than that) and description, and the
+ *   catalog label (where it says more than that) and description, and the
  *   default marked "Default". A pick is on screen only: the version is
  *   unsaved (the store's `setCollectorVersion`; the toolbar's "Unsaved"),
  *   and Save stores it with the text.
@@ -43,24 +43,23 @@ export function collectorVersionText(version: string, deprecated: boolean): stri
  *   changes it but a pick of another version (never silently moved to the
  *   newest). The saved pin's deprecation is the server's
  *   (`collectorVersionDeprecated`, as fresh as the last load, save or
- *   re-read), never the catalogue's, read once with the page, which may not
- *   list a release a teammate picked since; a pick's is the catalogue's.
- *   The catalogue's note follows it, behind an info mark that takes the
- *   focus and shows the note as its tooltip (as the distribution's lock
- *   does), so the keyboard reaches it even while the dropdown is disabled
- *   on a published version. While it is the pin it is listed first, with
- *   its note; once another is picked it is no longer offered, so it can't
- *   be picked again (Discard puts it back).
+ *   re-read), never the catalog's, read once with the page, which may not
+ *   list a release a teammate picked since; a pick's is the catalog's. The
+ *   catalog's note follows it, behind an info mark that takes the focus
+ *   and shows the note as its tooltip (as the distribution's lock does),
+ *   so the keyboard reaches it even while the dropdown is disabled on a
+ *   published version. While it is the pin it is listed first, with its
+ *   note; once another is picked it is no longer offered, so it can't be
+ *   picked again (Discard puts it back).
  * - On a published version it is read-only with the rest of the editor: the
  *   dropdown is disabled, and the store refuses a pick.
- * - Until the catalogue has been read (or when it couldn't be), the pin is
+ * - Until the catalog has been read (or when it couldn't be), the pin is
  *   shown as text, and the distribution by its id's mark and name.
  * There is no public picker and no ClickStack flag.
  *
- * Privacy: every string here is the catalogue's (labels, descriptions,
- * notes), public data, so they may be in a tooltip or a name; nothing a
- * person typed (the configuration's name, a version's label) is in any
- * attribute.
+ * Privacy: every string here is the catalog's (labels, descriptions, notes),
+ * public data, so they may be in a tooltip or a name; nothing a person typed
+ * (the configuration's name, a version's label) is in any attribute.
  */
 export function CollectorVersionSelect() {
   const distributionId = useEditorStore((state) => state.configuration?.collectorDistribution ?? null);
@@ -78,8 +77,8 @@ export function CollectorVersionSelect() {
   const distribution = findDistribution(distributions, distributionId);
   const offered: readonly CollectorVersionOffer[] = distribution?.versions ?? [];
   const isOffered = offered.some((offer) => offer.version === pin);
-  // The saved pin's deprecation is the server's, fresher than the catalogue
-  // read with the page; a pick's is the catalogue's.
+  // The saved pin's deprecation is the server's, fresher than the catalog
+  // read with the page; a pick's is the catalog's.
   const isSavedPin = pin === savedPin;
   const deprecated = isSavedPin ? savedPinDeprecated : distribution !== undefined && !isOffered;
   const note = deprecated && isSavedPin ? savedPinNote : null;
@@ -164,7 +163,7 @@ export function CollectorVersionSelect() {
           </SelectContent>
         </Select>
       ) : (
-        // The catalogue unread, or no versions offered: the pin as text.
+        // The catalog unread, or no versions offered: the pin as text.
         <span id={shownId} className="font-mono text-xs text-muted-foreground">
           {shown}
         </span>
@@ -178,7 +177,7 @@ export function CollectorVersionSelect() {
  * A deprecated pin's note: an info mark named "Deprecation note" that takes
  * the focus, its tooltip the note, as the distribution's lock explains
  * itself. It is its own stop, so the keyboard reaches it while the dropdown
- * is disabled. The note is the catalogue's (public text).
+ * is disabled. The note is the catalog's (public text).
  */
 function DeprecationNote({ note }: { note: string }) {
   return (

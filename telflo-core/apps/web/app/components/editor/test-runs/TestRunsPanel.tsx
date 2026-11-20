@@ -20,7 +20,7 @@ interface TestRunsPanelProps {
   takeFocus?: () => boolean;
 }
 
-/** A centred message under the toolbar, the empty states. */
+/** A centered message under the toolbar, the empty states. */
 function Placeholder({ children }: { children: ReactNode }) {
   return (
     <div className="flex-1 flex items-center justify-center">
@@ -34,7 +34,6 @@ function Placeholder({ children }: { children: ReactNode }) {
  * TestingTab). The list over the results, flex-[2] over flex-[3]; the runs are
  * the store's, polled while any is queued or running.
  *
- * Differences:
  * - the list is everyone's runs that the person can see, a teammate's
  *   included, refreshed while any is in flight; the "Created" time is when
  *   the run was queued;
@@ -45,8 +44,7 @@ function Placeholder({ children }: { children: ReactNode }) {
  * - ↺ shows on every run, since each keeps its own input, a file id or
  *   not; it is held while Play is;
  * - once the polling stops on failures, "Failed to refresh test runs" with
- *   Retry, never a single toast and a silent stop after 60 s; a
- *   failed first read says "Failed to load test runs" at once, and a refusal
+ *   Retry; a failed first read says "Failed to load test runs" at once, and a refusal
  *   the API's own words, each with Retry;
  * - each row's accessible name is its own text: the time, the "Suite ›
  *   Configuration" breadcrumb when it has one, and the status;

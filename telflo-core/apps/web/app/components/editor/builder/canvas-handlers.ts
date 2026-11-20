@@ -12,7 +12,7 @@ import type { Graph, OTelEdge, OTelNode, PaletteComponent } from "~/lib/graph/ty
  * The canvas's handlers, outside the component, so they are tested without
  * React Flow's pointer events: what a drop carries and where it lands, a
  * connection and its warning, the edges the canvas draws, the minimap's
- * colours, and the viewport remembered per version. The graph's changes
+ * colors, and the viewport remembered per version. The graph's changes
  * themselves are the editor store's, on the pure functions of
  * `lib/graph/canvas-operations.ts`.
  */
@@ -84,8 +84,8 @@ const MINIMAP_COLORS: Readonly<Record<string, string>> = {
 };
 
 /**
- * The minimap's fill: a group in its pipeline's colour, a component in its
- * type's. From the type and the colour only, never a name.
+ * The minimap's fill: a group in its pipeline's color, a component in its
+ * type's. From the type and the color only, never a name.
  */
 const confined = new WeakMap<OTelNode, OTelNode>();
 

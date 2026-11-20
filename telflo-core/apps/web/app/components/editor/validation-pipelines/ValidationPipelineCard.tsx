@@ -40,20 +40,17 @@ const ICON_BUTTON =
  * editor's text ("pipeline not found in current YAML") stays fully editable:
  * runs only pick its rules up once the pipeline is there again.
  *
- * Differences:
  * - the stale warning compares the pipeline's name with the editor's graph's
  *   pipelines, its current text's, as the runs test the text on screen;
- * - the rules are read each time the card mounts, not once on the first
- *   expand; a failed read shows inline with Retry ("Failed to load
- *   validation rules", or the API's words), not a toast;
+ * - the rules are read each time the card mounts; a failed read shows inline
+ *   with Retry ("Failed to load validation rules", or the API's words);
  * - the expand button and the buttons are siblings: Delete is never inside
  *   the expand button;
  * - each row's Edit and Delete are named by hidden text inside the panel's
  *   `ph-no-capture` block, "Edit rule 2: SSN guard" (the row's place, and the
- *   rule's name, else its summary; `aria-labelledby`), not all "Edit rule"
- *   and "Delete rule"; Delete validation pipeline is described by the
- *   pipeline's name (`aria-describedby`);
- * - a rule's delete is confirmed (never at once);
+ *   rule's name, else its summary; `aria-labelledby`); Delete validation
+ *   pipeline is described by the pipeline's name (`aria-describedby`);
+ * - a rule's delete is confirmed;
  * - closing the rule editor gives the focus back to its opener (Edit, Add
  *   Validation Rule), and closing the picker to "Add from regex library"; a
  *   rule deleted gives it to the next row's Edit, else the previous row's,

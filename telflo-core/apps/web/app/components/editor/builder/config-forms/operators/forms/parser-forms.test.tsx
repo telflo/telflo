@@ -854,7 +854,7 @@ describe("time_parser: presets per layout type, and the switch", () => {
     return options;
   }
 
-  it("strptime offers six presets, the first labelled with what it writes", async () => {
+  it("strptime offers six presets, the first labeled with what it writes", async () => {
     const user = renderParsers(TIME_BASE("strptime", "'%Y-%m-%d %H:%M:%S'"));
     expect(field(TIME, "time-layout-preset")).toHaveTextContent("%Y-%m-%d %H:%M:%S");
     expect(await optionsOf(user)).toEqual([

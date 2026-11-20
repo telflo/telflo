@@ -11,7 +11,6 @@ import { OWN_KEYS_PROPS } from "~/hooks/useUndoRedo.js";
  * 26 types. Choosing a type hands it to the pipeline, which appends the
  * type's seed (`operatorSeed`) as one item, and closes the dialog.
  *
- * Changed:
  * - every type shows its own icon (the catalog's), never a `FileText`
  *   fallback;
  * - the dialog's content spreads `OWN_KEYS_PROPS`: it renders in `<body>`,

@@ -23,8 +23,8 @@ import {
  * The redaction processor's form, over the form's fields. Collector claims
  * are contrib v0.162.0's `processor/redactionprocessor`.
  *
- * - Fixed: Hash Function offers the collector's set: None (asterisk masking)
- *   removes the key, MD5, SHA-1, SHA-3, HMAC-SHA256 and HMAC-SHA512
+ * - Hash Function offers the collector's set: None (asterisk masking) removes
+ *   the key, MD5, SHA-1, SHA-3, HMAC-SHA256 and HMAC-SHA512
  *   (`config.go:20-29, 97-124`; not `sha256`, which `UnmarshalText` refuses).
  *   The HMAC options are disabled unless the text has a non-empty `hmac_key`
  *   (`config.go:126-147` refuses an HMAC hash without one, `""` included,
@@ -32,19 +32,18 @@ import {
  *   its value never reaches the page. The collector reads the value in any
  *   case (`strings.ToLower`, `config.go:102`), so `SHA1` shows as SHA-1; a
  *   value it refuses (`sha256`, `none`) shows as an extra option, as written.
- * - Changed: Quick Add Template's Add writes the pattern string
- *   (`BlockedValues []string`, `config.go:72`), not `{pattern, name}`. A
- *   duplicate is found by its string in the text, read when Add is clicked,
- *   after the fields' held edits are written (a row's typing is counted, not
- *   overwritten). Blocked Values is `PatternListField`: the name badge is
- *   derived from the templates by exact pattern, with no Remove name.
- * - Fixed: the lists' Add holds a row (never `""`: an empty blocked key
- *   pattern masks every value, an empty allowed value turns masking off;
- *   Go's `regexp` matches `""` everywhere,
- *   `processor.go:362-371, 642-653`).
- * - Changed: Summary unset shows "Silent (no summary)" and "Default silent"
- *   (anything but `debug` or `info` adds nothing, `processor.go:423-443`);
- *   URL Sanitization shows unticked when unset (off by default,
+ * - Quick Add Template's Add writes the pattern string
+ *   (`BlockedValues []string`, `config.go:72`). A duplicate is found by its
+ *   string in the text, read when Add is clicked, after the fields' held
+ *   edits are written (a row's typing is counted, not overwritten). Blocked
+ *   Values is `PatternListField`: the name badge is derived from the
+ *   templates by exact pattern, with no Remove name.
+ * - The lists' Add holds a row (never `""`: an empty blocked key pattern
+ *   masks every value, an empty allowed value turns masking off; Go's
+ *   `regexp` matches `""` everywhere, `processor.go:362-371, 642-653`).
+ * - Summary unset shows "Silent (no summary)" and "Default silent" (anything
+ *   but `debug` or `info` adds nothing, `processor.go:423-443`); URL
+ *   Sanitization shows unticked when unset (off by default,
  *   `factory.go:31-33`; created only when enabled, `processor.go:89-95`) and
  *   URL Attributes has no default (`internal/url/sanitizer.go:17-44`) and
  *   says span names and log bodies are sanitized either way
@@ -53,11 +52,10 @@ import {
  *   (`processor.go:362-371, 502-510`); the fail-closed alert says ignored
  *   keys are kept and a map log body's fields go too
  *   (`processor.go:191-242, 334-389`).
- * - Changed: a Valkey row after Redis (`internal/db/config.go:9`).
- * - Dropped: OpenSearch's and Elasticsearch's Attributes, which
- *   the collector never reads (`internal/db/db.go:138-169`); while either is
- *   enabled, the hint `SPAN_NAMES_HINT`. A key already in the text is left
- *   alone.
+ * - A Valkey row after Redis (`internal/db/config.go:9`).
+ * - OpenSearch and Elasticsearch have no Attributes field: the collector
+ *   never reads one (`internal/db/db.go:138-169`); while either is enabled,
+ *   the hint `SPAN_NAMES_HINT`. A key already in the text is left alone.
  *
  * Ids are fixed per field; the template select's values are the library's
  * names, constants.

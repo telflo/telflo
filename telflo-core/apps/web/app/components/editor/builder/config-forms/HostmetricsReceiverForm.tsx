@@ -13,18 +13,18 @@ import type { ValueView } from "~/lib/graph/value-view.js";
  * The host metrics receiver's form, over the form's fields: each field writes
  * its own key.
  *
- * - Kept: a scraper is on while its key is under `scrapers`, a bare `cpu:`
- *   included (the collector configures every key it finds there with the
- *   scraper's defaults, `receiver/hostmetricsreceiver/ config.go:62-93`).
- *   Ticking one writes `{}`, and load `{cpu_average: false}`; unticking
- *   removes the key. The last one can be unticked: the collector refuses a
- *   receiver with no scraper (`config.go:43-45`), which the config validation
- *   reports; the form doesn't block it. A scraper whose value can't hold
- *   settings is read-only with `UNSHOWABLE_VALUE_MESSAGE`, and shows no
- *   section. When `scrapers` itself isn't a mapping, no box is ticked (none
- *   can be said to be on), all are disabled, and the hint shows once.
- * - Fixed: each scraper's filters are the shared `IncludeExcludeSection`: the
- *   first item is written with `match_type: strict` (with none, the collector
+ * - A scraper is on while its key is under `scrapers`, a bare `cpu:` included
+ *   (the collector configures every key it finds there with the scraper's
+ *   defaults, `receiver/hostmetricsreceiver/ config.go:62-93`). Ticking one
+ *   writes `{}`, and load `{cpu_average: false}`; unticking removes the key.
+ *   The last one can be unticked: the collector refuses a receiver with no
+ *   scraper (`config.go:43-45`), which the config validation reports; the
+ *   form doesn't block it. A scraper whose value can't hold settings is
+ *   read-only with `UNSHOWABLE_VALUE_MESSAGE`, and shows no section. When
+ *   `scrapers` itself isn't a mapping, no box is ticked (none can be said to
+ *   be on), all are disabled, and the hint shows once.
+ * - Each scraper's filters are the shared `IncludeExcludeSection`: the first
+ *   item is written with `match_type: strict` (with none, the collector
  *   refuses a list that has items,
  *   `internal/filter/filterset/ config.go:37-48`), include and exclude are
  *   kept together (the collector builds both,
@@ -41,7 +41,7 @@ import type { ValueView } from "~/lib/graph/value-view.js";
  *   placeholders and hints; the boxes unticked (every scraper's booleans
  *   default to false: `loadscraper/factory.go:21-25`,
  *   `processscraper/factory.go:44-48`, `filesystemscraper/factory.go:22-26`).
- * - Changed: clearing Root Path removes the key, never writing `""` (which
+ * - Clearing Root Path removes the key, never writing `""` (which
  *   the collector reads as unset, `config.go:25`).
  * - The row markup: the scraper and described boxes'
  *   `flex items-start space-x-3` rows with a `grid gap-1 leading-none`

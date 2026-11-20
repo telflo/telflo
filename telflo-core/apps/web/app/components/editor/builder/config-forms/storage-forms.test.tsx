@@ -1634,7 +1634,7 @@ describe("S3 receiver (10), S3 exporter (5) and ClickHouse exporter (4) cases", 
   };
 
   // awss3-receiver.test.ts 1–3.
-  it("receiver 1: is registered as a receiver, labelled AWS S3", () => {
+  it("receiver 1: is registered as a receiver, labeled AWS S3", () => {
     expect(findPaletteEntry("receiver", "awss3")?.label).toBe("AWS S3");
   });
   it("receiver 2: seeds the continuous (SQS) mode, not a time range that would go stale", () => {

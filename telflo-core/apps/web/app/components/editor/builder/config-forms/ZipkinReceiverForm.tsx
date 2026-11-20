@@ -7,13 +7,13 @@ import { TLSConfigSection } from "./shared/TLSConfigSection.js";
  * The Zipkin receiver's form, over the form's fields: each field writes its
  * own key. Collector claims are contrib v0.162.0's `receiver/zipkinreceiver`.
  *
- * - Changed: Endpoint unset shows the collector's default, `localhost:9411`
+ * - Endpoint unset shows the collector's default, `localhost:9411`
  *   (`factory.go:21`), as the placeholder and the "Default …" hint (the
  *   palette's seed, `0.0.0.0:9411`, stays). Cleared, the key is removed
  *   (never `""`).
- * - Kept: Parse String Tags writes `true` or `false`, unticked while unset
- *   (`factory.go:42`); the box sits beside its label and description in
- *   one row (the box moved down to sit centred on the label's first line).
+ * - Parse String Tags writes `true` or `false`, unticked while unset
+ *   (`factory.go:42`); the box sits beside its label and description in one
+ *   row (the box moved down to sit centered on the label's first line).
  * - Security: the shared server TLS section at `tls` (HTTP) and CORS at `cors`
  *   (`confighttp.ServerConfig` squashed, `config.go:12-17`).
  *

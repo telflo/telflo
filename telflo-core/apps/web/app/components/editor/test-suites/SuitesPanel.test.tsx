@@ -1643,7 +1643,7 @@ describe("the question, the hold and the focus around a Play", () => {
       await waitFor(() => expect(document.activeElement).toBe(tab("Suites")));
     });
 
-    it("goes back to the Run test pressed when the question is cancelled (nothing queued)", async () => {
+    it("goes back to the Run test pressed when the question is canceled (nothing queued)", async () => {
       serveApi();
       const { head } = serveRuns();
       head.mockResolvedValue(RAW_HEAD);

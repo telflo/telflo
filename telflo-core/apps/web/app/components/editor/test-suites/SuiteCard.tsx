@@ -35,15 +35,14 @@ const PLAY_BUTTON = `${ICON_BUTTON} disabled:opacity-40 disabled:cursor-not-allo
  * its definitions, each with Run test and Delete, and "Add test
  * configuration" under them.
  *
- * Differences:
- * - the definitions are read each time the card expands, not once; a failed
+ * - the definitions are read each time the card expands; a failed
  *   read shows inline with Retry ("Failed to load test configurations", or the
  *   API's words);
  * - a definition's delete is confirmed;
  * - Play all in parallel, Play all serially and each Run test are held,
  *   titled "Another run is in progress", by the one hold over every Play
  *   (the person's own run on the version, a Play all under way, a single
- *   run starting), not only while a polled run is in flight;
+ *   run starting);
  * - in the playground, the Play alls, Edit suite, Delete suite, a
  *   definition's Run test and delete, and Add test configuration open the
  *   sign-up prompt at their buttons (`useLockedAction`); expanding a

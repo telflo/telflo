@@ -54,7 +54,7 @@ export const CHIP_VALID = "Yaml is Valid";
 export const CHIP_UNCHECKED = "Validation unavailable — YAML not checked.";
 export const CHIP_ERRORS = "Errors must be corrected.";
 
-/** The chip's text and colours for an outcome; none while idle. */
+/** The chip's text and colors for an outcome; none while idle. */
 function chipOf(validation: CollectorValidationOutcome): { text: string; className: string } | null {
   switch (validation.status) {
     case "idle":

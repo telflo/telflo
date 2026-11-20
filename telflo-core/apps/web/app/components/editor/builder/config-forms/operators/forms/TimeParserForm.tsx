@@ -15,7 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~
  *
  * - Layout offers the layout type's presets (`LAYOUT_PRESETS`, shared with
  *   the timestamp section, all six here): the strptime ones, the first
- *   labelled with what it writes ("%Y-%m-%d %H:%M:%S", not Go's notation);
+ *   labeled with what it writes ("%Y-%m-%d %H:%M:%S", not Go's notation);
  *   Go layouts under Go time (never strptime strings there); under epoch
  *   the collector's `s` "Unix epoch (seconds)" and `s.us` "Unix epoch with
  *   fractional" (`helper/time.go:98-106`; `%s` and `%s.%f` are refused

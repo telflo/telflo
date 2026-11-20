@@ -152,7 +152,7 @@ describe("SignInMethodsCard", () => {
     expect(start).toHaveBeenCalledTimes(2);
   });
 
-  it("Back from the provider after the password prompt: the restored dialog can be cancelled and Link used again", async () => {
+  it("Back from the provider after the password prompt: the restored dialog can be canceled and Link used again", async () => {
     vi.spyOn(apiClient, "createIdentityLinkRequest").mockResolvedValue({ authorizationUrl: AUTHORIZATION_URL });
     const user = renderCard(signInMethods());
 

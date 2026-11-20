@@ -36,7 +36,7 @@ import type { ValueView } from "~/lib/graph/value-view.js";
  *   with a hint to remove the route): the form never writes
  *   `pipelines: []`, which `config.go:83-91` refuses; Default Pipelines'
  *   last one takes the key with it.
- * - Fixed: Add Route holds a card that isn't in the text (never
+ * - Add Route holds a card that isn't in the text (never
  *   `{context: resource, condition: "", pipelines: []}`, which
  *   `config.go:83-91` refuses). Its first expression typed or pipeline
  *   chosen writes the route, `{context: resource, <kind>: typed}` or
@@ -44,19 +44,19 @@ import type { ValueView } from "~/lib/graph/value-view.js";
  *   the config validation reports the route), keeping `context: resource`; a
  *   context or action chosen before then is held with it. "No routes
  *   configured" hides while a card is held.
- * - Changed: Context unset is blank, with the hint "Default: inferred from
- *   the expression's paths, else resource" (`router.go:247- 259`);
- *   `otelcol` is offered (`config.go:102`), and Request says it is
- *   deprecated (`router.go:234- 237`). Action and Error Mode show their
- *   defaults as placeholders: move, and ignore (the beta gate
+ * - Context unset is blank, with the hint "Default: inferred from the
+ *   expression's paths, else resource" (`router.go:247- 259`); `otelcol` is
+ *   offered (`config.go:102`), and Request says it is deprecated
+ *   (`router.go:234- 237`). Action and Error Mode show their defaults as
+ *   placeholders: move, and ignore (the beta gate
  *   `connector.routing.defaultErrorModeIgnore`, `factory.go:19-24`).
- * - Changed: Context switched to Request renames a statement to a condition
+ * - Context switched to Request renames a statement to a condition
  *   in place, in the same change, with a toast (the request context takes
  *   conditions only, `config.go:106-112`); with both keys the statement is
  *   removed.
- * - Changed: Match Using renames the expression's key in place; with
- *   neither key, the chosen kind is held until an expression is typed
- *   (never `statement: ""`). A cleared expression removes its key.
+ * - Match Using renames the expression's key in place; with neither key, the
+ *   chosen kind is held until an expression is typed (never `statement: ""`).
+ *   A cleared expression removes its key.
  */
 
 const CONTEXTS = [

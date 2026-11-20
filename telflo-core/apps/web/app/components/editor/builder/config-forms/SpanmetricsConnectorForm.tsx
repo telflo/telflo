@@ -23,8 +23,8 @@ import type { ValueChange, ValuePath } from "~/lib/graph/text-edits.js";
  * `connector/spanmetricsconnector`. The collector's own name,
  * `span_metrics`, opens this form (`RENAMED_TYPES`; `metadata.yaml:1-2`).
  *
- * - Fixed: Histogram Buckets are `[]time.Duration` (`config.go:139-144`;
- *   core `confmap/internal/decoder.go:58-76` has no weak typing, so a bare
+ * - Histogram Buckets are `[]time.Duration` (`config.go:139-144`; core
+ *   `confmap/internal/decoder.go:58-76` has no weak typing, so a bare
  *   number is nanoseconds: `2ms` read as a number would be `2`, 2 ns). The
  *   field is a `ListTextField`: each item written as typed, by item (`2ms`
  *   a string, a bare number plain), joined ", "; cleared,
@@ -32,7 +32,7 @@ import type { ValueChange, ValuePath } from "~/lib/graph/text-edits.js";
  *   (`connector.go:216-225`; an `explicit` with no buckets has none,
  *   `connector.go:211-215`). Its placeholder is the 16 defaults
  *   (`config.go:25-27`), its copy corrected.
- * - Changed: the collector refuses `explicit` beside `exponential`
+ * - The collector refuses `explicit` beside `exponential`
  *   (`config.go:172-174`). Typing buckets while `histogram.exponential` is
  *   set removes it in the same change, and typing Exponential Max Size while
  *   `histogram.explicit` is set removes that, each with its toast. A null
@@ -47,26 +47,26 @@ import type { ValueChange, ValuePath } from "~/lib/graph/text-edits.js";
  *   Buckets says so (`EXPONENTIAL_IN_USE`); with both written, which the
  *   collector refuses (`config.go:172-174`), it says that instead
  *   (`BOTH_HISTOGRAMS`).
- * - Changed: choosing Delta while `metric_timestamp_cache_size`
- *   is 0 or less removes it in the same change (the 1000 default applies),
- *   with its toast (`config.go:188-193`, `215-220`).
- * - Fixed: Enable Events Metrics with no events dimensions also writes
- *   the README's `dimensions: [{name: exception.type}]`
+ * - Choosing Delta while `metric_timestamp_cache_size` is 0 or less removes
+ *   it in the same change (the 1000 default applies), with its toast
+ *   (`config.go:188-193`, `215-220`).
+ * - Enable Events Metrics with no events dimensions also writes the
+ *   README's `dimensions: [{name: exception.type}]`
  *   (`README.md:200-204`), one change, no toast (the box's own seed): the
  *   collector refuses events with no dimensions
  *   (`config.go:168-170, 271-279`). The "Dimension required" alert stays
  *   for a text that has them on with none.
- * - Fixed: the four dimension lists are `DimensionListField`s
- *   (Add holds a row until a name is typed, never `{name: ""}`,
- *   refused, `config.go:238-241`); the three string lists hold their rows
- *   (never `""`). Exclude Dimensions emptied leaves `[]`, the
- *   other two remove their key.
- * - Changed: Aggregation Temporality writes
- *   `AGGREGATION_TEMPORALITY_CUMULATIVE` or `_DELTA`; unset is blank with
- *   "Default Cumulative"; any other value shows as written with the hint
- *   that the collector reads it as cumulative (`config.go:206-213`;
- *   `DELTA` included). Histogram Unit unset is blank with "Default ms"
- *   (`factory.go:43-49`); number fields write what is typed, 0 included.
+ * - The four dimension lists are `DimensionListField`s (Add holds a row
+ *   until a name is typed, never `{name: ""}`, refused,
+ *   `config.go:238-241`); the three string lists hold their rows (never
+ *   `""`). Exclude Dimensions emptied leaves `[]`, the other two remove
+ *   their key.
+ * - Aggregation Temporality writes `AGGREGATION_TEMPORALITY_CUMULATIVE`
+ *   or `_DELTA`; unset is blank with "Default Cumulative"; any other
+ *   value shows as written with the hint that the collector reads it as
+ *   cumulative (`config.go:206-213`; `DELTA` included). Histogram Unit
+ *   unset is blank with "Default ms" (`factory.go:43-49`); number fields
+ *   write what is typed, 0 included.
  * - Changed copy: Histogram Unit, Histogram Buckets, Exclude
  *   Dimensions (`collector.instance.id`, `connector.go:600-602`), Include
  *   Instrumentation Scopes (it adds dimensions, filtering nothing,
@@ -99,7 +99,7 @@ const TEMPORALITIES = [
   { value: DELTA, label: "Delta" },
 ] as const;
 
-/** A labelled dimension list (heading, description and rows). */
+/** A labeled dimension list (heading, description and rows). */
 function Dimensions({ label, description, path, id, namePlaceholder }: { label?: string; description: string; path: ValuePath; id: string; namePlaceholder?: string }) {
   return (
     <div className="space-y-2">

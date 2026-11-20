@@ -21,14 +21,13 @@ import { Label } from "~/components/ui/label.js";
  * The kubelet stats receiver's form, over the form's fields: each field
  * writes its own key.
  *
- * - Fixed: the collector's `auth_type` default is `tls`
+ * - The collector's `auth_type` default is `tls`
  *   (`receiver/kubeletstatsreceiver/factory.go:43-55`); unset shows TLS
  *   Certificate as the placeholder with the hint "Default tls" (Service
- *   Account keeps "(recommended)"), and the per-auth fields follow the
- *   shown value, so an unset `auth_type` shows TLS's certificate fields
- *   (not Service Account with every per-auth field hidden until one is
- *   picked). The section opens on its own while TLS shows, as it does for
- *   `tls`: its certificate and key are required.
+ *   Account is marked "(recommended)"), and the per-auth fields follow the
+ *   shown value, so an unset `auth_type` shows TLS's certificate fields. The
+ *   section opens on its own while TLS shows, as it does for `tls`: its
+ *   certificate and key are required.
  * - Unset shows the collector's default: Collection Interval `10s`
  *   (`factory.go:44-45`), Initial Delay `1s` (core scraperhelper's
  *   `NewDefaultControllerConfig`), Metric Groups "Default container, pod,
@@ -36,7 +35,7 @@ import { Label } from "~/components/ui/label.js";
  *   `config.go:128-132`). Metric groups and extra metadata labels are
  *   checkbox lists written by item: an unset list shows none ticked, and
  *   the first tick writes that item alone.
- * - Kept: Enable Kubernetes API Access writes
+ * - Enable Kubernetes API Access writes
  *   `k8s_api_config: {auth_type: serviceAccount}` and unticking removes the
  *   block; it shows ticked while the block is in the text. Its
  *   Authentication Type has no default (`internal/k8sconfig/config.go:90-93`

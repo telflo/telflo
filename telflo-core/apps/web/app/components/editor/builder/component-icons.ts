@@ -60,7 +60,7 @@ import type { ComponentType } from "~/lib/graph/types.js";
  * ClickStack; their provenance is beside their paths and in
  * docs/third-party-assets.md); everything else is the palette entry's lucide
  * icon, imported by name. All render monochrome, tinted in the component
- * type's colour.
+ * type's color.
  */
 
 /** Lucide icons take a stroke width; the vendor marks ignore it. */

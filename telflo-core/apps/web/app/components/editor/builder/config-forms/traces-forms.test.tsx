@@ -991,7 +991,7 @@ describe("SpanProcessorForm: the status code", () => {
     expect(infoToasts()).toEqual([]);
   });
 
-  it("Leave status unchanged removes status, with no toast; the select is labelled (fixed id span-status-code)", async () => {
+  it("Leave status unchanged removes status, with no toast; the select is labeled (fixed id span-status-code)", async () => {
     const user = renderForm(SPAN, errorText);
     await openSection(user, "Status Override");
     expect(screen.getByLabelText("Status Code")).toBe(byId("span-status-code"));

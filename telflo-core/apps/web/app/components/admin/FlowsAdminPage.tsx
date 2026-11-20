@@ -27,9 +27,9 @@ import { useCollectorDistributions } from "~/lib/stores/collector-catalogue-stor
  * ("Flow hidden" included) and delete confirmation:
  * - the flows come from the API (`GET /api/v1/flows`, the hidden ones too
  *   for a product admin), and every write goes through it;
- * - an edit sends only the fields it changed, so a pin the catalogue has
+ * - an edit sends only the fields it changed, so a pin the catalog has
  *   retired since stays unless the admin changes it;
- * - the Collector column marks a pin the catalogue no longer offers, so the
+ * - the Collector column marks a pin the catalog no longer offers, so the
  *   admin knows "Use this flow" moves copies to the default;
  * - the Visible switch's accessible name is given by hidden text rather than
  *   an `aria-label`, so the flow's name is in no attribute;
@@ -48,7 +48,7 @@ import { useCollectorDistributions } from "~/lib/stores/collector-catalogue-stor
  *   without the row, it goes to New flow.
  */
 
-/** The pin's mark in the Collector column: the catalogue no longer offers it. */
+/** The pin's mark in the Collector column: the catalog no longer offers it. */
 export const PIN_NO_LONGER_OFFERED = "No longer offered";
 
 export function FlowsAdminPage() {

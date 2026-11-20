@@ -50,20 +50,19 @@ import {
 } from "./VariableGroupChoice.js";
 
 /*
- * "Edit collector": a `max-w-md` dialog with a `<form>`, the
- * title, "OK" disabled until something changes and "Saving…", with the pin
- * picker (`CollectorPinPicker.tsx`). Differences:
+ * "Edit collector": a `max-w-md` dialog with a `<form>`, the title, "OK"
+ * disabled until something changes and "Saving…", with the pin picker
+ * (`CollectorPinPicker.tsx`).
  *
  * - The description names the move and the published version; "UID:".
  * - Name (prefilled, at most 200 characters, trimmed before it is sent and
  *   checked against `CollectorNameSchema`, whose words show under the
  *   field with nothing sent; a whitespace-only change is none), **Group**
- *   (new: the move; a Select of the fleet's groups, their ids its values)
- *   and **Pin**: "Follow the group", "A published version" (the
- *   Configuration and Version Selects), and, for a pin whose version the
- *   platform no longer holds, "A deleted configuration's version":
- *   preselected and never sent unless changed (it can't be sent back). No
- *   imported configuration.
+ *   (the move; a Select of the fleet's groups, their ids its values) and
+ *   **Pin**: "Follow the group", "A published version" (the Configuration
+ *   and Version Selects), and, for a pin whose version the platform no
+ *   longer holds, "A deleted configuration's version": preselected and
+ *   never sent unless changed (it can't be sent back).
  * - **Variable group**, a Select: "Follow group (eu-edge)" first (the chosen
  *   group's variable group's name, "Follow group (Organization values)" for
  *   none), then the organization's variable groups, read at the opening

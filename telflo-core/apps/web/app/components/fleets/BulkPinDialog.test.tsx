@@ -150,7 +150,7 @@ type User = ReturnType<typeof userEvent.setup>;
 const combobox = (name: string) => screen.getByRole("combobox", { name });
 const pinButton = () => screen.getByRole("button", { name: /^(Pin \d+|Pinning…)$/ });
 
-/** Opens the Select labelled `label`, once its read has put it there, and picks `option`. */
+/** Opens the Select labeled `label`, once its read has put it there, and picks `option`. */
 async function choose(user: User, label: string, option: string | RegExp) {
   await user.click(await screen.findByRole("combobox", { name: label }));
   await user.click(await screen.findByRole("option", { name: option }));

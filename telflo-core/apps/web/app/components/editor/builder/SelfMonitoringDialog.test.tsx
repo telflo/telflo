@@ -304,7 +304,7 @@ describe("Apply writes only what changed", () => {
   });
 
   it("the body stays mounted with the draft until Radix unmounts it, so a close animation added later wouldn't blank it; the next opening takes the text again", async () => {
-    // A guard, not the app's behaviour: neither app has a close animation (ui/dialog's `animate-out` classes have no CSS),
+    // A guard, not the app's behavior: neither app has a close animation (ui/dialog's `animate-out` classes have no CSS),
     // so the dialog closes at once. Stubbed here, an exit animation makes Radix keep the closed content mounted until it ends.
     const computed = window.getComputedStyle.bind(window);
     vi.spyOn(window, "getComputedStyle").mockImplementation((element, pseudo) => {

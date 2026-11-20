@@ -38,7 +38,7 @@ export const LIVENESS_WINDOWS: Record<Liveness, string> = {
   offline: `offline: ${LIVENESS_MEANINGS.offline}`,
 };
 
-/** The dot's colour: ok online, warning warning, muted unknown, fail offline. */
+/** The dot's color: ok online, warning warning, muted unknown, fail offline. */
 export const LIVENESS_DOT_CLASSES: Record<Liveness, string> = {
   online: "bg-ok",
   warning: "bg-warn",

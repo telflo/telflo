@@ -174,7 +174,7 @@ async function openDetails(user: ReturnType<typeof userEvent.setup>, n: number) 
   return screen.findByRole("dialog", { name: "Validation test details" });
 }
 
-/** The dialog's labelled rows (a label over its value), as [label, value], in order. */
+/** The dialog's labeled rows (a label over its value), as [label, value], in order. */
 function detailRows(dialog: HTMLElement): [string, string][] {
   return [...dialog.querySelectorAll(".tf-label")]
     .filter((label) => label.parentElement?.classList.contains("gap-1") && label.nextElementSibling !== null)
@@ -317,7 +317,7 @@ describe("Show test details", () => {
     const user = show();
     const dialog = await openDetails(user, 3);
 
-    // Two rows labelled Condition for an OTTL rule: the kind, then the condition.
+    // Two rows labeled Condition for an OTTL rule: the kind, then the condition.
     expect(detailRows(dialog)).toEqual([
       ["Name", "OTTL: zq-env-prod"],
       ["Condition", "OTTL condition assertion"],

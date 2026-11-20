@@ -13,7 +13,7 @@ export interface PhoneBackLink {
 }
 
 export const BACK_TO_PLAYGROUND: PhoneBackLink = { to: "/playground", label: "Back to playground" };
-/** The public editor's: the app has no home page of its own, so sign-in, labelled so. */
+/** The public editor's: the app has no home page of its own, so sign-in, labeled so. */
 export const BACK_TO_SIGN_IN: PhoneBackLink = { to: "/login", label: "Go to sign in" };
 
 /*

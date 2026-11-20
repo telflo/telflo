@@ -15,7 +15,7 @@ import { findPattern } from "~/lib/regex-library.js";
 /*
  * The filter processor's form, over the form.
  *
- * - **Carried forward**: OTTL condition lists only (`traces.span`,
+ * - The form edits OTTL condition lists only (`traces.span`,
  *   `traces.spanevent`, `metrics.metric`, `metrics.datapoint`,
  *   `logs.log_record`); the legacy matchers and the newer `*_conditions` keys
  *   stay in the YAML, untouched.
@@ -23,10 +23,10 @@ import { findPattern } from "~/lib/regex-library.js";
  *   its own lines, comments and quoting with it (`form.move`). A condition's
  *   typing is written to its item; cleared, it writes `""` (the item stays).
  *   "Add Filter" appends `""`; the trash button removes the item's lines.
- * - The examples' "Add" appends the example's expression to the list for
- *   its context and toasts "Added to <list>"; the
- *   "All Signals" examples go to Span Filters only (carried forward).
- * - **Fixed**: an unset `error_mode` shows the collector's default, `ignore`
+ * - The examples' "Add" appends the example's expression to the list for its
+ *   context and toasts "Added to <list>"; the "All Signals" examples go to
+ *   Span Filters only.
+ * - An unset `error_mode` shows the collector's default, `ignore`
  *   (filterprocessor `createDefaultConfig`, `ErrorMode: ottl.IgnoreError`,
  *   contrib v0.162.0), as its placeholder (the option's label) and in the
  *   "Default ignore" hint, never propagate as if it were set.

@@ -29,7 +29,7 @@ export function groupBadgeLabel(label: string, signalType: string | undefined): 
 
 /**
  * A pipeline group's node: a dashed box with a 5 % fill in the pipeline's
- * colour, its badge, and a resizer while selected (300 × 150 at least). Two
+ * color, its badge, and a resizer while selected (300 × 150 at least). Two
  * invisible, unconnectable handles anchor the edges drawn to and from the
  * group: the route edges of routing and failover connectors, and a
  * connector's edge in a pipeline with nothing else to join. The pipeline's

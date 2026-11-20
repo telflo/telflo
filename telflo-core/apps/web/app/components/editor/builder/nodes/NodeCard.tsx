@@ -7,11 +7,10 @@ import type { ComponentType } from "~/lib/graph/types.js";
 import { cn } from "~/lib/utils.js";
 
 /*
- * The node card: the quiet card every component node
- * shares. A neutral card with a hairline border; the component's type reads
- * through a 3 px left rail, a tinted 24 px icon chip and the handle rings,
- * all in the type's colour (`--color-node-*`); selection is a ring in the
- * same hue.
+ * The node card: the quiet card every component node shares. A neutral card
+ * with a hairline border; the component's type reads through a 3 px left
+ * rail, a tinted 24 px icon chip and the handle rings, all in the type's
+ * color (`--color-node-*`); selection is a ring in the same hue.
  *
  * The title and subtitle are text (masked by the app shell's replay
  * masking); nothing a person wrote goes into an attribute.

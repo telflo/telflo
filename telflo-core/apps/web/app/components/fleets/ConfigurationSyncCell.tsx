@@ -2,13 +2,13 @@ import type { Collector, FleetSummary } from "@telflo/contracts";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "~/components/ui/tooltip.js";
 
 /*
- * The fleet list's Configuration Sync column, named in full, never
- * `config`. State-aware text, never a second fraction beside Online's,
- * from the summary's drift counts as the server reckons them. Differences:
+ * The fleet list's Configuration Sync column, named in full, never `config`.
+ * State-aware text, never a second fraction beside Online's, from the
+ * summary's drift counts as the server reckons them:
  * - "all in sync" only when every collector is in sync (never when nothing
  *   is assigned); otherwise the non-zero counts in a fixed order, failed,
  *   drifted, pending, unassigned, in sync ("1 failed", a middle dot, "3 in
- *   sync"), in the warning colour;
+ *   sync"), in the warning color;
  * - the legend counts each drift state and says what it means, as Online's:
  *   Radix tooltip content on a focusable trigger and screen-reader text,
  *   never a `title`;

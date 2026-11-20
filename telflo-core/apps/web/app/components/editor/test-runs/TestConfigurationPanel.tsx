@@ -96,7 +96,6 @@ function slotOf(step: WizardStep): 0 | 1 | 2 {
  * sub-panel (My Files, Templates or Paste) and the upload panel, reached
  * from My Files.
  *
- * Differences:
  * - a template picked and deleted before the submit gets the API's words,
  *   leaves the selection, and the templates are read again, as a file deleted
  *   does; the templates step reads them afresh each time it shows
@@ -105,9 +104,8 @@ function slotOf(step: WizardStep): 0 | 1 | 2 {
  *   and what it chose goes out through `onSubmit`, so the definition dialog
  *   leaves the run dialog's remembered file and pipeline as they were, never
  *   writing its choice into the shared selection on a submit;
- * - the name fields' ids, as every id here, come from `useId`, never fixed
- *   (`test-config-name`); they take no more than the API keeps
- *   (`maxLength`);
+ * - the name fields' ids, as every id here, come from `useId`; they take no
+ *   more than the API keeps (`maxLength`);
  * - the pipelines are the canvas's (`graph.pipelines`), chosen by name, the
  *   last one run first, else the first;
  * - My Files are read each time the dialog opens, and a file deleted (here,

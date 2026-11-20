@@ -44,7 +44,7 @@ export function SignupPromptDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md" onCloseAutoFocus={onCloseAutoFocus}>
-        {/* An informational prompt: centred, as message dialogs are. */}
+        {/* An informational prompt: centered, as message dialogs are. */}
         <DialogHeader className="sm:text-center">
           <DialogTitle>{SIGNUP_PROMPT_TITLE}</DialogTitle>
           <DialogDescription>{signupPromptText(action)}</DialogDescription>

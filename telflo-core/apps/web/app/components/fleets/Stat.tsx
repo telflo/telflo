@@ -9,7 +9,7 @@ import type { ReactNode } from "react";
 
 export type StatEmphasis = "neutral" | "warn" | "danger";
 
-/** The value's colour, by emphasis. */
+/** The value's color, by emphasis. */
 export function emphasisClassName(emphasis: StatEmphasis): string {
   switch (emphasis) {
     case "danger":

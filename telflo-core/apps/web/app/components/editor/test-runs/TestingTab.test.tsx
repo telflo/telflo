@@ -305,7 +305,7 @@ describe("running", () => {
     expect(screen.getByText("Selected File:")).toHaveTextContent("zq-old-upload");
   });
 
-  it("gives the focus back to 'Configure and run' when the dialog is cancelled, even when the click didn't focus it", async () => {
+  it("gives the focus back to 'Configure and run' when the dialog is canceled, even when the click didn't focus it", async () => {
     serveFiles([]);
     const { user } = renderTab();
     const configure = play();

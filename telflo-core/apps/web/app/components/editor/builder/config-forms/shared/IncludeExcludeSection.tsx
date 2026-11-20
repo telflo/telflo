@@ -198,7 +198,7 @@ export function IncludeExcludeSection({
         {sides.map((side, index) => (
           <div key={side} className="space-y-2">
             {index > 0 && (
-              // Both sides set: the second is labelled with its mode's own words.
+              // Both sides set: the second is labeled with its mode's own words.
               <div className="flex items-center gap-2">
                 <span className="w-[180px] text-sm text-muted-foreground">Exclude</span>
                 {showMatchType && matchSelect(side)}

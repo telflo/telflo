@@ -69,18 +69,15 @@ function stopLine(saved: number, picked: number, held: number, message: string):
  * `not_contains_regex` rule on the output, named after its entry, described by
  * its description, else its name.
  *
- * Differences:
  * - each row shows its description and its regex under its name, the regex
  *   in full, wrapped, never cut, and never only in a title;
- * - one labelled checkbox per row (`aria-labelledby` its name,
+ * - one labeled checkbox per row (`aria-labelledby` its name,
  *   `aria-describedby` its description, as AcceptTermsDialog's), its focus
- *   visible and its state announced (not three toggling buttons with the
- *   checkbox out of the tab order);
+ *   visible and its state announced;
  * - the library is read each time the dialog opens, the latest read winning,
  *   aborted after 10 s as the Testing tab's reads; a failed read shows
  *   "Failed to load test regexes" inline with Retry (a refusal, a 4xx but
- *   408 and 429, in the API's words, as a card's failed read), not once per
- *   session with a toast;
+ *   408 and 429, in the API's words, as a card's failed read);
  * - the picks are saved one at a time, in the library's order, those the
  *   Category filter hides included, through the store's `createRule` (placed,
  *   dropped or read again as the Validation subtab's saves are); a refusal
@@ -110,8 +107,8 @@ function stopLine(saved: number, picked: number, held: number, message: string):
  *   portals, outside the panel's block); the Category select's values are
  *   "all" or a place in the list, never the category's text; no entry's
  *   text is in any attribute; no `<form>`;
- * - kept: no search or select-all, no duplicate check, a
- *   rule's description falling back to the entry's name.
+ * - there is no search or select-all and no duplicate check; a rule's
+ *   description falls back to the entry's name.
  */
 export function RegexLibraryPickerDialog({ open, onOpenChange, target, validationPipeline, onCloseAutoFocus }: RegexLibraryPickerDialogProps) {
   const id = useId();

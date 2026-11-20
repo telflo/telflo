@@ -9,7 +9,7 @@ import { useEditorStore } from "~/lib/stores/editor-store.js";
 /** The panel's drag bounds. */
 const MIN_PANEL_WIDTH = 320;
 const MAX_PANEL_WIDTH = 800;
-/** Smallest the centre may be squeezed to by the panel on its right. */
+/** Smallest the center may be squeezed to by the panel on its right. */
 const MIN_CENTRE_WIDTH = 320;
 
 /**
@@ -34,11 +34,11 @@ export type EditorPanelTab = {
 };
 
 type EditorLayoutProps = {
-  /** Toolbar rendered above the centre and the panel */
+  /** Toolbar rendered above the center and the panel */
   toolbar: ReactNode;
-  /** The column left of the centre: the builder's toolbox */
+  /** The column left of the center: the builder's toolbox */
   toolbox?: ReactNode;
-  /** The centre: the canvas column */
+  /** The center: the canvas column */
   main: ReactNode;
   /** The panel's tabs, in order */
   panelTabs: readonly EditorPanelTab[];
@@ -48,7 +48,7 @@ type EditorLayoutProps = {
 
 /**
  * The editor's layout, composed: the page passes the toolbar, the toolbox,
- * the centre and the panel's tabs, and the tab list and the collapsed rail
+ * the center and the panel's tabs, and the tab list and the collapsed rail
  * are built from `panelTabs`. The columns are toolbox | canvas | panel.
  *
  * The active tab, the collapse and the width live in the editor's store, the
@@ -83,8 +83,8 @@ export function EditorLayout({ toolbar, toolbox, main, panelTabs, dialogs }: Edi
     if (fellBack && currentTab !== undefined) setActiveTab(currentTab);
   }, [fellBack, currentTab, setActiveTab]);
 
-  // Measure the centre column's live left edge so the panel's max drag width
-  // accounts for everything to its left (the sidebar), keeping the centre at
+  // Measure the center column's live left edge so the panel's max drag width
+  // accounts for everything to its left (the sidebar), keeping the center at
   // least MIN_CENTRE_WIDTH wide.
   const centreColRef = useRef<HTMLDivElement>(null);
 

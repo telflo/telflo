@@ -272,7 +272,7 @@ function ErrorSection({ message }: { message: string | null }) {
   );
 }
 
-/** A labelled link with its help, the results rows. */
+/** A labeled link with its help, the results rows. */
 function LinkRow({
   icon: Icon,
   label,
@@ -363,14 +363,12 @@ interface RuleDraft {
  * couldn't check ended Error (`rules_unavailable`): its message under Error,
  * its output, logs and text as any other's.
  *
- * Differences:
  * - the files are the run's own (`GET …/test-runs/:runId/files/…`), read as
  *   bytes: a download keeps them exactly (downloadBlob, a detached anchor:
  *   no file name in the page), and a viewer decodes UTF-8 or UTF-16;
- * - the input's name is the run's snapshot, always there (never looked up,
- *   "Loading…", "(deleted file)");
+ * - the input's name is the run's snapshot, always there;
  * - the output row is "Output File" whether or not the run produced one
- *   ("no output produced"), never "Test Results File";
+ *   ("no output produced");
  * - Compare reads the decoded input the tester sent (an OTLP run's) and the
  *   output; it is enabled only with both;
  * - a failed run's "Error" shows the run's error message, and the

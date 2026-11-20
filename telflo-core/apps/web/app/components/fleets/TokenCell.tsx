@@ -32,7 +32,7 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 /** The link's hidden end, after its badges: where it goes. */
 export const TOKEN_LINK_SUFFIX = " (open the Tokens tab)";
 
-/** The badge's colour, by bucket. */
+/** The badge's color, by bucket. */
 export type TokenBadgeVariant = "outline" | "secondary" | "destructive" | "warning" | "success";
 
 export interface TokenBucket {

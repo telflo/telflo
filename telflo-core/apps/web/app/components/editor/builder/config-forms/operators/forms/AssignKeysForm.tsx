@@ -19,11 +19,10 @@ import { flushHeldEdits } from "~/lib/editor/held-edits.js";
  * removes the item's lines; the rows are keyed by their items (`useCardKeys`).
  * Remove is disabled while there is one key: the collector refuses an empty
  * `keys` (`transformer/assignkeys/config.go:51-53`). A `keys` that isn't a
- * list of scalars is read-only with `UNSHOWABLE_VALUE_MESSAGE`.
- * Changed: Field is required (`docs/operators/assign_keys.md`; a body,
- * attribute or resource field, `config.go:55-79`) and shows no default (never
- * `body` as a value it doesn't write). It isn't rootable (`config.go:40`, an
- * `entry.Field`).
+ * list of scalars is read-only with `UNSHOWABLE_VALUE_MESSAGE`. Field is
+ * required (`docs/operators/assign_keys.md`; a body, attribute or resource
+ * field, `config.go:55-79`) and shows no default (never `body` as a value it
+ * doesn't write). It isn't rootable (`config.go:40`, an `entry.Field`).
  */
 
 const CODE = "rounded-[4px] bg-muted px-1 py-0.5 font-mono text-xs";

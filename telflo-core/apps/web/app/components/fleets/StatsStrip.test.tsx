@@ -53,7 +53,7 @@ describe("StatsStrip", () => {
     expect(within(tile("Token expires")).getByText("Never")).toBeInTheDocument();
   });
 
-  it("shows a mixed fleet's: the counts, some offline in the warning colour, pending, failed and drifted as lagging", () => {
+  it("shows a mixed fleet's: the counts, some offline in the warning color, pending, failed and drifted as lagging", () => {
     renderStrip(fleetDetail({ summary: populatedSummary(NOW) }));
     expect(valueOf("Collectors")).toHaveTextContent(/^10$/);
     expect(valueOf("Online")).toHaveTextContent(/^4$/);
@@ -66,7 +66,7 @@ describe("StatsStrip", () => {
     expect(within(tile("Token expires")).getByText("Rotating →")).toBeInTheDocument();
   });
 
-  it("colours Online danger with collectors and none online", () => {
+  it("colors Online danger with collectors and none online", () => {
     renderStrip(fleetDetail({ summary: summary({ collectors: 3, offline: 3 }) }));
     expect(valueOf("Online")).toHaveClass("text-fail");
   });
@@ -133,7 +133,7 @@ describe("StatsStrip", () => {
       ["45d", rotate({ expiresAt: new Date(NOW + 45 * DAY).toISOString() }), "text-ok"],
       ["6mo", rotate({ expiresAt: new Date(NOW + 180 * DAY).toISOString() }), "text-ok"],
       ["1y", rotate({ expiresAt: new Date(NOW + 400 * DAY).toISOString() }), "text-ok"],
-    ] as const)("shows %s in its colour, linking to the fleet's Tokens tab", (label, counts, colour) => {
+    ] as const)("shows %s in its color, linking to the fleet's Tokens tab", (label, counts, colour) => {
       renderStrip(fleetDetail({ summary: counts }));
       expect(within(tile("Token expires")).getByText(label)).toHaveClass(colour);
       expect(screen.getAllByRole("link")).toEqual([trigger()]);

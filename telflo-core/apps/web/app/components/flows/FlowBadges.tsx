@@ -6,7 +6,7 @@ import { Badge } from "~/components/ui/badge.js";
  * string is the flow's, shown as text (nothing in an attribute).
  */
 
-// One colour per signal, everywhere a flow is shown, so the gallery can be
+// One color per signal, everywhere a flow is shown, so the gallery can be
 // scanned for "the logs ones" without reading labels.
 const SIGNAL_VARIANT: Record<FlowSignal, "info" | "success" | "warning"> = {
   traces: "info",

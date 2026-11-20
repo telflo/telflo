@@ -106,11 +106,11 @@ describe("OtelIcon", () => {
 });
 
 describe("fullLabelFor", () => {
-  it("prefers the catalogue's label", () => {
+  it("prefers the catalog's label", () => {
     expect(fullLabelFor("otelcol-contrib", "Contrib, as the catalogue says")).toBe("Contrib, as the catalogue says");
   });
 
-  it("names Contrib in full without the catalogue", () => {
+  it("names Contrib in full without the catalog", () => {
     expect(fullLabelFor("otelcol-contrib")).toBe("OpenTelemetry Collector Contrib");
   });
 

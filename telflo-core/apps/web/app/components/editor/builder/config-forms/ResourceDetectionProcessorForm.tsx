@@ -33,7 +33,7 @@ import { Label } from "~/components/ui/label.js";
  *   the collector's default in the hint, "Default env"
  *   (`factory.go:129-131`), and the first tick writes that detector alone.
  *   Ids are `detector-<index>`.
- * - Changed: the catalog is the collector's (`k8s-defaults.ts` `DETECTORS`,
+ * - The catalog is the collector's (`k8s-defaults.ts` `DETECTORS`,
  *   `factory.go:73-105`): `nova` in place of `openstack`, which isn't a
  *   detector (the collector refuses it, "invalid detector key"); ten more
  *   detectors, each in the group it fits (Azure's three in Azure;
@@ -43,19 +43,17 @@ import { Label } from "~/components/ui/label.js";
  *   settings sections. A detector the text holds that isn't one of them
  *   (`openstack`) shows after the groups, ticked, as text, so it can be
  *   unticked and is never lost.
- * - Fixed: the ECS, GCP and Docker "Client Timeout" fields are
- *   gone: they wrote `client_config.timeout`, which those detectors don't
- *   have (`internal/aws/ecs/config.go:11`, `internal/gcp/config.go:13-14`,
- *   `internal/docker/config.go:11`) and the collector refuses; the
- *   top-level Timeout is their HTTP client's (`config.go:56-58`). A key
- *   already in the text is left alone.
- * - Fixed: each resource attribute's box shows the collector's default
- *   while its `enabled` is unset (`k8s-defaults.ts`, each detector's
- *   `metadata.yaml`), not every one ticked (most of eks' and system's are
- *   off). A box writes
+ * - ECS, GCP and Docker have no "Client Timeout" field: those detectors
+ *   have no `client_config.timeout` (`internal/aws/ecs/config.go:11`,
+ *   `internal/gcp/config.go:13-14`, `internal/docker/config.go:11`), which
+ *   the collector refuses; the top-level Timeout is their HTTP client's
+ *   (`config.go:56-58`). A key already in the text is left alone.
+ * - Each resource attribute's box shows the collector's default while its
+ *   `enabled` is unset (`k8s-defaults.ts`, each detector's
+ *   `metadata.yaml`); most of eks' and system's are off. A box writes
  *   `<detector>.resource_attributes.<attribute>.enabled: <bool>`. The boxes
  *   are a fixed set; ids are `<detector>-attr-<index>`, never the name.
- * - Changed: the Kubernetes Node section edits `k8snode.*`, which only the
+ * - The Kubernetes Node section edits `k8snode.*`, which only the
  *   `k8snode` detector reads (`config.go:156-160, 265-268`); it shows for
  *   `k8snode` alone, and `k8s_api` has no section. Its Authentication Type
  *   shows the collector's default while unset, "Default serviceAccount"
@@ -66,15 +64,14 @@ import { Label } from "~/components/ui/label.js";
  *   variant's Client CA File and its reload. Its hint says what off means
  *   there: with no CA file, the service account's CA
  *   (`internal/openshift/config.go:75-77`).
- * - Fixed: Add Tag Pattern holds an empty row until something is typed in it
- *   (never `""`, an empty regex, which matches every tag).
- * - Kept: Hostname Sources shows `dns` and `os` ticked while unset, the
+ * - Add Tag Pattern holds an empty row until something is typed in it (never
+ *   `""`, an empty regex, which matches every tag).
+ * - Hostname Sources shows `dns` and `os` ticked while unset, the
  *   collector's default (`internal/system/system.go:48-50`), and its first
- *   toggle writes them with the change. Fixed: an empty list shows so too, as
- *   the collector reads `[]` as its default (same lines); unticking the last
- *   still leaves `[]`.
- *   Kept: the AWS order alert; the selected detectors' chips; each
- *   section's count and empty text.
+ *   toggle writes them with the change. An empty list shows so too, as the
+ *   collector reads `[]` as its default (same lines); unticking the last
+ *   still leaves `[]`. The form also has the AWS order alert, the selected
+ *   detectors' chips, and each section's count and empty text.
  * - Unset shows the collector's default: Timeout `5s`
  *   (`factory.go:153-157`), Override on (`factory.go:133`), Max Attempts 3
  *   and Max Backoff `20s` (`internal/aws/ec2/config.go:34-40`).

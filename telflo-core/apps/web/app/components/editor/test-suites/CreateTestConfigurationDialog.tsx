@@ -23,10 +23,8 @@ export const PIPELINE_GONE_MESSAGE = "Selected pipeline no longer exists";
  * Description, "OK" and "Saving…". The input is copied by the API at once, so
  * the definition never depends on the file staying in My Files.
  *
- * Differences:
  * - it opens with the remembered duration, no file chosen, and the
- *   remembered pipeline or the first, not 5 s and the run dialog's last
- *   file;
+ *   remembered pipeline or the first;
  * - it writes nothing back: the run dialog's remembered file, pipeline and
  *   duration stay as they were, never written into the shared selection;
  * - the sources are My Files (with Upload), Templates and Paste Text; a

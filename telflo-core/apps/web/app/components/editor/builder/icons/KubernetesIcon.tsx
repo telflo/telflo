@@ -11,7 +11,7 @@
  * mark names the system the component talks to. Listed in
  * docs/third-party-assets.md.
  *
- * A monochrome silhouette in the component type's colour; decorative, so
+ * A monochrome silhouette in the component type's color; decorative, so
  * hidden from assistive technology (the card's title names the component).
  */
 export function KubernetesIcon({ className }: { className?: string; strokeWidth?: number }) {

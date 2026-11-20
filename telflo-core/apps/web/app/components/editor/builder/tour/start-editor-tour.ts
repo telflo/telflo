@@ -259,10 +259,10 @@ export function stepsEmpty(options: EditorTourOptions = {}): DriveStep[] {
 }
 
 /**
- * Starts the tour after its delay, with the set the canvas calls
- * for. Closing it or finishing it leaves the Configuration tab showing with
+ * Starts the tour after its delay, with the set the canvas calls for.
+ * Closing it or finishing it leaves the Configuration tab showing with
  * nothing selected, and marks it completed. The function returned stops it:
- * a pending start is cancelled, and a running tour is taken down without
+ * a pending start is canceled, and a running tour is taken down without
  * being marked completed (the page is going). `options` as the steps take
  * them: `{ versionHistory: false }` where the editor has no version picker.
  */

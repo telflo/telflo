@@ -86,7 +86,7 @@ describe("CancelInvitationDialog", () => {
     await waitFor(() => expect(screen.getByRole("button", { name: "Cancel Invitation" })).toBeEnabled());
   });
 
-  it("toasts Failed to cancel invitation when cancelling fails unexpectedly, without reloading", async () => {
+  it("toasts Failed to cancel invitation when canceling fails unexpectedly, without reloading", async () => {
     vi.spyOn(apiClient, "cancelInvitation").mockRejectedValue(new ApiError("internal_error", "Something went wrong."));
     const error = vi.spyOn(toast, "error");
     const { user, onChanged } = renderDialog();

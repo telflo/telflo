@@ -15,7 +15,7 @@ import { cancelInvitation } from "~/lib/api-client.js";
 import { isManagementLost, isRefusal, refusalMessage, useLeaveManagement } from "~/lib/organizations.js";
 
 /*
- * Cancelling an invitation. Cancelling revokes the invitation, so its link
+ * Canceling an invitation. Canceling revokes the invitation, so its link
  * stops working; the row stays for the audit trail.
  *
  * The dialog stays open, showing "Cancelling...", until the API answers,

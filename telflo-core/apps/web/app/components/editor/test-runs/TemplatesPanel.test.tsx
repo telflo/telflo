@@ -167,12 +167,12 @@ describe("the Templates step", () => {
     expect(listTemplates).toHaveBeenCalledTimes(2);
   });
 
-  it("filters by 'Receiver Type' and 'Signal Type': 'Any' at first, the values present sorted by their labels (the palette's; 'Logs', 'Metrics'), each filter labelled", async () => {
+  it("filters by 'Receiver Type' and 'Signal Type': 'Any' at first, the values present sorted by their labels (the palette's; 'Logs', 'Metrics'), each filter labeled", async () => {
     const { user } = await openTemplates();
 
     expect(screen.getByRole("combobox", { name: "Receiver Type" })).toHaveTextContent("Any");
     expect(screen.getByRole("combobox", { name: "Signal Type" })).toHaveTextContent("Any");
-    // Labelled from the palette (the next test shows the order is the labels').
+    // Labeled from the palette (the next test shows the order is the labels').
     expect(await optionsOf(user, "Receiver Type")).toEqual(["Any", "File Log", "Host Metrics", "OTLP"]);
     expect(await optionsOf(user, "Signal Type")).toEqual(["Any", "Logs", "Metrics"]);
 

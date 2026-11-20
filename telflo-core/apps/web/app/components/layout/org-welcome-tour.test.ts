@@ -6,7 +6,7 @@ import {
   startOrgWelcomeTour,
 } from "./org-welcome-tour.js";
 
-// The callout's four behaviours, each a test.
+// The callout's four behaviors, each a test.
 
 describe("orgWelcomeMessage", () => {
   it("includes the org name and the switcher hint", () => {

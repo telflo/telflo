@@ -35,7 +35,7 @@ beforeEach(() => {
 });
 
 describe("EditorLayout", () => {
-  it("renders the toolbar above the columns (toolbox | centre | panel), and the dialogs", () => {
+  it("renders the toolbar above the columns (toolbox | center | panel), and the dialogs", () => {
     renderLayout();
 
     const toolbar = screen.getByText("The toolbar");
@@ -135,7 +135,7 @@ describe("EditorLayout", () => {
     expect(useEditorStore.getState().activeTab).toBe("second");
   });
 
-  it("collapse shows the 44 px rail: Expand panel, then one button per tab, labelled with its label", async () => {
+  it("collapse shows the 44 px rail: Expand panel, then one button per tab, labeled with its label", async () => {
     const { user } = renderLayout();
 
     const collapse = screen.getByRole("button", { name: "Collapse panel" });

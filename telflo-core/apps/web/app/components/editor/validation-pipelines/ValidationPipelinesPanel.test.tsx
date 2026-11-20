@@ -242,7 +242,7 @@ async function expand(user: User, pipeline: string) {
   return each;
 }
 
-/** Chooses `option` in the combobox labelled `label`, inside `scope`. */
+/** Chooses `option` in the combobox labeled `label`, inside `scope`. */
 async function choose(user: User, scope: HTMLElement, label: string, option: string) {
   await user.click(within(scope).getByRole("combobox", { name: label }));
   await user.click(await screen.findByRole("option", { name: option }));
@@ -563,7 +563,7 @@ describe("a validation pipeline's rules", () => {
     }
   });
 
-  it("are deleted only once confirmed (new): 'Delete validation rule?' with its name; Cancel deletes nothing, the focus back to its Delete; then to the next row's Edit, else the previous one's, else Add Validation Rule", async () => {
+  it("are deleted only once confirmed: 'Delete validation rule?' with its name; Cancel deletes nothing, the focus back to its Delete; then to the next row's Edit, else the previous one's, else Add Validation Rule", async () => {
     const { deleteRule } = serveApi();
     const second = validationRuleFixture({ id: "0199f400-0000-7000-8000-000000000002", position: 2, name: "zq-second" });
     api.pipelines = [LOGS];
@@ -723,7 +723,7 @@ describe("the rule editor's modes (all four, and the rules they save)", () => {
     });
   });
 
-  it("Record count refuses a negative count, a fraction, an empty one, and an unordered Between (new), Add rule held", async () => {
+  it("Record count refuses a negative count, a fraction, an empty one, and an unordered Between, Add rule held", async () => {
     serveApi();
     api.pipelines = [LOGS];
     const { user } = await renderValidation();
@@ -2463,7 +2463,7 @@ describe("a save answered after the editor has gone, and an edit given a prefill
       'attributes["a"] != nil and IsMatch(body, "zq.*")',
     ],
     [
-      "a builder-shaped OTTL rule, recognised",
+      "a builder-shaped OTTL rule, recognized",
       validationRuleFixture({
         kind: "ottl",
         pattern: null,
@@ -2495,7 +2495,7 @@ describe("a save answered after the editor has gone, and an edit given a prefill
       expect(within(dialog).getByRole("combobox", { name: "Require" })).toHaveTextContent("At least one matches");
     }
     if (mode === "Record attribute") {
-      // Recognised from the stored rule, never the prefill's resource / none.
+      // Recognized from the stored rule, never the prefill's resource / none.
       expect(within(dialog).getByRole("combobox", { name: "Require" })).toHaveTextContent("All records match");
       expect(within(dialog).getByRole("combobox", { name: "Scope" })).toHaveTextContent("Record");
       expect(within(dialog).getByRole("combobox", { name: "Operator" })).toHaveTextContent("Equals");

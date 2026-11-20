@@ -31,13 +31,13 @@ import type { ValuesResult } from "~/lib/stores/editor-store.js";
  * own key. Collector claims cite contrib v0.162.0
  * (`pkg/stanza/operator/input/journald/` unless named).
  *
- * - Kept: Add unit, Add identifier and Add file append seeds (`ssh`, `sudo`,
+ * - Add unit, Add identifier and Add file append seeds (`ssh`, `sudo`,
  *   `/var/log/journal/system.journal`), and removing a list's last row removes
  *   its key (`StringListField`). The boxes write `true` or remove their key
  *   (`CheckboxField`'s `uncheckedRemoves`). Start At is native radios
  *   (`RadioField`), End checked while unset (`config_all.go:19-24`).
- * - Fixed: Add match holds a new match, `_SYSTEMD_UNIT` with no value,
- *   until a value is typed in it: never `_SYSTEMD_UNIT: ""` at once, which
+ * - Add match holds a new match, `_SYSTEMD_UNIT` with no value, until a
+ *   value is typed in it: never `_SYSTEMD_UNIT: ""` at once, which
  *   journalctl reads as "an empty unit" (`config_linux.go:155-192` passes
  *   `_SYSTEMD_UNIT=`). The held match is a card like the others, reading a
  *   source of its own (the fields it holds); the first value typed writes
@@ -47,7 +47,7 @@ import type { ValuesResult } from "~/lib/stores/editor-store.js";
  *   with a value are written, and Remove match drops it. It is a held row:
  *   dropped when the list's length changes, the form goes or a
  *   configuration loads.
- * - Fixed: each match's fields are a `KeyValueMapField` (`"rows"`,
+ * - Each match's fields are a `KeyValueMapField` (`"rows"`,
  *   `holdUntilValue`): Add field holds a row until both its name and its
  *   value are typed (never a `""` key; a name alone would write `_UID: ""`,
  *   which matches entries whose field is empty), a field is renamed in place
@@ -285,9 +285,9 @@ export function JournaldReceiverForm() {
 }
 
 /**
- * A `StringListField` (units, identifiers, files): editable rows,
- * Add appending the sample value, the last row's removal removing the key,
- * each remove button labelled `Remove <label> entry` (the fixed label).
+ * A `StringListField` (units, identifiers, files): editable rows, Add
+ * appending the sample value, the last row's removal removing the key, each
+ * remove button labeled `Remove <label> entry` (the fixed label).
  */
 function JournaldList({
   path,

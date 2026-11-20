@@ -10,7 +10,7 @@ import { ConfigurationStatusBadge } from "./ConfigurationCard.js";
  * - the headers are plain, styled as sort buttons, and don't sort: the
  *   order is the API's;
  * - a Status column, after Owner, then a Distribution column: the
- *   distribution tag, its tooltip fixed text but for the catalogue's label;
+ *   distribution tag, its tooltip fixed text but for the catalog's label;
  * - no "Untitled" fallback, since a name is required;
  * - Delete shows only where it's allowed: the author's row, or any row for
  *   an admin.
@@ -31,7 +31,7 @@ interface ConfigurationsTableProps {
   onOpen: (configuration: Configuration) => void;
   /** `from` the Delete pressed (the playground's prompt gives the focus back there). */
   onDelete: (configuration: Configuration, from?: HTMLElement) => void;
-  /** The collector catalogue, for the Distribution column's labels and marks; null while unread or failed. */
+  /** The collector catalog, for the Distribution column's labels and marks; null while unread or failed. */
   distributions?: readonly CollectorDistribution[] | null;
 }
 

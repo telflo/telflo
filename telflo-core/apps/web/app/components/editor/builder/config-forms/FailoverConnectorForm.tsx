@@ -28,10 +28,10 @@ import type { ValueView } from "~/lib/graph/value-view.js";
  *   the pipeline, unless it is the pipeline's only receiver
  *   (`failover.go:77-84` refuses a level naming a pipeline that doesn't
  *   receive from the connector).
- * - Fixed: Add Priority Level holds a card that isn't in the text (never
- *   an appended `[]`, which `failover.go:78-81` refuses); its first
- *   pipeline chosen writes the level `[p]`. A level's last pipeline can't
- *   be removed (its Remove disabled, with a hint to remove the level), so
+ * - Add Priority Level holds a card that isn't in the text (never an
+ *   appended `[]`, which `failover.go:78-81` refuses); its first pipeline
+ *   chosen writes the level `[p]`. A level's last pipeline can't be
+ *   removed (its Remove disabled, with a hint to remove the level), so
  *   the form never writes a level `[]`; "No priority levels configured"
  *   hides while a card is held.
  * - Retry Interval's default 10m and the queue on by default are the

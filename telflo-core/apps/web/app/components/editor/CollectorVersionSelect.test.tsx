@@ -154,7 +154,7 @@ describe("CollectorVersionSelect", () => {
     expect(selectIsDirty(store())).toBe(true);
   });
 
-  it("keeps a distribution the catalogue doesn't list instead of swapping it, the pin as text", async () => {
+  it("keeps a distribution the catalog doesn't list instead of swapping it, the pin as text", async () => {
     open(versionFixture({ collectorVersion: "1.0.0" }), { ...MINE, collectorDistribution: "grafana-alloy" });
     renderPicker();
 
@@ -166,7 +166,7 @@ describe("CollectorVersionSelect", () => {
     expect(screen.getByText("v1.0.0")).toBeInTheDocument();
   });
 
-  it("shows the distribution and the pin even when the catalogue is unreachable", async () => {
+  it("shows the distribution and the pin even when the catalog is unreachable", async () => {
     resetCollectorCatalogue();
     open();
     renderPicker();
@@ -250,7 +250,7 @@ describe("CollectorVersionSelect's list", () => {
     expect(screen.getByText(CONTRIB_LABEL)).toBeInTheDocument();
   });
 
-  it("shows a version's catalogue label beside it when it says more than the version", async () => {
+  it("shows a version's catalog label beside it when it says more than the version", async () => {
     seedCatalogue([{ ...CONTRIB, versions: [{ ...CONTRIB.versions[0]!, label: "Recommended" }] }]);
     open();
     const user = renderPicker();
@@ -269,7 +269,7 @@ describe("a deprecated pin", () => {
     collectorVersionDeprecatedNote: RETIRED_NOTE,
   });
 
-  it("is shown as v0.155.0 (deprecated), with the catalogue's note behind a mark that takes the focus, and kept", async () => {
+  it("is shown as v0.155.0 (deprecated), with the catalog's note behind a mark that takes the focus, and kept", async () => {
     open(RETIRED);
     const user = renderPicker();
 
@@ -331,7 +331,7 @@ describe("a deprecated pin", () => {
     expect(queryNoteMark()).toBeInTheDocument();
   });
 
-  it("is shown as deprecated, with its note, while the catalogue is unread", async () => {
+  it("is shown as deprecated, with its note, while the catalog is unread", async () => {
     resetCollectorCatalogue();
     open(RETIRED);
     renderPicker();
@@ -340,8 +340,8 @@ describe("a deprecated pin", () => {
     expect(queryNoteMark()).toBeInTheDocument();
   });
 
-  it("the saved pin's deprecation is the server's, not the catalogue read with the page: a release it doesn't list isn't marked deprecated", async () => {
-    // A teammate picked 0.163.0, released since this page read the catalogue; the server says it is offered.
+  it("the saved pin's deprecation is the server's, not the catalog read with the page: a release it doesn't list isn't marked deprecated", async () => {
+    // A teammate picked 0.163.0, released since this page read the catalog; the server says it is offered.
     open(versionFixture({ collectorVersion: "0.163.0" }));
     const user = renderPicker();
 
@@ -354,7 +354,7 @@ describe("a deprecated pin", () => {
     expect(options[0]).toHaveAttribute("aria-selected", "true");
   });
 
-  it("the server's flag marks a saved pin deprecated that the page's catalogue still offers (retired since the page read it)", async () => {
+  it("the server's flag marks a saved pin deprecated that the page's catalog still offers (retired since the page read it)", async () => {
     open(
       versionFixture({ collectorVersion: "0.160.0", collectorVersionDeprecated: true, collectorVersionDeprecatedNote: RETIRED_NOTE }),
     );
@@ -364,10 +364,10 @@ describe("a deprecated pin", () => {
     expect(queryNoteMark()).toBeInTheDocument();
   });
 
-  it("a pick's deprecation is the catalogue's: a pin on screen that isn't the saved one and that the catalogue doesn't offer is marked", async () => {
+  it("a pick's deprecation is the catalog's: a pin on screen that isn't the saved one and that the catalog doesn't offer is marked", async () => {
     open();
     renderPicker();
-    // Not reachable through the dropdown (it offers only what the catalogue does): a store write stands for it.
+    // Not reachable through the dropdown (it offers only what the catalog does): a store write stands for it.
     act(() => store().setCollectorVersion(RETIRED_VERSION));
 
     expect(versionPicker()).toHaveTextContent(/^v0\.155\.0 \(deprecated\)$/);
@@ -435,7 +435,7 @@ describe("privacy", () => {
         expect(attribute.value).not.toContain(LABEL);
       }
     }
-    // Nor in its text: it shows catalogue data only.
+    // Nor in its text: it shows catalog data only.
     expect(document.body).not.toHaveTextContent(MINE.name);
     expect(document.body).not.toHaveTextContent(LABEL);
   });

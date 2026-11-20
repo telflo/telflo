@@ -210,7 +210,7 @@ const nameField = () => screen.getByRole("textbox", { name: "Name" });
 const submit = () => screen.getByRole("button", { name: /^(Create|Assign|Save|Saving…)$/ });
 const combobox = (name: string) => screen.getByRole("combobox", { name });
 
-/** Opens the Select labelled `label` and picks `option`. */
+/** Opens the Select labeled `label` and picks `option`. */
 async function choose(user: User, label: string, option: string | RegExp) {
   await user.click(combobox(label));
   await user.click(await screen.findByRole("option", { name: option }));

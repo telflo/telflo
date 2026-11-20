@@ -58,11 +58,11 @@ import { findDistribution, useCollectorDistributions } from "~/lib/stores/collec
  *   removes it; Cancel there goes back. Closing the dialog otherwise
  *   (Escape, the close button) keeps it, asked again on the next visit;
  * - a refusal keeps the staged edit (but a 401 `unauthenticated`, which
- *   signs out and removes it) and says why: a pin the catalogue no
- *   longer offers moves to the distribution's default, which a sentence
- *   says (as a flow's copy does: `flowCopyPin`), before Save and after a
- *   400 `collector_version_unknown`; a 403 `terms_acceptance_required` (or
- *   a 404 `organization_not_found`) closes it and revalidates the layout,
+ *   signs out and removes it) and says why: a pin the catalog no longer
+ *   offers moves to the distribution's default, which a sentence says (as
+ *   a flow's copy does: `flowCopyPin`), before Save and after a 400
+ *   `collector_version_unknown`; a 403 `terms_acceptance_required` (or a
+ *   404 `organization_not_found`) closes it and revalidates the layout,
  *   and it opens again once the terms are accepted (or in the session's
  *   organization); anything else says the configurations' refusal words
  *   (`configurationRefusalMessage`).
@@ -98,7 +98,7 @@ export function playgroundPinMovedSentence(pin: FlowCopyPin): string | null {
   return `Your playground configuration was built for collector v${pin.movedFrom}, which is no longer offered; it will use v${pin.version}.`;
 }
 
-/** The distribution's default version (else its first), when the catalogue lists it and it differs from `version`; else null. */
+/** The distribution's default version (else its first), when the catalog lists it and it differs from `version`; else null. */
 function defaultInstead(
   distributions: readonly CollectorDistribution[] | null,
   distribution: string,

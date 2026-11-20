@@ -155,7 +155,7 @@ describe("TokenCell", () => {
     [expiringIn(3 * DAY), "3d left", "text-fail"],
     [expiringIn(20 * DAY), "20d left", "text-warn"],
     [expiringIn(400 * DAY), "1y", "text-ok"],
-  ] as const)("shows the bucket's badge in its colour (%#)", (rotateToken, label, colour) => {
+  ] as const)("shows the bucket's badge in its color (%#)", (rotateToken, label, colour) => {
     renderCell(rotateToken);
     expect(screen.getByText(label)).toHaveClass(colour);
     expect(screen.queryByText("Rotating →")).toBeNull();

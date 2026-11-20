@@ -6,7 +6,7 @@ import { ConfigurationsTable } from "./ConfigurationsTable.js";
 import { ACME, CATALOGUE, CONTRIB_LABEL } from "~/test/collector-distributions.js";
 import { COLLEAGUE_EMAIL, MEMBER_EMAIL, MEMBER_ID, MINE, ORPHANED, THEIRS } from "~/test/configurations.js";
 
-/** By default every row may be deleted, as an admin's are, with the catalogue read. */
+/** By default every row may be deleted, as an admin's are, with the catalog read. */
 function renderTable(
   canDelete: (configuration: Configuration) => boolean = () => true,
   configurations: Configuration[] = [MINE, THEIRS, ORPHANED],
@@ -136,13 +136,13 @@ describe("ConfigurationsTable", () => {
       const contrib = within(row("Production Monitoring")).getAllByRole("cell")[3]!;
       expect(contrib).toHaveTextContent(/^Otel Contrib$/);
       expect(within(contrib).getByTitle(/^Built for/).querySelector("svg")).not.toBeNull();
-      // No short name of its own: the catalogue's label.
+      // No short name of its own: the catalog's label.
       expect(within(row("Staging Logs")).getAllByRole("cell")[3]).toHaveTextContent(/^Acme Collector$/);
     });
 
     // Every configuration has a distribution here, so the case left is one
-    // the catalogue doesn't list.
-    it("renders a distribution the catalogue doesn't list as its id, with the generic glyph", () => {
+    // the catalog doesn't list.
+    it("renders a distribution the catalog doesn't list as its id, with the generic glyph", () => {
       renderTable(() => true, [{ ...MINE, collectorDistribution: "grafana-alloy" }]);
 
       const cell = within(row("Production Monitoring")).getAllByRole("cell")[3]!;
@@ -151,7 +151,7 @@ describe("ConfigurationsTable", () => {
       expect(cell.querySelector("svg")).not.toBeNull();
     });
 
-    it("gives the tag fixed text for its tooltip, the catalogue's label in it, and puts no name or email in any attribute", () => {
+    it("gives the tag fixed text for its tooltip, the catalog's label in it, and puts no name or email in any attribute", () => {
       renderTable();
 
       for (const name of ["Production Monitoring", "Staging Logs", "Left Behind"]) {
@@ -167,7 +167,7 @@ describe("ConfigurationsTable", () => {
       }
     });
 
-    it("names the distribution by its id, with its mark, while the catalogue is unread", () => {
+    it("names the distribution by its id, with its mark, while the catalog is unread", () => {
       renderTable(() => true, [MINE], null);
 
       const cell = within(row("Production Monitoring")).getAllByRole("cell")[3]!;

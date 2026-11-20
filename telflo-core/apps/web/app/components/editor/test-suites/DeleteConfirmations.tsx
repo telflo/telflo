@@ -18,9 +18,9 @@ import { failureMessage } from "~/lib/test-runs/messages.js";
  * The Suites subtab's two delete confirmations: the suite confirmation, and
  * one for a definition, which is never deleted at once.
  *
- * Differences: Delete keeps the dialog open, its words "Deleting...", until
- * the API answers, and a failure toasts the API's words and keeps it open,
- * not closed at the click; one already gone ("not found": another tab
+ * Delete keeps the dialog open, its words "Deleting...", until
+ * the API answers, and a failure toasts the API's words and keeps it open;
+ * one already gone ("not found": another tab
  * deleted it) toasts the API's words and closes, the item dropped; a session
  * that ended toasts nothing. The name is text in the description, under the
  * app's `ph-mask`, never an attribute. Where the focus goes as it closes is

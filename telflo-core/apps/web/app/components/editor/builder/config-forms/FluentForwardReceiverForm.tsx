@@ -5,11 +5,10 @@ import { InlineAlert } from "./InlineAlert.js";
  * The Fluent Forward receiver's form, over the form's fields: Endpoint writes
  * its own key.
  *
- * - Kept: clearing Endpoint writes `""` (a `keepEmpty` field). The collector
- *   has no default endpoint
- *   (`receiver/fluentforwardreceiver/factory.go:27-29` at contrib v0.162.0);
- *   an empty one listens on a random TCP port (`receiver.go:81-92`), which
- *   the config validation reports.
+ * - Clearing Endpoint writes `""` (a `keepEmpty` field). The collector has
+ *   no default endpoint (`receiver/fluentforwardreceiver/factory.go:27-29`
+ *   at contrib v0.162.0); an empty one listens on a random TCP port
+ *   (`receiver.go:81-92`), which the config validation reports.
  * - Copy: the tag attribute is `fluent.tag` (`conversion.go:22`,
  *   `tagAttributeKey`), not `fluentd.tag`.
  *

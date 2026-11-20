@@ -631,7 +631,7 @@ describe("AcceptInvitation", () => {
       expect(screen.getByRole("button", { name: "Create Account & Join" })).toBeEnabled();
     });
 
-    it("forgets the token when registering finds the invitation cancelled since the preview", async () => {
+    it("forgets the token when registering finds the invitation canceled since the preview", async () => {
       previewAnswers(NEW_ADDRESS);
       vi.spyOn(apiClient, "registerFromInvitation").mockRejectedValue(
         new ApiError("invitation_not_found", INVALID_LINK_MESSAGE),

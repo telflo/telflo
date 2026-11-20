@@ -10,7 +10,7 @@ import { Button } from "~/components/ui/button.js";
  *   data goes only in text;
  * - the Published/Draft badge is in the footer's left slot, not the header,
  *   so the footer's divider always draws; the distribution tag follows it
- *   there, its tooltip fixed text but for the catalogue's label;
+ *   there, its tooltip fixed text but for the catalog's label;
  * - Delete shows only where it's allowed: the author's card, or any card for
  *   an admin;
  * - Enter and Space open the card only when the card itself has focus, not
@@ -28,7 +28,7 @@ interface ConfigurationCardProps {
   onOpen: (configuration: Configuration) => void;
   /** `from` the Delete pressed (the playground's prompt gives the focus back there). */
   onDelete: (configuration: Configuration, from?: HTMLElement) => void;
-  /** The collector catalogue, for the distribution tag's label and mark; null while unread or failed. */
+  /** The collector catalog, for the distribution tag's label and mark; null while unread or failed. */
   distributions?: readonly CollectorDistribution[] | null;
 }
 

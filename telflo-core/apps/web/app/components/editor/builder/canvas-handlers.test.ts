@@ -309,8 +309,8 @@ describe("the edges the canvas draws", () => {
   });
 });
 
-describe("the minimap's colours", () => {
-  it("is a group's pipeline colour, a component's type colour, from nothing a person wrote", () => {
+describe("the minimap's colors", () => {
+  it("is a group's pipeline color, a component's type color, from nothing a person wrote", () => {
     const group = (color: unknown) => ({ type: "pipelineGroup", data: { label: "x", componentType: "pipelineGroup", componentSubType: "", config: null, color } }) as OTelNode;
     expect(minimapNodeColor(group("#f97316"))).toBe("#f97316");
     expect(minimapNodeColor(group(undefined))).toBe("#374151");

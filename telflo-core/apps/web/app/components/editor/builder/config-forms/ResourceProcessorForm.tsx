@@ -32,12 +32,12 @@ import type { ValueChange } from "~/lib/graph/text-edits.js";
  *   source's keys go (`pattern` stays). From delete (or any action) to
  *   insert, update or upsert: `pattern` goes, and a `value: ""` is added
  *   when the item has no value source.
- * - Fixed: changing the value source swaps just those keys (the old one
- *   removed, the new one written `""`). A value
- *   keeps its type unless the person retypes it: the number `42` is shown as
- *   written and never rewritten as `"42"` until edited.
- * - Fixed: an action outside insert/update/upsert/delete (the collector's
- *   hash, extract, convert) shows as an extra option, as written, not a blank
+ * - Changing the value source swaps just those keys (the old one removed,
+ *   the new one written `""`). A value keeps its type unless the person
+ *   retypes it: the number `42` is shown as written and never rewritten as
+ *   `"42"` until edited.
+ * - An action outside insert/update/upsert/delete (the collector's hash,
+ *   extract, convert) shows as an extra option, as written, not a blank
  *   select.
  * - Clearing a card's Key or value writes `""`;
  *   clearing the Key Pattern (optional for delete) removes it.

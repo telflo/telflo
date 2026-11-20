@@ -27,11 +27,9 @@ interface ValidationPipelinesPanelProps {
  * rules can be created, edited and deleted on any version, published or not,
  * by anyone who can see the configuration.
  *
- * Differences:
  * - the pipelines are read each time the subtab shows and when the version
- *   changes, not once a version; a failed read shows inline with Retry
- *   ("Failed to load validation pipelines", or the API's words for a
- *   refusal), not a toast with no read again; it is announced
+ *   changes; a failed read shows inline with Retry ("Failed to load
+ *   validation pipelines", or the API's words for a refusal); it is announced
  *   (`role="alert"`), as a card's is;
  * - the whole panel is blocked from replay (`ph-no-capture`): pipeline names
  *   and every rule's name, description, pattern and OTTL are configuration

@@ -9,17 +9,15 @@ import type { ValuePath } from "~/lib/graph/text-edits.js";
  * The file exporter's form, over the form's fields: each field writes its own
  * key. Collector claims are contrib v0.162.0's `exporter/fileexporter`.
  *
- * - Fixed: rotation is on exactly while `rotation` is in the text, whatever
- *   it holds (`config.go:195-199`): `rotation: {}` is still on (100 MB, 100
+ * - Rotation is on exactly while `rotation` is in the text, whatever it
+ *   holds (`config.go:195-199`): `rotation: {}` is still on (100 MB, 100
  *   backups). The three fields sit in a pruning scope: clearing the last key
  *   removes `rotation`; a key no field shows (`localtime`) keeps it.
  *   `ROTATION_HINT` says so.
- * - Fixed: each is a `NumberField`, so 0 can be typed (Max Days 0 keeps every
- *   file).
- * - Changed: a rotation value written while the text has `append: true`
- *   removes `append` in the same change, with `APPEND_TOAST`: the collector
- *   refuses the two together (`config.go:126-128`). The form has no Append
- *   control.
+ * - Each is a `NumberField`, so 0 can be typed (Max Days 0 keeps every file).
+ * - A rotation value written while the text has `append: true` removes
+ *   `append` in the same change, with `APPEND_TOAST`: the collector refuses
+ *   the two together (`config.go:126-128`). The form has no Append control.
  * - File Path cleared removes the key, as clearing any field does (`""` is
  *   refused either way, `config.go:123-125`).
  *

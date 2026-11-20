@@ -36,18 +36,15 @@ function presentValues(templates: TestTemplate[], valueOf: (template: TestTempla
  * product-wide sample inputs, filtered by receiver type and signal, each
  * viewed, downloaded or picked. Highlight a row and OK picks it.
  *
- * Differences:
- * - read afresh each time the step shows (the store's `loadTemplates`),
- *   not once a session; a session that ended toasts
- *   nothing;
+ * - read afresh each time the step shows (the store's `loadTemplates`); a
+ *   session that ended toasts nothing;
  * - receiver types show by their palette labels ("File Log"), the raw value
  *   as a fallback, in the filter and the details, and signals by their
- *   words ("Traces", "Logs", "Metrics"), not "traces"; each filter offers
- *   the values present, sorted by label; the filters are labelled
+ *   words ("Traces", "Logs", "Metrics"); each filter offers
+ *   the values present, sorted by label; the filters are labeled
  *   (`aria-labelledby`);
  * - a download is the template's bytes, named by its original file name
- *   with its extension (not the display name without one),
- *   through a detached anchor (`downloadBlob`): the name never reaches the
+ *   with its extension, through a detached anchor (`downloadBlob`): the name never reaches the
  *   page, a URL or an attribute;
  * - no template name reaches an attribute: the Download, Show details and
  *   View contents buttons are named by hidden text, through

@@ -14,11 +14,11 @@ import { InlineAlert } from "./InlineAlert.js";
  * 100, `rebound_trigger_threshold_mib` 10, `check_interval` 5s,
  * `max_transaction_size` 65536; `fsync` false.
  *
- * Changed: Create Directory shows off while unset, as the collector has it.
- * The compaction directory's default is the collector's
- * (`getDefaultDirectory()`, `/var/lib/otelcol/file_storage` outside Windows),
- * its hint and placeholder, not the "storage directory": the collector
- * doesn't follow `directory` there.
+ * Create Directory shows off while unset, as the collector has it. The
+ * compaction directory's default is the collector's (`getDefaultDirectory()`,
+ * `/var/lib/otelcol/file_storage` outside Windows), its hint and placeholder,
+ * not the "storage directory": the collector doesn't follow `directory`
+ * there.
  *
  * The Compaction section's count is the keys the `compaction` block holds.
  */

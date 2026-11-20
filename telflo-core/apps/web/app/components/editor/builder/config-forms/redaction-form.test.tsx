@@ -140,7 +140,7 @@ async function openSanitizer(user: UserEvent, label: string) {
   await user.click(screen.getByRole("button", { name: new RegExp(`^${label}( enabled)?$`) }));
 }
 
-/** A labelled field's block (its ConfigField), by its label. */
+/** A labeled field's block (its ConfigField), by its label. */
 function fieldOf(label: string): HTMLElement {
   return screen.getByText(label, { selector: "label" }).closest("div.space-y-1\\.5") as HTMLElement;
 }

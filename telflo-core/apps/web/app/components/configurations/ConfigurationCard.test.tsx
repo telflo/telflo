@@ -162,16 +162,16 @@ describe("ConfigurationCard", () => {
     });
 
     // Every configuration has a distribution here, so the tag is never
-    // omitted; while the catalogue is unread (or failed) it is found from the
+    // omitted; while the catalog is unread (or failed) it is found from the
     // id alone.
-    it("shows the tag from the id alone while the catalogue is unread", () => {
+    it("shows the tag from the id alone while the catalog is unread", () => {
       const { card } = renderCard(MINE, true, true, null);
 
       expect(within(card).getByText("Otel Contrib")).toBeInTheDocument();
       expect(within(card).getByTitle("Built for otelcol-contrib — chosen when this configuration was created.")).toBeInTheDocument();
     });
 
-    it("gives the tag a fixed tooltip naming the catalogue's label, and no name, email or description in any attribute", () => {
+    it("gives the tag a fixed tooltip naming the catalog's label, and no name, email or description in any attribute", () => {
       const { card } = renderCard(THEIRS, false);
 
       const tag = within(card).getByTitle(`Built for ${CONTRIB_LABEL} — chosen when this configuration was created.`);

@@ -40,7 +40,7 @@ import { TOKENS_FAILED_WORDS } from "./CollectorTokenRow.js";
 // configuration's name in "Configuration name"); the IP precedence; "Edit
 // collector" in the footer closing the details for the edit dialog. Its Node
 // row is a Kubernetes fleet's (below); Variable Group, the collector-version
-// drift colour, the nested error dialog and the read-only grids' missing
+// drift color, the nested error dialog and the read-only grids' missing
 // footer don't apply.
 
 const NOW = Date.parse("2026-10-14T10:00:00.000Z");
@@ -136,7 +136,7 @@ async function settled() {
 
 const dialog = () => screen.getByRole("dialog");
 
-/** The value cell of the row labelled `label`. */
+/** The value cell of the row labeled `label`. */
 function rowValue(label: string): HTMLElement {
   const labelCell = within(dialog()).getByText(label, { selector: "div" });
   return labelCell.nextElementSibling as HTMLElement;

@@ -8,7 +8,7 @@ import { isTruthy } from "./shared/counts.js";
  * The Kubernetes events receiver's form, over the form's fields:
  * each field writes its own key.
  *
- * - Fixed: Add Namespace holds an empty row until something is typed in it
+ * - Add Namespace holds an empty row until something is typed in it
  *   (never writing `""`, which the receiver watches as every namespace,
  *   `receiver/k8seventsreceiver/receiver.go: 200-203`, so `[default, ""]`
  *   would collect everything). A row emptied and left is removed.

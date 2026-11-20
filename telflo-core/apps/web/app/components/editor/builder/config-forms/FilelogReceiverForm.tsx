@@ -26,39 +26,39 @@ import type { ValuesResult } from "~/lib/stores/editor-store.js";
  * own key. Collector claims cite contrib v0.162.0 (`pkg/stanza/fileconsumer/`
  * unless named).
  *
- * - Kept: Add Path and Add Exclusion append seeds, `/var/log/*.log` and
+ * - Add Path and Add Exclusion append seeds, `/var/log/*.log` and
  *   `/var/log/excluded/*.log` (`MultiValueField`'s `addValue`); removing the
  *   last row removes the key. Clearing a row writes `""`. Include is required
  *   (`matcher/matcher.go:63-65`): the asterisk is hand-made.
- * - Kept: the multiline box is on while a `multiline` block is there;
- *   ticking it writes `{line_start_pattern: ""}` (the collector splits on
- *   newlines while both patterns are empty, `split/split.go:57-59`), and
- *   unticking removes the block. Typing one pattern removes the other in
- *   the same change (`TextField`'s `excludes`; the collector refuses both,
+ * - The multiline box is on while a `multiline` block is there; ticking it
+ *   writes `{line_start_pattern: ""}` (the collector splits on newlines
+ *   while both patterns are empty, `split/split.go:57-59`), and unticking
+ *   removes the block. Typing one pattern removes the other in the same
+ *   change (`TextField`'s `excludes`; the collector refuses both,
  *   `split.go:77`), and a pattern is disabled while the other is set and it
  *   isn't (with both in the text, both stay editable, so either can be
  *   kept; the seed's empty start pattern disables nothing). Cleared, a
  *   pattern removes its key. The box's state is read from the text, so a
  *   YAML edit adding or removing the block shows.
- * - Fixed: Resource and Log Attributes are `KeyValueMapField`s (`"rows"`):
- *   Add holds a row until its key is typed (never writing `"": ""`), a key
- *   is renamed in place on blur or Enter, and a key another row has is
+ * - Resource and Log Attributes are `KeyValueMapField`s (`"rows"`): Add
+ *   holds a row until its key is typed (never writing `"": ""`), a key is
+ *   renamed in place on blur or Enter, and a key another row has is
  *   refused under the row with "An attribute with this key already
  *   exists." (never collapsing the two). Both are read from the text,
  *   never from refs taken once, so the next attribute edit never writes a
  *   stale map back over a YAML edit.
- * - Fixed: the collector refuses Delete file after reading with
- *   `start_at: end` (`config.go:246-253`), and a multiline pattern with the
- *   `nop` encoding (`split/split.go:47-55`). Ticking Delete file after
- *   reading sets Start Position to Beginning when it isn't, choosing End
- *   unticks Delete file after reading (writes `false`, as unticking does),
- *   choosing "No validation (raw bytes)" removes the multiline block when it
- *   holds a pattern (an empty one splits nothing), and ticking the multiline
- *   box or typing a pattern while the encoding is raw bytes removes the
- *   encoding (UTF-8, the collector's default), each in the same change (one
- *   undo entry), with a toast saying what changed.
- * - The "Deletes source files" alert is a hint under Delete file after
- *   reading, always shown (`DELETE_HINT`).
+ * - The collector refuses Delete file after reading with `start_at: end`
+ *   (`config.go:246-253`), and a multiline pattern with the `nop` encoding
+ *   (`split/split.go:47-55`). Ticking Delete file after reading sets Start
+ *   Position to Beginning when it isn't, choosing End unticks Delete file
+ *   after reading (writes `false`, as unticking does), choosing "No
+ *   validation (raw bytes)" removes the multiline block when it holds a
+ *   pattern (an empty one splits nothing), and ticking the multiline box or
+ *   typing a pattern while the encoding is raw bytes removes the encoding
+ *   (UTF-8, the collector's default), each in the same change (one undo
+ *   entry), with a toast saying what changed.
+ * - Delete file after reading has a hint under it, always shown
+ *   (`DELETE_HINT`).
  * - Copy: ASCII is "ASCII (read as UTF-8)": the collector decodes `ascii` as
  *   UTF-8 (`internal/coreinternal/textutils/encoding.go:23-24`).
  * - Unset shows the collector's default (`config.go:60-78`,

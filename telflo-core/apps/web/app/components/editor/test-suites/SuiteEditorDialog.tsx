@@ -24,11 +24,10 @@ interface SuiteEditorDialogProps {
  * Creating, renaming and describing a suite: its words and fields. On any
  * version, published or not.
  *
- * Differences:
- * - the fields' ids come from `useId` (never fixed), and they take no more
+ * - the fields' ids come from `useId`, and they take no more
  *   than the API keeps (`maxLength`);
  * - closing gives the focus back to the button that opened it;
- * - a description left empty is `''`, as the API keeps it, not null;
+ * - a description left empty is `''`, as the API keeps it;
  * - a refusal toasts the API's words (a version's 101st suite: "A version
  *   can have at most 100 test suites."), else fixed words; a session that
  *   ended toasts nothing;

@@ -88,7 +88,7 @@ describe("AddPipelineDialog", () => {
     expect(screen.getByText("traces", { selector: "div" })).toHaveClass("uppercase");
   });
 
-  it("creates the pipeline in the text with the first unused colour, toasts, closes, and can be undone", async () => {
+  it("creates the pipeline in the text with the first unused color, toasts, closes, and can be undone", async () => {
     const { user, onOpenChange } = renderDialog();
     const input = await screen.findByLabelText("Pipeline Name");
 

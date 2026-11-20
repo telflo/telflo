@@ -170,7 +170,7 @@ describe("count and distinct recognition", () => {
   });
 });
 
-describe("recognizeBuilderRule: a builder only on the context it saves (new)", () => {
+describe("recognizeBuilderRule: a builder only on the context it saves", () => {
   it.each([
     [
       "a traces spanevent none-rule (the builder would save span)",
@@ -232,7 +232,7 @@ describe("helpers", () => {
   });
 });
 
-describe("ottlStringLiteral (new)", () => {
+describe("ottlStringLiteral", () => {
   it.each([
     ["a plain string", "env", '"env"'],
     ["a backslash and a quote", 'say "hi" \\ done', '"say \\"hi\\" \\\\ done"'],
@@ -267,7 +267,7 @@ describe("ottlStringLiteral (new)", () => {
   });
 });
 
-describe("the number writers (new)", () => {
+describe("the number writers", () => {
   it.each([
     [0n, "0"],
     [-1n, "-1"],
@@ -313,7 +313,7 @@ describe("the number writers (new)", () => {
   });
 });
 
-describe("unescapeOttlString: exactly the writer's escapes (new)", () => {
+describe("unescapeOttlString: exactly the writer's escapes", () => {
   it.each([
     ["\\\\", "a backslash"],
     ['\\"', "a quote"],

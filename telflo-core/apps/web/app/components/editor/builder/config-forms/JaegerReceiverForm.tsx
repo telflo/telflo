@@ -12,27 +12,26 @@ import type { ValueView } from "~/lib/graph/value-view.js";
  * own key under `protocols.<protocol>`. Collector claims are contrib
  * v0.162.0's `receiver/jaegerreceiver`.
  *
- * - Fixed: a protocol is on while its key is under `protocols`, whatever its
- *   value. Every protocol is a `configoptional.Default` (`factory.go:46-64`),
- *   which is Some whenever its key is present, a bare `grpc:` (null) included
- *   (core `config/configoptional/optional.go:155-200`), never off. As in the
- *   OTLP receiver's form: a protocol whose value is a scalar or a list shows
- *   on, read-only, with `UNSHOWABLE_VALUE_MESSAGE`; a `protocols` that isn't a
+ * - A protocol is on while its key is under `protocols`, whatever its value.
+ *   Every protocol is a `configoptional.Default` (`factory.go:46-64`), which
+ *   is Some whenever its key is present, a bare `grpc:` (null) included (core
+ *   `config/configoptional/optional.go:155-200`), never off. As in the OTLP
+ *   receiver's form: a protocol whose value is a scalar or a list shows on,
+ *   read-only, with `UNSHOWABLE_VALUE_MESSAGE`; a `protocols` that isn't a
  *   mapping makes every box read-only. (`grpc: {enabled: false}` under the
  *   `configoptional.AddEnabledField` gate is off to the collector and shows on
  *   here; the gate is off by default.)
- * - Kept: ticking a protocol writes the seed `{endpoint: 0.0.0.0:<port>}` (a
+ * - Ticking a protocol writes the seed `{endpoint: 0.0.0.0:<port>}` (a
  *   listener on every interface, as a container needs); unticking removes it.
  *   Each is one change.
- * - Changed: the collector's defaults show as placeholders and
- *   "Default …" hints: `localhost:14250`, `localhost:14268`,
- *   `localhost:6832` (thrift_binary) and `localhost:6831` (thrift_compact)
- *   (`factory.go:23-28`), not `0.0.0.0`.
- * - Changed: the UDP tuning fields are number fields, so 0 can be entered and
- *   shows (`socket_buffer_size: 0` is the default, `config.go:20-25, 70-77`);
+ * - The collector's defaults show as placeholders and "Default …" hints:
+ *   `localhost:14250`, `localhost:14268`, `localhost:6832` (thrift_binary)
+ *   and `localhost:6831` (thrift_compact) (`factory.go:23-28`).
+ * - The UDP tuning fields are number fields, so 0 can be entered and shows
+ *   (`socket_buffer_size: 0` is the default, `config.go:20-25, 70-77`);
  *   cleared removes the key.
  * - Each card's box sits beside its label and description in a row, moved
- *   down to centre on the label's first line.
+ *   down to center on the label's first line.
  * - The Security section keys off the on-state: with neither gRPC nor Thrift
  *   HTTP on, an info alert; when one of them can't be shown,
  *   `UNSHOWABLE_VALUE_MESSAGE` instead.

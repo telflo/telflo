@@ -419,7 +419,7 @@ describe("the Product admins page", () => {
       expect(remove).toHaveBeenCalledOnce();
     });
 
-    it("gives the focus back to the Remove that opened the confirmation when it is cancelled", async () => {
+    it("gives the focus back to the Remove that opened the confirmation when it is canceled", async () => {
       const { user } = renderPage();
       await screen.findByRole("table");
       const opener = within(rowOf(BEN.email)).getByRole("button", { name: /^Remove product admin / });

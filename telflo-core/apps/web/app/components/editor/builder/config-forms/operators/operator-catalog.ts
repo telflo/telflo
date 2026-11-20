@@ -252,7 +252,7 @@ export interface LayoutPreset {
  * Go ones are the strptime ones' times in Go's notation
  * (`internal/coreinternal/timeutils/internal/ctimefmt/ctimefmt.go:30-72`),
  * with the same labels; epoch's are the collector's own
- * (`helper/time.go:98-106`), labelled as two epoch presets.
+ * (`helper/time.go:98-106`), labeled as two epoch presets.
  */
 export const LAYOUT_PRESETS: Readonly<Record<LayoutType, readonly LayoutPreset[]>> = {
   strptime: [

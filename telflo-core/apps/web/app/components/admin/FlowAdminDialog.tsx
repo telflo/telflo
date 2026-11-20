@@ -30,10 +30,10 @@ import { findDistribution, useCollectorDistributions } from "~/lib/stores/collec
 
 /*
  * A flow's dialog, with its fields, limits, copy, messages and layout:
- * - the distributions and versions come from the collector catalogue the
- *   rest of the app reads; the version select offers the distribution's
- *   versions, newest first, and falls back to the catalogue's default
- *   (resolveFlowVersion). Editing a flow whose pin the catalogue no longer
+ * - the distributions and versions come from the collector catalog the rest
+ *   of the app reads; the version select offers the distribution's versions,
+ *   newest first, and falls back to the catalog's default
+ *   (resolveFlowVersion). Editing a flow whose pin the catalog no longer
  *   offers, the select shows that pin, marked, as its current choice;
  * - the signals are derived from the text (deriveSignals);
  * - the fields are checked against the API's contract before saving, so a
@@ -61,10 +61,10 @@ interface FlowAdminDialogProps {
   onCloseAutoFocus?: (event: Event) => void;
 }
 
-/** What the version select shows beside a pin the catalogue no longer offers. */
+/** What the version select shows beside a pin the catalog no longer offers. */
 export const NO_LONGER_OFFERED = "no longer offered";
 
-/** The distribution a new flow starts with: the catalogue's default, or Contrib before it is read. */
+/** The distribution a new flow starts with: the catalog's default, or Contrib before it is read. */
 const FALLBACK_DISTRIBUTION = "otelcol-contrib";
 
 export function FlowAdminDialog({ open, flow, onClose, onSave, onProductAdminLost, onCloseAutoFocus }: FlowAdminDialogProps) {
@@ -106,9 +106,9 @@ export function FlowAdminDialog({ open, flow, onClose, onSave, onProductAdminLos
     offers,
   );
   // The flow's own pin when the options don't hold it, shown as the current
-  // choice: kept although the catalogue no longer offers it, and marked so;
-  // unmarked while the catalogue is unread (or its read failed), when
-  // nothing is known about it.
+  // choice: kept although the catalog no longer offers it, and marked so;
+  // unmarked while the catalog is unread (or its read failed), when nothing
+  // is known about it.
   const unlistedPin =
     effectiveVersion !== "" && !offers.some((offer) => offer.version === effectiveVersion) ? effectiveVersion : null;
 

@@ -9,11 +9,11 @@ import type { OpeningRead } from "~/lib/hooks/use-opening-reads.js";
 import { VersionOptionLabel } from "./VersionOptionLabel.js";
 
 /*
- * The pin picker, shared by Edit collector, bulk pin and New/Edit group:
- * two dependent Selects, Configuration then Version, a configuration
- * chosen selecting its newest version, "(group default)" marking the
- * group's assignment, over the platform's reads; a pin names a published
- * version only. Differences:
+ * The pin picker, shared by Edit collector, bulk pin and New/Edit group: two
+ * dependent Selects, Configuration then Version, a configuration chosen
+ * selecting its newest version, "(group default)" marking the group's
+ * assignment, over the platform's reads; a pin names a published version
+ * only.
  *
  * - The Configuration Select lists the organization's published
  *   configurations, 100 a page (`filter=published`, newest update first, the

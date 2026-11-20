@@ -39,7 +39,7 @@ import { useCurrentUser } from "~/lib/use-current-user.js";
  * `UseFlowDialog`: "Use this flow" on a flow's page, the name-and-create
  * step, prefilled with the flow's name and summary so the common case is one
  * click. Its details:
- * - the pin is the flow's, or the distribution's default when the catalogue
+ * - the pin is the flow's, or the distribution's default when the catalog
  *   no longer offers it, which a sentence under "pinned to collector v…"
  *   says; no ClickStack coercion;
  * - it behaves as the create dialog does: Create is enabled once the

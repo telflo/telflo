@@ -115,7 +115,7 @@ describe("UseFlowDialog", () => {
     expect(screen.getByRole("button", { name: "Cancel" })).toBeEnabled();
   });
 
-  describe("a pin the catalogue no longer offers", () => {
+  describe("a pin the catalog no longer offers", () => {
     it("quotes the default the copy will use, says why, and creates on it", async () => {
       const createConfiguration = vi.spyOn(apiClient, "createConfiguration").mockResolvedValue({ configuration: MINE });
       const { user } = renderDialog(makeFlow({ collectorVersion: RETIRED_VERSION }));
@@ -130,7 +130,7 @@ describe("UseFlowDialog", () => {
       expect(createConfiguration.mock.calls[0]![1]).toMatchObject({ collectorVersion: "0.162.0" });
     });
 
-    it("sends the flow's pin while the catalogue is unread, and toasts the API's refusal", async () => {
+    it("sends the flow's pin while the catalog is unread, and toasts the API's refusal", async () => {
       vi.spyOn(apiClient, "getCollectorDistributions").mockRejectedValue(
         new ApiError("network_error", "Could not reach the server. Check your connection."),
       );

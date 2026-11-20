@@ -134,7 +134,7 @@ async function openSection(user: UserEvent, title: string) {
   await user.click(screen.getAllByRole("button", { name: new RegExp(`^${title}\\s*\\d*$`) }).at(-1)!);
 }
 
-/** A labelled field's block (its ConfigField), by its label. */
+/** A labeled field's block (its ConfigField), by its label. */
 function fieldOf(label: string): HTMLElement {
   return screen.getByText(label, { selector: "label" }).closest("div.space-y-1\\.5") as HTMLElement;
 }

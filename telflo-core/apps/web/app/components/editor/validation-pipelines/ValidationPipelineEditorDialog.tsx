@@ -25,7 +25,6 @@ interface ValidationPipelineEditorDialogProps {
  * that already has a validation pipeline is offered disabled, " — already
  * has a validation pipeline". On any version, published or not.
  *
- * Differences:
  * - the request is the pipeline's name only (`{pipeline}`): the API takes
  *   the signal from it, and keeps no unused `name`;
  * - the select's values are the pipelines' opaque ids (`pipeline_<n>`), its

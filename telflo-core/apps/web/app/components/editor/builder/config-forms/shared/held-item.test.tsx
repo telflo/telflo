@@ -109,7 +109,7 @@ function Transforms() {
   const cards = useCardKeys(items);
   const held = useHeldItem(["transforms"], { cards });
   latest = held;
-  // Labelled and identified by position, as a form's cards are: the held card's is where it shows.
+  // Labeled and identified by position, as a form's cards are: the held card's is where it shows.
   const position = (index: number) => (held.held && index >= held.at ? index + 1 : index);
   const rows = cards.keys.map((key, index) => <Card key={key} index={index} position={position(index)} />);
   if (held.held) rows.splice(held.at, 0, <Card key={cards.next} index={held.at} position={held.at} held={held} />);

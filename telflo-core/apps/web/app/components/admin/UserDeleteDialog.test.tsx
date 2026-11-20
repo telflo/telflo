@@ -19,7 +19,7 @@ import { quietQueries } from "~/test/service-accounts.js";
 /*
  * The Users page's delete dialog: the block's sentence per kind around the
  * visible values; the kind alone in fixed words; the type-to-confirm
- * (uncontrolled, inside ph-no-capture, labelled, no placeholder, enabled only
+ * (uncontrolled, inside ph-no-capture, labeled, no placeholder, enabled only
  * on the exact email); each answer. Emails and organization names are
  * fixtures carrying the marker "zq"; they are compared as booleans only,
  * never printed by a matcher.
@@ -154,7 +154,7 @@ describe("UserDeleteDialog", () => {
     }
   });
 
-  it("asks for the email in an uncontrolled field inside ph-no-capture, labelled by the confirm sentence, with no placeholder; Permanently delete is enabled only by the exact email, trimmed", async () => {
+  it("asks for the email in an uncontrolled field inside ph-no-capture, labeled by the confirm sentence, with no placeholder; Permanently delete is enabled only by the exact email, trimmed", async () => {
     const { user } = renderDialog({ user: adminUser() });
     const dialog = screen.getByRole("alertdialog");
     expect(within(dialog).getByRole("heading").textContent === `Nuclear delete: ${EMAIL}`).toBe(true);

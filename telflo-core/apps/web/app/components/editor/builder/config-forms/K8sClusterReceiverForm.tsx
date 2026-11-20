@@ -8,7 +8,7 @@ import { isTruthy, listLength } from "./shared/counts.js";
  * The Kubernetes cluster receiver's form, over the form's fields:
  * each field writes its own key.
  *
- * - Fixed: Add Namespace and Add Metadata Exporter hold an empty row until
+ * - Add Namespace and Add Metadata Exporter hold an empty row until
  *   something is typed in it (never writing `""`). The collector refuses a
  *   blank metadata exporter at start
  *   (`receiver/k8sclusterreceiver/watcher.go:467-509`, "exporter is not in

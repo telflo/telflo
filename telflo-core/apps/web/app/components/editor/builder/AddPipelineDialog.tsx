@@ -13,7 +13,7 @@ import { useEditorStore } from "~/lib/stores/editor-store.js";
  * The Add New Pipeline dialog: the name is lowercased as it's typed and
  * trimmed on submit, then refused when empty, not `traces`, `metrics` or
  * `logs` with an optional `/<name>`, or already used. The store adds the
- * pipeline to the text, empty, with the first unused colour, as one undo
+ * pipeline to the text, empty, with the first unused color, as one undo
  * entry.
  *
  * The pipeline's id is opaque (`pipeline_<n>`), never built from the name.

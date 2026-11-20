@@ -4,7 +4,7 @@ import type { OTelEdge } from "~/lib/graph/types.js";
 
 /**
  * The arrowhead pointing into the target handle: 8 px long, 4 px half-width,
- * its tip 4 px shy of the handle's centre, turned for the side the edge
+ * its tip 4 px shy of the handle's center, turned for the side the edge
  * enters from.
  */
 export function arrowPath(x: number, y: number, position: Position): string {
@@ -26,7 +26,7 @@ export function arrowPath(x: number, y: number, position: Position): string {
 
 /**
  * A pipeline edge: a bezier with an arrowhead and marching dashes
- * (`tf-edge-flow`, off under reduced motion), grey at rest, the brand colour
+ * (`tf-edge-flow`, off under reduced motion), gray at rest, the brand color
  * with a halo when selected. The path's `id` is the edge's opaque id.
  */
 export function PipelineEdge({

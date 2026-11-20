@@ -251,7 +251,7 @@ describe("PlaygroundSaveDialog", () => {
     stage();
     const { user } = renderDialog();
     const dialog = await saveDialog();
-    // The catalogue (read once the dialog opens) offers 0.161.0: the staged pin is sent.
+    // The catalog (read once the dialog opens) offers 0.161.0: the staged pin is sent.
     await waitFor(() => expect(apiClient.getCollectorDistributions).toHaveBeenCalled());
     await user.click(within(dialog).getByRole("button", { name: "Save" }));
     expect(
@@ -266,7 +266,7 @@ describe("PlaygroundSaveDialog", () => {
     expect(create.mock.calls.map(([, request]) => request.collectorVersion)).toEqual(["0.161.0", "0.162.0"]);
   });
 
-  it("a staged pin the catalogue no longer offers moves to its default before Save, as a flow's copy does", async () => {
+  it("a staged pin the catalog no longer offers moves to its default before Save, as a flow's copy does", async () => {
     stage({ collectorVersion: RETIRED_VERSION });
     const { user } = renderDialog();
     const dialog = await saveDialog();

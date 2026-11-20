@@ -80,7 +80,7 @@ describe("the sample editor: the person's editor preferences", () => {
     expect(fake.mounts).toBe(1);
   });
 
-  it("the sample editor's tab size and minimap follow the preferences, no longer fixed at 2 and off", async () => {
+  it("the sample editor's tab size and minimap follow the preferences", async () => {
     choose("dark", { tabSize: 4, minimap: true });
     await renderEditor();
     expect(fake.props?.options).toMatchObject({ minimap: { enabled: true } });

@@ -15,25 +15,24 @@ import type { ValueView } from "~/lib/graph/value-view.js";
  * shows no default; it isn't rootable (`transformer/add/config.go:38`, an
  * `entry.Field`).
  *
- * Changed: Value is written as typed. It is never coerced on a keystroke
- * (`1.0` to `1`, so a decimal couldn't be typed, or `007` to `7`): what is
- * typed is written verbatim, plain, when it reads alone on one line as a
- * number, a boolean (any YAML 1.2 core spelling) or a one-line flow mapping or
- * sequence (`{"k": "v"}`, `[1, "a"]`; the text edits' `plainValue`; a plain
- * string in it that the collector would read as another type is written
- * double-quoted, `["2024-01-01"]`), and as a string otherwise; `EXPR(...)` is
- * a string, which the collector compiles (`add/config.go:53-66`). The field
- * shows what the text holds as written: a plain scalar's characters (`0750`,
- * `1.0`), a string's value, a one-line flow collection's characters
- * (`readValue`'s `source`), so it stays editable; a block collection or a line
- * break is read-only with `UNSHOWABLE_VALUE_MESSAGE`. Retyping the characters
- * shown writes them (`writeSame`, as docker_stats' API Version): a string
- * `"42"` shows `42`, and typing `42` means the number; while the text holds
- * such a string (`"42"`, `"true"`, `'1.0'`), "Written as a string." shows
- * under the field. Cleared, it writes `""`, as the seed does: the collector
- * requires a value (`add.md`). Fixed: the examples' "JSON object" was
- * `{'key': 'value'}`, which isn't JSON; it is `{"key": "value"}`, which the
- * field writes as a mapping.
+ * Value is written as typed. It is never coerced on a keystroke (`1.0` to `1`,
+ * so a decimal couldn't be typed, or `007` to `7`): what is typed is written
+ * verbatim, plain, when it reads alone on one line as a number, a boolean (any
+ * YAML 1.2 core spelling) or a one-line flow mapping or sequence
+ * (`{"k": "v"}`, `[1, "a"]`; the text edits' `plainValue`; a plain string in
+ * it that the collector would read as another type is written double-quoted,
+ * `["2024-01-01"]`), and as a string otherwise; `EXPR(...)` is a string, which
+ * the collector compiles (`add/config.go:53-66`). The field shows what the
+ * text holds as written: a plain scalar's characters (`0750`, `1.0`), a
+ * string's value, a one-line flow collection's characters (`readValue`'s
+ * `source`), so it stays editable; a block collection or a line break is
+ * read-only with `UNSHOWABLE_VALUE_MESSAGE`. Retyping the characters shown
+ * writes them (`writeSame`, as docker_stats' API Version): a string `"42"`
+ * shows `42`, and typing `42` means the number; while the text holds such a
+ * string (`"42"`, `"true"`, `'1.0'`), "Written as a string." shows under the
+ * field. Cleared, it writes `""`, as the seed does: the collector requires a
+ * value (`add.md`). The examples' "JSON object" is `{"key": "value"}`, which
+ * the field writes as a mapping.
  */
 
 /** Under a Value that is a string whose characters read as a number or a boolean. */

@@ -45,26 +45,26 @@ import type { ValueView } from "~/lib/graph/value-view.js";
  *   `localhost:8080`, and on a job with no target group writes
  *   `static_configs: [{targets: [localhost:8080]}]`; other groups and a
  *   group's `labels` stay as written.
- * - Fixed: Report Extra Scrape Metrics writes
+ * - Report Extra Scrape Metrics writes
  *   `config.global.extra_scrape_metrics`, Prometheus' own key, which each
  *   job falls back to (`config/config.go:540, 943-945`), not the receiver's
  *   `report_extra_scrape_metrics`, removed in v0.149.0 and refused (contrib
  *   `CHANGELOG.md:3911-3913`; `config.go:30-58` has no such field). A key
  *   already in the text is left alone.
- * - Fixed: Add Job seeds the first `job-N` (N from the job count + 1 up) no
- *   job has: Prometheus refuses two jobs of one name
- *   (`config/config.go:444`), and `job-${count + 1}` alone could repeat one.
- * - Fixed: the Security box's TLS is `PrometheusTLSSection` (`TLS12`/`TLS13`,
- *   no server-only fields), its ids by the job's index
+ * - Add Job seeds the first `job-N` (N from the job count + 1 up) no job
+ *   has: Prometheus refuses two jobs of one name (`config/config.go:444`),
+ *   and `job-${count + 1}` alone could repeat one.
+ * - The Security box's TLS is `PrometheusTLSSection` (`TLS12`/`TLS13`, no
+ *   server-only fields), its ids by the job's index
  *   (`prometheus-job-0-tls-…`), never the job's name.
- * - Changed: basic authentication and authorization exclude each other
+ * - Basic authentication and authorization exclude each other
  *   (prometheus/common v0.71.0 `config/http_config.go:434-437`): writing
  *   into one removes the other in the same change, with a toast. Each block
  *   goes with its last key cleared (a pruning scope; a key it doesn't show,
  *   `password`, keeps it).
- * - Changed: Honor Timestamps shows ticked while unset (Prometheus'
- *   default, `config/config.go:208`); Scrape Timeout's default says it is
- *   the interval when that is shorter (`config/config.go:913- 915`); Scheme
+ * - Honor Timestamps shows ticked while unset (Prometheus' default,
+ *   `config/config.go:208`); Scrape Timeout's default says it is the
+ *   interval when that is shorter (`config/config.go:913- 915`); Scheme
  *   shows its default as a hint, not a value; the interval and timeout are
  *   checked with Prometheus' grammar (`1d`, `1h30m`;
  *   `shared/prometheus-duration.ts`).

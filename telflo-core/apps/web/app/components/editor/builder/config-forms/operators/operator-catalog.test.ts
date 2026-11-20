@@ -494,7 +494,7 @@ describe("every seed builds: its keys are its operator's, and each Build rule ho
 });
 
 describe("the time layouts", () => {
-  it("epoch offers the collector's s and s.us, labelled as the two epoch presets (helper/time.go:98-106)", () => {
+  it("epoch offers the collector's s and s.us, labeled as the two epoch presets (helper/time.go:98-106)", () => {
     expect(LAYOUT_PRESETS.epoch.map((p) => [p.value, p.label])).toEqual([
       ["s", "Unix epoch (seconds)"],
       ["s.us", "Unix epoch with fractional"],
@@ -502,7 +502,7 @@ describe("the time layouts", () => {
     for (const preset of LAYOUT_PRESETS.epoch) expect(EPOCH_LAYOUTS).toContain(preset.value);
   });
 
-  it("strptime's first preset is labelled with what it writes; Go time offers Go layouts", () => {
+  it("strptime's first preset is labeled with what it writes; Go time offers Go layouts", () => {
     expect(LAYOUT_PRESETS.strptime[0]).toMatchObject({ value: "%Y-%m-%d %H:%M:%S", label: "%Y-%m-%d %H:%M:%S" });
     expect(LAYOUT_PRESETS.gotime.map((p) => p.value)).toEqual([
       "2006-01-02 15:04:05",
@@ -512,7 +512,7 @@ describe("the time layouts", () => {
       "02/Jan/2006:15:04:05 -0700",
       "Jan 02 15:04:05",
     ]);
-    // The same times, labelled alike.
+    // The same times, labeled alike.
     expect(LAYOUT_PRESETS.gotime.slice(1).map((p) => p.label)).toEqual(LAYOUT_PRESETS.strptime.slice(1).map((p) => p.label));
     for (const preset of LAYOUT_PRESETS.gotime) expect(preset.value).not.toContain("%");
   });

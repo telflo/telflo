@@ -40,30 +40,29 @@ import type { ValueView } from "~/lib/graph/value-view.js";
  *   (`form.move`); the cards are keyed by keys of their own, so a card's state
  *   (a field's typing) follows it (`useCardKeys`; a rule's sources too); a
  *   rule is never rebuilt as `{sources}` on a change.
- * - Fixed: "Extract OpenTelemetry Annotations" writes only
+ * - "Extract OpenTelemetry Annotations" writes only
  *   `extract.otel_annotations`, never
- *   `extract: {metadata: [], otel_annotations: …}` when `extract` is
- *   unset: an empty list replaces the collector's default metadata
+ *   `extract: {metadata: [], otel_annotations: …}` when `extract` is unset:
+ *   an empty list replaces the collector's default metadata
  *   (`factory.go:45-51`).
- * - Fixed: "Derive Deployment Name from ReplicaSet" isn't shown:
+ * - "Derive Deployment Name from ReplicaSet" isn't shown:
  *   `deployment_name_from_replicaset` isn't a key (`config.go:22-60`; the
  *   collector derives the name anyway) and the collector refuses it. A key
  *   already in the text is left alone.
- * - Fixed: Add Rule never appends a second `{sources: [{from: connection}]}`,
- *   which the collector refuses ("duplicate pod association",
- *   `config.go:74-85`). It seeds the first of `connection`,
- *   `resource_attribute` `k8s.pod.ip` and `resource_attribute` `k8s.pod.uid`
- *   that isn't already a rule, compared by the collector's key (each source's
- *   `from/name`, sorted and joined, `config.go:152-164`); with all three
- *   there it is disabled, with "Every suggested rule is already here. Add
- *   others in the YAML."
+ * - Add Rule never appends a second `{sources: [{from: connection}]}`, which
+ *   the collector refuses ("duplicate pod association", `config.go:74-85`).
+ *   It seeds the first of `connection`, `resource_attribute` `k8s.pod.ip` and
+ *   `resource_attribute` `k8s.pod.uid` that isn't already a rule, compared by
+ *   the collector's key (each source's `from/name`, sorted and joined,
+ *   `config.go:152-164`); with all three there it is disabled, with "Every
+ *   suggested rule is already here. Add others in the YAML."
  * - Standard Attributes is a checkbox list written by item: unset shows none
  *   ticked, with the collector's default in the hint
  *   (`K8S_ATTRIBUTES_DEFAULT_METADATA`, v0.162.0), and the first tick writes
  *   that item alone. An item outside the 13 (the collector takes 31,
  *   `config.go:106-125`) shows after them, ticked, as text. Ids are
  *   `metadata-<index>`, never the attribute name.
- * - Kept: Add Source appends `{from: connection}` while a rule has fewer than
+ * - Add Source appends `{from: connection}` while a rule has fewer than
  *   4 sources (`config.go:76-77`); a source's From writes `from` alone; Add
  *   Label and Add Annotation append `{tag_name: "", key: "", from: pod}` (the
  *   collector takes empty ones, `options.go:258-286`); the Key/Regex switch

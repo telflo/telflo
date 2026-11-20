@@ -16,11 +16,10 @@ import {
  * was queued, in its order, each with its result; "Show test details" opens
  * the rule and why it failed.
  *
- * Differences:
  * - a count line beside the grid's label, "1 of 2 rules passed" ("1 of 1
  *   rule passed");
- * - a rule's error message shows in its details (not only in the row's
- *   tooltip, which stays), and so does its advisory (an `all` or `none` over
+ * - a rule's error message shows in its details (and in the row's
+ *   tooltip), and so does its advisory (an `all` or `none` over
  *   zero records, a truncated output), a passed rule's or a failed one's; a
  *   failed rule with no error and no detail shows its advisory as the
  *   failure's reason (a not-contains regex that matched only empty text), else
@@ -35,22 +34,21 @@ import {
  *   in the output, the element of its records and the JSON path inside it
  *   ("record 2", `resourceLogs[0]…body`); in the collector's log, the line.
  *   "Found more than 100,000 …" when the count stopped;
- * - an OTTL rule's misses are labelled by its context ("log #3"), `any`'s
+ * - an OTTL rule's misses are labeled by its context ("log #3"), `any`'s
  *   included; "… did not" counts the records that didn't hold the
  *   condition, and "Showing the first n" compares with the evaluator's
  *   count of listed records;
  * - replay: the grid sits inside the results' `ph-no-capture` region, the
  *   dialog's content is `ph-no-capture` too; each row's "Show test
  *   details" is named by hidden text inside the block ("Show test details
- *   for rule 2: SSN guard", `aria-labelledby`), not all "Show test
- *   details"; the icons are named Passed and Failed (`role="img"`);
+ *   for rule 2: SSN guard", `aria-labelledby`); the icons are named Passed and Failed (`role="img"`);
  *   closing the details gives the focus back to the row's button, not to
  *   the page.
  */
 
 const ICON_CLASS = "inline-flex items-center justify-center w-5 h-5 rounded-full";
 
-/** The result icons: coloured circles with plain glyphs, in the platform's tokens. */
+/** The result icons: colored circles with plain glyphs, in the platform's tokens. */
 function ResultIcon({ passed }: { passed: boolean }) {
   return passed ? (
     <span role="img" aria-label="Passed" className={`${ICON_CLASS} bg-ok-soft text-ok`}>

@@ -41,10 +41,9 @@ import {
 /*
  * "Pin collectors": a `max-w-2xl` dialog with a `<form>`, "Pin {n}" /
  * "Pinning…" and the toast "Pinned {n} collector(s)", over the grid's
- * selection. Differences:
+ * selection.
  *
- * - No group step and no checkbox list: the collectors are the grid's
- *   selection.
+ * - The collectors are the grid's selection.
  * - **Two choices**, both starting at "Leave as is": **Version** — "Leave
  *   as is", "Follow each collector's group" (unpins), "A published version"
  *   (the picker, `CollectorPinPicker.tsx`); **Variable group** — "Leave as
@@ -53,8 +52,7 @@ import {
  *   opening, `VariableGroupChoice`). Pin is enabled once either moves off
  *   "Leave as is" (a version chosen complete). The request carries only the
  *   choices moved: "Follow each collector's group" is a null, "Leave as is"
- *   a field left out (`pin`, `pinnedVariableGroupId`). No imported
- *   configuration.
+ *   a field left out (`pin`, `pinnedVariableGroupId`).
  * - **"Variables used"** (the group dialogs' part, `VariableGroupChoice`'s
  *   `VariablesUsed`): for "A published version", the chosen version's
  *   organization variables no variable defines, before Pin, with "Saving is

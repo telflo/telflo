@@ -21,7 +21,7 @@ function asDisplayName(name: string): string {
 }
 
 /**
- * Upload a test file to My Files. Differences:
+ * Upload a test file to My Files.
  * - the file is checked as it is picked: one of the six extensions, up to
  *   10 MiB (`uploadRefusal`), said under the field, with OK held;
  * - a refusal shows the API's words (413, 415, 429), else

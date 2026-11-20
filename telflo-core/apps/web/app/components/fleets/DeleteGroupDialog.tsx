@@ -26,7 +26,7 @@ import { HelmUninstall } from "./HelmUninstall.js";
 /*
  * A group's delete, both fleet types': an AlertDialog with the title
  * `Delete {name}`, "Delete" / "Deleting..." and Cancel, with
- * `DeleteCollectorDialog`'s pattern for a write under way. Differences:
+ * `DeleteCollectorDialog`'s pattern for a write under way.
  *
  * - The body says what the delete does: the group and its collectors'
  *   records go; a collector installed into it that is still running keeps

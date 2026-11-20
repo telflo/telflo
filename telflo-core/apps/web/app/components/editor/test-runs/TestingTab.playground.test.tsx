@@ -6,7 +6,7 @@
  * opens on the sample's templates, and every action that would run, change,
  * upload, view or download a template, or read the regex library opens the
  * sign-up prompt at its button, with its words, and does nothing else. The
- * signed-in tab is TestingTab.test.tsx's (unchanged).
+ * signed-in tab is TestingTab.test.tsx's.
  *
  * Monaco is stubbed (a textarea holding its text), as in TestingTab's tests.
  */

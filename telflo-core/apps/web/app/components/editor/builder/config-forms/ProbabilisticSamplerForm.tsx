@@ -10,32 +10,31 @@ import type { ValueView } from "~/lib/graph/value-view.js";
  * its own key. Collector claims are contrib v0.162.0's
  * `processor/probabilisticsamplerprocessor`.
  *
- * - Kept: Sampling Percentage is marked required (the README calls it
- *   required, `README.md:306`), though the factory leaves it 0, which
- *   rejects everything (`config.go:32`): unset shows the placeholder 0 and
+ * - Sampling Percentage is marked required (the README calls it required,
+ *   `README.md:306`), though the factory leaves it 0, which rejects
+ *   everything (`config.go:32`): unset shows the placeholder 0 and
  *   "Default 0".
- * - Changed: Sampling Mode unset is blank with the placeholder Hash Seed,
- *   "Default hash_seed" and hash_seed's description: an unset mode runs as
+ * - Sampling Mode unset is blank with the placeholder Hash Seed, "Default
+ *   hash_seed" and hash_seed's description: an unset mode runs as
  *   `hash_seed` (`sampler_mode.go:69-70, 381-397`; the README's reference
  *   agrees, `README.md:305`), not proportional. Hash Seed and its "Seed
  *   must match" alert show while the mode is unset or hash_seed, the mode
  *   the collector runs.
- * - Changed: the number fields write what is typed, as typed; cleared, the
- *   key is removed (never 0, and the precision isn't clamped:
- *   `config.go:125-129` refuses 0 and 15+, which the config validation
- *   reports). Unset shows the collector's defaults: Hash Seed 0, Precision
- *   4 (`factory.go:20, 32-39`).
- * - Changed: Attribute Source unset is blank with the placeholder TraceID and
+ * - The number fields write what is typed, as typed; cleared, the key is
+ *   removed (never 0, and the precision isn't clamped: `config.go:125-129`
+ *   refuses 0 and 15+, which the config validation reports). Unset shows
+ *   the collector's defaults: Hash Seed 0, Precision 4
+ *   (`factory.go:20, 32-39`).
+ * - Attribute Source unset is blank with the placeholder TraceID and
  *   "Default traceID" (`factory.go:34`).
- * - Changed: From Attribute shows while it is set or the source is
- *   `record`: the collector reads it under traceID too, as a fallback for a
- *   record with no trace ID (`config.go:90-92`;
- *   `logsprocessor.go:128-136`), so a value in the text can be seen and
- *   removed. Cleared, From Attribute and Sampling Priority remove their
- *   keys (never `""`). Once shown, From Attribute stays shown for the
- *   form's session, until another component (or load) is shown: cleared
- *   under traceID, it doesn't vanish mid-edit.
- * - Kept: Fail Closed ticked while unset (`factory.go:32-39`), writing
+ * - From Attribute shows while it is set or the source is `record`: the
+ *   collector reads it under traceID too, as a fallback for a record with
+ *   no trace ID (`config.go:90-92`; `logsprocessor.go:128-136`), so a value
+ *   in the text can be seen and removed. Cleared, From Attribute and
+ *   Sampling Priority remove their keys (never `""`). Once shown, From
+ *   Attribute stays shown for the form's session, until another component
+ *   (or load) is shown: cleared under traceID, it doesn't vanish mid-edit.
+ * - Fail Closed ticked while unset (`factory.go:32-39`), writing
  *   `true` or `false`. No cascades: a mode or source switch leaves the
  *   other keys.
  *

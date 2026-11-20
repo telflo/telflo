@@ -31,10 +31,10 @@ import type { ValueChange } from "~/lib/graph/text-edits.js";
  * following the card).
  *
  * - the Layout presets are the layout type's (`LAYOUT_PRESETS`): strptime's
- *   ones, the first labelled with what it writes ("%Y-%m-%d %H:%M:%S", not
- *   the Go notation); Go layouts under Go time (never strptime strings, which
- *   Go doesn't read); the collector's epoch layouts `s` and `s.us` under
- *   epoch (`helper/time.go:98-106`);
+ *   ones, the first labeled with what it writes ("%Y-%m-%d %H:%M:%S", not the
+ *   Go notation); Go layouts under Go time (never strptime strings, which Go
+ *   doesn't read); the collector's epoch layouts `s` and `s.us` under epoch
+ *   (`helper/time.go:98-106`);
  * - switching Layout Type sets the new type's first preset when the layout is
  *   another type's preset (the collector refuses a strptime layout under
  *   epoch, `time.go:98-106`), in the same change (one undo entry), with the

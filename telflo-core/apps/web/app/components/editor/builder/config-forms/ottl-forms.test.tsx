@@ -163,7 +163,7 @@ function groupCard(number: number): HTMLElement {
   return screen.getByRole("button", { name: `Statement Group ${number}` }).closest("div.rounded-lg") as HTMLElement;
 }
 
-/** A labelled field's block (its ConfigField), by its label. */
+/** A labeled field's block (its ConfigField), by its label. */
 function fieldOf(label: string): HTMLElement {
   return screen.getByText(label, { selector: "label" }).closest("div.space-y-1\\.5") as HTMLElement;
 }

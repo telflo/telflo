@@ -217,7 +217,7 @@ describe("FlowAdminDialog", () => {
   });
 
   describe("the distribution and the version", () => {
-    it("offers the catalogue's distributions, and the distribution's versions newest first, the default chosen", async () => {
+    it("offers the catalog's distributions, and the distribution's versions newest first, the default chosen", async () => {
       const { user } = renderDialog();
 
       expect(screen.getByRole("combobox", { name: "Distribution" })).toHaveTextContent(CONTRIB.label);
@@ -242,7 +242,7 @@ describe("FlowAdminDialog", () => {
       expect(onSave.mock.calls[0]![0]).toMatchObject({ collectorDistribution: ACME.id, collectorVersion: "2.36.0" });
     });
 
-    it("keeps an edited flow's pin, and marks one the catalogue no longer offers", async () => {
+    it("keeps an edited flow's pin, and marks one the catalog no longer offers", async () => {
       const { user } = renderDialog(makeFlow({ collectorVersion: RETIRED_VERSION }));
 
       const version = screen.getByRole("combobox", { name: "Collector version" });
@@ -256,7 +256,7 @@ describe("FlowAdminDialog", () => {
       ]);
     });
 
-    it("shows an edited flow's pin unmarked while the catalogue can't say", () => {
+    it("shows an edited flow's pin unmarked while the catalog can't say", () => {
       resetCollectorCatalogue();
       vi.spyOn(apiClient, "getCollectorDistributions").mockReturnValue(new Promise(() => {}));
       renderDialog(makeFlow({ collectorVersion: RETIRED_VERSION }));

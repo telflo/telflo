@@ -44,7 +44,7 @@ describe("ConfigurationSyncCell", () => {
     expect(screen.getByText("all in sync")).toHaveClass("text-muted-foreground");
   });
 
-  it("shows the counts in the warning colour when any collector isn't in sync, never a fraction", () => {
+  it("shows the counts in the warning color when any collector isn't in sync, never a fraction", () => {
     const { container } = render(<ConfigurationSyncCell summary={counts({ failed: 1, inSync: 3 })} />);
     const text = screen.getByText("1 failed · 3 in sync");
     expect(text).toHaveClass("text-warn");

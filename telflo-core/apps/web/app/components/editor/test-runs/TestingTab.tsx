@@ -90,7 +90,7 @@ function currentUserId(): string | null {
  * (`../validation-pipelines/ValidationPipelinesPanel.tsx`).
  *
  * A composed panel tab, kept mounted, disabled with Configuration
- * (routes/editor.tsx). Differences:
+ * (routes/editor.tsx).
  * - three subtabs, "Tests", "Validation" and "Suites". The subtab shown is
  *   the tab's state (controlled), so a Play from Suites can switch to Tests;
  *   the Validation and Suites subtabs mount each time they show, and read
@@ -105,8 +105,7 @@ function currentUserId(): string | null {
  * - ↺ re-runs a run the person can see, a teammate's included, through the
  *   run's own copy of its input (`sourceRunId`), with the run's pipeline,
  *   signal and duration and the CURRENT raw text, which the API substitutes
- *   organization variables into as for any run, never the text
- *   unsubstituted with the person's own file re-read. The fixture-shape
+ *   organization variables into as for any run. The fixture-shape
  *   check reads the first 64 KiB of the run's input, from the API's head of
  *   it (`…/files/input/head`);
  * - every Play ("Configure and run", ↺, a definition's Run test, both Play
@@ -117,7 +116,7 @@ function currentUserId(): string | null {
  *   flight;
  * - a definition's Run test (Play one) asks the fixture-shape question from
  *   the head of the definition's own input (`…/input/head`), and switches to
- *   the Tests subtab once its run is queued, so a cancelled question stays on
+ *   the Tests subtab once its run is queued, so a canceled question stays on
  *   Suites, never switched first; a Play all switches once its definitions are
  *   known not to be empty, and asks nothing;
  * - neither switches to Tests while one of the Suites subtab's dialogs shows
@@ -146,7 +145,7 @@ function currentUserId(): string | null {
  *   that answers once the editor has left queues nothing either, though its
  *   input suits the pipeline;
  * - a Play that queued nothing (every definition refused, an empty suite, a
- *   failed read, a refused or failed Play one or ↺, a cancelled question)
+ *   failed read, a refused or failed Play one or ↺, a canceled question)
  *   gives the focus back to the button pressed when it is still there and
  *   can be pressed, else to the active subtab's trigger, where it was lost
  *   to the body (the button held, or unmounted by the switch to Tests); only
@@ -609,7 +608,7 @@ export function TestingTab() {
             focusAfterQueue();
             return;
           }
-          // Cancelled: back to the button that opened it, explicitly, as a
+          // Canceled: back to the button that opened it, explicitly, as a
           // click doesn't focus a button in every browser. With a question to
           // ask, its dialog takes the focus.
           if (pendingRef.current === null && playRef.current?.disabled === false) playRef.current.focus();

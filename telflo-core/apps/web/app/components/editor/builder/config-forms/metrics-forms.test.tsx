@@ -933,7 +933,7 @@ describe("StatsdReceiverForm: the mappings", () => {
     expect(screen.getByRole("button", { name: "Add Mapping" })).toBeDisabled();
   });
 
-  it("a mapping card lacking both types is labelled Mapping <n>; one with a type keeps its arrow", async () => {
+  it("a mapping card lacking both types is labeled Mapping <n>; one with a type keeps its arrow", async () => {
     const user = renderForm(
       STATSD,
       statsdText("    timer_histogram_mapping:\n      - statsd_type: timer\n        observer_type: gauge\n      - histogram:\n          max_size: 10\n      - timer\n"),
@@ -1543,7 +1543,7 @@ describe("MetricsTransformProcessorForm: the changes", () => {
     expect(operation(valueOf(MT), 0, 0)).toEqual({ action: "experimental_scale_value" });
   });
 
-  it("a card's header is a labelled button; the operation's select is labelled Operation action", async () => {
+  it("a card's header is a labeled button; the operation's select is labeled Operation action", async () => {
     const user = renderForm(MT);
     const toggles = screen.getAllByRole("button", { name: "Expand transform" });
     expect(toggles).toHaveLength(3);

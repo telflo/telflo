@@ -64,9 +64,9 @@ const railItemActive =
 type NavItem = { icon: LucideIcon; label: string; path: string };
 
 /**
- * The unsaved-changes acknowledgement: the switch, or the sign-out,
- * is refused, and there is no "anyway", since silently abandoning unsaved
- * YAML would be a data loss path. Closing the dialog is all it does.
+ * The unsaved-changes acknowledgment: the switch, or the sign-out, is
+ * refused, and there is no "anyway", since silently abandoning unsaved YAML
+ * would be a data loss path. Closing the dialog is all it does.
  */
 function UnsavedChangesRefusal({
   open,

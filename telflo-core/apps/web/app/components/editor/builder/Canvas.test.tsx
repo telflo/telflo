@@ -215,7 +215,7 @@ describe("the edges", () => {
     expect(drawn).not.toHaveClass("selectable");
   });
 
-  it("show a selected connection in the brand colour with a halo", async () => {
+  it("show a selected connection in the brand color with a halo", async () => {
     open(corpusText("starter.yaml"));
     await renderCanvas();
     const edge = store().graph.edges[0]!;

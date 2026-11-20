@@ -11,15 +11,15 @@ import { selectIsEditingLocked, useEditorStore } from "~/lib/stores/editor-store
  * The pipeline group panel, on the editor's store: the Configuration tab
  * shows it for a selected pipeline group.
  *
- * A colour change is an undo entry (it changes the layout, never
- * the text), and Delete asks through the one delete dialog, which says the
- * pipeline's components go too, and is undoable.
+ * A color change is an undo entry (it changes the layout, never the text),
+ * and Delete asks through the one delete dialog, which says the pipeline's
+ * components go too, and is undoable.
  *
- * The swatches' `title` is the hex colour; the pipeline's name is text only,
+ * The swatches' `title` is the hex color; the pipeline's name is text only,
  * never an attribute.
  */
 
-/** The signal badges' colours (the Add New Pipeline dialog uses them too). */
+/** The signal badges' colors (the Add New Pipeline dialog uses them too). */
 export const SIGNAL_BADGE_CLASSES: Readonly<Record<PipelineSignalType, string>> = {
   traces:
     "bg-orange-50 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 border-orange-200 dark:border-orange-700",
@@ -30,7 +30,7 @@ export const SIGNAL_BADGE_CLASSES: Readonly<Record<PipelineSignalType, string>> 
 export const SIGNAL_BADGE_BASE =
   "inline-flex items-center rounded-[4px] border px-1.5 py-px font-mono text-[10px] font-medium uppercase tracking-[0.07em]";
 
-/** The colour for a pipeline without one. */
+/** The color for a pipeline without one. */
 const FALLBACK_COLOR = "#94a3b8";
 
 export function PipelineGroupConfigPanel() {
@@ -83,7 +83,7 @@ export function PipelineGroupConfigPanel() {
         <div className={`${SIGNAL_BADGE_BASE} ${SIGNAL_BADGE_CLASSES[pipeline.signalType]}`}>{pipeline.signalType}</div>
       </div>
 
-      {/* Color: sets this pipeline's lane colour on the canvas. */}
+      {/* Color: sets this pipeline's lane color on the canvas. */}
       <div className="mb-4">
         <Label className="mb-1.5 block text-[13px] font-medium text-foreground">Color</Label>
         <div className="grid grid-cols-6 gap-2">

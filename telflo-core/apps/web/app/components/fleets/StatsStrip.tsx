@@ -7,9 +7,8 @@ import { TokenCell } from "./TokenCell.js";
  * the same tiles): the server tiles, between the header and the tabs, from
  * the fleet's summary as the server counted it (`useFleet`'s, polled every
  * 15 s), never recomputed from the collectors shown. Its details:
- * - Online is the last minute ("Last minute"), in the danger colour when
- *   there are collectors and none is online, the warning colour when some
- *   aren't;
+ * - Online is the last minute ("Last minute"), in the danger color when there
+ *   are collectors and none is online, the warning color when some aren't;
  * - Version drift counts pending, failed and drifted collectors ("Collectors
  *   lagging", failed ones included); with no drift, its hint says how many
  *   have nothing assigned ("{n} with nothing assigned": every collector
@@ -18,7 +17,7 @@ import { TokenCell } from "./TokenCell.js";
  *   a link to the fleet's Tokens tab as in the fleet list.
  */
 
-/** Online's colour: danger with collectors and none online, warning with some offline, else neutral. */
+/** Online's color: danger with collectors and none online, warning with some offline, else neutral. */
 export function onlineEmphasis({ collectors, online }: Pick<FleetSummary, "collectors" | "online">): StatEmphasis {
   if (collectors === 0 || online === collectors) return "neutral";
   return online === 0 ? "danger" : "warn";

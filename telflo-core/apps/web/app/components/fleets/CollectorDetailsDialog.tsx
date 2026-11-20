@@ -34,7 +34,7 @@ import { NO_PINNED_WORDS, VariableGroupLink } from "./VariableGroupLink.js";
 /*
  * A collector's details: a Dialog opened from the grid's Name button, the
  * collector's name its title and "Collector details" its description, a
- * two-column grid of `DetailRow`s. Differences:
+ * two-column grid of `DetailRow`s.
  *
  * - Shown at once from the grid's row, then refreshed from `GET
  *   …/collectors/{c}`; a 404 for the collector toasts "Collector not found",
@@ -53,9 +53,8 @@ import { NO_PINNED_WORDS, VariableGroupLink } from "./VariableGroupLink.js";
  *   assigned), as the grid's two columns, each with its meaning as text (a
  *   touch user sees no tooltip); Token by the opamp-server's rule
  *   (`CollectorTokenRow`); "Configuration name" (named so because
- *   "Configuration" is the drift's row); Pin, Applied and Created (new); Last
- *   Seen's relative and full time as text, no dot. No collector-version drift
- *   colour.
+ *   "Configuration" is the drift's row); Pin, Applied and Created; Last Seen's
+ *   relative and full time as text, no dot.
  * - "Pinned variable group" (the collector's own, by name inside
  *   `ph-no-capture`, else "None: follows its group") and "Variable group"
  *   (the effective one: the pin's, else its group's, else "Organization
@@ -68,11 +67,11 @@ import { NO_PINNED_WORDS, VariableGroupLink } from "./VariableGroupLink.js";
  *   keeps a collector's errors 30 days only, so a collector still failing an
  *   old apply would otherwise show "Failed" beside "No errors reported.".
  * - Then the error history and the reported attributes, each in
- *   `ph-no-capture` (new). Pin, Target Version and Effective Version show a
+ *   `ph-no-capture`. Pin, Target Version and Effective Version show a
  *   published version as "{configurationName} @v{n}" (the two version rows
- *   linked, the whole name, no tooltip) or their empty forms; no imported
- *   configuration. Effective Version's meaning, the grid's Version
- *   tooltip's (`VERSION_MEANINGS`), is text under it, as Status's.
+ *   linked, the whole name, no tooltip) or their empty forms. Effective
+ *   Version's meaning, the grid's Version tooltip's (`VERSION_MEANINGS`), is
+ *   text under it, as Status's.
  * - No `title` attribute anywhere, and no collector, group or configuration
  *   name, address, attribute or error text in any attribute: text only, in
  *   the masked shell.
@@ -143,7 +142,7 @@ export function pinWords(pin: Collector["pin"]): string {
   return `${pin.version.configurationName} @v${pin.version.versionNumber}`;
 }
 
-/** A meaning as a sentence: its first letter capitalised, a full stop at its end. */
+/** A meaning as a sentence: its first letter capitalized, a full stop at its end. */
 function sentence(meaning: string): string {
   return meaning.charAt(0).toUpperCase() + meaning.slice(1) + (meaning.endsWith(".") ? "" : ".");
 }

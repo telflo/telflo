@@ -174,7 +174,7 @@ function countProblem(text: string, words: { notInteger: string; negative: strin
   return undefined;
 }
 
-/** Between's bounds out of order (new: never saved so). */
+/** Between's bounds out of order (never saved so). */
 const UNORDERED_BETWEEN_MESSAGE = "To can't be less than From";
 
 /**
@@ -185,7 +185,6 @@ const UNORDERED_BETWEEN_MESSAGE = "To can't be less than From";
  * any other OTTL opens in OTTL mode. OTTL is typed in plain textareas and
  * checked when saved.
  *
- * Differences:
  * - the API checks every OTTL and regex rule as it is saved, through the
  *   evaluator: its refusal, "OTTL syntax error: …" or "Invalid regex: …" (400
  *   `validation_rule_invalid`), shows as it words it, each problem under the
@@ -195,19 +194,17 @@ const UNORDERED_BETWEEN_MESSAGE = "To can't be less than From";
  *   kept open. There is no OTTL lint in the browser, and no browser `RegExp`
  *   check (JavaScript's, not RE2);
  * - the OTTL contexts are always the pipeline's signal's
- *   (OTTL_CONTEXTS_BY_SIGNAL): the signal comes with the pipeline, never all
- *   seven before the pipelines load;
+ *   (OTTL_CONTEXTS_BY_SIGNAL): the signal comes with the pipeline;
  * - the form resets only as the dialog opens and when its rule changes, never
  *   when the pipelines load (never mid-edit when the signal arrives late);
  * - Record count refuses a negative count and an unordered Between, every
  *   count refuses one past 2,147,483,647 (the API's bound) and an empty one
  *   (never saved as 0), and each mode's
  *   counts keep Between's bounds in order;
- * - only the five kinds: no retired rule types, and no silent rewrite of one
- *   as a text rule of its JSON;
+ * - only the five kinds;
  * - Save sends the rule whole: a change sends its kind, target and pattern or
  *   OTTL with its name and description; an empty name or description is `''`,
- *   as the API keeps it, not null;
+ *   as the API keeps it;
  * - the fields' ids come from `useId`; a form problem is tied to its field
  *   (`aria-describedby`, `aria-invalid`) and announced politely (a live
  *   region); closing gives the focus back to the opener (Edit, Add

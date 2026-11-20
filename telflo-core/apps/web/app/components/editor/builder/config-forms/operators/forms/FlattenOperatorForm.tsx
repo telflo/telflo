@@ -6,13 +6,12 @@ import { FieldSelector } from "../shared/FieldSelector.js";
  * The `flatten` operator's form, over the card's scope. Ids are the card's
  * (`op-<index>-flatten-…`).
  *
- * Fixed:
  * - What flatten does: it moves the named map's fields up one level, into
  *   its parent (`transformer/flatten/transformer.go:35-58`;
  *   `docs/operators/flatten.md:3-4`), and doesn't join keys with dots. The
  *   description is "Moves a map's fields up one level, into its parent.";
  *   there is no inline example, and the before/after example is the
- *   collector's first (`flatten.md:19-64`, Field `body.key1`), labelled
+ *   collector's first (`flatten.md:19-64`, Field `body.key1`), labeled
  *   "Before flatten, with Field body.key1:".
  * - Field is required (`flatten.md:12`) and not rootable: the collector
  *   builds it for a body, attribute or resource field
@@ -21,8 +20,8 @@ import { FieldSelector } from "../shared/FieldSelector.js";
  *   key. Its hint is "Required. The map to flatten, under body,
  *   attributes or resource." (an empty Field is refused by the collector,
  *   `config.go:68`). It shows no default.
- * - Depth is dropped: `depth` isn't a key (`flatten/config.go:35-38`), and
- *   the collector ignores it (`operator/config.go:111`). A `depth` in the
+ * - There is no Depth field: `depth` isn't a key (`flatten/config.go:35-38`),
+ *   and the collector ignores it (`operator/config.go:111`). A `depth` in the
  *   text is left alone.
  */
 

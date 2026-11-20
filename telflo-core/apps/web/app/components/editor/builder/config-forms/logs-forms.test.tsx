@@ -966,7 +966,7 @@ describe("filelog: a control that would leave a refused combination adjusts the 
   // The "Deletes source files" alert is a hint under the box, always shown;
   // the gate filelog.allowFileDeletion is at stage beta, on by default
   // (pkg/stanza/fileconsumer/internal/metadata/generated_feature_gates.go).
-  it("the delete hint shows under the box whether or not it's ticked; the old alert is gone", async () => {
+  it("the delete hint shows under the box whether or not it's ticked, with no 'Deletes source files' alert", async () => {
     expect(DELETE_HINT).toBe("Deletes each file once it's read. Needs the filelog.allowFileDeletion feature gate (on by default).");
     const user = renderForm(FILELOG, DELETING);
     await openSection(user, "Storage & File Handling");

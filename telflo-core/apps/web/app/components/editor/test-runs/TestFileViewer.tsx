@@ -12,7 +12,7 @@ interface TestFileViewerProps {
 }
 
 /**
- * A read-only Monaco for a test file, the run's text or its logs. Differences:
+ * A read-only Monaco for a test file, the run's text or its logs:
  * - the person's theme and all four editor preferences, as every Monaco
  *   here (`useEditorPreferences`), the tab size setting how wide a tab
  *   character shows; the themes are defined before mount, not Monaco's

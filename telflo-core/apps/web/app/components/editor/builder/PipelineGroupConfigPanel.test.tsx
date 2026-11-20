@@ -77,7 +77,7 @@ describe("PipelineGroupConfigPanel", () => {
     expect(screen.getByText("Pipeline not found")).toBeInTheDocument();
   });
 
-  it("changes the colour as a layout change, with its toast, and the change undoes", async () => {
+  it("changes the color as a layout change, with its toast, and the change undoes", async () => {
     openText(STARTER);
     const user = renderPanel();
     selectGroup("traces");
@@ -100,7 +100,7 @@ describe("PipelineGroupConfigPanel", () => {
     expect(selectIsDirty(builderStore())).toBe(false);
   });
 
-  it("clicking the current colour changes nothing", async () => {
+  it("clicking the current color changes nothing", async () => {
     openText(STARTER);
     const user = renderPanel();
     selectGroup("traces");

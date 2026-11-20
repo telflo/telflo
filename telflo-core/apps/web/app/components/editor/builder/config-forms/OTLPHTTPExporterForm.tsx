@@ -25,9 +25,8 @@ import type { ValueView } from "~/lib/graph/value-view.js";
  * A compression or encoding outside the options shows as an extra option,
  * as written.
  *
- * Changed: the TLS section is the client variant ("Customize TLS for
- * OTLP/HTTP", no Client CA fields), and the `insecure` box says what it
- * does on HTTP.
+ * The TLS section is the client variant ("Customize TLS for OTLP/HTTP", no
+ * Client CA fields), and the `insecure` box says what it does on HTTP.
  *
  * The quick setups (presets, endpoints, placeholder credentials and marks)
  * are written by key: one change list, one undo entry. The rule, so a

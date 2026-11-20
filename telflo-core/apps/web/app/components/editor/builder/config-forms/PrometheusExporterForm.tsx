@@ -19,9 +19,8 @@ import type { ValueView } from "~/lib/graph/value-view.js";
  *   default, unset means UnderscoreEscapingWithSuffixes
  *   (`exporter/prometheusexporter/collector.go:126-130`, `metadata.yaml:20-
  *   24` at contrib v0.162.0).
- * - Changed: the add_metric_suffixes alert says the collector ignores it
- *   (that gate), not only "whenever a translation strategy is selected".
- * - Changed: "Convert all resource attributes" can't be ticked while
+ * - The add_metric_suffixes alert says the collector ignores it (that gate).
+ * - "Convert all resource attributes" can't be ticked while
  *   `resource_constant_labels` is set, which the collector refuses beside it
  *   (`config.go:76-78`), with a hint; ticked, it can be unticked. It writes
  *   `resource_to_telemetry_conversion. enabled` (`true`, or removed when

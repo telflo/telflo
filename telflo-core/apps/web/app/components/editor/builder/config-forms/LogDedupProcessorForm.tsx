@@ -9,20 +9,20 @@ import { listLength } from "./shared/counts.js";
  * are contrib v0.162.0's `processor/logdedupprocessor`. The collector's own
  * name, `log_dedup`, opens this form (`RENAMED_TYPES`; `metadata.yaml:2-3`).
  *
- * - Fixed: the lists' Add holds a row that isn't in the text (never `""`: a
- *   field whose first segment isn't `body` or `attributes` is refused,
+ * - The lists' Add holds a row that isn't in the text (never `""`: a field
+ *   whose first segment isn't `body` or `attributes` is refused,
  *   `config.go:107-172`; an empty condition doesn't parse,
  *   `factory.go:46-58`); the first typing appends it. Removing a list's last
  *   item removes its key.
- * - Changed: the collector refuses Include and Exclude Fields together
+ * - The collector refuses Include and Exclude Fields together
  *   (`config.go:85-87`). A cascade would delete a typed list, so each list
  *   is locked (typing and Add disabled) while the other has items, with a
  *   hint; its items can still be removed. A text with both shows a fail
  *   alert, its section forced open.
- * - Changed: Exclude Fields says excluded fields are removed from the emitted
- *   log (`README.md:35`).
- * - Fixed: Metadata Cardinality Limit is a number field: 0, the collector's
- *   "no limit" (`config.go:51-53`), can be typed; cleared removes it.
+ * - Exclude Fields says excluded fields are removed from the emitted log
+ *   (`README.md:35`).
+ * - Metadata Cardinality Limit is a number field: 0, the collector's "no
+ *   limit" (`config.go:51-53`), can be typed; cleared removes it.
  * - Strings are written as typed: field paths keep `\.`, and conditions their
  *   quotes and escapes.
  *

@@ -853,7 +853,7 @@ describe("the timestamp section", () => {
     expect(entries()).toBe(1);
   });
 
-  it("each layout type offers its own presets: strptime's first labelled with what it writes, Go layouts, epoch's s and s.us", async () => {
+  it("each layout type offers its own presets: strptime's first labeled with what it writes, Go layouts, epoch's s and s.us", async () => {
     const user = renderPipeline();
     expect(byId("op-0-ts-layout-preset")).toHaveTextContent("%Y-%m-%d %H:%M:%S");
     await user.click(byId("op-0-ts-layout-preset"));

@@ -4,7 +4,7 @@ import { Rocket } from "lucide-react";
 
 /*
  * The fleet list's first-run card, shown when the organization has no fleet
- * at all ("All fleets" and nothing). Differences:
+ * at all ("All fleets" and nothing):
  * - the "editor" link opens `/app`, the configurations list;
  * - it says "group", never "deploy group", and "served", never "deployed"
  *   (never "deployments").

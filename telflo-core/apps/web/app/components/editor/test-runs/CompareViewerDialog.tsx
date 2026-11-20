@@ -103,7 +103,7 @@ function ReleasingDiffEditor({
  * nothing to offer. The two lines are polite status regions mounted empty
  * with the footer as Compare opens and filled once its files show
  * (`loaded`), so a screen reader hears them: a region inserted with its text
- * may go unannounced. The chips are a group labelled by the "Detected" line;
+ * may go unannounced. The chips are a group labeled by the "Detected" line;
  * every chip is held (`aria-disabled`) while one's lookup runs, that one
  * busy. A chip's key wraps, whole, however long (never cut: no title can
  * carry it); the chips' group is at most 10rem tall and scrolls, so long
@@ -216,7 +216,7 @@ function RuleCandidatesFooter({
  * - a chip's key wraps, whole, however long, the chips scrolling within a
  *   group at most 10rem tall, so the diff editor keeps most of the dialog,
  *   never whole on one line, a long one running past the footer;
- * - the chips are a group labelled by the "Detected …" line; while a chip's lookup runs every chip is held
+ * - the chips are a group labeled by the "Detected …" line; while a chip's lookup runs every chip is held
  *   (`aria-disabled`) and that one is busy (`aria-busy`, a spinner), so a
  *   second click looks nothing up (never twice, opening two editors);
  * - the detection walks the run's signal's records (`signal`), and the

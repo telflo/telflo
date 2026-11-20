@@ -19,7 +19,7 @@ import { HIDDEN, PII_REDACTION, TAIL_SAMPLING, makeFlow } from "~/test/flows.js"
  * flag is cleared mid-visit.
  */
 
-/** A flow ClickStack wrote, pinned where the catalogue no longer offers. */
+/** A flow ClickStack wrote, pinned where the catalog no longer offers. */
 const RETIRED = makeFlow({
   id: "0199b000-0000-7000-8000-000000000004",
   slug: "otel-to-clickstack",
@@ -167,7 +167,7 @@ describe("FlowsAdminPage", () => {
   });
 
   describe("the retired-pin mark", () => {
-    it("marks a flow whose pin the catalogue no longer offers, and no other", async () => {
+    it("marks a flow whose pin the catalog no longer offers, and no other", async () => {
       serveFlows(FLOWS);
       renderPage();
       await screen.findByRole("cell", { name: RETIRED.name });
@@ -178,7 +178,7 @@ describe("FlowsAdminPage", () => {
       expect(screen.getAllByText(PIN_NO_LONGER_OFFERED)).toHaveLength(1);
     });
 
-    it("marks nothing while the catalogue can't say", async () => {
+    it("marks nothing while the catalog can't say", async () => {
       resetCollectorCatalogue();
       vi.spyOn(apiClient, "getCollectorDistributions").mockRejectedValue(new ApiError("network_error", "Down."));
       serveFlows(FLOWS);

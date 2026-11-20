@@ -393,7 +393,7 @@ export function playgroundEditorSteps(next: () => void, restoreEditor: () => voi
     },
     {
       // The shell's sidebar item: the full-screen editor has no sidebar, so
-      // driver.js centres the step.
+      // driver.js centers the step.
       element: '[data-tour-step="sidebar-fleet-mgmt"]',
       popover: {
         title: "Configs are half the story",
@@ -449,7 +449,7 @@ export function playgroundFleetSteps(signUp: "/register" | "/login"): DriveStep[
       },
     },
     {
-      // No element: a centred wrap-up.
+      // No element: a centered wrap-up.
       popover: {
         title: "That's the loop: build, test, roll out",
         description:
@@ -475,9 +475,9 @@ export function startPlaygroundFleetTour(signUp: "/register" | "/login"): void {
  * The banner's "Take the tour": the tour from the top, which is the list's.
  * The stage is stored and the list starts it: through the restart event
  * when the visitor is on it, through its mount effect otherwise. Any run
- * still waiting or showing is cancelled first without giving its stage
- * back, so a page leaving afterwards (its cleanup stops the tour) can't
- * put its own stage over the list's.
+ * still waiting or showing is canceled first without giving its stage back,
+ * so a page leaving afterwards (its cleanup stops the tour) can't put its
+ * own stage over the list's.
  */
 export function restartPlaygroundTour(pathname: string, navigate: NavigateFn): void {
   cancelActiveTour(false);

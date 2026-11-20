@@ -9,7 +9,6 @@ import { TimestampConfigSection } from "../shared/TimestampConfigSection.js";
  * The `csv_parser` operator's form, over the card's scope. Ids are the card's
  * (`op-<index>-csv-…`).
  *
- * Fixed:
  * - Header Attribute is an attribute's name: the collector looks the header up
  *   as `e.Attributes[header_attribute]` (`parser/csv/parser.go:95`), so a
  *   FieldSelector, which writes `attributes.x`, would name a key
@@ -25,12 +24,11 @@ import { TimestampConfigSection } from "../shared/TimestampConfigSection.js";
  *   never kept).
  * - A one-column header, which the collector refuses (`config.go:82-84`),
  *   is written as typed, for the config validation to report.
- * - Header's hint is "Column names, separated by the delimiter." (not
- *   "Comma-separated column names."): the header is split on
- *   `header_delimiter`, which defaults to Delimiter
+ * - Header's hint is "Column names, separated by the delimiter.": the header
+ *   is split on `header_delimiter`, which defaults to Delimiter
  *   (`config.go:58-60, 82-84, 99`), not always on a comma.
- * Changed: an unset Delimiter shows the collector's `,` (`config.go:54-56`)
- * as its placeholder and in the hint, never as the value (which couldn't be
+ * An unset Delimiter shows the collector's `,` (`config.go:54-56`) as its
+ * placeholder and in the hint, never as the value (which couldn't be
  * cleared); Parse From and Parse To show `body` and `attributes`
  * (`helper/parser.go:26-27`), Parse To rootable (`:35`). The quote boxes
  * write `true` or `false`.

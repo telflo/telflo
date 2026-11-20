@@ -5,17 +5,16 @@ import { useOperatorId } from "../operator-ids.js";
  * The `filter` operator's form, over the card's scope. Ids are the card's
  * (`op-<index>-filter-…`).
  *
- * Changed:
  * - Drop Ratio is a number field: what is typed is written as typed, plain
  *   when it reads as a number (`0.5`, `1.0`, `0`), a string otherwise (`1.0`
  *   stays `1.0`, never `1`). Its 0-1 range is advisory: a ratio outside it,
  *   which the collector refuses (`transformer/filter/config.go:61-63`), is
- *   written as typed, for the config validation to report. Unset keeps the
+ *   written as typed, for the config validation to report. Unset shows the
  *   placeholder "1.0 (drop all)", the collector's 1 (`config.go:38`), and
- *   gains the hint "Default 1.0".
+ *   the hint "Default 1.0".
  * - Expression, cleared, removes `expr` (as clearing any field does; never
  *   `""`, which the collector refuses to compile as well, `config.go:56-59`).
- * Fixed: the "Drop by service" example reads the `service.name` key,
+ * The "Drop by service" example reads the `service.name` key,
  * `resource["service.name"] == "noisy-service"`; `resource.service.name`
  * would be a nested path (`service` → `name`), which the semantic-convention
  * key never matches (`entry/field.go:152-226`; `docs/types/field.md`).

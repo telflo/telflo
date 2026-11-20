@@ -38,7 +38,7 @@ import type { ValueView } from "~/lib/graph/value-view.js";
  *   position), and matched to their objects again after an undo, a redo or
  *   a YAML edit (`useCardKeys`). Cards start collapsed; ids are by index
  *   (`obj-0-name`, sortable `obj-0`), never a value.
- * - Fixed: Include Initial State is the receiver's top-level
+ * - Include Initial State is the receiver's top-level
  *   `include_initial_state` (`receiver/k8sobjectsreceiver/config.go:66`);
  *   `K8sObjectsConfig` has no such key (`config.go:43-57`), so a per-object
  *   box would write one the collector refuses. It is one box, at the top of
@@ -52,25 +52,25 @@ import type { ValueView } from "~/lib/graph/value-view.js";
  *   object switched to watch loses its `initial_delay` (refused in watch
  *   mode, `config.go:113-115`), with its toast. Each is one change, one
  *   undo entry.
- * - Kept: Add Object appends `{name: pods, mode: pull, interval: 60m}`;
- *   switching to pull clears `exclude_watch_type` and `resource_version`, and
- *   writes `interval: 60m` when the object has none (a person's own interval
- *   is kept); switching to watch removes `interval`. Neither writes `interval`
+ * - Add Object appends `{name: pods, mode: pull, interval: 60m}`; switching to
+ *   pull clears `exclude_watch_type` and `resource_version`, and writes
+ *   `interval: 60m` when the object has none (a person's own interval is
+ *   kept); switching to watch removes `interval`. Neither writes `interval`
  *   while a top-level `interval` is set: the object inherits it
  *   (`config.go:101-107`), and a `60m` would override it.
- * - Fixed: clearing `exclude_watch_type`, which the collector refuses in
- *   pull mode (`config.go:109-111`), says so in the toast "Removed the
+ * - Clearing `exclude_watch_type`, which the collector refuses in pull
+ *   mode (`config.go:109-111`), says so in the toast "Removed the
  *   watch-only settings: pull mode can't use them." A `resource_version`
  *   isn't refused in pull mode (`config.go:121-123` refuses it only beside
  *   `storage`); the pull observer lists that exact version on every pull
  *   (`internal/k8sinventory/pull/observer.go:74-76`), and the README calls
  *   it watch-only (`README.md:68`). It is cleared silently.
- * - Fixed: Add Namespace holds an empty row until something is typed in it
+ * - Add Namespace holds an empty row until something is typed in it
  *   (never writing `""`, every namespace). A card's namespaces reorder by
  *   drag.
- * - Changed: a resource name outside the 16 (a CRD, which the collector
- *   resolves by discovery) shows as an extra option, as written, never a
- *   blank select. Unset shows the collector's default: Authentication Type
+ * - A resource name outside the 16 (a CRD, which the collector resolves by
+ *   discovery) shows as an extra option, as written, never a blank select.
+ *   Unset shows the collector's default: Authentication Type
  *   `serviceAccount`, Error Mode `propagate` (`factory.go:30-39`),
  *   Collection Mode `pull` (`config.go:26, 91-92`), and Pull Interval the
  *   top-level `interval` when set (in the hint only: it is the text's, so

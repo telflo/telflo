@@ -55,7 +55,7 @@ export function PlaygroundLinkScope({ children, className }: { children: ReactNo
         if (!mapped) return;
         event.preventDefault();
         event.stopPropagation();
-        // Honour open-in-a-new-tab (cmd/ctrl/shift/alt-click).
+        // Honor open-in-a-new-tab (cmd/ctrl/shift/alt-click).
         if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
           window.open(mapped, "_blank", "noopener");
           return;

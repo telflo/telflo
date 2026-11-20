@@ -44,7 +44,7 @@ export function PlaygroundTourWelcomeDialog({
       }}
     >
       <DialogContent className="sm:max-w-md">
-        {/* An informational prompt: centred, as message dialogs are. */}
+        {/* An informational prompt: centered, as message dialogs are. */}
         <DialogHeader className="items-center text-center sm:text-center">
           <DialogTitle>{PLAYGROUND_WELCOME_TITLE}</DialogTitle>
           <DialogDescription>

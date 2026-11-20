@@ -83,7 +83,7 @@ describe("ConfigurationPanel's states", () => {
     expect(screen.getByText("Select a node to configure it")).toHaveClass("text-xs");
   });
 
-  it("summarises a multi-selection: the count, five labels, how many more, and the hint", () => {
+  it("summarizes a multi-selection: the count, five labels, how many more, and the hint", () => {
     openText(STARTER);
     render(<ConfigurationPanel />);
     const components = builderStore().graph.nodes.filter((n) => n.type !== "pipelineGroup");

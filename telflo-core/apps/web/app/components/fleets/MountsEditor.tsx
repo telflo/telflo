@@ -18,7 +18,7 @@ import { Label } from "~/components/ui/label.js";
  * the group's container install command. Its details:
  *
  * - Rows of plain fields, not collapsible sections: Host path (placeholder
- *   /var/log/nginx), Container path, Read-only (a labelled Checkbox, ticked
+ *   /var/log/nginx), Container path, Read-only (a labeled Checkbox, ticked
  *   for a new mount), and "Remove mount {n}", named by the row's number,
  *   never the mount's paths. No `hostPathType` (`docker run -v` has none), no
  *   suggestions list, no host path mirrored into the container path, no

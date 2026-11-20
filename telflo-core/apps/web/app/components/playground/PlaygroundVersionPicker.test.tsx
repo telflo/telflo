@@ -15,10 +15,10 @@ import { OTHER_VERSION_LOCKED_ACTION, PlaygroundVersionPicker } from "./Playgrou
 import { SIGNUP_PROMPT_TITLE, signupPromptText } from "./SignupPromptDialog.js";
 
 /*
- * The fixed picker and the catalogue the web was built with: the pin shows;
- * the build-time catalogue's offered versions are listed, the same ones the
+ * The fixed picker and the catalog the web was built with: the pin shows;
+ * the build-time catalog's offered versions are listed, the same ones the
  * schemas cover; a pick of another opens the sign-up prompt and changes
- * nothing. Inside the playground no catalogue request is made.
+ * nothing. Inside the playground no catalog request is made.
  */
 
 const initial = useEditorStore.getState();
@@ -54,7 +54,7 @@ afterEach(() => {
   resetCollectorCatalogue();
 });
 
-describe("the build-time catalogue", () => {
+describe("the build-time catalog", () => {
   it("is the API's shape, its deprecated versions left out: exactly the versions the schemas cover", () => {
     expect(CollectorDistributionsResponseSchema.parse({ distributions: PLAYGROUND_CATALOGUE })).toBeTruthy();
     const contrib = PLAYGROUND_CATALOGUE.find((distribution) => distribution.id === "otelcol-contrib")!;
@@ -64,7 +64,7 @@ describe("the build-time catalogue", () => {
     expect(contrib.versions.filter((offer) => offer.isDefault).map((offer) => offer.version)).toEqual(["0.162.0"]);
   });
 
-  it("is what useCollectorDistributions answers inside the playground, with no catalogue request", async () => {
+  it("is what useCollectorDistributions answers inside the playground, with no catalog request", async () => {
     const read = vi.spyOn(apiClient, "getCollectorDistributions");
     const Inside = () => {
       const { distributions } = useCollectorDistributions();
@@ -85,7 +85,7 @@ describe("the build-time catalogue", () => {
     expect(read).not.toHaveBeenCalled();
   });
 
-  it("outside the playground, the hook reads the API's catalogue as before", async () => {
+  it("outside the playground, the hook reads the API's catalog", async () => {
     const read = vi.spyOn(apiClient, "getCollectorDistributions").mockResolvedValue({ distributions: [] });
     renderHook(() => useCollectorDistributions());
     await waitFor(() => expect(read).toHaveBeenCalledTimes(1));

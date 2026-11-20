@@ -9,13 +9,13 @@ import { TimestampConfigSection } from "../shared/TimestampConfigSection.js";
  * The `key_value_parser` operator's form, over the card's scope.
  * Ids are the card's (`op-<index>-kv-…`).
  *
- * Changed: unset delimiters show the collector's defaults as their
- * placeholders and hints, not as values (which couldn't be cleared):
- * Key-Value Delimiter `=` (`parser/keyvalue/config.go:30`), Pair Delimiter a
- * space (`:53-56`), which the placeholder and hint call "(space)". Equal
- * delimiters, which the collector refuses (`:58-60`), are written as typed.
- * Parse From and Parse To show `body` and `attributes`
- * (`helper/parser.go:26-27`), Parse To rootable (`:35`).
+ * Unset delimiters show the collector's defaults as their placeholders and
+ * hints, not as values (which couldn't be cleared): Key-Value Delimiter `=`
+ * (`parser/keyvalue/config.go:30`), Pair Delimiter a space (`:53-56`), which
+ * the placeholder and hint call "(space)". Equal delimiters, which the
+ * collector refuses (`:58-60`), are written as typed. Parse From and Parse
+ * To show `body` and `attributes` (`helper/parser.go:26-27`), Parse To
+ * rootable (`:35`).
  */
 export function KeyValueParserForm() {
   const opId = useOperatorId();

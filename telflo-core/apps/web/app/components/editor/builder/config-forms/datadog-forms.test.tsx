@@ -175,7 +175,7 @@ async function clearPauseRetype(user: UserEvent, id: string, typed: string) {
 }
 const combo = (label: string) => screen.getByRole("combobox", { name: label });
 
-/** A labelled field's block (its ConfigField), by its label. */
+/** A labeled field's block (its ConfigField), by its label. */
 function fieldOf(label: string): HTMLElement {
   return screen.getByText(label, { selector: "label" }).closest("div.space-y-1\\.5") as HTMLElement;
 }
@@ -1370,7 +1370,7 @@ describe("keep-alives and the keepalive move", () => {
   });
 });
 
-describe("the authenticator (carried forward)", () => {
+describe("the authenticator", () => {
   it("cleared, the whole auth block goes (\"blank disables auth\")", async () => {
     const base = ownReceiver("    auth:\n      authenticator: bearertokenauth/dd\n      request_params: [tenant]\n    endpoint: localhost:8126");
     const user = renderForm(base, RX);
