@@ -24,18 +24,16 @@ import { selectIsDirty, selectUndoDescription, useEditorStore } from "~/lib/stor
 import { builderStore, componentNamed, openText } from "~/test/builder-store.js";
 
 /*
- * The file and journal receivers' forms (D9c Task 8): the filelog and
- * journald forms over the form contract. Each field is driven as a
- * person would (typing, clicking, picking) on the logs corpus (comments, an
- * anchor and an alias, a merge, flow lists, `0750`), LF and CRLF, and writes
- * only its key: the text changes in that key's lines only, as one undo
- * entry, and parses to the value (D9c decision 2). The fixes each have a
- * test that fails if the bug returns: filelog's decision 7
- * adjustments with their toasts (no inline alert, D9d decision 7), its attribute maps' held rows and clash
- * (decision 9), a YAML edit kept by the next form edit; journald's held
- * match (Preflight ruling 22), its fields' held rows, renames and clash, and
- * the corrected copy (decision 4). The journald cases cover the seed and
- * the lists' shapes.
+ * The file and journal receivers' forms: the filelog and journald forms over
+ * the form contract. Each field is driven as a person would (typing, clicking,
+ * picking) on the logs corpus (comments, an anchor and an alias, a merge, flow
+ * lists, `0750`), LF and CRLF, and writes only its key: the text changes in
+ * that key's lines only, as one undo entry, and parses to the value. The fixes
+ * each have a test that fails if the bug returns: filelog's adjustments with
+ * their toasts (no inline alert), its attribute maps' held rows and clash, a
+ * YAML edit kept by the next form edit; journald's held match, its fields'
+ * held rows, renames and clash, and the corrected copy. The journald cases
+ * cover the seed and the lists' shapes.
  *
  * Collector claims cite contrib v0.162.0.
  */
@@ -56,7 +54,7 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-/** The info toasts shown so far: decision 7's adjustments toast their messages (Ruling 87). */
+/** The info toasts shown so far: the adjustments toast their messages. */
 const infoToasts = () => vi.mocked(toast.info).mock.calls.map(([message]) => message);
 
 function ComponentForm({ nodeId, children }: { nodeId: string; children: ReactNode }) {
@@ -659,7 +657,7 @@ const CASES: FieldCase[] = [
     check: (v) => expect(v.matches).toEqual([{ _SYSTEMD_UNIT: "ssh.service", _UID: "1000" }]),
   },
   {
-    name: "journald Add match holds a match; its value typed appends it (Preflight ruling 22)",
+    name: "journald Add match holds a match; its value typed appends it",
     key: JOURNALD,
     edit: async (user) => {
       await openSection(user, "Filtering");
@@ -807,8 +805,8 @@ const CASES: FieldCase[] = [
   },
 ];
 
-describe("every field of each form writes only its key (decision 2)", () => {
-  // Its own time limit (D9c Rulings 54 and 80).
+describe("every field of each form writes only its key", () => {
+  // Its own time limit.
   it.each(CASES.flatMap((c) => [[`${c.name}, LF`, c, false] as const, [`${c.name}, CRLF`, c, true] as const]))(
     "%s",
     async (_name, c, crlf) => {
@@ -832,9 +830,9 @@ describe("every field of each form writes only its key (decision 2)", () => {
   );
 });
 
-// ── filelog: decision 7's adjustments ──
+// ── filelog: the adjustments ──
 
-describe("filelog: a control that would leave a refused combination adjusts the other (decision 7)", () => {
+describe("filelog: a control that would leave a refused combination adjusts the other", () => {
   /** filelog reading from the end, and one deleting (which the collector refuses). */
   const AT_END = CORPUS.replace("    start_at: beginning\n", "    start_at: end\n");
   const DELETING = CORPUS.replace("    start_at: beginning\n", "    start_at: beginning\n    delete_after_read: true\n");
@@ -919,7 +917,7 @@ describe("filelog: a control that would leave a refused combination adjusts the 
     expect(entries()).toBe(1);
   });
 
-  // Ruling 76: an empty pattern splits nothing, so raw bytes can take it (split/split.go:47-59).
+  // An empty pattern splits nothing, so raw bytes can take it (split/split.go:47-59).
   it('"No validation (raw bytes)" keeps a multiline block with no pattern, with no toast', async () => {
     const user = renderForm(FILELOG, SEEDED_MULTILINE);
     await pickIn(user, byId("encoding"), "No validation (raw bytes)");
@@ -928,7 +926,7 @@ describe("filelog: a control that would leave a refused combination adjusts the 
     expect(entries()).toBe(1);
   });
 
-  // Ruling 75: split/split.go:47-55 refuses a pattern with raw bytes; the encoding goes, the collector's utf-8 then.
+  // split/split.go:47-55 refuses a pattern with raw bytes; the encoding goes, the collector's utf-8 then.
   const RAW = NO_MULTILINE.replace("    compression: gzip\n", "    compression: gzip\n    encoding: nop\n");
   it("ticking Enable multiline parsing while the encoding is raw bytes removes the encoding, in one change, with the toast and no inline alert", async () => {
     const user = renderForm(FILELOG, RAW);
@@ -965,8 +963,9 @@ describe("filelog: a control that would leave a refused combination adjusts the 
     expect(infoToasts()).toEqual([]);
   });
 
-  // D9d decision 7: the "Deletes source files" alert became a hint under the box, always shown; the gate
-  // filelog.allowFileDeletion is at stage beta, on by default (pkg/stanza/fileconsumer/internal/metadata/generated_feature_gates.go).
+  // The "Deletes source files" alert is a hint under the box, always shown;
+  // the gate filelog.allowFileDeletion is at stage beta, on by default
+  // (pkg/stanza/fileconsumer/internal/metadata/generated_feature_gates.go).
   it("the delete hint shows under the box whether or not it's ticked; the old alert is gone", async () => {
     expect(DELETE_HINT).toBe("Deletes each file once it's read. Needs the filelog.allowFileDeletion feature gate (on by default).");
     const user = renderForm(FILELOG, DELETING);
@@ -991,7 +990,7 @@ describe("filelog: a control that would leave a refused combination adjusts the 
 
 // ── filelog: the rest of its fixes ──
 
-describe("filelog: read from the text (decisions 2, 3 and 9)", () => {
+describe("filelog: read from the text", () => {
   it("a YAML edit of resource is kept by the next form edit (no stale map written back)", async () => {
     const user = renderForm(FILELOG);
     await openSection(user, "Metadata");
@@ -1111,7 +1110,7 @@ describe("filelog: read from the text (decisions 2, 3 and 9)", () => {
 
 // ── journald ──
 
-describe("journald: the held match (Preflight ruling 22; config_linux.go:155-192)", () => {
+describe("journald: the held match (config_linux.go:155-192)", () => {
   it("Add match writes nothing: the held match reads _SYSTEMD_UNIT with no value, until one is typed", async () => {
     const user = renderForm(JOURNALD);
     await openSection(user, "Filtering");
@@ -1135,7 +1134,7 @@ describe("journald: the held match (Preflight ruling 22; config_linux.go:155-192
     expect(text()).toBe(CORPUS);
   });
 
-  // Its own time limit (D9c Rulings 54 and 80).
+  // Its own time limit.
   it("typing slowly: the first pause writes the match, and the same input keeps focus and takes the rest", async () => {
     const user = renderForm(JOURNALD);
     await openSection(user, "Filtering");
@@ -1153,7 +1152,7 @@ describe("journald: the held match (Preflight ruling 22; config_linux.go:155-192
     expect(entries()).toBe(1);
   }, 20_000);
 
-  // Ruling 73: a field is held until both its name and its value are typed; `_UID: ""` matches entries whose field is empty.
+  // A field is held until both its name and its value are typed; `_UID: ""` matches entries whose field is empty.
   it("a field renamed in the held match is written with its value; a field added with a name only stays held, then is written with its value", async () => {
     const user = renderForm(JOURNALD);
     await openSection(user, "Filtering");
@@ -1174,7 +1173,7 @@ describe("journald: the held match (Preflight ruling 22; config_linux.go:155-192
     expect(text()).toBe(CORPUS.replace("      - _TRANSPORT: kernel\n", '      - _TRANSPORT: kernel\n      - _COMM: sshd\n        _UID: "0"\n'));
   });
 
-  it("Add field in a match: a name committed with no value writes nothing (Ruling 73); its value typed writes the pair", async () => {
+  it("Add field in a match: a name committed with no value writes nothing; its value typed writes the pair", async () => {
     const user = renderForm(JOURNALD);
     await openSection(user, "Filtering");
     const card = () => matchCards()[1]!;
@@ -1256,7 +1255,7 @@ describe("journald: the held match (Preflight ruling 22; config_linux.go:155-192
   });
 });
 
-describe("journald: the rest (decisions 3, 4 and 9)", () => {
+describe("journald: the rest", () => {
   it("Add unit on a receiver with none writes a block list, and the last removed removes the key", async () => {
     const user = renderForm(SOURCE);
     await openSection(user, "Filtering");
@@ -1314,7 +1313,7 @@ describe("journald: the rest (decisions 3, 4 and 9)", () => {
     ]);
   });
 
-  it("a Start At outside the two checks neither and is read-only with the hint (Preflight ruling 9)", () => {
+  it("a Start At outside the two checks neither and is read-only with the hint", () => {
     renderForm(JOURNALD, CORPUS.replace("    start_at: end\n", "    start_at: middle\n"));
     expect(screen.getByRole("radio", { name: "End" })).not.toBeChecked();
     expect(screen.getByRole("radio", { name: "Beginning" })).not.toBeChecked();
@@ -1354,8 +1353,8 @@ describe("journald: the rest (decisions 3, 4 and 9)", () => {
 
 // ── Opening writes nothing ──
 
-describe("opening writes nothing (D9b decision 2)", () => {
-  // One test per form and text, each with its own time limit (D9c Ruling 54).
+describe("opening writes nothing", () => {
+  // One test per form and text, each with its own time limit.
   const TEXTS = [
     ["the corpus", CORPUS],
     ["the corpus in CRLF", CRLF(CORPUS)],
@@ -1381,9 +1380,9 @@ describe("opening writes nothing (D9b decision 2)", () => {
   );
 });
 
-// ── Privacy (decision 10) ──
+// ── Privacy ──
 
-describe("privacy (decision 10)", () => {
+describe("privacy", () => {
   const MARK = "zq-mark";
   const MARKED = [
     "receivers:",
@@ -1445,7 +1444,7 @@ describe("privacy (decision 10)", () => {
       for (const attribute of element.attributes) {
         if (attribute.name !== "value" && attribute.value.includes(MARK)) leaks.push(`${where}: ${element.tagName}[${attribute.name}]`);
       }
-      // An option's or a radio's value attribute is an attribute (Ruling 76): it carries a fixed name, never the value.
+      // An option's or a radio's value attribute is an attribute: it carries a fixed name, never the value.
       if (element.tagName === "OPTION" && element.getAttribute("value")?.includes(MARK)) leaks.push(`${where}: OPTION[value]`);
       if (element.tagName === "INPUT" && (element as HTMLInputElement).type === "radio" && element.getAttribute("value")?.includes(MARK)) {
         leaks.push(`${where}: radio[value]`);
@@ -1455,7 +1454,7 @@ describe("privacy (decision 10)", () => {
   const shown = () =>
     document.body.textContent + [...document.querySelectorAll("input, textarea")].map((e) => (e as HTMLInputElement).value).join();
 
-  // Its own time limit (D9c Rulings 54 and 80).
+  // Its own time limit.
   it.each([FILELOG, JOURNALD])("%s puts no config value in any attribute: every section open, the menus open, held rows typed", async (key) => {
     leaks.length = 0;
     const user = renderForm(key, MARKED);
@@ -1490,7 +1489,7 @@ describe("privacy (decision 10)", () => {
 
 // ── Dispatch and journald cases ──
 
-describe("dispatch (decision 2)", () => {
+describe("dispatch", () => {
   // receiver/filelogreceiver/metadata.yaml:2-3 (v0.162.0): `file_log` is the type, `filelog` its deprecated alias.
   it("the collector's file_log gets the filelog form", () => {
     const renamed = CORPUS.replace("  filelog:\n", "  file_log:\n").replace("receivers: [filelog,", "receivers: [file_log,");

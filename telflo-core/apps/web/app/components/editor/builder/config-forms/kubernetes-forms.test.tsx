@@ -22,17 +22,15 @@ import { builderStore, componentNamed, openText } from "~/test/builder-store.js"
 import { formControls } from "~/test/form-controls.js";
 
 /*
- * The Kubernetes receivers' forms (D9c Task 2): the k8s_cluster,
- * k8s_events, k8sobjects and kubeletstats forms over the form contract.
- * Each field is driven as a person would (typing, clicking, picking,
- * dragging by keyboard) on the Kubernetes corpus text (comments, an anchor
- * and merges, a flow list, `0750`), LF and CRLF, and writes only its key:
- * the text changes in that key's lines only, and parses to the value
- * (D9c decision 2). The fixes each have a test that fails if the bug
- * returns: held rows (decisions 3 and 9), k8sobjects' top-level
- * Include Initial State and decision 7's adjustments (Preflight ruling 6),
- * kubeletstats' `tls` default (decision 4), the copy (Appearance), the
- * extra option (D9b decision 3).
+ * The Kubernetes receivers' forms: the k8s_cluster, k8s_events, k8sobjects
+ * and kubeletstats forms over the form contract. Each field is driven as a
+ * person would (typing, clicking, picking, dragging by keyboard) on the
+ * Kubernetes corpus text (comments, an anchor and merges, a flow list,
+ * `0750`), LF and CRLF, and writes only its key: the text changes in that
+ * key's lines only, and parses to the value. The fixes each have a test
+ * that fails if the bug returns: held rows, k8sobjects' top-level Include
+ * Initial State and its adjustments, kubeletstats' `tls` default, the
+ * copy, the extra option.
  *
  * Collector claims cite contrib v0.162.0.
  */
@@ -53,7 +51,7 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-/** The info toasts shown so far: decision 7's adjustments toast their messages (Ruling 87). */
+/** The info toasts shown so far: the adjustments toast their messages. */
 const infoToasts = () => vi.mocked(toast.info).mock.calls.map(([message]) => message);
 
 function ComponentForm({ nodeId, children }: { nodeId: string; children: ReactNode }) {
@@ -126,7 +124,7 @@ async function addRow(user: UserEvent, add: HTMLElement, placeholder: string, ty
   await user.tab();
 }
 
-// ── Sortable rows by keyboard (D9b Preflight ruling 15) ──
+// ── Sortable rows by keyboard ──
 
 const ROW_HEIGHT = 40;
 
@@ -491,7 +489,7 @@ const CASES: FieldCase[] = [
     check: (v) => expect((v.objects as Value[])[1]!.resource_version).toBe("12345"),
   },
   {
-    name: "k8sobjects Include Initial State is written at the top level (decision 3)",
+    name: "k8sobjects Include Initial State is written at the top level",
     key: OBJECTS,
     base: OBJECTS_WATCHING,
     edit: async (user) => {
@@ -690,7 +688,7 @@ const CASES: FieldCase[] = [
   },
 ];
 
-describe("every field of each form writes only its key (decision 2)", () => {
+describe("every field of each form writes only its key", () => {
   it.each(CASES.flatMap((c) => [[`${c.name}, LF`, c, false] as const, [`${c.name}, CRLF`, c, true] as const]))(
     "%s",
     async (_name, c, crlf) => {
@@ -712,7 +710,7 @@ describe("every field of each form writes only its key (decision 2)", () => {
   );
 });
 
-describe("merges, undo and opening (decision 2)", () => {
+describe("merges, undo and opening", () => {
   it("a key a merge gives is set as the component's own key; the merge, the anchor and the others' merges stay", async () => {
     const user = renderForm(CLUSTER);
     // The merged auth_type shows as the text gives it.
@@ -733,7 +731,7 @@ describe("merges, undo and opening (decision 2)", () => {
     expect(entries()).toBe(1);
   });
 
-  // One test per form and text, each with its own time limit (D9c Ruling 54): together they took 2-5 s.
+  // One test per form and text, each with its own time limit: together they took 2-5 s.
   const OPENING_TEXTS = [
     ["the corpus", CORPUS],
     ["the corpus in CRLF", CRLF(CORPUS)],
@@ -752,7 +750,7 @@ describe("merges, undo and opening (decision 2)", () => {
       const user = renderForm(key, base);
       for (const button of screen.queryAllByRole("button", { expanded: false })) await user.click(button);
       for (const header of screen.queryAllByRole("button", { name: /^Object #/ })) await user.click(header);
-      // Opened, it shows the form's fields (D9c final review M6).
+      // Opened, it shows the form's fields.
       const { textboxes, all } = formControls();
       expect(screen.queryAllByRole("button", { expanded: false })).toHaveLength(0);
       expect(textboxes.length).toBeGreaterThanOrEqual(OPENED[key]!.textboxes);
@@ -770,7 +768,7 @@ describe("merges, undo and opening (decision 2)", () => {
   );
 });
 
-describe("held rows never write an empty item (decisions 3 and 9)", () => {
+describe("held rows never write an empty item", () => {
   it.each([
     ["k8s_cluster namespaces", CLUSTER, "Resources", "Add Namespace", "e.g. kube-system", "Remove"],
     ["k8s_cluster metadata exporters", CLUSTER, "Advanced", "Add Metadata Exporter", "e.g. signalfx", "Remove"],
@@ -805,7 +803,7 @@ describe("held rows never write an empty item (decisions 3 and 9)", () => {
     expect(entries()).toBe(1);
   });
 
-  // Its own time limit (D9c Rulings 54 and 80).
+  // Its own time limit.
   it("a held row's typing is written after the pause, into the row it was typed in, with focus kept", async () => {
     const user = renderForm(EVENTS);
     await user.click(screen.getByRole("button", { name: "Add Namespace" }));
@@ -820,7 +818,7 @@ describe("held rows never write an empty item (decisions 3 and 9)", () => {
   }, 20_000);
 });
 
-// ── k8sobjects: Include Initial State and decision 7 (Preflight ruling 6) ──
+// ── k8sobjects: Include Initial State and its adjustments ──
 
 /** Objects' own lines in the corpus. */
 const PODS_OBJECT = "      - name: pods\n        mode: pull\n        interval: 60m\n        label_selector: environment in (production)\n";
@@ -828,7 +826,7 @@ const EVENTS_OBJECT = "      - name: events # watched\n        mode: watch\n    
 /** The corpus with a top-level include_initial_state: true beside a pulling object (refused, but a text may hold it). */
 const INITIAL_STATE_ON = CORPUS.replace("  k8sobjects:\n    <<: *k8s-auth\n", "  k8sobjects:\n    <<: *k8s-auth\n    include_initial_state: true # snapshot\n");
 
-describe("k8sobjects: Include Initial State is the receiver's, at the top level (decisions 3 and 7)", () => {
+describe("k8sobjects: Include Initial State is the receiver's, at the top level", () => {
   // receiver/k8sobjectsreceiver/config.go:66 (Config.IncludeInitialState); K8sObjectsConfig (config.go:43-57) has none.
   it("ticked, it writes include_initial_state at the top level, never in an object", async () => {
     const user = renderForm(OBJECTS, OBJECTS_WATCHING);
@@ -978,7 +976,7 @@ describe("k8sobjects: Include Initial State is the receiver's, at the top level 
 describe("k8sobjects: the cards", () => {
   beforeEach(layOutRows);
 
-  it("a resource outside the 16 shows as an extra option, as written (D9b decision 3)", async () => {
+  it("a resource outside the 16 shows as an extra option, as written", async () => {
     const user = renderForm(OBJECTS, CORPUS.replace("      - name: pods\n", "      - name: leases # a CRD's\n"));
     await openCard(user, "Object #1: leases (pull)");
     expect(byId("obj-0-name")).toHaveTextContent("leases");
@@ -1042,9 +1040,9 @@ describe("k8sobjects: the cards", () => {
   });
 });
 
-// ── kubeletstats (decision 4) ──
+// ── kubeletstats ──
 
-describe("kubeletstats: auth_type's default is tls (decision 4)", () => {
+describe("kubeletstats: auth_type's default is tls", () => {
   // receiver/kubeletstatsreceiver/factory.go:49-53: AuthType k8sconfig.AuthTypeTLS.
   it("unset shows TLS Certificate with the hint Default tls, the section open, and TLS's fields", () => {
     renderForm(KUBELET, KUBELET_UNSET_AUTH);
@@ -1100,7 +1098,7 @@ describe("kubeletstats: auth_type's default is tls (decision 4)", () => {
   });
 });
 
-// ── What the forms show (decision 3) and the copy (Appearance) ──
+// ── What the forms show and the copy ──
 
 const UNSET = [
   "receivers:",
@@ -1124,7 +1122,7 @@ const UNSET = [
   "",
 ].join("\n");
 
-describe("what the forms show (decision 3)", () => {
+describe("what the forms show", () => {
   it("k8s_cluster unset: the collector's defaults as placeholders and hints; no node condition ticked, Default Ready", async () => {
     const user = renderForm(CLUSTER, UNSET);
     expect(byId("auth-type")).toHaveTextContent("Service Account (recommended)");
@@ -1134,11 +1132,11 @@ describe("what the forms show (decision 3)", () => {
     expect(byId("collection-interval")).toHaveAttribute("placeholder", "10s");
     expect(byId("metadata-collection-interval")).toHaveAttribute("placeholder", "5m");
     await openSection(user, "Resources");
-    // receiver/k8sclusterreceiver/factory.go:28: the default is [Ready], named in the hint (decision 5).
+    // receiver/k8sclusterreceiver/factory.go:28: the default is [Ready], named in the hint.
     expect(hint("Default Ready")).toBeInTheDocument();
     for (let i = 0; i < 5; i++) expect(byId(`condition-${i}`)).not.toBeChecked();
 
-    // The first tick writes that item alone (decision 5).
+    // The first tick writes that item alone.
     await user.click(byId("condition-1"));
     expect(valueOf(text(), CLUSTER).node_conditions_to_report).toEqual(["MemoryPressure"]);
   });
@@ -1165,7 +1163,7 @@ describe("what the forms show (decision 3)", () => {
     await openCard(user, "Object #1: pods (pull)");
     expect(byId("obj-0-mode")).toHaveTextContent("Pull");
     expect(hint("Default pull")).toBeInTheDocument();
-    // The top-level interval is the text's: shown in the hint, as text, never in the placeholder (decision 10).
+    // The top-level interval is the text's: shown in the hint, as text, never in the placeholder.
     expect(hint("Default 30m")).toBeInTheDocument();
     expect(byId("obj-0-interval")).toHaveAttribute("placeholder", "");
   });
@@ -1211,7 +1209,7 @@ describe("what the forms show (decision 3)", () => {
   });
 });
 
-describe("the copy (D9c decision 4, Appearance)", () => {
+describe("the copy", () => {
   it("k8s_cluster: the Namespaces and Metadata Exporters hints", async () => {
     const user = renderForm(CLUSTER);
     await openSection(user, "Resources");
@@ -1240,7 +1238,7 @@ describe("the copy (D9c decision 4, Appearance)", () => {
     expect(screen.getByText("RBAC permissions").nextElementSibling).toHaveTextContent(
       /^The service account needs get on nodes\/stats, plus nodes\/pods for extra metadata labels or request and limit utilization, and get on persistentvolumeclaims and persistentvolumes with Kubernetes API access\.$/,
     );
-    // README.md:188-189 (/pods gives the volume type), 232-234 (the API adds the PV's details); Ruling 38.
+    // README.md:188-189 (/pods gives the volume type), 232-234 (the API adds the PV's details).
     expect(screen.getByText("Required for node utilization metrics; adds persistent volume details to Volume Type.")).toBeInTheDocument();
   });
 
@@ -1254,12 +1252,12 @@ describe("the copy (D9c decision 4, Appearance)", () => {
   });
 });
 
-// ── Privacy (decision 10) ──
+// ── Privacy ──
 
-describe("privacy (decision 10)", () => {
+describe("privacy", () => {
   beforeEach(layOutRows);
 
-  // Its own time limit (D9c Rulings 54 and 80).
+  // Its own time limit.
   it("puts no config value in any attribute: every section and card open, the menus open, drags in progress", async () => {
     const MARK = "zq-mark";
     const marked = (kubeletAuth: string) =>
@@ -1377,9 +1375,9 @@ describe("privacy (decision 10)", () => {
   }, 20_000);
 });
 
-// ── The review's fixes (D9c Rulings 35-38) ──
+// ── Fixes ──
 
-describe("k8sobjects: cards follow their objects through undo, redo and the YAML box (Ruling 35)", () => {
+describe("k8sobjects: cards follow their objects through undo, redo and the YAML box", () => {
   beforeEach(layOutRows);
 
   const SWAPPED = CORPUS.replace(`      # pods, pulled hourly\n${PODS_OBJECT}${EVENTS_OBJECT}`, `${EVENTS_OBJECT}      # pods, pulled hourly\n${PODS_OBJECT}`);
@@ -1450,7 +1448,7 @@ describe("k8sobjects: cards follow their objects through undo, redo and the YAML
   });
 });
 
-describe("k8sobjects: the collector's pull rules (Rulings 36-38)", () => {
+describe("k8sobjects: the collector's pull rules", () => {
   // receiver/k8sobjectsreceiver/config.go:91-92: `if object.Mode == ""` → pull.
   it('mode: "" pulls: Include Initial State is disabled, the card shows pull and its Pull Interval', async () => {
     const base = OBJECTS_WATCHING.replace("      - name: pods\n        mode: watch\n", '      - name: pods\n        mode: ""\n');
@@ -1510,7 +1508,7 @@ describe("k8sobjects: the collector's pull rules (Rulings 36-38)", () => {
   });
 });
 
-describe("markup (Ruling 38)", () => {
+describe("markup", () => {
   it("kubeletstats' checkbox rows: items-start space-x-3 rows, leading-none labels, text-xs descriptions", async () => {
     const user = renderForm(KUBELET);
     await openSection(user, "Authentication");
@@ -1525,8 +1523,8 @@ describe("markup (Ruling 38)", () => {
     expect(screen.getByText("Increases metric cardinality").parentElement).toHaveClass("grid", "gap-1.5", "leading-none");
   });
 
-  // Ruling 85, measured in Chromium, WebKit and Firefox: a box beside a text-sm label and its description sat 2 px high.
-  it("a box beside a label and its description is moved down 2 px; the boxes beside a label alone are left as they were (Ruling 85)", async () => {
+  // Measured in Chromium, WebKit and Firefox: a box beside a text-sm label and its description sat 2 px high.
+  it("a box beside a label and its description is moved down 2 px; the boxes beside a label alone are left as they were", async () => {
     const user = renderForm(KUBELET);
     await openSection(user, "Authentication");
     await openSection(user, "Metrics");
@@ -1558,10 +1556,10 @@ describe("markup (Ruling 38)", () => {
   });
 });
 
-// ── D9c Ruling 55: two objects that read alike ──
+// ── Two objects that read alike ──
 
-describe("k8sobjects: a card keeps its object when another reads alike (Ruling 55)", () => {
-  // Its own time limit (D9c Rulings 54 and 80).
+describe("k8sobjects: a card keeps its object when another reads alike", () => {
+  // Its own time limit.
   it("two identical objects: slow typing in the first card's Label Selector stays in the first, focus kept", async () => {
     const base = CORPUS.replace(PODS_OBJECT, PODS_OBJECT + PODS_OBJECT);
     const user = renderForm(OBJECTS, base);

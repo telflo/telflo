@@ -15,18 +15,16 @@ import { builderStore, componentNamed, openText } from "~/test/builder-store.js"
 import { formControls } from "~/test/form-controls.js";
 
 /*
- * k8sattributes' and resourcedetection's forms (D9c Task 3): their forms
- * over the form contract. Each field is driven as a person would
- * (typing, clicking, picking, dragging by keyboard) on the Kubernetes
- * corpus text (comments, flow and block lists, CRLF), and writes only its
- * key: the text changes in that key's lines only, and parses to the value
- * (D9c decision 2). The fixes each have a test that fails if the bug
- * returns: OTel annotations writing only its key, no Derive
- * Deployment Name, Add Rule's seeding (decision 3; Preflight ruling 16);
- * the detector catalog and `openstack` (decision 6); the Client Timeout
- * fields gone (decision 3); each resource attribute's collector default
- * (decision 4); the Kubernetes Node section for `k8snode` only (Preflight
- * ruling 27).
+ * k8sattributes' and resourcedetection's forms: their forms over the form
+ * contract. Each field is driven as a person would (typing, clicking,
+ * picking, dragging by keyboard) on the Kubernetes corpus text (comments,
+ * flow and block lists, CRLF), and writes only its key: the text changes
+ * in that key's lines only, and parses to the value. The fixes each have a
+ * test that fails if the bug returns: OTel annotations writing only its
+ * key, no Derive Deployment Name, Add Rule's seeding; the detector catalog
+ * and `openstack`; the Client Timeout fields gone; each resource
+ * attribute's collector default; the Kubernetes Node section for `k8snode`
+ * only.
  *
  * Collector claims cite contrib v0.162.0 (`processor/k8sattributesprocessor/`,
  * `processor/resourcedetectionprocessor/`).
@@ -108,7 +106,7 @@ function cardOf(element: HTMLElement): HTMLElement {
   return element.closest<HTMLElement>("div.rounded-md.border-border")!;
 }
 
-// ── Sortable rows by keyboard (D9b Preflight ruling 15) ──
+// ── Sortable rows by keyboard ──
 
 const ROW_HEIGHT = 40;
 
@@ -709,7 +707,7 @@ const CASES: FieldCase[] = [
   },
 ];
 
-describe("every field of each form writes only its key (decision 2)", () => {
+describe("every field of each form writes only its key", () => {
   it.each(CASES.flatMap((c) => [[`${c.name}, LF`, c, false] as const, [`${c.name}, CRLF`, c, true] as const]))(
     "%s",
     async (_name, c, crlf) => {
@@ -731,7 +729,7 @@ describe("every field of each form writes only its key (decision 2)", () => {
   );
 });
 
-describe("undo and opening (decision 2)", () => {
+describe("undo and opening", () => {
   it("each edit is one undo entry named after the component", async () => {
     const user = renderForm(DETECTION);
     await user.click(box("ec2"));
@@ -739,7 +737,7 @@ describe("undo and opening (decision 2)", () => {
     expect(entries()).toBe(1);
   });
 
-  // One test per form and text, each with its own time limit (D9c Ruling 54): together they took 2-5 s.
+  // One test per form and text, each with its own time limit: together they took 2-5 s.
   const OPENING_TEXTS = [
     ["the corpus", CORPUS],
     ["the corpus in CRLF", CRLF(CORPUS)],
@@ -762,7 +760,7 @@ describe("undo and opening (decision 2)", () => {
       for (const group of ["Azure", "Google Cloud", "Kubernetes", "Container", "Other Clouds"]) {
         if (key === DETECTION) await openGroup(user, group);
       }
-      // Opened, it shows the form's fields (D9c final review M6).
+      // Opened, it shows the form's fields.
       const { textboxes, all } = formControls();
       expect(screen.queryAllByRole("button", { expanded: false })).toHaveLength(0);
       expect(textboxes.length).toBeGreaterThanOrEqual(OPENED[key]!.textboxes);
@@ -780,7 +778,7 @@ describe("undo and opening (decision 2)", () => {
   );
 });
 
-describe("resourcedetection: tag patterns are held rows (decisions 3 and 9)", () => {
+describe("resourcedetection: tag patterns are held rows", () => {
   it.each([
     ["EC2", "AWS Detectors", withDetectors("ec2")],
     ["Azure", "Cloud & System Detectors", withDetectors("azure")],
@@ -797,7 +795,7 @@ describe("resourcedetection: tag patterns are held rows (decisions 3 and 9)", ()
   });
 });
 
-describe("values the fields can't show (D9b decision 3)", () => {
+describe("values the fields can't show", () => {
   it("k8sattributes: rules, labels and metadata that aren't lists are read-only with the hint; the rest works", async () => {
     const base = CORPUS.replace(`    pod_association:\n${RULE_IP}${RULE_CONNECTION}`, "    pod_association: connection\n")
       .replace(`      labels:\n${LABEL}`, "      labels: {app: x}\n")
@@ -823,9 +821,9 @@ describe("values the fields can't show (D9b decision 3)", () => {
   });
 });
 
-// ── k8sattributes' fixes (decision 3) ──
+// ── k8sattributes' fixes ──
 
-describe("k8sattributes: Extract OpenTelemetry Annotations writes only its key (decision 3)", () => {
+describe("k8sattributes: Extract OpenTelemetry Annotations writes only its key", () => {
   it("with no extract, ticking it writes extract.otel_annotations alone: no metadata: [] replacing the collector's default", async () => {
     // Not `extract: {metadata: [], otel_annotations: true}`: an empty metadata list replaces the
     // collector's default list (factory.go:45-51), so no pod, namespace or node metadata would be extracted.
@@ -841,7 +839,7 @@ describe("k8sattributes: Extract OpenTelemetry Annotations writes only its key (
   });
 });
 
-describe("k8sattributes: no Derive Deployment Name (decision 3)", () => {
+describe("k8sattributes: no Derive Deployment Name", () => {
   it("isn't shown; a deployment_name_from_replicaset already in the text is left alone", async () => {
     // Not a key at v0.162.0 (config.go:22-60): the collector refuses it, and derives the name anyway.
     const base = CORPUS.replace("    passthrough: false\n", "    passthrough: false\n    deployment_name_from_replicaset: true # old\n");
@@ -855,7 +853,7 @@ describe("k8sattributes: no Derive Deployment Name (decision 3)", () => {
   });
 });
 
-describe("k8sattributes: Add Rule seeds a rule not already there (decision 3; Preflight ruling 16)", () => {
+describe("k8sattributes: Add Rule seeds a rule not already there", () => {
   const withRules = (rules: string) => CORPUS.replace(`${RULE_IP}${RULE_CONNECTION}`, rules);
   const rulesOf = () => valueOf(text(), ATTRS).pod_association as Value[];
 
@@ -931,7 +929,7 @@ describe("k8sattributes: the cards move by item", () => {
     expect(within(cardOf(screen.getByText("Rule 2"))).getByRole("textbox", { name: "Resource attribute key" })).toBe(keyField);
   });
 
-  // D9c Ruling 35: the cards follow their items through undo, redo and the YAML box, not their positions.
+  // The cards follow their items through undo, redo and the YAML box, not their positions.
   it("after a rule's move is undone and redone, each card and its fields are still its rule's", async () => {
     const user = renderForm(ATTRS);
     await openSection(user, "Pod Association");
@@ -1062,11 +1060,11 @@ describe("k8sattributes: the cards move by item", () => {
   });
 });
 
-// ── What the forms show (decision 3; decision 5; Preflight ruling 10) ──
+// ── What the forms show ──
 
-// ── The review's fixes (D9c Rulings 41-43) ──
+// ── Fixes ──
 
-describe("k8sattributes: the Key/Regex switch never loses a value (Ruling 41)", () => {
+describe("k8sattributes: the Key/Regex switch never loses a value", () => {
   const withLabel = (label: string) => CORPUS.replace(LABEL, label);
   const switchOf = () => within(cardOf(screen.getByRole("textbox", { name: "Tag name" }))).getAllByRole("combobox")[0]!;
 
@@ -1101,7 +1099,7 @@ describe("k8sattributes: the Key/Regex switch never loses a value (Ruling 41)", 
   });
 });
 
-describe("resourcedetection: hostname sources [] is the collector's dns, os (decision 4; Ruling 42)", () => {
+describe("resourcedetection: hostname sources [] is the collector's dns, os", () => {
   // The collector uses dns, os when the list is empty (internal/system/system.go:48-50).
   const EMPTY = CORPUS.replace("      hostname_sources: [os]\n", "      hostname_sources: []\n");
 
@@ -1128,7 +1126,7 @@ describe("resourcedetection: hostname sources [] is the collector's dns, os (dec
   });
 });
 
-describe("k8sattributes: a rule's sources keep their rows (Ruling 43)", () => {
+describe("k8sattributes: a rule's sources keep their rows", () => {
   const TWO = "      - sources:\n          - from: resource_attribute\n            name: k8s.pod.ip\n          - from: resource_attribute\n            name: k8s.pod.name\n";
   const SWAPPED = "      - sources:\n          - from: resource_attribute\n            name: k8s.pod.name\n          - from: resource_attribute\n            name: k8s.pod.ip\n";
 
@@ -1173,13 +1171,13 @@ describe("what the forms show", () => {
     expect(hint("How to authenticate with the Kubernetes API. · Default serviceAccount")).toBeInTheDocument();
     await openSection(user, "Metadata Extraction");
     for (let index = 0; index < 13; index++) expect(byId(`metadata-${index}`)).not.toBeChecked();
-    // factory.go:45-51 with both conventions gates on (Preflight ruling 10).
+    // factory.go:45-51 with both conventions gates on.
     expect(
       hint(
         "Default container.image.name, container.image.tags, k8s.deployment.name, k8s.namespace.name, k8s.node.name, k8s.pod.name, k8s.pod.start_time, k8s.pod.uid",
       ),
     ).toBeInTheDocument();
-    // The first tick writes that item alone (decision 5).
+    // The first tick writes that item alone.
     await user.click(box("k8s.pod.name"));
     expect(valueOf(text(), ATTRS).extract).toEqual({ metadata: ["k8s.pod.name"] });
   });
@@ -1239,7 +1237,7 @@ describe("what the forms show", () => {
   });
 });
 
-describe("resourcedetection: each resource attribute shows the collector's default (decision 4)", () => {
+describe("resourcedetection: each resource attribute shows the collector's default", () => {
   it("unset, every box shows its metadata.yaml default (most of eks' and system's are off), not every one ticked", async () => {
     const base = DETECTION_ALL.replace(/ {6}resource_attributes:\n[\s\S]*? {10}enabled: false\n/, "");
     const user = renderForm(DETECTION, base);
@@ -1273,7 +1271,7 @@ describe("resourcedetection: each resource attribute shows the collector's defau
   });
 });
 
-describe("resourcedetection: the collector's detector catalog (decision 6)", () => {
+describe("resourcedetection: the collector's detector catalog", () => {
   it("offers nova for OpenStack, and ten more detectors, with no settings sections for them", async () => {
     const user = renderForm(DETECTION, withDetectors("nova, alibaba_ecs, azureappservice, k8s_api, kubeadm, dynatrace"));
     for (const group of ["Azure", "Kubernetes", "Other Clouds"]) await openGroup(user, group);
@@ -1317,7 +1315,7 @@ describe("resourcedetection: the collector's detector catalog (decision 6)", () 
     expect(valueOf(text(), DETECTION).gcp).toEqual({ client_config: { timeout: "5s" }, resource_attributes: { "cloud.provider": { enabled: false } } });
   });
 
-  it("the Kubernetes Node section shows for k8snode only: k8s_api reads k8s_api.*, and has none (Preflight ruling 27)", async () => {
+  it("the Kubernetes Node section shows for k8snode only: k8s_api reads k8s_api.*, and has none", async () => {
     // config.go:156-160, 265-268: k8snode reads `k8snode`, k8s_api reads `k8s_api`.
     let user = renderForm(DETECTION, withDetectors("k8s_api"));
     await openSection(user, "Kubernetes Detectors");
@@ -1329,7 +1327,7 @@ describe("resourcedetection: the collector's detector catalog (decision 6)", () 
     user = renderForm(DETECTION, withDetectors("k8snode"));
     await openSection(user, "Kubernetes Detectors");
     expect(screen.getByText("Kubernetes Node")).toBeInTheDocument();
-    // Unset shows the collector's serviceAccount (internal/k8sapi/config.go:51-55; Ruling 31).
+    // Unset shows the collector's serviceAccount (internal/k8sapi/config.go:51-55).
     expect(byId("k8s-auth-type")).toHaveTextContent("Service Account (recommended)");
     expect(hint("Default serviceAccount")).toBeInTheDocument();
   });
@@ -1347,9 +1345,9 @@ describe("resourcedetection: the collector's detector catalog (decision 6)", () 
   });
 });
 
-// ── Ruling 85: boxes level with their labels ──
+// ── Boxes level with their labels ──
 
-describe("resourcedetection: the boxes sit level with their labels (Ruling 85)", () => {
+describe("resourcedetection: the boxes sit level with their labels", () => {
   // Measured in Chromium, WebKit and Firefox: a detector's box sat 4.5 px above its name's line without the shift.
   it("a detector's box is moved down 2 px beside its name and description, which stack in a grid", () => {
     renderForm(DETECTION);
@@ -1366,12 +1364,12 @@ describe("resourcedetection: the boxes sit level with their labels (Ruling 85)",
   });
 });
 
-// ── Privacy (decision 10) ──
+// ── Privacy ──
 
-describe("privacy (decision 10)", () => {
+describe("privacy", () => {
   beforeEach(layOutRows);
 
-  // Its own time limit (D9c Rulings 54 and 80).
+  // Its own time limit.
   it("puts no config value in any attribute: every section, group and card open, the menus open, drags in progress", async () => {
     const MARK = "zq-mark";
     const marked = [
@@ -1484,10 +1482,10 @@ describe("privacy (decision 10)", () => {
   }, 20_000);
 });
 
-// ── D9c Ruling 55: two labels that read alike ──
+// ── Two labels that read alike ──
 
-describe("k8sattributes: a card keeps its label when another reads alike (Ruling 55)", () => {
-  // Its own time limit (D9c Rulings 54 and 80).
+describe("k8sattributes: a card keeps its label when another reads alike", () => {
+  // Its own time limit.
   it("two identical labels: slow typing in the first's Tag name stays in the first, focus kept", async () => {
     const base = CORPUS.replace(LABEL, LABEL + LABEL);
     const user = renderForm(ATTRS, base);

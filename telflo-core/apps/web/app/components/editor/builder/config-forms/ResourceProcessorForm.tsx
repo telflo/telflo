@@ -16,15 +16,15 @@ import { SortableHandle, SortableItem, SortableList } from "~/components/ui/sort
 import type { ValueChange } from "~/lib/graph/text-edits.js";
 
 /*
- * The resource processor's form (ADR 0018), over the form (D9b decisions
- * 2 to 4). The attributes are a sortable list of cards; each card's fields
- * write their own key under `attributes.<index>`.
+ * The resource processor's form, over the form. The attributes are a sortable
+ * list of cards; each card's fields write their own key under
+ * `attributes.<index>`.
  *
  * - Dragging a card (pointer or keyboard) moves the item's own lines, its
- *   comments and quoting with it (`form.move`; Preflight ruling 2).
+ *   comments and quoting with it (`form.move`).
  * - "Add Attribute" appends `{key: "", value: "", action:
  *   "insert"}`; the trash button removes the item's lines.
- * - Fixed (decision 4, "a person's own config isn't lost"): changing the
+ * - Fixed, so a person's own config isn't lost: changing the
  *   action writes `action`, adds the key the new action needs and removes
  *   the ones it no longer uses, leaving the item's other keys (a
  *   `converted_type`, a `default_value`) as they are, never rebuilding the
@@ -36,14 +36,14 @@ import type { ValueChange } from "~/lib/graph/text-edits.js";
  *   removed, the new one written `""`). A value
  *   keeps its type unless the person retypes it: the number `42` is shown as
  *   written and never rewritten as `"42"` until edited.
- * - Fixed (decision 3): an action outside insert/update/upsert/delete (the
- *   collector's hash, extract, convert) shows as an extra option, as
- *   written, not a blank select.
+ * - Fixed: an action outside insert/update/upsert/delete (the collector's
+ *   hash, extract, convert) shows as an extra option, as written, not a blank
+ *   select.
  * - Clearing a card's Key or value writes `""`;
  *   clearing the Key Pattern (optional for delete) removes it.
  *
  * Cards are keyed and identified by index (`attr-0`), never by a key or
- * value (decision 10).
+ * value.
  */
 
 type ValueSource = "literal" | "from_attribute" | "from_context";

@@ -12,29 +12,28 @@ import { SortableHandle, SortableItem, SortableList } from "~/components/ui/sort
 import type { ValueView } from "~/lib/graph/value-view.js";
 
 /*
- * The failover connector's form (ADR 0018), over the form's fields (D9d
- * decision 2, D9b's contract). The priority levels are a sortable list of
- * cards; each card is its level's `PipelineListField` (`ItemScope` over
- * `priority_levels.<index>`), so a choice writes its item by its lines.
+ * The failover connector's form, over the form's fields. The priority levels
+ * are a sortable list of cards; each card is its level's `PipelineListField`
+ * (`ItemScope` over `priority_levels.<index>`), so a choice writes its item by
+ * its lines.
  *
  * - Dragging a level moves its own lines (`form.move`); cards are keyed by
  *   their levels (`useCardKeys`), not by index. Ids are by card
  *   index (`level-0-targets`, sortable `level-0`), never a value.
  * - A level offers `connectorPipelineOptions` less the pipelines other
- *   levels name (the collector itself
- *   doesn't refuse one at two levels). Choosing a pipeline writes it and,
- *   in the store, the connector into that pipeline's receivers, one change
- *   with its toast; removing one, or a level, takes the connector out of
- *   receivers once nothing here names the pipeline, unless it is the
- *   pipeline's only receiver (decision 8; `failover.go:77-84` refuses a
- *   level naming a pipeline that doesn't receive from the connector).
- * - Fixed (decision 3): Add Priority Level holds a card that isn't in the
- *   text (never an appended `[]`, which `failover.go:78-81` refuses); its
- *   first pipeline chosen writes the level `[p]`. A level's last pipeline
- *   can't be removed (its Remove disabled, with a hint to remove the
- *   level), so the form never writes a level `[]` (final ruling F2); "No
- *   priority levels configured" hides while a card is held (final ruling
- *   F3).
+ *   levels name (the collector itself doesn't refuse one at two levels).
+ *   Choosing a pipeline writes it and, in the store, the connector into
+ *   that pipeline's receivers, one change with its toast; removing one, or
+ *   a level, takes the connector out of receivers once nothing here names
+ *   the pipeline, unless it is the pipeline's only receiver
+ *   (`failover.go:77-84` refuses a level naming a pipeline that doesn't
+ *   receive from the connector).
+ * - Fixed: Add Priority Level holds a card that isn't in the text (never
+ *   an appended `[]`, which `failover.go:78-81` refuses); its first
+ *   pipeline chosen writes the level `[p]`. A level's last pipeline can't
+ *   be removed (its Remove disabled, with a hint to remove the level), so
+ *   the form never writes a level `[]`; "No priority levels configured"
+ *   hides while a card is held.
  * - Retry Interval's default 10m and the queue on by default are the
  *   collector's (`factory.go:30-35`: `sending_queue` is Some(default)).
  */
@@ -44,7 +43,7 @@ function textOf(view: ValueView): string {
   return view.kind === "scalar" ? (view.source ?? String(view.value)) : "";
 }
 
-/** Under a level's last pipeline, whose Remove is disabled (final ruling F2; `failover.go:77-84` refuses an empty level). */
+/** Under a level's last pipeline, whose Remove is disabled (`failover.go:77-84` refuses an empty level). */
 export const LEVEL_KEEPS_LAST_PIPELINE = "A priority level needs at least one pipeline. Remove the level instead.";
 
 const TARGETS_HELP =

@@ -18,67 +18,62 @@ import { ListTextField } from "./shared/ListTextField.js";
 import type { ValueChange, ValuePath } from "~/lib/graph/text-edits.js";
 
 /*
- * The spanmetrics connector's form (ADR 0018), over the form's fields
- * (D9d decision 2, D9b's contract): each field writes its own key.
- * Collector claims are contrib v0.162.0's `connector/spanmetricsconnector`.
- * The collector's own name, `span_metrics`, opens this form
- * (`RENAMED_TYPES`; `metadata.yaml:1-2`).
+ * The spanmetrics connector's form, over the form's fields: each field
+ * writes its own key. Collector claims are contrib v0.162.0's
+ * `connector/spanmetricsconnector`. The collector's own name,
+ * `span_metrics`, opens this form (`RENAMED_TYPES`; `metadata.yaml:1-2`).
  *
- * - Fixed (decision 4): Histogram Buckets are `[]time.Duration`
- *   (`config.go:139-144`; core `confmap/internal/decoder.go:58-76` has no
- *   weak typing, so a bare number is nanoseconds: `2ms` read as a number
- *   would be `2`, 2 ns). The
+ * - Fixed: Histogram Buckets are `[]time.Duration` (`config.go:139-144`;
+ *   core `confmap/internal/decoder.go:58-76` has no weak typing, so a bare
+ *   number is nanoseconds: `2ms` read as a number would be `2`, 2 ns). The
  *   field is a `ListTextField`: each item written as typed, by item (`2ms`
- *   a string, a bare number plain), joined ", " (Preflight ruling 20);
- *   cleared, `histogram.explicit` goes, so the collector's defaults apply
+ *   a string, a bare number plain), joined ", "; cleared,
+ *   `histogram.explicit` goes, so the collector's defaults apply
  *   (`connector.go:216-225`; an `explicit` with no buckets has none,
  *   `connector.go:211-215`). Its placeholder is the 16 defaults
  *   (`config.go:25-27`), its copy corrected.
- * - Changed (decision 7): the collector refuses `explicit` beside
- *   `exponential` (`config.go:172-174`). Typing buckets while
- *   `histogram.exponential` is set removes it in the same change, and
- *   typing Exponential Max Size while `histogram.explicit` is set removes
- *   that, each with its toast. A null one is unset to the collector (neither
- *   is a `configoptional.Default`, `factory.go:38-55`; core
- *   `configoptional/optional.go:176`) and isn't removed. Max Size cleared
- *   removes `max_size` only (D9d Ruling 44): `exponential: {}` stays, an
- *   exponential histogram at the default 160 (the
- *   collector checks `Histogram.Exponential.HasValue()` first,
- *   `connector.go` `initHistogramMetrics`); removing it would switch the
- *   connector to explicit buckets unasked. While `histogram.exponential`
- *   is a mapping (`{}` too; a null one is unset) and `explicit` isn't set,
- *   Histogram Buckets says so (`EXPONENTIAL_IN_USE`); with both written,
- *   which the collector refuses (`config.go:172-174`), it says that instead
- *   (`BOTH_HISTOGRAMS`; D9d Ruling 45).
- * - Changed (decision 7): choosing Delta while `metric_timestamp_cache_size`
+ * - Changed: the collector refuses `explicit` beside `exponential`
+ *   (`config.go:172-174`). Typing buckets while `histogram.exponential` is
+ *   set removes it in the same change, and typing Exponential Max Size while
+ *   `histogram.explicit` is set removes that, each with its toast. A null
+ *   one is unset to the collector (neither is a `configoptional.Default`,
+ *   `factory.go:38-55`; core `configoptional/optional.go:176`) and isn't
+ *   removed. Max Size cleared removes `max_size` only: `exponential: {}`
+ *   stays, an exponential histogram at the default 160 (the collector checks
+ *   `Histogram.Exponential.HasValue()` first, `connector.go`
+ *   `initHistogramMetrics`); removing it would switch the connector to
+ *   explicit buckets unasked. While `histogram.exponential` is a mapping
+ *   (`{}` too; a null one is unset) and `explicit` isn't set, Histogram
+ *   Buckets says so (`EXPONENTIAL_IN_USE`); with both written, which the
+ *   collector refuses (`config.go:172-174`), it says that instead
+ *   (`BOTH_HISTOGRAMS`).
+ * - Changed: choosing Delta while `metric_timestamp_cache_size`
  *   is 0 or less removes it in the same change (the 1000 default applies),
  *   with its toast (`config.go:188-193`, `215-220`).
- * - Fixed (decision 3): Enable Events Metrics with no events dimensions
- *   also writes the README's `dimensions: [{name: exception.type}]`
+ * - Fixed: Enable Events Metrics with no events dimensions also writes
+ *   the README's `dimensions: [{name: exception.type}]`
  *   (`README.md:200-204`), one change, no toast (the box's own seed): the
- *   collector refuses events with no dimensions (`config.go:168-170,
- *   271-279`). The "Dimension required" alert stays for a text
- *   that has them on with none.
- * - Fixed (decision 3): the four dimension lists are `DimensionListField`s
+ *   collector refuses events with no dimensions
+ *   (`config.go:168-170, 271-279`). The "Dimension required" alert stays
+ *   for a text that has them on with none.
+ * - Fixed: the four dimension lists are `DimensionListField`s
  *   (Add holds a row until a name is typed, never `{name: ""}`,
  *   refused, `config.go:238-241`); the three string lists hold their rows
  *   (never `""`). Exclude Dimensions emptied leaves `[]`, the
  *   other two remove their key.
- * - Changed (D9b decision 3; decision 4): Aggregation Temporality writes
+ * - Changed: Aggregation Temporality writes
  *   `AGGREGATION_TEMPORALITY_CUMULATIVE` or `_DELTA`; unset is blank with
  *   "Default Cumulative"; any other value shows as written with the hint
  *   that the collector reads it as cumulative (`config.go:206-213`;
- *   `DELTA` included). Histogram Unit unset is blank
- *   with "Default ms" (`factory.go:43-49`); number fields write what is
- *   typed, 0 included.
- * - Changed (decision 4) copy: Histogram Unit, Histogram Buckets, Exclude
+ *   `DELTA` included). Histogram Unit unset is blank with "Default ms"
+ *   (`factory.go:43-49`); number fields write what is typed, 0 included.
+ * - Changed copy: Histogram Unit, Histogram Buckets, Exclude
  *   Dimensions (`collector.instance.id`, `connector.go:600-602`), Include
  *   Instrumentation Scopes (it adds dimensions, filtering nothing,
  *   `connector.go:605-610`), Add Resource Attributes (kept either way
  *   unless the alpha gate is on, `connector.go:315-317`).
  *
- * Ids are fixed (dimension rows by index); no value reaches an attribute
- * (decision 13).
+ * Ids are fixed (dimension rows by index); no value reaches an attribute.
  */
 
 export const REMOVED_EXPLICIT = "Removed the explicit buckets: the collector uses either explicit or exponential buckets.";
@@ -130,8 +125,8 @@ export function SpanmetricsConnectorForm() {
   const eventsOn = isTruthy(form.read(["events", "enabled"]));
   const eventsMissingDimensions = eventsOn && listLength(form.read(["events", "dimensions"])) === 0;
   const dimensionCount = listLength(form.read(["dimensions"])) + listLength(form.read(["calls_dimensions"]));
-  // A mapping, `{}` included, is the histogram the collector makes (D9d Ruling 44), unless explicit is set
-  // too, which the collector refuses (config.go:172-174; D9d Ruling 45). Null is unset to it (optional.go:176).
+  // A mapping, `{}` included, is the histogram the collector makes, unless explicit is set too, which the
+  // collector refuses (config.go:172-174). Null is unset to it (optional.go:176).
   const exponentialSet = form.read(["histogram", "exponential"]).kind === "map";
   const explicitSet = form.read(["histogram", "explicit"]).kind !== "absent";
 

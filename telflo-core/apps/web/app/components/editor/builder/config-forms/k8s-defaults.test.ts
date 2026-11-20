@@ -10,12 +10,12 @@ import {
 import { DETECTOR_DESCRIPTIONS, DETECTOR_GROUPS, RESOURCE_ATTRIBUTE_BOXES } from "./ResourceDetectionProcessorForm.js";
 
 /*
- * The collector's defaults the Kubernetes forms show (D9c decisions 4 to 6;
- * plan Task 3), checked against contrib v0.162.0's sources, read when this
- * test was written and transcribed here with their places: each detector's
- * `metadata.yaml` `resource_attributes` block (under
- * `processor/resourcedetectionprocessor/`), as the attributes it enables
- * and those it doesn't, a gate that is off at v0.162.0 overriding (elastic_beanstalk's).
+ * The collector's defaults the Kubernetes forms show, checked against contrib
+ * v0.162.0's sources, read when this test was written and transcribed here
+ * with their places: each detector's `metadata.yaml` `resource_attributes`
+ * block (under `processor/resourcedetectionprocessor/`), as the attributes it
+ * enables and those it doesn't, a gate that is off at v0.162.0 overriding
+ * (elastic_beanstalk's).
  */
 
 /** [detector, its metadata.yaml block, enabled by default, not enabled by default] at v0.162.0. */
@@ -33,8 +33,9 @@ const METADATA: readonly (readonly [string, string, readonly string[], readonly 
   ["ec2", "internal/aws/ec2/metadata.yaml:6-60", ["cloud.account.id", "cloud.availability_zone", "cloud.platform", "cloud.provider", "cloud.region", "host.id", "host.image.id", "host.name", "host.type"], []],
   ["ecs", "internal/aws/ecs/metadata.yaml:6-96", ["aws.ecs.cluster.arn", "aws.ecs.launchtype", "aws.ecs.task.arn", "aws.ecs.task.family", "aws.ecs.task.id", "aws.ecs.task.revision", "aws.log.group.arns", "aws.log.group.names", "aws.log.stream.arns", "aws.log.stream.names", "cloud.account.id", "cloud.availability_zone", "cloud.platform", "cloud.provider", "cloud.region"], []],
   ["eks", "internal/aws/eks/metadata.yaml:6-66", ["cloud.platform", "cloud.provider"], ["cloud.account.id", "cloud.availability_zone", "cloud.region", "host.id", "host.image.id", "host.name", "host.type", "k8s.cluster.name"]],
-  // metadata.yaml enables all seven; deployment.environment.name and deployment.id are emitted only under the Alpha
-  // EmitV1DeploymentConventions gate (elasticbeanstalk.go:79-105; metadata.yaml:15-20), so off (D9c Ruling 43).
+  // metadata.yaml enables all seven; deployment.environment.name and
+  // deployment.id are emitted only under the Alpha EmitV1DeploymentConventions
+  // gate (elasticbeanstalk.go:79-105; metadata.yaml:15-20), so off.
   ["elastic_beanstalk", "internal/aws/elasticbeanstalk/metadata.yaml:23-63", ["cloud.platform", "cloud.provider", "deployment.environment", "service.instance.id", "service.version"], ["deployment.environment.name", "deployment.id"]],
   ["gcp", "internal/gcp/metadata.yaml:6-121", ["cloud.account.id", "cloud.availability_zone", "cloud.platform", "cloud.provider", "cloud.region", "faas.instance", "faas.name", "faas.version", "gcp.cloud_run.job.execution", "gcp.cloud_run.job.task_index", "gcp.gce.instance_group_manager.name", "gcp.gce.instance_group_manager.region", "gcp.gce.instance_group_manager.zone", "host.id", "host.name", "host.type", "k8s.cluster.name"], ["gcp.gce.instance.hostname", "gcp.gce.instance.name"]],
   ["heroku", "internal/heroku/metadata.yaml:6-52", ["cloud.provider", "heroku.app.id", "heroku.dyno.id", "heroku.release.commit", "heroku.release.creation_timestamp", "service.instance.id", "service.name", "service.version"], []],

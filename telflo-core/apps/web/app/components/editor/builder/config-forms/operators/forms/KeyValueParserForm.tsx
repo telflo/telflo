@@ -6,16 +6,15 @@ import { SeverityConfigSection } from "../shared/SeverityConfigSection.js";
 import { TimestampConfigSection } from "../shared/TimestampConfigSection.js";
 
 /*
- * The `key_value_parser` operator's form (ADR 0018), over the card's scope
- * (D9c decisions 2 and 8). Ids are the card's (`op-<index>-kv-…`).
+ * The `key_value_parser` operator's form, over the card's scope.
+ * Ids are the card's (`op-<index>-kv-…`).
  *
- * Changed (D9b decision 3): unset delimiters show the collector's defaults
- * as their placeholders and hints, not as values (which couldn't be
- * cleared): Key-Value Delimiter `=`
- * (`parser/keyvalue/config.go:30`), Pair Delimiter a space (`:53-56`), which
- * the placeholder and hint call "(space)". Equal
- * delimiters, which the collector refuses (`:58-60`), are written as typed
- * (decision 3). Parse From and Parse To show `body` and `attributes`
+ * Changed: unset delimiters show the collector's defaults as their
+ * placeholders and hints, not as values (which couldn't be cleared):
+ * Key-Value Delimiter `=` (`parser/keyvalue/config.go:30`), Pair Delimiter a
+ * space (`:53-56`), which the placeholder and hint call "(space)". Equal
+ * delimiters, which the collector refuses (`:58-60`), are written as typed.
+ * Parse From and Parse To show `body` and `attributes`
  * (`helper/parser.go:26-27`), Parse To rootable (`:35`).
  */
 export function KeyValueParserForm() {

@@ -35,13 +35,12 @@ import { formControls } from "~/test/form-controls.js";
 
 /*
  * The statsd receiver and the cumulativetodelta, metricstransform and
- * groupbyattrs processors (D9d Task 6): their forms over the form
- * contract. Each field is driven as a person would on the metrics corpus
- * text (comments, an anchor and a merge, flow and block lists, a plain
- * `0622` and a bare `0750`), LF and CRLF, and writes only its key.
- * The metricstransform (4; the empty alert's copy changed) and
- * groupbyattrs (3) cases follow. The fixes each have a test that fails if
- * the bug returns.
+ * groupbyattrs processors: their forms over the form contract. Each field
+ * is driven as a person would on the metrics corpus text (comments, an
+ * anchor and a merge, flow and block lists, a plain `0622` and a bare
+ * `0750`), LF and CRLF, and writes only its key. The metricstransform (4;
+ * the empty alert's copy changed) and groupbyattrs (3) cases follow. The
+ * fixes each have a test that fails if the bug returns.
  *
  * Collector claims cite contrib v0.162.0: `receiver/statsdreceiver`,
  * `processor/cumulativetodeltaprocessor`,
@@ -533,7 +532,7 @@ const CASES: FieldCase[] = [
   },
 ];
 
-describe("every field of each form writes only its key (decision 2)", () => {
+describe("every field of each form writes only its key", () => {
   it.each(CASES.flatMap((c) => [[`${c.name}, LF`, c, false] as const, [`${c.name}, CRLF`, c, true] as const]))(
     "%s",
     async (_name, c, crlf) => {
@@ -555,7 +554,7 @@ describe("every field of each form writes only its key (decision 2)", () => {
   );
 });
 
-describe("opening writes nothing (decision 2)", () => {
+describe("opening writes nothing", () => {
   /** What each form shows once opened, at least: its text fields, every control, and a field. */
   const OPENED: Record<string, { textboxes: number; all: number; field: string }> = {
     [STATSD]: { textboxes: 4, all: 21, field: "percentiles_1" },
@@ -566,7 +565,7 @@ describe("opening writes nothing (decision 2)", () => {
     [GBA]: { textboxes: 3, all: 3, field: "" },
     [GBA_COMPACT]: { textboxes: 1, all: 1, field: "" },
   };
-  // One test per form and text, each with its own time limit (D9c Ruling 54).
+  // One test per form and text, each with its own time limit.
   it.each(Object.keys(OPENED).flatMap((key) => [[key, "LF", CORPUS] as const, [key, "CRLF", CRLF(CORPUS)] as const]))(
     "opening %s (%s), every section and card, focusing every field, writes nothing and leaves the editor clean",
     async (key, _name, base) => {
@@ -743,14 +742,14 @@ describe("StatsdReceiverForm: transport and socket", () => {
     expect(byId("socket_permissions")).toHaveValue("");
   });
 
-  it("a transport outside the seven is read-only with D9b's hint", () => {
+  it("a transport outside the seven is read-only with the unshowable-value hint", () => {
     renderForm(STATSD, statsdText("    transport: sctp\n"));
     expect((screen.getAllByRole("radio") as HTMLInputElement[]).every((radio) => radio.disabled && !radio.checked)).toBe(true);
     expect(screen.getByText(UNSHOWABLE_VALUE_MESSAGE)).toBeInTheDocument();
   });
 });
 
-// ── Sortable cards by keyboard (D9b Preflight ruling 15) ──
+// ── Sortable cards by keyboard ──
 
 const ROW_HEIGHT = 40;
 
@@ -851,7 +850,7 @@ describe("StatsdReceiverForm: the mappings", () => {
     expect(entries()).toBe(1);
   });
 
-  it("Add Mapping on an unset list writes one seeded mapping (decision 5), expanded; the empty state names the collector's defaults", async () => {
+  it("Add Mapping on an unset list writes one seeded mapping, expanded; the empty state names the collector's defaults", async () => {
     const before = statsdText("    transport: udp\n");
     const user = renderForm(STATSD, before);
     await openSection(user, "Timer Mapping");
@@ -922,7 +921,7 @@ describe("StatsdReceiverForm: the mappings", () => {
     expect(text()).toBe(CORPUS.replace("        summary:\n          percentiles: [0, 10, 50, 90, 95, 100]\n", ""));
   });
 
-  it("a mapping that isn't a mapping is read-only with D9b's hint; the list that isn't a list disables Add", async () => {
+  it("a mapping that isn't a mapping is read-only with the unshowable-value hint; the list that isn't a list disables Add", async () => {
     const user = renderForm(STATSD, statsdText("    timer_histogram_mapping:\n      - timer\n"));
     await openSection(user, "Timer Mapping");
     expect(screen.getByText(UNSHOWABLE_VALUE_MESSAGE)).toBeInTheDocument();
@@ -934,7 +933,7 @@ describe("StatsdReceiverForm: the mappings", () => {
     expect(screen.getByRole("button", { name: "Add Mapping" })).toBeDisabled();
   });
 
-  it("a mapping card lacking both types is labelled Mapping <n> (final ruling F4); one with a type keeps its arrow", async () => {
+  it("a mapping card lacking both types is labelled Mapping <n>; one with a type keeps its arrow", async () => {
     const user = renderForm(
       STATSD,
       statsdText("    timer_histogram_mapping:\n      - statsd_type: timer\n        observer_type: gauge\n      - histogram:\n          max_size: 10\n      - timer\n"),
@@ -946,7 +945,7 @@ describe("StatsdReceiverForm: the mappings", () => {
   });
 });
 
-describe("StatsdReceiverForm: percentiles typed (Preflight rulings 5 and 20)", () => {
+describe("StatsdReceiverForm: percentiles typed", () => {
   /** The summary mapping's text, its percentiles as given. */
   const summaryText = (percentiles: string) =>
     statsdText(`    timer_histogram_mapping:\n      - statsd_type: timing\n        observer_type: summary\n        summary:\n          percentiles: ${percentiles}\n`);
@@ -995,7 +994,7 @@ describe("StatsdReceiverForm: percentiles typed (Preflight rulings 5 and 20)", (
     expect(entries()).toBe(1);
   });
 
-  it("each item is written as typed: a number plain, anything else as a string (D13 checks the range)", async () => {
+  it("each item is written as typed: a number plain, anything else as a string (the config validation checks the range)", async () => {
     const before = summaryText("[50]");
     const user = renderForm(STATSD, before);
     await openSection(user, "Timer Mapping");
@@ -1095,7 +1094,7 @@ describe("CumulativeToDeltaProcessorForm", () => {
     expect(text()).not.toContain('""');
   });
 
-  it("a side with metrics and no match_type (refused) shows the match blank; its next metric is written with strict (D9c Ruling 48)", async () => {
+  it("a side with metrics and no match_type (refused) shows the match blank; its next metric is written with strict", async () => {
     const before = ctdText("    include:\n      metrics: [a]\n");
     const user = renderForm(CTD, before);
     await openSection(user, "Filtering");
@@ -1119,7 +1118,7 @@ describe("CumulativeToDeltaProcessorForm", () => {
     expect(screen.getByRole("button", { name: /^Filtering/ })).toHaveTextContent("2");
   });
 
-  it("a side that isn't a mapping is read-only with D9b's hint", async () => {
+  it("a side that isn't a mapping is read-only with the unshowable-value hint", async () => {
     const user = renderForm(CTD, ctdText("    include: everything\n"));
     await openSection(user, "Filtering");
     expect(within(boxOf("Include Metrics")).getByText(UNSHOWABLE_VALUE_MESSAGE)).toBeInTheDocument();
@@ -1185,7 +1184,7 @@ describe("MetricsTransformProcessorForm cases", () => {
 });
 
 describe("MetricsTransformProcessorForm: held cards", () => {
-  it("Add Transform holds a card; its metric typed writes {include, match_type: strict, action: update} as one entry, the card keeping focus (Preflight ruling 8)", async () => {
+  it("Add Transform holds a card; its metric typed writes {include, match_type: strict, action: update} as one entry, the card keeping focus", async () => {
     const before = mtText("    transforms:\n      - include: a\n        action: update\n");
     const user = renderForm(MT, before);
     await user.click(screen.getByRole("button", { name: "Add Transform" }));
@@ -1205,7 +1204,7 @@ describe("MetricsTransformProcessorForm: held cards", () => {
     expect(screen.getByRole("button", { name: "Add Transform" })).toBeEnabled();
   });
 
-  it("a held transform's action is held with it; Combine's aggregation type comes with it, toasted once when written (decision 7, Ruling 41)", async () => {
+  it("a held transform's action is held with it; Combine's aggregation type comes with it, toasted once when written", async () => {
     const before = mtText("");
     const user = renderForm(MT, before);
     await user.click(screen.getByRole("button", { name: "Add Transform" }));
@@ -1252,7 +1251,7 @@ describe("MetricsTransformProcessorForm: held cards", () => {
     expect(operation(valueOf(MT), 0, 0)).toEqual({ action: "update_label", label: "state", new_label: "cpu_state" });
   });
 
-  it("a held operation's Toggle int/double data type (no other field) writes {action} at once, one entry; Add Operation is enabled again (final ruling F1)", async () => {
+  it("a held operation's Toggle int/double data type (no other field) writes {action} at once, one entry; Add Operation is enabled again", async () => {
     const before = mtText("    transforms:\n      - include: a\n        action: update\n");
     const user = renderForm(MT, before);
     await user.click(screen.getByRole("button", { name: "Add Operation" }));
@@ -1278,7 +1277,7 @@ describe("MetricsTransformProcessorForm: held cards", () => {
   });
 });
 
-describe("MetricsTransformProcessorForm: a held card's toasts (Ruling 41)", () => {
+describe("MetricsTransformProcessorForm: a held card's toasts", () => {
   it("Combine in a held transform toasts nothing; its metric typed writes aggregation_type: sum and toasts once", async () => {
     const before = mtText("    transforms:\n      - include: a\n        action: update\n");
     const user = renderForm(MT, before);
@@ -1297,7 +1296,7 @@ describe("MetricsTransformProcessorForm: a held card's toasts (Ruling 41)", () =
     expect(infoToasts()).toEqual([COMBINE_SUM]);
   });
 
-  it("Combine in a held transform, then Aggregation Type mean: the write writes mean and says nothing of sum (Ruling 41d)", async () => {
+  it("Combine in a held transform, then Aggregation Type mean: the write writes mean and says nothing of sum", async () => {
     const before = mtText("    transforms:\n      - include: a\n        action: update\n");
     const user = renderForm(MT, before);
     await user.click(screen.getByRole("button", { name: "Add Transform" }));
@@ -1315,7 +1314,7 @@ describe("MetricsTransformProcessorForm: a held card's toasts (Ruling 41)", () =
     expect(infoToasts()).toEqual([]);
   });
 
-  it("Combine and Group held, then Aggregation Type chosen: only Group's message comes with the write (Ruling 41d)", async () => {
+  it("Combine and Group held, then Aggregation Type chosen: only Group's message comes with the write", async () => {
     const before = mtText("");
     const user = renderForm(MT, before);
     await user.click(screen.getByRole("button", { name: "Add Transform" }));
@@ -1407,7 +1406,7 @@ describe("MetricsTransformProcessorForm: a held card's toasts (Ruling 41)", () =
   });
 });
 
-describe("MetricsTransformProcessorForm: removing an operation with a field's edit pending (Ruling 41)", () => {
+describe("MetricsTransformProcessorForm: removing an operation with a field's edit pending", () => {
   /** Types `typed` into the field without leaving it: the edit waits for the pause. */
   const typePending = (field: HTMLElement, typed: string) =>
     act(() => void fireEvent.change(field, { target: { value: (field as HTMLInputElement).value + typed } }));
@@ -1544,7 +1543,7 @@ describe("MetricsTransformProcessorForm: the changes", () => {
     expect(operation(valueOf(MT), 0, 0)).toEqual({ action: "experimental_scale_value" });
   });
 
-  it("a card's header is a labelled button; the operation's select is labelled Operation action (Parity Notes)", async () => {
+  it("a card's header is a labelled button; the operation's select is labelled Operation action", async () => {
     const user = renderForm(MT);
     const toggles = screen.getAllByRole("button", { name: "Expand transform" });
     expect(toggles).toHaveLength(3);
@@ -1564,7 +1563,7 @@ describe("MetricsTransformProcessorForm: the changes", () => {
     expect(byId("transform-1-include")).toHaveValue("^system\\.disk\\.(.*)");
   });
 
-  it("a transforms value that isn't a list is read-only with D9b's hint; Add Transform is disabled", () => {
+  it("a transforms value that isn't a list is read-only with the unshowable-value hint; Add Transform is disabled", () => {
     renderForm(MT, mtText("    transforms: everything\n"));
     expect(screen.getByText(UNSHOWABLE_VALUE_MESSAGE)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Add Transform" })).toBeDisabled();
@@ -1609,7 +1608,7 @@ describe("GroupByAttrsProcessorForm cases", () => {
 
 // ── Privacy ──
 
-describe("privacy (decision 13)", () => {
+describe("privacy", () => {
   it("puts no config value in any attribute: every section and card open, the menus open, a held card and row, a drag in progress", async () => {
     const MARK = "zq-mark";
     const marked = [
@@ -1733,8 +1732,8 @@ describe("privacy (decision 13)", () => {
 
 // ── The copy, word for word ──
 
-describe("the plan's and the spec's copy", () => {
-  it("toasts, hints and alerts read exactly as the plan and the Parity Notes give them", () => {
+describe("the copy", () => {
+  it("toasts, hints and alerts read exactly as written", () => {
     expect(REMOVED_HISTOGRAM).toBe("Removed the histogram settings: they need observer type histogram.");
     expect(REMOVED_SUMMARY).toBe("Removed the summary percentiles: they need observer type summary.");
     expect(COMBINE_SUM).toBe("Aggregation Type set to sum: combine needs one.");
@@ -1750,7 +1749,7 @@ describe("the plan's and the spec's copy", () => {
   });
 });
 
-// ── Held items and the YAML box (D9d Rulings 33, 33a) ──
+// ── Held items and the YAML box ──
 
 describe("held cards and the YAML box", () => {
   it("a held transform stays through an edit inside another transform, and goes when the YAML box changes the list's length", async () => {

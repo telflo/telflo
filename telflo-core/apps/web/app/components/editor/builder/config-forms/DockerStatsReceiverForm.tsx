@@ -12,54 +12,50 @@ import { useHeldText } from "~/lib/editor/held-text.js";
 import type { ValueView } from "~/lib/graph/value-view.js";
 
 /*
- * The Docker stats receiver's form (ADR 0018), over the form's fields (D9c
- * decision 2, D9b's contract): each field writes its own key.
+ * The Docker stats receiver's form, over the form's fields: each field writes
+ * its own key.
  *
- * - API Version is a string (D9c decision 2): what is typed is written as a
- *   string, so `1.25` is written `"1.25"`. The collector reads a string
- *   there and refuses a float, with a hint to quote it
+ * - API Version is a string: what is typed is written as a string, so
+ *   `1.25` is written `"1.25"`. The collector reads a string there and
+ *   refuses a float, with a hint to quote it
  *   (`internal/docker/config.go:34, 47-61` at contrib v0.162.0). A number
  *   already in the text (`api_version: 1.40`) shows as written, with
- *   `API_VERSION_NUMBER_HINT` under it (decision 4; Ruling 47), and typing
- *   writes a string even when the characters are the same: the change is
- *   the type (`useHeldText`'s `writeSame`). Focusing and leaving writes
- *   nothing.
- * - Copy (D9c decision 4, Appearance): the API Version hint says what the
- *   collector does with it unset: it pins 1.44
- *   (`receiver/dockerstatsreceiver/factory.go:32-33`, `receiver.go:28`); only
- *   an explicit empty version leaves the client unpinned
- *   (`internal/docker/docker.go:60-67`), which the form can't write
+ *   `API_VERSION_NUMBER_HINT` under it, and typing writes a string even
+ *   when the characters are the same: the change is the type
+ *   (`useHeldText`'s `writeSame`). Focusing and leaving writes nothing.
+ * - Copy: the API Version hint says what the collector does with it unset: it
+ *   pins 1.44 (`receiver/dockerstatsreceiver/factory.go:32-33`,
+ *   `receiver.go:28`); only an explicit empty version leaves the client
+ *   unpinned (`internal/docker/docker.go:60-67`), which the form can't write
  *   (clearing removes the key); it doesn't auto-negotiate.
  * - The two label maps are `KeyValueMapField`'s `"staging"` layout, the
- *   `HeadersConfigSection` markup with `title={null}` (Preflight ruling 4),
- *   with their own nouns (decision 4), not "Header name", "Header value",
- *   "e.g. Authorization", "Add header", "Remove header".
- *   A key is renamed in place on blur or Enter, and a key another row has
- *   is refused under the row (D9b decision 4; never re-keyed on each
+ *   `HeadersConfigSection` markup with `title={null}`, with their own nouns,
+ *   not "Header name", "Header value", "e.g. Authorization", "Add header",
+ *   "Remove header". A key is renamed in place on blur or Enter, and a key
+ *   another row has is refused under the row (never re-keyed on each
  *   keystroke, never overwriting a clash). The staging row's examples are the
  *   collector's own (`receiver/dockerstatsreceiver/config.go:22-35`). Both
  *   maps are `map[string]string` (`config.go:27, 35`).
- * - Excluded Images is D9b's `StringListField`: removing the last pattern
- *   removes the key, and a remove button says
- *   "Remove", never the pattern (D9b decision 10).
- * - Unset shows the collector's default (D9b decision 3): Endpoint
+ * - Excluded Images is a `StringListField`: removing the last pattern removes
+ *   the key, and a remove button says "Remove", never the pattern.
+ * - Unset shows the collector's default: Endpoint
  *   `unix:///var/run/docker.sock` (`internal/docker/config.go:90-95`,
  *   `client.DefaultDockerHost`), Collection Interval `10s`, Timeout `5s`
  *   (`factory.go:29-31`), Initial Delay `1s` (core scraperhelper's
  *   `NewDefaultControllerConfig`), as the placeholders and hints say.
  *   Clearing a field removes its key.
  *
- * Ids are fixed (`docker-stats-…`); map rows are keyed by
- * index; no value reaches an attribute (decision 10).
+ * Ids are fixed (`docker-stats-…`); map rows are keyed by index; no value
+ * reaches an attribute.
  */
 
-/** The hint under API Version (D9c decision 4, Appearance). */
+/** The hint under API Version. */
 export const API_VERSION_HINT = "Docker client API version to pin (1.25+). Default 1.44. Always a quoted string in YAML.";
 
-/** Under API Version while the text holds a number there (Ruling 47; `internal/docker/config.go:47-61`). */
+/** Under API Version while the text holds a number there (`internal/docker/config.go:47-61`). */
 export const API_VERSION_NUMBER_HINT = "Written as a number; the collector needs a quoted string. Retype it to quote it.";
 
-/** Container labels to metric labels: its rows' words (decision 4). */
+/** Container labels to metric labels: its rows' words. */
 export const CONTAINER_LABEL_NOUNS: KeyValueNouns = {
   key: "Container label",
   value: "Metric label",
@@ -70,7 +66,7 @@ export const CONTAINER_LABEL_NOUNS: KeyValueNouns = {
   newValue: "e.g. container_spec_name",
 };
 
-/** Environment variables to metric labels: its rows' words (decision 4). */
+/** Environment variables to metric labels: its rows' words. */
 export const ENV_VAR_NOUNS: KeyValueNouns = {
   key: "Environment variable",
   value: "Metric label",
@@ -177,7 +173,7 @@ export function DockerStatsReceiverForm() {
  * API Version: a string, always (`1.25` is written "1.25"; the collector
  * refuses a float). `TextField`'s display and writes, and a number in the
  * text says so and is quoted by the next typing, the same characters
- * included (Ruling 47).
+ * included.
  */
 function ApiVersionField() {
   const form = useForm();

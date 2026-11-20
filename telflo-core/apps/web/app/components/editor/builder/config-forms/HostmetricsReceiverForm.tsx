@@ -10,48 +10,47 @@ import type { ValuePath } from "~/lib/graph/text-edits.js";
 import type { ValueView } from "~/lib/graph/value-view.js";
 
 /*
- * The host metrics receiver's form (ADR 0018), over the form's fields
- * (D9c decision 2, D9b's contract): each field writes its own key.
+ * The host metrics receiver's form, over the form's fields: each field writes
+ * its own key.
  *
- * - Kept (Parity Notes): a scraper is on while its key is under `scrapers`,
- *   a bare `cpu:` included (the collector configures every key it finds
- *   there with the scraper's defaults, `receiver/hostmetricsreceiver/
- *   config.go:62-93`). Ticking one writes `{}`, and load
- *   `{cpu_average: false}`; unticking removes the key. The
- *   last one can be unticked: the collector refuses a receiver with no
- *   scraper (`config.go:43-45`), which D13's validation reports; the form
- *   doesn't block it. A scraper whose value can't hold settings is
- *   read-only with D9b decision 3's hint, and shows no section. When
- *   `scrapers` itself isn't a mapping, no box is ticked (none can be said to
- *   be on), all are disabled, and the hint shows once (Ruling 46).
- * - Fixed (D9c decisions 3 and 9; Preflight ruling 5): each scraper's
- *   filters are the shared `IncludeExcludeSection`: the first item is
- *   written with `match_type: strict` (with none, the collector refuses a
- *   list that has items, `internal/filter/filterset/
- *   config.go:37-48`), include and exclude are kept together (the collector
- *   builds both, `internal/scraper/diskscraper/disk_scraper_others.go:51-63`,
+ * - Kept: a scraper is on while its key is under `scrapers`, a bare `cpu:`
+ *   included (the collector configures every key it finds there with the
+ *   scraper's defaults, `receiver/hostmetricsreceiver/ config.go:62-93`).
+ *   Ticking one writes `{}`, and load `{cpu_average: false}`; unticking
+ *   removes the key. The last one can be unticked: the collector refuses a
+ *   receiver with no scraper (`config.go:43-45`), which the config validation
+ *   reports; the form doesn't block it. A scraper whose value can't hold
+ *   settings is read-only with `UNSHOWABLE_VALUE_MESSAGE`, and shows no
+ *   section. When `scrapers` itself isn't a mapping, no box is ticked (none
+ *   can be said to be on), all are disabled, and the hint shows once.
+ * - Fixed: each scraper's filters are the shared `IncludeExcludeSection`: the
+ *   first item is written with `match_type: strict` (with none, the collector
+ *   refuses a list that has items,
+ *   `internal/filter/filterset/ config.go:37-48`), include and exclude are
+ *   kept together (the collector builds both,
+ *   `internal/scraper/diskscraper/disk_scraper_others.go:51-63`,
  *   `filesystemscraper/config.go:78-117`) and both show when both are set,
- *   and a side's first row is held until something is typed in it
- *   (never `[""]`). The filter keys are the collector's
+ *   and a side's first row is held until something is typed in it (never
+ *   `[""]`). The filter keys are the collector's
  *   (`diskscraper/config.go:19-26`, `filesystemscraper/config.go:23-57`,
  *   `networkscraper/config.go:15-23`, `processscraper/config.go:20-61`).
- * - Unset shows the collector's default (D9b decision 3): Collection
- *   Interval `1m` and Initial Delay `1s` (core `scraper/scraperhelper/
- *   internal/controller/generated_config.go:39-40`, v0.162.0), Metadata
- *   Collection Interval `5m` (`factory.go:39`), as placeholders and hints;
- *   the boxes unticked (every scraper's booleans
+ * - Unset shows the collector's default: Collection Interval `1m` and Initial
+ *   Delay `1s` (core
+ *   `scraper/scraperhelper/ internal/controller/generated_config.go:39-40`,
+ *   v0.162.0), Metadata Collection Interval `5m` (`factory.go:39`), as
+ *   placeholders and hints; the boxes unticked (every scraper's booleans
  *   default to false: `loadscraper/factory.go:21-25`,
  *   `processscraper/factory.go:44-48`, `filesystemscraper/factory.go:22-26`).
- * - Changed (D9b's rule): clearing Root Path removes the key, never writing
- *   `""` (which the collector reads as unset, `config.go:25`).
- * - The row markup (D9c Ruling 38): the scraper and
- *   described boxes' `flex items-start space-x-3` rows with a `grid gap-1
- *   leading-none` block, the error boxes' `flex items-center space-x-3`
- *   rows, `text-sm font-medium cursor-pointer` labels.
+ * - Changed: clearing Root Path removes the key, never writing `""` (which
+ *   the collector reads as unset, `config.go:25`).
+ * - The row markup: the scraper and described boxes'
+ *   `flex items-start space-x-3` rows with a `grid gap-1 leading-none`
+ *   block, the error boxes' `flex items-center space-x-3` rows,
+ *   `text-sm font-medium cursor-pointer` labels.
  *
- * Ids are fixed (`scraper-<name>`, a name from the fixed
- * catalog; each filter's `<section>-mode`, `<section>-include-<index>`);
- * no value reaches an attribute (decision 10).
+ * Ids are fixed (`scraper-<name>`, a name from the fixed catalog; each
+ * filter's `<section>-mode`, `<section>-include-<index>`); no value reaches
+ * an attribute.
  */
 
 /** The scraper catalog, the collector's at v0.162.0 (`factory.go:44-56`), with the README's OS tags. */

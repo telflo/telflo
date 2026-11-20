@@ -2,25 +2,23 @@ import { NumberField, TextField } from "../../form-context.js";
 import { useOperatorId } from "../operator-ids.js";
 
 /*
- * The `filter` operator's form (ADR 0018), over the card's scope (D9c
- * decisions 2 and 8). Ids are the card's (`op-<index>-filter-…`).
+ * The `filter` operator's form, over the card's scope. Ids are the card's
+ * (`op-<index>-filter-…`).
  *
- * Changed (D9b decisions 2 and 3):
- * - Drop Ratio is D9b's number field: what is typed is written as typed,
- *   plain when it reads as a number (`0.5`, `1.0`, `0`), a string otherwise
- *   (`1.0` stays `1.0`, never `1`). Its 0-1 range is advisory: a ratio
- *   outside it, which
- *   the collector refuses (`transformer/filter/config.go:61-63`), is written
- *   as typed (decision 3), D13's to report. Unset keeps the placeholder
- *   "1.0 (drop all)", the collector's 1 (`config.go:38`), and
+ * Changed:
+ * - Drop Ratio is a number field: what is typed is written as typed, plain
+ *   when it reads as a number (`0.5`, `1.0`, `0`), a string otherwise (`1.0`
+ *   stays `1.0`, never `1`). Its 0-1 range is advisory: a ratio outside it,
+ *   which the collector refuses (`transformer/filter/config.go:61-63`), is
+ *   written as typed, for the config validation to report. Unset keeps the
+ *   placeholder "1.0 (drop all)", the collector's 1 (`config.go:38`), and
  *   gains the hint "Default 1.0".
- * - Expression, cleared, removes `expr` (D9b's rule; never `""`, which the
- *   collector refuses to compile as well, `config.go:56-59`).
- * Fixed (decision 4; D9c Ruling 67): the "Drop by service" example reads
- * the `service.name` key, `resource["service.name"] == "noisy-service"`;
- * `resource.service.name` would be a nested path (`service` →
- * `name`), which the semantic-convention key never matches
- * (`entry/field.go:152-226`; `docs/types/field.md`).
+ * - Expression, cleared, removes `expr` (as clearing any field does; never
+ *   `""`, which the collector refuses to compile as well, `config.go:56-59`).
+ * Fixed: the "Drop by service" example reads the `service.name` key,
+ * `resource["service.name"] == "noisy-service"`; `resource.service.name`
+ * would be a nested path (`service` → `name`), which the semantic-convention
+ * key never matches (`entry/field.go:152-226`; `docs/types/field.md`).
  */
 export function FilterOperatorForm() {
   const opId = useOperatorId();

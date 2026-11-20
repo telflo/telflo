@@ -7,21 +7,20 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { OWN_KEYS_PROPS } from "~/hooks/useUndoRedo.js";
 
 /*
- * The operator selector (ADR 0018): the "Add Operator" dialog, its four
- * categories and 26 types. Choosing a type hands it to the pipeline,
- * which appends the type's seed (`operatorSeed`) as one item, and closes
- * the dialog.
+ * The operator selector: the "Add Operator" dialog, its four categories and
+ * 26 types. Choosing a type hands it to the pipeline, which appends the
+ * type's seed (`operatorSeed`) as one item, and closes the dialog.
  *
  * Changed:
  * - every type shows its own icon (the catalog's), never a `FileText`
- *   fallback (D9c Task 5);
- * - the dialog's content spreads `OWN_KEYS_PROPS` (Preflight ruling 19): it
- *   renders in `<body>`, outside the Configuration tab's marker, so Delete,
- *   Backspace and Cmd/Ctrl+D on a focused type would otherwise delete or
- *   duplicate the selected receiver (D9b decision 6);
- * - the type buttons are `type="button"`, as every D9b button.
- * No attribute carries anything from the text (decision 10): the dialog
- * holds only the catalog's fixed names.
+ *   fallback;
+ * - the dialog's content spreads `OWN_KEYS_PROPS`: it renders in `<body>`,
+ *   outside the Configuration tab's marker, so Delete, Backspace and
+ *   Cmd/Ctrl+D on a focused type would otherwise delete or duplicate the
+ *   selected receiver;
+ * - the type buttons are `type="button"`, as every button in the forms.
+ * No attribute carries anything from the text: the dialog holds only the
+ * catalog's fixed names.
  */
 
 const CATEGORY_TINTS: Readonly<Record<OperatorCategory, string>> = {

@@ -3,10 +3,10 @@ import { useOperatorId } from "../operator-ids.js";
 import { FieldSelector } from "../shared/FieldSelector.js";
 
 /*
- * The `flatten` operator's form (ADR 0018), over the card's scope (D9c
- * decisions 2 and 8). Ids are the card's (`op-<index>-flatten-…`).
+ * The `flatten` operator's form, over the card's scope. Ids are the card's
+ * (`op-<index>-flatten-…`).
  *
- * Fixed (decisions 3 and 4):
+ * Fixed:
  * - What flatten does: it moves the named map's fields up one level, into
  *   its parent (`transformer/flatten/transformer.go:35-58`;
  *   `docs/operators/flatten.md:3-4`), and doesn't join keys with dots. The
@@ -18,12 +18,12 @@ import { FieldSelector } from "../shared/FieldSelector.js";
  *   builds it for a body, attribute or resource field
  *   (`flatten/config.go:47-68`) and refuses a bare `attributes` or
  *   `resource` (`entry/field.go:119-126`), so an empty suffix removes the
- *   key (decision 8). Its hint is "Required. The map to flatten, under
- *   body, attributes or resource." (an empty Field is refused by the
- *   collector, `config.go:68`). It shows no default.
+ *   key. Its hint is "Required. The map to flatten, under body,
+ *   attributes or resource." (an empty Field is refused by the collector,
+ *   `config.go:68`). It shows no default.
  * - Depth is dropped: `depth` isn't a key (`flatten/config.go:35-38`), and
  *   the collector ignores it (`operator/config.go:111`). A `depth` in the
- *   text is left alone (D9b Ruling 52).
+ *   text is left alone.
  */
 
 const PRE = "text-xs text-muted-foreground font-mono bg-muted p-2 rounded-[4px] mt-1 overflow-x-auto";

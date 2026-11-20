@@ -10,21 +10,19 @@ import { flushHeldEdits } from "~/lib/editor/held-edits.js";
 import type { ValuePath } from "~/lib/graph/text-edits.js";
 
 /*
- * The operator pipeline (ADR 0018): a filelog, journald or syslog
- * receiver's `operators` list as a column of operator cards between the log
- * entry's input and output, over the form (D9c decision 8). The receivers'
- * forms (Task 8) put it in their Operators section with the list's `path`.
+ * The operator pipeline: a filelog, journald or syslog receiver's
+ * `operators` list as a column of operator cards between the log entry's
+ * input and output, over the form. The receivers' forms put it in their
+ * Operators section with the list's `path`.
  *
- * Every change is the item's own lines (D9b decision 2), never the whole
- * array.
+ * Every change is the item's own lines, never the whole array.
  * - Add Operator (the selector) appends the type's seed (`operatorSeed`) as
  *   one item; an empty `operators: []`, a null `operators:` or a missing key
- *   takes it in block style (D9b Ruling 85).
+ *   takes it in block style.
  * - The trash button removes the item's lines (the comment lines above it
- *   stay, as D9a removes an entry; Preflight ruling 24); removing the last
- *   operator removes `operators`.
- *   What a field of the card still holds is written first, so it can't
- *   write into the item after it has gone.
+ *   stay, as with any removed entry); removing the last operator removes
+ *   `operators`. What a field of the card still holds is written first,
+ *   so it can't write into the item after it has gone.
  * - Dragging a card (pointer or keyboard, the shared `SortableList`, list
  *   `operator`: sortable ids `operator-<index>`, never a value) moves the
  *   item's lines, its comments with it (`form.move`; the array is never
@@ -33,19 +31,19 @@ import type { ValuePath } from "~/lib/graph/text-edits.js";
  *   keyed by the item's card key (`useCardKeys`): its state (expanded, a
  *   section's toggle, a selector's pick) follows it through the form's own
  *   moves and removals, and is matched to it again after an undo, a redo or
- *   a YAML edit (Preflight ruling 25; D9c Ruling 35). A card whose item no
- *   key matches starts afresh (expanded, as every card starts).
- * - The drag overlay draws the dragged card's header only (Preflight ruling
- *   25): a whole card would draw every field's id twice.
+ *   a YAML edit. A card whose item no key matches starts afresh (expanded,
+ *   as every card starts).
+ * - The drag overlay draws the dragged card's header only: a whole card
+ *   would draw every field's id twice.
  *
- * Fixed (decision 4): the input row names the receiver's source ("from
- * file", "from journal", "from syslog"; not "from file" for every
- * receiver), and no arrow is drawn after a router: a router sends
- * each entry where its routes say (`transformer/router/transformer.go:90-120`),
- * never on to the next card or to the output by position.
- * Changed (Preflight ruling 20; D9b decision 3): `operators` that isn't a
- * list is read-only, with decision 3's hint in place of the cards (no count;
- * Add Operator disabled).
+ * Fixed: the input row names the receiver's source ("from file", "from
+ * journal", "from syslog"; not "from file" for every receiver), and no arrow
+ * is drawn after a router: a router sends each entry where its routes say
+ * (`transformer/router/transformer.go:90-120`), never on to the next card or
+ * to the output by position.
+ * Changed: `operators` that isn't a list is read-only, with
+ * `UNSHOWABLE_VALUE_MESSAGE` in place of the cards (no count; Add Operator
+ * disabled).
  */
 
 export type OperatorSource = "file" | "journal" | "syslog";
@@ -204,7 +202,7 @@ export function OperatorPipeline({ path, source }: { path: ValuePath; source: Op
   );
 }
 
-/** The dragged card's header, alone (Preflight ruling 25). */
+/** The dragged card's header, alone. */
 function OverlayHeader({ index }: { index: number }) {
   const item = useOperatorItem();
   return (

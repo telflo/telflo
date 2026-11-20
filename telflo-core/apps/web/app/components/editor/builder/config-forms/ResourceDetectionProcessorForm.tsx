@@ -22,73 +22,67 @@ import { Checkbox } from "~/components/ui/checkbox.js";
 import { Label } from "~/components/ui/label.js";
 
 /*
- * The resource detection processor's form (ADR 0018), over the form's
- * fields (D9c decision 2, D9b's contract): each field writes its own
- * key. Collector paths are `processor/resourcedetectionprocessor/` at
- * contrib v0.162.0.
+ * The resource detection processor's form, over the form's fields: each field
+ * writes its own key. Collector paths are
+ * `processor/resourcedetectionprocessor/` at contrib v0.162.0.
  *
- * - Detectors: collapsible groups of checkboxes over
- *   `detectors`, written by item (`useCheckboxSet`, `CheckboxSetField`'s
- *   reading and writing; D9c decisions 5 and 9): ticking appends the
- *   detector (no reorder: the hint says to reorder in the
- *   YAML), unticking removes its lines. Unset shows none ticked, with the
- *   collector's default in the hint, "Default env" (`factory.go:129-131`),
- *   and the first tick writes that detector alone. Ids are
- *   `detector-<index>`.
- * - Changed (decisions 3 and 6): the catalog is the collector's
- *   (`k8s-defaults.ts` `DETECTORS`, `factory.go:73-105`): `nova` in place
- *   of `openstack`, which isn't a detector (the collector refuses it,
- *   "invalid detector key"); ten more detectors, each in the group it
- *   fits (Azure's three in Azure; `k8s_api`, `k8snode`'s current name,
- *   beside it and `kubeadm` in Kubernetes; `dynatrace`, which reads the
- *   OneAgent's file on the host, in Environment & System; the other clouds'
- *   in Other Clouds), with no settings sections. A detector the text holds
- *   that isn't one of them (`openstack`) shows after the groups, ticked, as
- *   text, so it can be unticked and is never lost (Preflight ruling 10).
- * - Fixed (decision 3): the ECS, GCP and Docker "Client Timeout" fields are
+ * - Detectors: collapsible groups of checkboxes over `detectors`, written
+ *   by item (`useCheckboxSet`, `CheckboxSetField`'s reading and writing):
+ *   ticking appends the detector (no reorder: the hint says to reorder in
+ *   the YAML), unticking removes its lines. Unset shows none ticked, with
+ *   the collector's default in the hint, "Default env"
+ *   (`factory.go:129-131`), and the first tick writes that detector alone.
+ *   Ids are `detector-<index>`.
+ * - Changed: the catalog is the collector's (`k8s-defaults.ts` `DETECTORS`,
+ *   `factory.go:73-105`): `nova` in place of `openstack`, which isn't a
+ *   detector (the collector refuses it, "invalid detector key"); ten more
+ *   detectors, each in the group it fits (Azure's three in Azure;
+ *   `k8s_api`, `k8snode`'s current name, beside it and `kubeadm` in
+ *   Kubernetes; `dynatrace`, which reads the OneAgent's file on the host,
+ *   in Environment & System; the other clouds' in Other Clouds), with no
+ *   settings sections. A detector the text holds that isn't one of them
+ *   (`openstack`) shows after the groups, ticked, as text, so it can be
+ *   unticked and is never lost.
+ * - Fixed: the ECS, GCP and Docker "Client Timeout" fields are
  *   gone: they wrote `client_config.timeout`, which those detectors don't
  *   have (`internal/aws/ecs/config.go:11`, `internal/gcp/config.go:13-14`,
  *   `internal/docker/config.go:11`) and the collector refuses; the
  *   top-level Timeout is their HTTP client's (`config.go:56-58`). A key
- *   already in the text is left alone (D13's).
- * - Fixed (decision 4): each resource attribute's box shows the collector's
- *   default while its `enabled` is unset (`k8s-defaults.ts`, each
- *   detector's `metadata.yaml`), not every one ticked
- *   (most of eks' and system's are off). A box writes
+ *   already in the text is left alone.
+ * - Fixed: each resource attribute's box shows the collector's default
+ *   while its `enabled` is unset (`k8s-defaults.ts`, each detector's
+ *   `metadata.yaml`), not every one ticked (most of eks' and system's are
+ *   off). A box writes
  *   `<detector>.resource_attributes.<attribute>.enabled: <bool>`. The boxes
- *   are a fixed set (decision 6 adds none); ids are
- *   `<detector>-attr-<index>`, never the name.
- * - Changed (Preflight ruling 27): the Kubernetes Node section edits
- *   `k8snode.*`, which only the `k8snode` detector reads
- *   (`config.go:156-160, 265-268`); it shows for `k8snode` alone, and
- *   `k8s_api` has no section. Its Authentication Type shows the collector's
- *   default while unset, "Default serviceAccount"
- *   (`internal/k8sapi/config.go:51-55`; Ruling 31).
+ *   are a fixed set; ids are `<detector>-attr-<index>`, never the name.
+ * - Changed: the Kubernetes Node section edits `k8snode.*`, which only the
+ *   `k8snode` detector reads (`config.go:156-160, 265-268`); it shows for
+ *   `k8snode` alone, and `k8s_api` has no section. Its Authentication Type
+ *   shows the collector's default while unset, "Default serviceAccount"
+ *   (`internal/k8sapi/config.go:51-55`).
  * - OpenShift's TLS is the shared section's client variant: `openshift.tls`
  *   is a client's (`configtls.ClientConfig`,
  *   `internal/openshift/config.go:50-52`), which refuses the server
  *   variant's Client CA File and its reload. Its hint says what off means
  *   there: with no CA file, the service account's CA
  *   (`internal/openshift/config.go:75-77`).
- * - Fixed (decisions 3 and 9): Add Tag Pattern holds an empty row until
- *   something is typed in it (never `""`, an empty regex, which
- *   matches every tag).
+ * - Fixed: Add Tag Pattern holds an empty row until something is typed in it
+ *   (never `""`, an empty regex, which matches every tag).
  * - Kept: Hostname Sources shows `dns` and `os` ticked while unset, the
  *   collector's default (`internal/system/system.go:48-50`), and its first
- *   toggle writes them with the change. Fixed (decision 4;
- *   Ruling 42): an empty list shows so too, as the collector reads `[]` as
- *   its default (same lines); unticking the last still leaves `[]`.
- *   Kept: the AWS order alert;
- *   the selected detectors' chips; each section's count and empty text.
- * - Unset shows the collector's default (D9b decision 3): Timeout `5s`
+ *   toggle writes them with the change. Fixed: an empty list shows so too, as
+ *   the collector reads `[]` as its default (same lines); unticking the last
+ *   still leaves `[]`.
+ *   Kept: the AWS order alert; the selected detectors' chips; each
+ *   section's count and empty text.
+ * - Unset shows the collector's default: Timeout `5s`
  *   (`factory.go:153-157`), Override on (`factory.go:133`), Max Attempts 3
  *   and Max Backoff `20s` (`internal/aws/ec2/config.go:34-40`).
  *
- * Every id is fixed per field or by index; no value reaches an attribute
- * (decision 10).
+ * Every id is fixed per field or by index; no value reaches an attribute.
  */
 
-/** The detector groups, with the collector's catalog at v0.162.0 (decision 6). */
+/** The detector groups, with the collector's catalog at v0.162.0. */
 export const DETECTOR_GROUPS: readonly (readonly [string, readonly string[]])[] = [
   ["Environment & System", ["env", "system", "dynatrace"]],
   ["AWS", ["lambda", "elastic_beanstalk", "ec2", "ecs", "eks"]],
@@ -171,7 +165,7 @@ const AUTH_TYPES = [
 /** The OpenShift TLS box's hint: off, the collector trusts the service account's CA (`internal/openshift/config.go:75-77`). */
 export const OPENSHIFT_TLS_HINT = "Off: the collector uses TLS with the service account's CA.";
 
-/** The resource attributes the boxes toggle, per detector (decision 6: no others). */
+/** The resource attributes the boxes toggle, per detector (no others). */
 export const RESOURCE_ATTRIBUTE_BOXES: Readonly<Record<string, readonly string[]>> = {
   ec2: [
     "cloud.provider",

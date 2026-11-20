@@ -16,25 +16,25 @@ import type { ValueChange } from "~/lib/graph/text-edits.js";
 import type { ValueView } from "~/lib/graph/value-view.js";
 
 /*
- * The OTLP/HTTP exporter's form (ADR 0018), over the form's fields (D9b
- * decisions 2 to 4): each field writes its own key.
+ * The OTLP/HTTP exporter's form, over the form's fields: each field writes its
+ * own key.
  *
  * The collector's defaults (otlphttp exporter `createDefaultConfig`, core
  * v0.162.0: timeout 30s, encoding proto, compression gzip, read buffer 0,
- * write buffer 512 KiB) show while a key is unset (decision 3),
- * not written as values. A compression or encoding outside the options
- * shows as an extra option, as written.
+ * write buffer 512 KiB) show while a key is unset, not written as values.
+ * A compression or encoding outside the options shows as an extra option,
+ * as written.
  *
- * Changed (decision 4, the owner's ruling, Preflight ruling 4): the TLS
- * section is the client variant ("Customize TLS for OTLP/HTTP", no Client
- * CA fields), and the `insecure` box says what it does on HTTP.
+ * Changed: the TLS section is the client variant ("Customize TLS for
+ * OTLP/HTTP", no Client CA fields), and the `insecure` box says what it
+ * does on HTTP.
  *
- * The quick setups (presets, endpoints, placeholder credentials and
- * marks) are written by key: one change list, one undo entry.
- * The rule (decision 4, "a person's own config isn't lost"): **a quick
- * setup only removes or replaces what a preset put there.** A header is a
- * preset's while its name is one a preset sets (in any case) and its value
- * is still that preset's placeholder (`Basic <YOUR_BASE64_CREDENTIALS>`,
+ * The quick setups (presets, endpoints, placeholder credentials and marks)
+ * are written by key: one change list, one undo entry. The rule, so a
+ * person's own config isn't lost: **a quick setup only removes or replaces
+ * what a preset put there.** A header is a preset's while its name is one
+ * a preset sets (in any case) and its value is still that preset's
+ * placeholder (`Basic <YOUR_BASE64_CREDENTIALS>`,
  * `Api-Token <YOUR_DYNATRACE_TOKEN>`, `<YOUR_DATADOG_API_KEY>`); any other
  * value is the person's own and is never removed or overwritten.
  * - "Custom (clear pre-fill)" removes the endpoint while it is still a
@@ -46,9 +46,9 @@ import type { ValueView } from "~/lib/graph/value-view.js";
  *   themselves as it is.
  * The last header removed takes the `headers` mapping with it.
  *
- * The selection is derived from the endpoint as the text holds it: a
- * preset while the endpoint is exactly its endpoint.
- * The options' values are the presets' fixed ids (decision 10).
+ * The selection is derived from the endpoint as the text holds it: a preset
+ * while the endpoint is exactly its endpoint. The options' values are the
+ * presets' fixed ids.
  */
 
 export interface QuickSetupPreset {

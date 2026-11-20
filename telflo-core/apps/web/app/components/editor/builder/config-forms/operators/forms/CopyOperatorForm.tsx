@@ -3,10 +3,10 @@ import { useOperatorId } from "../operator-ids.js";
 import { FieldSelector } from "../shared/FieldSelector.js";
 
 /*
- * The `copy` operator's form (ADR 0018), over the card's scope (D9c
- * decisions 2 and 8). Ids are the card's (`op-<index>-copy-…`). From and To
- * are required (`docs/operators/copy.md`), so they show no default, and
- * neither is rootable (`transformer/copy/config.go:42-43`, `entry.Field`s).
+ * The `copy` operator's form, over the card's scope. Ids are the card's
+ * (`op-<index>-copy-…`). From and To are required (`docs/operators/copy.md`),
+ * so they show no default, and neither is rootable
+ * (`transformer/copy/config.go:42-43`, `entry.Field`s).
  */
 export function CopyOperatorForm() {
   const opId = useOperatorId();

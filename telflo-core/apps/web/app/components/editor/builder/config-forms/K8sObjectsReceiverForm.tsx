@@ -26,67 +26,60 @@ import type { ValueChange } from "~/lib/graph/text-edits.js";
 import type { ValueView } from "~/lib/graph/value-view.js";
 
 /*
- * The Kubernetes objects receiver's form (ADR 0018), over the form's fields
- * (D9c decision 2, D9b's contract). The objects are a sortable list of cards;
- * each card's fields write their own key under `objects.<index>`
- * (`FormScope`), so keys the form doesn't show (`exclude_namespaces`,
- * `initial_delay`) stay.
+ * The Kubernetes objects receiver's form, over the form's fields. The objects
+ * are a sortable list of cards; each card's fields write their own key under
+ * `objects.<index>` (`FormScope`), so keys the form doesn't show
+ * (`exclude_namespaces`, `initial_delay`) stay.
  *
  * - Dragging a card (pointer or keyboard) moves the object's own lines, its
- *   comments with it (`form.move`; D9b Preflight ruling 2). A card's
- *   expanded state, and everything else the card holds (a held namespace
- *   row), follows the card: cards are keyed by a key of their own, moved
- *   with them (Preflight ruling 25; never staying with the position),
- *   and matched to their objects again after an undo, a redo or a YAML
- *   edit (`useCardKeys`, D9c Ruling 35).
- *   Cards start collapsed; ids are by index (`obj-0-name`,
- *   sortable `obj-0`), never a value (decision 10).
- * - Fixed (decisions 3 and 7; Preflight ruling 6): Include Initial State is
- *   the receiver's top-level `include_initial_state`
- *   (`receiver/k8sobjectsreceiver/config.go:66`); `K8sObjectsConfig` has no
- *   such key (`config.go:43-57`), so a per-object box would write one the
- *   collector refuses. It is one box, at the top of Watch Options. The
- *   collector refuses it while any object pulls (`config.go:125-127`), and
- *   an object with no `mode`, or `mode: ""`, pulls (`config.go:91-92`;
- *   Ruling 36), so while one does
- *   the box can't be ticked, with the hint "Can't be used while an object
- *   pulls."; a text with it ticked and an object pulling shows it ticked,
- *   and it can be unticked. An object switched to, or added in, pull mode
- *   removes a top-level `include_initial_state: true` in the same change,
- *   with decision 7's toast; an object switched to watch loses its
- *   `initial_delay` (refused in watch mode, `config.go:113-115`), with its
- *   toast. Each is one change, one undo entry.
- * - Kept (Parity Notes): Add Object appends `{name: pods, mode: pull,
- *   interval: 60m}`; switching to pull clears `exclude_watch_type` and
- *   `resource_version`, and writes `interval: 60m` when the object has none
- *   (a person's own interval is kept, D9b decision 4); switching to watch
- *   removes `interval`. Neither writes `interval` while a top-level
- *   `interval` is set: the object inherits it (`config.go:101-107`; Ruling
- *   37), and a `60m` would override it.
- * - Fixed (decision 7; Ruling 38): clearing `exclude_watch_type`, which the
- *   collector refuses in pull mode (`config.go:109-111`), says so in the
- *   toast "Removed the watch-only settings: pull mode can't use them." A
- *   `resource_version` isn't refused in pull mode (`config.go:121-123`
- *   refuses it only beside `storage`); the pull observer lists that exact
- *   version on every pull (`internal/k8sinventory/pull/observer.go:74-76`),
- *   and the README calls it watch-only (`README.md:68`). It is cleared
- *   silently.
- * - Fixed (decisions 3 and 9): Add Namespace holds an empty row until
- *   something is typed in it (never writing `""`, every namespace). A
- *   card's namespaces reorder by drag.
- * - Changed (D9b decision 3): a resource name outside the 16 (a CRD, which
- *   the collector resolves by discovery) shows as an extra option, as
- *   written, never a blank select. Unset shows the collector's
- *   default: Authentication Type `serviceAccount`, Error Mode `propagate`
- *   (`factory.go:30-39`), Collection Mode `pull` (`config.go:26, 91-92`),
- *   and Pull Interval the top-level `interval` when set (in the hint only:
- *   it is the text's, so never a placeholder, decision 10), else `60m`
- *   (`config.go:101-107`, `defaultPullInterval`). A card's header shows its
- *   mode as `pull` while unset.
+ *   comments with it (`form.move`). A card's expanded state, and everything
+ *   else the card holds (a held namespace row), follows the card: cards are
+ *   keyed by a key of their own, moved with them (never staying with the
+ *   position), and matched to their objects again after an undo, a redo or
+ *   a YAML edit (`useCardKeys`). Cards start collapsed; ids are by index
+ *   (`obj-0-name`, sortable `obj-0`), never a value.
+ * - Fixed: Include Initial State is the receiver's top-level
+ *   `include_initial_state` (`receiver/k8sobjectsreceiver/config.go:66`);
+ *   `K8sObjectsConfig` has no such key (`config.go:43-57`), so a per-object
+ *   box would write one the collector refuses. It is one box, at the top of
+ *   Watch Options. The collector refuses it while any object pulls
+ *   (`config.go:125-127`), and an object with no `mode`, or `mode: ""`,
+ *   pulls (`config.go:91-92`), so while one does the box can't be ticked,
+ *   with the hint "Can't be used while an object pulls."; a text with it
+ *   ticked and an object pulling shows it ticked, and it can be unticked.
+ *   An object switched to, or added in, pull mode removes a top-level
+ *   `include_initial_state: true` in the same change, with a toast; an
+ *   object switched to watch loses its `initial_delay` (refused in watch
+ *   mode, `config.go:113-115`), with its toast. Each is one change, one
+ *   undo entry.
+ * - Kept: Add Object appends `{name: pods, mode: pull, interval: 60m}`;
+ *   switching to pull clears `exclude_watch_type` and `resource_version`, and
+ *   writes `interval: 60m` when the object has none (a person's own interval
+ *   is kept); switching to watch removes `interval`. Neither writes `interval`
+ *   while a top-level `interval` is set: the object inherits it
+ *   (`config.go:101-107`), and a `60m` would override it.
+ * - Fixed: clearing `exclude_watch_type`, which the collector refuses in
+ *   pull mode (`config.go:109-111`), says so in the toast "Removed the
+ *   watch-only settings: pull mode can't use them." A `resource_version`
+ *   isn't refused in pull mode (`config.go:121-123` refuses it only beside
+ *   `storage`); the pull observer lists that exact version on every pull
+ *   (`internal/k8sinventory/pull/observer.go:74-76`), and the README calls
+ *   it watch-only (`README.md:68`). It is cleared silently.
+ * - Fixed: Add Namespace holds an empty row until something is typed in it
+ *   (never writing `""`, every namespace). A card's namespaces reorder by
+ *   drag.
+ * - Changed: a resource name outside the 16 (a CRD, which the collector
+ *   resolves by discovery) shows as an extra option, as written, never a
+ *   blank select. Unset shows the collector's default: Authentication Type
+ *   `serviceAccount`, Error Mode `propagate` (`factory.go:30-39`),
+ *   Collection Mode `pull` (`config.go:26, 91-92`), and Pull Interval the
+ *   top-level `interval` when set (in the hint only: it is the text's, so
+ *   never a placeholder), else `60m` (`config.go:101-107`,
+ *   `defaultPullInterval`). A card's header shows its mode as `pull` while
+ *   unset.
  *
- * Decision 7's notices are toasts (D9d decision 7: D9c's inline alerts
- * became toasts); the standing hint "Can't be used while an object pulls."
- * stays.
+ * The adjustment notices are toasts; the standing hint "Can't be used while an
+ * object pulls." stays.
  */
 
 const AUTH_TYPES = [
@@ -147,7 +140,7 @@ function textOf(view: ValueView): string {
 function modeOf(form: FormSource, index: number): string | null {
   if (form.read(["objects", index]).kind !== "map") return null;
   const mode = form.read(["objects", index, "mode"]);
-  // config.go:91-92: an empty mode (unset or `""`) is pull (Ruling 36).
+  // config.go:91-92: an empty mode (unset or `""`) is pull.
   if (mode.kind === "absent" || (mode.kind === "scalar" && mode.value === "")) return DEFAULT_MODE;
   return mode.kind === "scalar" ? textOf(mode) : null;
 }
@@ -170,7 +163,7 @@ export function K8sObjectsReceiverForm() {
   const watchObjects = modes.flatMap((mode, index) => (mode === "watch" ? [index] : []));
   const objectsShowable = objectsView.kind === "list" || objectsView.kind === "absent";
 
-  // config.go:101-107: an object with no interval inherits the top-level one (Ruling 37).
+  // config.go:101-107: an object with no interval inherits the top-level one.
   const inheritsInterval = form.read(["interval"]).kind !== "absent";
 
   const addObject = () => {
@@ -191,7 +184,7 @@ export function K8sObjectsReceiverForm() {
     if (form.move(["objects"], from, to) === "written") cards.move(from, to);
   };
 
-  /** The mode switch, with decision 7's adjustments, as one change. */
+  /** The mode switch, with its adjustments, as one change. */
   const switchMode = (index: number, next: string) => {
     const has = (key: string) => form.read(["objects", index, key]).kind !== "absent";
     const item = (key: string) => ["objects", index, key];
@@ -226,7 +219,7 @@ export function K8sObjectsReceiverForm() {
     setExpanded(next);
   };
 
-  // The top-level interval is the text's: it shows in the hint, as text, never in the placeholder (decision 10).
+  // The top-level interval is the text's: it shows in the hint, as text, never in the placeholder.
   const topInterval = form.read(["interval"]);
   const pullDefault = topInterval.kind === "scalar" ? { defaultValue: textOf(topInterval), placeholder: "" } : { defaultValue: PULL_INTERVAL };
 
@@ -370,9 +363,8 @@ export function K8sObjectsReceiverForm() {
 }
 
 /**
- * The receiver's top-level `include_initial_state` (Preflight ruling 6):
- * ticking it is disabled while an object pulls; ticked, it can always be
- * unticked (written `false`).
+ * The receiver's top-level `include_initial_state`: ticking it is disabled
+ * while an object pulls; ticked, it can always be unticked (written `false`).
  */
 function IncludeInitialState({ canTick, anyPull }: { canTick: boolean; anyPull: boolean }) {
   const form = useForm();

@@ -9,23 +9,23 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~
 import type { ValueChange } from "~/lib/graph/text-edits.js";
 
 /*
- * The OpAMP extension's form (ADR 0018), over the form's fields (D9b
- * decisions 2 to 4). The transport is `http` while `server.http` is there,
- * `ws` otherwise; the transport's fields write their own key under
- * `server.<transport>`, and nothing else under `server` is touched.
+ * The OpAMP extension's form, over the form's fields. The transport is `http`
+ * while `server.http` is there, `ws` otherwise; the transport's fields write
+ * their own key under `server.<transport>`, and nothing else under `server` is
+ * touched.
  *
- * Fixed (decision 4, "a person's own config isn't lost"): switching the
- * transport renames `server.ws` to `server.http` (or back) in place, so the
- * block keeps its keys, their order and comments: `endpoint`, `tls`,
- * `headers`, `auth`, and anything else it holds. The collector's `ws` and
- * `http` share every key but `polling_interval`, which is http's only
- * (`opampextension` `commonFields` and `httpFields`, contrib v0.162.0), so
- * switching to `ws` also removes `polling_interval`; switching to `http`
- * keeps everything, a `polling_interval` the ws block held included (it
- * now applies). One change list, one undo entry. With no block to rename
- * (no `server.ws` yet), switching to http writes `server.http: {}`. A text
- * holding both blocks (which the collector refuses) shows http, and a
- * switch to ws is refused with D9a's toast (the names clash).
+ * Fixed, so a person's own config isn't lost: switching the transport
+ * renames `server.ws` to `server.http` (or back) in place, so the block
+ * keeps its keys, their order and comments: `endpoint`, `tls`, `headers`,
+ * `auth`, and anything else it holds. The collector's `ws` and `http` share
+ * every key but `polling_interval`, which is http's only (`opampextension`
+ * `commonFields` and `httpFields`, contrib v0.162.0), so switching to `ws`
+ * also removes `polling_interval`; switching to `http` keeps everything, a
+ * `polling_interval` the ws block held included (it now applies). One
+ * change list, one undo entry. With no block to rename (no `server.ws`
+ * yet), switching to http writes `server.http: {}`. A text holding both
+ * blocks (which the collector refuses) shows http, and a switch to ws is
+ * refused with a toast (the names clash).
  *
  * Capabilities store only deviations from the collector's defaults: a
  * box set back to its default removes its key, and the
@@ -44,7 +44,7 @@ function transportOf(server: Record<string, unknown> | undefined): Transport {
   return server !== undefined && Object.hasOwn(server, "http") ? "http" : "ws";
 }
 
-/** The changes that switch `current` to `next` (decision 4): the block renamed in place; ws takes no polling interval. */
+/** The changes that switch `current` to `next`: the block renamed in place; ws takes no polling interval. */
 export function transportChanges(form: FormSource, current: Transport, next: Transport): ValueChange[] {
   const server = form.read(["server"]);
   const hasBlock = server.kind === "map" && Object.hasOwn(server.value, current);

@@ -17,43 +17,40 @@ import { TLSInsecureCheckbox } from "./shared/TLSInsecureCheckbox.js";
 import type { ValuePath } from "~/lib/graph/text-edits.js";
 
 /*
- * The Prometheus remote write exporter's form (ADR 0018), over the
- * form's fields (D9d decision 2, D9b's contract): each field
- * writes its own key. Collector claims cite contrib v0.162.0
+ * The Prometheus remote write exporter's form, over the form's fields: each
+ * field writes its own key. Collector claims cite contrib v0.162.0
  * `exporter/prometheusremotewriteexporter`.
  *
- * - Changed (decision 4; the controller's ruling): while the text has an
- *   `http:` key (any value, null included), Endpoint, HTTP Headers, TLS and
- *   its insecure box read and write under `http`: the collector then reads
- *   the client settings there and ignores the deprecated top-level ones
- *   (`config.go:41-45, 188-194`). Otherwise they are
- *   top-level. Timeout is the exporter's own (`config.go:26`),
+ * - Changed: while the text has an `http:` key (any value, null included),
+ *   Endpoint, HTTP Headers, TLS and its insecure box read and write under
+ *   `http`: the collector then reads the client settings there and ignores
+ *   the deprecated top-level ones (`config.go:41-45, 188-194`). Otherwise
+ *   they are top-level. Timeout is the exporter's own (`config.go:26`),
  *   top-level either way.
- * - Fixed (decision 3): TLS is D9b's client variant ("Customize TLS for the
+ * - Fixed: TLS is the shared section's client variant ("Customize TLS for the
  *   remote-write connection"; the client config refuses Client CA File and
  *   its reload). Its insecure box is separate and always shown:
  *   unticking the section keeps `insecure` (`keepKeys`).
- * - Changed (decision 4): the http:// alert is dropped (nothing fails at
- *   start: confighttp's client uses TLS only for https, D9b Preflight
- *   ruling 4), and the insecure box has D9b's HTTP copy.
- * - Changed (decision 3): the strategies `NoUTF8EscapingWithSuffixes` and
- *   `NoTranslation` are offered only while the text's `protobuf_message` is
- *   Remote Write 2.0 (`config.go:272-274`); a value already written shows as
- *   written. With v2, a hint names its feature gate (`config.go:260-262`,
- *   alpha, off by default).
- * - Changed (decision 4): Retry's Initial Interval shows the exporter's
- *   default, 50ms (`factory.go:91-92`); External Labels have label nouns;
- *   Target Info shows ticked while unset (`factory.go:118-120`), unticking
- *   writes `target_info.enabled: false` and ticking removes it (the block
- *   with its last key). The add_metric_suffixes alert applies here (no
- *   gate; `exporter.go:224-225`).
- * - Changed (decision 7): "Convert all resource attributes" can't be
- *   ticked while `resource_constant_labels` is set (`config.go:217-219`).
+ * - Changed: the http:// alert is dropped (nothing fails at start:
+ *   confighttp's client uses TLS only for https), and the insecure box has
+ *   the HTTP copy.
+ * - Changed: the strategies `NoUTF8EscapingWithSuffixes` and `NoTranslation`
+ *   are offered only while the text's `protobuf_message` is Remote Write 2.0
+ *   (`config.go:272-274`); a value already written shows as written. With
+ *   v2, a hint names its feature gate (`config.go:260-262`, alpha, off by
+ *   default).
+ * - Changed: Retry's Initial Interval shows the exporter's default, 50ms
+ *   (`factory.go:91-92`); External Labels have label nouns; Target Info
+ *   shows ticked while unset (`factory.go:118-120`), unticking writes
+ *   `target_info.enabled: false` and ticking removes it (the block with
+ *   its last key). The add_metric_suffixes alert applies here (no gate;
+ *   `exporter.go:224-225`).
+ * - Changed: "Convert all resource attributes" can't be ticked while
+ *   `resource_constant_labels` is set (`config.go:217-219`).
  * - The queue fields write `remote_write_queue.<key>` by key (never
  *   leaving `remote_write_queue: {}` when cleared).
  *
- * Ids are fixed (`prwe-…`, `tls-insecure`); no value
- * reaches an attribute (decision 13).
+ * Ids are fixed (`prwe-…`, `tls-insecure`); no value reaches an attribute.
  */
 
 /** Remote Write 2.0's message (prometheus/client_golang exp `api/remote/remote_headers.go:51-54`). */

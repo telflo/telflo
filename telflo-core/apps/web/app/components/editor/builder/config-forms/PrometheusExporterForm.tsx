@@ -6,12 +6,12 @@ import { TLSConfigSection } from "./shared/TLSConfigSection.js";
 import type { ValueView } from "~/lib/graph/value-view.js";
 
 /*
- * The Prometheus exporter's form (ADR 0018), over the form's fields
- * (D9d decision 2, D9b's contract): each field writes its own key.
+ * The Prometheus exporter's form, over the form's fields: each field writes
+ * its own key.
  *
- * - Constant Labels is `KeyValueMapField`'s `"staging"` layout
- *   (as `HeadersConfigSection` with `title={null}`), with label
- *   nouns (Parity Notes, Appearance; as D9c's docker_stats).
+ * - Constant Labels is `KeyValueMapField`'s `"staging"` layout (as
+ *   `HeadersConfigSection` with `title={null}`), with label nouns (as
+ *   docker_stats' form has).
  * - Translation Strategy's "Collector default (suffixes added)" is
  *   `SelectField`'s unset option: shown while the key is unset, choosing it
  *   removes the key (its value `__unset__`, never written). With the beta
@@ -19,26 +19,23 @@ import type { ValueView } from "~/lib/graph/value-view.js";
  *   default, unset means UnderscoreEscapingWithSuffixes
  *   (`exporter/prometheusexporter/collector.go:126-130`, `metadata.yaml:20-
  *   24` at contrib v0.162.0).
- * - Changed (decision 4): the add_metric_suffixes alert says the collector
- *   ignores it (that gate), not only "whenever a translation strategy is
- *   selected".
- * - Changed (decision 7; the controller's ruling): "Convert all resource
- *   attributes" can't be ticked while `resource_constant_labels` is set,
- *   which the collector refuses beside it (`config.go:76-78`), with a hint;
- *   ticked, it can be unticked. It writes `resource_to_telemetry_conversion.
- *   enabled` (`true`, or removed when unticked, the block with its last key),
- *   never replacing the whole block.
+ * - Changed: the add_metric_suffixes alert says the collector ignores it
+ *   (that gate), not only "whenever a translation strategy is selected".
+ * - Changed: "Convert all resource attributes" can't be ticked while
+ *   `resource_constant_labels` is set, which the collector refuses beside it
+ *   (`config.go:76-78`), with a hint; ticked, it can be unticked. It writes
+ *   `resource_to_telemetry_conversion. enabled` (`true`, or removed when
+ *   unticked, the block with its last key), never replacing the whole block.
  * - The behavior boxes write `true` or remove the key;
  *   unset shows the collector's default (`factory.go:29-38`): Metric
  *   Expiration 5m.
  * - TLS is the server variant (the exporter serves `/metrics`, a squashed
  *   `confighttp.ServerConfig`, `config.go:22-62`).
  *
- * Ids are fixed (`prometheus-exporter-…`); no value
- * reaches an attribute (decision 13).
+ * Ids are fixed (`prometheus-exporter-…`); no value reaches an attribute.
  */
 
-/** Constant and external labels: the rows' words (Parity Notes, Appearance). */
+/** Constant and external labels: the rows' words. */
 export const LABEL_NOUNS: KeyValueNouns = {
   key: "Label name",
   value: "Label value",
@@ -63,13 +60,13 @@ export const STRATEGY_UNSET = { label: "Collector default (suffixes added)" } as
 export const TRANSLATION_STRATEGY_DESCRIPTION =
   "How OTLP metric names translate to Prometheus names (escaping and type/unit suffixes).";
 
-/** While the text sets `add_metric_suffixes` (decision 4: the gate is on by default). */
+/** While the text sets `add_metric_suffixes` (the gate is on by default). */
 export const ADD_METRIC_SUFFIXES_ALERT =
   "This config sets the deprecated add_metric_suffixes field; the collector ignores it (the exporter.prometheusexporter.DisableAddMetricSuffixes feature gate is on by default).";
 
 export const CONVERT_ALL_LABEL = "Convert all resource attributes to metric labels (instead of target_info)";
 
-/** Under "Convert all resource attributes" while `resource_constant_labels` is set (Parity Notes, Appearance). */
+/** Under "Convert all resource attributes" while `resource_constant_labels` is set. */
 export const CONSTANT_LABELS_HINT = "Can't be used while resource_constant_labels is set.";
 
 /** A mapping's key count (0 for anything else). */

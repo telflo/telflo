@@ -1,8 +1,7 @@
 import { TextField } from "./form-context.js";
 
 /*
- * The zPages extension's form (ADR 0018), over the form's fields (D9b
- * decisions 2 and 3). Changed (decision 3, Preflight ruling 8): the default
+ * The zPages extension's form, over the form's fields. Changed: the default
  * shown is the collector's, `localhost:55679` (zpages `createDefaultConfig`,
  * core v0.162.0), not `0.0.0.0:55679`.
  */
