@@ -151,7 +151,7 @@ if (violations.length > 0) {
   for (const violation of [...new Set(violations)].sort()) console.error(`  ${violation}`);
   console.error("");
   console.error("telflo ships to customers, so every shipped dependency must allow redistribution.");
-  console.error("Replace the dependency: only a license that allows redistribution may be added to license-policy.json (ADR 0019).");
+  console.error("Replace the dependency: only a license that allows redistribution may be added to license-policy.json.");
   console.error("A vendored file's change: check its licenses, then update license-policy.json and docs/third-party-assets.md.");
   process.exit(1);
 }

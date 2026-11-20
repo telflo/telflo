@@ -301,7 +301,7 @@
 # organization's signed-in admin, on edge-b2 in "unassigned-b" (never the
 # Default group, whose assignment the later steps rely on): the variables
 # SMOKE_TAG (a$b-1) and SMOKE_UNUSED are created (201, no-store); a
-# configuration of its own, whose processor attributes/d20 inserts an
+# configuration of its own, whose processor attributes/variable inserts an
 # attribute of the value ${org:SMOKE_TAG}, is published and assigned to
 # "unassigned-b"; edge-b2 applies the text filled in, by the SHA-256 the
 # script computes with the value's `$` doubled (a$$b-1; the resolution keeps
@@ -548,54 +548,54 @@ remove_fleet_steps() {
 # that ends among them removes each, best effort: the containers, the fleet
 # through the management API (so the configuration is no longer in use),
 # the image, then the configuration through the gateway.
-d16b_containers=""
-d16b_fleet_id=""
-d16b_image=""
-d16b_configuration_id=""
+managed_containers=""
+managed_fleet_id=""
+managed_image=""
+managed_configuration_id=""
 # The Kubernetes fleet (below), made through the platform in the group
 # organization, until its last step deletes it: removed the same way.
 k8s_fleet_id=""
-remove_d16b_steps() {
+remove_managed_steps() {
   local container
-  for container in $d16b_containers; do docker rm -f "$container" >/dev/null 2>&1 || true; done
-  if [ -n "$d16b_fleet_id" ]; then
-    management DELETE "$OPAMP_MANAGEMENT_URL/api/v1/organizations/$group_id/fleets/$d16b_fleet_id" || true
+  for container in $managed_containers; do docker rm -f "$container" >/dev/null 2>&1 || true; done
+  if [ -n "$managed_fleet_id" ]; then
+    management DELETE "$OPAMP_MANAGEMENT_URL/api/v1/organizations/$group_id/fleets/$managed_fleet_id" || true
   fi
   if [ -n "$k8s_fleet_id" ]; then
     management DELETE "$OPAMP_MANAGEMENT_URL/api/v1/organizations/$group_id/fleets/$k8s_fleet_id" || true
   fi
-  if [ -n "$d16b_image" ]; then docker rmi "$d16b_image" >/dev/null 2>&1 || true; fi
-  if [ -n "$d16b_configuration_id" ]; then
+  if [ -n "$managed_image" ]; then docker rmi "$managed_image" >/dev/null 2>&1 || true; fi
+  if [ -n "$managed_configuration_id" ]; then
     curl -s -o /dev/null --max-time 30 -b "$JAR" -X DELETE \
-      "$GATEWAY_URL/api/v1/organizations/$group_id/configurations/$d16b_configuration_id" -H 'X-Telflo-CSRF: 1' || true
+      "$GATEWAY_URL/api/v1/organizations/$group_id/configurations/$managed_configuration_id" -H 'X-Telflo-CSRF: 1' || true
   fi
 }
 # The organization-variable steps (below), in edge-b1's fleet's group
 # "unassigned-b", leave until their last steps delete them: two variables, two
 # variable groups and a configuration, each through the platform. A run that
 # ends among them deletes each by id, best effort, through the gateway, once
-# edge-b1's fleet is removed (remove_d16b_steps, before), so nothing uses them
-# any more: the variable groups, then the variables, then the configuration,
-# then its published version through the management API, in case the
-# platform's after-response delete didn't.
-d20_variable_ids=""
-d20_variable_group_ids=""
-d20_configuration_id=""
-d20_publication_id=""
-remove_d20_steps() {
+# edge-b1's fleet is removed (remove_managed_steps, before), so nothing uses
+# them any more: the variable groups, then the variables, then the
+# configuration, then its published version through the management API, in
+# case the platform's after-response delete didn't.
+variable_ids=""
+variable_group_ids=""
+variable_configuration_id=""
+variable_publication_id=""
+remove_variable_steps() {
   local id organization_url="$GATEWAY_URL/api/v1/organizations/$group_id"
-  for id in $d20_variable_group_ids; do
+  for id in $variable_group_ids; do
     curl -s -o /dev/null --max-time 30 -b "$JAR" -X DELETE "$organization_url/variable-groups/$id" -H 'X-Telflo-CSRF: 1' || true
   done
-  for id in $d20_variable_ids; do
+  for id in $variable_ids; do
     curl -s -o /dev/null --max-time 30 -b "$JAR" -X DELETE "$organization_url/variables/$id" -H 'X-Telflo-CSRF: 1' || true
   done
-  if [ -n "$d20_configuration_id" ]; then
-    curl -s -o /dev/null --max-time 30 -b "$JAR" -X DELETE "$organization_url/configurations/$d20_configuration_id" \
+  if [ -n "$variable_configuration_id" ]; then
+    curl -s -o /dev/null --max-time 30 -b "$JAR" -X DELETE "$organization_url/configurations/$variable_configuration_id" \
       -H 'X-Telflo-CSRF: 1' || true
   fi
-  if [ -n "$d20_publication_id" ]; then
-    management DELETE "$OPAMP_MANAGEMENT_URL/api/v1/organizations/$group_id/publications/$d20_publication_id" || true
+  if [ -n "$variable_publication_id" ]; then
+    management DELETE "$OPAMP_MANAGEMENT_URL/api/v1/organizations/$group_id/publications/$variable_publication_id" || true
   fi
 }
 # The install steps (below), in edge-b1's fleet, leave until their last
@@ -609,7 +609,7 @@ install_volume=""
 # The public API steps (below) make a personal token on the account, revoked
 # at their end: a run that ends among them revokes it (on_exit). Everything
 # else they make is the group organization's.
-d25_personal_token_id=""
+public_api_personal_token_id=""
 remove_install_steps() {
   local container
   for container in $install_containers; do docker rm -f "$container" >/dev/null 2>&1 || true; done
@@ -636,16 +636,16 @@ on_exit() {
   if [ -n "$install_containers$install_volume" ]; then
     (remove_install_steps) >/dev/null 2>&1 || true
   fi
-  if [ -n "$d16b_containers$d16b_fleet_id$d16b_image$d16b_configuration_id$k8s_fleet_id" ]; then
-    (remove_d16b_steps) >/dev/null 2>&1 || true
+  if [ -n "$managed_containers$managed_fleet_id$managed_image$managed_configuration_id$k8s_fleet_id" ]; then
+    (remove_managed_steps) >/dev/null 2>&1 || true
   fi
-  if [ -n "$d20_variable_ids$d20_variable_group_ids$d20_configuration_id$d20_publication_id" ]; then
-    (remove_d20_steps) >/dev/null 2>&1 || true
+  if [ -n "$variable_ids$variable_group_ids$variable_configuration_id$variable_publication_id" ]; then
+    (remove_variable_steps) >/dev/null 2>&1 || true
   fi
   # The public API steps' personal token, revoked through the session (the service account and its tokens go with the
   # group).
-  if [ -n "$d25_personal_token_id" ]; then
-    curl -s -o /dev/null --max-time 30 -b "$JAR" -X DELETE "$GATEWAY_URL/api/v1/auth/me/api-tokens/$d25_personal_token_id" \
+  if [ -n "$public_api_personal_token_id" ]; then
+    curl -s -o /dev/null --max-time 30 -b "$JAR" -X DELETE "$GATEWAY_URL/api/v1/auth/me/api-tokens/$public_api_personal_token_id" \
       -H 'X-Telflo-CSRF: 1' >/dev/null 2>&1 || true
   fi
   rm -rf "$work_dir"
@@ -1085,7 +1085,7 @@ elif throwaway_stack; then
 else
   step "SKIPPED: turning the product admins' switch off for the create (a product admin by SQL) runs only on a throwaway stack: COMPOSE_PROJECT_NAME is ${COMPOSE_PROJECT_NAME:-unset}, not a throwaway stack's"
   [ "$(may_create_organizations)" = "true" ] ||
-    fail "only product admins may create organizations on this stack (a fresh stack's default, Q259): turn \"Only product admins can create organizations\" off on its Product admins page, or run on a throwaway stack (COMPOSE_PROJECT_NAME)"
+    fail "only product admins may create organizations on this stack (a fresh stack's default): turn \"Only product admins can create organizations\" off on its Product admins page, or run on a throwaway stack (COMPOSE_PROJECT_NAME)"
 fi
 
 if [ "$SMOKE_SITE" = "saas" ]; then
@@ -2335,7 +2335,7 @@ gateways_group_id=$(json_field '.id' "$body")
 # The fleet's own configuration, published through the gateway as a user
 # publishes; the supervisor merges it over its local file and reports the
 # SHA-256 of the bytes it was served.
-FLEET_YAML=$'# Published by the stack smoke test for its fleet (D16a)\nreceivers:\n  otlp:\n    protocols:\n      http:\n        endpoint: 127.0.0.1:4319\nprocessors:\n  batch: {}\nexporters:\n  debug:\n    verbosity: basic\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      processors: [batch]\n      exporters: [debug]\n'
+FLEET_YAML=$'# Published by the stack smoke test for its fleet\nreceivers:\n  otlp:\n    protocols:\n      http:\n        endpoint: 127.0.0.1:4319\nprocessors:\n  batch: {}\nexporters:\n  debug:\n    verbosity: basic\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      processors: [batch]\n      exporters: [debug]\n'
 step "publish the fleet's configuration through the gateway: create it, save its YAML and publish version 1"
 response=$(curl -s -w '\n%{http_code}' -b "$JAR" -X POST "$CONFIGURATIONS_URL" \
   -H 'content-type: application/json' -H 'X-Telflo-CSRF: 1' \
@@ -2725,7 +2725,7 @@ if [ "$SMOKE_SITE" = "saas" ]; then
   code=$(json_field '.error.code // empty' "$body")
   [ "$status" = "404" ] && [ "$code" = "flow_not_found" ] ||
     fail "GET /api/v1/published-flows/no-such-flow-smoke returned HTTP $status ${code:-with no error code}, not 404 flow_not_found"
-  d31_steps="opened the playground, its editor and the public editor signed out (each with its title), and read the published flows with no session (the list holding $PUBLISHED_FLOW_SLUG and its YAML by slug, both no-store; an unknown slug 404 flow_not_found)"
+  playground_steps="opened the playground, its editor and the public editor signed out (each with its title), and read the published flows with no session (the list holding $PUBLISHED_FLOW_SLUG and its YAML by slug, both no-store; an unknown slug 404 flow_not_found)"
 
   # The inquiry goes to TELFLO_SALES_INQUIRY_TO, which the stack's API was
   # given (required while TELFLO_SALES_INQUIRY is on; no
@@ -2774,7 +2774,7 @@ else
     [ "$status" = "404" ] && [ "$code" = "not_found" ] ||
       fail "GET $flows_path returned HTTP $status ${code:-with no error code}, not 404 not_found"
   done
-  d31_steps="found the playground, its editor and the public editor 404 and the published flows' anonymous reads 404 not_found (the open-source defaults)"
+  playground_steps="found the playground, its editor and the public editor 404 and the published flows' anonymous reads 404 not_found (the open-source defaults)"
 
   INQUIRY_NAME="Stack smoke $(date +%s)-$$"
   step "the sales inquiries are off (TELFLO_SALES_INQUIRY=false): POST /api/v1/sales-inquiries from $INQUIRY_NAME is 404 not_found"
@@ -2855,31 +2855,31 @@ stack_smoke group-renamed "$group_id" "$RENAMED_ORGANIZATION_NAME" ||
 # only its error code.
 # The bearers reach a collector by a bare `docker run -e`, never a command
 # line. Every wait is a bounded number of polls. A run that ends inside these
-# steps removes what they made (the EXIT trap: remove_d16b_steps).
-D16B_ORGANIZATION_URL="$GATEWAY_URL/api/v1/organizations/$group_id"
-D16B_CONFIGURATIONS_URL="$D16B_ORGANIZATION_URL/configurations"
-D16B_FLEETS_URL="$D16B_ORGANIZATION_URL/fleets"
-D16B_REPLY_HEADERS="$work_dir/d16b-reply-headers"
-D16B_REPLY_BODY="$work_dir/d16b-reply-body"
+# steps removes what they made (the EXIT trap: remove_managed_steps).
+GROUP_ORGANIZATION_URL="$GATEWAY_URL/api/v1/organizations/$group_id"
+GROUP_CONFIGURATIONS_URL="$GROUP_ORGANIZATION_URL/configurations"
+GROUP_FLEETS_URL="$GROUP_ORGANIZATION_URL/fleets"
+PLATFORM_REPLY_HEADERS="$work_dir/platform-reply-headers"
+PLATFORM_REPLY_BODY="$work_dir/platform-reply-body"
 
 # platform <method> <url> [<json body>]: one call to the platform through
 # the gateway; its status goes into $status, its body into $body (and
-# $D16B_REPLY_BODY), its headers into $D16B_REPLY_HEADERS, both files 0600.
-# A curl that fails writes 000 and doesn't end the script, so the step's own
-# check reports it.
+# $PLATFORM_REPLY_BODY), its headers into $PLATFORM_REPLY_HEADERS, both
+# files 0600. A curl that fails writes 000 and doesn't end the script, so
+# the step's own check reports it.
 platform() {
   local method=$1 url=$2
-  local args=(-s --max-time 30 -o "$D16B_REPLY_BODY" -D "$D16B_REPLY_HEADERS" -w '%{http_code}' -b "$JAR"
+  local args=(-s --max-time 30 -o "$PLATFORM_REPLY_BODY" -D "$PLATFORM_REPLY_HEADERS" -w '%{http_code}' -b "$JAR"
     -X "$method" -H 'X-Telflo-CSRF: 1')
   if [ $# -ge 3 ]; then args+=(-H 'content-type: application/json' --data-binary "$3"); fi
-  status=$(umask 077 && : >"$D16B_REPLY_BODY" && curl "${args[@]}" "$url" || true)
-  body=$(cat "$D16B_REPLY_BODY")
+  status=$(umask 077 && : >"$PLATFORM_REPLY_BODY" && curl "${args[@]}" "$url" || true)
+  body=$(cat "$PLATFORM_REPLY_BODY")
 }
 # Whether the last reply told every cache to keep no copy.
-no_store() { grep -qiE '^cache-control:[[:space:]]*no-store' "$D16B_REPLY_HEADERS"; }
+no_store() { grep -qiE '^cache-control:[[:space:]]*no-store' "$PLATFORM_REPLY_HEADERS"; }
 # jq's answer (raw) of the last reply's body, with jq's own arguments (`--arg …`, the filter), or "" when it isn't JSON.
 # Read from the 0600 file: a reply carrying a bearer never goes through a here-string (a temporary file of bash's own).
-reply_json() { jq -r "$@" "$D16B_REPLY_BODY" 2>/dev/null || true; }
+reply_json() { jq -r "$@" "$PLATFORM_REPLY_BODY" 2>/dev/null || true; }
 # The last reply's error code, the only thing a bearer reply's failure prints.
 reply_code() {
   local code
@@ -2893,80 +2893,80 @@ reply_code() {
 # exits on a failed $(<file) even inside `||`.
 reply_holds() {
   local reply
-  { [ -f "$D16B_REPLY_BODY" ] && true <"$D16B_REPLY_BODY"; } 2>/dev/null || return 0
-  reply=$(<"$D16B_REPLY_BODY")
+  { [ -f "$PLATFORM_REPLY_BODY" ] && true <"$PLATFORM_REPLY_BODY"; } 2>/dev/null || return 0
+  reply=$(<"$PLATFORM_REPLY_BODY")
   [[ "$reply" == *"$1"* ]]
 }
 
-D16B_YAML=$'# D16b: published by the stack smoke test, managed through the platform\nreceivers:\n  otlp:\n    protocols:\n      http:\n        endpoint: 127.0.0.1:4320\nprocessors:\n  batch: {}\nexporters:\n  debug:\n    verbosity: basic\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      processors: [batch]\n      exporters: [debug]\n'
-D16B_CONFIGURATION_NAME="Stack smoke D16b $(date +%s)-$$"
+MANAGED_YAML=$'# Published by the stack smoke test, managed through the platform\nreceivers:\n  otlp:\n    protocols:\n      http:\n        endpoint: 127.0.0.1:4320\nprocessors:\n  batch: {}\nexporters:\n  debug:\n    verbosity: basic\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      processors: [batch]\n      exporters: [debug]\n'
+MANAGED_CONFIGURATION_NAME="Stack smoke managed $(date +%s)-$$"
 step "publish a configuration in the group organization through the gateway: create it, save its YAML and publish version 1"
-platform POST "$D16B_CONFIGURATIONS_URL" "$(jq -cn --arg name "$D16B_CONFIGURATION_NAME" \
+platform POST "$GROUP_CONFIGURATIONS_URL" "$(jq -cn --arg name "$MANAGED_CONFIGURATION_NAME" \
   '{name: $name, description: "The stack smoke test fleet'"'"'s configuration, managed through the platform"}')"
-[ "$status" = "201" ] || fail "creating the D16b configuration returned HTTP $status: $(head -c 500 <<<"$body")"
-d16b_configuration_id=$(json_field '.configuration.id' "$body")
-[ -n "$d16b_configuration_id" ] && [ "$d16b_configuration_id" != "null" ] || fail "the D16b configuration has no id: $body"
-platform GET "$D16B_CONFIGURATIONS_URL/$d16b_configuration_id"
-[ "$status" = "200" ] || fail "reading the D16b configuration returned HTTP $status: $(head -c 500 <<<"$body")"
-d16b_version_id=$(json_field '.version.id' "$body")
-platform PATCH "$D16B_CONFIGURATIONS_URL/$d16b_configuration_id/versions/$d16b_version_id" \
-  "$(jq -cn --arg yaml "$D16B_YAML" '{yamlContent: $yaml, nodes: [], edges: [], pipelines: []}')"
-[ "$status" = "200" ] || fail "saving the D16b configuration returned HTTP $status: $(head -c 500 <<<"$body")"
-platform POST "$D16B_CONFIGURATIONS_URL/$d16b_configuration_id/versions/$d16b_version_id/publish"
+[ "$status" = "201" ] || fail "creating the managed configuration returned HTTP $status: $(head -c 500 <<<"$body")"
+managed_configuration_id=$(json_field '.configuration.id' "$body")
+[ -n "$managed_configuration_id" ] && [ "$managed_configuration_id" != "null" ] || fail "the managed configuration has no id: $body"
+platform GET "$GROUP_CONFIGURATIONS_URL/$managed_configuration_id"
+[ "$status" = "200" ] || fail "reading the managed configuration returned HTTP $status: $(head -c 500 <<<"$body")"
+managed_version_id=$(json_field '.version.id' "$body")
+platform PATCH "$GROUP_CONFIGURATIONS_URL/$managed_configuration_id/versions/$managed_version_id" \
+  "$(jq -cn --arg yaml "$MANAGED_YAML" '{yamlContent: $yaml, nodes: [], edges: [], pipelines: []}')"
+[ "$status" = "200" ] || fail "saving the managed configuration returned HTTP $status: $(head -c 500 <<<"$body")"
+platform POST "$GROUP_CONFIGURATIONS_URL/$managed_configuration_id/versions/$managed_version_id/publish"
 [ "$status" = "200" ] && [ "$(json_field '.version.publishedAt | type' "$body")" = "string" ] ||
-  fail "publishing the D16b configuration returned HTTP $status: $(head -c 500 <<<"$body")"
-d16b_yaml_sha256=$(jq -j -n --arg yaml "$D16B_YAML" '$yaml' | sha256_of)
+  fail "publishing the managed configuration returned HTTP $status: $(head -c 500 <<<"$body")"
+managed_yaml_sha256=$(jq -j -n --arg yaml "$MANAGED_YAML" '$yaml' | sha256_of)
 
 step "list the configuration's published versions: GET .../configurations/:configurationId/versions?filter=published answers exactly version 1, its id, number, label and published date only"
-platform GET "$D16B_CONFIGURATIONS_URL/$d16b_configuration_id/versions?filter=published"
-[ "$status" = "200" ] || fail "listing the D16b configuration's published versions returned HTTP $status: $(reply_code)"
-[ "$(reply_json --arg id "$d16b_version_id" '(.versions | length) == 1 and .versions[0].id == $id and .versions[0].versionNumber == 1 and (.versions[0].publishedAt | type) == "string"')" = "true" ] ||
-  fail "the D16b configuration's published versions aren't exactly its version 1: $(reply_json -c '[.versions[]? | {id, versionNumber, publishedAt}]')"
+platform GET "$GROUP_CONFIGURATIONS_URL/$managed_configuration_id/versions?filter=published"
+[ "$status" = "200" ] || fail "listing the managed configuration's published versions returned HTTP $status: $(reply_code)"
+[ "$(reply_json --arg id "$managed_version_id" '(.versions | length) == 1 and .versions[0].id == $id and .versions[0].versionNumber == 1 and (.versions[0].publishedAt | type) == "string"')" = "true" ] ||
+  fail "the managed configuration's published versions aren't exactly its version 1: $(reply_json -c '[.versions[]? | {id, versionNumber, publishedAt}]')"
 [ "$(reply_json '[.versions[] | keys == ["id", "label", "publishedAt", "versionNumber"]] | all')" = "true" ] ||
-  fail "the D16b configuration's versions' list carries more than each version's id, number, label and published date: $(reply_json -c '[.versions[]? | keys]')"
+  fail "the managed configuration's versions' list carries more than each version's id, number, label and published date: $(reply_json -c '[.versions[]? | keys]')"
 
 # The id a browser chooses for a safe retry: a random UUID v4,
 # from /dev/urandom so neither uuidgen nor a GNU date is needed. Recorded
 # before the create, so a create whose reply is lost is still removed.
-d16b_hex=$(od -An -N16 -tx1 /dev/urandom | tr -d ' \n')
-d16b_fleet_id="${d16b_hex:0:8}-${d16b_hex:8:4}-4${d16b_hex:13:3}-$(printf '%x' $(((0x${d16b_hex:16:2} & 0x3f) | 0x80)))${d16b_hex:18:2}-${d16b_hex:20:12}"
-[[ "$d16b_fleet_id" =~ ^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$ ]] || fail "couldn't make a UUID for the fleet: $d16b_fleet_id"
-D16B_FLEET_LABEL="stack-smoke-d16b-$(date +%s)-$$"
-d16b_create_body=$(jq -cn --arg id "$d16b_fleet_id" --arg label "$D16B_FLEET_LABEL" \
+managed_hex=$(od -An -N16 -tx1 /dev/urandom | tr -d ' \n')
+managed_fleet_id="${managed_hex:0:8}-${managed_hex:8:4}-4${managed_hex:13:3}-$(printf '%x' $(((0x${managed_hex:16:2} & 0x3f) | 0x80)))${managed_hex:18:2}-${managed_hex:20:12}"
+[[ "$managed_fleet_id" =~ ^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$ ]] || fail "couldn't make a UUID for the fleet: $managed_fleet_id"
+MANAGED_FLEET_LABEL="stack-smoke-managed-$(date +%s)-$$"
+managed_create_body=$(jq -cn --arg id "$managed_fleet_id" --arg label "$MANAGED_FLEET_LABEL" \
   '{id: $id, label: $label, type: "server", rotateExpiresAt: null}')
 step "create a fleet through the platform with the browser's id: POST .../fleets answers 201, no-store, its Default group and both tokens' bearers"
-platform POST "$D16B_FLEETS_URL" "$d16b_create_body"
+platform POST "$GROUP_FLEETS_URL" "$managed_create_body"
 [ "$status" = "201" ] || fail "creating the fleet through the platform returned HTTP $status: $(reply_code)"
 no_store || fail "the fleet's creation, carrying its bearers, isn't Cache-Control: no-store"
-[ "$(reply_json '.fleet.id')" = "$d16b_fleet_id" ] && [ "$(reply_json '.fleet.label')" = "$D16B_FLEET_LABEL" ] &&
+[ "$(reply_json '.fleet.id')" = "$managed_fleet_id" ] && [ "$(reply_json '.fleet.label')" = "$MANAGED_FLEET_LABEL" ] &&
   [ "$(reply_json '.defaultGroup.isDefault')" = "true" ] ||
-  fail "the fleet's creation didn't answer the fleet $d16b_fleet_id with its Default group"
-d16b_default_group_id=$(reply_json '.defaultGroup.id')
-d16b_default_token_id=$(reply_json '.tokens.default.id')
-d16b_rotate_token_id=$(reply_json '.tokens.rotate.id')
-d16b_default_bearer=$(reply_json '.tokens.default.bearer')
-d16b_rotate_bearer=$(reply_json '.tokens.rotate.bearer')
-for value in "$d16b_default_group_id" "$d16b_default_token_id" "$d16b_rotate_token_id" "$d16b_default_bearer" "$d16b_rotate_bearer"; do
+  fail "the fleet's creation didn't answer the fleet $managed_fleet_id with its Default group"
+managed_default_group_id=$(reply_json '.defaultGroup.id')
+managed_default_token_id=$(reply_json '.tokens.default.id')
+managed_rotate_token_id=$(reply_json '.tokens.rotate.id')
+managed_default_bearer=$(reply_json '.tokens.default.bearer')
+managed_rotate_bearer=$(reply_json '.tokens.rotate.bearer')
+for value in "$managed_default_group_id" "$managed_default_token_id" "$managed_rotate_token_id" "$managed_default_bearer" "$managed_rotate_bearer"; do
   [ -n "$value" ] && [ "$value" != "null" ] || fail "the fleet's creation answered no Default group, token or bearer"
 done
 body=""
 
 step "create it again with the same id, label and type: 200, no-store, the fleet without bearers"
-platform POST "$D16B_FLEETS_URL" "$d16b_create_body"
+platform POST "$GROUP_FLEETS_URL" "$managed_create_body"
 [ "$status" = "200" ] || fail "creating the fleet again returned HTTP $status: $(reply_code)"
 no_store || fail "the fleet's creation again isn't Cache-Control: no-store"
-[ "$(reply_json '.fleet.id')" = "$d16b_fleet_id" ] && [ "$(reply_json 'has("tokens") or has("defaultGroup")')" = "false" ] ||
+[ "$(reply_json '.fleet.id')" = "$managed_fleet_id" ] && [ "$(reply_json 'has("tokens") or has("defaultGroup")')" = "false" ] ||
   fail "creating the fleet again didn't answer the fleet alone: $(reply_json -c '{fleet: .fleet.id, keys: keys}')"
-if reply_holds "$d16b_default_bearer" || reply_holds "$d16b_rotate_bearer" || reply_holds '"bearer"'; then
+if reply_holds "$managed_default_bearer" || reply_holds "$managed_rotate_bearer" || reply_holds '"bearer"'; then
   fail "creating the fleet again answered a bearer"
 fi
 
 step "list the organization's fleets and read the fleet: GET .../fleets and GET .../fleets/:fleetId"
-platform GET "$D16B_FLEETS_URL"
-[ "$status" = "200" ] && [ "$(reply_json --arg id "$d16b_fleet_id" 'any(.fleets[]; .id == $id)')" = "true" ] ||
-  fail "the fleets' list (HTTP $status) doesn't hold the fleet $d16b_fleet_id: $(head -c 500 <<<"$body")"
-platform GET "$D16B_FLEETS_URL/$d16b_fleet_id"
-[ "$status" = "200" ] && [ "$(json_field '.fleet.label' "$body")" = "$D16B_FLEET_LABEL" ] &&
+platform GET "$GROUP_FLEETS_URL"
+[ "$status" = "200" ] && [ "$(reply_json --arg id "$managed_fleet_id" 'any(.fleets[]; .id == $id)')" = "true" ] ||
+  fail "the fleets' list (HTTP $status) doesn't hold the fleet $managed_fleet_id: $(head -c 500 <<<"$body")"
+platform GET "$GROUP_FLEETS_URL/$managed_fleet_id"
+[ "$status" = "200" ] && [ "$(json_field '.fleet.label' "$body")" = "$MANAGED_FLEET_LABEL" ] &&
   [ "$(json_field '.fleet.type' "$body")" = "server" ] && [ "$(json_field '.fleet.summary.collectors' "$body")" = "0" ] ||
   fail "reading the fleet returned HTTP $status: $(head -c 500 <<<"$body")"
 
@@ -2981,59 +2981,59 @@ step "the new fleet's summary answers no last seen and one valid rotate token th
 # platform resolves its published copy and answers the configuration and
 # version beside it.
 step "assign the published version to the Default group by its version id: PATCH .../groups/:groupId answers its configuration and version"
-platform PATCH "$D16B_FLEETS_URL/$d16b_fleet_id/groups/$d16b_default_group_id" \
-  "$(jq -cn --arg id "$d16b_version_id" '{assignedVersionId: $id}')"
-[ "$status" = "200" ] || fail "assigning the D16b version returned HTTP $status: $(head -c 500 <<<"$body")"
+platform PATCH "$GROUP_FLEETS_URL/$managed_fleet_id/groups/$managed_default_group_id" \
+  "$(jq -cn --arg id "$managed_version_id" '{assignedVersionId: $id}')"
+[ "$status" = "200" ] || fail "assigning the managed configuration's version returned HTTP $status: $(head -c 500 <<<"$body")"
 [ "$(json_compact '.group.assignedVersion | {configurationId, configurationName, versionId, versionNumber}' "$body")" = \
-  "$(jq -cn --arg c "$d16b_configuration_id" --arg n "$D16B_CONFIGURATION_NAME" --arg v "$d16b_version_id" \
+  "$(jq -cn --arg c "$managed_configuration_id" --arg n "$MANAGED_CONFIGURATION_NAME" --arg v "$managed_version_id" \
     '{configurationId: $c, configurationName: $n, versionId: $v, versionNumber: 1}')" ] ||
-  fail "the assignment isn't answered with the D16b configuration's version 1 beside it: $(json_compact '.group' "$body")"
-d16b_publication_id=$(json_field '.group.assignedPublishedVersionId' "$body")
-[[ "$d16b_publication_id" =~ ^[0-9a-f-]{36}$ ]] || fail "the assignment names no published version: $(json_compact '.group' "$body")"
+  fail "the assignment isn't answered with the managed configuration's version 1 beside it: $(json_compact '.group' "$body")"
+managed_publication_id=$(json_field '.group.assignedPublishedVersionId' "$body")
+[[ "$managed_publication_id" =~ ^[0-9a-f-]{36}$ ]] || fail "the assignment names no published version: $(json_compact '.group' "$body")"
 
 # A collector of this block: a container of its own on the compose network,
 # named <project>-<name>, built from the smoke collector's image again
 # (the fleet steps removed theirs).
 step "build the smoke collector again for the platform fleet steps: docker/smoke-collector"
-d16b_image="telflo-smoke-collector:$compose_project-d16b-$$"
-if ! output=$(docker build -q --build-arg "VALIDATOR_IMAGE=$validator_image" -t "$d16b_image" \
+managed_image="telflo-smoke-collector:$compose_project-managed-$$"
+if ! output=$(docker build -q --build-arg "VALIDATOR_IMAGE=$validator_image" -t "$managed_image" \
   "$(dirname "$0")/../docker/smoke-collector" 2>&1); then
-  d16b_image=""
+  managed_image=""
   fail "building the smoke collector failed: $output"
 fi
-# d16b_start_collector <name> <bearer> <group id>: as start_collector, on
+# managed_start_collector <name> <bearer> <group id>: as start_collector, on
 # this stack's agent URL; the group required likewise.
-d16b_start_collector() {
+managed_start_collector() {
   local container="$compose_project-$1"
-  [ -n "$3" ] || fail "d16b_start_collector $1: no group id (the opamp-server refuses a collector naming no group)"
-  d16b_containers="$d16b_containers $container"
+  [ -n "$3" ] || fail "managed_start_collector $1: no group id (the opamp-server refuses a collector naming no group)"
+  managed_containers="$managed_containers $container"
   TELFLO_COLLECTOR_NAME=$1 TELFLO_OPAMP_ENDPOINT=$server_url TELFLO_OPAMP_BEARER=$2 TELFLO_COLLECTOR_GROUP_ID=$3 \
     docker run -d --name "$container" --network "$compose_network" \
     -e TELFLO_COLLECTOR_NAME -e TELFLO_OPAMP_ENDPOINT -e TELFLO_OPAMP_BEARER -e TELFLO_COLLECTOR_GROUP_ID \
-    "$d16b_image" >/dev/null || fail "starting the collector $1 failed"
+    "$managed_image" >/dev/null || fail "starting the collector $1 failed"
 }
 
-# d16b_redact: its standard input for a failure's message, every tqd_… (a
+# redact_secrets: its standard input for a failure's message, every tqd_… (a
 # quick-deploy link's secret), every tf_… (an API token) and every run of
 # 100 or more base64 characters (a bearer's shape) replaced.
-d16b_redact() {
+redact_secrets() {
   LC_ALL=C sed -E -e 's#tqd_[A-Za-z0-9_-]+#[redacted]#g' -e 's#tf_[A-Za-z0-9_-]+#[redacted]#g' \
     -e 's#[A-Za-z0-9+/]{100,}#[a long base64 run, redacted]#g'
 }
-# d16b_wait_for_collector <name> <polls> <jq condition> [<container>] [<redaction>]:
+# wait_for_managed_collector <name> <polls> <jq condition> [<container>] [<redaction>]:
 # reads the fleet's collector of that name through the platform's collector
 # list (searched by `q`), once a second, until the condition holds of it;
 # $collector holds it. The reply that satisfies it must be no-store. When it
 # never holds, <container>'s last 50 lines of output are printed before the
 # failure, and the collector last read in it, both through <redaction> (a
-# function filtering its standard input; d16b_redact when none is given; the
-# quick-deploy steps pass qd_diagnostic: whole when it holds no secret, else
-# redacted).
-d16b_wait_for_collector() {
-  local name=$1 polls=$2 condition=$3 logs_of=${4:-} redaction=${5:-d16b_redact}
+# function filtering its standard input; redact_secrets when none is given;
+# the quick-deploy steps pass qd_diagnostic: whole when it holds no secret,
+# else redacted).
+wait_for_managed_collector() {
+  local name=$1 polls=$2 condition=$3 logs_of=${4:-} redaction=${5:-redact_secrets}
   collector=""
   for _ in $(seq 1 "$polls"); do
-    platform GET "$D16B_FLEETS_URL/$d16b_fleet_id/collectors?q=$name"
+    platform GET "$GROUP_FLEETS_URL/$managed_fleet_id/collectors?q=$name"
     if [ "$status" = "200" ]; then
       collector=$(jq -c --arg name "$name" '[.collectors[] | select(.name == $name)][0] // empty' <<<"$body" 2>/dev/null || true)
       if [ -n "$collector" ] && [ "$(jq -r "$condition" <<<"$collector")" = "true" ]; then
@@ -3054,25 +3054,25 @@ d16b_wait_for_collector() {
 }
 
 step "start edge-b1 with the platform's default bearer, in the Default group"
-d16b_start_collector edge-b1 "$d16b_default_bearer" "$d16b_default_group_id"
+managed_start_collector edge-b1 "$managed_default_bearer" "$managed_default_group_id"
 
 step "create the group \"unassigned-b\" with nothing assigned through the platform: POST .../groups, and start edge-b2 in it"
-platform POST "$D16B_FLEETS_URL/$d16b_fleet_id/groups" '{"name": "unassigned-b"}'
+platform POST "$GROUP_FLEETS_URL/$managed_fleet_id/groups" '{"name": "unassigned-b"}'
 [ "$status" = "201" ] && [ "$(json_field '.group.isDefault' "$body")" = "false" ] && [ "$(json_field '.group.assignedVersion' "$body")" = "null" ] ||
   fail "creating the group returned HTTP $status: $(head -c 500 <<<"$body")"
-d16b_unassigned_group_id=$(json_field '.group.id' "$body")
-d16b_start_collector edge-b2 "$d16b_default_bearer" "$d16b_unassigned_group_id"
+managed_unassigned_group_id=$(json_field '.group.id' "$body")
+managed_start_collector edge-b2 "$managed_default_bearer" "$managed_unassigned_group_id"
 
 step "edge-b1, read through the platform, holds the rotate token and applies the published version: its SHA-256, in sync, the served version named (at most 60 polls)"
-d16b_wait_for_collector edge-b1 60 "(.enrollmentTokenId == \"$d16b_rotate_token_id\") and (.groupId == \"$d16b_default_group_id\") and (.effective.status == \"applied\") and (.effective.sha256 == \"$d16b_yaml_sha256\") and (.drift == \"inSync\") and (.served.kind == \"version\") and (.served.publishedVersionId == \"$d16b_publication_id\") and (.served.version.versionId == \"$d16b_version_id\") and (.served.version.configurationId == \"$d16b_configuration_id\")"
+wait_for_managed_collector edge-b1 60 "(.enrollmentTokenId == \"$managed_rotate_token_id\") and (.groupId == \"$managed_default_group_id\") and (.effective.status == \"applied\") and (.effective.sha256 == \"$managed_yaml_sha256\") and (.drift == \"inSync\") and (.served.kind == \"version\") and (.served.publishedVersionId == \"$managed_publication_id\") and (.served.version.versionId == \"$managed_version_id\") and (.served.version.configurationId == \"$managed_configuration_id\")"
 
 step "read edge-b1 alone and its error history through the platform: GET .../collectors/:collectorId and .../errors, each no-store"
-d16b_edge_b1_id=$(jq -r '.id' <<<"$collector")
-platform GET "$D16B_FLEETS_URL/$d16b_fleet_id/collectors/$d16b_edge_b1_id"
-[ "$status" = "200" ] && [ "$(reply_json '.collector.id')" = "$d16b_edge_b1_id" ] ||
+managed_edge_b1_id=$(jq -r '.id' <<<"$collector")
+platform GET "$GROUP_FLEETS_URL/$managed_fleet_id/collectors/$managed_edge_b1_id"
+[ "$status" = "200" ] && [ "$(reply_json '.collector.id')" = "$managed_edge_b1_id" ] ||
   fail "reading edge-b1 through the platform returned HTTP $status: $(reply_code)"
 no_store || fail "a collector's read, carrying its reported attributes and error text, isn't Cache-Control: no-store"
-platform GET "$D16B_FLEETS_URL/$d16b_fleet_id/collectors/$d16b_edge_b1_id/errors"
+platform GET "$GROUP_FLEETS_URL/$managed_fleet_id/collectors/$managed_edge_b1_id/errors"
 [ "$status" = "200" ] && [ "$(reply_json '.errors | type')" = "array" ] ||
   fail "reading edge-b1's error history through the platform returned HTTP $status: $(reply_code)"
 no_store || fail "a collector's error history, carrying its error text, isn't Cache-Control: no-store"
@@ -3082,25 +3082,25 @@ no_store || fail "a collector's error history, carrying its error text, isn't Ca
 # fromdateiso8601), once edge-b1 polls. Read until it is, a second apart,
 # then the list must agree.
 step "the fleet's summary answers a last seen of the last 5 minutes, in its read and the list (at most 10 polls)"
-d16b_seen=""
+managed_seen=""
 for _ in $(seq 1 10); do
-  platform GET "$D16B_FLEETS_URL/$d16b_fleet_id"
+  platform GET "$GROUP_FLEETS_URL/$managed_fleet_id"
   if [ "$status" = "200" ] &&
     [ "$(reply_json '.fleet.summary.lastSeenAt | if type == "string" then (sub("\\.[0-9]{3}Z$"; "Z") | fromdateiso8601) as $t | ($t > now - 300 and $t < now + 60) else false end')" = "true" ]; then
-    d16b_seen=yes
+    managed_seen=yes
     break
   fi
   sleep 1
 done
-[ -n "$d16b_seen" ] ||
+[ -n "$managed_seen" ] ||
   fail "the fleet's summary (last HTTP $status) didn't answer a last seen of the last 5 minutes within 10 polls: $(reply_json -c '.fleet.summary.lastSeenAt')"
-platform GET "$D16B_FLEETS_URL"
-[ "$status" = "200" ] && [ "$(reply_json --arg id "$d16b_fleet_id" '[.fleets[] | select(.id == $id) | .summary.lastSeenAt | type] == ["string"]')" = "true" ] ||
-  fail "the fleets' list (HTTP $status) doesn't answer the fleet's last seen: $(reply_json -c --arg id "$d16b_fleet_id" '[.fleets[] | select(.id == $id) | .summary.lastSeenAt]')"
+platform GET "$GROUP_FLEETS_URL"
+[ "$status" = "200" ] && [ "$(reply_json --arg id "$managed_fleet_id" '[.fleets[] | select(.id == $id) | .summary.lastSeenAt | type] == ["string"]')" = "true" ] ||
+  fail "the fleets' list (HTTP $status) doesn't answer the fleet's last seen: $(reply_json -c --arg id "$managed_fleet_id" '[.fleets[] | select(.id == $id) | .summary.lastSeenAt]')"
 
 step "edge-b2, with nothing assigned, is unassigned and sent no configuration, read through the platform; its former imports path answers 404 not_found (at most 60 polls)"
-d16b_wait_for_collector edge-b2 60 "(.pin == null) and (.resolution == null) and (.served == null) and (.drift == \"unassigned\") and (.groupId == \"$d16b_unassigned_group_id\") and (.enrollmentTokenId == \"$d16b_rotate_token_id\")"
-platform GET "$D16B_FLEETS_URL/$d16b_fleet_id/imports"
+wait_for_managed_collector edge-b2 60 "(.pin == null) and (.resolution == null) and (.served == null) and (.drift == \"unassigned\") and (.groupId == \"$managed_unassigned_group_id\") and (.enrollmentTokenId == \"$managed_rotate_token_id\")"
+platform GET "$GROUP_FLEETS_URL/$managed_fleet_id/imports"
 [ "$status" = "404" ] && [ "$(reply_code)" = "not_found" ] ||
   fail "the platform's former imports path returned HTTP $status: $(head -c 500 <<<"$body")"
 
@@ -3109,173 +3109,173 @@ platform GET "$D16B_FLEETS_URL/$d16b_fleet_id/imports"
 # before the configuration's in-use and delete steps below, so only the
 # Default group's assignment uses the version there.
 step "pin edge-b2 to the published version through the platform: PATCH .../collectors/:collectorId with a version pin answers it pinned, no-store"
-d16b_edge_b2_id=$(jq -r '.id' <<<"$collector")
-platform PATCH "$D16B_FLEETS_URL/$d16b_fleet_id/collectors/$d16b_edge_b2_id" \
-  "$(jq -cn --arg id "$d16b_version_id" '{pin: {kind: "version", versionId: $id}}')"
+managed_edge_b2_id=$(jq -r '.id' <<<"$collector")
+platform PATCH "$GROUP_FLEETS_URL/$managed_fleet_id/collectors/$managed_edge_b2_id" \
+  "$(jq -cn --arg id "$managed_version_id" '{pin: {kind: "version", versionId: $id}}')"
 [ "$status" = "200" ] && [ "$(reply_json '.collector.pin.kind')" = "version" ] &&
-  [ "$(reply_json '.collector.pin.versionId')" = "$d16b_version_id" ] &&
-  [ "$(reply_json '.collector.pin.publishedVersionId')" = "$d16b_publication_id" ] ||
+  [ "$(reply_json '.collector.pin.versionId')" = "$managed_version_id" ] &&
+  [ "$(reply_json '.collector.pin.publishedVersionId')" = "$managed_publication_id" ] ||
   fail "pinning edge-b2 returned HTTP $status: $(reply_json -c 'if .collector then (.collector | {pin, resolution, served, drift}) else .error end')"
 no_store || fail "a collector's pin's reply, carrying its reported attributes and error text, isn't Cache-Control: no-store"
 
 step "edge-b2, read through the platform, applies its pinned version: resolved from its pin, its SHA-256, in sync, the served version named (at most 60 polls)"
-d16b_wait_for_collector edge-b2 60 "(.pin.kind == \"version\") and (.pin.versionId == \"$d16b_version_id\") and (.resolution.from == \"pinnedVersion\") and (.resolution.publishedVersionId == \"$d16b_publication_id\") and (.effective.status == \"applied\") and (.effective.sha256 == \"$d16b_yaml_sha256\") and (.drift == \"inSync\") and (.served.publishedVersionId == \"$d16b_publication_id\") and (.groupId == \"$d16b_unassigned_group_id\")"
+wait_for_managed_collector edge-b2 60 "(.pin.kind == \"version\") and (.pin.versionId == \"$managed_version_id\") and (.resolution.from == \"pinnedVersion\") and (.resolution.publishedVersionId == \"$managed_publication_id\") and (.effective.status == \"applied\") and (.effective.sha256 == \"$managed_yaml_sha256\") and (.drift == \"inSync\") and (.served.publishedVersionId == \"$managed_publication_id\") and (.groupId == \"$managed_unassigned_group_id\")"
 
 step "unpin edge-b2 through the platform: PATCH .../collectors/:collectorId with pin null answers it unpinned and unassigned, still served the version it was sent"
-platform PATCH "$D16B_FLEETS_URL/$d16b_fleet_id/collectors/$d16b_edge_b2_id" '{"pin": null}'
+platform PATCH "$GROUP_FLEETS_URL/$managed_fleet_id/collectors/$managed_edge_b2_id" '{"pin": null}'
 [ "$status" = "200" ] && [ "$(reply_json '.collector.pin')" = "null" ] && [ "$(reply_json '.collector.resolution')" = "null" ] &&
-  [ "$(reply_json '.collector.drift')" = "unassigned" ] && [ "$(reply_json '.collector.served.publishedVersionId')" = "$d16b_publication_id" ] ||
+  [ "$(reply_json '.collector.drift')" = "unassigned" ] && [ "$(reply_json '.collector.served.publishedVersionId')" = "$managed_publication_id" ] ||
   fail "unpinning edge-b2 returned HTTP $status: $(reply_json -c 'if .collector then (.collector | {pin, resolution, served, drift}) else .error end')"
 
 # Organization variables reaching a real supervisor: on edge-b2 in
 # "unassigned-b", never the Default group, whose assignment the steps below
 # rely on. Through the platform, as the group organization's signed-in admin:
 # a variable SMOKE_TAG (a$b-1) and one the text doesn't use; a configuration
-# of this block's own whose processor attributes/d20 inserts an attribute of
+# of this block's own whose processor attributes/variable inserts an attribute of
 # the value ${org:SMOKE_TAG}, assigned to "unassigned-b"; edge-b2 applies the
 # text filled in, every `$` of the value doubled (`a$$b-1`, which the
 # collector's own pass reads as a$b-1), its SHA-256 computed here
-# (d20_filled_in_sha256) and never the published text's. Each change of what
-# it uses (the value, a variable group bound to its group, one pinned on it)
-# is a push (served.at moves) of that level's value, in sync again; a change
-# of the unused variable is none: served.at stays while edge-b2 polls three
-# times (its lastSeenAt moving), in sync throughout. SMOKE_TAG's delete is
-# refused while the version is assigned (409 variable_in_use, naming the
+# (variable_filled_in_sha256) and never the published text's. Each change of
+# what it uses (the value, a variable group bound to its group, one pinned on
+# it) is a push (served.at moves) of that level's value, in sync again; a
+# change of the unused variable is none: served.at stays while edge-b2 polls
+# three times (its lastSeenAt moving), in sync throughout. SMOKE_TAG's delete
+# is refused while the version is assigned (409 variable_in_use, naming the
 # version and its group, with the totals). The block ends as it found
 # "unassigned-b": nothing assigned, no variable group, edge-b2 unpinned; then
 # its variable groups, variables and configuration are deleted. A run that
-# ends among these steps removes them (the EXIT trap: remove_d20_steps, after
-# the fleet's removal, so nothing uses them any more; the published version,
-# recorded once the publish answers, through the management API).
-D20_VARIABLES_URL="$D16B_ORGANIZATION_URL/variables"
-D20_VARIABLE_GROUPS_URL="$D16B_ORGANIZATION_URL/variable-groups"
-D20_YAML=$'# D20: published by the stack smoke test, filled in with an organization variable\nreceivers:\n  otlp:\n    protocols:\n      http:\n        endpoint: 127.0.0.1:4321\nprocessors:\n  attributes/d20:\n    actions:\n      - key: telflo.smoke.tag\n        value: ${org:SMOKE_TAG}\n        action: insert\n  batch: {}\nexporters:\n  debug:\n    verbosity: basic\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      processors: [attributes/d20, batch]\n      exporters: [debug]\n'
-D20_CONFIGURATION_NAME="Stack smoke D20 $(date +%s)-$$"
+# ends among these steps removes them (the EXIT trap: remove_variable_steps,
+# after the fleet's removal, so nothing uses them any more; the published
+# version, recorded once the publish answers, through the management API).
+VARIABLES_URL="$GROUP_ORGANIZATION_URL/variables"
+VARIABLE_GROUPS_URL="$GROUP_ORGANIZATION_URL/variable-groups"
+VARIABLE_YAML=$'# Published by the stack smoke test, filled in with an organization variable\nreceivers:\n  otlp:\n    protocols:\n      http:\n        endpoint: 127.0.0.1:4321\nprocessors:\n  attributes/variable:\n    actions:\n      - key: telflo.smoke.tag\n        value: ${org:SMOKE_TAG}\n        action: insert\n  batch: {}\nexporters:\n  debug:\n    verbosity: basic\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      processors: [attributes/variable, batch]\n      exporters: [debug]\n'
+VARIABLE_CONFIGURATION_NAME="Stack smoke variable $(date +%s)-$$"
 # The values each level gives SMOKE_TAG: the organization's, then its new
 # one, the collector group's variable group's and the pinned one's.
-D20_VALUE='a$b-1'
-D20_NEW_VALUE='a$b-2'
-D20_GROUP_VALUE='a$b-group'
-D20_PIN_VALUE='a$b-pin'
+VARIABLE_VALUE='a$b-1'
+VARIABLE_NEW_VALUE='a$b-2'
+VARIABLE_GROUP_VALUE='a$b-group'
+VARIABLE_PIN_VALUE='a$b-pin'
 
-# d20_uuid: a random UUID v4, as the fleet's id above (the browser's own id
-# for a create, which makes a retry safe).
-d20_uuid() {
+# variable_uuid: a random UUID v4, as the fleet's id above (the browser's own
+# id for a create, which makes a retry safe).
+variable_uuid() {
   local hex
   hex=$(od -An -N16 -tx1 /dev/urandom | tr -d ' \n')
   printf '%s-%s-4%s-%x%s-%s\n' "${hex:0:8}" "${hex:8:4}" "${hex:13:3}" $(((0x${hex:16:2} & 0x3f) | 0x80)) "${hex:18:2}" "${hex:20:12}"
 }
-# d20_filled_in <value>: D20_YAML filled in as the opamp-server's poll fills
-# it in (orgvariables.Render): its one live reference replaced by the value,
-# every `$` of it doubled, the bytes around it as published.
+# variable_filled_in <value>: VARIABLE_YAML filled in as the opamp-server's poll
+# fills it in (orgvariables.Render): its one live reference replaced by the
+# value, every `$` of it doubled, the bytes around it as published.
 # Printed with no newline added (jq -j).
-d20_filled_in() {
-  jq -j -n --arg yaml "$D20_YAML" --arg value "$1" '$yaml | split("${org:SMOKE_TAG}") | join($value | split("$") | join("$$"))'
+variable_filled_in() {
+  jq -j -n --arg yaml "$VARIABLE_YAML" --arg value "$1" '$yaml | split("${org:SMOKE_TAG}") | join($value | split("$") | join("$$"))'
 }
-# d20_filled_in_sha256 <value>: the SHA-256 the collector applies.
-d20_filled_in_sha256() { d20_filled_in "$1" | sha256_of; }
-# d20_create <url> <list> <jq filter> [<jq arguments>...]: a create under an
-# id of the script's, its body the filter's output (the id as $id), the id
-# recorded first in the trap's list named <list> (d20_variable_ids or
-# d20_variable_group_ids), so a create whose reply is lost is still
-# removed; 201, no-store. $d20_id holds the id.
-d20_create() {
+# variable_filled_in_sha256 <value>: the SHA-256 the collector applies.
+variable_filled_in_sha256() { variable_filled_in "$1" | sha256_of; }
+# variable_create <url> <list> <jq filter> [<jq arguments>...]: a create under
+# an id of the script's, its body the filter's output (the id as $id), the id
+# recorded first in the trap's list named <list> (variable_ids or
+# variable_group_ids), so a create whose reply is lost is still removed; 201,
+# no-store. $created_id holds the id.
+variable_create() {
   local url=$1 list=$2 filter=$3
   shift 3
-  d20_id=$(d20_uuid)
-  [[ "$d20_id" =~ ^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$ ]] || fail "couldn't make a UUID: $d20_id"
-  printf -v "$list" '%s %s' "${!list}" "$d20_id"
-  platform POST "$url" "$(jq -cn --arg id "$d20_id" "$@" "$filter")"
+  created_id=$(variable_uuid)
+  [[ "$created_id" =~ ^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$ ]] || fail "couldn't make a UUID: $created_id"
+  printf -v "$list" '%s %s' "${!list}" "$created_id"
+  platform POST "$url" "$(jq -cn --arg id "$created_id" "$@" "$filter")"
   [ "$status" = "201" ] || fail "the create at ${url##*/} returned HTTP $status: $(reply_code)"
   no_store || fail "the create at ${url##*/}, carrying configuration text, isn't Cache-Control: no-store"
 }
-# d20_forget <list> <id>: the id removed from the trap's list once deleted.
-d20_forget() {
+# variable_forget <list> <id>: the id removed from the trap's list once deleted.
+variable_forget() {
   local kept="" id
   for id in ${!1}; do [ "$id" = "$2" ] || kept="$kept $id"; done
   printf -v "$1" '%s' "$kept"
 }
-# d20_wait_for_push <step's words> <value> <jq condition>: edge-b2, read
-# through the platform's collector list, applies its group's assigned
-# version filled in with <value>, in sync, sent anew since $d20_served_at
-# (served.at moved), and the condition holds of it besides; then
-# $d20_served_at is its new served.at. At most 60 polls (its heartbeat is
-# 30 s).
-d20_wait_for_push() {
+# variable_wait_for_push <step's words> <value> <jq condition>: edge-b2,
+# read through the platform's collector list, applies its group's assigned
+# version filled in with <value>, in sync, sent anew since
+# $variable_served_at (served.at moved), and the condition holds of it
+# besides; then $variable_served_at is its new served.at. At most 60 polls
+# (its heartbeat is 30 s).
+variable_wait_for_push() {
   local sha
-  sha=$(d20_filled_in_sha256 "$2")
-  [ "$sha" != "$d20_published_sha256" ] || fail "the text filled in with $1's value is the published text"
-  d16b_wait_for_collector edge-b2 60 "(.groupId == \"$d16b_unassigned_group_id\") and (.pin == null) and (.resolution.from == \"groupVersion\") and (.resolution.publishedVersionId == \"$d20_publication_id\") and (.resolution.sha256 == \"$d20_published_sha256\") and (.served.publishedVersionId == \"$d20_publication_id\") and (.served.sha256 == \"$sha\") and ((.served.at | type) == \"string\") and (.served.at > \"$d20_served_at\") and (.effective.status == \"applied\") and (.effective.sha256 == \"$sha\") and (.drift == \"inSync\") and ($3)"
-  d20_served_at=$(jq -r '.served.at' <<<"$collector")
-  d20_sha256=$sha
+  sha=$(variable_filled_in_sha256 "$2")
+  [ "$sha" != "$variable_published_sha256" ] || fail "the text filled in with $1's value is the published text"
+  wait_for_managed_collector edge-b2 60 "(.groupId == \"$managed_unassigned_group_id\") and (.pin == null) and (.resolution.from == \"groupVersion\") and (.resolution.publishedVersionId == \"$variable_publication_id\") and (.resolution.sha256 == \"$variable_published_sha256\") and (.served.publishedVersionId == \"$variable_publication_id\") and (.served.sha256 == \"$sha\") and ((.served.at | type) == \"string\") and (.served.at > \"$variable_served_at\") and (.effective.status == \"applied\") and (.effective.sha256 == \"$sha\") and (.drift == \"inSync\") and ($3)"
+  variable_served_at=$(jq -r '.served.at' <<<"$collector")
+  variable_sha256=$sha
 }
 
-step "create the organization variables SMOKE_TAG = $D20_VALUE and SMOKE_UNUSED through the platform: POST .../variables answers each 201, no-store, as sent"
-d20_create "$D20_VARIABLES_URL" d20_variable_ids '{id: $id, name: "SMOKE_TAG", value: $value, description: null}' --arg value "$D20_VALUE"
-d20_smoke_tag_id=$d20_id
-[ "$(reply_json --arg id "$d20_smoke_tag_id" --arg value "$D20_VALUE" '.variable | .id == $id and .name == "SMOKE_TAG" and .value == $value and .description == null')" = "true" ] ||
-  fail "SMOKE_TAG's create didn't answer it as sent: $(reply_json -c '.variable | {id, name, value, description}' | d16b_redact)"
-d20_create "$D20_VARIABLES_URL" d20_variable_ids '{id: $id, name: "SMOKE_UNUSED", value: "unused-1", description: null}'
-d20_unused_id=$d20_id
-[ "$(reply_json --arg id "$d20_unused_id" '.variable | .id == $id and .name == "SMOKE_UNUSED" and .value == "unused-1"')" = "true" ] ||
-  fail "SMOKE_UNUSED's create didn't answer it as sent: $(reply_json -c '.variable | {id, name, value, description}' | d16b_redact)"
+step "create the organization variables SMOKE_TAG = $VARIABLE_VALUE and SMOKE_UNUSED through the platform: POST .../variables answers each 201, no-store, as sent"
+variable_create "$VARIABLES_URL" variable_ids '{id: $id, name: "SMOKE_TAG", value: $value, description: null}' --arg value "$VARIABLE_VALUE"
+smoke_tag_id=$created_id
+[ "$(reply_json --arg id "$smoke_tag_id" --arg value "$VARIABLE_VALUE" '.variable | .id == $id and .name == "SMOKE_TAG" and .value == $value and .description == null')" = "true" ] ||
+  fail "SMOKE_TAG's create didn't answer it as sent: $(reply_json -c '.variable | {id, name, value, description}' | redact_secrets)"
+variable_create "$VARIABLES_URL" variable_ids '{id: $id, name: "SMOKE_UNUSED", value: "unused-1", description: null}'
+smoke_unused_id=$created_id
+[ "$(reply_json --arg id "$smoke_unused_id" '.variable | .id == $id and .name == "SMOKE_UNUSED" and .value == "unused-1"')" = "true" ] ||
+  fail "SMOKE_UNUSED's create didn't answer it as sent: $(reply_json -c '.variable | {id, name, value, description}' | redact_secrets)"
 
-step "publish a configuration of its own whose attributes/d20 inserts \${org:SMOKE_TAG}: create it, save it and publish version 1"
-platform POST "$D16B_CONFIGURATIONS_URL" "$(jq -cn --arg name "$D20_CONFIGURATION_NAME" \
+step "publish a configuration of its own whose attributes/variable inserts \${org:SMOKE_TAG}: create it, save it and publish version 1"
+platform POST "$GROUP_CONFIGURATIONS_URL" "$(jq -cn --arg name "$VARIABLE_CONFIGURATION_NAME" \
   '{name: $name, description: "The stack smoke test'"'"'s configuration filled in with an organization variable"}')"
-[ "$status" = "201" ] || fail "creating the D20 configuration returned HTTP $status: $(reply_code)"
-d20_configuration_id=$(reply_json '.configuration.id')
-[[ "$d20_configuration_id" =~ ^[0-9a-f-]{36}$ ]] || fail "the D20 configuration has no id: $(reply_json -c '.configuration | {id}')"
-platform GET "$D16B_CONFIGURATIONS_URL/$d20_configuration_id"
-[ "$status" = "200" ] || fail "reading the D20 configuration returned HTTP $status: $(reply_code)"
-d20_version_id=$(reply_json '.version.id')
-platform PATCH "$D16B_CONFIGURATIONS_URL/$d20_configuration_id/versions/$d20_version_id" \
-  "$(jq -cn --arg yaml "$D20_YAML" '{yamlContent: $yaml, nodes: [], edges: [], pipelines: []}')"
-[ "$status" = "200" ] || fail "saving the D20 configuration returned HTTP $status: $(reply_code)"
-platform POST "$D16B_CONFIGURATIONS_URL/$d20_configuration_id/versions/$d20_version_id/publish"
+[ "$status" = "201" ] || fail "creating the variable configuration returned HTTP $status: $(reply_code)"
+variable_configuration_id=$(reply_json '.configuration.id')
+[[ "$variable_configuration_id" =~ ^[0-9a-f-]{36}$ ]] || fail "the variable configuration has no id: $(reply_json -c '.configuration | {id}')"
+platform GET "$GROUP_CONFIGURATIONS_URL/$variable_configuration_id"
+[ "$status" = "200" ] || fail "reading the variable configuration returned HTTP $status: $(reply_code)"
+variable_version_id=$(reply_json '.version.id')
+platform PATCH "$GROUP_CONFIGURATIONS_URL/$variable_configuration_id/versions/$variable_version_id" \
+  "$(jq -cn --arg yaml "$VARIABLE_YAML" '{yamlContent: $yaml, nodes: [], edges: [], pipelines: []}')"
+[ "$status" = "200" ] || fail "saving the variable configuration returned HTTP $status: $(reply_code)"
+platform POST "$GROUP_CONFIGURATIONS_URL/$variable_configuration_id/versions/$variable_version_id/publish"
 [ "$status" = "200" ] && [ "$(reply_json '.version.publishedAt | type')" = "string" ] ||
-  fail "publishing the D20 configuration returned HTTP $status: $(reply_code)"
+  fail "publishing the variable configuration returned HTTP $status: $(reply_code)"
 # Its published version, recorded as soon as the publish answers, so a run
 # that ends before the assignment still removes it (the EXIT trap): the
 # configuration's one publication in the opamp-server, holding the text
 # saved.
-management GET "$OPAMP_MANAGEMENT_URL/api/v1/organizations/$group_id/publications?configurationId=$d20_configuration_id"
-[ "$status" = "200" ] || fail "listing the D20 configuration's publications returned HTTP $status: $(json_field '.error.code // "no error code"' "$body")"
-d20_publication_id=$(json_field '.publications[0].id' "$body")
-[ "$(json_field '.publications | length' "$body")" = "1" ] && [[ "$d20_publication_id" =~ ^[0-9a-f-]{36}$ ]] &&
-  [ "$(json_field '.publications[0].sha256' "$body")" = "$(jq -j -n --arg yaml "$D20_YAML" '$yaml' | sha256_of)" ] ||
-  fail "the opamp-server doesn't hold the one published version of the D20 configuration, with the text saved: $(json_compact '[.publications[]? | {id, sha256}]' "$body")"
+management GET "$OPAMP_MANAGEMENT_URL/api/v1/organizations/$group_id/publications?configurationId=$variable_configuration_id"
+[ "$status" = "200" ] || fail "listing the variable configuration's publications returned HTTP $status: $(json_field '.error.code // "no error code"' "$body")"
+variable_publication_id=$(json_field '.publications[0].id' "$body")
+[ "$(json_field '.publications | length' "$body")" = "1" ] && [[ "$variable_publication_id" =~ ^[0-9a-f-]{36}$ ]] &&
+  [ "$(json_field '.publications[0].sha256' "$body")" = "$(jq -j -n --arg yaml "$VARIABLE_YAML" '$yaml' | sha256_of)" ] ||
+  fail "the opamp-server doesn't hold the one published version of the variable configuration, with the text saved: $(json_compact '[.publications[]? | {id, sha256}]' "$body")"
 # The published text's SHA-256 (the resolution's: the opamp-server keeps the
 # text as published), and this script's own fill-in checked against the
 # bytes it must give: the value with its `$` doubled where the reference
 # was, and nothing else changed.
-d20_published_sha256=$(jq -j -n --arg yaml "$D20_YAML" '$yaml' | sha256_of)
-d20_reference='${org:SMOKE_TAG}'
-d20_expected="${D20_YAML%%"$d20_reference"*}"'a$$b-1'"${D20_YAML#*"$d20_reference"}"
-[ "$(d20_filled_in_sha256 "$D20_VALUE")" = "$(printf '%s' "$d20_expected" | sha256_of)" ] ||
-  fail "the script's fill-in (d20_filled_in) doesn't write $D20_VALUE as a\$\$b-1 in place of \${org:SMOKE_TAG}"
+variable_published_sha256=$(jq -j -n --arg yaml "$VARIABLE_YAML" '$yaml' | sha256_of)
+variable_reference='${org:SMOKE_TAG}'
+variable_expected="${VARIABLE_YAML%%"$variable_reference"*}"'a$$b-1'"${VARIABLE_YAML#*"$variable_reference"}"
+[ "$(variable_filled_in_sha256 "$VARIABLE_VALUE")" = "$(printf '%s' "$variable_expected" | sha256_of)" ] ||
+  fail "the script's fill-in (variable_filled_in) doesn't write $VARIABLE_VALUE as a\$\$b-1 in place of \${org:SMOKE_TAG}"
 
 step "assign it to \"unassigned-b\" by its version id: PATCH .../groups/:groupId answers its configuration and version"
-platform PATCH "$D16B_FLEETS_URL/$d16b_fleet_id/groups/$d16b_unassigned_group_id" \
-  "$(jq -cn --arg id "$d20_version_id" '{assignedVersionId: $id}')"
+platform PATCH "$GROUP_FLEETS_URL/$managed_fleet_id/groups/$managed_unassigned_group_id" \
+  "$(jq -cn --arg id "$variable_version_id" '{assignedVersionId: $id}')"
 [ "$status" = "200" ] &&
-  [ "$(reply_json --arg c "$d20_configuration_id" --arg v "$d20_version_id" '.group.assignedVersion | .configurationId == $c and .versionId == $v and .versionNumber == 1')" = "true" ] &&
+  [ "$(reply_json --arg c "$variable_configuration_id" --arg v "$variable_version_id" '.group.assignedVersion | .configurationId == $c and .versionId == $v and .versionNumber == 1')" = "true" ] &&
   [ "$(reply_json '.group.variableGroupId')" = "null" ] ||
-  fail "assigning the D20 version returned HTTP $status: $(reply_json -c 'if .group then (.group | {assignedPublishedVersionId, variableGroupId}) else .error end' | d16b_redact)"
-[ "$(reply_json '.group.assignedPublishedVersionId')" = "$d20_publication_id" ] ||
-  fail "the D20 assignment doesn't name its published version $d20_publication_id: $(reply_json -c '.group.assignedPublishedVersionId')"
+  fail "assigning the variable configuration's version returned HTTP $status: $(reply_json -c 'if .group then (.group | {assignedPublishedVersionId, variableGroupId}) else .error end' | redact_secrets)"
+[ "$(reply_json '.group.assignedPublishedVersionId')" = "$variable_publication_id" ] ||
+  fail "the variable configuration's assignment doesn't name its published version $variable_publication_id: $(reply_json -c '.group.assignedPublishedVersionId')"
 
-step "edge-b2 applies the text filled in with $D20_VALUE (\$ doubled), by its SHA-256, in sync, the resolution's the published text's (at most 60 polls)"
+step "edge-b2 applies the text filled in with $VARIABLE_VALUE (\$ doubled), by its SHA-256, in sync, the resolution's the published text's (at most 60 polls)"
 # Before this push edge-b2 was served the Default group's published version: any served time counts.
-d20_served_at=""
-d20_wait_for_push "SMOKE_TAG" "$D20_VALUE" "(.pinnedVariableGroupId == null)"
+variable_served_at=""
+variable_wait_for_push "SMOKE_TAG" "$VARIABLE_VALUE" "(.pinnedVariableGroupId == null)"
 
-step "change SMOKE_TAG's value to $D20_NEW_VALUE: PATCH .../variables/:variableId answers it, no-store; edge-b2 is sent the text again (served.at moves), its new SHA-256, in sync (at most 60 polls)"
-platform PATCH "$D20_VARIABLES_URL/$d20_smoke_tag_id" "$(jq -cn --arg value "$D20_NEW_VALUE" '{value: $value}')"
-[ "$status" = "200" ] && [ "$(reply_json --arg value "$D20_NEW_VALUE" '.variable.value == $value and .variable.name == "SMOKE_TAG"')" = "true" ] ||
+step "change SMOKE_TAG's value to $VARIABLE_NEW_VALUE: PATCH .../variables/:variableId answers it, no-store; edge-b2 is sent the text again (served.at moves), its new SHA-256, in sync (at most 60 polls)"
+platform PATCH "$VARIABLES_URL/$smoke_tag_id" "$(jq -cn --arg value "$VARIABLE_NEW_VALUE" '{value: $value}')"
+[ "$status" = "200" ] && [ "$(reply_json --arg value "$VARIABLE_NEW_VALUE" '.variable.value == $value and .variable.name == "SMOKE_TAG"')" = "true" ] ||
   fail "changing SMOKE_TAG's value returned HTTP $status: $(reply_code)"
 no_store || fail "a variable's update, carrying its value, isn't Cache-Control: no-store"
-d20_wait_for_push "SMOKE_TAG's new" "$D20_NEW_VALUE" "(.pinnedVariableGroupId == null)"
+variable_wait_for_push "SMOKE_TAG's new" "$VARIABLE_NEW_VALUE" "(.pinnedVariableGroupId == null)"
 
 # A poll is counted by edge-b2's lastSeenAt moving (each 30 s heartbeat
 # moves it), from its read after the change: of three moves, at least two
@@ -3285,207 +3285,207 @@ d20_wait_for_push "SMOKE_TAG's new" "$D20_NEW_VALUE" "(.pinnedVariableGroupId ==
 # read, from the first after the change, that holds the marker to the
 # names the text uses.
 step "change SMOKE_UNUSED, which the text doesn't use: edge-b2 is sent nothing (served.at and its SHA-256 as they were) and reads in sync at every read while its lastSeenAt moves 3 times (at most 180 reads)"
-platform PATCH "$D20_VARIABLES_URL/$d20_unused_id" '{"value": "unused-2"}'
+platform PATCH "$VARIABLES_URL/$smoke_unused_id" '{"value": "unused-2"}'
 [ "$status" = "200" ] && [ "$(reply_json '.variable.value')" = "unused-2" ] ||
   fail "changing SMOKE_UNUSED's value returned HTTP $status: $(reply_code)"
 no_store || fail "SMOKE_UNUSED's update, carrying its value, isn't Cache-Control: no-store"
-platform GET "$D16B_FLEETS_URL/$d16b_fleet_id/collectors/$d16b_edge_b2_id"
-d20_seen=$(reply_json '.collector.lastSeenAt')
-[ "$status" = "200" ] && [ -n "$d20_seen" ] && [ "$d20_seen" != "null" ] ||
+platform GET "$GROUP_FLEETS_URL/$managed_fleet_id/collectors/$managed_edge_b2_id"
+variable_seen=$(reply_json '.collector.lastSeenAt')
+[ "$status" = "200" ] && [ -n "$variable_seen" ] && [ "$variable_seen" != "null" ] ||
   fail "reading edge-b2 after SMOKE_UNUSED's change returned HTTP $status: $(reply_code)"
-d20_moves=0
+variable_moves=0
 for _ in $(seq 1 180); do
-  platform GET "$D16B_FLEETS_URL/$d16b_fleet_id/collectors/$d16b_edge_b2_id"
+  platform GET "$GROUP_FLEETS_URL/$managed_fleet_id/collectors/$managed_edge_b2_id"
   [ "$status" = "200" ] || fail "reading edge-b2 while it polls returned HTTP $status: $(reply_code)"
-  [ "$(reply_json --arg at "$d20_served_at" --arg sha "$d20_sha256" \
+  [ "$(reply_json --arg at "$variable_served_at" --arg sha "$variable_sha256" \
     '.collector | .served.at == $at and .served.sha256 == $sha and .effective.sha256 == $sha and .drift == "inSync"')" = "true" ] ||
-    fail "after SMOKE_UNUSED's change, edge-b2 was sent its text again or read out of sync: $(reply_json -c '.collector | {served: (.served | {sha256, at}), effective: (.effective | {sha256, status}), drift, lastSeenAt}' | d16b_redact)"
-  d20_now_seen=$(reply_json '.collector.lastSeenAt')
-  if [ "$d20_now_seen" != "$d20_seen" ]; then
-    d20_moves=$((d20_moves + 1))
-    d20_seen=$d20_now_seen
+    fail "after SMOKE_UNUSED's change, edge-b2 was sent its text again or read out of sync: $(reply_json -c '.collector | {served: (.served | {sha256, at}), effective: (.effective | {sha256, status}), drift, lastSeenAt}' | redact_secrets)"
+  variable_now_seen=$(reply_json '.collector.lastSeenAt')
+  if [ "$variable_now_seen" != "$variable_seen" ]; then
+    variable_moves=$((variable_moves + 1))
+    variable_seen=$variable_now_seen
   fi
-  [ "$d20_moves" -lt 3 ] || break
+  [ "$variable_moves" -lt 3 ] || break
   sleep 1
 done
-[ "$d20_moves" -ge 3 ] || fail "edge-b2's lastSeenAt moved $d20_moves times, not 3, within 180 reads"
+[ "$variable_moves" -ge 3 ] || fail "edge-b2's lastSeenAt moved $variable_moves times, not 3, within 180 reads"
 
 step "SMOKE_TAG's delete is refused while its version is assigned: DELETE .../variables/:variableId answers 409 variable_in_use naming the version and \"unassigned-b\", with the totals, and neither the variable's name nor its value"
-platform DELETE "$D20_VARIABLES_URL/$d20_smoke_tag_id"
+platform DELETE "$VARIABLES_URL/$smoke_tag_id"
 [ "$status" = "409" ] && [ "$(reply_code)" = "variable_in_use" ] ||
   fail "deleting SMOKE_TAG while it is used returned HTTP $status: $(reply_code)"
-[ "$(reply_json --arg p "$d20_publication_id" --arg c "$d20_configuration_id" --arg n "$D20_CONFIGURATION_NAME" \
-  --arg v "$d20_version_id" --arg f "$d16b_fleet_id" --arg l "$D16B_FLEET_LABEL" --arg g "$d16b_unassigned_group_id" \
+[ "$(reply_json --arg p "$variable_publication_id" --arg c "$variable_configuration_id" --arg n "$VARIABLE_CONFIGURATION_NAME" \
+  --arg v "$variable_version_id" --arg f "$managed_fleet_id" --arg l "$MANAGED_FLEET_LABEL" --arg g "$managed_unassigned_group_id" \
   '.error.details == {usedBy: [{publishedVersionId: $p, configurationId: $c, configurationName: $n, versionId: $v, versionNumber: 1,
     groups: [{fleetId: $f, fleetLabel: $l, groupId: $g, groupName: "unassigned-b"}], pinnedCollectors: 0}],
     totalPublications: 1, totalGroups: 1, totalPinnedCollectors: 0}')" = "true" ] ||
-  fail "SMOKE_TAG's refusal doesn't name exactly the D20 version and \"unassigned-b\" with the totals: $(reply_json -c '.error.details' | d16b_redact)"
-if reply_holds "SMOKE_TAG" || reply_holds "$D20_NEW_VALUE"; then
+  fail "SMOKE_TAG's refusal doesn't name exactly the variable configuration's version and \"unassigned-b\" with the totals: $(reply_json -c '.error.details' | redact_secrets)"
+if reply_holds "SMOKE_TAG" || reply_holds "$VARIABLE_NEW_VALUE"; then
   fail "SMOKE_TAG's refusal holds the variable's name or value (its message is fixed, its details ids and the platform's names)"
 fi
-platform GET "$D20_VARIABLES_URL"
+platform GET "$VARIABLES_URL"
 [ "$status" = "200" ] &&
-  [ "$(reply_json --arg id "$d20_smoke_tag_id" --arg value "$D20_NEW_VALUE" '[.variables[] | select(.id == $id) | .value] == [$value]')" = "true" ] ||
+  [ "$(reply_json --arg id "$smoke_tag_id" --arg value "$VARIABLE_NEW_VALUE" '[.variables[] | select(.id == $id) | .value] == [$value]')" = "true" ] ||
   fail "after the refused delete, the variables' list (HTTP $status) doesn't hold SMOKE_TAG with its value: $(reply_code)"
 no_store || fail "the variables' list, carrying their values, isn't Cache-Control: no-store"
 
-step "bind a variable group overriding SMOKE_TAG with $D20_GROUP_VALUE to \"unassigned-b\": POST .../variable-groups, PUT .../overrides/:variableId, PATCH .../groups/:groupId; edge-b2 is sent the override's value, in sync (at most 60 polls)"
-d20_create "$D20_VARIABLE_GROUPS_URL" d20_variable_group_ids '{id: $id, name: "smoke-d20-group", description: null}'
-d20_group_variable_group_id=$d20_id
-[ "$(reply_json --arg id "$d20_group_variable_group_id" '.variableGroup | .id == $id and .name == "smoke-d20-group" and .overrideCount == 0')" = "true" ] ||
+step "bind a variable group overriding SMOKE_TAG with $VARIABLE_GROUP_VALUE to \"unassigned-b\": POST .../variable-groups, PUT .../overrides/:variableId, PATCH .../groups/:groupId; edge-b2 is sent the override's value, in sync (at most 60 polls)"
+variable_create "$VARIABLE_GROUPS_URL" variable_group_ids '{id: $id, name: "smoke-variable-group", description: null}'
+group_variable_group_id=$created_id
+[ "$(reply_json --arg id "$group_variable_group_id" '.variableGroup | .id == $id and .name == "smoke-variable-group" and .overrideCount == 0')" = "true" ] ||
   fail "the variable group's create didn't answer it as sent: $(reply_json -c '.variableGroup | {id, overrideCount}')"
-platform PUT "$D20_VARIABLE_GROUPS_URL/$d20_group_variable_group_id/overrides/$d20_smoke_tag_id" \
-  "$(jq -cn --arg value "$D20_GROUP_VALUE" '{value: $value}')"
+platform PUT "$VARIABLE_GROUPS_URL/$group_variable_group_id/overrides/$smoke_tag_id" \
+  "$(jq -cn --arg value "$VARIABLE_GROUP_VALUE" '{value: $value}')"
 [ "$status" = "200" ] &&
-  [ "$(reply_json --arg id "$d20_smoke_tag_id" --arg value "$D20_GROUP_VALUE" '.override.variableId == $id and .override.value == $value')" = "true" ] ||
+  [ "$(reply_json --arg id "$smoke_tag_id" --arg value "$VARIABLE_GROUP_VALUE" '.override.variableId == $id and .override.value == $value')" = "true" ] ||
   fail "overriding SMOKE_TAG in the group's variable group returned HTTP $status: $(reply_code)"
 no_store || fail "an override's reply, carrying its value, isn't Cache-Control: no-store"
-platform PATCH "$D16B_FLEETS_URL/$d16b_fleet_id/groups/$d16b_unassigned_group_id" \
-  "$(jq -cn --arg id "$d20_group_variable_group_id" '{variableGroupId: $id}')"
-[ "$status" = "200" ] && [ "$(reply_json '.group.variableGroupId')" = "$d20_group_variable_group_id" ] &&
-  [ "$(reply_json '.group.assignedPublishedVersionId')" = "$d20_publication_id" ] ||
+platform PATCH "$GROUP_FLEETS_URL/$managed_fleet_id/groups/$managed_unassigned_group_id" \
+  "$(jq -cn --arg id "$group_variable_group_id" '{variableGroupId: $id}')"
+[ "$status" = "200" ] && [ "$(reply_json '.group.variableGroupId')" = "$group_variable_group_id" ] &&
+  [ "$(reply_json '.group.assignedPublishedVersionId')" = "$variable_publication_id" ] ||
   fail "binding the variable group to \"unassigned-b\" returned HTTP $status: $(reply_code)"
-d20_wait_for_push "the group's variable group's" "$D20_GROUP_VALUE" "(.pinnedVariableGroupId == null)"
+variable_wait_for_push "the group's variable group's" "$VARIABLE_GROUP_VALUE" "(.pinnedVariableGroupId == null)"
 
-step "pin another variable group, overriding SMOKE_TAG with $D20_PIN_VALUE, on edge-b2: PATCH .../collectors/:collectorId with pinnedVariableGroupId answers it, no version pinned; edge-b2 is sent the pinned group's value, in sync (at most 60 polls)"
-d20_create "$D20_VARIABLE_GROUPS_URL" d20_variable_group_ids '{id: $id, name: "smoke-d20-pin", description: null}'
-d20_pin_variable_group_id=$d20_id
-platform PUT "$D20_VARIABLE_GROUPS_URL/$d20_pin_variable_group_id/overrides/$d20_smoke_tag_id" \
-  "$(jq -cn --arg value "$D20_PIN_VALUE" '{value: $value}')"
-[ "$status" = "200" ] && [ "$(reply_json --arg value "$D20_PIN_VALUE" '.override.value == $value')" = "true" ] ||
+step "pin another variable group, overriding SMOKE_TAG with $VARIABLE_PIN_VALUE, on edge-b2: PATCH .../collectors/:collectorId with pinnedVariableGroupId answers it, no version pinned; edge-b2 is sent the pinned group's value, in sync (at most 60 polls)"
+variable_create "$VARIABLE_GROUPS_URL" variable_group_ids '{id: $id, name: "smoke-variable-pin", description: null}'
+pin_variable_group_id=$created_id
+platform PUT "$VARIABLE_GROUPS_URL/$pin_variable_group_id/overrides/$smoke_tag_id" \
+  "$(jq -cn --arg value "$VARIABLE_PIN_VALUE" '{value: $value}')"
+[ "$status" = "200" ] && [ "$(reply_json --arg value "$VARIABLE_PIN_VALUE" '.override.value == $value')" = "true" ] ||
   fail "overriding SMOKE_TAG in the pinned variable group returned HTTP $status: $(reply_code)"
 no_store || fail "the pinned variable group's override reply, carrying its value, isn't Cache-Control: no-store"
-platform PATCH "$D16B_FLEETS_URL/$d16b_fleet_id/collectors/$d16b_edge_b2_id" \
-  "$(jq -cn --arg id "$d20_pin_variable_group_id" '{pinnedVariableGroupId: $id}')"
-[ "$status" = "200" ] && [ "$(reply_json '.collector.pinnedVariableGroupId')" = "$d20_pin_variable_group_id" ] &&
+platform PATCH "$GROUP_FLEETS_URL/$managed_fleet_id/collectors/$managed_edge_b2_id" \
+  "$(jq -cn --arg id "$pin_variable_group_id" '{pinnedVariableGroupId: $id}')"
+[ "$status" = "200" ] && [ "$(reply_json '.collector.pinnedVariableGroupId')" = "$pin_variable_group_id" ] &&
   [ "$(reply_json '.collector | has("pin") and .pin == null')" = "true" ] ||
-  fail "pinning the variable group on edge-b2 returned HTTP $status: $(reply_json -c 'if .collector then (.collector | {pin, pinnedVariableGroupId}) else .error end' | d16b_redact)"
+  fail "pinning the variable group on edge-b2 returned HTTP $status: $(reply_json -c 'if .collector then (.collector | {pin, pinnedVariableGroupId}) else .error end' | redact_secrets)"
 no_store || fail "a collector's update's reply, carrying its reported attributes and error text, isn't Cache-Control: no-store"
-d20_wait_for_push "the pinned variable group's" "$D20_PIN_VALUE" "(.pinnedVariableGroupId == \"$d20_pin_variable_group_id\")"
+variable_wait_for_push "the pinned variable group's" "$VARIABLE_PIN_VALUE" "(.pinnedVariableGroupId == \"$pin_variable_group_id\")"
 
 step "clean up, leaving \"unassigned-b\" as it was: edge-b2's pinned variable group cleared, then the group's variable group and assignment (PATCH each answers null), edge-b2 unassigned again (at most 60 polls)"
-platform PATCH "$D16B_FLEETS_URL/$d16b_fleet_id/collectors/$d16b_edge_b2_id" '{"pinnedVariableGroupId": null}'
+platform PATCH "$GROUP_FLEETS_URL/$managed_fleet_id/collectors/$managed_edge_b2_id" '{"pinnedVariableGroupId": null}'
 [ "$status" = "200" ] &&
   [ "$(reply_json '.collector | has("pin") and .pin == null and has("pinnedVariableGroupId") and .pinnedVariableGroupId == null')" = "true" ] ||
   fail "clearing edge-b2's pinned variable group returned HTTP $status: $(reply_code)"
-platform PATCH "$D16B_FLEETS_URL/$d16b_fleet_id/groups/$d16b_unassigned_group_id" '{"variableGroupId": null, "assignedVersionId": null}'
+platform PATCH "$GROUP_FLEETS_URL/$managed_fleet_id/groups/$managed_unassigned_group_id" '{"variableGroupId": null, "assignedVersionId": null}'
 [ "$status" = "200" ] && [ "$(reply_json '.group | .variableGroupId == null and .assignedPublishedVersionId == null and .assignedVersion == null')" = "true" ] ||
   fail "clearing \"unassigned-b\"'s variable group and assignment returned HTTP $status: $(reply_code)"
-d16b_wait_for_collector edge-b2 60 "(.groupId == \"$d16b_unassigned_group_id\") and (.pin == null) and (.pinnedVariableGroupId == null) and (.resolution == null) and (.drift == \"unassigned\")"
+wait_for_managed_collector edge-b2 60 "(.groupId == \"$managed_unassigned_group_id\") and (.pin == null) and (.pinnedVariableGroupId == null) and (.resolution == null) and (.drift == \"unassigned\")"
 
 step "delete the two variable groups, the two variables (no longer in use) and the configuration: each DELETE answers 204, the lists are empty, and its published version leaves the opamp-server"
-for d20_id in "$d20_pin_variable_group_id" "$d20_group_variable_group_id"; do
-  platform DELETE "$D20_VARIABLE_GROUPS_URL/$d20_id"
-  [ "$status" = "204" ] || fail "deleting the variable group $d20_id returned HTTP $status: $(reply_code)"
-  d20_forget d20_variable_group_ids "$d20_id"
+for created_id in "$pin_variable_group_id" "$group_variable_group_id"; do
+  platform DELETE "$VARIABLE_GROUPS_URL/$created_id"
+  [ "$status" = "204" ] || fail "deleting the variable group $created_id returned HTTP $status: $(reply_code)"
+  variable_forget variable_group_ids "$created_id"
 done
-for d20_id in "$d20_smoke_tag_id" "$d20_unused_id"; do
-  platform DELETE "$D20_VARIABLES_URL/$d20_id"
-  [ "$status" = "204" ] || fail "deleting the variable $d20_id returned HTTP $status: $(reply_code)"
-  d20_forget d20_variable_ids "$d20_id"
+for created_id in "$smoke_tag_id" "$smoke_unused_id"; do
+  platform DELETE "$VARIABLES_URL/$created_id"
+  [ "$status" = "204" ] || fail "deleting the variable $created_id returned HTTP $status: $(reply_code)"
+  variable_forget variable_ids "$created_id"
 done
-platform GET "$D20_VARIABLES_URL"
+platform GET "$VARIABLES_URL"
 [ "$status" = "200" ] && [ "$(reply_json '.variables == []')" = "true" ] ||
   fail "after the deletes, the variables' list (HTTP $status) isn't empty: $(reply_json -c '[.variables[]? | .id]')"
-platform GET "$D20_VARIABLE_GROUPS_URL"
+platform GET "$VARIABLE_GROUPS_URL"
 [ "$status" = "200" ] && [ "$(reply_json '.variableGroups == []')" = "true" ] ||
   fail "after the deletes, the variable groups' list (HTTP $status) isn't empty: $(reply_json -c '[.variableGroups[]? | .id]')"
 no_store || fail "the variable groups' list, carrying their names and descriptions, isn't Cache-Control: no-store"
-platform DELETE "$D16B_CONFIGURATIONS_URL/$d20_configuration_id"
-[ "$status" = "204" ] || fail "deleting the D20 configuration returned HTTP $status: $(reply_code)"
-d20_deleted_configuration_id=$d20_configuration_id
-d20_configuration_id=""
-stack_smoke publications "$group_id" "$d20_deleted_configuration_id" 0 ||
-  fail "the opamp-server still holds the published version of the D20 configuration $d20_deleted_configuration_id after its delete (above)"
-d20_publication_id=""
+platform DELETE "$GROUP_CONFIGURATIONS_URL/$variable_configuration_id"
+[ "$status" = "204" ] || fail "deleting the variable configuration returned HTTP $status: $(reply_code)"
+variable_deleted_configuration_id=$variable_configuration_id
+variable_configuration_id=""
+stack_smoke publications "$group_id" "$variable_deleted_configuration_id" 0 ||
+  fail "the opamp-server still holds the published version of the variable configuration $variable_deleted_configuration_id after its delete (above)"
+variable_publication_id=""
 
 step "the configuration's delete is refused while the Default group uses its published version: 409 configuration_in_use"
-platform DELETE "$D16B_CONFIGURATIONS_URL/$d16b_configuration_id"
+platform DELETE "$GROUP_CONFIGURATIONS_URL/$managed_configuration_id"
 [ "$status" = "409" ] && [ "$(reply_code)" = "configuration_in_use" ] ||
   fail "deleting the configuration in use returned HTTP $status: $(head -c 500 <<<"$body")"
 
 step "its fleet usage lists the Default group: GET .../configurations/:configurationId/fleet-usage"
-platform GET "$D16B_CONFIGURATIONS_URL/$d16b_configuration_id/fleet-usage"
+platform GET "$GROUP_CONFIGURATIONS_URL/$managed_configuration_id/fleet-usage"
 [ "$status" = "200" ] && [ "$(json_field '.usage.inUse' "$body")" = "true" ] &&
-  [ "$(reply_json --arg p "$d16b_publication_id" --arg f "$d16b_fleet_id" --arg g "$d16b_default_group_id" \
+  [ "$(reply_json --arg p "$managed_publication_id" --arg f "$managed_fleet_id" --arg g "$managed_default_group_id" \
     'any(.usage.publishedVersions[]; .publishedVersionId == $p and any(.groups[]; .fleetId == $f and .groupId == $g))')" = "true" ] ||
   fail "the configuration's fleet usage (HTTP $status) doesn't list the Default group: $(head -c 500 <<<"$body")"
 
 step "reveal the default token: POST .../tokens/:tokenId/reveal answers a bearer, no-store"
-platform POST "$D16B_FLEETS_URL/$d16b_fleet_id/tokens/$d16b_default_token_id/reveal"
+platform POST "$GROUP_FLEETS_URL/$managed_fleet_id/tokens/$managed_default_token_id/reveal"
 [ "$status" = "200" ] || fail "revealing the default token returned HTTP $status: $(reply_code)"
 no_store || fail "the reveal, carrying a bearer, isn't Cache-Control: no-store"
-[ "$(reply_json '.token.id')" = "$d16b_default_token_id" ] && [ "$(reply_json '.token.kind')" = "default" ] &&
+[ "$(reply_json '.token.id')" = "$managed_default_token_id" ] && [ "$(reply_json '.token.kind')" = "default" ] &&
   [ "$(reply_json '.token.bearer | type')" = "string" ] ||
   fail "the reveal didn't answer the default token with its bearer"
-d16b_revealed_bearer=$(reply_json '.token.bearer')
+managed_revealed_bearer=$(reply_json '.token.bearer')
 body=""
 # The same token encrypted anew under a fresh nonce (bearers are never
 # stored, each reveal seals the token again): as long as the create's, not
 # the same text. Compared by bash's own [ ], never a command's argv.
-[ -n "$d16b_revealed_bearer" ] && [ "${#d16b_revealed_bearer}" -eq "${#d16b_default_bearer}" ] &&
-  [ "$d16b_revealed_bearer" != "$d16b_default_bearer" ] ||
+[ -n "$managed_revealed_bearer" ] && [ "${#managed_revealed_bearer}" -eq "${#managed_default_bearer}" ] &&
+  [ "$managed_revealed_bearer" != "$managed_default_bearer" ] ||
   fail "the reveal's bearer isn't the default token's sealed anew (its length differs, or it repeats the create's)"
 
 # The grace's end in RFC 3339 with seconds, from jq's clock: no GNU date
 # needed. Kept, for the summary's check after it.
 step "rotate the rotate token with 120 s of grace: POST .../tokens/rotate answers the new token, its predecessor the old one, no-store"
-d16b_grace_ends_at=$(jq -rn 'now + 120 | floor | todate')
-platform POST "$D16B_FLEETS_URL/$d16b_fleet_id/tokens/rotate" \
-  "$(jq -cn --arg g "$d16b_grace_ends_at" '{expiresAt: null, graceEndsAt: $g}')"
+managed_grace_ends_at=$(jq -rn 'now + 120 | floor | todate')
+platform POST "$GROUP_FLEETS_URL/$managed_fleet_id/tokens/rotate" \
+  "$(jq -cn --arg g "$managed_grace_ends_at" '{expiresAt: null, graceEndsAt: $g}')"
 [ "$status" = "201" ] || fail "rotating the rotate token returned HTTP $status: $(reply_code)"
 no_store || fail "the rotation, carrying a bearer, isn't Cache-Control: no-store"
-d16b_new_rotate_token_id=$(reply_json '.token.id')
-d16b_new_rotate_bearer=$(reply_json '.token.bearer')
-[ "$(reply_json '.token.predecessorId')" = "$d16b_rotate_token_id" ] &&
-  [[ "$d16b_new_rotate_token_id" =~ ^[0-9a-f-]{36}$ ]] && [ "$d16b_new_rotate_token_id" != "$d16b_rotate_token_id" ] &&
-  [ -n "$d16b_new_rotate_bearer" ] && [ "$d16b_new_rotate_bearer" != "null" ] ||
-  fail "the rotation didn't answer a new token whose predecessor is $d16b_rotate_token_id"
+managed_new_rotate_token_id=$(reply_json '.token.id')
+managed_new_rotate_bearer=$(reply_json '.token.bearer')
+[ "$(reply_json '.token.predecessorId')" = "$managed_rotate_token_id" ] &&
+  [[ "$managed_new_rotate_token_id" =~ ^[0-9a-f-]{36}$ ]] && [ "$managed_new_rotate_token_id" != "$managed_rotate_token_id" ] &&
+  [ -n "$managed_new_rotate_bearer" ] && [ "$managed_new_rotate_bearer" != "null" ] ||
+  fail "the rotation didn't answer a new token whose predecessor is $managed_rotate_token_id"
 body=""
 
 # During the grace: the new token current and never expiring, the old one
 # valid until the grace's end (answered with milliseconds), two valid.
 step "the fleet's summary answers the rotation's grace: two valid rotate tokens, the grace ending when the rotation said (at most 5 polls)"
-d16b_rotating=""
+managed_rotating=""
 for _ in $(seq 1 5); do
-  platform GET "$D16B_FLEETS_URL/$d16b_fleet_id"
+  platform GET "$GROUP_FLEETS_URL/$managed_fleet_id"
   if [ "$status" = "200" ] &&
-    [ "$(reply_json --arg g "$d16b_grace_ends_at" '.fleet.summary.rotateToken == {expiresAt: null, graceEndsAt: ($g | sub("Z$"; ".000Z")), validCount: 2}')" = "true" ]; then
-    d16b_rotating=yes
+    [ "$(reply_json --arg g "$managed_grace_ends_at" '.fleet.summary.rotateToken == {expiresAt: null, graceEndsAt: ($g | sub("Z$"; ".000Z")), validCount: 2}')" = "true" ]; then
+    managed_rotating=yes
     break
   fi
   sleep 1
 done
-[ -n "$d16b_rotating" ] ||
-  fail "the fleet's summary (last HTTP $status) didn't answer the grace ending at $d16b_grace_ends_at with two valid rotate tokens within 5 polls: $(reply_json -c '.fleet.summary.rotateToken')"
+[ -n "$managed_rotating" ] ||
+  fail "the fleet's summary (last HTTP $status) didn't answer the grace ending at $managed_grace_ends_at with two valid rotate tokens within 5 polls: $(reply_json -c '.fleet.summary.rotateToken')"
 
 # The rotated token tells its collectors to move to its successor; edge-b1
 # hears it on its next poll (its heartbeat is 30 s).
 step "edge-b1 follows the rotation: it holds the new rotate token (at most 60 polls)"
-d16b_wait_for_collector edge-b1 60 "(.enrollmentTokenId == \"$d16b_new_rotate_token_id\")"
+wait_for_managed_collector edge-b1 60 "(.enrollmentTokenId == \"$managed_new_rotate_token_id\")"
 
 step "revoke the old rotate token: POST .../tokens/:tokenId/revoke"
-platform POST "$D16B_FLEETS_URL/$d16b_fleet_id/tokens/$d16b_rotate_token_id/revoke"
-[ "$status" = "200" ] && [ "$(json_field '.token.id' "$body")" = "$d16b_rotate_token_id" ] &&
+platform POST "$GROUP_FLEETS_URL/$managed_fleet_id/tokens/$managed_rotate_token_id/revoke"
+[ "$status" = "200" ] && [ "$(json_field '.token.id' "$body")" = "$managed_rotate_token_id" ] &&
   [ "$(json_field '.token.revokedAt | type' "$body")" = "string" ] ||
   fail "revoking the old rotate token returned HTTP $status: $(head -c 500 <<<"$body")"
 
 step "the fleet's summary answers the grace over: one valid rotate token, in no grace"
-platform GET "$D16B_FLEETS_URL/$d16b_fleet_id"
+platform GET "$GROUP_FLEETS_URL/$managed_fleet_id"
 [ "$status" = "200" ] && [ "$(reply_json '.fleet.summary.rotateToken == {expiresAt: null, graceEndsAt: null, validCount: 1}')" = "true" ] ||
   fail "the fleet's summary (HTTP $status) after the revoke isn't one rotate token in no grace: $(reply_json -c '.fleet.summary.rotateToken')"
 
 step "list the tokens: the old one revoked, the new one live, and no bearer: GET .../tokens"
-platform GET "$D16B_FLEETS_URL/$d16b_fleet_id/tokens"
+platform GET "$GROUP_FLEETS_URL/$managed_fleet_id/tokens"
 [ "$status" = "200" ] || fail "listing the tokens returned HTTP $status: $(reply_code)"
 if [ "$(reply_json '[.. | objects | has("bearer")] | any')" != "false" ] ||
-  reply_holds "$d16b_default_bearer" || reply_holds "$d16b_rotate_bearer" || reply_holds "$d16b_revealed_bearer" ||
-  reply_holds "$d16b_new_rotate_bearer"; then
+  reply_holds "$managed_default_bearer" || reply_holds "$managed_rotate_bearer" || reply_holds "$managed_revealed_bearer" ||
+  reply_holds "$managed_new_rotate_bearer"; then
   fail "the token list carries a bearer"
 fi
-[ "$(reply_json --arg id "$d16b_rotate_token_id" '[.tokens[] | select(.id == $id) | .revokedAt | type] == ["string"]')" = "true" ] &&
-  [ "$(reply_json --arg id "$d16b_new_rotate_token_id" '[.tokens[] | select(.id == $id) | {kind, revokedAt}] == [{kind: "rotate", revokedAt: null}]')" = "true" ] &&
-  [ "$(reply_json --arg id "$d16b_default_token_id" '[.tokens[] | select(.id == $id) | .revokedAt] == [null]')" = "true" ] ||
+[ "$(reply_json --arg id "$managed_rotate_token_id" '[.tokens[] | select(.id == $id) | .revokedAt | type] == ["string"]')" = "true" ] &&
+  [ "$(reply_json --arg id "$managed_new_rotate_token_id" '[.tokens[] | select(.id == $id) | {kind, revokedAt}] == [{kind: "rotate", revokedAt: null}]')" = "true" ] &&
+  [ "$(reply_json --arg id "$managed_default_token_id" '[.tokens[] | select(.id == $id) | .revokedAt] == [null]')" = "true" ] ||
   fail "the token list doesn't hold the old rotate token revoked and the new one and the default one live: $(reply_json -c '[.tokens[] | {id, kind, revokedAt}]')"
 
 # The token history through the platform: the fleet's
@@ -3495,31 +3495,31 @@ fi
 # page of 1 and its cursor reach the second event. Not no-store (ids, times
 # and the person's email).
 step "read the token history through the platform: GET .../tokens/events answers issued, viewed, rotated and revoked, newest first, each by the smoke's person, no bearer; a page of 1 and its cursor"
-platform GET "$D16B_FLEETS_URL/$d16b_fleet_id/tokens/events"
+platform GET "$GROUP_FLEETS_URL/$managed_fleet_id/tokens/events"
 [ "$status" = "200" ] || fail "reading the token history returned HTTP $status: $(reply_code)"
 if [ "$(reply_json '[.. | objects | has("bearer")] | any')" != "false" ] ||
-  reply_holds "$d16b_default_bearer" || reply_holds "$d16b_rotate_bearer" || reply_holds "$d16b_revealed_bearer" ||
-  reply_holds "$d16b_new_rotate_bearer"; then
+  reply_holds "$managed_default_bearer" || reply_holds "$managed_rotate_bearer" || reply_holds "$managed_revealed_bearer" ||
+  reply_holds "$managed_new_rotate_bearer"; then
   fail "the token history carries a bearer"
 fi
-no_store && fail "the token history is Cache-Control: no-store, which D17b-2 decision 20 leaves off"
+no_store && fail "the token history is Cache-Control: no-store, though it holds no bearer (only ids, times and the person's email)"
 [ "$(reply_json '.nextCursor')" = "null" ] &&
   [ "$(reply_json '[.events[].event] | sort == ["issued", "issued", "issued", "revoked", "rotated", "viewed"]')" = "true" ] &&
   [ "$(reply_json --arg e "$EMAIL" 'all(.events[]; .actor.email == $e and (.actor.userId | type) == "string")')" = "true" ] &&
-  [ "$(reply_json --arg id "$d16b_rotate_token_id" '.events[0].event == "revoked" and .events[0].tokenId == $id')" = "true" ] &&
-  [ "$(reply_json --arg id "$d16b_default_token_id" 'any(.events[]; .event == "viewed" and .tokenId == $id)')" = "true" ] &&
-  [ "$(reply_json --arg id "$d16b_new_rotate_token_id" 'any(.events[]; .event == "issued" and .tokenId == $id)')" = "true" ] &&
+  [ "$(reply_json --arg id "$managed_rotate_token_id" '.events[0].event == "revoked" and .events[0].tokenId == $id')" = "true" ] &&
+  [ "$(reply_json --arg id "$managed_default_token_id" 'any(.events[]; .event == "viewed" and .tokenId == $id)')" = "true" ] &&
+  [ "$(reply_json --arg id "$managed_new_rotate_token_id" 'any(.events[]; .event == "issued" and .tokenId == $id)')" = "true" ] &&
   [ "$(reply_json '[.events[].occurredAt] == ([.events[].occurredAt] | sort | reverse)')" = "true" ] ||
   fail "the token history isn't the fleet's six events, newest first, by the smoke's person: $(reply_json -c '[.events[] | {event, tokenId, by: (.actor != null)}]')"
-d16b_first_event_id=$(reply_json '.events[0].id')
-d16b_second_event_id=$(reply_json '.events[1].id')
-platform GET "$D16B_FLEETS_URL/$d16b_fleet_id/tokens/events?limit=1"
-d16b_events_cursor=$(reply_json '.nextCursor')
-[ "$status" = "200" ] && [ "$(reply_json '.events | length')" = "1" ] && [ "$(reply_json '.events[0].id')" = "$d16b_first_event_id" ] &&
-  [[ "$d16b_events_cursor" =~ ^[A-Za-z0-9_-]+$ ]] ||
+managed_first_event_id=$(reply_json '.events[0].id')
+managed_second_event_id=$(reply_json '.events[1].id')
+platform GET "$GROUP_FLEETS_URL/$managed_fleet_id/tokens/events?limit=1"
+managed_events_cursor=$(reply_json '.nextCursor')
+[ "$status" = "200" ] && [ "$(reply_json '.events | length')" = "1" ] && [ "$(reply_json '.events[0].id')" = "$managed_first_event_id" ] &&
+  [[ "$managed_events_cursor" =~ ^[A-Za-z0-9_-]+$ ]] ||
   fail "a page of 1 of the token history (HTTP $status) isn't its newest event with a cursor: $(reply_code)"
-platform GET "$D16B_FLEETS_URL/$d16b_fleet_id/tokens/events?limit=1&cursor=$d16b_events_cursor"
-[ "$status" = "200" ] && [ "$(reply_json '.events | length')" = "1" ] && [ "$(reply_json '.events[0].id')" = "$d16b_second_event_id" ] &&
+platform GET "$GROUP_FLEETS_URL/$managed_fleet_id/tokens/events?limit=1&cursor=$managed_events_cursor"
+[ "$status" = "200" ] && [ "$(reply_json '.events | length')" = "1" ] && [ "$(reply_json '.events[0].id')" = "$managed_second_event_id" ] &&
   [ "$(reply_json '.nextCursor | type')" = "string" ] ||
   fail "the token history's cursor (HTTP $status) didn't reach its second event: $(reply_code)"
 
@@ -3601,7 +3601,7 @@ qd_printable() {
 qd_shown() {
   if qd_printable "$1"; then tr '\n' ';' <"$1" | head -c "${2:-4000}"; else qd_redacted "$1" "${2:-4000}"; fi
 }
-# qd_diagnostic: a filter (d16b_wait_for_collector's <redaction>): its standard input kept in a 0600 file and
+# qd_diagnostic: a filter (wait_for_managed_collector's <redaction>): its standard input kept in a 0600 file and
 # printed whole when qd_printable, else redacted (qd_redact).
 qd_diagnostic() {
   (umask 077 && cat >"$qd_dir/diagnostic")
@@ -3618,7 +3618,7 @@ qd_search() {
 # qd_reply <jq's arguments>... and qd_reply_code: the last reply's jq answer (reply_json) or error code
 # (reply_code) for a failure's message, printed only when the reply holds no tqd_ and no tll_ (any link's
 # secret, one not yet known here among them) and is clean (qd_clean); otherwise a note that it isn't printed.
-qd_reply_printable() { ! reply_holds tqd_ && ! reply_holds tll_ && qd_clean "$D16B_REPLY_BODY"; }
+qd_reply_printable() { ! reply_holds tqd_ && ! reply_holds tll_ && qd_clean "$PLATFORM_REPLY_BODY"; }
 qd_reply() {
   if qd_reply_printable; then reply_json "$@"; else echo "(not printed: the reply holds a link's secret or the bearer)"; fi
 }
@@ -3697,20 +3697,20 @@ else
   install_mounts=$(jq -cn --arg h "$install_mount_host" '[{hostPath: $h, containerPath: "/var/log/telflo-smoke", readOnly: true}]')
 
   step "create the group \"$install_group_name\" with the published version and a read-only mount through the platform: POST .../groups answers its annotations"
-  platform POST "$D16B_FLEETS_URL/$d16b_fleet_id/groups" "$(jq -cn --arg name "$install_group_name" --arg v "$d16b_version_id" \
+  platform POST "$GROUP_FLEETS_URL/$managed_fleet_id/groups" "$(jq -cn --arg name "$install_group_name" --arg v "$managed_version_id" \
     --argjson mounts "$install_mounts" '{name: $name, assignedVersionId: $v, annotations: {telflo: {dockerMounts: $mounts}}}')"
   [ "$status" = "201" ] && [ "$(reply_json --argjson mounts "$install_mounts" '.group.annotations == {telflo: {dockerMounts: $mounts}}')" = "true" ] &&
-    [ "$(reply_json --arg v "$d16b_version_id" '.group.assignedVersion.versionId == $v')" = "true" ] ||
+    [ "$(reply_json --arg v "$managed_version_id" '.group.assignedVersion.versionId == $v')" = "true" ] ||
     fail "creating the install's group returned HTTP $status: $(head -c 500 <<<"$body")"
   install_group_id=$(reply_json '.group.id')
 
   step "read the install's facts through the platform: GET .../groups/:groupId/install answers no-store, $install_image, this stack's agent endpoint, the group and its mount, and no bearer"
-  platform GET "$D16B_FLEETS_URL/$d16b_fleet_id/groups/$install_group_id/install"
+  platform GET "$GROUP_FLEETS_URL/$managed_fleet_id/groups/$install_group_id/install"
   [ "$status" = "200" ] || fail "reading the install's facts returned HTTP $status: $(reply_code)"
   no_store || fail "the install's facts, carrying configuration text, aren't Cache-Control: no-store"
   # No bearer by its shape (each reveal seals a new one, so no earlier bearer's text can show it): a bearer is
   # 100 or more base64 characters in a row; nothing in the facts runs past 64 (a sha256).
-  if [ "$(reply_json '[.. | objects | has("bearer")] | any')" != "false" ] || grep -qE '[A-Za-z0-9+/]{100,}' "$D16B_REPLY_BODY"; then
+  if [ "$(reply_json '[.. | objects | has("bearer")] | any')" != "false" ] || grep -qE '[A-Za-z0-9+/]{100,}' "$PLATFORM_REPLY_BODY"; then
     fail "the install's facts carry a bearer, or a run of 100 or more base64 characters"
   fi
   [ "$(reply_json '.imageTag')" = "$install_image" ] &&
@@ -3721,10 +3721,10 @@ else
   [ "$(reply_json --arg g "$install_group_id" --argjson mounts "$install_mounts" '.groupId == $g and .mounts == $mounts and .envVarNames == []')" = "true" ] ||
     fail "the install's facts aren't the group's id and mount, with no variables: $(reply_json -c '{groupId, mounts, envVarNames}')"
   install_facts="$work_dir/install-facts.json"
-  (umask 077 && cp "$D16B_REPLY_BODY" "$install_facts")
+  (umask 077 && cp "$PLATFORM_REPLY_BODY" "$install_facts")
 
   step "reveal the default token for the install: POST .../tokens/:tokenId/reveal"
-  platform POST "$D16B_FLEETS_URL/$d16b_fleet_id/tokens/$d16b_default_token_id/reveal"
+  platform POST "$GROUP_FLEETS_URL/$managed_fleet_id/tokens/$managed_default_token_id/reveal"
   [ "$status" = "200" ] && [ "$(reply_json '.token.kind')" = "default" ] || fail "revealing the default token for the install returned HTTP $status: $(reply_code)"
   install_bearer=$(reply_json '.token.bearer')
   body=""
@@ -3746,7 +3746,7 @@ else
     fail "the container install's mounts aren't the group's read-only mount and its volume: $install_container_mounts"
 
   step "install-c1 enrolls in \"$install_group_name\" through the platform, handed the rotate token (at most 60 polls)"
-  d16b_wait_for_collector install-c1 60 "(.groupId == \"$install_group_id\") and (.enrollmentTokenId == \"$d16b_new_rotate_token_id\")"
+  wait_for_managed_collector install-c1 60 "(.groupId == \"$install_group_id\") and (.enrollmentTokenId == \"$managed_new_rotate_token_id\")"
   install_c1_id=$(jq -r '.id' <<<"$collector")
   install_c1_uid=$(jq -r '.instanceUid' <<<"$collector")
 
@@ -3762,7 +3762,7 @@ else
   status=$(curl -s --max-time 60 -o "$install_bundle" -D "$install_bundle_headers" -w '%{http_code}' -b "$JAR" -X POST \
     -H 'X-Telflo-CSRF: 1' -H 'content-type: application/json' \
     --data-binary "$(jq -cn --arg arch "$install_arch" '{method: "all-in-one", arch: $arch, rootPath: "/etc/otelcol", env: []}')" \
-    "$D16B_FLEETS_URL/$d16b_fleet_id/groups/$install_group_id/install-bundle" || true)
+    "$GROUP_FLEETS_URL/$managed_fleet_id/groups/$install_group_id/install-bundle" || true)
   [ "$status" = "200" ] || fail "downloading the bundle returned HTTP $status: $(head -c 500 "$install_bundle")"
   grep -qiE '^content-type:[[:space:]]*application/gzip' "$install_bundle_headers" &&
     grep -qiE '^cache-control:[[:space:]]*no-store' "$install_bundle_headers" &&
@@ -3796,10 +3796,10 @@ else
     -v "$install_bundle:/bundle/$install_bundle_name:ro" -e OPAMP_TOKEN --entrypoint bash "$install_image" \
     -c 'set -euo pipefail; mkdir -p /etc/otelcol; tar -xzf "/bundle/$1" -C /etc/otelcol; cd /etc/otelcol; exec ./start_supervisor.sh --OPAMP_SERVER_NAME="$2"' \
     install-aio "$install_bundle_name" install-aio >/dev/null || fail "running the All In One bundle failed"
-  d16b_wait_for_collector install-aio 300 "(.groupId == \"$install_group_id\") and (.enrollmentTokenId == \"$d16b_new_rotate_token_id\")" "$install_aio_container"
+  wait_for_managed_collector install-aio 300 "(.groupId == \"$install_group_id\") and (.enrollmentTokenId == \"$managed_new_rotate_token_id\")" "$install_aio_container"
 
   step "the fleet's collectors in \"$install_group_name\" are both installed ones: GET .../collectors?groupId="
-  platform GET "$D16B_FLEETS_URL/$d16b_fleet_id/collectors?groupId=$install_group_id"
+  platform GET "$GROUP_FLEETS_URL/$managed_fleet_id/collectors?groupId=$install_group_id"
   [ "$status" = "200" ] && [ "$(reply_json '[.collectors[].name] | sort == ["install-aio", "install-c1"]')" = "true" ] ||
     fail "the group's collectors (HTTP $status) aren't install-c1 and install-aio: $(reply_json -c '[.collectors[]?.name]')"
 
@@ -3846,7 +3846,7 @@ else
   qd_public_api_url=$(docker compose exec -T api printenv TELFLO_PUBLIC_API_URL) ||
     fail "couldn't read the API's TELFLO_PUBLIC_API_URL"
   [ "$qd_public_api_url" = "http://gateway" ] ||
-    fail "the API's TELFLO_PUBLIC_API_URL is $qd_public_api_url, not http://gateway: start this stack with TELFLO_PUBLIC_API_URL=http://gateway (compose's default, http://host.docker.internal:50080, would send its Quick Deploy commands to whatever gateway listens on the host's port 50080, the owner's stack's)"
+    fail "the API's TELFLO_PUBLIC_API_URL is $qd_public_api_url, not http://gateway: start this stack with TELFLO_PUBLIC_API_URL=http://gateway (compose's default, http://host.docker.internal:50080, would send its Quick Deploy commands to whatever gateway listens on the host's port 50080, a developer's own development stack's)"
   (umask 077 && mkdir -p "$qd_dir/bin" "$qd_dir/l1-out" "$qd_dir/l2-out")
   chmod 0755 "$qd_dir/bin"
   # The shims: no secret reaches either (the command puts none on a command line), which the calls' check shows.
@@ -3887,13 +3887,13 @@ process.stdout.write(`${quickDeployCommands({ url: QD_URL, rootPath: QD_ROOT, be
       docker compose exec -T -e QD_URL -e QD_BEARER -e QD_ROOT -e QD_NAME -e QD_SYSTEMD api \
       node --input-type=module -e "$script" >"$5" 2>"$5.err")
   }
-  QD_LINKS_URL="$D16B_FLEETS_URL/$d16b_fleet_id/quick-deploy-links"
+  QD_LINKS_URL="$GROUP_FLEETS_URL/$managed_fleet_id/quick-deploy-links"
   QD_URL_PATTERN='^http://gateway/api/v1/quick-deploy/tqd_[A-Za-z0-9_-]{43}$'
   # The bearer first: every reply, file and output below is searched for it.
   qd_secrets "$install_bearer"
 
   step "make link L1 for \"$install_group_name\" (All In One, $install_arch, /etc/otelcol, in the foreground): POST .../groups/:groupId/quick-deploy-links answers 201, no-store, the link and its url"
-  platform POST "$D16B_FLEETS_URL/$d16b_fleet_id/groups/$install_group_id/quick-deploy-links" \
+  platform POST "$GROUP_FLEETS_URL/$managed_fleet_id/groups/$install_group_id/quick-deploy-links" \
     "$(jq -cn --arg arch "$install_arch" '{method: "all-in-one", arch: $arch, rootPath: "/etc/otelcol", env: [], systemd: false}')"
   [ "$status" = "201" ] || fail "making L1 returned HTTP $status: $(qd_reply_code)"
   no_store || fail "L1's reply, carrying the link's secret, isn't Cache-Control: no-store"
@@ -3903,7 +3903,7 @@ process.stdout.write(`${quickDeployCommands({ url: QD_URL, rootPath: QD_ROOT, be
   # L1's secret too, before anything else is compared or printed.
   qd_secrets "$qd_l1_secret" "$install_bearer"
   qd_l1_id=$(reply_json '.link.id')
-  [ "$(reply_json --arg g "$install_group_id" --arg t "$d16b_default_token_id" --arg arch "$install_arch" '
+  [ "$(reply_json --arg g "$install_group_id" --arg t "$managed_default_token_id" --arg arch "$install_arch" '
       .link.groupId == $g and .link.groupName == "install-i" and .link.defaultTokenId == $t and .link.status == "active"
       and .link.downloadCount == 0 and .link.revokedAt == null and (.link.expiresAt | type) == "string"
       and .link.choices == {method: "all-in-one", arch: $arch, rootPath: "/etc/otelcol", executablePath: null, systemd: false, envNames: []}')" = "true" ] ||
@@ -3949,7 +3949,7 @@ process.stdout.write(`${quickDeployCommands({ url: QD_URL, rootPath: QD_ROOT, be
     -v "$qd_dir/otelcol-contrib:/etc/otelcol/otelcol-contrib:ro" -v "$qd_dir/supervisor:/etc/otelcol/supervisor:ro" \
     --entrypoint bash "$install_image" -c 'PATH=/qd/bin:$PATH exec bash /qd/command' >/dev/null ||
     fail "starting L1's Quick Deploy command failed"
-  d16b_wait_for_collector install-qd1 120 "(.groupId == \"$install_group_id\") and (.enrollmentTokenId == \"$d16b_new_rotate_token_id\")" "$qd1_container" qd_diagnostic
+  wait_for_managed_collector install-qd1 120 "(.groupId == \"$install_group_id\") and (.enrollmentTokenId == \"$managed_new_rotate_token_id\")" "$qd1_container" qd_diagnostic
   # The calls searched first: a failure below prints them whole when they hold no tqd_ and no bearer's shape
   # either, else redacted (qd_shown).
   qd_search "a shim's arguments in L1's command (its calls)" "$qd_dir/l1-out/calls"
@@ -3960,7 +3960,7 @@ sudo --preserve-env=OPAMP_TOKEN ./start_supervisor.sh --OPAMP_SERVER_NAME=instal
 
   qd2_container="$compose_project-install-qd2"
   step "make link L2 (the systemd service) and run its command with the sudo and a recording systemctl: opamp.env 0600 root's, one line, the bearer's; the unit 0644 root's, its text exact; daemon-reload, enable and restart in order; neither secret on a shim's arguments"
-  platform POST "$D16B_FLEETS_URL/$d16b_fleet_id/groups/$install_group_id/quick-deploy-links" \
+  platform POST "$GROUP_FLEETS_URL/$managed_fleet_id/groups/$install_group_id/quick-deploy-links" \
     "$(jq -cn --arg arch "$install_arch" '{method: "all-in-one", arch: $arch, rootPath: "/etc/otelcol", env: [], systemd: true}')"
   [ "$status" = "201" ] && no_store && [ "$(reply_json '.link.choices.systemd')" = "true" ] || fail "making L2 returned HTTP $status: $(qd_reply_code)"
   qd_l2_url=$(reply_json '.url')
@@ -4051,7 +4051,7 @@ systemctl restart telflo-supervisor.service" ] ||
     fail "L1 isn't listed revoked with its 2 downloads (the host's and install-qd1's): HTTP $status $(qd_reply -c --arg id "$qd_l1_id" '[.links[]? | select(.id == $id) | {status, downloadCount}]')"
 
   step "revoke the default token: POST .../tokens/:tokenId/revoke"
-  platform POST "$D16B_FLEETS_URL/$d16b_fleet_id/tokens/$d16b_default_token_id/revoke"
+  platform POST "$GROUP_FLEETS_URL/$managed_fleet_id/tokens/$managed_default_token_id/revoke"
   [ "$status" = "200" ] && [ "$(reply_json '.token.revokedAt | type')" = "string" ] ||
     fail "revoking the default token returned HTTP $status: $(qd_reply_code)"
 
@@ -4072,35 +4072,35 @@ systemctl restart telflo-supervisor.service" ] ||
   unset qd_l1_url qd_l1_secret qd_l2_url qd_l2_secret
 
   step "issue a new default token: POST .../tokens/default answers 201, no-store, a default token and its bearer; a second issue is 409 enrollment_token_default_exists"
-  platform POST "$D16B_FLEETS_URL/$d16b_fleet_id/tokens/default"
+  platform POST "$GROUP_FLEETS_URL/$managed_fleet_id/tokens/default"
   [ "$status" = "201" ] || fail "issuing a new default token returned HTTP $status: $(reply_code)"
   no_store || fail "the new default token's reply, carrying a bearer, isn't Cache-Control: no-store"
-  [ "$(reply_json --arg old "$d16b_default_token_id" '.token.kind == "default" and .token.id != $old and (.token.bearer | type) == "string"')" = "true" ] ||
+  [ "$(reply_json --arg old "$managed_default_token_id" '.token.kind == "default" and .token.id != $old and (.token.bearer | type) == "string"')" = "true" ] ||
     fail "the new default token's reply isn't a new default token with its bearer"
   install_new_bearer=$(reply_json '.token.bearer')
   body=""
-  platform POST "$D16B_FLEETS_URL/$d16b_fleet_id/tokens/default"
+  platform POST "$GROUP_FLEETS_URL/$managed_fleet_id/tokens/default"
   [ "$status" = "409" ] && [ "$(reply_code)" = "enrollment_token_default_exists" ] ||
     fail "a second new default token returned HTTP $status: $(reply_code)"
 
   step "re-run the container install with the new default token on the same volume: install-c1 reconnects, the same collector (its id and instance uid), and no new one enrolls (at most 60 polls)"
   docker rm -f "$install_container" >/dev/null || fail "removing the first container install failed"
-  platform GET "$D16B_FLEETS_URL/$d16b_fleet_id"
+  platform GET "$GROUP_FLEETS_URL/$managed_fleet_id"
   install_count_before=$(reply_json '.fleet.summary.collectors')
   [ "$status" = "200" ] && [[ "$install_count_before" =~ ^[0-9]+$ ]] ||
     fail "reading the fleet's collector count before the re-run returned HTTP $status: $(reply_code)"
   # Read once its container is gone: a later last seen is the new container's.
-  platform GET "$D16B_FLEETS_URL/$d16b_fleet_id/collectors/$install_c1_id"
+  platform GET "$GROUP_FLEETS_URL/$managed_fleet_id/collectors/$install_c1_id"
   install_seen_before=$(reply_json '.collector.lastSeenAt')
   [ "$status" = "200" ] && [ -n "$install_seen_before" ] && [ "$install_seen_before" != "null" ] ||
     fail "reading install-c1 before its re-run returned HTTP $status: $(reply_code)"
   install_run_args "$install_facts" "$install_container" "$install_volume" install-c1 "$compose_network" ||
     fail "the install's facts aren't ones the container install can be built from"
   OPAMP_TOKEN=$install_new_bearer docker "${install_args[@]}" >/dev/null || fail "re-running the container install failed"
-  d16b_wait_for_collector install-c1 60 "(.id == \"$install_c1_id\") and (.instanceUid == \"$install_c1_uid\") and (.lastSeenAt > \"$install_seen_before\") and (.groupId == \"$install_group_id\")"
+  wait_for_managed_collector install-c1 60 "(.id == \"$install_c1_id\") and (.instanceUid == \"$install_c1_uid\") and (.lastSeenAt > \"$install_seen_before\") and (.groupId == \"$install_group_id\")"
   # A new enrollment would be named afresh (install-c1 is taken), so no name check finds it: the wait's id and
   # instance uid, and the fleet's collector count, do.
-  platform GET "$D16B_FLEETS_URL/$d16b_fleet_id"
+  platform GET "$GROUP_FLEETS_URL/$managed_fleet_id"
   [ "$status" = "200" ] && [ "$(reply_json '.fleet.summary.collectors')" = "$install_count_before" ] ||
     fail "the fleet's collectors went from $install_count_before to $(reply_json '.fleet.summary.collectors') with the re-run: it enrolled anew"
 
@@ -4108,7 +4108,7 @@ systemctl restart telflo-supervisor.service" ] ||
   # fleet's count; after it, each collector 404 and the count down by three. The containers go first, so
   # none polls again meanwhile.
   step "remove the installed collectors, their volume and the group \"$install_group_name\", whose delete deletes its three collectors with it: each 404 collector_not_found, the fleet's count down by three"
-  platform GET "$D16B_FLEETS_URL/$d16b_fleet_id/collectors?groupId=$install_group_id"
+  platform GET "$GROUP_FLEETS_URL/$managed_fleet_id/collectors?groupId=$install_group_id"
   install_group_collector_ids=$(reply_json '[.collectors[].id] | join(" ")')
   [ "$status" = "200" ] && [ "$(reply_json '[.collectors[].name] | sort == ["install-aio", "install-c1", "install-qd1"]')" = "true" ] ||
     fail "the group's collectors before its delete (HTTP $status) aren't install-c1, install-aio and install-qd1: $(reply_json -c '[.collectors[]?.name]')"
@@ -4120,18 +4120,18 @@ systemctl restart telflo-supervisor.service" ] ||
   docker volume rm "$install_volume" >/dev/null 2>&1 || install_cleanup_failed="$install_cleanup_failed the volume $install_volume;"
   install_volume=""
   [ -z "$install_cleanup_failed" ] || fail "removing the installed collectors failed: $install_cleanup_failed"
-  platform GET "$D16B_FLEETS_URL/$d16b_fleet_id"
+  platform GET "$GROUP_FLEETS_URL/$managed_fleet_id"
   install_fleet_count_before=$(reply_json '.fleet.summary.collectors')
   [ "$status" = "200" ] && [[ "$install_fleet_count_before" =~ ^[0-9]+$ ]] ||
     fail "reading the fleet's collector count before the group's delete returned HTTP $status: $(reply_code)"
-  platform DELETE "$D16B_FLEETS_URL/$d16b_fleet_id/groups/$install_group_id"
+  platform DELETE "$GROUP_FLEETS_URL/$managed_fleet_id/groups/$install_group_id"
   [ "$status" = "204" ] || fail "deleting the install's group returned HTTP $status: $(reply_code)"
   for install_collector_id in $install_group_collector_ids; do
-    platform GET "$D16B_FLEETS_URL/$d16b_fleet_id/collectors/$install_collector_id"
+    platform GET "$GROUP_FLEETS_URL/$managed_fleet_id/collectors/$install_collector_id"
     [ "$status" = "404" ] && [ "$(reply_code)" = "collector_not_found" ] ||
       fail "the deleted group's collector $install_collector_id is still there: HTTP $status $(reply_code)"
   done
-  platform GET "$D16B_FLEETS_URL/$d16b_fleet_id"
+  platform GET "$GROUP_FLEETS_URL/$managed_fleet_id"
   [ "$status" = "200" ] && [ "$(reply_json '.fleet.summary.collectors')" = "$((install_fleet_count_before - 3))" ] ||
     fail "the fleet's collectors went from $install_fleet_count_before to $(reply_json '.fleet.summary.collectors') (HTTP $status) with its group's delete, not down by its three"
   unset install_bearer install_new_bearer
@@ -4160,7 +4160,7 @@ fi
 # its bearers: never printed, the body dropped at once. A failed refusal
 # prints the status, the error code and the details' field paths only (never a
 # name, namespace or path). A run that ends inside these steps removes the
-# fleet (the EXIT trap: remove_d16b_steps).
+# fleet (the EXIT trap: remove_managed_steps).
 # k8s_refused <status> <code> [<field path>]: whether the last reply is that
 # refusal, naming that field (a detail's instancePath) when one is given.
 k8s_refused() {
@@ -4182,16 +4182,16 @@ k8s_key_absent() {
 }
 
 step "a server fleet's group refuses the annotations' Kubernetes key: POST .../groups answers 400 invalid_request at annotations.telflo.kubernetes"
-platform POST "$D16B_FLEETS_URL/$d16b_fleet_id/groups" "$(jq -cn --argjson k "$K8S_GATEWAY_KEY" '{name: "k8s-on-server", annotations: {telflo: {kubernetes: $k}}}')"
+platform POST "$GROUP_FLEETS_URL/$managed_fleet_id/groups" "$(jq -cn --argjson k "$K8S_GATEWAY_KEY" '{name: "k8s-on-server", annotations: {telflo: {kubernetes: $k}}}')"
 k8s_refused 400 invalid_request /annotations/telflo/kubernetes ||
   fail "a server fleet's group with the Kubernetes key wasn't refused at annotations.telflo.kubernetes: $(k8s_refusal_seen)"
 
 k8s_hex=$(od -An -N16 -tx1 /dev/urandom | tr -d ' \n')
 k8s_fleet_id="${k8s_hex:0:8}-${k8s_hex:8:4}-4${k8s_hex:13:3}-$(printf '%x' $(((0x${k8s_hex:16:2} & 0x3f) | 0x80)))${k8s_hex:18:2}-${k8s_hex:20:12}"
 [[ "$k8s_fleet_id" =~ ^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$ ]] || fail "couldn't make a UUID for the Kubernetes fleet: $k8s_fleet_id"
-K8S_FLEET_URL="$D16B_FLEETS_URL/$k8s_fleet_id"
+K8S_FLEET_URL="$GROUP_FLEETS_URL/$k8s_fleet_id"
 step "create a kubernetes-supervisor fleet through the platform: POST .../fleets answers 201 and its Default group; its groups list the Default group alone"
-platform POST "$D16B_FLEETS_URL" "$(jq -cn --arg id "$k8s_fleet_id" --arg label "stack-smoke-k8s-$(date +%s)-$$" \
+platform POST "$GROUP_FLEETS_URL" "$(jq -cn --arg id "$k8s_fleet_id" --arg label "stack-smoke-k8s-$(date +%s)-$$" \
   '{id: $id, label: $label, type: "kubernetes-supervisor", rotateExpiresAt: null}')"
 body=""
 [ "$status" = "201" ] || fail "creating the Kubernetes fleet returned HTTP $status: $(reply_code)"
@@ -4200,7 +4200,7 @@ body=""
 k8s_default_group_id=$(reply_json '.defaultGroup.id')
 # Its default token's id (not its bearer): the Helm install's link names it.
 k8s_default_token_id=$(reply_json '.tokens.default.id')
-: >"$D16B_REPLY_BODY"
+: >"$PLATFORM_REPLY_BODY"
 platform GET "$K8S_FLEET_URL/groups"
 [ "$status" = "200" ] && [ "$(reply_json --arg id "$k8s_default_group_id" '(.groups | length) == 1 and .groups[0].id == $id and .groups[0].isDefault')" = "true" ] ||
   fail "the new Kubernetes fleet's groups (HTTP $status) aren't its Default group alone: $(k8s_group_names)"
@@ -4235,11 +4235,11 @@ platform GET "$K8S_FLEET_URL/groups"
   fail "after the refusals, the Kubernetes fleet's groups (HTTP $status) aren't the Default group, cluster and gw-smoke: $(k8s_group_names)"
 
 step "the update side: a server group's save with telflo.kubernetes (400 at annotations.telflo.kubernetes), the Kubernetes Default group's save naming the role gateway (400 at annotations.telflo.kubernetes.role) and the gateway's save of annotations without its settings (400 at annotations.telflo.kubernetes) are refused, none written; the Default group's save naming node is answered 200 with its annotations as sent"
-platform PATCH "$D16B_FLEETS_URL/$d16b_fleet_id/groups/$d16b_unassigned_group_id" "$(jq -cn --argjson k "$K8S_GATEWAY_KEY" '{annotations: {telflo: {kubernetes: $k}}}')"
+platform PATCH "$GROUP_FLEETS_URL/$managed_fleet_id/groups/$managed_unassigned_group_id" "$(jq -cn --argjson k "$K8S_GATEWAY_KEY" '{annotations: {telflo: {kubernetes: $k}}}')"
 k8s_refused 400 invalid_request /annotations/telflo/kubernetes ||
   fail "a server fleet's group's save with the Kubernetes key wasn't refused at annotations.telflo.kubernetes: $(k8s_refusal_seen)"
-platform GET "$D16B_FLEETS_URL/$d16b_fleet_id/groups/$d16b_unassigned_group_id"
-[ "$status" = "200" ] && k8s_key_absent "$d16b_unassigned_group_id" ||
+platform GET "$GROUP_FLEETS_URL/$managed_fleet_id/groups/$managed_unassigned_group_id"
+[ "$status" = "200" ] && k8s_key_absent "$managed_unassigned_group_id" ||
   fail "after the refused save, the server group \"unassigned-b\" (HTTP $status) holds the platform's key: $(reply_json -c '.group.annotations | if type == "object" then keys else type end')"
 platform PATCH "$K8S_FLEET_URL/groups/$k8s_default_group_id" "$(jq -cn --argjson k "$K8S_GATEWAY_KEY" '{annotations: {telflo: {kubernetes: $k}}}')"
 k8s_refused 400 invalid_request /annotations/telflo/kubernetes/role ||
@@ -4344,7 +4344,7 @@ helm_client_get() {
   helm_gateway_ip=$(docker inspect --format "{{with index .NetworkSettings.Networks \"$compose_network\"}}{{.IPAddress}}{{end}}" "$gateway_container") ||
     fail "couldn't read the gateway's address on $compose_network"
   [ -n "$helm_gateway_ip" ] || fail "the gateway has no address on the compose network $compose_network"
-  d16b_containers="$d16b_containers $container"
+  managed_containers="$managed_containers $container"
   docker run -d --pull never --name "$container" --network "$compose_network" --entrypoint sleep "$image" 300 >/dev/null ||
     fail "starting the client container $container from $image failed"
   helm_client_ip=$(docker inspect --format "{{with index .NetworkSettings.Networks \"$compose_network\"}}{{.IPAddress}}{{end}}" "$container") ||
@@ -4355,7 +4355,7 @@ helm_client_get() {
   (umask 077 && docker exec "$container" cat /tmp/values >"$qd_dir/$2" && docker exec "$container" cat /tmp/headers >"$qd_dir/$2.headers") ||
     fail "the client container's download returned HTTP $status, and its body or headers couldn't be copied out"
   docker rm -f "$container" >/dev/null || fail "removing the client container $container failed"
-  d16b_containers=${d16b_containers/" $container"/}
+  managed_containers=${managed_containers/" $container"/}
 }
 # helm_refused <status> <code> <message>: whether the last reply is that refusal, in those words.
 helm_refused() {
@@ -4365,13 +4365,13 @@ FLEET_TYPE_NOT_INSTALLABLE_WORDS="A Kubernetes-supervisor fleet's collectors are
 FLEET_TYPE_NOT_HELM_INSTALLABLE_WORDS="A server fleet's groups have no Helm install: use Install collector."
 LINKS_DISABLED_WORDS="Public install links are turned off for this organization: an admin can turn them on in Settings → Organization."
 LINKS_DISABLED_DOWNLOAD_WORDS="Install links are turned off for this organization."
-HELM_SETTINGS_URL="$D16B_ORGANIZATION_URL/settings"
+HELM_SETTINGS_URL="$GROUP_ORGANIZATION_URL/settings"
 HELM_LINKS_URL="$K8S_FLEET_URL/quick-deploy-links"
 
 step "assign the published version of edge-b1's fleet's Default group to the Kubernetes fleet's Agent and gateway: PATCH .../groups/:groupId answers each with it"
 for helm_group_id in "$k8s_default_group_id" "$k8s_gateway_id"; do
-  platform PATCH "$K8S_FLEET_URL/groups/$helm_group_id" "$(jq -cn --arg v "$d16b_version_id" '{assignedVersionId: $v}')"
-  [ "$status" = "200" ] && [ "$(reply_json --arg v "$d16b_version_id" '.group.assignedVersion.versionId == $v')" = "true" ] ||
+  platform PATCH "$K8S_FLEET_URL/groups/$helm_group_id" "$(jq -cn --arg v "$managed_version_id" '{assignedVersionId: $v}')"
+  [ "$status" = "200" ] && [ "$(reply_json --arg v "$managed_version_id" '.group.assignedVersion.versionId == $v')" = "true" ] ||
     fail "assigning the published version to the Kubernetes group $helm_group_id answered $(k8s_refusal_seen)"
 done
 
@@ -4380,7 +4380,7 @@ step "read the Agent's Helm facts: GET .../groups/:groupId/install answers no-st
 platform GET "$K8S_FLEET_URL/groups/$k8s_default_group_id/install"
 [ "$status" = "200" ] || fail "reading the Agent's Helm facts returned HTTP $status: $(reply_code)"
 no_store || fail "the Agent's Helm facts, carrying configuration text, aren't Cache-Control: no-store"
-if [ "$(reply_json '[.. | objects | has("bearer")] | any')" != "false" ] || grep -qE '[A-Za-z0-9+/]{100,}' "$D16B_REPLY_BODY"; then
+if [ "$(reply_json '[.. | objects | has("bearer")] | any')" != "false" ] || grep -qE '[A-Za-z0-9+/]{100,}' "$PLATFORM_REPLY_BODY"; then
   fail "the Agent's Helm facts carry a bearer, or a run of 100 or more base64 characters"
 fi
 [ "$(reply_json --arg image "$install_image" --arg v "$catalog_default" --arg endpoint "$server_url" --arg g "$k8s_default_group_id" \
@@ -4391,7 +4391,7 @@ fi
       helm: {chartReference: $chart, chartVersion: $chartVersion, imageRepository: $repository, release: "telflo-node", fullnameOverride: $o,
         role: "node", namespace: "telflo-collectors", replicas: null, volumes: []}}')" = "true" ] ||
   fail "the Agent's Helm facts aren't its group's, this stack's endpoint ($server_url), $install_image, chart $HELM_CHART_REFERENCE $HELM_CHART_VERSION and fullnameOverride ${k8s_fleet_id:0:8}-default (TELFLO_COLLECTOR_IMAGE_REPOSITORY and TELFLO_HELM_CHART_* must be the defaults for these steps): $(reply_json -c '{imageTag, endpoint, groupId, envVarNames, helm: (.helm | {chartReference, chartVersion, imageRepository, fullnameOverride, role, replicas})}')"
-(umask 077 && cp "$D16B_REPLY_BODY" "$helm_agent_facts")
+(umask 077 && cp "$PLATFORM_REPLY_BODY" "$helm_agent_facts")
 
 step "read the gateway's Helm facts: no-store, no bearer, its release gw-smoke, no fullnameOverride, role gateway, namespace, 2 replicas and its volume as saved"
 platform GET "$K8S_FLEET_URL/groups/$k8s_gateway_id/install"
@@ -4399,7 +4399,7 @@ platform GET "$K8S_FLEET_URL/groups/$k8s_gateway_id/install"
 no_store || fail "the gateway's Helm facts, carrying configuration text, aren't Cache-Control: no-store"
 # No bearer (as in the install facts), grep's status tested (qd_none: an unread reply fails the run).
 if [ "$(reply_json '[.. | objects | has("bearer")] | any')" != "false" ] ||
-  ! qd_none "the gateway's Helm facts" -E '[A-Za-z0-9+/]{100,}' -- "$D16B_REPLY_BODY"; then
+  ! qd_none "the gateway's Helm facts" -E '[A-Za-z0-9+/]{100,}' -- "$PLATFORM_REPLY_BODY"; then
   fail "the gateway's Helm facts carry a bearer, or a run of 100 or more base64 characters"
 fi
 [ "$(reply_json --argjson k "$K8S_GATEWAY_KEY" --arg g "$k8s_gateway_id" '.groupId == $g and .helm.release == "gw-smoke" and .helm.role == "gateway"
@@ -4415,9 +4415,9 @@ platform POST "$K8S_FLEET_URL/groups/$k8s_default_group_id/quick-deploy-links" \
   '{"method": "all-in-one", "arch": "amd64", "rootPath": "/etc/otelcol", "env": [], "systemd": false}'
 helm_refused 409 fleet_type_not_installable "$FLEET_TYPE_NOT_INSTALLABLE_WORDS" ||
   fail "a Linux link on the Kubernetes fleet's Agent answered HTTP $status $(qd_reply_code), not 409 fleet_type_not_installable in the Kubernetes direction's words"
-platform POST "$D16B_FLEETS_URL/$d16b_fleet_id/groups/$d16b_default_group_id/quick-deploy-links" '{"kind": "helm", "env": []}'
+platform POST "$GROUP_FLEETS_URL/$managed_fleet_id/groups/$managed_default_group_id/quick-deploy-links" '{"kind": "helm", "env": []}'
 helm_refused 409 fleet_type_not_installable "$FLEET_TYPE_NOT_HELM_INSTALLABLE_WORDS" ||
-  fail "a Helm link on D16b's server fleet answered HTTP $status $(qd_reply_code), not 409 fleet_type_not_installable in the server direction's words"
+  fail "a Helm link on edge-b1's server fleet answered HTTP $status $(qd_reply_code), not 409 fleet_type_not_installable in the server direction's words"
 
 step "the organization's settings: GET .../settings answers publicInstallLinks true (the default)"
 platform GET "$HELM_SETTINGS_URL"
@@ -4503,10 +4503,10 @@ qd_refused helm-off "$LINKS_DISABLED_DOWNLOAD_WORDS" 403 ||
 platform POST "$K8S_FLEET_URL/groups/$k8s_default_group_id/quick-deploy-links" '{"kind": "helm", "env": []}'
 helm_refused 409 public_install_links_disabled "$LINKS_DISABLED_WORDS" ||
   fail "a Helm link's create while the links are off answered HTTP $status $(qd_reply_code), not 409 public_install_links_disabled in its words"
-platform POST "$D16B_FLEETS_URL/$d16b_fleet_id/groups/$d16b_default_group_id/quick-deploy-links" \
+platform POST "$GROUP_FLEETS_URL/$managed_fleet_id/groups/$managed_default_group_id/quick-deploy-links" \
   '{"method": "all-in-one", "arch": "amd64", "rootPath": "/etc/otelcol", "env": [], "systemd": false}'
 helm_refused 409 public_install_links_disabled "$LINKS_DISABLED_WORDS" ||
-  fail "a Linux link's create on D16b's server fleet while the links are off answered HTTP $status $(qd_reply_code), not 409 public_install_links_disabled in its words"
+  fail "a Linux link's create on edge-b1's server fleet while the links are off answered HTTP $status $(qd_reply_code), not 409 public_install_links_disabled in its words"
 platform GET "$HELM_LINKS_URL"
 [ "$status" = "200" ] && [ "$(reply_json --arg id "$helm_link_id" '[.links[] | select(.id == $id) | .status == "active" and .downloadCount == 1] == [true]') $(reply_json '[.links[] | select(.choices.kind == "helm")] | length')" = "true 1" ] ||
   fail "while the links are off, the fleet's links (HTTP $status) aren't the one Helm link, active with its one download: $(qd_reply_code)"
@@ -4585,14 +4585,14 @@ unset helm_url helm_secret helm_token helm_first_token
 platform_form() {
   local method=$1 url=$2
   shift 2
-  status=$(umask 077 && : >"$D16B_REPLY_BODY" && curl -s --max-time 120 -o "$D16B_REPLY_BODY" -D "$D16B_REPLY_HEADERS" \
+  status=$(umask 077 && : >"$PLATFORM_REPLY_BODY" && curl -s --max-time 120 -o "$PLATFORM_REPLY_BODY" -D "$PLATFORM_REPLY_HEADERS" \
     -w '%{http_code}' -b "$JAR" -X "$method" -H 'X-Telflo-CSRF: 1' "$@" "$url" || true)
-  body=$(cat "$D16B_REPLY_BODY")
+  body=$(cat "$PLATFORM_REPLY_BODY")
 }
 # gateway_refused_too_large: the last reply is nginx's own 413 (its HTML page, no error code of the API's): the
 # gateway refused the body before the API read it.
 gateway_refused_too_large() {
-  [ "$status" = "413" ] && grep -qiE '^content-type:[[:space:]]*text/html' "$D16B_REPLY_HEADERS" &&
+  [ "$status" = "413" ] && grep -qiE '^content-type:[[:space:]]*text/html' "$PLATFORM_REPLY_HEADERS" &&
     [ "$(reply_code)" = "no error code" ]
 }
 
@@ -4767,39 +4767,39 @@ fi
 # counts. The logs are searched for the search's term by counts only. The EXIT trap clears the flags only: a run
 # that ends between the invitee's grant and removal clears the invitee's by SQL, and the account's, as before; a
 # run that dies mid-block leaves the third account and the feedback item on the throwaway stack.
-# d29_call <jar> <method> <url> [<JSON body>]: platform() for the session in <jar> (the account's $JAR, the
+# admin_call <jar> <method> <url> [<JSON body>]: platform() for the session in <jar> (the account's $JAR, the
 # invitee's $INVITEE_JAR or the third account's): the status into $status, the body and the headers into
 # platform()'s 0600 files (reply_json, reply_code and no_store read them); $body isn't set.
-d29_call() {
+admin_call() {
   local jar=$1 method=$2 url=$3
-  local args=(-s --max-time 30 -o "$D16B_REPLY_BODY" -D "$D16B_REPLY_HEADERS" -w '%{http_code}' -b "$jar"
+  local args=(-s --max-time 30 -o "$PLATFORM_REPLY_BODY" -D "$PLATFORM_REPLY_HEADERS" -w '%{http_code}' -b "$jar"
     -X "$method" -H 'X-Telflo-CSRF: 1')
   if [ $# -ge 4 ]; then args+=(-H 'content-type: application/json' --data-binary "$4"); fi
-  status=$(umask 077 && : >"$D16B_REPLY_BODY" && curl "${args[@]}" "$url" || true)
+  status=$(umask 077 && : >"$PLATFORM_REPLY_BODY" && curl "${args[@]}" "$url" || true)
 }
-# d29_reply_is [jq's --arg ...] <jq condition>: the last reply's JSON satisfies it (a boolean: nothing printed).
-d29_reply_is() { [ "$(reply_json "$@")" = "true" ]; }
-# d29_refused <status> <code> <what>: the last reply is the refusal <status> <code>, no-store, or the run fails.
-d29_refused() {
+# admin_reply_is [jq's --arg ...] <jq condition>: the last reply's JSON satisfies it (a boolean: nothing printed).
+admin_reply_is() { [ "$(reply_json "$@")" = "true" ]; }
+# admin_refused <status> <code> <what>: the last reply is the refusal <status> <code>, no-store, or the run fails.
+admin_refused() {
   [ "$status" = "$1" ] && [ "$(reply_code)" = "$2" ] && no_store ||
     fail "$3 returned HTTP $status $(reply_code), not $1 $2 with Cache-Control: no-store"
 }
 if throwaway_stack; then
-  if [ "$SMOKE_SITE" = "saas" ]; then d29_third="registered and verified"; else d29_third="invited to the group organization and removed from it"; fi
-  d29_steps="had a product admin list the product admins (its account alone), grant the invitee by email (201, then 200) and remove them, be refused its own removal as the last one (409 last_product_admin), find and dismiss the invitee's feedback (the admins' email naming the sender without the text), be refused the invitee's delete (a member) and its own, and delete a third account ($d29_third) found by search (its session, refresh and sign-in then refused, its deletion record and anonymous address in the database, no organization named with its address, no session holding its IP or user agent, its personal organization registered in the opamp-server before and gone after), with the search's term in no log"
-  D29_ADMIN_URL="$GATEWAY_URL/api/v1/product-admin"
+  if [ "$SMOKE_SITE" = "saas" ]; then deleted_account_how="registered and verified"; else deleted_account_how="invited to the group organization and removed from it"; fi
+  admin_steps="had a product admin list the product admins (its account alone), grant the invitee by email (201, then 200) and remove them, be refused its own removal as the last one (409 last_product_admin), find and dismiss the invitee's feedback (the admins' email naming the sender without the text), be refused the invitee's delete (a member) and its own, and delete a third account ($deleted_account_how) found by search (its session, refresh and sign-in then refused, its deletion record and anonymous address in the database, no organization named with its address, no session holding its IP or user agent, its personal organization registered in the opamp-server before and gone after), with the search's term in no log"
+  PRODUCT_ADMIN_URL="$GATEWAY_URL/api/v1/product-admin"
 
   # The steps above take minutes; the access cookie lasts 15. The invitee's session hasn't been used since they
   # joined: its refresh cookie, from then, is still live.
   step "refresh the account's and the invitee's sessions (POST /api/v1/auth/refresh answers 200 for each) and read the invitee's id from /api/v1/auth/me"
-  for d29_jar in "$JAR" "$INVITEE_JAR"; do
-    status=$(curl -s --max-time 30 -o /dev/null -w '%{http_code}' -b "$d29_jar" -c "$d29_jar" -X POST \
+  for admin_jar in "$JAR" "$INVITEE_JAR"; do
+    status=$(curl -s --max-time 30 -o /dev/null -w '%{http_code}' -b "$admin_jar" -c "$admin_jar" -X POST \
       "$GATEWAY_URL/api/v1/auth/refresh" -H 'X-Telflo-CSRF: 1' || true)
-    [ "$status" = "200" ] || fail "refreshing a session before D29's steps returned HTTP $status"
+    [ "$status" = "200" ] || fail "refreshing a session before the product-administration steps returned HTTP $status"
   done
-  d29_call "$INVITEE_JAR" GET "$GATEWAY_URL/api/v1/auth/me"
-  d29_invitee_id=$(reply_json '.user.id // empty')
-  [ "$status" = "200" ] && [ -n "$d29_invitee_id" ] && d29_reply_is --arg email "$INVITEE_EMAIL" '.user.email == $email' ||
+  admin_call "$INVITEE_JAR" GET "$GATEWAY_URL/api/v1/auth/me"
+  admin_invitee_id=$(reply_json '.user.id // empty')
+  [ "$status" = "200" ] && [ -n "$admin_invitee_id" ] && admin_reply_is --arg email "$INVITEE_EMAIL" '.user.email == $email' ||
     fail "GET /api/v1/auth/me as the invitee returned HTTP $status $(reply_code), not the invitee"
 
   step "make the account a product admin by SQL on the stack's database: /api/v1/auth/me shows isProductAdmin true"
@@ -4807,188 +4807,188 @@ if throwaway_stack; then
   expect_product_admin true
 
   step "list the product admins: GET /api/v1/product-admin/product-admins answers 200, no-store, the account alone (a throwaway stack's only one)"
-  d29_call "$JAR" GET "$D29_ADMIN_URL/product-admins"
-  [ "$status" = "200" ] && no_store && d29_reply_is --arg id "$user_id" '[.items[].id] == [$id]' ||
+  admin_call "$JAR" GET "$PRODUCT_ADMIN_URL/product-admins"
+  [ "$status" = "200" ] && no_store && admin_reply_is --arg id "$user_id" '[.items[].id] == [$id]' ||
     fail "the product admins' list returned HTTP $status $(reply_code), $(reply_json '.items | length') items, not the account alone with no-store"
 
   step "grant the invitee by email: POST /api/v1/product-admin/product-admins answers 201 with their id and email, then 200 again, no-store"
-  d29_grant=$(jq -cn --arg email "$INVITEE_EMAIL" '{email: $email}')
+  admin_grant=$(jq -cn --arg email "$INVITEE_EMAIL" '{email: $email}')
   # Marked before it's sent: the EXIT trap clears the invitee's flag if the run ends before the removal below.
   invitee_product_admin_granted=yes
-  for d29_expected in 201 200; do
-    d29_call "$JAR" POST "$D29_ADMIN_URL/product-admins" "$d29_grant"
-    [ "$status" = "$d29_expected" ] && no_store &&
-      d29_reply_is --arg id "$d29_invitee_id" --arg email "$INVITEE_EMAIL" '. == {id: $id, email: $email}' ||
-      fail "granting the invitee returned HTTP $status $(reply_code), not $d29_expected with their id and email and no-store"
+  for admin_expected in 201 200; do
+    admin_call "$JAR" POST "$PRODUCT_ADMIN_URL/product-admins" "$admin_grant"
+    [ "$status" = "$admin_expected" ] && no_store &&
+      admin_reply_is --arg id "$admin_invitee_id" --arg email "$INVITEE_EMAIL" '. == {id: $id, email: $email}' ||
+      fail "granting the invitee returned HTTP $status $(reply_code), not $admin_expected with their id and email and no-store"
   done
 
   step "the product admins' list holds the account and the invitee"
-  d29_call "$JAR" GET "$D29_ADMIN_URL/product-admins"
+  admin_call "$JAR" GET "$PRODUCT_ADMIN_URL/product-admins"
   [ "$status" = "200" ] && no_store &&
-    d29_reply_is --arg a "$user_id" --arg b "$d29_invitee_id" '([.items[].id] | sort) == ([$a, $b] | sort)' ||
+    admin_reply_is --arg a "$user_id" --arg b "$admin_invitee_id" '([.items[].id] | sort) == ([$a, $b] | sort)' ||
     fail "the product admins' list returned HTTP $status $(reply_code), $(reply_json '.items | length') items, not the account and the invitee"
 
   step "remove the invitee: DELETE /api/v1/product-admin/product-admins/:userId answers 204, no-store"
-  d29_call "$JAR" DELETE "$D29_ADMIN_URL/product-admins/$d29_invitee_id"
+  admin_call "$JAR" DELETE "$PRODUCT_ADMIN_URL/product-admins/$admin_invitee_id"
   [ "$status" = "204" ] && no_store || fail "removing the invitee returned HTTP $status $(reply_code), not 204 with no-store"
   invitee_product_admin_granted=""
 
   step "the last product admin's removal is refused: removing the account itself answers 409 last_product_admin, and /api/v1/auth/me still shows isProductAdmin true"
-  d29_call "$JAR" DELETE "$D29_ADMIN_URL/product-admins/$user_id"
-  d29_refused 409 last_product_admin "removing the last product admin"
+  admin_call "$JAR" DELETE "$PRODUCT_ADMIN_URL/product-admins/$user_id"
+  admin_refused 409 last_product_admin "removing the last product admin"
   expect_product_admin true
 
-  D29_MARKER="d29feedbackmarker$(date +%s)$$"
-  D29_FEEDBACK_TEXT="Sent by the stack smoke test: $D29_MARKER"
+  FEEDBACK_MARKER="smokefeedbackmarker$(date +%s)$$"
+  FEEDBACK_TEXT="Sent by the stack smoke test: $FEEDBACK_MARKER"
   step "the invitee sends feedback: POST /api/v1/feedback answers 201 with its id"
-  d29_call "$INVITEE_JAR" POST "$GATEWAY_URL/api/v1/feedback" "$(jq -cn --arg text "$D29_FEEDBACK_TEXT" '{text: $text}')"
-  d29_feedback_id=$(reply_json '.id // empty')
-  [ "$status" = "201" ] && [ -n "$d29_feedback_id" ] ||
+  admin_call "$INVITEE_JAR" POST "$GATEWAY_URL/api/v1/feedback" "$(jq -cn --arg text "$FEEDBACK_TEXT" '{text: $text}')"
+  admin_feedback_id=$(reply_json '.id // empty')
+  [ "$status" = "201" ] && [ -n "$admin_feedback_id" ] ||
     fail "sending the invitee's feedback returned HTTP $status $(reply_code), not 201 with an id"
 
   # Sent after the response, to every product admin: the account alone, once the invitee's flag is removed.
   step "the product admins' email reached the account in Mailpit, naming the invitee and linking to the gateway's User Feedback page, without the feedback's text (counted)"
-  d29_query=$(jq -rn --arg query "to:\"$EMAIL\" subject:\"Telflo - New User Feedback Request\"" '$query | @uri')
+  admin_query=$(jq -rn --arg query "to:\"$EMAIL\" subject:\"Telflo - New User Feedback Request\"" '$query | @uri')
   message_id=""
   for _ in $(seq 1 30); do
-    message_id=$(curl -s "$MAILPIT_URL/api/v1/search?query=$d29_query" | jq -r '.messages[0].ID // empty')
+    message_id=$(curl -s "$MAILPIT_URL/api/v1/search?query=$admin_query" | jq -r '.messages[0].ID // empty')
     [ -n "$message_id" ] && break
     sleep 1
   done
   [ -n "$message_id" ] || fail "no feedback email to the account arrived in Mailpit within 30s"
-  d29_mail="$work_dir/d29-admin-email"
-  (umask 077 && curl -s "$MAILPIT_URL/api/v1/message/$message_id" | jq -r '.Text, .HTML' >"$d29_mail") ||
+  admin_mail="$work_dir/product-admin-email"
+  (umask 077 && curl -s "$MAILPIT_URL/api/v1/message/$message_id" | jq -r '.Text, .HTML' >"$admin_mail") ||
     fail "reading the feedback email from Mailpit failed"
-  d29_marker_lines=$(grep -cF -e "$D29_MARKER" -- "$d29_mail" || true)
-  [ "$d29_marker_lines" = "0" ] || fail "the product admins' email holds the feedback's text on ${d29_marker_lines:-unread} lines"
-  grep -qF -e "Requested by: $INVITEE_EMAIL" -- "$d29_mail" &&
-    grep -qF -e "Review Request: $GATEWAY_URL/product-admin/user-feedback" -- "$d29_mail" ||
+  admin_marker_lines=$(grep -cF -e "$FEEDBACK_MARKER" -- "$admin_mail" || true)
+  [ "$admin_marker_lines" = "0" ] || fail "the product admins' email holds the feedback's text on ${admin_marker_lines:-unread} lines"
+  grep -qF -e "Requested by: $INVITEE_EMAIL" -- "$admin_mail" &&
+    grep -qF -e "Review Request: $GATEWAY_URL/product-admin/user-feedback" -- "$admin_mail" ||
     fail "the product admins' email doesn't name the invitee and link to $GATEWAY_URL/product-admin/user-feedback"
 
   step "list the pending feedback: GET /api/v1/product-admin/feedback answers 200, no-store, holding the invitee's item with its text and sender (its cursor followed until found)"
-  d29_url="$D29_ADMIN_URL/feedback"
-  d29_found=""
+  admin_url="$PRODUCT_ADMIN_URL/feedback"
+  admin_found=""
   for _ in $(seq 1 20); do
-    d29_call "$JAR" GET "$d29_url"
+    admin_call "$JAR" GET "$admin_url"
     [ "$status" = "200" ] && no_store || fail "listing the feedback returned HTTP $status $(reply_code), not 200 with no-store"
-    if d29_reply_is --arg id "$d29_feedback_id" --arg email "$INVITEE_EMAIL" --arg text "$D29_FEEDBACK_TEXT" \
+    if admin_reply_is --arg id "$admin_feedback_id" --arg email "$INVITEE_EMAIL" --arg text "$FEEDBACK_TEXT" \
       'any(.items[]; .id == $id and .email == $email and .text == $text and .authorDeleted == false)'; then
-      d29_found=yes
+      admin_found=yes
       break
     fi
-    d29_cursor=$(reply_json '.nextCursor // empty')
-    [ -n "$d29_cursor" ] || break
-    d29_url="$D29_ADMIN_URL/feedback?cursor=$(jq -rn --arg cursor "$d29_cursor" '$cursor | @uri')"
+    admin_cursor=$(reply_json '.nextCursor // empty')
+    [ -n "$admin_cursor" ] || break
+    admin_url="$PRODUCT_ADMIN_URL/feedback?cursor=$(jq -rn --arg cursor "$admin_cursor" '$cursor | @uri')"
   done
-  [ -n "$d29_found" ] || fail "the pending feedback doesn't hold the invitee's item with its text and sender"
+  [ -n "$admin_found" ] || fail "the pending feedback doesn't hold the invitee's item with its text and sender"
 
   step "dismiss it: POST /api/v1/product-admin/feedback/:id/dismiss answers 204, no-store, then again 404 feedback_not_found"
-  d29_call "$JAR" POST "$D29_ADMIN_URL/feedback/$d29_feedback_id/dismiss"
+  admin_call "$JAR" POST "$PRODUCT_ADMIN_URL/feedback/$admin_feedback_id/dismiss"
   [ "$status" = "204" ] && no_store || fail "dismissing the feedback returned HTTP $status $(reply_code), not 204 with no-store"
-  d29_call "$JAR" POST "$D29_ADMIN_URL/feedback/$d29_feedback_id/dismiss"
-  d29_refused 404 feedback_not_found "dismissing the feedback again"
+  admin_call "$JAR" POST "$PRODUCT_ADMIN_URL/feedback/$admin_feedback_id/dismiss"
+  admin_refused 404 feedback_not_found "dismissing the feedback again"
 
   step "the invitee's delete is refused, a member of the group organization: DELETE /api/v1/product-admin/users/:userId answers 409 user_delete_blocked, its details { kind: member }"
-  d29_call "$JAR" DELETE "$D29_ADMIN_URL/users/$d29_invitee_id"
-  d29_refused 409 user_delete_blocked "deleting the invitee"
-  d29_reply_is '.error.details == {kind: "member"}' ||
+  admin_call "$JAR" DELETE "$PRODUCT_ADMIN_URL/users/$admin_invitee_id"
+  admin_refused 409 user_delete_blocked "deleting the invitee"
+  admin_reply_is '.error.details == {kind: "member"}' ||
     fail "deleting the invitee was refused with the details $(reply_json -c '.error.details'), not { kind: member }"
 
   step "the account's own delete is refused: DELETE /api/v1/product-admin/users/:userId answers 409 user_delete_self"
-  d29_call "$JAR" DELETE "$D29_ADMIN_URL/users/$user_id"
-  d29_refused 409 user_delete_self "deleting the account itself"
+  admin_call "$JAR" DELETE "$PRODUCT_ADMIN_URL/users/$user_id"
+  admin_refused 409 user_delete_self "deleting the account itself"
 
   # A third account, made here to be deleted. Its address is never printed: the step lines say "the third
   # account", and register_verified's name it so.
-  D29_THIRD_LOCAL="stack-smoke-deleted-$(date +%s)-$$"
-  D29_THIRD_EMAIL="$D29_THIRD_LOCAL@example.com"
-  D29_THIRD_JAR="$work_dir/d29-third-cookies"
+  DELETED_ACCOUNT_LOCAL="stack-smoke-deleted-$(date +%s)-$$"
+  DELETED_ACCOUNT_EMAIL="$DELETED_ACCOUNT_LOCAL@example.com"
+  DELETED_ACCOUNT_JAR="$work_dir/deleted-account-cookies"
   if [ "$SMOKE_SITE" = "saas" ]; then
     step "register and verify a third account through the gateway (its address never printed)"
-    register_verified "$D29_THIRD_EMAIL" "$PASSWORD" "the third account"
+    register_verified "$DELETED_ACCOUNT_EMAIL" "$PASSWORD" "the third account"
   else
     # Nobody registers on the open-source defaults: the third account joins the group organization (the
     # session's active one, as since the second sign-in) by an invitation read from Mailpit, as the invitee did,
     # and is removed from it before its delete (a member's delete is refused, as the invitee's above).
     step "invite a third account to the group organization: POST /api/v1/organizations/:id/invitations answers 201 (its address never printed)"
-    d29_call "$JAR" POST "$GATEWAY_URL/api/v1/organizations/$group_id/invitations" \
-      "$(jq -cn --arg email "$D29_THIRD_EMAIL" '{email: $email, role: "contributor"}')"
-    [ "$status" = "201" ] && d29_reply_is --arg email "$D29_THIRD_EMAIL" '.invitation.email == $email' ||
+    admin_call "$JAR" POST "$GATEWAY_URL/api/v1/organizations/$group_id/invitations" \
+      "$(jq -cn --arg email "$DELETED_ACCOUNT_EMAIL" '{email: $email, role: "contributor"}')"
+    [ "$status" = "201" ] && admin_reply_is --arg email "$DELETED_ACCOUNT_EMAIL" '.invitation.email == $email' ||
       fail "inviting the third account returned HTTP $status $(reply_code), not 201 naming its address"
 
     step "the invitation email reached the third account in Mailpit; its token, from the accept link at the gateway's origin, makes the account: POST /api/v1/invitation-registrations answers 201, signed in, in the group organization"
-    d29_query=$(jq -rn --arg query "to:\"$D29_THIRD_EMAIL\" subject:\"You've been invited to join\"" '$query | @uri')
+    admin_query=$(jq -rn --arg query "to:\"$DELETED_ACCOUNT_EMAIL\" subject:\"You've been invited to join\"" '$query | @uri')
     message_id=""
     for _ in $(seq 1 30); do
-      message_id=$(curl -s "$MAILPIT_URL/api/v1/search?query=$d29_query" | jq -r '.messages[0].ID // empty')
+      message_id=$(curl -s "$MAILPIT_URL/api/v1/search?query=$admin_query" | jq -r '.messages[0].ID // empty')
       [ -n "$message_id" ] && break
       sleep 1
     done
     [ -n "$message_id" ] || fail "no invitation email to the third account arrived in Mailpit within 30s"
-    d29_link=$(curl -s "$MAILPIT_URL/api/v1/message/$message_id" | jq -r '.Text' |
+    admin_link=$(curl -s "$MAILPIT_URL/api/v1/message/$message_id" | jq -r '.Text' |
       grep -oE 'https?://[^[:space:]]+/accept-invitation#token=[A-Za-z0-9_-]+' | head -n1 || true)
-    [[ "$d29_link" == "$GATEWAY_URL/accept-invitation#token="* ]] ||
+    [[ "$admin_link" == "$GATEWAY_URL/accept-invitation#token="* ]] ||
       fail "the third account's invitation email holds no accept link at the gateway ($GATEWAY_URL) with #token="
-    d29_invitation_token="${d29_link##*token=}"
-    remember_secret "$d29_invitation_token"
-    status=$(curl -s --max-time 30 -o "$D16B_REPLY_BODY" -D "$D16B_REPLY_HEADERS" -w '%{http_code}' -c "$D29_THIRD_JAR" \
+    admin_invitation_token="${admin_link##*token=}"
+    remember_secret "$admin_invitation_token"
+    status=$(curl -s --max-time 30 -o "$PLATFORM_REPLY_BODY" -D "$PLATFORM_REPLY_HEADERS" -w '%{http_code}' -c "$DELETED_ACCOUNT_JAR" \
       -X POST "$GATEWAY_URL/api/v1/invitation-registrations" -H 'content-type: application/json' -H 'X-Telflo-CSRF: 1' \
-      --data-binary "$(invitation_registration_body "$d29_invitation_token")" || true)
-    [ "$status" = "201" ] && d29_reply_is --arg id "$group_id" '.organization.id == $id' ||
+      --data-binary "$(invitation_registration_body "$admin_invitation_token")" || true)
+    [ "$status" = "201" ] && admin_reply_is --arg id "$group_id" '.organization.id == $id' ||
       fail "the third account's invitation-registrations returned HTTP $status $(reply_code), not 201 in the group organization"
-    unset d29_link d29_invitation_token
+    unset admin_link admin_invitation_token
   fi
 
   step "sign the third account in: POST /api/v1/auth/sessions answers 200, and /api/v1/auth/me names it"
-  d29_sign_in=$(jq -cn --arg email "$D29_THIRD_EMAIL" --arg password "$PASSWORD" '{email: $email, password: $password}')
-  status=$(curl -s --max-time 30 -o /dev/null -w '%{http_code}' -c "$D29_THIRD_JAR" -X POST "$GATEWAY_URL/api/v1/auth/sessions" \
-    -H 'content-type: application/json' -H 'X-Telflo-CSRF: 1' --data-binary "$d29_sign_in" || true)
+  admin_sign_in=$(jq -cn --arg email "$DELETED_ACCOUNT_EMAIL" --arg password "$PASSWORD" '{email: $email, password: $password}')
+  status=$(curl -s --max-time 30 -o /dev/null -w '%{http_code}' -c "$DELETED_ACCOUNT_JAR" -X POST "$GATEWAY_URL/api/v1/auth/sessions" \
+    -H 'content-type: application/json' -H 'X-Telflo-CSRF: 1' --data-binary "$admin_sign_in" || true)
   [ "$status" = "200" ] || fail "signing the third account in returned HTTP $status"
-  d29_call "$D29_THIRD_JAR" GET "$GATEWAY_URL/api/v1/auth/me"
-  d29_third_id=$(reply_json '.user.id // empty')
+  admin_call "$DELETED_ACCOUNT_JAR" GET "$GATEWAY_URL/api/v1/auth/me"
+  deleted_account_id=$(reply_json '.user.id // empty')
   # Its personal organization (the one a sign-in lands in, in saas; oss's lands in the group organization).
-  d29_third_organization_id=$(reply_json '[.organizations[] | select(.type == "personal") | .id] | if length == 1 then .[0] else empty end')
-  [ "$status" = "200" ] && [ -n "$d29_third_id" ] && [ -n "$d29_third_organization_id" ] &&
-    d29_reply_is --arg email "$D29_THIRD_EMAIL" '.user.email == $email' ||
+  deleted_account_organization_id=$(reply_json '[.organizations[] | select(.type == "personal") | .id] | if length == 1 then .[0] else empty end')
+  [ "$status" = "200" ] && [ -n "$deleted_account_id" ] && [ -n "$deleted_account_organization_id" ] &&
+    admin_reply_is --arg email "$DELETED_ACCOUNT_EMAIL" '.user.email == $email' ||
     fail "GET /api/v1/auth/me as the third account returned HTTP $status $(reply_code), not the third account"
 
   if [ "$SMOKE_SITE" = "oss" ]; then
     step "the group organization's admin removes the third account from it, so nothing blocks its delete: DELETE /api/v1/organizations/:id/members/:userId answers 204"
-    d29_call "$JAR" DELETE "$GATEWAY_URL/api/v1/organizations/$group_id/members/$d29_third_id"
+    admin_call "$JAR" DELETE "$GATEWAY_URL/api/v1/organizations/$group_id/members/$deleted_account_id"
     [ "$status" = "204" ] || fail "removing the third account from the group organization returned HTTP $status $(reply_code), not 204"
   fi
 
   step "find the third account by its address: GET /api/v1/product-admin/users?q= answers 200, no-store, that one person, no block, no next page"
-  d29_call "$JAR" GET "$D29_ADMIN_URL/users?q=$(jq -rn --arg q "$D29_THIRD_EMAIL" '$q | @uri')"
-  [ "$status" = "200" ] && no_store && d29_reply_is --arg id "$d29_third_id" --arg email "$D29_THIRD_EMAIL" \
+  admin_call "$JAR" GET "$PRODUCT_ADMIN_URL/users?q=$(jq -rn --arg q "$DELETED_ACCOUNT_EMAIL" '$q | @uri')"
+  [ "$status" = "200" ] && no_store && admin_reply_is --arg id "$deleted_account_id" --arg email "$DELETED_ACCOUNT_EMAIL" \
     '.nextCursor == null and (.items | length) == 1 and (.items[0] | .id == $id and .email == $email and .isProductAdmin == false and .block == null)' ||
     fail "searching for the third account returned HTTP $status $(reply_code), $(reply_json '.items | length') items, not that one person with no block and no-store"
 
   # So the check that it's gone after the delete can't pass vacuously. stack_smoke's personal-organization mode
   # also runs its own publication sequence first (as for the first account) and prints no name.
   step "the platform registered the third account's personal organization in the opamp-server (under a personal organization's name)"
-  stack_smoke "$d29_third_organization_id" ||
-    fail "the third account's personal organization $d29_third_organization_id isn't registered in the opamp-server (above)"
+  stack_smoke "$deleted_account_organization_id" ||
+    fail "the third account's personal organization $deleted_account_organization_id isn't registered in the opamp-server (above)"
 
   step "delete the third account: DELETE /api/v1/product-admin/users/:userId answers 204, no-store"
-  d29_call "$JAR" DELETE "$D29_ADMIN_URL/users/$d29_third_id"
+  admin_call "$JAR" DELETE "$PRODUCT_ADMIN_URL/users/$deleted_account_id"
   [ "$status" = "204" ] && no_store || fail "deleting the third account returned HTTP $status $(reply_code), not 204 with no-store"
 
   step "the third account's session ended: GET /api/v1/auth/me and POST /api/v1/auth/refresh with its cookies answer 401 unauthenticated"
-  d29_call "$D29_THIRD_JAR" GET "$GATEWAY_URL/api/v1/auth/me"
+  admin_call "$DELETED_ACCOUNT_JAR" GET "$GATEWAY_URL/api/v1/auth/me"
   [ "$status" = "401" ] && [ "$(reply_code)" = "unauthenticated" ] ||
     fail "GET /api/v1/auth/me as the deleted third account returned HTTP $status $(reply_code), not 401 unauthenticated"
-  d29_call "$D29_THIRD_JAR" POST "$GATEWAY_URL/api/v1/auth/refresh"
+  admin_call "$DELETED_ACCOUNT_JAR" POST "$GATEWAY_URL/api/v1/auth/refresh"
   [ "$status" = "401" ] && [ "$(reply_code)" = "unauthenticated" ] ||
     fail "refreshing the deleted third account's session returned HTTP $status $(reply_code), not 401 unauthenticated"
 
   step "the third account's sign-in is refused: POST /api/v1/auth/sessions with its address and password answers 401 invalid_credentials"
-  d29_call "$D29_THIRD_JAR" POST "$GATEWAY_URL/api/v1/auth/sessions" "$d29_sign_in"
+  admin_call "$DELETED_ACCOUNT_JAR" POST "$GATEWAY_URL/api/v1/auth/sessions" "$admin_sign_in"
   [ "$status" = "401" ] && [ "$(reply_code)" = "invalid_credentials" ] ||
     fail "signing the deleted third account in returned HTTP $status $(reply_code), not 401 invalid_credentials"
 
   step "by SQL on the stack's database, the third account's deletion record (its original address, deleted by the account) and its anonymous address (no password, deleted_at set), its address freed, no organization named with it, no session of its holding an IP address or user agent: counts 1, 1, 0, 0 and 0"
-  d29_counts=$(stack_psql -v id="$d29_third_id" -v email="$D29_THIRD_EMAIL" -v admin="$user_id" <<'SQL'
+  admin_counts=$(stack_psql -v id="$deleted_account_id" -v email="$DELETED_ACCOUNT_EMAIL" -v admin="$user_id" <<'SQL'
 select count(*) from user_deletion_records
  where user_id = :'id'::uuid and original_email = lower(:'email') and deleted_by_user_id = :'admin'::uuid
    and deleted_at is not null;
@@ -5000,30 +5000,30 @@ select count(*) from organizations where strpos(lower(name), lower(:'email')) > 
 select count(*) from sessions
  where user_id = :'id'::uuid and (ip_address is not null or user_agent is not null);
 SQL
-  ) || fail "reading the third account's rows by SQL failed: $(sed "s/$D29_THIRD_LOCAL/[the third account]/g" "$work_dir/stack-psql-stderr")"
-  [ "$(tr '\n' ' ' <<<"$d29_counts")" = "1 1 0 0 0 " ] ||
-    fail "the third account's deletion record, anonymous address, freed address, organizations named with it and sessions holding an IP or user agent counted $(tr '\n' ' ' <<<"$d29_counts"), not 1 1 0 0 0"
+  ) || fail "reading the third account's rows by SQL failed: $(sed "s/$DELETED_ACCOUNT_LOCAL/[the third account]/g" "$work_dir/stack-psql-stderr")"
+  [ "$(tr '\n' ' ' <<<"$admin_counts")" = "1 1 0 0 0 " ] ||
+    fail "the third account's deletion record, anonymous address, freed address, organizations named with it and sessions holding an IP or user agent counted $(tr '\n' ' ' <<<"$admin_counts"), not 1 1 0 0 0"
 
   # stack_smoke's group-gone checks any organization by its id (its line calls it a group organization).
   step "the platform removed the third account's personal organization from the opamp-server"
-  stack_smoke group-gone "$d29_third_organization_id" ||
-    fail "the third account's personal organization $d29_third_organization_id is still registered in the opamp-server (above)"
+  stack_smoke group-gone "$deleted_account_organization_id" ||
+    fail "the third account's personal organization $deleted_account_organization_id is still registered in the opamp-server (above)"
 
   step "the API's and the gateway's logs hold no search term, and the gateway logged the search by its path alone: docker compose logs api gateway (counts only)"
-  d29_logs="$work_dir/d29-logs"
-  (umask 077 && docker compose logs --no-color api gateway >"$d29_logs" 2>&1) ||
+  admin_logs="$work_dir/product-admin-logs"
+  (umask 077 && docker compose logs --no-color api gateway >"$admin_logs" 2>&1) ||
     fail "reading the API's and the gateway's logs failed"
-  qd_none "the API's and the gateway's logs" -F -e "$D29_THIRD_LOCAL" -- "$d29_logs" ||
-    fail "the API's or the gateway's logs hold the Users search's term on $(grep -cF -e "$D29_THIRD_LOCAL" -- "$d29_logs") lines"
-  d29_search_lines=$(grep -cF -e '"GET /api/v1/product-admin/users HTTP/' -- "$d29_logs" || true)
-  [[ "$d29_search_lines" =~ ^[1-9][0-9]*$ ]] ||
-    fail "the gateway's access log holds ${d29_search_lines:-no} lines \"GET /api/v1/product-admin/users HTTP/…\", not at least one for the search"
+  qd_none "the API's and the gateway's logs" -F -e "$DELETED_ACCOUNT_LOCAL" -- "$admin_logs" ||
+    fail "the API's or the gateway's logs hold the Users search's term on $(grep -cF -e "$DELETED_ACCOUNT_LOCAL" -- "$admin_logs") lines"
+  admin_search_lines=$(grep -cF -e '"GET /api/v1/product-admin/users HTTP/' -- "$admin_logs" || true)
+  [[ "$admin_search_lines" =~ ^[1-9][0-9]*$ ]] ||
+    fail "the gateway's access log holds ${admin_search_lines:-no} lines \"GET /api/v1/product-admin/users HTTP/…\", not at least one for the search"
 
   step "clear the flag by SQL: /api/v1/auth/me shows isProductAdmin false"
   product_admin false
   expect_product_admin false
 else
-  d29_steps="skipped the product-administration steps (not a throwaway stack)"
+  admin_steps="skipped the product-administration steps (not a throwaway stack)"
   step "SKIPPED: the product-administration steps (grant the flag by SQL, grant and remove the invitee, send and dismiss feedback, delete a third account, clear the flag) run only on a throwaway stack: COMPOSE_PROJECT_NAME is ${COMPOSE_PROJECT_NAME:-unset}, not a throwaway stack's"
 fi
 
@@ -5034,215 +5034,218 @@ fi
 # 14's path carries; the API's and the gateway's logs are then searched for every token and the marker, counts
 # only. The personal token is revoked at the end (and by the EXIT trap); the service account and everything
 # made here go with the group organization's delete below.
-# d25_call <token's variable> <method> <path under /api/public/v1> [<JSON body file>] [<X-Telflo-Org>]: one call;
-# the status into $status, the body and headers into platform()'s 0600 files (reply_json, reply_code, no_store
-# read them). The token reaches curl as a config line on its standard input (printf is a builtin): never argv.
-D25_PUBLIC_URL="$GATEWAY_URL/api/public/v1"
-d25_call() {
+# public_api_call <token's variable> <method> <path under /api/public/v1> [<JSON body file>] [<X-Telflo-Org>]:
+# one call; the status into $status, the body and headers into platform()'s 0600 files (reply_json, reply_code,
+# no_store read them). The token reaches curl as a config line on its standard input (printf is a builtin):
+# never argv.
+PUBLIC_API_URL="$GATEWAY_URL/api/public/v1"
+public_api_call() {
   local token_name=$1 method=$2 path=$3 data=${4:-} organization=${5:-}
-  local args=(-q -s --max-time 30 -o "$D16B_REPLY_BODY" -D "$D16B_REPLY_HEADERS" -w '%{http_code}' -X "$method" -K -)
+  local args=(-q -s --max-time 30 -o "$PLATFORM_REPLY_BODY" -D "$PLATFORM_REPLY_HEADERS" -w '%{http_code}' -X "$method" -K -)
   if [ -n "$data" ]; then args+=(-H 'content-type: application/json' --data-binary "@$data"); fi
   if [ -n "$organization" ]; then args+=(-H "X-Telflo-Org: $organization"); fi
-  status=$(umask 077 && : >"$D16B_REPLY_BODY" && printf 'header = "Authorization: Bearer %s"\n' "${!token_name}" |
-    curl "${args[@]}" "$D25_PUBLIC_URL$path" || true)
+  status=$(umask 077 && : >"$PLATFORM_REPLY_BODY" && printf 'header = "Authorization: Bearer %s"\n' "${!token_name}" |
+    curl "${args[@]}" "$PUBLIC_API_URL$path" || true)
 }
-# d25_body <name> <jq's arguments>...: jq -n's answer into $work_dir/d25-<name>.json (0600); its path into $d25_file.
-d25_body() {
+# public_api_body <name> <jq's arguments>...: jq -n's answer into $work_dir/public-api-<name>.json (0600); its
+# path into $public_api_file.
+public_api_body() {
   local name=$1
   shift
-  d25_file="$work_dir/d25-$name.json"
-  (umask 077 && jq -n "$@" >"$d25_file") || fail "building the D25 body $name failed"
+  public_api_file="$work_dir/public-api-$name.json"
+  (umask 077 && jq -n "$@" >"$public_api_file") || fail "building the public API body $name failed"
 }
-# d25_reply_is [jq's --arg ...] <jq condition>: the last reply's JSON satisfies it.
-d25_reply_is() { [ "$(reply_json "$@")" = "true" ]; }
-# d25_token_shaped <token's variable>: tf_ and 43 base64url characters (bash's own match: nothing printed).
-d25_token_shaped() { [[ "${!1}" =~ ^tf_[A-Za-z0-9_-]{43}$ ]]; }
-# d25_mint <variable> <url> <name> <access> [<id variable>]: creates a token at <url> through the session (201,
-# no-store), its token into <variable> (from the 0600 reply file, never printed), its id into $d25_token_id and
-# <id variable>, set first, before any check, so the EXIT trap can revoke a token whose checks fail.
-d25_mint() {
+# public_api_reply_is [jq's --arg ...] <jq condition>: the last reply's JSON satisfies it.
+public_api_reply_is() { [ "$(reply_json "$@")" = "true" ]; }
+# api_token_shaped <token's variable>: tf_ and 43 base64url characters (bash's own match: nothing printed).
+api_token_shaped() { [[ "${!1}" =~ ^tf_[A-Za-z0-9_-]{43}$ ]]; }
+# mint_api_token <variable> <url> <name> <access> [<id variable>]: creates a token at <url> through the session
+# (201, no-store), its token into <variable> (from the 0600 reply file, never printed), its id into
+# $minted_token_id and <id variable>, set first, before any check, so the EXIT trap can revoke a token whose
+# checks fail.
+mint_api_token() {
   local variable=$1 url=$2 name=$3 access=$4 id_variable=${5:-}
   platform POST "$url" "$(jq -cn --arg name "$name" --arg access "$access" '{name: $name, access: $access, expiresInDays: 1}')"
   body=""
-  d25_token_id=$(reply_json '.apiToken.id // empty')
-  if [ -n "$id_variable" ]; then printf -v "$id_variable" '%s' "$d25_token_id"; fi
+  minted_token_id=$(reply_json '.apiToken.id // empty')
+  if [ -n "$id_variable" ]; then printf -v "$id_variable" '%s' "$minted_token_id"; fi
   [ "$status" = "201" ] || fail "creating the $name token returned HTTP $status: $(reply_code)"
   no_store || fail "the $name token's create reply isn't Cache-Control: no-store"
   printf -v "$variable" '%s' "$(reply_json '.token // empty')"
-  d25_token_shaped "$variable" && [ -n "$d25_token_id" ] ||
+  api_token_shaped "$variable" && [ -n "$minted_token_id" ] ||
     fail "the $name token's create reply isn't a token tf_ and 43 base64url characters with an id (not printed)"
-  (umask 077 && : >"$D16B_REPLY_BODY")
+  (umask 077 && : >"$PLATFORM_REPLY_BODY")
 }
 
-D25_MARKER="d25pipelinemarker$(date +%s)$$"
-D25_YAML=$'receivers:\n  otlp:\n    protocols:\n      http: {}\nexporters:\n  debug: {}\nservice:\n  pipelines:\n    logs:\n      receivers: [otlp]\n      exporters: [debug]\n    logs/'"$D25_MARKER"$':\n      receivers: [otlp]\n      exporters: [debug]\n'
-D25_INVALID_YAML=$'receivers:\n  not_a_receiver: {}\nexporters:\n  debug: {}\nservice:\n  pipelines:\n    logs:\n      receivers: [not_a_receiver]\n      exporters: [debug]\n'
+PIPELINE_MARKER="smokepipelinemarker$(date +%s)$$"
+PUBLIC_API_YAML=$'receivers:\n  otlp:\n    protocols:\n      http: {}\nexporters:\n  debug: {}\nservice:\n  pipelines:\n    logs:\n      receivers: [otlp]\n      exporters: [debug]\n    logs/'"$PIPELINE_MARKER"$':\n      receivers: [otlp]\n      exporters: [debug]\n'
+PUBLIC_API_INVALID_YAML=$'receivers:\n  not_a_receiver: {}\nexporters:\n  debug: {}\nservice:\n  pipelines:\n    logs:\n      receivers: [not_a_receiver]\n      exporters: [debug]\n'
 
 # The steps above take minutes; the access cookie lasts 15 (as the refresh before the logo).
 step "refresh the session's access cookie: POST /api/v1/auth/refresh answers 200"
 response=$(curl -s --max-time 30 -w '\n%{http_code}' -b "$JAR" -c "$JAR" -X POST "$GATEWAY_URL/api/v1/auth/refresh" \
-  -H 'X-Telflo-CSRF: 1') || fail "refreshing before the D25 steps got no reply (curl exit $?)"
+  -H 'X-Telflo-CSRF: 1') || fail "refreshing before the public API steps got no reply (curl exit $?)"
 status=$(tail -n1 <<<"$response")
-[ "$status" = "200" ] || fail "refreshing before the D25 steps returned HTTP $status: $(sed '$d' <<<"$response")"
+[ "$status" = "200" ] || fail "refreshing before the public API steps returned HTTP $status: $(sed '$d' <<<"$response")"
 
 step "mint a service account's write and read tokens and a personal write token through the session (201, no-store; each tf_ and 43 base64url characters, never printed)"
-platform POST "$D16B_ORGANIZATION_URL/service-accounts" "$(jq -cn --arg name "Stack smoke D25 $(date +%s)-$$" '{name: $name}')"
-[ "$status" = "201" ] || fail "creating the D25 service account returned HTTP $status: $(reply_code)"
-d25_service_account_id=$(reply_json '.serviceAccount.id // empty')
-[ -n "$d25_service_account_id" ] || fail "the D25 service account's create answered no id"
-d25_mint d25_write_token "$D16B_ORGANIZATION_URL/service-accounts/$d25_service_account_id/api-tokens" "D25 write" write
-d25_mint d25_read_token "$D16B_ORGANIZATION_URL/service-accounts/$d25_service_account_id/api-tokens" "D25 read" read
-d25_mint d25_personal_token "$GATEWAY_URL/api/v1/auth/me/api-tokens" "D25 personal" write d25_personal_token_id
-(umask 077 && printf '%s\n' "$d25_write_token" >"$work_dir/d25-secret-write" && printf '%s\n' "$d25_read_token" >"$work_dir/d25-secret-read" &&
-  printf '%s\n' "$d25_personal_token" >"$work_dir/d25-secret-personal" && printf '%s\n' "$D25_MARKER" >"$work_dir/d25-marker") ||
-  fail "writing the D25 search files failed"
+platform POST "$GROUP_ORGANIZATION_URL/service-accounts" "$(jq -cn --arg name "Stack smoke public API $(date +%s)-$$" '{name: $name}')"
+[ "$status" = "201" ] || fail "creating the public API service account returned HTTP $status: $(reply_code)"
+public_api_service_account_id=$(reply_json '.serviceAccount.id // empty')
+[ -n "$public_api_service_account_id" ] || fail "the public API service account's create answered no id"
+mint_api_token public_api_write_token "$GROUP_ORGANIZATION_URL/service-accounts/$public_api_service_account_id/api-tokens" "smoke write token" write
+mint_api_token public_api_read_token "$GROUP_ORGANIZATION_URL/service-accounts/$public_api_service_account_id/api-tokens" "smoke read token" read
+mint_api_token public_api_personal_token "$GATEWAY_URL/api/v1/auth/me/api-tokens" "smoke personal token" write public_api_personal_token_id
+(umask 077 && printf '%s\n' "$public_api_write_token" >"$work_dir/public-api-secret-write" && printf '%s\n' "$public_api_read_token" >"$work_dir/public-api-secret-read" &&
+  printf '%s\n' "$public_api_personal_token" >"$work_dir/public-api-secret-personal" && printf '%s\n' "$PIPELINE_MARKER" >"$work_dir/public-api-marker") ||
+  fail "writing the public API search files failed"
 
 step "GET /whoami as the service account (service_account, the group organization) and as the person (person, no organization header needed)"
-d25_call d25_write_token GET /whoami
-[ "$status" = "200" ] && no_store && d25_reply_is --arg org "$group_id" '.kind == "service_account" and .organizationId == $org and .access == "write"' ||
+public_api_call public_api_write_token GET /whoami
+[ "$status" = "200" ] && no_store && public_api_reply_is --arg org "$group_id" '.kind == "service_account" and .organizationId == $org and .access == "write"' ||
   fail "the service account's /whoami returned HTTP $status: $(reply_code)"
-d25_call d25_personal_token GET /whoami
-[ "$status" = "200" ] && d25_reply_is '.kind == "person" and .access == "write"' ||
+public_api_call public_api_personal_token GET /whoami
+[ "$status" = "200" ] && public_api_reply_is '.kind == "person" and .access == "write"' ||
   fail "the person's /whoami returned HTTP $status: $(reply_code)"
 
 step "GET /orgs: the service account's one organization; the person's memberships, the group's among them"
-d25_call d25_read_token GET /orgs
-[ "$status" = "200" ] && d25_reply_is --arg org "$group_id" '[.items[].id] == [$org]' ||
+public_api_call public_api_read_token GET /orgs
+[ "$status" = "200" ] && public_api_reply_is --arg org "$group_id" '[.items[].id] == [$org]' ||
   fail "the service account's /orgs returned HTTP $status: $(reply_code)"
-d25_call d25_personal_token GET /orgs
-[ "$status" = "200" ] && d25_reply_is --arg org "$group_id" --arg personal "$personal_id" '([.items[].id] | index($org) != null and index($personal) != null)' ||
+public_api_call public_api_personal_token GET /orgs
+[ "$status" = "200" ] && public_api_reply_is --arg org "$group_id" --arg personal "$personal_id" '([.items[].id] | index($org) != null and index($personal) != null)' ||
   fail "the person's /orgs returned HTTP $status: $(reply_code)"
 
 step "the person without X-Telflo-Org is 400 organization_required; with the group's id, GET /configurations is 200"
-d25_call d25_personal_token GET /configurations
+public_api_call public_api_personal_token GET /configurations
 [ "$status" = "400" ] && [ "$(reply_code)" = "organization_required" ] ||
   fail "the person's /configurations without X-Telflo-Org returned HTTP $status $(reply_code), not 400 organization_required"
-d25_call d25_personal_token GET /configurations "" "$group_id"
-[ "$status" = "200" ] && no_store && d25_reply_is '.items | type == "array"' ||
+public_api_call public_api_personal_token GET /configurations "" "$group_id"
+[ "$status" = "200" ] && no_store && public_api_reply_is '.items | type == "array"' ||
   fail "the person's /configurations with X-Telflo-Org returned HTTP $status: $(reply_code)"
 
 step "a read token on a write route: POST /configurations is 403 insufficient_access"
-d25_body create --arg name "Stack smoke D25 $(date +%s)-$$" --arg yaml "$D25_YAML" '{name: $name, yaml: $yaml}'
-d25_call d25_read_token POST /configurations "$d25_file"
+public_api_body create --arg name "Stack smoke public API $(date +%s)-$$" --arg yaml "$PUBLIC_API_YAML" '{name: $name, yaml: $yaml}'
+public_api_call public_api_read_token POST /configurations "$public_api_file"
 [ "$status" = "403" ] && [ "$(reply_code)" = "insufficient_access" ] ||
   fail "a read token's POST /configurations returned HTTP $status $(reply_code), not 403 insufficient_access"
 
 step "create a configuration (201), PATCH its version 1 ?validate=true with the real validator (an invalid text 422, nothing saved; a valid one 200)"
-d25_call d25_write_token POST /configurations "$d25_file"
-[ "$status" = "201" ] || fail "creating the D25 configuration returned HTTP $status: $(reply_code)"
-d25_configuration_id=$(reply_json '.id // empty')
-[ -n "$d25_configuration_id" ] && d25_reply_is --arg org "$group_id" '.organizationId == $org and .versionNumber == 1' ||
-  fail "the D25 configuration's create answered no id or another organization: $(reply_json -c '{organizationId, versionNumber}')"
-d25_body invalid --arg yaml "$D25_INVALID_YAML" '{yaml: $yaml}'
-d25_call d25_write_token PATCH "/configurations/$d25_configuration_id/versions/1?validate=true" "$d25_file"
+public_api_call public_api_write_token POST /configurations "$public_api_file"
+[ "$status" = "201" ] || fail "creating the public API configuration returned HTTP $status: $(reply_code)"
+public_api_configuration_id=$(reply_json '.id // empty')
+[ -n "$public_api_configuration_id" ] && public_api_reply_is --arg org "$group_id" '.organizationId == $org and .versionNumber == 1' ||
+  fail "the public API configuration's create answered no id or another organization: $(reply_json -c '{organizationId, versionNumber}')"
+public_api_body invalid --arg yaml "$PUBLIC_API_INVALID_YAML" '{yaml: $yaml}'
+public_api_call public_api_write_token PATCH "/configurations/$public_api_configuration_id/versions/1?validate=true" "$public_api_file"
 [ "$status" = "422" ] && [ "$(reply_code)" = "configuration_invalid" ] ||
   fail "an invalid text's PATCH ?validate=true returned HTTP $status $(reply_code), not 422 configuration_invalid"
-d25_body valid --arg yaml "$D25_YAML" '{yaml: $yaml}'
-d25_call d25_write_token PATCH "/configurations/$d25_configuration_id/versions/1?validate=true" "$d25_file"
-[ "$status" = "200" ] && d25_reply_is '.versionNumber == 1 and .status == "draft"' ||
+public_api_body valid --arg yaml "$PUBLIC_API_YAML" '{yaml: $yaml}'
+public_api_call public_api_write_token PATCH "/configurations/$public_api_configuration_id/versions/1?validate=true" "$public_api_file"
+[ "$status" = "200" ] && public_api_reply_is '.versionNumber == 1 and .status == "draft"' ||
   fail "a valid text's PATCH ?validate=true returned HTTP $status: $(reply_code)"
 
 step "route 14: PUT .../validation-pipelines/logs/<the marker> and its %2F spelling replace its rules (200), and the list shows them"
-d25_body rules '{signal: "logs", rules: [{kind: "contains_text", target: "output", pattern: "stack smoke"}]}'
-d25_call d25_write_token PUT "/configurations/$d25_configuration_id/versions/1/validation-pipelines/logs/$D25_MARKER" "$d25_file"
+public_api_body rules '{signal: "logs", rules: [{kind: "contains_text", target: "output", pattern: "stack smoke"}]}'
+public_api_call public_api_write_token PUT "/configurations/$public_api_configuration_id/versions/1/validation-pipelines/logs/$PIPELINE_MARKER" "$public_api_file"
 [ "$status" = "200" ] || [ "$status" = "201" ] || fail "PUT route 14 (a raw slash) returned HTTP $status: $(reply_code)"
-d25_call d25_write_token PUT "/configurations/$d25_configuration_id/versions/1/validation-pipelines/logs%2F$D25_MARKER" "$d25_file"
+public_api_call public_api_write_token PUT "/configurations/$public_api_configuration_id/versions/1/validation-pipelines/logs%2F$PIPELINE_MARKER" "$public_api_file"
 [ "$status" = "200" ] || [ "$status" = "201" ] || fail "PUT route 14 (an encoded slash) returned HTTP $status: $(reply_code)"
-d25_call d25_read_token GET "/configurations/$d25_configuration_id/versions/1/validation-pipelines"
-[ "$status" = "200" ] && d25_reply_is --arg name "logs/$D25_MARKER" '[.items[] | select(.pipeline == $name) | .rules | length] == [1]' ||
+public_api_call public_api_read_token GET "/configurations/$public_api_configuration_id/versions/1/validation-pipelines"
+[ "$status" = "200" ] && public_api_reply_is --arg name "logs/$PIPELINE_MARKER" '[.items[] | select(.pipeline == $name) | .rules | length] == [1]' ||
   fail "the version's validation pipelines returned HTTP $status, or not the marker's pipeline with its one rule"
 
 step "publish version 1 (200): the opamp-server holds it"
-d25_call d25_write_token POST "/configurations/$d25_configuration_id/versions/1/publish"
-[ "$status" = "200" ] && d25_reply_is '.publishedVersionNumber == 1 and .isPublished == true' ||
-  fail "publishing the D25 configuration's version 1 returned HTTP $status: $(reply_code)"
-stack_smoke publications "$group_id" "$d25_configuration_id" 1 ||
-  fail "the opamp-server doesn't hold the D25 configuration's published version (above)"
+public_api_call public_api_write_token POST "/configurations/$public_api_configuration_id/versions/1/publish"
+[ "$status" = "200" ] && public_api_reply_is '.publishedVersionNumber == 1 and .isPublished == true' ||
+  fail "publishing the public API configuration's version 1 returned HTTP $status: $(reply_code)"
+stack_smoke publications "$group_id" "$public_api_configuration_id" 1 ||
+  fail "the opamp-server doesn't hold the public API configuration's published version (above)"
 
 step "POST /validate with the real validator: a valid text is valid, an invalid one names its errors"
-d25_call d25_read_token POST /validate "$work_dir/d25-valid.json"
-[ "$status" = "200" ] && d25_reply_is '.valid == true and (.errors | length) == 0' ||
+public_api_call public_api_read_token POST /validate "$work_dir/public-api-valid.json"
+[ "$status" = "200" ] && public_api_reply_is '.valid == true and (.errors | length) == 0' ||
   fail "/validate of a valid text returned HTTP $status: $(reply_code)"
-d25_call d25_read_token POST /validate "$work_dir/d25-invalid.json"
-[ "$status" = "200" ] && d25_reply_is '.valid == false and (.errors | length) > 0' ||
+public_api_call public_api_read_token POST /validate "$work_dir/public-api-invalid.json"
+[ "$status" = "200" ] && public_api_reply_is '.valid == false and (.errors | length) > 0' ||
   fail "/validate of an invalid text returned HTTP $status: $(reply_code)"
 
 step "POST /ottl/lint with the real evaluator's lint endpoint: a valid and a broken condition, each item answered"
-d25_body lint '{context: "log", conditions: ["attributes[\"env\"] == \"prod\"", "attributes[\"env\" =="]}'
-d25_call d25_read_token POST /ottl/lint "$d25_file"
-[ "$status" = "200" ] && d25_reply_is '.valid == false and .ottlVersion != null and .checked == 2 and [.items[].valid] == [true, false]' ||
+public_api_body lint '{context: "log", conditions: ["attributes[\"env\"] == \"prod\"", "attributes[\"env\" =="]}'
+public_api_call public_api_read_token POST /ottl/lint "$public_api_file"
+[ "$status" = "200" ] && public_api_reply_is '.valid == false and .ottlVersion != null and .checked == 2 and [.items[].valid] == [true, false]' ||
   fail "/ottl/lint returned HTTP $status: $(reply_code) $(reply_json -c '{valid, checked, ottlVersion}')"
 
 step "a fleet (201, no bearer in the reply), a group assigned the published version (201), and a docker install (200, no-store, its command a docker run: a boolean, never printed)"
-d25_body fleet --arg label "d25-$(date +%s)-$$" '{label: $label, type: "server"}'
-d25_call d25_write_token POST /fleets "$d25_file"
+public_api_body fleet --arg label "public-api-$(date +%s)-$$" '{label: $label, type: "server"}'
+public_api_call public_api_write_token POST /fleets "$public_api_file"
 # Exactly the route's five keys (jq's keys are sorted): no bearer, no tokens object, nothing else.
-[ "$status" = "201" ] && d25_reply_is 'keys == ["id","label","tokenExpiresAt","tokenId","type"]' ||
-  fail "creating the D25 fleet returned HTTP $status: $(reply_code) $(reply_json -c 'keys')"
-d25_fleet_id=$(reply_json '.id // empty')
-[ -n "$d25_fleet_id" ] || fail "the D25 fleet's create answered no id"
-d25_body group --arg configuration "$d25_configuration_id" '{name: "d25-group", configurationId: $configuration, versionNumber: 1}'
-d25_call d25_write_token POST "/fleets/$d25_fleet_id/groups" "$d25_file"
-[ "$status" = "201" ] && d25_reply_is '.name == "d25-group" and .versionNumber == 1' ||
-  fail "creating the D25 group returned HTTP $status: $(reply_code)"
-d25_group_id=$(reply_json '.id // empty')
-d25_body install --arg group "$d25_group_id" '{platform: "docker", groupId: $group}'
-d25_call d25_write_token POST "/fleets/$d25_fleet_id/install" "$d25_file"
-[ "$status" = "200" ] || fail "the D25 docker install returned HTTP $status: $(reply_code)"
-no_store || fail "the D25 docker install's reply, holding the fleet's bearer, isn't Cache-Control: no-store"
-d25_reply_is '.platform == "docker" and (.command | startswith("docker run"))' ||
-  fail "the D25 docker install's command isn't a docker run (not printed)"
-(umask 077 && : >"$D16B_REPLY_BODY")
+[ "$status" = "201" ] && public_api_reply_is 'keys == ["id","label","tokenExpiresAt","tokenId","type"]' ||
+  fail "creating the public API fleet returned HTTP $status: $(reply_code) $(reply_json -c 'keys')"
+public_api_fleet_id=$(reply_json '.id // empty')
+[ -n "$public_api_fleet_id" ] || fail "the public API fleet's create answered no id"
+public_api_body group --arg configuration "$public_api_configuration_id" '{name: "public-api-group", configurationId: $configuration, versionNumber: 1}'
+public_api_call public_api_write_token POST "/fleets/$public_api_fleet_id/groups" "$public_api_file"
+[ "$status" = "201" ] && public_api_reply_is '.name == "public-api-group" and .versionNumber == 1' ||
+  fail "creating the public API group returned HTTP $status: $(reply_code)"
+public_api_group_id=$(reply_json '.id // empty')
+public_api_body install --arg group "$public_api_group_id" '{platform: "docker", groupId: $group}'
+public_api_call public_api_write_token POST "/fleets/$public_api_fleet_id/install" "$public_api_file"
+[ "$status" = "200" ] || fail "the public API docker install returned HTTP $status: $(reply_code)"
+no_store || fail "the public API docker install's reply, holding the fleet's bearer, isn't Cache-Control: no-store"
+public_api_reply_is '.platform == "docker" and (.command | startswith("docker run"))' ||
+  fail "the public API docker install's command isn't a docker run (not printed)"
+(umask 077 && : >"$PLATFORM_REPLY_BODY")
 
 step "a YAML test run with an inline sample and a rule (202 queued), run by the real tester: read back with the read token until it ends succeeded, then its output holds the record"
-d25_body run --arg yaml "$TEST_RUN_YAML" --rawfile sample "$work_dir/stack-smoke-logs.json" --arg record "$TEST_RECORD_BODY" \
+public_api_body run --arg yaml "$TEST_RUN_YAML" --rawfile sample "$work_dir/stack-smoke-logs.json" --arg record "$TEST_RECORD_BODY" \
   '{yaml: $yaml, sample: $sample, signal: "logs", pipeline: "logs", durationSeconds: 2, rules: [{kind: "contains_text", target: "output", pattern: $record}]}'
-d25_call d25_write_token POST /test-runs "$d25_file"
-[ "$status" = "202" ] && d25_reply_is '.status == "queued"' || fail "queuing the D25 YAML run returned HTTP $status: $(reply_code)"
-d25_run_id=$(reply_json '.id // empty')
+public_api_call public_api_write_token POST /test-runs "$public_api_file"
+[ "$status" = "202" ] && public_api_reply_is '.status == "queued"' || fail "queuing the public API YAML run returned HTTP $status: $(reply_code)"
+public_api_run_id=$(reply_json '.id // empty')
 # Two seconds apart: the read token's 60 a minute is never reached.
-d25_run_status=""
+public_api_run_status=""
 for _ in $(seq 1 90); do
-  d25_call d25_read_token GET "/test-runs/$d25_run_id"
-  [ "$status" = "200" ] || [ "$status" = "000" ] || fail "reading the D25 run returned HTTP $status: $(reply_code)"
-  d25_run_status=$(reply_json '.status // empty')
-  case "$d25_run_status" in succeeded | failed | validation_failed) break ;; esac
+  public_api_call public_api_read_token GET "/test-runs/$public_api_run_id"
+  [ "$status" = "200" ] || [ "$status" = "000" ] || fail "reading the public API run returned HTTP $status: $(reply_code)"
+  public_api_run_status=$(reply_json '.status // empty')
+  case "$public_api_run_status" in succeeded | failed | validation_failed) break ;; esac
   sleep 2
 done
-[ "$d25_run_status" = "succeeded" ] && d25_reply_is '.success == true and ([.validationResults[].passed] == [true])' ||
-  fail "the D25 YAML run ended ${d25_run_status:-unread}: $(reply_json -c '{status, success, errorMessage}')"
-d25_call d25_read_token GET "/test-runs/$d25_run_id/output"
-[ "$status" = "200" ] && grep -qF "$TEST_RECORD_BODY" "$D16B_REPLY_BODY" ||
-  fail "the D25 run's output returned HTTP $status, or doesn't hold the record"
+[ "$public_api_run_status" = "succeeded" ] && public_api_reply_is '.success == true and ([.validationResults[].passed] == [true])' ||
+  fail "the public API YAML run ended ${public_api_run_status:-unread}: $(reply_json -c '{status, success, errorMessage}')"
+public_api_call public_api_read_token GET "/test-runs/$public_api_run_id/output"
+[ "$status" = "200" ] && grep -qF "$TEST_RECORD_BODY" "$PLATFORM_REPLY_BODY" ||
+  fail "the public API run's output returned HTTP $status, or doesn't hold the record"
 
 step "GET /openapi.json (OpenAPI 3.1, no token) and GET /docs/ (the reference page with its CSP), /docs a 301 to /docs/"
-status=$(curl -q -s --max-time 30 -o "$work_dir/d25-openapi.json" -w '%{http_code}' "$D25_PUBLIC_URL/openapi.json" || true)
-[ "$status" = "200" ] && [ "$(jq -r '.openapi | startswith("3.1")' "$work_dir/d25-openapi.json" 2>/dev/null)" = "true" ] ||
+status=$(curl -q -s --max-time 30 -o "$work_dir/public-api-openapi.json" -w '%{http_code}' "$PUBLIC_API_URL/openapi.json" || true)
+[ "$status" = "200" ] && [ "$(jq -r '.openapi | startswith("3.1")' "$work_dir/public-api-openapi.json" 2>/dev/null)" = "true" ] ||
   fail "GET /api/public/v1/openapi.json returned HTTP $status, or not an OpenAPI 3.1 document"
-status=$(curl -q -s --max-time 30 -o "$work_dir/d25-docs.html" -D "$work_dir/d25-docs.headers" -w '%{http_code}' "$D25_PUBLIC_URL/docs/" || true)
-D25_CSP="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; font-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
-[ "$status" = "200" ] && grep -qF 'src="/api/public/v1/docs/swagger-ui-bundle.js"' "$work_dir/d25-docs.html" &&
-  grep -qixF "content-security-policy: $D25_CSP"$'\r' "$work_dir/d25-docs.headers" &&
-  grep -qiE '^referrer-policy: no-referrer' "$work_dir/d25-docs.headers" ||
-  fail "GET /api/public/v1/docs/ returned HTTP $status, or not the page with B18's CSP and no-referrer: $(grep -iE '^(content-security-policy|referrer-policy):' "$work_dir/d25-docs.headers" | tr '\r\n' '  ')"
-status=$(curl -q -s --max-time 30 -o /dev/null -D "$work_dir/d25-docs-redirect.headers" -w '%{http_code}' "$D25_PUBLIC_URL/docs" || true)
-[ "$status" = "301" ] && grep -qiE '^location: /api/public/v1/docs/'$'\r''?$' "$work_dir/d25-docs-redirect.headers" ||
+status=$(curl -q -s --max-time 30 -o "$work_dir/public-api-docs.html" -D "$work_dir/public-api-docs.headers" -w '%{http_code}' "$PUBLIC_API_URL/docs/" || true)
+DOCS_CSP="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; font-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
+[ "$status" = "200" ] && grep -qF 'src="/api/public/v1/docs/swagger-ui-bundle.js"' "$work_dir/public-api-docs.html" &&
+  grep -qixF "content-security-policy: $DOCS_CSP"$'\r' "$work_dir/public-api-docs.headers" &&
+  grep -qiE '^referrer-policy: no-referrer' "$work_dir/public-api-docs.headers" ||
+  fail "GET /api/public/v1/docs/ returned HTTP $status, or not the page with its CSP and no-referrer: $(grep -iE '^(content-security-policy|referrer-policy):' "$work_dir/public-api-docs.headers" | tr '\r\n' '  ')"
+status=$(curl -q -s --max-time 30 -o /dev/null -D "$work_dir/public-api-docs-redirect.headers" -w '%{http_code}' "$PUBLIC_API_URL/docs" || true)
+[ "$status" = "301" ] && grep -qiE '^location: /api/public/v1/docs/'$'\r''?$' "$work_dir/public-api-docs-redirect.headers" ||
   fail "GET /api/public/v1/docs returned HTTP $status, not a 301 to /api/public/v1/docs/"
-for d25_asset in swagger-ui-bundle.js swagger-ui.css init.js; do
-  status=$(curl -q -s --max-time 30 -o /dev/null -w '%{http_code}' "$D25_PUBLIC_URL/docs/$d25_asset" || true)
-  [ "$status" = "200" ] || fail "GET /api/public/v1/docs/$d25_asset returned HTTP $status"
+for public_api_asset in swagger-ui-bundle.js swagger-ui.css init.js; do
+  status=$(curl -q -s --max-time 30 -o /dev/null -w '%{http_code}' "$PUBLIC_API_URL/docs/$public_api_asset" || true)
+  [ "$status" = "200" ] || fail "GET /api/public/v1/docs/$public_api_asset returned HTTP $status"
 done
 
 step "a 2.2 MiB body to /validate is the gateway's own 413 (nginx's page, before the API)"
-d25_large="$work_dir/d25-too-large.json"
-(umask 077 && { printf '{"yaml":"'; head -c 2306867 /dev/zero | tr '\0' 'a'; printf '"}'; } >"$d25_large")
-d25_call d25_read_token POST /validate "$d25_large"
+public_api_large="$work_dir/public-api-too-large.json"
+(umask 077 && { printf '{"yaml":"'; head -c 2306867 /dev/zero | tr '\0' 'a'; printf '"}'; } >"$public_api_large")
+public_api_call public_api_read_token POST /validate "$public_api_large"
 gateway_refused_too_large || fail "a 2.2 MiB body to /validate returned HTTP $status ($(reply_code)), not the gateway's 413"
 
 step "route 14's PUT with a body over 1 MiB, its path and query naming the pipeline, is the gateway's own 413 (its error log line, crit only)"
-d25_large_put="$work_dir/d25-too-large-put.json"
-(umask 077 && { printf '{"signal":"logs","rules":[{"kind":"contains_text","target":"output","pattern":"'; head -c 1258291 /dev/zero | tr '\0' 'a'; printf '"}]}'; } >"$d25_large_put")
-d25_call d25_write_token PUT "/configurations/$d25_configuration_id/versions/1/validation-pipelines/logs/$D25_MARKER?q=$D25_MARKER" "$d25_large_put"
+public_api_large_put="$work_dir/public-api-too-large-put.json"
+(umask 077 && { printf '{"signal":"logs","rules":[{"kind":"contains_text","target":"output","pattern":"'; head -c 1258291 /dev/zero | tr '\0' 'a'; printf '"}]}'; } >"$public_api_large_put")
+public_api_call public_api_write_token PUT "/configurations/$public_api_configuration_id/versions/1/validation-pipelines/logs/$PIPELINE_MARKER?q=$PIPELINE_MARKER" "$public_api_large_put"
 gateway_refused_too_large || fail "a 1.2 MiB body to route 14 returned HTTP $status ($(reply_code)), not the gateway's 413"
 
 # The telflo CLI ($SMOKE_CLI, checked at the start) drives the same public surface through the gateway, logged in
@@ -5280,27 +5283,27 @@ cli_said() {
 }
 CLI_STAMP="$(date +%s)-$$"
 
-step "telflo login reads the public API steps' personal token from its standard input (--server the gateway, --org the group organization): exit 0, 'Logged in … as D25 personal (…)', the credentials file 0600 in a 0700 folder"
+step "telflo login reads the public API steps' personal token from its standard input (--server the gateway, --org the group organization): exit 0, 'Logged in … as smoke personal token (…)', the credentials file 0600 in a 0700 folder"
 cli_code=0
-(umask 077 && printf '%s\n' "$d25_personal_token" |
+(umask 077 && printf '%s\n' "$public_api_personal_token" |
   cli_env TELFLO_CLI_CONFIG_DIR="$CLI_CONFIG" node "$SMOKE_CLI" login --server "$GATEWAY_URL" --org "$group_id" \
     >"$CLI_DIR/login.out" 2>"$CLI_DIR/login.err") || cli_code=$?
-[ "$cli_code" = "0" ] && grep -qE '^Logged in to https?://[^ ]+ as D25 personal \(.+\)\.$' "$CLI_DIR/login.out" ||
+[ "$cli_code" = "0" ] && grep -qE '^Logged in to https?://[^ ]+ as smoke personal token \(.+\)\.$' "$CLI_DIR/login.out" ||
   fail "telflo login from stdin failed: $(cli_said login)"
 [ -n "$(find "$CLI_CONFIG" -maxdepth 0 -type d -perm 700)" ] && [ -n "$(find "$CLI_CONFIG/credentials.json" -maxdepth 0 -type f -perm 600 2>/dev/null)" ] ||
   fail "telflo login's credentials file isn't $CLI_CONFIG/credentials.json with mode 0600 in a 0700 folder"
 
-step "telflo whoami and telflo org list (--json): the person's write token D25 personal, from the file, in the group organization, the current one of its organizations"
+step "telflo whoami and telflo org list (--json): the person's write token, smoke personal token, from the file, in the group organization, the current one of its organizations"
 cli_run whoami --json whoami
 [ "$cli_code" = "0" ] &&
-  cli_json_is whoami --arg org "$group_id" '.kind == "person" and .source == "file" and .tokenName == "D25 personal" and .access == "write" and .organizationId == $org' ||
+  cli_json_is whoami --arg org "$group_id" '.kind == "person" and .source == "file" and .tokenName == "smoke personal token" and .access == "write" and .organizationId == $org' ||
   fail "telflo whoami didn't answer the person's token in the group organization: $(cli_said whoami)"
 cli_run org-list --json org list
 [ "$cli_code" = "0" ] && cli_json_is org-list --arg org "$group_id" '.current == $org and ([.items[].id] | index($org)) != null' ||
   fail "telflo org list didn't list the group organization as the current one: $(cli_said org-list)"
 
 step "telflo config create (draft v1), config push (the draft updated in place, validated), config publish (v1) and config pull -o (the pushed text, byte for byte)"
-(umask 077 && printf '%s' "$TEST_RUN_YAML" >"$CLI_DIR/config.yaml" && printf '# D27: pushed by the telflo CLI\n%s' "$TEST_RUN_YAML" >"$CLI_DIR/config-pushed.yaml") ||
+(umask 077 && printf '%s' "$TEST_RUN_YAML" >"$CLI_DIR/config.yaml" && printf '# Pushed by the telflo CLI\n%s' "$TEST_RUN_YAML" >"$CLI_DIR/config-pushed.yaml") ||
   fail "writing the CLI's configuration files failed"
 cli_run config-create --json config create --name "Stack smoke CLI $CLI_STAMP" -f "$CLI_DIR/config.yaml"
 cli_configuration_id=$(cli_json config-create '.id // empty')
@@ -5318,15 +5321,15 @@ cli_run config-pull --json config pull "$cli_configuration_id" -o "$CLI_DIR/conf
   fail "telflo config pull -o didn't write v1's text as pushed: $(cli_said config-pull)"
 
 if [ "$SMOKE_SITE" = "saas" ]; then
-  d27_anonymous="the open route: valid exit 0, an invalid text exit 4 with its errors"
+  cli_anonymous="the open route: valid exit 0, an invalid text exit 4 with its errors"
 else
-  d27_anonymous="the open route off: both exit 3 login_required"
+  cli_anonymous="the open route off: both exit 3 login_required"
 fi
-step "telflo validate, logged in on the configuration's pin (valid, exit 0), then anonymously with an empty config folder ($d27_anonymous; no login written)"
+step "telflo validate, logged in on the configuration's pin (valid, exit 0), then anonymously with an empty config folder ($cli_anonymous; no login written)"
 cli_run validate --json validate "$CLI_DIR/config-pushed.yaml" --config "$cli_configuration_id"
 [ "$cli_code" = "0" ] && cli_json_is validate '.valid == true and (.errors | length) == 0' ||
   fail "telflo validate --config of a valid text didn't answer valid: $(cli_said validate)"
-(umask 077 && printf '%s' "$D25_INVALID_YAML" >"$CLI_DIR/config-invalid.yaml") || fail "writing the CLI's invalid configuration failed"
+(umask 077 && printf '%s' "$PUBLIC_API_INVALID_YAML" >"$CLI_DIR/config-invalid.yaml") || fail "writing the CLI's invalid configuration failed"
 # No login (an empty config folder, no TELFLO_TOKEN): the CLI takes the anonymous route, on TELFLO_SERVER (else it
 # would ask https://telflo.com).
 cli_code=0
@@ -5410,7 +5413,7 @@ done
 [ "${#cli_outputs[@]}" -ge 38 ] || fail "the CLI's runs left ${#cli_outputs[@]} output files, not the 38 expected, so the search proves less"
 cli_count=$(cat -- "${cli_outputs[@]}" | grep -cE 'tf_[A-Za-z0-9_-]+|tqd_[A-Za-z0-9_-]+|tll_[A-Za-z0-9_-]+' || true)
 [ "$cli_count" = "0" ] || fail "the CLI's outputs hold a tf_, tqd_ or tll_ value on ${cli_count:-an unread number of} lines (not printed)"
-cli_count=$(cat -- "$CLI_DIR"/*.out "$CLI_DIR"/*.err | grep -cF -f "$work_dir/d25-secret-personal" || true)
+cli_count=$(cat -- "$CLI_DIR"/*.out "$CLI_DIR"/*.err | grep -cF -f "$work_dir/public-api-secret-personal" || true)
 [ "$cli_count" = "0" ] || fail "the CLI's outputs hold the personal token on ${cli_count:-an unread number of} lines (not printed)"
 # Every non-blank line of install's stdout is a pattern (a blank one would match every line).
 (umask 077 && grep -v '^[[:space:]]*$' "$CLI_DIR/install.out" >"$work_dir/cli-install-patterns") || fail "reading install's stdout failed"
@@ -5423,7 +5426,7 @@ cli_count=$(cat -- "${cli_outputs[@]}" | grep -cF -f "$work_dir/cli-install-patt
 cli_count=$(grep -cF -f "$work_dir/cli-install-patterns" -- "$work_dir/cli-logs" || true)
 [ "$cli_count" = "0" ] || fail "the API's or the gateway's logs hold a line of install's command on ${cli_count:-an unread number of} lines (not printed)"
 rm -f "$CLI_DIR/install.out" "$work_dir/cli-install-patterns" "$work_dir/cli-logs"
-cli_steps="drove the telflo CLI ($smoke_cli_version) through the gateway: logged in from stdin with the personal token (the credentials file 0600 in a 0700 folder), whoami, org list, a configuration created, pushed, published and pulled back byte for byte, validated on its pin and anonymously ($d27_anonymous), OTTL linted (exit 0 and 4), tested in the real tester (both rules passed), a fleet created (no bearer), its Default group deployed to, a docker install (a docker run, never printed) and logout (then exit 3), with no token in its outputs and its install command in no other output and no log"
+cli_steps="drove the telflo CLI ($smoke_cli_version) through the gateway: logged in from stdin with the personal token (the credentials file 0600 in a 0700 folder), whoami, org list, a configuration created, pushed, published and pulled back byte for byte, validated on its pin and anonymously ($cli_anonymous), OTTL linted (exit 0 and 4), tested in the real tester (both rules passed), a fleet created (no bearer), its Default group deployed to, a docker install (a docker run, never printed) and logout (then exit 3), with no token in its outputs and its install command in no other output and no log"
 
 # The CLI's steps take minutes; the access cookie lasts 15, and the per-token step mints its token and the next
 # step revokes the personal one through the session.
@@ -5436,41 +5439,41 @@ status=$(tail -n1 <<<"$response")
 step "the per-token limit, 60 a minute, on a token minted for it alone: 61 GET /whoami, the first 60 answered 200, the 61st 429 rate_limited with Retry-After"
 # A fresh token: its minute starts with its first request, so the 61 run in one window (an older token's could
 # reset part-way).
-d25_mint d25_limit_token "$D16B_ORGANIZATION_URL/service-accounts/$d25_service_account_id/api-tokens" "D25 limit" read
-(umask 077 && printf '%s\n' "$d25_limit_token" >"$work_dir/d25-secret-limit") || fail "writing the D25 search files failed"
-d25_allowed=0
-for d25_request in $(seq 1 60); do
-  d25_call d25_limit_token GET /whoami
-  [ "$status" = "200" ] && d25_allowed=$((d25_allowed + 1))
+mint_api_token public_api_limit_token "$GROUP_ORGANIZATION_URL/service-accounts/$public_api_service_account_id/api-tokens" "smoke limit token" read
+(umask 077 && printf '%s\n' "$public_api_limit_token" >"$work_dir/public-api-secret-limit") || fail "writing the public API search files failed"
+public_api_allowed=0
+for public_api_request in $(seq 1 60); do
+  public_api_call public_api_limit_token GET /whoami
+  [ "$status" = "200" ] && public_api_allowed=$((public_api_allowed + 1))
 done
-[ "$d25_allowed" = "60" ] || fail "of a fresh token's first 60 /whoami, $d25_allowed answered 200, not 60 (the last HTTP $status $(reply_code))"
-d25_call d25_limit_token GET /whoami
+[ "$public_api_allowed" = "60" ] || fail "of a fresh token's first 60 /whoami, $public_api_allowed answered 200, not 60 (the last HTTP $status $(reply_code))"
+public_api_call public_api_limit_token GET /whoami
 [ "$status" = "429" ] && [ "$(reply_code)" = "rate_limited" ] ||
   fail "a fresh token's 61st /whoami returned HTTP $status $(reply_code), not 429 rate_limited"
-grep -qiE '^retry-after: [1-9][0-9]*'$'\r''?$' "$D16B_REPLY_HEADERS" || fail "the per-token limit's 429 has no Retry-After"
+grep -qiE '^retry-after: [1-9][0-9]*'$'\r''?$' "$PLATFORM_REPLY_HEADERS" || fail "the per-token limit's 429 has no Retry-After"
 
 step "revoke the personal token through the session (204); it's then the one 401"
-platform DELETE "$GATEWAY_URL/api/v1/auth/me/api-tokens/$d25_personal_token_id"
-[ "$status" = "204" ] || fail "revoking the D25 personal token returned HTTP $status: $(reply_code)"
-d25_personal_token_id=""
-d25_call d25_personal_token GET /whoami
+platform DELETE "$GATEWAY_URL/api/v1/auth/me/api-tokens/$public_api_personal_token_id"
+[ "$status" = "204" ] || fail "revoking the personal token returned HTTP $status: $(reply_code)"
+public_api_personal_token_id=""
+public_api_call public_api_personal_token GET /whoami
 [ "$status" = "401" ] && [ "$(reply_code)" = "invalid_api_token" ] ||
   fail "the revoked personal token's /whoami returned HTTP $status $(reply_code), not 401 invalid_api_token"
 
 step "after every public API call: the API's and the gateway's logs hold no token and no pipeline name: grep -cF of each, counts only (docker compose logs api gateway)"
-(umask 077 && docker compose logs --no-color api gateway >"$work_dir/d25-logs" 2>&1) ||
+(umask 077 && docker compose logs --no-color api gateway >"$work_dir/public-api-logs" 2>&1) ||
   fail "reading the API's and the gateway's logs failed"
-[ -s "$work_dir/d25-logs" ] || fail "the API's and the gateway's logs are empty, so the search proves nothing"
-for d25_secret in write read personal limit; do
-  d25_count=$(grep -cF -f "$work_dir/d25-secret-$d25_secret" -- "$work_dir/d25-logs" || true)
-  [ "$d25_count" = "0" ] || fail "the API's or the gateway's logs hold the D25 $d25_secret token on ${d25_count:-an unread number of} lines (not printed)"
+[ -s "$work_dir/public-api-logs" ] || fail "the API's and the gateway's logs are empty, so the search proves nothing"
+for public_api_secret in write read personal limit; do
+  public_api_count=$(grep -cF -f "$work_dir/public-api-secret-$public_api_secret" -- "$work_dir/public-api-logs" || true)
+  [ "$public_api_count" = "0" ] || fail "the API's or the gateway's logs hold the $public_api_secret token on ${public_api_count:-an unread number of} lines (not printed)"
 done
-d25_count=$(grep -cF -f "$work_dir/d25-marker" -- "$work_dir/d25-logs" || true)
-[ "$d25_count" = "0" ] || fail "the API's or the gateway's logs hold the D25 pipeline name on ${d25_count:-an unread number of} lines"
-grep -qF '"PUT /api/public/v1/[redacted] HTTP/1.1"' "$work_dir/d25-logs" ||
-  fail "the gateway's access log holds no PUT /api/public/v1/[redacted] line for route 14 (Ruling 177)"
-unset d25_write_token d25_read_token d25_personal_token d25_limit_token
-d25_steps="drove the public API through the gateway with a service account's write and read tokens and a personal token (whoami and orgs for both kinds, the person's organization header 400 then 200, a read token refused a write, a configuration created, checked by the real validator and published to the opamp-server, a pipeline's rules replaced by its name, /validate, the real evaluator's /ottl/lint, a fleet, a group and a docker install, a YAML test run in the real tester read back with its output, the document, the reference page with its CSP, nginx's 413 and the per-token 429), no token or pipeline name in the API's or the gateway's logs"
+public_api_count=$(grep -cF -f "$work_dir/public-api-marker" -- "$work_dir/public-api-logs" || true)
+[ "$public_api_count" = "0" ] || fail "the API's or the gateway's logs hold the pipeline name on ${public_api_count:-an unread number of} lines"
+grep -qF '"PUT /api/public/v1/[redacted] HTTP/1.1"' "$work_dir/public-api-logs" ||
+  fail "the gateway's access log holds no PUT /api/public/v1/[redacted] line for route 14"
+unset public_api_write_token public_api_read_token public_api_personal_token public_api_limit_token
+public_api_steps="drove the public API through the gateway with a service account's write and read tokens and a personal token (whoami and orgs for both kinds, the person's organization header 400 then 200, a read token refused a write, a configuration created, checked by the real validator and published to the opamp-server, a pipeline's rules replaced by its name, /validate, the real evaluator's /ottl/lint, a fleet, a group and a docker install, a YAML test run in the real tester read back with its output, the document, the reference page with its CSP, nginx's 413 and the per-token 429), no token or pipeline name in the API's or the gateway's logs"
 
 step "delete the gateway (204: the Default group and the Cluster left), then the Kubernetes fleet (204)"
 platform DELETE "$K8S_FLEET_URL/groups/$k8s_gateway_id"
@@ -5483,30 +5486,30 @@ platform DELETE "$K8S_FLEET_URL"
 k8s_fleet_id=""
 
 step "clear the Default group's assignment: PATCH .../groups/:groupId with assignedVersionId null"
-platform PATCH "$D16B_FLEETS_URL/$d16b_fleet_id/groups/$d16b_default_group_id" '{"assignedVersionId": null}'
+platform PATCH "$GROUP_FLEETS_URL/$managed_fleet_id/groups/$managed_default_group_id" '{"assignedVersionId": null}'
 [ "$status" = "200" ] && [ "$(json_field '.group.assignedVersion' "$body")" = "null" ] && [ "$(json_field '.group.assignedPublishedVersionId' "$body")" = "null" ] ||
   fail "clearing the assignment returned HTTP $status: $(head -c 500 <<<"$body")"
 
 step "the configuration, used no longer, is deleted: DELETE .../configurations/:configurationId answers 204, and its published version leaves the opamp-server"
-platform DELETE "$D16B_CONFIGURATIONS_URL/$d16b_configuration_id"
+platform DELETE "$GROUP_CONFIGURATIONS_URL/$managed_configuration_id"
 [ "$status" = "204" ] || fail "deleting the configuration once unassigned returned HTTP $status: $(head -c 500 <<<"$body")"
-d16b_deleted_configuration_id=$d16b_configuration_id
-d16b_configuration_id=""
+managed_deleted_configuration_id=$managed_configuration_id
+managed_configuration_id=""
 # The platform's after-response delete, which the Default group's assignment
 # would have refused, now removes it (as the fleet steps check theirs).
-stack_smoke publications "$group_id" "$d16b_deleted_configuration_id" 0 ||
-  fail "the opamp-server still holds the published version of the D16b configuration $d16b_deleted_configuration_id after its delete (above)"
+stack_smoke publications "$group_id" "$managed_deleted_configuration_id" 0 ||
+  fail "the opamp-server still holds the published version of the managed configuration $managed_deleted_configuration_id after its delete (above)"
 
 step "remove edge-b1, edge-b2 and the smoke collector's image"
-d16b_cleanup_failed=""
-for container in $d16b_containers; do
-  docker rm -f "$container" >/dev/null 2>&1 || d16b_cleanup_failed="$d16b_cleanup_failed the container $container;"
+managed_cleanup_failed=""
+for container in $managed_containers; do
+  docker rm -f "$container" >/dev/null 2>&1 || managed_cleanup_failed="$managed_cleanup_failed the container $container;"
 done
-d16b_containers=""
-docker rmi "$d16b_image" >/dev/null 2>&1 || d16b_cleanup_failed="$d16b_cleanup_failed the image $d16b_image;"
-d16b_image=""
-[ -z "$d16b_cleanup_failed" ] || fail "removing the D16b collectors failed: $d16b_cleanup_failed"
-unset d16b_default_bearer d16b_rotate_bearer d16b_revealed_bearer d16b_new_rotate_bearer
+managed_containers=""
+docker rmi "$managed_image" >/dev/null 2>&1 || managed_cleanup_failed="$managed_cleanup_failed the image $managed_image;"
+managed_image=""
+[ -z "$managed_cleanup_failed" ] || fail "removing the managed fleet's collectors failed: $managed_cleanup_failed"
+unset managed_default_bearer managed_rotate_bearer managed_revealed_bearer managed_new_rotate_bearer
 
 # The id is the group organization's, never the personal one's, and the
 # platform refuses to delete a personal organization anyway; the account
@@ -5550,18 +5553,18 @@ stack_smoke group-gone "$group_id" ||
 # organization's fleets 404 organization_not_found. Polled: the platform's
 # delete runs after its response, retried on a failure.
 step "the opamp-server removed the group organization's fleets with it: GET .../organizations/:id/fleets answers 404 organization_not_found (at most 30 polls)"
-d16b_fleets_gone=""
+managed_fleets_gone=""
 for _ in $(seq 1 30); do
   management GET "$OPAMP_MANAGEMENT_URL/api/v1/organizations/$group_id/fleets"
   if [ "$status" = "404" ] && [ "$(json_field '.error.code' "$body")" = "organization_not_found" ]; then
-    d16b_fleets_gone=yes
+    managed_fleets_gone=yes
     break
   fi
   sleep 1
 done
-[ -n "$d16b_fleets_gone" ] ||
+[ -n "$managed_fleets_gone" ] ||
   fail "the management API still answers the deleted group organization's fleets after 30 polls: HTTP $status $(json_field '.error.code // empty' "$body")"
-d16b_fleet_id=""
+managed_fleet_id=""
 
 # The delete moved the session to the account's fallback organization: its
 # access cookie is answered access_token_expired, and a refresh issues one
@@ -5607,4 +5610,4 @@ else
   first_account_steps="refused a registration (invite-only), bootstrapped the first account with telflo-admin (its set-password link never printed) and set its password through it, signed in"
 fi
 
-echo "OK: the full stack ($SMOKE_SITE) $first_account_steps, refreshed, created and switched organizations, invited $INVITEE_EMAIL (who joined from the emailed token), created, listed and deleted a configuration, read, saved (over 2 MiB too) and read back its YAML and graph, checked a valid and an invalid text with the collector of its pin, created (over 2 MiB), renamed, selected and read its versions, published one and found its snapshot, with its collector, in the opamp-server and none after the delete, ran a real test of it in the collector tester and read the record back from its output, ran a suite's test configuration of it there, its run carrying its breadcrumb, found the suite copied to version 2, had the OTTL evaluator check a validation pipeline's rules at Save (refusing a broken condition and regex in its words) and after two runs (one passed, one ended validation_failed), read the regex library, saved one of its entries and a Compare-shaped rule and ran them, $product_admin_steps, found the validation pipeline copied to version 2, found the OTTL evaluator healthy and refusing calls without its secret, found the Initial Configuration, signed out and reset the password of $EMAIL through $GATEWAY_URL, lists no OIDC providers, serves robots.txt disallowing every path, $d31_steps, $inquiry_steps, and reached the opamp-server through the platform's client, which found the new account's personal organization registered, with each side refused the other's database, and found the group organization registered there, renamed there after its rename and gone after its delete, the account kept in its personal organization; and enrolled a real collector in a fleet through the opamp-server's agent endpoint, which applied the version assigned to its group, left another, with nothing assigned, unassigned through a second replica (sent no configuration), refused a collector naming no group, deleted a group's collector with the group (refused when it named that group again), and refused a revoked token on both replicas; and, through the platform, listed a published configuration's published versions (ids, numbers, labels and dates only), created a fleet (and again, safely; its summary unseen, with one rotate token in no grace), assigned a published version to its Default group, read two real collectors (one applying it, one unassigned; the summary's last seen recent in the fleet's read and the list; the collector list, a collector's read and its error history no-store), pinned the unassigned one to the published version (applied in sync from its pin) and unpinned it, refused to delete the configuration in use, revealed a token (sealed anew), rotated one (the collector following it; the summary in the rotation's grace) and revoked the old one (the summary out of grace), read the token history (every event by the person, newest first, no bearer, paged by its cursor), $install_steps, refused the Kubernetes key on a server fleet's group (its create and a save), made a Kubernetes fleet's Cluster and a gateway (refusing Docker mounts, a gateway named node, a role not the name's, a create without the key, a rename and the Default group's save naming another role there), saved the Default group as the Agent, read the Agent's and the gateway's Helm facts, refused each install on the other fleet type, downloaded a Helm values link's values.yaml (the contracts' file, its token in no log) through the gateway with no session, refused it while the organization's public install links were off (and a link's create), served it again once on (to a client container, its audit row holding that container's address, not the gateway's) and refused it once revoked, and set the group organization's logo (a 2 MiB PNG; over 3 MiB the gateway's 413) and read it back publicly with its headers, $library_steps, $d29_steps, $d25_steps, $cli_steps, deleted the gateway and the fleet, deleted the configuration once unassigned (its published version leaving the opamp-server), found the fleets and the logo gone with the group organization, and found none of the run's secrets in its logs"
+echo "OK: the full stack ($SMOKE_SITE) $first_account_steps, refreshed, created and switched organizations, invited $INVITEE_EMAIL (who joined from the emailed token), created, listed and deleted a configuration, read, saved (over 2 MiB too) and read back its YAML and graph, checked a valid and an invalid text with the collector of its pin, created (over 2 MiB), renamed, selected and read its versions, published one and found its snapshot, with its collector, in the opamp-server and none after the delete, ran a real test of it in the collector tester and read the record back from its output, ran a suite's test configuration of it there, its run carrying its breadcrumb, found the suite copied to version 2, had the OTTL evaluator check a validation pipeline's rules at Save (refusing a broken condition and regex in its words) and after two runs (one passed, one ended validation_failed), read the regex library, saved one of its entries and a Compare-shaped rule and ran them, $product_admin_steps, found the validation pipeline copied to version 2, found the OTTL evaluator healthy and refusing calls without its secret, found the Initial Configuration, signed out and reset the password of $EMAIL through $GATEWAY_URL, lists no OIDC providers, serves robots.txt disallowing every path, $playground_steps, $inquiry_steps, and reached the opamp-server through the platform's client, which found the new account's personal organization registered, with each side refused the other's database, and found the group organization registered there, renamed there after its rename and gone after its delete, the account kept in its personal organization; and enrolled a real collector in a fleet through the opamp-server's agent endpoint, which applied the version assigned to its group, left another, with nothing assigned, unassigned through a second replica (sent no configuration), refused a collector naming no group, deleted a group's collector with the group (refused when it named that group again), and refused a revoked token on both replicas; and, through the platform, listed a published configuration's published versions (ids, numbers, labels and dates only), created a fleet (and again, safely; its summary unseen, with one rotate token in no grace), assigned a published version to its Default group, read two real collectors (one applying it, one unassigned; the summary's last seen recent in the fleet's read and the list; the collector list, a collector's read and its error history no-store), pinned the unassigned one to the published version (applied in sync from its pin) and unpinned it, refused to delete the configuration in use, revealed a token (sealed anew), rotated one (the collector following it; the summary in the rotation's grace) and revoked the old one (the summary out of grace), read the token history (every event by the person, newest first, no bearer, paged by its cursor), $install_steps, refused the Kubernetes key on a server fleet's group (its create and a save), made a Kubernetes fleet's Cluster and a gateway (refusing Docker mounts, a gateway named node, a role not the name's, a create without the key, a rename and the Default group's save naming another role there), saved the Default group as the Agent, read the Agent's and the gateway's Helm facts, refused each install on the other fleet type, downloaded a Helm values link's values.yaml (the contracts' file, its token in no log) through the gateway with no session, refused it while the organization's public install links were off (and a link's create), served it again once on (to a client container, its audit row holding that container's address, not the gateway's) and refused it once revoked, and set the group organization's logo (a 2 MiB PNG; over 3 MiB the gateway's 413) and read it back publicly with its headers, $library_steps, $admin_steps, $public_api_steps, $cli_steps, deleted the gateway and the fleet, deleted the configuration once unassigned (its published version leaving the opamp-server), found the fleets and the logo gone with the group organization, and found none of the run's secrets in its logs"

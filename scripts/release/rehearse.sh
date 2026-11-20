@@ -381,12 +381,12 @@ PORTS=""
 for offset in 1 2 3 4 5 6 7 8 9 10 11 100 101 102 110 111 112 120; do PORTS="$PORTS $((port_base + offset))"; done
 for p in $PORTS; do
   for owner in $OWNER_PORTS; do
-    [ "$p" != "$owner" ] || refuse "--port-base $port_base puts a rehearsal port on $p, one the owner's stack or dev servers use: name another"
+    [ "$p" != "$owner" ] || refuse "--port-base $port_base puts a rehearsal port on $p, one a developer's own development stack or dev servers use: name another"
   done
 done
 for p in $OWNER_PROJECTS; do
   [ "${COMPOSE_PROJECT_NAME:-}" != "$p" ] \
-    || refuse "COMPOSE_PROJECT_NAME is $p, the owner's: unset it (the rehearsal's compose calls name their own telflo-rehearse-* projects)"
+    || refuse "COMPOSE_PROJECT_NAME is $p, a developer's own development stack's: unset it (the rehearsal's compose calls name their own telflo-rehearse-* projects)"
 done
 # The kubeconfig guarded (never read here but by its hash and kubectl's current-context).
 if [ -n "${TELFLO_REHEARSE_KUBECONFIG+set}" ]; then

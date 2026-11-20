@@ -138,14 +138,14 @@ MAILPIT_PORT=${MAILPIT_PORT:-58282}
 # The project: never the Compose install's, the development stack's or a developer's own running stack.
 case "$PROJECT" in
   telflo | telflo-dev | telflo-platform)
-    refuse "--project $PROJECT is never a throwaway project (the Compose install's, the development stack's or the owner's running stack)" ;;
+    refuse "--project $PROJECT is never a throwaway project (the Compose install's, the development stack's or a developer's own running stack)" ;;
 esac
 [[ "$PROJECT" =~ ^[a-z0-9][a-z0-9_-]{0,40}$ ]] || refuse "--project must be lower-case letters, digits, '_' and '-' (at most 41)"
 for port in "$HTTP_PORT" "$AGENT_PORT" "$MAILPIT_PORT"; do
   [[ "$port" =~ ^[1-9][0-9]{3,4}$ ]] && [ "$port" -le 65535 ] || refuse "a port must be a number from 1000 to 65535"
   case "$port" in
     8080 | 8025 | 51234 | 51235 | 50080 | 58025 | 51025 | 53000 | 55432)
-      refuse "port $port is a README default, or one the owner's stack or dev servers use: name another" ;;
+      refuse "port $port is a README default, or one a developer's own development stack or dev servers use: name another" ;;
   esac
 done
 [ "$HTTP_PORT" != "$AGENT_PORT" ] && [ "$HTTP_PORT" != "$MAILPIT_PORT" ] && [ "$AGENT_PORT" != "$MAILPIT_PORT" ] ||

@@ -29,7 +29,7 @@
 #                              image runs the supervisor itself, with no
 #                              script of its own to refuse an empty one, so
 #                              the smoke's start_collector and
-#                              d16b_start_collector refuse it instead
+#                              managed_start_collector refuse it instead
 #
 # Each container is one collector: its instance uid is made on its first
 # start and kept in its own storage, so a new container is a new collector.

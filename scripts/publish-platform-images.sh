@@ -31,9 +31,9 @@
 #                before anything builds; a failed build leaves neither.
 #                Prints `<name> <digest>` per image.
 #   --push-oci   copies each image's archive, unchanged, to
-#                <registry>/telflo/telflo/<name>:<version> with crane (Ruling
-#                383): it reads <dir>/<name>.oci.tar and <dir>/<name>.digest
-#                only. Every archive is checked (as above, against its digest
+#                <registry>/telflo/telflo/<name>:<version> with crane: it
+#                reads <dir>/<name>.oci.tar and <dir>/<name>.digest only.
+#                Every archive is checked (as above, against its digest
 #                file and HEAD's version and revision) and every tag is asked
 #                before anything is pushed: a tag holding the archive's digest
 #                is skipped with a line (a re-run); a tag holding another

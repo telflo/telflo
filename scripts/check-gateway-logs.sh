@@ -337,12 +337,12 @@ API_SPELLINGS=(
   "/api/v1/quick-deploy/$SECRET/"
   "/api/v1/quick-deploy/$SECRET/../x"
 )
-# The same typed without /api/: nginx's own 404, never proxied (Ruling
-# 44). As spelt, with a query, upper case, runs of slashes, an encoded
-# letter (lower and upper case codes), an encoded slash before and after,
-# dot segments, under another path, the path ending in /quick-deploy; and
-# two whose extensions nginx's types would name otherwise (text/html,
-# application/javascript), still plain text.
+# The same typed without /api/: nginx's own 404, never proxied. As spelt,
+# with a query, upper case, runs of slashes, an encoded letter (lower and
+# upper case codes), an encoded slash before and after, dot segments, under
+# another path, the path ending in /quick-deploy; and two whose extensions
+# nginx's types would name otherwise (text/html, application/javascript),
+# still plain text.
 NGINX_404_SPELLINGS=(
   "/quick-deploy/$SECRET"
   "/QUICK-DEPLOY/$SECRET?x=1"

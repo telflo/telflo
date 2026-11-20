@@ -96,7 +96,7 @@ done
 [ -n "$work" ] || usage
 case "$project" in
   telflo|telflo-dev|telflo-platform)
-    refuse "the project $project is never a throwaway stack (the Compose install's, the development stack's or the owner's)" ;;
+    refuse "the project $project is never a throwaway stack (the Compose install's, the development stack's or a developer's own running stack)" ;;
 esac
 printf '%s' "$project" | grep -Eq '^[a-z0-9][a-z0-9_-]*$' || refuse "--project must be lower-case letters, digits, '_' and '-'"
 # The smoke's install steps mount folders under the work folder: its path is

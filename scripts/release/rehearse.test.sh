@@ -67,7 +67,7 @@ check "TELFLO_REHEARSE_KUBECONFIG named but empty, with CI: refused too (exit 2)
 for pb in 58022 51020 7970 52890 51134 50079 1023 65401 abc 0; do
   run --version "$version" --work "$tmp/w" --port-base "$pb" --dry-run
   check "--port-base $pb (a developer's own stack's port among the rehearsal's, or out of range): refused (exit 2)" \
-    "[ $rc -eq 2 ] && { has \"one the owner's stack or dev servers use\" || has '--port-base must be a number'; }"
+    "[ $rc -eq 2 ] && { has \"one a developer's own development stack or dev servers use\" || has '--port-base must be a number'; }"
 done
 for p in telflo telflo-dev telflo-platform; do
   out="$(env COMPOSE_PROJECT_NAME="$p" "$shell" "$script" --version "$version" --work "$tmp/w" --dry-run 2>&1)"; rc=$?

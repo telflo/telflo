@@ -622,10 +622,10 @@ organization's signed-in admin. They run on edge-b2 in the group
 "unassigned-b", never the Default group, whose assignment the later steps
 rely on. A variable `SMOKE_TAG` of the value `a$b-1` and one the text
 doesn't use are created; a configuration of the block's own, whose
-`attributes/d20` processor inserts an attribute of the value
+`attributes/variable` processor inserts an attribute of the value
 `${org:SMOKE_TAG}`, is published and assigned to "unassigned-b". The script
 computes the SHA-256 edge-b2 must apply from the text filled in as the
-opamp-server's poll fills it in (`d20_filled_in`: the reference replaced by
+opamp-server's poll fills it in (`variable_filled_in`: the reference replaced by
 the value with every `$` doubled, `a$$b-1`, the bytes around it as
 published), and checks its own fill-in first against those bytes; the
 collector's resolution keeps the published text's SHA-256. Each change of
@@ -715,7 +715,7 @@ invitee's flag is granted through the API, so the EXIT trap clears it by
 SQL (`product_admin false "$INVITEE_EMAIL"`) as well as the account's. The
 steps add four identity requests (the third account's register, verify,
 sign-in and refused sign-in), 15 a run in all (`docs/development.md`). The OK line's
-`$d29_steps` names what ran.
+`$admin_steps` names what ran.
 
 ## Browser tests on shared, global data
 
@@ -888,7 +888,7 @@ The mail tests send through a real TLS connection to an in-process relay,
 ## The real Helm install
 
 `scripts/check-helm-install.sh <work dir>` installs for real into a
-throwaway minikube profile (`CHECK_HELM_PROFILE`, default `d18-helm`),
+throwaway minikube profile (`CHECK_HELM_PROFILE`, default `telflo-helm-check`),
 against a throwaway compose stack, through the platform's API as a person
 it registers there, from the platform's **published** chart and image
 (`oci://ghcr.io/telflo/telflo/charts/supervisor-collector` at `0.1.0`,
@@ -1132,8 +1132,8 @@ a local image whose `entrypoint.sh` isn't the checkout's is named in a
 note. For example, once the chart and the image are published and public:
 
 ```sh
-minikube start -p d18-helm --driver=docker
-minikube -p d18-helm kubectl -- config view --flatten --minify --context=d18-helm >"$WORK/kubeconfig"
+minikube start -p telflo-helm-check --driver=docker
+minikube -p telflo-helm-check kubectl -- config view --flatten --minify --context=telflo-helm-check >"$WORK/kubeconfig"
 OPAMP_SERVER_URL=http://host.minikube.internal:<agent port>/opamp/api/v1 \
   TELFLO_PUBLIC_API_URL=http://localhost:<gateway port> \
   docker compose -p <project> -f <a copy with its own ports> up -d   # then poll its health

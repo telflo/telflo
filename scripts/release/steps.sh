@@ -185,7 +185,7 @@ free_disk() {
     note "$path: $((free / 1024 / 1024)) GB free"
     [ "$free" -ge "$need_kb" ] || low="$low $path ($((free / 1024 / 1024)) GB)"
   done
-  [ -z "$low" ] || fail "this job needs $1 GB free, and has less on:$low (a larger runner is the owner's choice)"
+  [ -z "$low" ] || fail "this job needs $1 GB free, and has less on:$low (a larger runner is the maintainers' choice)"
   note "at least $1 GB free"
 }
 

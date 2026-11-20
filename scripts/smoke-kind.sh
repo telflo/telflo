@@ -249,7 +249,7 @@ done
   refuse "--port, --mailpit-port and --api-port must differ"
 for value in "$PORT" "$MAILPIT_PORT" "$API_PORT"; do
   case "$value" in
-    50080 | 58025 | 51025 | 53000 | 8080 | 51234 | 51235) refuse "port $value is one the owner's stack or dev servers use: name another" ;;
+    50080 | 58025 | 51025 | 53000 | 8080 | 51234 | 51235) refuse "port $value is one a developer's own development stack or dev servers use: name another" ;;
   esac
 done
 [[ "$WAIT_TIMEOUT" =~ ^[1-9][0-9]{1,4}$ ]] || refuse "--timeout is a number of seconds"
@@ -1003,7 +1003,7 @@ else
   done
   if called=$(helpers_called); then fail "a credential helper was called while pulling the bases ($called)"; fi
   {
-    echo "# The smoke's own tags (scripts/smoke-kind.sh): never the owner's telflo-*:dev."
+    echo "# The smoke's own tags (scripts/smoke-kind.sh): never a developer's own telflo-*:dev."
     echo "services:"
     echo "  telflo-api: {image: \"$(image_of api)\"}"
     echo "  telflo-web: {image: \"$(image_of web)\"}"
@@ -1155,7 +1155,7 @@ pass "four Secrets created by server-side apply (no last-applied annotation; key
   done
   echo "gateway:"
   echo "  image: {digest: \"\", pullPolicy: Never}"
-  echo "# Postgres: the chart's own reference, postgres:18 at its digest, pulled into the node first (Ruling 328)."
+  echo "# Postgres: the chart's own reference, postgres:18 at its digest, pulled into the node first."
   echo "postgres:"
   echo "  size: 2Gi"
   echo "opamp-server:"
@@ -1723,7 +1723,7 @@ status=$(curl -q -s -o /dev/null -w '%{http_code}' --max-time 10 \
 [ "$status" = 200 ] || fail "the double-encoded /__manifest request answered $status, not 200: it didn't reach React Router's decode"
 sleep 2
 kns logs "$web_pod" -c web >"$LOGS/web-after-manifest.log" 2>&1 || fail "reading the web pod's log failed"
-grep -q "The URL path" "$LOGS/web-after-manifest.log" && fail "the web pod's log holds a 'The URL path' line (Ruling 327's filter isn't installed)"
+grep -q "The URL path" "$LOGS/web-after-manifest.log" && fail "the web pod's log holds a 'The URL path' line (the web server's filter for React Router's decode warning isn't installed)"
 grep -qF "$MARKER" "$LOGS/web-after-manifest.log" && fail "the web pod's log holds the marker"
 web_lines_after=$(grep -c . "$LOGS/web-after-manifest.log" || true)
 pass "answered $status; the web pod's log gained $((web_lines_after - web_lines_before)) lines, none 'The URL path', no marker (version $MANIFEST_VERSION)"

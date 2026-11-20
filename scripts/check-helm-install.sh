@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Checks the Helm install for real: against a throwaway compose stack and a
-# throwaway minikube profile (CHECK_HELM_PROFILE, default d18-helm), through
+# throwaway minikube profile (CHECK_HELM_PROFILE, default telflo-helm-check), through
 # the platform's API as a signed-in person, with the platform's published
 # chart and image (oci://ghcr.io/telflo/telflo/charts/supervisor-collector,
 # ghcr.io/telflo/telflo/collector: the stack's defaults), it installs an
@@ -54,7 +54,7 @@
 #   COMPOSE_PROJECT_NAME=<project> COMPOSE_FILE=<its compose file> \
 #   TELFLO_GATEWAY_URL=http://localhost:<gateway port> \
 #   TELFLO_MAILPIT_API_URL=http://localhost:<mailpit's http port> \
-#   KUBECONFIG=<work dir>/kubeconfig [CHECK_HELM_PROFILE=<profile, default d18-helm>] \
+#   KUBECONFIG=<work dir>/kubeconfig [CHECK_HELM_PROFILE=<profile, default telflo-helm-check>] \
 #   [CHECK_HELM_LOCAL_IMAGE=<a local image's tag>] [CHECK_HELM_IMAGE_PULLABLE=yes|no] \
 #   [CHECK_HELM_NEW_DEFAULT_TOKEN=1] \
 #   scripts/check-helm-install.sh <work dir>
@@ -116,7 +116,7 @@
 # stays in the throwaway stack; the profile is the caller's to delete.
 set -euo pipefail
 
-PROFILE=${CHECK_HELM_PROFILE:-d18-helm}
+PROFILE=${CHECK_HELM_PROFILE:-telflo-helm-check}
 # The platform's own packages: the stack's defaults, and what this check installs.
 PLATFORM_CHART_REFERENCE="oci://ghcr.io/telflo/telflo/charts/supervisor-collector"
 PLATFORM_CHART_VERSION="0.1.0"
@@ -162,10 +162,10 @@ esac
 local_url='^http://(localhost|127[.]0[.]0[.]1):([0-9]+)$'
 [[ "${TELFLO_GATEWAY_URL:-}" =~ $local_url ]] ||
   refuse "TELFLO_GATEWAY_URL must be the throwaway stack's gateway, http://localhost:<port> (or 127.0.0.1)"
-[ "${BASH_REMATCH[2]}" != "50080" ] || refuse "TELFLO_GATEWAY_URL names port 50080, the owner's stack's gateway"
+[ "${BASH_REMATCH[2]}" != "50080" ] || refuse "TELFLO_GATEWAY_URL names port 50080, a developer's own development stack's gateway"
 [[ "${TELFLO_MAILPIT_API_URL:-}" =~ $local_url ]] ||
   refuse "TELFLO_MAILPIT_API_URL must be the throwaway stack's Mailpit, http://localhost:<port> (or 127.0.0.1)"
-[ "${BASH_REMATCH[2]}" != "58025" ] || refuse "TELFLO_MAILPIT_API_URL names port 58025, the owner's Mailpit"
+[ "${BASH_REMATCH[2]}" != "58025" ] || refuse "TELFLO_MAILPIT_API_URL names port 58025, a developer's own development stack's Mailpit"
 case "${CHECK_HELM_IMAGE_PULLABLE:-}" in "" | yes | no) ;; *) refuse "CHECK_HELM_IMAGE_PULLABLE is yes, no or unset" ;; esac
 case "${CHECK_HELM_NEW_DEFAULT_TOKEN:-}" in "" | 0 | 1) ;; *) refuse "CHECK_HELM_NEW_DEFAULT_TOKEN is 1, 0 or unset" ;; esac
 if [ -n "${CHECK_HELM_LOCAL_IMAGE:-}" ]; then
@@ -178,17 +178,17 @@ fi
 profile_lower=$(printf '%s' "$PROFILE" | tr '[:upper:]' '[:lower:]')
 case "$profile_lower" in
   y | n | yes | no | true | false | on | off | null | "~")
-    refuse "CHECK_HELM_PROFILE ($PROFILE) is a word YAML reads as a boolean or null: kubectl writes such a name quoted in the kubeconfig, which this check doesn't read; name another profile (default d18-helm)" ;;
+    refuse "CHECK_HELM_PROFILE ($PROFILE) is a word YAML reads as a boolean or null: kubectl writes such a name quoted in the kubeconfig, which this check doesn't read; name another profile (default telflo-helm-check)" ;;
 esac
 # A YAML 1.1 date (2001-12-14) too: kubectl writes it quoted.
 [[ ! "$profile_lower" =~ ^[0-9]{4}-[0-9]{1,2}-[0-9]{1,2}$ ]] ||
-  refuse "CHECK_HELM_PROFILE ($PROFILE) is a date to YAML: kubectl writes such a name quoted in the kubeconfig, which this check doesn't read; name another profile (default d18-helm)"
+  refuse "CHECK_HELM_PROFILE ($PROFILE) is a date to YAML: kubectl writes such a name quoted in the kubeconfig, which this check doesn't read; name another profile (default telflo-helm-check)"
 [[ ! "$profile_lower" =~ ^([0-9]+(e-?[0-9]+)?|0x[0-9a-f]+|0o[0-7]+|0b[01]+)$ ]] ||
-  refuse "CHECK_HELM_PROFILE ($PROFILE) is a number to YAML: kubectl writes such a name quoted in the kubeconfig, which this check doesn't read; name another profile (default d18-helm)"
+  refuse "CHECK_HELM_PROFILE ($PROFILE) is a number to YAML: kubectl writes such a name quoted in the kubeconfig, which this check doesn't read; name another profile (default telflo-helm-check)"
 [[ "$PROFILE" =~ ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$ ]] && [ "${#PROFILE}" -le 63 ] ||
-  refuse "CHECK_HELM_PROFILE must be a minikube profile's name, a DNS-1123 label (lowercase letters, digits and '-', at most 63; default d18-helm)"
+  refuse "CHECK_HELM_PROFILE must be a minikube profile's name, a DNS-1123 label (lowercase letters, digits and '-', at most 63; default telflo-helm-check)"
 [ "$PROFILE" != "minikube" ] ||
-  refuse "CHECK_HELM_PROFILE is minikube, the owner's own profile: name a throwaway one (default d18-helm)"
+  refuse "CHECK_HELM_PROFILE is minikube, a developer's own profile: name a throwaway one (default telflo-helm-check)"
 kubeconfig_how="make it with: minikube -p $PROFILE kubectl -- config view --flatten --minify --context=$PROFILE >$work/kubeconfig"
 [ -n "${KUBECONFIG:-}" ] || refuse "KUBECONFIG isn't set: $kubeconfig_how"
 case "$KUBECONFIG" in *:*) refuse "KUBECONFIG names more than one file: name one, in the work directory" ;; esac
@@ -311,13 +311,13 @@ kube_proxy_url=$(printf '%s\n' "$minified" | sed -n 4p)
 [ -z "$kube_proxy_url" ] ||
   refuse "KUBECONFIG's cluster $PROFILE names a proxy-url: kubectl would reach the profile through it, not directly: $kubeconfig_how"
 [[ "$kube_server" =~ ^https://(\[[0-9A-Fa-f:]+\]|[A-Za-z0-9.-]+)(:([^/]*))?(/.*)?$ ]] ||
-  refuse "KUBECONFIG's cluster $PROFILE names the server '$(printf '%s' "$kube_server" | redact)', not an https:// address (kubectl would reach http://localhost:8080, the owner's development API, for an empty one): $kubeconfig_how"
+  refuse "KUBECONFIG's cluster $PROFILE names the server '$(printf '%s' "$kube_server" | redact)', not an https:// address (kubectl would reach http://localhost:8080, a developer's own development API, for an empty one): $kubeconfig_how"
 if [ -n "${BASH_REMATCH[2]}" ]; then
   kube_port=${BASH_REMATCH[3]}
   [[ "$kube_port" =~ ^[1-9][0-9]{0,4}$ ]] && [ $((10#$kube_port)) -le 65535 ] ||
     refuse "KUBECONFIG's cluster $PROFILE names a server whose port isn't a port number (digits, no leading zero, at most 65535): $kubeconfig_how"
   [ $((10#$kube_port)) -ne 8080 ] ||
-    refuse "KUBECONFIG's cluster $PROFILE names a server on port 8080 (the owner's development API's port), not the profile's: $kubeconfig_how"
+    refuse "KUBECONFIG's cluster $PROFILE names a server on port 8080 (a developer's own development API's port), not the profile's: $kubeconfig_how"
 fi
 for proxy in HTTPS_PROXY https_proxy HTTP_PROXY http_proxy ALL_PROXY all_proxy; do
   [ -z "${!proxy:-}" ] ||
@@ -612,7 +612,7 @@ CONFIGURATIONS_URL="$ORGANIZATION_URL/configurations"
 FLEETS_URL="$ORGANIZATION_URL/fleets"
 
 step "publish a configuration (an OTLP receiver to the debug exporter) through the gateway: its version 1"
-CONFIGURATION_YAML=$'# D17d-2: published by scripts/check-helm-install.sh\nreceivers:\n  otlp:\n    protocols:\n      http:\n        endpoint: 127.0.0.1:4320\nprocessors:\n  batch: {}\nexporters:\n  debug:\n    verbosity: basic\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      processors: [batch]\n      exporters: [debug]\n'
+CONFIGURATION_YAML=$'# Published by scripts/check-helm-install.sh\nreceivers:\n  otlp:\n    protocols:\n      http:\n        endpoint: 127.0.0.1:4320\nprocessors:\n  batch: {}\nexporters:\n  debug:\n    verbosity: basic\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      processors: [batch]\n      exporters: [debug]\n'
 platform POST "$CONFIGURATIONS_URL" "$(jq -cn --arg n "Helm check $(date +%s)-$$" '{name: $n, description: "scripts/check-helm-install.sh"}')"
 [ "$status" = "201" ] || fail "creating the configuration returned HTTP $status: $(reply_code)"
 configuration_id=$(reply_json '.configuration.id')

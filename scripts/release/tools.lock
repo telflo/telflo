@@ -1,8 +1,8 @@
-# The release pipeline's private tools (D36-2 decision 110; Q281, Ruling 383,
-# Preflight rulings 4 and 5), read by scripts/release/tools.sh. Nothing here is
-# installed system-wide: tools.sh fetches each into the git-ignored .tools/ and
-# checks it against the sha256 below before it may run; images are pulled by
-# digest only. A runner installs the same versions with the same sums.
+# The release pipeline's private tools, read by scripts/release/tools.sh.
+# Nothing here is installed system-wide: tools.sh fetches each into the
+# git-ignored .tools/ and checks it against the sha256 below before it may run;
+# images are pulled by digest only. A runner installs the same versions with
+# the same sums.
 #
 # tool <name> <version> <os-arch> <url> <sha256> <sums file> <member> <binary sha256>
 #   <sha256> is the downloaded file's, as the project publishes it in
@@ -10,8 +10,8 @@
 #   a .tar.gz download ("-": the download is the binary itself); <binary
 #   sha256> is that member's own sha256 ("-" when the download is the binary:
 #   <sha256> is then the binary's), which `tools.sh path` checks the installed
-#   binary against every time (Ruling 399). The binaries' sums were taken from
-#   files `tools.sh fetch` had extracted from archives that matched <sha256>.
+#   binary against every time. The binaries' sums were taken from files
+#   `tools.sh fetch` had extracted from archives that matched <sha256>.
 #   kind: each asset's own .sha256sum; crane: the release's checksums.txt
 #   (crane only, from go-containerregistry's archive); buildx: checksums.txt
 #   for Linux, checksums-signed.txt for macOS (its macOS binaries are signed
@@ -29,8 +29,8 @@ tool gitleaks v8.30.1 linux-amd64 https://github.com/gitleaks/gitleaks/releases/
 #
 # image <key> <repository> <tag> <digest> <after>
 #   pulled by `tools.sh pull <key>` as <repository>@<digest> only (the tag is
-#   for people); <after> is `remove` (tools.sh remove deletes it when D36-2 is
-#   done) or `keep` (it was on the machine before, for other work).
+#   for people); <after> is `remove` (tools.sh remove deletes it) or `keep`
+#   (it was on the machine before, for other work).
 #   binfmt (QEMU's emulators) runs on the runner only, pinned by the workflow.
 image buildkit moby/buildkit v0.34.1 sha256:99368f3e46177c6405b9740e4461d91cee004128daeecca78d4ceac50ec1da5c remove
 image registry registry 2.8.3 sha256:a3d8aaa63ed8681a604f1dea0aa03f100d5895b6a58ace528858a7b332415373 remove
