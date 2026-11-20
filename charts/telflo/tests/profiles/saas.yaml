@@ -35,9 +35,9 @@ gateway:
   extraRoutes:
     - path: /
       match: exact
-      service: telflo-site
+      service: website
       port: 8081
     - path: /home/
       match: prefix
-      service: telflo-site
+      service: website
       port: 8081

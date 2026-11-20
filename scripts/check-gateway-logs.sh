@@ -114,7 +114,7 @@
 #  11. gateway.extraRoutes (D36-1 decision 24, Preflight ruling 15), on a
 #      fresh container whose include reads the chart's rendered snippet
 #      (charts/telflo/tests/expected/extra-routes.conf, an exact /
-#      and a ^~ /home/ prefix to telflo-site.telflo.svc:8081; a render case
+#      and a ^~ /home/ prefix to website.telflo.svc:8081; a render case
 #      holds helm's output equal to it): nginx -t accepts it; / and every
 #      path under /home/, in any spelling nginx routes there (runs of
 #      slashes, an encoded letter, dot segments), reach a third stand-in
@@ -146,7 +146,7 @@
 # so sections 8 and 10 don't send one. An extra route's prefix wins over
 # the quick-deploy and library-link locations for a path under it
 # (/home/quick-deploy/tqd_...: proxied to the site, not nginx's 404; its
-# access log line still redacted), and telflo-site's own logs are its own.
+# access log line still redacted), and website's own logs are its own.
 # Every other location's
 # error log quotes a request line, its referrer and its host when its
 # upstream fails: a secret pasted into ANOTHER path's query, a Referer
@@ -184,7 +184,7 @@ CONFIG=docker/gateway/default.conf
 EXTRA_ROUTES=docker/gateway/extra-routes.conf
 EXTRA_ROUTES_FIXTURE=charts/telflo/tests/expected/extra-routes.conf
 # The fixture's service, as the chart names it in the render tests' namespace.
-SITE_HOST=telflo-site.telflo.svc
+SITE_HOST=website.telflo.svc
 FAILURES=0
 
 SECRET=tqd_CANARYCANARYCANARYCANARYCANARYCANARYCANARY0

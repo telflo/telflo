@@ -329,8 +329,8 @@ a path, a match, a Service's name and its port:
 ```yaml
 gateway:
   extraRoutes:
-    - { path: /, match: exact, service: telflo-site, port: 8081 }
-    - { path: /home/, match: prefix, service: telflo-site, port: 8081 }
+    - { path: /, match: exact, service: website, port: 8081 }
+    - { path: /home/, match: prefix, service: website, port: 8081 }
 ```
 
 The chart renders them into the ConfigMap `telflo-gateway-extra-routes`,

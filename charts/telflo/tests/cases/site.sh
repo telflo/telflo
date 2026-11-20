@@ -188,18 +188,18 @@ run_case "guard: api.mail.smtp.host in brackets refused" refused "$M_HOST" "" "$
 # routes <file> <one route's YAML lines, already indented under a list item>
 routes() { local file="$1"; shift; { printf 'gateway:\n  extraRoutes:\n    - '; printf '%s\n      ' "$@"; printf '\n'; } >"$file"; }
 extra_routes_ok() {
-  routes "$tmp/routes-ok.yaml" 'path: /' 'match: exact' 'service: telflo-site' 'port: 8080'
+  routes "$tmp/routes-ok.yaml" 'path: /' 'match: exact' 'service: website' 'port: 8080'
   renders "${D[@]}" -f "$tmp/routes-ok.yaml" && renders "${D[@]}" --set 'gateway.extraRoutes=null'
 }
 run_case "gateway.extraRoutes: empty by default; a well-formed route is accepted" extra_routes_ok
 extra_routes_schema() {
-  routes "$tmp/r1.yaml" 'path: /home/' 'match: prefix' 'service: telflo-site' 'port: 8080' 'cnryKey: 1'
-  routes "$tmp/r2.yaml" 'path: "/home x"' 'match: prefix' 'service: telflo-site' 'port: 8080'
-  routes "$tmp/r3.yaml" 'path: /home/' 'match: regex' 'service: telflo-site' 'port: 8080'
+  routes "$tmp/r1.yaml" 'path: /home/' 'match: prefix' 'service: website' 'port: 8080' 'cnryKey: 1'
+  routes "$tmp/r2.yaml" 'path: "/home x"' 'match: prefix' 'service: website' 'port: 8080'
+  routes "$tmp/r3.yaml" 'path: /home/' 'match: regex' 'service: website' 'port: 8080'
   routes "$tmp/r4.yaml" 'path: /home/' 'match: prefix' 'service: Telflo_Site' 'port: 8080'
-  routes "$tmp/r5.yaml" 'path: /home/' 'match: prefix' 'service: telflo-site' 'port: 0'
-  routes "$tmp/r6.yaml" 'path: /home/' 'match: prefix' 'service: telflo-site'
-  routes "$tmp/r7.yaml" 'path: home/' 'match: prefix' 'service: telflo-site' 'port: 8080'
+  routes "$tmp/r5.yaml" 'path: /home/' 'match: prefix' 'service: website' 'port: 0'
+  routes "$tmp/r6.yaml" 'path: /home/' 'match: prefix' 'service: website'
+  routes "$tmp/r7.yaml" 'path: home/' 'match: prefix' 'service: website' 'port: 8080'
   schema_refused /gateway/extraRoutes/0 "additional properties 'cnryKey' not allowed" "${D[@]}" -f "$tmp/r1.yaml" &&
     schema_refused /gateway/extraRoutes/0/path "does not match pattern" "${D[@]}" -f "$tmp/r2.yaml" &&
     schema_refused /gateway/extraRoutes/0/match "value must be one of" "${D[@]}" -f "$tmp/r3.yaml" &&

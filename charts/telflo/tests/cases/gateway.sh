@@ -176,7 +176,7 @@ gw_extra_empty() { # <listing>: every profile but saas has no route: an empty fi
 }
 each_profile "gateway: no extraRoutes renders an empty extra-routes.conf (nginx needs the file), checksum/gateway-extra-routes the empty file's sha256 (every profile but saas)" gw_extra_empty
 # The saas profile holds the fixture's values (an exact / and a /home/
-# prefix to telflo-site:8081, in the tests' namespace): Helm's rendering is
+# prefix to website:8081, in the tests' namespace): Helm's rendering is
 # the fixture, byte for byte, the file scripts/check-gateway-logs.sh's
 # section 11 runs nginx with.
 gw_extra_fixture() {
@@ -193,14 +193,14 @@ run_case "gateway: the saas profile's extraRoutes render as tests/expected/extra
 gw_extra_namespace() { # the Service's namespace is the release's
   next_file
   helm template "$REL" "$CHART_DIR" -n other-ns -f "$PROFILES_DIR/saas.yaml" >"$f.yaml" 2>"$f.err" && flat "$f.yaml" "$f" || return 1
-  value "$f" "$GW_EXTRA_CM.data.extra-routes.conf" | grep -qF 'proxy_pass http://telflo-site.other-ns.svc:8081;' &&
+  value "$f" "$GW_EXTRA_CM.data.extra-routes.conf" | grep -qF 'proxy_pass http://website.other-ns.svc:8081;' &&
     ! value "$f" "$GW_EXTRA_CM.data.extra-routes.conf" | grep -qF '.telflo.svc'
 }
 run_case "gateway: an extra route proxies to <service>.<the release's namespace>.svc:<port>" gw_extra_namespace
 
 # route_args <path> <match> [service] [port]: --set flags for one route
 route_args() { printf '%s\n' --set-string "gateway.extraRoutes[0].path=$1" --set-string "gateway.extraRoutes[0].match=$2" \
-  --set-string "gateway.extraRoutes[0].service=${3:-telflo-site}" --set "gateway.extraRoutes[0].port=${4:-8081}"; }
+  --set-string "gateway.extraRoutes[0].service=${3:-website}" --set "gateway.extraRoutes[0].port=${4:-8081}"; }
 # extra_refused <message> <path> <match> [helm args...]
 extra_refused() {
   local msg="$1" path="$2" match="$3" a; shift 3
@@ -287,8 +287,8 @@ run_case "guard: gateway.extraRoutes exact /, /robots.txt, /home/, the old marke
 gw_extra_duplicate() {
   local dup="$tmp/routes-dup.yaml"
   printf 'gateway:\n  extraRoutes:\n' >"$dup"
-  printf '    - {path: /home/, match: prefix, service: telflo-site, port: 8081}\n' >>"$dup"
-  printf '    - {path: /home/, match: exact, service: telflo-site, port: 8081}\n' >>"$dup"
+  printf '    - {path: /home/, match: prefix, service: website, port: 8081}\n' >>"$dup"
+  printf '    - {path: /home/, match: exact, service: website, port: 8081}\n' >>"$dup"
   renders "${D[@]}" -f "$dup" || return 1
   printf '    - {path: /home/, match: prefix, service: other-site, port: 8082}\n' >>"$dup"
   refused "gateway.extraRoutes[2] repeats an earlier route's match and path" "" "${D[@]}" -f "$dup"
@@ -322,10 +322,10 @@ gw_extra_service_port() {
     --set-string 'gateway.extraRoutes[0].service=site;x' --set gateway.extraRoutes[0].port=8081 &&
     refused "gateway.extraRoutes[0].port must be a port, 1 to 65535" "" \
       "${D[@]}" "$SKIP" --set-string 'gateway.extraRoutes[0].path=/home/' --set-string gateway.extraRoutes[0].match=prefix \
-      --set-string gateway.extraRoutes[0].service=telflo-site --set gateway.extraRoutes[0].port=65536 &&
+      --set-string gateway.extraRoutes[0].service=website --set gateway.extraRoutes[0].port=65536 &&
     refused "gateway.extraRoutes[0].port must be a port, 1 to 65535" "" \
       "${D[@]}" "$SKIP" --set-string 'gateway.extraRoutes[0].path=/home/' --set-string gateway.extraRoutes[0].match=prefix \
-      --set-string gateway.extraRoutes[0].service=telflo-site --set-string 'gateway.extraRoutes[0].port=80;x' &&
+      --set-string gateway.extraRoutes[0].service=website --set-string 'gateway.extraRoutes[0].port=80;x' &&
     gw_port_text 010 && gw_port_text 8081
 }
 # gw_port_text <text>: a port given as text refused (Ruling 351: "010" once
@@ -333,7 +333,7 @@ gw_extra_service_port() {
 gw_port_text() {
   refused "gateway.extraRoutes[0].port must be a port, 1 to 65535" "" \
     "${D[@]}" "$SKIP" --set-string 'gateway.extraRoutes[0].path=/home/' --set-string gateway.extraRoutes[0].match=prefix \
-    --set-string gateway.extraRoutes[0].service=telflo-site --set-string "gateway.extraRoutes[0].port=$1"
+    --set-string gateway.extraRoutes[0].service=website --set-string "gateway.extraRoutes[0].port=$1"
 }
 run_case "guard: gateway.extraRoutes' service and port checked without the schema (a port over 65535, or text: 80;x, 010, 8081)" gw_extra_service_port
 run_case "guard: gateway.extraRoutes not a list refused without the schema" refused \
