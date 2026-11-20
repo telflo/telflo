@@ -4,7 +4,7 @@ info:
   title: otelcol-validator API
   version: 1.0.0
   description: |
-    The collector validator (D13b spec decisions 10 and 11): checks an
+    The collector validator: checks an
     OpenTelemetry Collector configuration with `otelcol-contrib validate` of
     the version it is pinned to, and says what a host must provide to run
     it. The platform's API is its only caller; browsers never reach it.
@@ -96,7 +96,7 @@ paths:
       tags: [validation]
       summary: Check a configuration's text with one collector version.
       description: |
-        Fills in the organization's values first (D20 decision 13): each live
+        Fills in the organization's values first: each live
         `${org:NAME}` with a value in `organizationVariables` is replaced by
         it, every `$` of the value doubled, as the opamp-server fills them
         in, and everything below runs on the filled-in text. A text whose
@@ -105,7 +105,7 @@ paths:
         MiB.`, and nothing is built.
 
         Then runs `otelcol-contrib validate` of the version on the text, with the
-        validator's protections (D13b spec decision 10): non-`env` confmap
+        validator's protections: non-`env` confmap
         providers are replaced with placeholders, `${env:VAR}` gets a
         placeholder in the collector's environment only, Datadog exporters get
         a placeholder `hostname`. `valid` is false whenever `errors` isn't
@@ -248,8 +248,8 @@ components:
         organizationVariables:
           type: object
           description: |
-            The organization's values, by name, to fill in before every check
-            (D20 decisions 13 and 27): the platform sends those the text
+            The organization's values, by name, to fill in before every check:
+            the platform sends those the text
             references. Left out, none. Within the opamp-server's bounds: at
             most 150; a name an ASCII letter or an underscore, then ASCII
             letters, digits or underscores, at most 128 characters; a value

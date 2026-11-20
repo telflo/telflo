@@ -3,12 +3,11 @@
 The service's half (`app/runner.py`) bounds all of it: the child has one
 deadline (57 + d s), past which its whole process group, the collector
 included, is killed. Nothing here has to bound itself to be safe, but each
-phase keeps to its own limit (ruling 2) so a run answers before that.
+phase keeps to its own limit so a run answers before that.
 
-D14a Task 3 built the run's frame and its protections; Task 4 fills the
-seam (``_prepare_strategy``): the compatibility refusal and its "sandbox
-refused to run pipeline: …" message, the strategy pick and the
-fixture-shape advisory first, the status from the collector's exit (the
+A run, in order: the compatibility refusal and its "sandbox refused to run
+pipeline: …" message, the strategy pick and the fixture-shape advisory first
+(the seam, ``_prepare_strategy``), the status from the collector's exit (the
 exit codes 0, -15 and 143 as a clean stop, a fully rejected replay as a
 failure), the stop, the scrubbed logs with the ``[replay]`` block and the
 output read:
@@ -26,17 +25,17 @@ output read:
 3. the backstop on the exact text the collector reads, and beside it the
    file-settings check on the same text, walking the node graph the
    backstop's own reader composes (`bounded_yaml.single_node`; C-006 again,
-   C-000 for a text it can't compose; Rulings 32, 34);
+   C-000 for a text it can't compose);
 4. the collector (`<binary> --config <file>`, no shell, the allowlisted
    environment and the sandbox's fixed overrides, ``KUBECONFIG`` for a
    Kubernetes processor, the workspace as its working directory, its pipes
    drained as they arrive), then the strategy: ready (a TCP probe, or the
    collector's ready line for filelog), the kwok informer wait for a
-   Kubernetes processor (every strategy's, Ruling 30), the feed (the OTLP
+   Kubernetes processor (every strategy's), the feed (the OTLP
    replay within its 30 s budget, the syslog push, filelog's input staged
    once the informer wait is over when there was one), the hold
    for the run's duration while an output watchdog stops a collector whose
-   file passes 16 MiB (ruling 4), then the stop (SIGTERM, 5 s, SIGKILL, the
+   file passes 16 MiB, then the stop (SIGTERM, 5 s, SIGKILL, the
    reap), always, in a ``finally``;
 5. the answer: the scrubbed logs with the replay's ``[replay]`` block (at
    most ``LOGS_KEPT_BYTES`` kept here; the service cuts them to 256 KiB
@@ -45,7 +44,7 @@ output read:
    decoded input (OTLP runs), the timings.
 
 Nothing here logs the text, the input, the output or what the collector
-printed (ADR 0024).
+printed.
 """
 
 from __future__ import annotations
@@ -77,14 +76,13 @@ from app.yaml_mutations import processor_needs_k8s
 # pipe), at most; the service cuts the scrubbed logs to 256 KiB.
 LOGS_KEPT_BYTES = 1024 * 1024
 LOGS_TRUNCATION_MARKER = b"\n[logs truncated by the tester]\n"
-# The decoded input an answer carries, at most (ruling 1: `errors="replace"`
-# can turn 10 MiB into 30 MiB). The child sends a little more and says
-# whether there was more than the cap: the service scrubs the secret first,
-# then cuts at the cap (Ruling 27), so a secret across the cut never leaves
-# part of itself behind.
+# The decoded input an answer carries, at most (`errors="replace"` can turn
+# 10 MiB into 30 MiB). The child sends a little more and says whether there
+# was more than the cap: the service scrubs the secret first, then cuts at
+# the cap, so a secret across the cut never leaves part of itself behind.
 MAX_DECODED_INPUT_BYTES = 10 * 1024 * 1024
 DECODED_INPUT_SLACK_BYTES = 64 * 1024
-# The output watchdog (ruling 4): a collector whose output file passes this
+# The output watchdog: a collector whose output file passes this
 # is stopped, so one run can't fill the shared /tmp.
 OUTPUT_WATCHDOG_BYTES = 16 * 1024 * 1024
 OUTPUT_WATCHDOG_POLL_SECONDS = 0.05
@@ -102,7 +100,7 @@ _STOPPED_CLEANLY = (0, -15, 143)
 __all__ = ["MAX_OUTPUT_BYTES", "INPUT_NAME", "CollectorExecFailed", "RunRequest", "Strategy", "execute"]
 
 
-# The errors of the exec itself (Ruling 29): the binary is missing (ENOENT),
+# The errors of the exec itself: the binary is missing (ENOENT),
 # not executable or on a noexec mount (EACCES, EPERM), or not an executable
 # this system runs (ENOEXEC). Anything else from starting the collector (a
 # fork that fails: EAGAIN, ENOMEM; a pipe that can't be made: EMFILE, ENFILE)
@@ -113,8 +111,7 @@ EXEC_ERRNOS = frozenset({errno.ENOENT, errno.EACCES, errno.ENOEXEC, errno.EPERM}
 class CollectorExecFailed(Exception):
     """The collector's binary couldn't be executed (an OSError of
     ``EXEC_ERRNOS`` from the exec itself): the only failure the service
-    answers as 503 ``version_unavailable`` (Rulings 27, 29). ``kind`` is the
-    error's type."""
+    answers as 503 ``version_unavailable``. ``kind`` is the error's type."""
 
     def __init__(self, kind: str) -> None:
         super().__init__(kind)
@@ -197,7 +194,7 @@ class Strategy:
     """What the seam decides for a run: the text the collector reads, the
     strategy's name, the mutations and compatibility findings (as the answer
     carries them), whether kwok is used, and the strategy that stages,
-    readies and feeds (None runs the collector unfed, as Task 3's seam did).
+    readies and feeds (None runs the collector unfed).
     ``close`` lets go of what the strategy holds (its port's lease)."""
 
     text: str
@@ -361,12 +358,12 @@ def _prepare_strategy(request: RunRequest, text: str) -> Strategy | Refusal:
 
 
 def _final_file_settings(strategy: Strategy) -> Refusal | None:
-    """Rulings 32 and 34, beside the backstop on the same text and composed
-    by the backstop's own reader (`bounded_yaml.single_node`): a processor
-    setting that names a file and survived to the exact text the collector
-    reads is refused (C-006, naming the processor and the key only),
-    whatever let it through; a text that can't be composed is refused too
-    (C-000, `unreadable`), never let through."""
+    """Beside the backstop on the same text and composed by the backstop's
+    own reader (`bounded_yaml.single_node`): a processor setting that names
+    a file and survived to the exact text the collector reads is refused
+    (C-006, naming the processor and the key only), whatever let it through;
+    a text that can't be composed is refused too (C-000, `unreadable`),
+    never let through."""
     issues = compatibility.final_file_settings(strategy.text)
     if not issues:
         return None
@@ -414,11 +411,11 @@ class RunningCollector:
 
 
 async def _watch_output(path: Path, collector: RunningCollector, fired: list[int], limit: int) -> None:
-    """Ruling 4's watchdog: once the output file passes ``limit`` bytes, stop
+    """The watchdog: once the output file passes ``limit`` bytes, stop
     the collector (SIGTERM, then SIGKILL after the grace) and record the
     size.
 
-    The outcome (Ruling 29): a collector that stops on SIGTERM exits 0, -15
+    The outcome: a collector that stops on SIGTERM exits 0, -15
     or 143, a clean stop, so the run succeeds with its output cut at 10 MiB
     and R-006. One that ignores SIGTERM is killed after the grace (-9): the
     run fails, ``collector_failed`` "The collector stopped with exit code

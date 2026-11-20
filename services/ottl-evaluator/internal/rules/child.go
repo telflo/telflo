@@ -1,15 +1,13 @@
-// New in D15a Task 2 (plan Preflight ruling 10): the child processes. A Go
-// regexp call and OTTL's parser can't be interrupted (one pattern measured
-// 52 s per MiB; `Concat([` twenty deep, 37 s to parse), so each evaluate and
-// validate request's work runs in a child process of the same binary, which
-// the server kills at its limit. The child reads the checked request on
-// stdin and writes one JSON line per finished rule (evaluate) or per step
-// (validate) on stdout, flushed as it goes, so the lines written before a
-// kill survive it. It runs with an empty environment but GOMEMLIMIT and
-// GOMAXPROCS (internal/server's childEnvironment), in its own process group,
-// and asks the kernel to kill it first when memory runs out (oom_score_adj
-// 1000, Linux only). D15a Task 3's follow-up (the controller's Ruling 34)
-// corrected this comment, which named GOMEMLIMIT alone.
+// The child processes. A Go regexp call and OTTL's parser can't be
+// interrupted (one pattern measured 52 s per MiB; `Concat([` twenty deep,
+// 37 s to parse), so each evaluate and validate request's work runs in a
+// child process of the same binary, which the server kills at its limit. The
+// child reads the checked request on stdin and writes one JSON line per
+// finished rule (evaluate) or per step (validate) on stdout, flushed as it
+// goes, so the lines written before a kill survive it. It runs with an empty
+// environment but GOMEMLIMIT and GOMAXPROCS (internal/server's
+// childEnvironment), in its own process group, and asks the kernel to kill
+// it first when memory runs out (oom_score_adj 1000, Linux only).
 
 package rules
 

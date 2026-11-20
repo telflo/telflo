@@ -1,7 +1,6 @@
-// New in D15a Task 2 (spec decisions 2, 3 and 8; plan Preflight rulings 5,
-// 6, 7 and 10): checking a run's rules, one at a time, against its output
-// and the collector's log. Text and regex rules have decision 8's
-// whitespace tolerance and Go's regexp, and a match names its record.
+// Checking a run's rules, one at a time, against its output and the
+// collector's log. Text and regex rules have whitespace tolerance and
+// Go's regexp, and a match names its record.
 
 package rules
 

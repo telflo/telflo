@@ -2,21 +2,18 @@
 adds on its own.
 
 - Organization variables (`${org:X}`), read from the text with the
-  organization's values already filled in (D20 decisions 13 and 27): one
-  row names the names filled in; a live reference left, a name the
-  organization doesn't define, reports `Unresolved organization variable:
-  X` (D13b spec decision 7); a name over 128 characters, which no variable
-  can have, has its own row (Ruling 55); the legacy `$orgvar:X` form, which
-  nothing fills in any more, reports `Unsupported: write ${org:X}` (D20
-  decision 16).
+  organization's values already filled in: one row names the names filled in;
+  a live reference left, a name the organization doesn't define, reports
+  `Unresolved organization variable: X`; a name over 128 characters, which no
+  variable can have, has its own row; the legacy `$orgvar:X` form, which
+  nothing fills in, reports `Unsupported: write ${org:X}`.
 - The non-`env` confmap providers the validator neutralised.
-- What `validate` passes but the collector refuses at start (D13b Preflight
-  ruling 2, the owner's): the text names TLS files, the file exporter's
-  directory, or components that need the cluster's API. The validator reads
-  the text only; it never opens a path.
+- What `validate` passes but the collector refuses at start: the text names
+  TLS files, the file exporter's directory, or components that need the
+  cluster's API. The validator reads the text only; it never opens a path.
 - A tail_sampling `ottl_condition` policy with no conditions, which
   `validate` accepts and the collector refuses at start, is an error on the
-  processor (Preflight ruling 2).
+  processor.
 """
 
 from __future__ import annotations
@@ -53,11 +50,10 @@ def live_organization_references(text: str) -> list[str]:
     Deliberately separate from ``_neutralize_str``: that function is
     security-critical and total, and this only reads.
 
-    Brace matching is linear (D13b ruling 37): each
-    reference's closing brace is looked up in `_matching_braces`, found in
-    one pass, instead of scanned for, which cost the square of the text's
-    length on unbalanced `${org:` (225 KB: 568 s). Same answers (the
-    differential test in tests/test_linear_scans.py).
+    Brace matching is linear: each reference's closing brace is looked up in
+    `_matching_braces`, found in one pass, instead of scanned for, which cost
+    the square of the text's length on unbalanced `${org:` (225 KB: 568 s).
+    Same answers (the differential test in tests/test_linear_scans.py).
     """
     found: dict[str, None] = {}
     braces: dict[int, int] | None = None  # found once, at the first reference
@@ -81,8 +77,7 @@ def _decoded_strings(root: Node | None) -> list[str]:
     """Every decoded key and scalar value under a composed document, each
     container visited once however often it is aliased. Iterative, so depth
     costs no stack; the strings are what the collector's confmap layer reads,
-    so a reference hidden behind a YAML escape is visible here (D13b ruling
-    39)."""
+    so a reference hidden behind a YAML escape is visible here."""
     strings: list[str] = []
     seen: set[int] = set()
     stack: list[Node] = [root] if root is not None else []
@@ -121,9 +116,9 @@ def _legacy_names(text: str) -> list[str]:
 
 def _decoded_organization_references(yaml_content: str) -> tuple[list[str], list[str]]:
     """Live ``${org:...}`` bodies, and legacy ``$orgvar:`` names, across the
-    DECODED keys and values, each in first-seen order, deduped (D13b ruling
-    39(f)): a reference a YAML escape hid from the raw text is found here,
-    as the collector would find it, and one in a comment isn't."""
+    DECODED keys and values, each in first-seen order, deduped: a reference a
+    YAML escape hid from the raw text is found here, as the collector would
+    find it, and one in a comment isn't."""
     try:
         root = bounded_yaml.single_node(yaml_content)
     except (bounded_yaml.YAMLError, bounded_yaml.TooDeep, bounded_yaml.TooManyAliases):
@@ -141,7 +136,7 @@ def _decoded_organization_references(yaml_content: str) -> tuple[list[str], list
 
 # The opamp-server's bound on a variable's name (`store/orgvariables`'
 # MaxNameLength): a longer reference is live but never defined, and Publish
-# refuses it (Rulings 51 and 55).
+# refuses it.
 NAME_OVER_LIMIT_DESCRIPTION = (
     "This organization variable name is over 128 characters: no variable can have it, and Publish refuses it."
 )
@@ -149,8 +144,8 @@ NAME_OVER_LIMIT_DESCRIPTION = (
 
 def filled_in_requirement(names: Sequence[str]) -> dict:
     """The one row naming every organization variable whose value was filled
-    in (D20 decision 27; Preflight ruling 30): one row in all, so the names
-    never use up the answer's requirements."""
+    in: one row in all, so the names never use up the answer's
+    requirements."""
     return {
         "category": "organization_variable",
         "title": "Organization variables filled in",
@@ -177,20 +172,20 @@ def name_over_limit_requirement(name: str) -> dict:
 def organization_variable_requirements(
     yaml_content: str, filled_in: Sequence[str] = (), name_over_limit: str | None = None
 ) -> list[dict]:
-    """Requirement dicts for the organization variables (D20 decisions 16
-    and 27). `yaml_content` is the text with the organization's values
-    already filled in; `filled_in` names the variables whose values were
-    (the defined names, from the text as written), and `name_over_limit` the
-    first live reference to a name over 128 characters.
+    """Requirement dicts for the organization variables. `yaml_content` is
+    the text with the organization's values already filled in; `filled_in`
+    names the variables whose values were (the defined names, from the text
+    as written), and `name_over_limit` the first live reference to a name
+    over 128 characters.
 
     The "filled in" row and the name over 128 characters come first, one row
     each, so a text's many references never cut them. Then, found on the
-    decoded keys and values (D13b ruling 39(f)): each live ``${org:...}``
-    still left, a bare-name body an "unresolved organization variable" (no
-    value filled it in) and a ``NAME:-fallback`` body (confmap's ``:-``
-    default syntax, which organization variables don't support) a distinct
-    "unsupported syntax" requirement; and each legacy ``$orgvar:NAME``, which
-    stays literal text, "Unsupported: write ${org:NAME}".
+    decoded keys and values: each live ``${org:...}`` still left, a bare-name
+    body an "unresolved organization variable" (no value filled it in) and a
+    ``NAME:-fallback`` body (confmap's ``:-`` default syntax, which
+    organization variables don't support) a distinct "unsupported syntax"
+    requirement; and each legacy ``$orgvar:NAME``, which stays literal text,
+    "Unsupported: write ${org:NAME}".
     """
     requirements: list[dict] = []
     if filled_in:
@@ -258,7 +253,7 @@ def confmap_provider_requirement(schemes: list[str]) -> dict:
 
 
 # ---------------------------------------------------------------------------
-# What the collector needs at start (Preflight ruling 2)
+# What the collector needs at start
 # ---------------------------------------------------------------------------
 
 SECTIONS = ("receivers", "processors", "exporters", "connectors", "extensions")
@@ -333,12 +328,12 @@ def _tls_files(node: object, inside_tls: bool, found: list[tuple[str, str]]) -> 
 
 
 def _directory_requirement(component_id: str, component_path: str, file_path: object) -> dict | None:
-    """The file exporter's directory (Preflight ruling 2). An absolute one is
-    named as written; a relative one is relative to the collector's working
-    directory and is shown in quotes, as is any directory with whitespace at
-    either end: `path: 'stat /y'` names the directory `"stat "` (the first
-    fix read `Directory stat  must exist`). A bare file name (or `./x`)
-    needs nothing."""
+    """The file exporter's directory. An absolute one is named as written; a
+    relative one is relative to the collector's working directory and is
+    shown in quotes, as is any directory with whitespace at either end:
+    `path: 'stat /y'` names the directory `"stat "` (never
+    `Directory stat  must exist`). A bare file name (or `./x`) needs
+    nothing."""
     if not isinstance(file_path, str) or not file_path.strip():
         return None
     written = file_path.strip()
@@ -361,9 +356,9 @@ def _directory_requirement(component_id: str, component_path: str, file_path: ob
 
 
 def text_requirements(yaml_content: str) -> list[dict]:
-    """The requirements the text itself shows (Preflight ruling 2): TLS
-    files, the file exporter's directory, and the cluster's API. Nothing is
-    opened or resolved; a path is reported as written."""
+    """The requirements the text itself shows: TLS files, the file exporter's
+    directory, and the cluster's API. Nothing is opened or resolved; a path
+    is reported as written."""
     document = _parse(yaml_content)
     if document is None:
         return []

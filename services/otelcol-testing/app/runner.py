@@ -1,5 +1,4 @@
-"""Running one test, the service's half (D14a spec decision 5; Preflight
-rulings 1 to 4), as the validator runs a check (D13b rulings 26, 27, 33):
+"""Running one test, the service's half, as the validator runs a check:
 
 1. Take one of a fixed number of slots (the cap, 4 by default), waiting at
    most 5 s; past that the request answers 503 `tester_busy`.
@@ -21,8 +20,8 @@ rulings 1 to 4), as the validator runs a check (D13b rulings 26, 27, 33):
    paths, and the secret's exact value), cut the logs to 256 KiB at a line,
    cut the files to 10 MiB only once they are scrubbed (the output at a
    record, the decoded input at a character: a secret across a cut never
-   leaves part of itself behind; Ruling 27), and render it, at most 32 MiB
-   (ruling 1), off the event loop.
+   leaves part of itself behind), and render it, at most 32 MiB, off the
+   event loop.
 
 The event loop parses nothing of the text or of what the collector printed.
 """
@@ -58,9 +57,9 @@ RUN_COMMAND: tuple[str, ...] = (sys.executable, "-E", "-s", "-m", "app.run_child
 # The child's answer, at most: two base64 files of 10 MiB (13,981,016 bytes
 # each), the logs and the text it ran. More is a failure.
 CHILD_ANSWER_MAX_BYTES = 40 * 1024 * 1024
-# What the service answers, at most (ruling 1: the platform reads 32 MiB).
+# What the service answers, at most (the platform reads 32 MiB).
 MAX_ANSWER_BYTES = 32 * 1024 * 1024
-# The logs an answer carries, at most, in UTF-8 bytes (ruling 1: 256 KiB).
+# The logs an answer carries, at most, in UTF-8 bytes (256 KiB).
 MAX_LOGS_BYTES = 256 * 1024
 LOGS_TRUNCATION_MARKER = "\n[logs truncated by the tester]\n"
 # The text the collector ran: the person's (262,144 characters at most),
@@ -107,8 +106,8 @@ class CollectorUnavailable(OSError):
 class ChildNotStarted(OSError):
     """The run's child process couldn't be started (the service's own
     interpreter or directory is unusable, a fork or a pipe failed): the
-    tester's own trouble, 500 ``internal_error`` (Ruling 29), logged as
-    such; never 503 ``version_unavailable``."""
+    tester's own trouble, 500 ``internal_error``, logged as such; never 503
+    ``version_unavailable``."""
 
     def __init__(self, kind: str) -> None:
         super().__init__(kind)
@@ -130,8 +129,8 @@ class Job:
 
 
 async def acquire_slot(slots: asyncio.Semaphore, wait_seconds: float) -> None:
-    """Take one of the run slots, waiting at most `wait_seconds` (ruling 2:
-    5 s), else SlotUnavailable."""
+    """Take one of the run slots, waiting at most `wait_seconds` (5 s), else
+    SlotUnavailable."""
     try:
         await asyncio.wait_for(slots.acquire(), timeout=wait_seconds)
     except TimeoutError:
@@ -197,10 +196,10 @@ async def run_test(
     """Run one test while holding a slot; returns the child's checked answer,
     not yet scrubbed of the secret (`finish_answer` does that).
     ``record_workspace`` is told the run's workspace as soon as it is made,
-    so the caller's scrub replaces it in every field (Ruling 27). Raises
-    SlotUnavailable, CollectorUnavailable (503) or ChildNotStarted (500;
-    both OSErrors), and RunFailed. The slot is released only once the run's
-    process group is dead and its workspace gone."""
+    so the caller's scrub replaces it in every field. Raises SlotUnavailable,
+    CollectorUnavailable (503) or ChildNotStarted (500; both OSErrors), and
+    RunFailed. The slot is released only once the run's process group is dead
+    and its workspace gone."""
     await acquire_slot(slots, slot_wait_seconds)
     started = time.monotonic()
     try:

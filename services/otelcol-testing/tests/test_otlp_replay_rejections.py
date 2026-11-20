@@ -1,13 +1,11 @@
-"""The replay's client is ``httpx2``, imported as ``httpx`` (D14a Preflight
-ruling 19). D14a Task 4's tests follow at the end: the replay's total
-budget, the port's lease while runs overlap, and the informer wait with the
-cluster's certificates.
+"""The replay's client is ``httpx2``, imported as ``httpx``. More tests
+follow at the end: the replay's total budget, the port's lease while runs
+overlap, and the informer wait with the cluster's certificates.
 
-Tests for the P1 fix that surfaces OTLP-replay rejections in the run's
-stderr instead of swallowing them. Pre-fix `_replay_file` only logged 4xx
-responses to the service logger, so a misconfigured fixture (logs JSON sent
-to a metrics pipeline, etc.) produced an empty output with no diagnostic
-visible to the user.
+OTLP-replay rejections are surfaced in the run's stderr instead of being
+swallowed: logged only to the service logger, a misconfigured fixture (logs
+JSON sent to a metrics pipeline, etc.) would produce an empty output with no
+diagnostic visible to the user.
 
 Two layers of test:
 
@@ -313,7 +311,7 @@ def test_summary_fully_rejected_property() -> None:
 
 
 # ---------------------------------------------------------------------------
-# _hold_free_port (P3.10 — tighten the TOCTOU window between picker and
+# _hold_free_port (tightens the TOCTOU window between picker and
 # subprocess bind by holding the picker socket open until immediately
 # before spawn).
 # ---------------------------------------------------------------------------
@@ -358,8 +356,8 @@ def test_hold_free_port_releases_on_exit() -> None:
 
 
 # ---------------------------------------------------------------------------
-# _wait_for_pod_listable (P3.11 — replaces the static 2s informer-sync
-# sleep with a poll against the kwok apiserver).
+# _wait_for_pod_listable (a poll against the kwok apiserver, in place of a
+# static informer-sync sleep).
 # ---------------------------------------------------------------------------
 
 
@@ -462,7 +460,7 @@ async def test_wait_for_pod_listable_survives_transport_errors(
 
 
 # ---------------------------------------------------------------------------
-# D14a Task 4: the replay's total budget (Preflight ruling 2)
+# The replay's total budget
 # ---------------------------------------------------------------------------
 
 from app import settings as settings_module  # noqa: E402
@@ -556,7 +554,7 @@ async def test_only_the_payloads_sent_count_toward_fully_rejected(tmp_path: Path
 async def test_a_receiver_that_never_answers_is_bounded_by_the_posts_own_limit(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Ruling 29: a POST is awaited under ``wait_for(min(what is left, 5 s))``,
+    """A POST is awaited under ``wait_for(min(what is left, 5 s))``,
     so a receiver that never answers (httpx's per-read timeouts would let one
     that answers a byte at a time run on; the mock transport has none at all)
     holds it for the POST's limit only: a rejection, and the replay goes on.
@@ -636,7 +634,7 @@ async def test_the_replay_has_ruling_2s_limits_and_ignores_proxy_variables(
 
 
 # ---------------------------------------------------------------------------
-# D14a Task 4: the port's lease, while runs overlap
+# The port's lease, while runs overlap
 # ---------------------------------------------------------------------------
 
 import random  # noqa: E402
@@ -742,7 +740,7 @@ def test_the_range_is_below_the_kernels_ephemeral_ranges() -> None:
 
 
 # ---------------------------------------------------------------------------
-# D14a Task 4: the informer wait verifies the cluster (Preflight ruling 5)
+# The informer wait verifies the cluster
 # ---------------------------------------------------------------------------
 
 import os  # noqa: E402

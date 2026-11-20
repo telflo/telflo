@@ -1,5 +1,5 @@
-"""D13b ruling 37: the `${env:` reference scan and the brace matching are
-linear, and answer exactly as the scanning versions (tests/verbatim.py) do.
+"""The `${env:` reference scan and the brace matching are linear, and answer
+exactly as the scanning versions (tests/verbatim.py) do.
 
 The scanning versions cost the square of the text's length on
 unterminated references: `_ENV_REF_RE`'s `[^}]*` ran to the end of the value
@@ -7,12 +7,12 @@ from every `${env:A:-` (236 KB: 47 s), and `_find_matching_brace` scanned to
 the end from every unbalanced `${org:` (225 KB: 568 s) or `${a:`. Each was
 bounded only by the check's deadline, holding a slot 12 s.
 
-Two kinds of test: a differential fuzz (seeded, a fixed number of texts)
-that the service's versions answer as the scanning ones on every text, and
-metered runs at the reviewer's sizes that count what is scanned (characters
-read by the string operations and the regexes, or Python lines run) and stop
-the moment the count passes a budget linear in the text's length. Neither
-measures time.
+Two kinds of test: a differential fuzz (seeded, a fixed number of texts) that
+the service's versions answer as the scanning ones on every text, and metered
+runs at the sizes above (about 225 to 262 KB) that count what is scanned
+(characters read by the string operations and the regexes, or Python lines
+run) and stop the moment the count passes a budget linear in the text's
+length. Neither measures time.
 """
 
 from __future__ import annotations
@@ -80,7 +80,7 @@ def test_env_references_find_what_telflo_apps_expression_finds() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Metered at the reviewer's sizes
+# Metered at the sizes of the slow texts
 # ---------------------------------------------------------------------------
 
 ENV_TEXT = 'x: "' + "${env:A:-" * 26_214 + '"\n'  # 235,932 characters

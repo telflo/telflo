@@ -1,4 +1,3 @@
-// New in the follow-up to D15a Task 2's review (the controller's Ruling 33):
 // `OPTIONS *` and paths that aren't in their cleaned form get the
 // envelope, after the secret's check, never Go's own answers.
 

@@ -1,14 +1,13 @@
-"""The requirements-only rerun (D13b ruling 40) and the reap primitives
-(ruling 41).
+"""The requirements-only rerun and the reap primitives.
 
-Ruling 40: a validate-stage requirement (file_storage's missing directory, a
-custom ``node_from_env_var``) stops the collector before the build stage and
-hid any build-stage error, so a run that ends with requirements only is run
+A validate-stage requirement (file_storage's missing directory, a custom
+``node_from_env_var``) stops the collector before the build stage and would
+hide any build-stage error, so a run that ends with requirements only is run
 once more with what the sandbox can meet — a fresh directory, a placeholder
 environment variable — and that run's errors are the answer's, the
 requirements staying from the first run.
 
-Ruling 41: ``_stop`` shields the shared futures so a reap cancelled midway
+``_stop`` shields the shared futures so a reap cancelled midway
 doesn't break the next reap; a requirement whose captured variable holds the
 validator's placeholder or a line break is not emitted.
 """
@@ -73,9 +72,9 @@ async def _check(binary: Path, text: str):
 
 
 async def test_a_masked_build_error_is_surfaced_by_the_rerun(binary_dir: Path) -> None:
-    """The reviewer's case: file_storage's missing directory hid the
-    no_such_detector build error (valid: true). The rerun meets the directory
-    and the build error surfaces, with the directory still a requirement."""
+    """file_storage's missing directory hides the no_such_detector build
+    error (valid: true). The rerun meets the directory and the build error
+    surfaces, with the directory still a requirement."""
     binary = write_collector(binary_dir, "0.162.0", STAGING_COLLECTOR)
 
     result = await _check(binary, MASKING_CONFIG)
@@ -129,9 +128,9 @@ def test_meet_requirements_sets_named_variables_and_skips_the_unmeetable() -> No
     assert _meet_requirements("receivers: {}\n", only_cluster, None) is None
 
 
-# D13b Task 7's host_filesystem template (hostmetrics' root_path, a
-# validate-stage requirement on Linux) is met the same way: the rerun points
-# root_path at a fresh directory, so a build error it hid surfaces.
+# The host_filesystem template (hostmetrics' root_path, a validate-stage
+# requirement on Linux) is met the same way: the rerun points root_path at a
+# fresh directory, so a build error it hid surfaces.
 ROOT_PATH_COLLECTOR = r"""cfg="${2#--config=}"
 root=$(sed -n 's/.*root_path: *//p' "$cfg" | head -1 | tr -d '"'"'"'"')
 if [ -d "$root" ]; then
@@ -207,9 +206,9 @@ def test_meet_requirements_repoints_every_hostmetrics_root_path(tmp_path: Path) 
     assert _meet_requirements("receivers:\n  otlp: {}\n", [requirement], str(tmp_path)) is None
 
 
-# D13b ruling 63: components that reach one directory through an anchor get
-# one splice (two splices of one span left the text unreadable, refused as
-# "could not be checked safely"). The fake collectors pass once no component
+# Components that reach one directory through an anchor get one splice (two
+# splices of one span would leave the text unreadable, refused as "could not
+# be checked safely"). The fake collectors pass once no component
 # names the missing directory.
 SHARED_ROOT_PATH = """\
 receivers:
@@ -301,15 +300,15 @@ def test_meet_requirements_splices_an_anchored_directory_once(tmp_path: Path) ->
 
 
 # ---------------------------------------------------------------------------
-# Ruling 41: the reap shields its shared futures.
+# The reap shields its shared futures.
 # ---------------------------------------------------------------------------
 
 
 def test_stop_cancelled_once_still_ends_when_called_again() -> None:
     """A reap cancelled while it awaits the shared `exited`/`finished` futures
-    must not cancel the futures themselves (the review of b25c81a: m1), so a
-    second reap of the same process still reaps and closes it. Under a hang
-    guard (ruling 36): a broken shield leaves the second `_stop` hung."""
+    must not cancel the futures themselves, so a second reap of the same
+    process still reaps and closes it. Under a hang guard: a broken shield
+    leaves the second `_stop` hung."""
 
     async def scenario() -> tuple[bool, bool, bool]:
         transport, pipes = await asyncio.get_running_loop().subprocess_exec(
@@ -339,7 +338,7 @@ def test_stop_cancelled_once_still_ends_when_called_again() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Ruling 41: a placeholder-filled cause is never a requirement.
+# A placeholder-filled cause is never a requirement.
 # ---------------------------------------------------------------------------
 
 _DIRECTORY_CAUSE = (

@@ -1,11 +1,10 @@
-// New in D15a Task 2 (plan Preflight ruling 10): each cap refuses; past the
-// in-flight cap the answer is busy, and the slot is taken before the body is
-// read; the deadline ends an evaluation with "Not checked"; the hard kill
-// reaps the child and frees the slot; a child killed for memory, one the Go
-// runtime kills, one that crashes; validate's kill. No test sleeps: the
-// timers are fake and fired by the test, and every wait is on a channel
-// under the hang guard. D15a Task 3's follow-up (the controller's Ruling 34)
-// pins validate's "too complex" wording by its literal text per field.
+// Each cap refuses; past the in-flight cap the answer is busy, and the slot
+// is taken before the body is read; the deadline ends an evaluation with
+// "Not checked"; the hard kill reaps the child and frees the slot; a child
+// killed for memory, one the Go runtime kills, one that crashes; validate's
+// kill. No test sleeps: the timers are fake and fired by the test, and every
+// wait is on a channel under the hang guard. Validate's "too complex"
+// wording is pinned by its literal text per field.
 
 package server
 
@@ -337,7 +336,7 @@ func TestValidateKilledAtItsLimitIsTooComplex(t *testing.T) {
 	}
 }
 
-// The real slow parse the preflight measured (`Concat([` twenty deep, 37 s)
+// The real slow parse measured (`Concat([` twenty deep, 37 s)
 // never reaches the parser: its nesting is refused first.
 func TestTheSlowParseIsRefusedByItsNesting(t *testing.T) {
 	ts := newTestServer(t)
@@ -373,7 +372,7 @@ func TestLogsCarryNoRequestContent(t *testing.T) {
 			t.Fatalf("the log holds %q:\n%s", secret, logs)
 		}
 	}
-	// GET /health writes no line (D33-1 decision 18, Ruling 335).
+	// GET /health writes no line.
 	lines := strings.Split(strings.TrimSpace(logs), "\n")
 	if len(lines) != 6 {
 		t.Fatalf("%d log lines:\n%s", len(lines), logs)

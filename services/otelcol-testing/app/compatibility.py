@@ -1,6 +1,6 @@
 """Pre-flight compatibility checks for user-submitted pipelines.
 
-Its codes and messages are stable (D14a Task 4):
+Its codes and messages are stable:
 
 - **C-002 checks a mapping only:** a processor whose value isn't a mapping
   is skipped, so an integer never crashes the check and a string never
@@ -17,17 +17,17 @@ Its codes and messages are stable (D14a Task 4):
   top, a pipeline that's a string, a component named by a number) would make
   the rules and mutations raise. It is refused as C-000, with a message
   naming the misshapen field.
-- **C-005** (Rulings 28, 33): a ``geoip`` processor is refused, since it
-  reads a database file the sandbox doesn't have (and a path the text names
-  could be another run's file).
-- **C-006** (Rulings 31, 32): any setting of a processor whose key
-  ends in ``_file`` or ``_path`` and holds a value, anywhere in its
-  configuration (``tls`` blocks and lists included), is refused: the sandbox
-  can't give a run access to files. Those C-002 and C-005 already refuse
-  are left to them; R-106's settings are refused too. The same check runs
-  on the exact text each collector reads, walking the node graph the
-  backstop's own reader composes (``final_file_settings``, Ruling 34).
-- **C-005 refuses ``schema`` and ``remotetap``** too (Ruling 33), each with
+- **C-005**: a ``geoip`` processor is refused, since it reads a database file
+  the sandbox doesn't have (and a path the text names could be another run's
+  file).
+- **C-006**: any setting of a processor whose key ends in ``_file`` or
+  ``_path`` and holds a value, anywhere in its configuration (``tls`` blocks
+  and lists included), is refused: the sandbox can't give a run access to
+  files. Those C-002 and C-005 already refuse are left to them; R-106's
+  settings are refused too. The same check runs on the exact text each
+  collector reads, walking the node graph the backstop's own reader composes
+  (``final_file_settings``).
+- **C-005 refuses ``schema`` and ``remotetap``** too, each with
   its own message.
 - `check_compatibility_doc` takes an already-parsed document, so the run
   parses once for the shape check and the rules (`check_compatibility`, the
@@ -154,15 +154,15 @@ def _check_pinned_kube_config_path(
         )
 
 
-# C-005 (new in D14a, Rulings 28 and 33): processors that can't run in the
-# sandbox, each with its own message. `geoip` looks every address up in a
-# MaxMind database at `providers.maxmind.database_path`: the sandbox has no
-# such database, and every run's collector shares one user and one disk, so a
-# path there could name another run's files or the tester's. `schema` fetches
-# schema files from URLs, `file://` included, which the sandbox can neither
-# reach nor let it open. `remotetap` starts its own server, on a port or a
-# unix socket path, which the sandbox doesn't run. The catalogue knows each
-# by one spelling (no rename; a test fails if that changes). Refused wherever
+# C-005: processors that can't run in the sandbox, each with its own message.
+# `geoip` looks every address up in a MaxMind database at
+# `providers.maxmind.database_path`: the sandbox has no such database, and
+# every run's collector shares one user and one disk, so a path there could
+# name another run's files or the tester's. `schema` fetches schema files
+# from URLs, `file://` included, which the sandbox can neither reach nor let
+# it open. `remotetap` starts its own server, on a port or a unix socket
+# path, which the sandbox doesn't run. The catalogue knows each by one
+# spelling (no rename; a test fails if that changes). Refused wherever
 # they're defined, as C-002 is, not only in the pipeline under test.
 _REFUSED_PROCESSORS: dict[str, str] = {
     "geoip": (
@@ -406,7 +406,7 @@ def _check_testable_receiver_constraints(
 ) -> None:
     """C-004: only fires when the **target-signal pipeline actually uses**
     a filelog/syslog receiver (`filelog` spelt either way: `file_log` is its
-    name from collector 0.149.0, D14a Ruling 49). A filelog defined at the top level but
+    name from collector 0.149.0). A filelog defined at the top level but
     referenced only by a sibling pipeline (e.g., the logs pipeline while
     the user runs a traces test) is irrelevant — the test takes the
     OTLP-replay path for the target signal and the unused filelog is
@@ -507,20 +507,19 @@ def _check_testable_receiver_constraints(
         refuse(only_full, f"{only_full}: {reason}.")
 
 
-# C-006 (new in D14a, Ruling 31, the owner's Ruling 28 applied; Ruling 32):
-# any processor setting that names a file is refused, found by a walk over
-# every processor's configuration, not a list of processors: a key ending in
-# `_file` or `_path` holding a value (TLS's ca_file, cert_file and key_file, a
-# token_file, a database_path, ...), at any depth, in mappings and lists
-# alike. Every run's collector shares one user and one disk, so such a path
-# could name another run's files or the tester's. Ruling 32: resourcedetection's
-# consul, openshift and docker settings are refused too, though R-106 would
-# strip them (defence in depth), and the same rule runs again on the exact
-# text each collector reads, over the node graph the backstop's own reader
-# composes (``final_file_settings``, Ruling 34). Left to the others
-# here: a processor C-005 refuses outright (it keeps its own message) and
-# C-002's `kube_config_path`. The message names the processor and the key,
-# never the value.
+# C-006: any processor setting that names a file is refused, found by a walk
+# over every processor's configuration, not a list of processors: a key
+# ending in `_file` or `_path` holding a value (TLS's ca_file, cert_file and
+# key_file, a token_file, a database_path, ...), at any depth, in mappings
+# and lists alike. Every run's collector shares one user and one disk, so
+# such a path could name another run's files or the tester's.
+# resourcedetection's consul, openshift and docker settings are refused too,
+# though R-106 would strip them (defence in depth), and the same rule runs
+# again on the exact text each collector reads, over the node graph the
+# backstop's own reader composes (``final_file_settings``). Left to the
+# others here: a processor C-005 refuses outright (it keeps its own message)
+# and C-002's `kube_config_path`. The message names the processor and the
+# key, never the value.
 _FILE_KEY_SUFFIXES = ("_file", "_path")
 _LEFT_TO_C002 = "kube_config_path"
 
@@ -528,9 +527,9 @@ _LEFT_TO_C002 = "kube_config_path"
 def _names_a_file(value: Any) -> bool:
     """Whether a constructed value is set: not null, and not an empty
     string, bytes value, list or mapping. Its tag never matters, as in the
-    final check's ``_node_names_a_file`` (the tagged-empty minor, Ruling 35):
-    ruamel builds `!foo ''` or `!!str ''` as a TaggedScalar holding '', and
-    `!!binary ''` as b'', each empty."""
+    final check's ``_node_names_a_file``: ruamel builds `!foo ''` or
+    `!!str ''` as a TaggedScalar holding '', and `!!binary ''` as b'', each
+    empty."""
     if isinstance(value, TaggedScalar):
         value = value.value
     if value is None or isinstance(value, (str, bytes, list, dict)):
@@ -589,7 +588,7 @@ def _check_processor_file_settings(doc: dict, issues: list[CompatibilityIssue]) 
     issues.extend(_file_setting_issues(doc.get("processors"), leave_to_others=True))
 
 
-# What the final check calls a text it can't compose (C-000; Ruling 34).
+# What the final check calls a text it can't compose (C-000).
 FINAL_UNREADABLE_MESSAGE = (
     f"{UNPARSEABLE_PREFIX}the text the collector would read couldn't be "
     "checked for processor settings that name files"
@@ -669,14 +668,14 @@ def _processor_entries(node: Node) -> list[tuple[str, Node]]:
 
 
 def final_file_settings(text: str) -> list[CompatibilityIssue]:
-    """C-006 on the exact text a collector is about to read (Rulings 32, 34),
-    beside the backstop and read by the backstop's own reader
+    """C-006 on the exact text a collector is about to read, beside the
+    backstop and read by the backstop's own reader
     (`bounded_yaml.single_node`, which composes and never constructs): every
-    processor's file-naming setting that survived, found on the composed
-    node graph, through any tag (a custom tag, an unhashable key or an
-    ill-fitting explicit tag, which the collector reads all the same), with
-    nothing left to another rule. A text it can't compose is refused (C-000),
-    never passed."""
+    processor's file-naming setting that survived, found on the composed node
+    graph, through any tag (a custom tag, an unhashable key or an ill-fitting
+    explicit tag, which the collector reads all the same), with nothing left
+    to another rule. A text it can't compose is refused (C-000), never
+    passed."""
     try:
         root = bounded_yaml.single_node(text)
     except Exception as error:  # noqa: BLE001 - any read failure refuses the run
@@ -699,7 +698,7 @@ _RULES = (
 
 
 # ---------------------------------------------------------------------------
-# The configuration's shape (D14a Task 4)
+# The configuration's shape
 # ---------------------------------------------------------------------------
 
 # The top-level sections that hold components, each a mapping of names.

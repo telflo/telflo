@@ -1,5 +1,5 @@
-"""The provider neutraliser's steps in a run (D14a spec decision 5, Preflight
-ruling 3), all in the run's child process, before any collector starts:
+"""The provider neutraliser's steps in a run, all in the run's child
+process, before any collector starts:
 
 1. `bounded_yaml.single_node` reads the text as one YAML document before any
    ruamel parse. A text it can't read, nesting too deeply or expanding too
@@ -8,20 +8,20 @@ ruling 3), all in the run's child process, before any collector starts:
    reference found on the DECODED keys and values (escapes, tagged scalars,
    keys and aliases included) by splicing its node's source span. R-105's
    advisory names the schemes it returns.
-3. (D14a Task 4) C-000 to C-006, the strategy pick and the mutations
-   (R-105 is step 2's, not a mutation's walk).
+3. C-000 to C-006, the strategy pick and the mutations (R-105 is step 2's,
+   not a mutation's walk).
 4. `backstop` on the exact text each collector reads: a text that no longer
    reads as one document, or still holds a live non-`env` reference, is
    refused and never runs.
-   Beside it (`app/run.py`, Rulings 32 and 34), C-006's file-settings check
-   runs on the same text, on the node graph composed by the backstop's own
-   reader (`bounded_yaml.single_node`, never constructed, so no tag hides a
+   Beside it (`app/run.py`), C-006's file-settings check runs on the same
+   text, on the node graph composed by the backstop's own reader
+   (`bounded_yaml.single_node`, never constructed, so no tag hides a
    setting), and refuses a text it can't compose
    (`compatibility.final_file_settings`).
 
 `providers.py`, `bounded_yaml.py` and `placeholders.py` are the validator's,
 byte for byte (tests/test_neutraliser_identity.py). The backstop is
-reimplemented here (ruling 3), as the validator's `runner._backstop`.
+reimplemented here, as the validator's `runner._backstop`.
 """
 
 from __future__ import annotations

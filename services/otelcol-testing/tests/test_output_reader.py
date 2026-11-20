@@ -1,6 +1,5 @@
 """The size-unit test makes a sparse file instead of writing 5 GiB; the
-answer's form (D14a Preflight ruling 1, ``encode_output``) is tested at the
-end.
+answer's form (``encode_output``) is tested at the end.
 
 Tests for the output-cap fix (R-006).
 
@@ -174,8 +173,8 @@ def test_advisory_message_uses_appropriate_size_unit(
 
 
 # ---------------------------------------------------------------------------
-# The answer's form (D14a Preflight ruling 1): one record or {"records"},
-# compact, at most 10 MiB with trailing records dropped and R-006
+# The answer's form: one record or {"records"}, compact, at most 10 MiB with
+# trailing records dropped and R-006
 # ---------------------------------------------------------------------------
 
 from app.output_reader import MAX_OUTPUT_BYTES, encode_output  # noqa: E402

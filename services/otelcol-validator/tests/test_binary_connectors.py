@@ -1,11 +1,9 @@
-"""The routing and failover cases against every offered collector (D13b
-decision 9, Preflight ruling 8; marked `binary`, run inside the image with
-`pytest -m binary`).
+"""The routing and failover cases against every offered collector (marked
+`binary`, run inside the image with `pytest -m binary`).
 
-The collector answers these 11 (there is no client-side `validatePipeline`,
-decision 18). Each text
-is the preflight's (an otlp receiver into the connector's pipeline, its
-targets each a pipeline to debug).
+The collector answers these 11 (there is no client-side `validatePipeline`).
+Each text is an otlp receiver into the connector's pipeline, its targets each
+a pipeline to debug.
 """
 
 from __future__ import annotations

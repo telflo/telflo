@@ -1,5 +1,4 @@
-// New in D15a Task 2 (spec decisions 5 and 6; plan Preflight rulings 6, 7
-// and 8): a rule's own checks, the same at Save (validate) and in a run
+// A rule's own checks, the same at Save (validate) and in a run
 // (evaluate), so lint and runs can't disagree: both parse with the
 // converters-only parsers runs use, never with the editors registered too
 // (StandardFuncs).
@@ -19,10 +18,10 @@ import (
 // Problem is one thing wrong with a rule: the field (pattern, ottl.context,
 // ottl.condition, ottl.expression, ottl.count, ottl.count.value2) and why.
 // Its message is worded once, here, and carried as it is both by validate
-// (Save) and by a run's rule error, so the two always read alike (the
-// controller's Ruling 33, refining Preflight ruling 20): a parser's message
-// follows SyntaxErrorPrefix, a regexp's follows InvalidRegexPrefix, and every
-// other problem is in its own words. Each is capped at maxMessageBytes.
+// (Save) and by a run's rule error, so the two always read alike: a parser's
+// message follows SyntaxErrorPrefix, a regexp's follows InvalidRegexPrefix,
+// and every other problem is in its own words. Each is capped at
+// maxMessageBytes.
 type Problem struct {
 	Field   string `json:"field"`
 	Message string `json:"message"`

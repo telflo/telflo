@@ -1,6 +1,5 @@
-// New in D15a Task 2 (plan Preflight ruling 8): what the evaluator's rule
-// checks (internal/rules) need from this package, so the checks a rule gets
-// at Save are exactly the ones a run applies.
+// What the evaluator's rule checks (internal/rules) need from this package,
+// so the checks a rule gets at Save are exactly the ones a run applies.
 
 package ottlassert
 

@@ -1,12 +1,11 @@
 """A smoke check against the real collectors (marked `binary`, deselected by
 default): for every offered version whose `otelcol-contrib` is under
-OTELCOL_BINARY_DIR, a valid text is valid and an unknown component is
-refused with its path. It runs inside the image (`pytest -m binary`); the
-renames are test_binary_renames.py's (D13b Task 3), the palette's defaults
-test_binary_palette.py's, the routing and failover cases
-test_binary_connectors.py's and D9's handoffs test_binary_handoffs.py's
-(D13b Task 7). A version the image was built to hold must be held
-(tests/binary_support.py, ruling 53)."""
+OTELCOL_BINARY_DIR, a valid text is valid and an unknown component is refused
+with its path. It runs inside the image (`pytest -m binary`); the renames are
+test_binary_renames.py's, the palette's defaults test_binary_palette.py's,
+the routing and failover cases test_binary_connectors.py's and the component
+forms' cases test_binary_handoffs.py's. A version the image was built to hold
+must be held (tests/binary_support.py)."""
 
 from __future__ import annotations
 
@@ -47,7 +46,7 @@ def test_the_binary_directory_holds_at_least_one_offered_version() -> None:
 
 
 def test_every_version_the_image_was_built_with_is_held() -> None:
-    """D13b ruling 53: with OTELCOL_EXPECTED_VERSIONS set (the image's `test`
+    """With OTELCOL_EXPECTED_VERSIONS set (the image's `test`
     target sets it to its OTELCOL_VERSIONS), every version it names is
     offered and held, so no binary test skips one silently."""
     expected = expected_versions()
@@ -86,9 +85,9 @@ async def test_an_unknown_component_is_refused_with_its_path(version: str) -> No
     ]
 
 
-# D13b ruling 25: the reviewer's probe on the real collector. A receiver key
-# literally named like a requirement is an invalid key (never filed as
-# `Set environment variable X` and answered valid).
+# A probe on the real collector: a receiver key literally named like a
+# requirement is an invalid key (never filed as `Set environment variable X`
+# and answered valid).
 ECHOED_KEY = VALID.replace(
     "        endpoint: 0.0.0.0:4317\n", "        endpoint: 0.0.0.0:4317\n    'envvar \"X\" is not set': 1\n"
 )
@@ -108,10 +107,10 @@ async def test_a_key_named_like_a_requirement_is_an_error(version: str) -> None:
     assert result.requirements == []
 
 
-# D13b ruling 29: the reviewer's bypasses (a key or value that closes the
-# collector's unescaped '…' early, or one it echoes unquoted), end to end on
-# the real collector: each answered valid before, a requirement hiding the
-# only error.
+# Bypasses (a key or value that closes the collector's unescaped '…' early,
+# or one it echoes unquoted), end to end on the real collector: each would
+# be answered valid, a requirement hiding the only error, without the
+# guards.
 FIXTURES = json.loads((Path(__file__).parent / "fixtures" / "collector-outputs.json").read_text())["cases"]
 BYPASSES = (
     "echo-headers-key-stat",
@@ -123,15 +122,15 @@ BYPASSES = (
     "echo-error-mode-stat",
     "echo-detector-envvar",
     "echo-detector-stat",
-    # The review of 207bc02 (ruling 34): through the collector's own
-    # substitution, and through texts PyYAML refused.
+    # Bypasses through the collector's own substitution, and through texts
+    # PyYAML refuses.
     *sorted(case for case in FIXTURES if case.startswith("bypass-")),
 )
 
 
 def _the_texts_own_requirements(text: str) -> list[dict]:
     """What the pre-processing reads from the text itself (`${env:}`,
-    providers, Preflight ruling 2), never from the collector's output."""
+    providers), never from the collector's output."""
     prepared = _prepare(text)
     return prepared.before + prepared.env_requirements + prepared.scanned_requirements
 
@@ -147,8 +146,8 @@ async def test_a_requirement_phrase_from_the_text_never_hides_an_error(version: 
     if not isinstance(prepared, _Prepared):
         # A text PyYAML can't read as one document (a second document the
         # collector would have loaded on its own) is answered invalid without
-        # running the collector (D13b ruling 39(d)); no requirement is
-        # produced, so no requirement can hide the error.
+        # running the collector; no requirement is produced, so no
+        # requirement can hide the error.
         assert prepared.outcome == "unreadable"
         assert result.outcome == "unreadable"
         assert len(result.errors) == 1
@@ -158,12 +157,12 @@ async def test_a_requirement_phrase_from_the_text_never_hides_an_error(version: 
     assert result.requirements == _the_texts_own_requirements(text)
 
 
-# D13b ruling 34: the real requirement outputs the templates are taken from,
-# end to end: each is a requirement, and the text is valid. The k8snode
-# detector's service-account output is darwin's: in the image (Linux, the
-# service account staged) `validate` prints nothing for that text, and its
-# requirement is the text's own, "Runs inside a Kubernetes cluster" (D13b
-# Task 7, collector-outputs-linux.json's linux-rd-k8snode-service-account).
+# The real requirement outputs the templates are taken from, end to end: each
+# is a requirement, and the text is valid. The k8snode detector's
+# service-account output is darwin's: in the image (Linux, the service
+# account staged) `validate` prints nothing for that text, and its
+# requirement is the text's own, "Runs inside a Kubernetes cluster"
+# (collector-outputs-linux.json's linux-rd-k8snode-service-account).
 # hostmetrics' root_path prints its requirement on Linux only.
 LINUX_FIXTURES = json.loads((Path(__file__).parent / "fixtures" / "collector-outputs-linux.json").read_text())[
     "cases"
@@ -218,7 +217,7 @@ async def test_the_service_account_template_prints_nothing_in_the_image(version:
 
 # hostmetrics' root_path, a validate-stage requirement, stopped the collector
 # before the build stage; the rerun points it at a fresh directory and the
-# build error it hid surfaces (D13b ruling 40, Task 7's template).
+# build error it hid surfaces.
 ROOT_PATH_MASKING = """\
 receivers:
   hostmetrics:
@@ -257,7 +256,7 @@ async def test_a_build_error_root_path_masked_surfaces_with_its_requirement(vers
     ]
 
 
-# D13b ruling 30: past the nesting bound the collector isn't run.
+# Past the nesting bound the collector isn't run.
 async def test_a_text_nested_too_deep_is_invalid_without_the_collector() -> None:
     held_versions = [version for version in OFFERED if held(version)]
     if not held_versions:
@@ -268,10 +267,10 @@ async def test_a_text_nested_too_deep_is_invalid_without_the_collector() -> None
     assert result.outcome == "too_deep"
 
 
-# D13b ruling 63: one directory reached through an anchor is repointed once
-# (two splices of its span answered "could not be checked safely"), and a
+# One directory reached through an anchor is repointed once (two splices of
+# its span would answer "could not be checked safely"), and a
 # directory-valued `${env:}` reference gets a fresh directory inside the
-# check's own (a string placeholder was an error naming it).
+# check's own (a string placeholder would be an error naming it).
 METRICS_TO_DEBUG = "exporters:\n  debug: {}\nservice:\n  pipelines:\n    metrics:\n      receivers: [%s]\n      exporters: [debug]\n"
 SHARED_ROOT_PATH = (
     "receivers:\n  hostmetrics:\n    root_path: &root /nonexistent-root\n    scrapers:\n      cpu: {}\n"
@@ -336,9 +335,9 @@ async def test_a_storage_directory_from_an_env_reference_is_valid_with_its_requi
     assert _summary(result) == [("env_var", "Set environment variable STORAGE_DIR")]
 
 
-# D13b ruling 64: every hostmetrics root_path in a check is one directory,
-# and no answer names the check's own directory (its strings scrubbed to
-# `<validator>`; a requirement under it not emitted).
+# Every hostmetrics root_path in a check is one directory, and no answer
+# names the check's own directory (its strings scrubbed to `<validator>`; a
+# requirement under it not emitted).
 TWO_LITERAL_ROOT_PATHS = (
     "receivers:\n  hostmetrics:\n    root_path: /nonexistent-root\n    scrapers:\n      cpu: {}\n"
     "  hostmetrics/slow:\n    root_path: /nonexistent-root\n    scrapers:\n      disk: {}\n"
@@ -433,10 +432,10 @@ async def test_a_storage_path_under_a_placeholder_names_no_check_directory(versi
     assert [(r["category"], r["title"]) for r in result.requirements] == [("env_var", "Set environment variable BASE")]
 
 
-# D13b ruling 66: past the cap on placeholder directories, every further
-# value shares the overflow directory and the root keeps its own, so the
-# rerun still meets every directory and the build error the validate stage
-# hid surfaces (past the cap it was left as written: valid, the error hidden).
+# Past the cap on placeholder directories, every further value shares the
+# overflow directory and the root keeps its own, so the rerun still meets
+# every directory and the build error the validate stage hid surfaces (past
+# the cap it was left as written: valid, the error hidden).
 def _past_the_cap(stores: int, root_path: bool) -> str:
     extensions = "".join(f"  file_storage/{n}:\n    directory: /var/lib/otel-nope-{n}\n" for n in range(stores))
     hostmetrics = "  hostmetrics:\n    root_path: /nonexistent-root\n    scrapers:\n      cpu: {}\n" if root_path else ""
@@ -478,9 +477,9 @@ async def test_past_the_cap_a_masked_build_error_still_surfaces(version: str, st
 
 
 def _aliased_multiline_key(lines: int, pipelines: int) -> str:
-    """The final review's probe (D13b ruling 71): a pipeline with a key of
-    `lines` lines, aliased into `pipelines` pipelines; the collector echoes
-    the key per pipeline, a line each."""
+    """A probe: a pipeline with a key of `lines` lines, aliased into
+    `pipelines` pipelines; the collector echoes the key per pipeline, a line
+    each."""
     key = '"zz' + "\\nq" * lines + '"'
     text = [
         "receivers:",

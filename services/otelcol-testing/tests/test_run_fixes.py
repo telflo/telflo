@@ -1,5 +1,5 @@
-"""The run's fixes (D14a Task 4's contract), each pinned here, plus the
-contract's distribution (contrib only, spec decision 14):
+"""The run's fixes, each pinned here, plus the contract's distribution
+(contrib only):
 
 - the collector's pipes drained while it runs (a chatty collector blocked);
 - the collector always stopped, in a ``finally`` (an exception orphaned it);
@@ -11,7 +11,7 @@ contract's distribution (contrib only, spec decision 14):
 - the output watchdog: a collector whose file passes 16 MiB is stopped, R-006;
 - the decoded input capped at 10 MiB, ``truncated``;
 - no path outside the run's workspace survives the mutations (all runs share
-  one uid and /tmp; Ruling 27);
+  one uid and /tmp);
 - ClickStack (any distribution but contrib) refused at the contract.
 
 Fixed elsewhere, and tested there: stderr scrubbed on every path
@@ -215,7 +215,7 @@ def test_an_odd_component_configuration_is_left_to_the_collector_never_a_500(cli
 def test_when_the_replays_budget_runs_out_the_hold_still_runs(
     binary_dir: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Ruling 2: the replay stops, the hold still runs, and the [replay]
+    """The replay stops, the hold still runs, and the [replay]
     block says how many payloads weren't sent. (The budget is spent before
     the first payload here.)"""
     write_fake_collector(binary_dir, VERSION)
@@ -245,7 +245,7 @@ FLOOD = (
     ids=["flooding as the replay starts", "flooding once the replay is answered"],
 )
 def test_the_output_watchdog_stops_a_collector_whose_file_passes_16_mib(binary_dir: Path, after_ready: str) -> None:
-    """Ruling 4: one run can't fill the shared /tmp. The collector writes
+    """One run can't fill the shared /tmp. The collector writes
     17 MiB, the run (60 s long) ends once the watchdog stops it, and the
     answer carries R-006 and 10 MiB at most. A collector stopped while the
     replay still runs isn't a rejected replay: its output overflowed."""
@@ -266,11 +266,11 @@ def test_the_output_watchdog_stops_a_collector_whose_file_passes_16_mib(binary_d
 def test_a_collector_that_ignores_the_watchdogs_sigterm_is_killed_and_the_run_fails(
     binary_dir: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Ruling 29's nit, the outcome stated (`app/run.py`'s ``_watch_output``):
-    a collector that ignores SIGTERM is killed after the grace (lowered
-    here); the run fails, ``collector_failed`` with exit code 137, and still
-    answers its output cut at 10 MiB with R-006, as a collector killed at the
-    hold's own stop does."""
+    """The outcome stated (`app/run.py`'s ``_watch_output``): a collector
+    that ignores SIGTERM is killed after the grace (lowered here); the run
+    fails, ``collector_failed`` with exit code 137, and still answers its
+    output cut at 10 MiB with R-006, as a collector killed at the hold's own
+    stop does."""
     write_fake_collector(
         binary_dir,
         VERSION,
@@ -302,9 +302,9 @@ class _Decoded:
 
 
 def test_the_decoded_input_is_capped_at_10_mib_at_a_character() -> None:
-    """Ruling 1: ``errors="replace"`` can turn 10 MiB into 30 MiB. The child
+    """``errors="replace"`` can turn 10 MiB into 30 MiB. The child
     sends at most the cap plus a slack and says it was longer; the service
-    scrubs, then cuts at the cap, at a character (Ruling 27)."""
+    scrubs, then cuts at the cap, at a character."""
     text = "\ufffd" * (4 * 1024 * 1024)  # 12 MiB of UTF-8
     strategy = Strategy(text="", executor=_Decoded(text))  # type: ignore[arg-type]
 
@@ -340,7 +340,7 @@ async def test_a_syslog_push_that_cant_connect_fails_the_run_with_its_reason(tmp
 
 
 # ---------------------------------------------------------------------------
-# Ruling 30: filelog (and syslog) wait for kwok's informer as OTLP runs do
+# Filelog (and syslog) wait for kwok's informer as OTLP runs do
 # ---------------------------------------------------------------------------
 
 K8S_PROCESSORS = "processors:\n  k8sattributes: {auth_type: serviceAccount}\n"
@@ -471,7 +471,7 @@ def test_a_deferred_filelog_input_is_written_whole_then_renamed_into_place(tmp_p
 
 
 # ---------------------------------------------------------------------------
-# No path outside the run's workspace survives the mutations (Ruling 27)
+# No path outside the run's workspace survives the mutations
 # ---------------------------------------------------------------------------
 
 ELSEWHERE = (
@@ -480,12 +480,11 @@ ELSEWHERE = (
     "/home/otelcol-testing/.kwok/clusters/telflo-test/pki/admin.key",
 )
 
-# The processors that could reach out (Ruling 28): R-106 strips
-# resourcedetection's consul, openshift and docker detectors with their
-# settings (either spelling of the processor). A processor setting that names
-# a file is refused before any of this (C-006, Rulings 31 and 32, below and
-# in `tests/test_file_reading_components.py`), as are geoip, schema and
-# remotetap (C-005). The others hold no path.
+# The processors that could reach out: R-106 strips resourcedetection's
+# consul, openshift and docker detectors with their settings (either spelling
+# of the processor). A processor setting that names a file is refused before
+# any of this (C-006, below and in `tests/test_file_reading_components.py`),
+# as are geoip, schema and remotetap (C-005). The others hold no path.
 PROCESSORS = (
     "processors:\n"
     "  resource_detection:\n"
@@ -501,8 +500,7 @@ PROCESSORS = (
     "    openshift: {{address: 'https://127.0.0.1:20003'}}\n"
     "  batch: {{}}\n"
 )
-# Ruling 33: a relative path out of the workspace and a file: URI never
-# survive either.
+# A relative path out of the workspace and a file: URI never survive either.
 RELATIVE = "../../run/secrets/otelcol_testing_secret"
 FILE_URI = "file:///run/secrets/otelcol_testing_secret"
 CHAIN = "processors: [resource_detection, resourcedetection/only, resourcedetection/unused, batch], "
@@ -558,10 +556,9 @@ def _strings(value: object) -> list[str]:
 def test_no_path_outside_the_workspace_survives_the_mutations(binary_dir: Path, tmp_path: Path, kind: str) -> None:
     """Every receiver, exporter, extension and connector the collector runs,
     and its own telemetry, are the sandbox's, and no processor that survives
-    names a file (Ruling 28): the only paths left are in the run's own
-    workspace (never the secret's file, kwok's certificates or another run's
-    directory), and no relative path climbing out or file: URI is left
-    (Ruling 33)."""
+    names a file: the only paths left are in the run's own workspace (never
+    the secret's file, kwok's certificates or another run's directory), and
+    no relative path climbing out or file: URI is left."""
     secret, other, key = ELSEWHERE
     text = PATHS_EVERYWHERE[kind].format(secret=secret, other=other, key=key)
     workspace = tmp_path / "workspace"
@@ -586,7 +583,7 @@ def test_no_path_outside_the_workspace_survives_the_mutations(binary_dir: Path, 
         for value in _strings(mutated.get(section) or {}):
             if value.startswith("/"):
                 assert Path(value).resolve().is_relative_to(workspace.resolve()), (section, value)
-            # Ruling 33: nor a relative path climbing out, nor a file: URI.
+            # Nor a relative path climbing out, nor a file: URI.
             assert "../" not in value and not value.startswith(".."), (section, value)
             assert not value.lower().startswith("file:"), (section, value)
     assert not any(path in prepared.text for path in (*ELSEWHERE, RELATIVE, FILE_URI))
@@ -594,11 +591,11 @@ def test_no_path_outside_the_workspace_survives_the_mutations(binary_dir: Path, 
 
 FILE_NAMING_PROCESSORS = {
     "resource_detection's tls": "  resource_detection:\n    detectors: [env]\n    tls: {{ca_file: {secret}}}\n",
-    # Ruling 32: refused though R-106 would strip them.
+    # Refused though R-106 would strip them.
     "consul's token_file": "  resourcedetection:\n    detectors: [env, consul]\n    consul: {{token_file: {secret}}}\n",
     "openshift's tls": "  resource_detection/o:\n    detectors: [openshift]\n    openshift: {{tls: {{ca_file: {other}, key_file: {key}}}}}\n",
     "a key in a list": "  attributes:\n    actions: [{{key: a, action: insert, value: b}}, {{token_file: {secret}}}]\n",
-    # Ruling 33: refused outright (C-005), its tls with it.
+    # Refused outright (C-005), its tls with it.
     "schema's tls": "  schema:\n    tls: {{cert_file: {other}, key_file: {key}}}\n",
     "remotetap's tls": "  remotetap:\n    tls: {{client_ca_file: {secret}}}\n",
 }
@@ -609,9 +606,9 @@ REFUSED_AS = {"schema's tls": "C-005", "remotetap's tls": "C-005"}
 def test_a_processor_setting_that_names_a_file_never_reaches_the_collector(
     binary_dir: Path, tmp_path: Path, case: str
 ) -> None:
-    """Rulings 31 and 32: whatever survives the mutations names no file. A
-    processor setting that does is refused (C-006; C-005 for a processor
-    refused outright) before any text is written for the collector."""
+    """Whatever survives the mutations names no file. A processor setting
+    that does is refused (C-006; C-005 for a processor refused outright)
+    before any text is written for the collector."""
     secret, other, key = ELSEWHERE
     name = FILE_NAMING_PROCESSORS[case].split(":", 1)[0].strip()
     text = (
@@ -636,7 +633,7 @@ def test_a_processor_setting_that_names_a_file_never_reaches_the_collector(
 
 
 # ---------------------------------------------------------------------------
-# Ruling 32: the file-settings check again, on the exact text each collector
+# The file-settings check again, on the exact text each collector
 # reads, beside the backstop
 # ---------------------------------------------------------------------------
 
@@ -734,7 +731,7 @@ def test_a_file_setting_a_mutation_reintroduces_is_refused_at_the_final_check(
     assert ELSEWHERE[0] not in json.dumps(answer)
 
 
-# Ruling 34: a final text that composes but doesn't construct (a custom tag,
+# A final text that composes but doesn't construct (a custom tag,
 # an unhashable key, an ill-fitting explicit tag) is read by the collector all
 # the same; the final check walks the composed graph, so a re-introduced file
 # setting beside any of them is still refused.
@@ -877,8 +874,7 @@ def test_contrib_runs_the_requested_versions_binary(binary_dir: Path, tmp_path: 
 
 
 def test_a_version_is_required_there_is_no_default(client: TestClient) -> None:
-    """There is no default version: the platform always pins one
-    (Preflight ruling 13)."""
+    """There is no default version: the platform always pins one."""
     body = run_body()
     del body["version"]
 
@@ -890,7 +886,7 @@ def test_a_version_is_required_there_is_no_default(client: TestClient) -> None:
 
 @pytest.mark.parametrize("distribution", ["clickstack", "", "bogus-distro", None])
 def test_clickstack_and_every_other_distribution_are_refused_at_the_contract(client: TestClient, distribution: object) -> None:
-    """The platform offers contrib only (spec decision 14)."""
+    """The platform offers contrib only."""
     resp = _post(client, distribution=distribution)
 
     assert resp.status_code == 400

@@ -1,5 +1,5 @@
-# The tester's runtime dependencies (D14a Preflight ruling 19). The lock,
-# requirements.txt, is made from this file with
+# The tester's runtime dependencies. The lock, requirements.txt, is made from
+# this file with
 #   pip-compile --generate-hashes --allow-unsafe --strip-extras \
 #     --output-file=requirements.txt requirements.in
 # and installed with `pip install --require-hashes -r requirements.txt`.
@@ -10,10 +10,10 @@ fastapi
 # Plain uvicorn (no [standard]): no uvloop, httptools or watchfiles.
 uvicorn
 pyyaml
-# The mutations (D14a Task 4) edit the text with ruamel.yaml, pinned.
+# The mutations edit the text with ruamel.yaml, pinned.
 ruamel.yaml==0.18.6
-# OTLP replay's client (Task 4). Not httpx: it brings certifi, MPL-2.0, which
-# fails the license check (ruling 19). httpx2 is BSD-3-Clause.
+# OTLP replay's client. Not httpx: it brings certifi, MPL-2.0, which
+# fails the license check. httpx2 is BSD-3-Clause.
 httpx2
 
 # The service's own telemetry (telemetry.py), inert unless

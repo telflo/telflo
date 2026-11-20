@@ -1,11 +1,11 @@
 """The collector catalogue, read from `catalog/distributions/*.json`: the
-validator's `app/catalog.py`, copied for the tester (D14a spec decision 14)
-and changed in its words only.
+validator's `app/catalog.py`, copied for the tester and changed in its words
+only.
 
 The platform's migration step owns the catalogue's rules (catalog/README.md);
 the tester reads only what it needs, each file's `distribution` and each
 version's `version` and `deprecated`, and ignores every other field, so a
-field added to the format later (D13b Task 3's `renamedTypes`) changes
+field added to the format later (such as `renamedTypes`) changes
 nothing here. A version is offered (not deprecated), retired (deprecated) or
 unknown; a distribution the catalogue doesn't list makes every version
 unknown.

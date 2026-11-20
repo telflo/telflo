@@ -1,10 +1,10 @@
-// Ported from the opamp-server's management/constant_time_test.go (D11a
-// Task 5), D15a Task 2 (plan Preflight ruling 12; docs/conventions/go.md,
-// "What is never written down"): the same scan over this package. One
-// change: secretInEnvironment (secrets.go), which runs once at start on the
-// secrets' own text, may call strings.Contains on a secret; it compares no
-// presented token. Its exemption is by name, and the scan's own test shows
-// a strings.Contains anywhere else is still seen.
+// Ported from the opamp-server's management/constant_time_test.go
+// (docs/conventions/go.md, "What is never written down"): the same scan
+// over this package. One change: secretInEnvironment (secrets.go), which
+// runs once at start on the secrets' own text, may call strings.Contains
+// on a secret; it compares no presented token. Its exemption is by name,
+// and the scan's own test shows a strings.Contains anywhere else is still
+// seen.
 
 package server
 
@@ -20,9 +20,8 @@ import (
 	"testing"
 )
 
-// No test can see a comparison's timing, so the constant-time property
-// (spec decision 7) is held by review and by this test, which reads the
-// package's own source (D11a Task 5's deliberate-break note):
+// No test can see a comparison's timing, so the constant-time property is
+// held by review and by this test, which reads the package's own source:
 //
 //   - subtle.ConstantTimeCompare is called exactly once, in Secrets.Accepts;
 //   - Accepts's loop over the secrets never returns, breaks or jumps early,

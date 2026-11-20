@@ -413,10 +413,10 @@ def test_validate_with_binary_writes_yaml_verbatim(tmp_path, binary_dir) -> None
     errors in their actual YAML would either be hidden (if our mutation
     "fixed" them) or invented (if our mutation broke them).
 
-    A fake collector (a shell script) copies the file the validator hands
-    it, and the copy must match the input exactly. (The runner reads its pipes
-    through its own protocol, D13b ruling 33, so a real process stands in
-    rather than a stubbed create_subprocess_exec.)
+    A fake collector (a shell script) copies the file the validator hands it,
+    and the copy must match the input exactly. (The runner reads its pipes
+    through its own protocol, so a real process stands in rather than a
+    stubbed create_subprocess_exec.)
     """
     import asyncio
     from pathlib import Path
@@ -497,7 +497,7 @@ service:
 
 
 # ---------------------------------------------------------------------------
-# D13b ruling 63: a directory-valued key's placeholder is a directory
+# A directory-valued key's placeholder is a directory
 # ---------------------------------------------------------------------------
 
 ROOT_PATH_ENV_TEXT = """\

@@ -1,17 +1,16 @@
 #!/usr/bin/env bash
-# Checks the running collector tester's container from the inside (D14a spec
-# decision 5, Preflight ruling 4): uid 10001, a read-only root filesystem
-# with tmpfs for runs and kwok, no route out (external names don't resolve,
-# external addresses don't answer), and the secret in no environment, the
-# service's process not dumpable, and no capability or privilege gained
-# through exec (Ruling 30). scripts/container-probe.py does the checking,
-# piped into the container's own Python (nothing is copied in, and the image
-# carries no probe).
+# Checks the running collector tester's container from the inside: uid
+# 10001, a read-only root filesystem with tmpfs for runs and kwok, no route
+# out (external names don't resolve, external addresses don't answer), and
+# the secret in no environment, the service's process not dumpable, and no
+# capability or privilege gained through exec. scripts/container-probe.py
+# does the checking, piped into the container's own Python (nothing is
+# copied in, and the image carries no probe).
 #
-# Then the forwarder (otelcol-testing-forward, Ruling 30): its nginx
-# runs as uid 101, master and workers, with no capability and
-# no-new-privileges, on a read-only root, and has workers (as root without
-# capabilities its master couldn't start any and served nothing).
+# Then the forwarder (otelcol-testing-forward): its nginx runs as uid 101,
+# master and workers, with no capability and no-new-privileges, on a
+# read-only root, and has workers (as root without capabilities its master
+# couldn't start any and served nothing).
 #
 #   services/otelcol-testing/scripts/check-container.sh [compose options...]
 #

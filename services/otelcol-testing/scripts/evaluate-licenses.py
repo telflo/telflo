@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 """Reads pip-licenses' JSON report of an environment holding exactly a lock's
 packages and decides whether each package's license is on the allowed list
-(ADR 0019, D13b Preflight ruling 12; the tester's copy of the validator's
-script, D14a Preflight ruling 19). `check-licenses.sh` runs it; it isn't
-meant to be run by hand.
+(the tester's copy of the validator's script). `check-licenses.sh` runs it;
+it isn't meant to be run by hand.
 
     evaluate-licenses.py <policy.json> <report.json> <lock>
 
@@ -283,7 +282,7 @@ def main(argv: list[str]) -> int:
     if disallowed:
         print("")
         print(f"ERROR: {disallowed} package license(s) above are not on the allowed list in {policy_path}.")
-        print("Only a license that allows redistribution may be added to that list (ADR 0019).")
+        print("Only a license that allows redistribution may be added to that list.")
         return 1
     print(f"All {len(reported)} Python package licenses are allowed.")
     return 0

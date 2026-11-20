@@ -1,8 +1,8 @@
 """Regression tests for the validator's hardened pre-spawn primitives.
 
 The subprocess environment allowlist, the confmap provider neutralisation
-(its triple-dollar bypass fix), and the `${org:…}` pseudo-scheme's reporting
-(D13b Preflight ruling 1).
+(its triple-dollar bypass fix), and the `${org:…}` pseudo-scheme's
+reporting.
 """
 from __future__ import annotations
 
@@ -20,8 +20,8 @@ from app.providers import (
 from app.requirements import live_organization_references, organization_variable_requirements
 from app.runner import _ALLOWED_PARENT_ENV, _build_subprocess_env
 
-# The raw-text scan: not in the service (D13b ruling 44), kept as the
-# reference these tests compare with.
+# The raw-text scan: not in the service, kept as the reference these tests
+# compare with.
 from tests.verbatim import _disallowed_confmap_schemes
 
 
@@ -262,8 +262,8 @@ def test_disallowed_provider_under_service_telemetry_is_neutralized():
 # ---------------------------------------------------------------------------
 # `org` pseudo-scheme
 #
-# `${org:NAME}` is telflo's own token. Until D20 resolves values on the
-# server, every LIVE `${org:...}` reaching the validator is unresolved. `org`
+# `${org:NAME}` is telflo's own token. The values are filled in before this
+# check, so every LIVE `${org:...}` reaching it is unresolved. `org`
 # is NOT added to `_ALLOWED_CONFMAP_SCHEMES` — it isn't a registered confmap
 # provider, so an unrendered token would fail collector config load outright.
 # It is still neutralized like any foreign scheme; only the *reporting*
@@ -357,7 +357,7 @@ async def test_fail_closed_refusal_still_reports_unresolved_organization_variabl
     The real neutralizer is total, so this branch is unreachable through
     normal input — reached here by monkeypatching the fail-closed re-scan
     (``_still_references``) to report a surviving reference even after the
-    splice ran (D13b ruling 39(c)). The collector must never run.
+    splice ran. The collector must never run.
     """
     async def _must_not_run(*args, **kwargs):
         raise AssertionError("the collector ran despite a surviving provider")

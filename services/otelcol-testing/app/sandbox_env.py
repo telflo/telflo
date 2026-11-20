@@ -1,9 +1,9 @@
 """Environment-variable overrides for the spawned otelcol-contrib subprocess.
 
-The parent-environment allowlist is `app/environment.py`'s (D14a Task 4),
-so the run's child and its collector are filtered by one list; this module
-adds the sandbox's fixed overrides on top of it. ``_ALLOWED_PARENT_ENV``
-names that same set for the tests.
+The parent-environment allowlist is `app/environment.py`'s, so the run's
+child and its collector are filtered by one list; this module adds the
+sandbox's fixed overrides on top of it. ``_ALLOWED_PARENT_ENV`` names that
+same set for the tests.
 
 User pipelines often reference env vars the runtime is expected to provide
 (``${env:MY_POD_IP}``, ``${env:K8S_NODE_NAME}`` from the downward API,

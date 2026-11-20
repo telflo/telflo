@@ -1,21 +1,20 @@
-"""The fake Kubernetes cluster's state, as health answers it (D14a spec
-decision 6, Preflight ruling 5, Ruling 26).
+"""The fake Kubernetes cluster's state, as health answers it.
 
 The service listens first and starts kwok in the background. While it
-starts, health answers 503 `{"status": "starting", "kwok": "starting"}`
-and a run is refused with 503 `tester_starting`; once it is up, 200
-`{"status": "ok", "kwok": "ready"}`. kwok is part of the tester's health
-(Ruling 26): a start that fails is retried, three attempts in all with a
-backoff between them (still `starting`); after the last, health answers 503
+starts, health answers 503 `{"status": "starting", "kwok": "starting"}` and
+a run is refused with 503 `tester_starting`; once it is up, 200
+`{"status": "ok", "kwok": "ready"}`. kwok is part of the tester's health: a
+start that fails is retried, three attempts in all with a backoff between
+them (still `starting`); after the last, health answers 503
 `{"status": "unavailable", "kwok": "failed"}`, a run is refused with 503
 `tester_unavailable`, and the supervisor calls ``on_gave_up``: in the
 service, that ends the process with a non-zero status, so compose's restart
 policy starts it afresh (`app/main.py`). A run is never served "without
 kwok": a Kubernetes pipeline would silently test differently.
 
-Once it is up, the cluster's liveness is re-checked (Ruling 29): by health,
+Once it is up, the cluster's liveness is re-checked: by health,
 and before each run (``check_alive``). A cluster that no longer answers
-(its ``is_alive()`` false or failing) on two probes in a row (Ruling 33: one
+(its ``is_alive()`` false or failing) on two probes in a row (one
 stall of a few seconds isn't a dead cluster) moves kwok to `failed`, with
 the same consequences: health 503 `unavailable`/`failed`, runs refused with
 503 `tester_unavailable`, and ``on_gave_up`` (the service's exit). Checks
@@ -38,10 +37,10 @@ from typing import Any, Protocol
 
 logger = logging.getLogger(__name__)
 
-# Ruling 33: probes that must fail in a row before a ready cluster is failed.
+# Probes that must fail in a row before a ready cluster is failed.
 LIVENESS_FAILURES_BEFORE_FAILED = 2
 
-# Ruling 26: three attempts, a backoff before each retry.
+# Three attempts, a backoff before each retry.
 START_ATTEMPTS = 3
 RETRY_BACKOFF_SECONDS: tuple[float, ...] = (2.0, 4.0)
 
@@ -172,7 +171,7 @@ class KwokSupervisor:
 
     async def check_alive(self) -> KwokState:
         """kwok's state, the cluster's liveness re-checked first when it is
-        ready (Ruling 29). A probe already running is shared, not repeated;
+        ready. A probe already running is shared, not repeated;
         a cancelled caller leaves it to finish."""
         if self.state is not KwokState.READY or self.cluster is None:
             return self.state

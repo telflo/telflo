@@ -81,11 +81,11 @@ func TestRuleValidateRejectsSuspiciousEscape(t *testing.T) {
 	}
 }
 
-// New in D15a's final fix wave (Ruling 55): the message is true of each
-// sequence on the pinned OTTL. `\b` parses (a backspace) and Lint flags it;
-// every other risky letter doesn't parse at all, so Lint reports the
-// parser's own error, and the message (Save's, a run's: rule.validate and
-// internal/rules check before parsing) asks for the double backslash.
+// The message is true of each sequence on the pinned OTTL. `\b` parses (a
+// backspace) and Lint flags it; every other risky letter doesn't parse at
+// all, so Lint reports the parser's own error, and the message (Save's, a
+// run's: rule.validate and internal/rules check before parsing) asks for
+// the double backslash.
 func TestSuspiciousEscapeErrorIsTrueOfEachSequence(t *testing.T) {
 	want := map[string]string{
 		`\b`: `single-escaped regex sequence '\b': OTTL string literals consume one level of backslash escaping, so it becomes a literal backspace character and the pattern can never match — write '\\b' (double backslash) for the regex word boundary`,

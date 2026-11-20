@@ -1,7 +1,7 @@
 // evalDistinct parses before it collects the records and calls the
 // Checkpoint every CheckEveryRecords records, returning its error and no
-// result; truncateDisplay keeps a sample within 120 bytes, its "…" included
-// (D15a plan Preflight rulings 5 and 10).
+// result; truncateDisplay keeps a sample within 120 bytes, its "…"
+// included.
 
 package ottlassert
 

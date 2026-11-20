@@ -1,13 +1,14 @@
-"""A run per strategy, against the fake collector (D14a Task 4), for the
-database-free tester (Preflight ruling 6):
+"""A run per strategy, against the fake collector, for the database-free
+tester:
 
 - the operator tests (5): the fixture-shape advisories ahead of the others,
   filelog's pull, syslog's push;
 - the stop (2): a collector stopped cleanly succeeds, one that crashes
   fails;
-- the runner (7; the service stores nothing, and output checks are D15's):
-  the happy path, a crash, an empty output, a clean filelog test, a refused
-  operator, and the decoded input answered (OTLP) or not (filelog, syslog).
+- the runner (7; the service stores nothing, and output checks are the OTTL
+  evaluator's): the happy path, a crash, an empty output, a clean filelog
+  test, a refused operator, and the decoded input answered (OTLP) or not
+  (filelog, syslog).
 
 Through the service (a run's child, the fake collector) where the answer is
 what matters; through `app.run.execute` in-process where a strategy's

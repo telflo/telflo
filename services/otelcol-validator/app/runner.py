@@ -1,4 +1,4 @@
-"""Running one check, in two halves (D13b ruling 27).
+"""Running one check, in two halves.
 
 **The service's half** (`run_validation`, on the event loop): take one of a
 fixed number of slots (a bounded wait), start the check's child process
@@ -16,25 +16,25 @@ cancellation while it waits included). The event loop reads the child's
 answer (JSON) and nothing else: no YAML parsing, no stderr classifying.
 
 **The child's half** (`check_text`, in the child): the pre-processing (the
-organization's values filled in first, D20 decision 13; then the text's
-requirements and errors, the provider neutralisation, the Datadog
-insert, the `${env:}` placeholders; every parse bounded by
-`app/bounded_yaml.py`), the collector subprocess (no shell, an allowlisted
-environment, the check's directory as its working directory, its own time
-limit, capped stderr) and the stderr parse. None of these steps has its own
-time bound but the collector's: the deadline bounds them all.
+organization's values filled in first; then the text's requirements and
+errors, the provider neutralisation, the Datadog insert, the `${env:}`
+placeholders; every parse bounded by `app/bounded_yaml.py`), the collector
+subprocess (no shell, an allowlisted environment, the check's directory as
+its working directory, its own time limit, capped stderr) and the stderr
+parse. None of these steps has its own time bound but the collector's: the
+deadline bounds them all.
 
-**Pipes and reaps** (D13b ruling 33): both halves read their subprocess's
-pipes as the data arrives, never pausing a pipe (`_Pipes`: the first bytes
-up to a cap are kept, the rest dropped), and a reap waits for the process's
-exit only, then closes its pipes (`_stop`), so a reap always ends, whatever
-the pipes still hold and whoever still holds them.
+**Pipes and reaps**: both halves read their subprocess's pipes as the data
+arrives, never pausing a pipe (`_Pipes`: the first bytes up to a cap are
+kept, the rest dropped), and a reap waits for the process's exit only, then
+closes its pipes (`_stop`), so a reap always ends, whatever the pipes still
+hold and whoever still holds them.
 
-D13b spec decision 10: a crash or an unexplained non-zero exit is
-invalid (`The collector stopped without saying why (exit 137).`, a signal
-reported as 128 + N), and the wait for a slot is bounded.
+A crash or an unexplained non-zero exit is invalid
+(`The collector stopped without saying why (exit 137).`, a signal reported as
+128 + N), and the wait for a slot is bounded.
 
-Nothing here logs the text or what the collector printed (ADR 0024): log
+Nothing here logs the text or what the collector printed: log
 lines name the outcome's kind only.
 """
 
@@ -91,8 +91,8 @@ logger = logging.getLogger(__name__)
 # 256 KB × 8 slots keeps the worst case at 2 MB. Truncation appends a marker
 # so the bound is visible, not a silent cut. The cut can fall inside a line,
 # and a partial line can hold part of a path the scrub can no longer
-# recognise (the check's directory, ruling 64), so the kept output ends at its
-# last complete line before the marker (ruling 66).
+# recognise (the check's directory), so the kept output ends at its
+# last complete line before the marker.
 _STDERR_MAX_BYTES = 256 * 1024
 _STDERR_TRUNCATION_MARKER = b"\n[stderr truncated by validator]\n"
 
@@ -133,38 +133,36 @@ REFUSED_PROVIDERS_MESSAGE = (
     "neutralized: {schemes}. Only '${{env:VAR}}' substitution is supported."
 )
 # The same refusal when no scheme can be named: the text a run would read no
-# longer reads as one document (D13b ruling 46).
+# longer reads as one document.
 UNCHECKED_MESSAGE = "Config references configuration provider(s) that could not be checked safely."
 # A text PyYAML can't read as one document is answered invalid and never
-# reaches the collector (D13b ruling 39(d)): the collector would otherwise
-# decode and expand a reference a YAML escape hid, or read a second document
-# the validator never neutralised. Only PyYAML's own problem and line are
-# reported — never any of the text (ADR 0024).
+# reaches the collector: the collector would otherwise decode and expand a
+# reference a YAML escape hid, or read a second document the validator never
+# neutralised. Only PyYAML's own problem and line are reported — never any of
+# the text.
 UNREADABLE_MESSAGE = "The configuration can't be read as YAML: {problem}"
-# The opamp-server's message for a text its fill-in takes over 1 MiB (D20
-# decision 11, handlers/poll.go's tooLargeMessage): such a text is never
-# served, so it is refused here before it is built (Preflight rulings 12 and
-# 30).
+# The opamp-server's message for a text its fill-in takes over 1 MiB
+# (handlers/poll.go's tooLargeMessage): such a text is never served, so it is
+# refused here before it is built.
 FILLED_IN_TOO_LONG_MESSAGE = "The configuration with its organization variables filled in is over 1 MiB."
 
 
 # The check's deadline is the collector's time limit plus
 # DEADLINE_MARGIN_SECONDS (2): the margin covers the child's start (about
 # 0.1 s), the pre-processing and the stderr parse. The pre-processing
-# (`_prepare`, measured for D13b ruling 46 on an Apple-silicon laptop,
-# Python 3.12, median of 7 with the parse cache cleared) takes 0.37 s for a
-# realistic 262,144-character configuration (the largest the service
-# takes), 2.1 s for the worst text found (a flow sequence of about
-# 131,000 one-character items) and 3.5 s for that text with one reference to
-# neutralise (the backstop then composes it a second time). So the margin
-# holds for realistic texts but not for the worst one with a collector that
-# uses its whole limit: such a check answers at the deadline
-# (`Validation timed out after 12s`) rather than at the collector's limit.
-# With the default limit of 10 s the deadline is 12 s, and ending a check
-# takes at most about a second more (the group's poll, below). The deadline
-# starts once the slot is taken, so a request that first waited the longest
-# for a slot (5 s) answers within about 18 s, inside the platform's 20-second
-# limit on its call (D13b ruling 32; spec decision 12 is amended in Task 4).
+# (`_prepare`, measured on an Apple-silicon laptop, Python 3.12, median of 7
+# with the parse cache cleared) takes 0.37 s for a realistic
+# 262,144-character configuration (the largest the service takes), 2.1 s for
+# the worst text found (a flow sequence of about 131,000 one-character items)
+# and 3.5 s for that text with one reference to neutralise (the backstop then
+# composes it a second time). So the margin holds for realistic texts but not
+# for the worst one with a collector that uses its whole limit: such a check
+# answers at the deadline (`Validation timed out after 12s`) rather than at
+# the collector's limit. With the default limit of 10 s the deadline is 12 s,
+# and ending a check takes at most about a second more (the group's poll,
+# below). The deadline starts once the slot is taken, so a request that first
+# waited the longest for a slot (5 s) answers within about 18 s, inside the
+# platform's 20-second limit on its call.
 
 # The child: this interpreter, the service's own `app` package (the working
 # directory is the service's), `-E` (no PYTHON* variable is read) and `-s`
@@ -212,7 +210,7 @@ def _fixed_env_names() -> frozenset[str]:
     """Every name the collector's environment holds before any placeholder,
     or may hold: the parent allowlist (whether or not the service has the
     variable) and whatever `_build_subprocess_env()` sets. The first run's
-    placeholders never set one of these (D13b ruling 46)."""
+    placeholders never set one of these."""
     return _ALLOWED_PARENT_ENV | frozenset(_build_subprocess_env())
 
 
@@ -244,9 +242,9 @@ class CollectorUnavailable(OSError):
 
 class ChildNotStarted(OSError):
     """The check's child process couldn't be started (the service's own
-    interpreter or directory is unusable): the caller answers 503 and logs
-    it as such, not as a collector that can't be run (D13b ruling 38).
-    `kind` is the OSError's type name."""
+    interpreter or directory is unusable): the caller answers 503 and logs it
+    as such, not as a collector that can't be run. `kind` is the OSError's
+    type name."""
 
     def __init__(self, kind: str) -> None:
         super().__init__(kind)
@@ -272,16 +270,16 @@ class ValidationResult:
 
 
 class _Pipes(asyncio.SubprocessProtocol):
-    """A subprocess's pipes, read as their data arrives and never paused
-    (D13b ruling 33): each pipe keeps its first `caps[fd]` bytes and drops
-    the rest, so the process never blocks on a full pipe and nothing waits
-    for a reader. `exited` resolves once the process has exited; `finished`
-    once it has and every pipe has closed (the end of its output).
+    """A subprocess's pipes, read as their data arrives and never paused:
+    each pipe keeps its first `caps[fd]` bytes and drops the rest, so the
+    process never blocks on a full pipe and nothing waits for a reader.
+    `exited` resolves once the process has exited; `finished` once it has and
+    every pipe has closed (the end of its output).
 
     asyncio's own streams pause a pipe once 128 KiB wait unread, and its
     `Process.wait()` resolves only after every pipe has closed: a check
-    killed while its child wrote a large answer never ended (the review of
-    207bc02). Here a reap waits for the exit alone (`_stop`)."""
+    killed while its child wrote a large answer would never end. Here a reap
+    waits for the exit alone (`_stop`)."""
 
     def __init__(self, caps: dict[int, int]) -> None:
         loop = asyncio.get_running_loop()
@@ -331,10 +329,10 @@ async def _stop(transport: asyncio.SubprocessTransport, pipes: _Pipes) -> None:
     except ProcessLookupError:
         pass  # it exited on its own meanwhile
     # Shield the shared futures: a reap cancelled while it awaits them (a
-    # dropped task) must not cancel the futures themselves, or a later reap of
-    # the same process would raise CancelledError at once and never close the
-    # transport (the review of b25c81a: m1). The kill already landed, so the
-    # process still exits and these still resolve for whoever waits next.
+    # dropped task) must not cancel the futures themselves, or a later reap
+    # of the same process would raise CancelledError at once and never close
+    # the transport. The kill already landed, so the process still exits and
+    # these still resolve for whoever waits next.
     await asyncio.shield(pipes.exited)
     stdin = transport.get_pipe_transport(0)
     if isinstance(stdin, asyncio.WriteTransport) and (not stdin.is_closing() or stdin.get_write_buffer_size()):
@@ -350,8 +348,8 @@ def exit_code(returncode: int) -> int:
 
 
 async def acquire_slot(slots: asyncio.Semaphore, wait_seconds: float) -> None:
-    """Take one of the run slots, waiting at most `wait_seconds` (spec
-    decision 10: the wait is bounded)."""
+    """Take one of the run slots, waiting at most `wait_seconds`: the wait is
+    bounded."""
     try:
         await asyncio.wait_for(slots.acquire(), timeout=wait_seconds)
     except TimeoutError:
@@ -375,9 +373,9 @@ async def run_collector(
     and the rest dropped as it arrives; its stdout goes nowhere.
 
     However the run ends (its time limit, or the awaiting task cancelled), a
-    collector still running is killed and reaped before the temporary file
-    is removed and before the caller can release its slot (D13b ruling 26),
-    and the reap waits for its exit only, never for its pipes (ruling 33)."""
+    collector still running is killed and reaped before the temporary file is
+    removed and before the caller can release its slot, and the reap waits
+    for its exit only, never for its pipes."""
     subprocess_env = _build_subprocess_env()
     subprocess_env.update(env_overlay)
     tmp_path: str | None = None
@@ -447,7 +445,7 @@ class _Prepared:
     env_requirements: list[dict]
     scanned_requirements: list[dict]
     scanned_errors: list[dict]
-    # For the backstop on the rerun's text (ruling 44): what was neutralised,
+    # For the backstop on the rerun's text: what was neutralised,
     # and the requirements a refusal keeps.
     neutralized: list[str] = field(default_factory=list)
     organization_requirements: list[dict] = field(default_factory=list)
@@ -456,16 +454,15 @@ class _Prepared:
 def _prepare(
     yaml_content: str, directory: str | None = None, organization_variables: Mapping[str, str] | None = None
 ) -> _Prepared | ValidationResult:
-    """The pre-processing: the organization's values filled in first (D20
-    decision 13's invariant), then the text's requirements and errors, the
-    provider neutralisation, the Datadog insert, the fail-closed backstop on the
-    result and the `${env:}` placeholders. Synchronous and CPU-bound (YAML
-    parses and walks), run in the check's child under its deadline. Returns
-    the answer itself when the collector mustn't run: a text PyYAML can't
-    read, nesting or aliases past their bounds, or a text the backstop
-    refuses, or a text whose fill-in is over 1 MiB. `directory` is the
-    check's own, where a directory-valued `${env:}` placeholder is made (D13b
-    ruling 63)."""
+    """The pre-processing: the organization's values filled in first, then
+    the text's requirements and errors, the provider neutralisation, the
+    Datadog insert, the fail-closed backstop on the result and the `${env:}`
+    placeholders. Synchronous and CPU-bound (YAML parses and walks), run in
+    the check's child under its deadline. Returns the answer itself when the
+    collector mustn't run: a text PyYAML can't read, nesting or aliases past
+    their bounds, or a text the backstop refuses, or a text whose fill-in is
+    over 1 MiB. `directory` is the check's own, where a directory-valued
+    `${env:}` placeholder is made."""
     try:
         return _prepare_text(yaml_content, directory, organization_variables)
     except TooDeep:
@@ -484,8 +481,8 @@ def _refused(message: str, outcome: str, requirements: list[dict] | None = None)
 
 
 def _unreadable(error: bounded_yaml.YAMLError) -> ValidationResult:
-    """The answer for a text PyYAML can't read as one document (ruling
-    39(d)): PyYAML's own problem and line, never any of the text."""
+    """The answer for a text PyYAML can't read as one document: PyYAML's own
+    problem and line, never any of the text."""
     problem = getattr(error, "problem", None)
     mark = getattr(error, "problem_mark", None)
     if problem is None:  # our own bounded message (e.g. a non-Unicode character)
@@ -498,14 +495,13 @@ def _unreadable(error: bounded_yaml.YAMLError) -> ValidationResult:
 def _prepare_text(
     yaml_content: str, directory: str | None = None, organization_variables: Mapping[str, str] | None = None
 ) -> _Prepared | ValidationResult:
-    # The organization's values FIRST (D20 decision 13's invariant; Preflight
-    # ruling 30): every cleanup and check below reads the text the collector
-    # would be served, so a value that adds YAML structure (`x, headers:
-    # {…}` in a flow mapping) is parsed, neutralised and checked like the
-    # rest of the text. The references are read from the text as written, as
-    # the opamp-server's fill-in reads them; the filled-in length is counted
-    # before anything is built, and over 1 MiB the text is refused, as the
-    # opamp-server never serves it (Preflight ruling 12).
+    # The organization's values FIRST: every cleanup and check below reads
+    # the text the collector would be served, so a value that adds YAML
+    # structure (`x, headers: {…}` in a flow mapping) is parsed, neutralised
+    # and checked like the rest of the text. The references are read from the
+    # text as written, as the opamp-server's fill-in reads them; the
+    # filled-in length is counted before anything is built, and over 1 MiB
+    # the text is refused, as the opamp-server never serves it.
     values = organization_variables or {}
     length, names = org_variables.rendered_length(yaml_content, values)
     if length > org_variables.MAX_RENDERED_BYTES:
@@ -516,7 +512,7 @@ def _prepare_text(
 
     # Read the one document, with every node's source marks. A text PyYAML
     # can't read (a scanner/parser error, or more than one document) is
-    # answered invalid and never reaches the collector (ruling 39(d)), so the
+    # answered invalid and never reaches the collector, so the
     # collector can't decode and expand a reference an escape hid, nor read a
     # second document the validator never saw. `TooDeep` / `TooManyAliases`
     # propagate to `_prepare`.
@@ -538,9 +534,8 @@ def _prepare_text(
     # Neutralise non-``env`` confmap providers before the collector sees the
     # text: it would otherwise expand ``${file:...}`` / ``${http:...}`` at
     # load time and echo host files and secrets back through its messages.
-    # Detection is on the DECODED keys and values (ruling 39), and each
-    # reference is spliced out by node position — no re-dump, so nothing else
-    # drifts.
+    # Detection is on the DECODED keys and values, and each reference is
+    # spliced out by node position — no re-dump, so nothing else drifts.
     provider_requirements: list[dict] = []
     sent = yaml_content
     yaml_content, neutralized = neutralize_providers(yaml_content, root)
@@ -553,13 +548,13 @@ def _prepare_text(
     # Datadog exporters get a placeholder ``hostname`` so the constructor
     # skips cloud hostname detection, the last rewrite before the run — a
     # fixed value this inserts, carrying none of the text, on the spliced
-    # text so it and the neutralisation never disagree (ruling 39(f)).
+    # text so it and the neutralisation never disagree.
     yaml_content = _inject_datadog_hostname_placeholder(yaml_content)
 
     # Fail closed, on the exact text the collector will read, after every
-    # splice and insert (ruling 44). When neither changed anything, that text
+    # splice and insert. When neither changed anything, that text
     # is the one composed above and already found clean, so it isn't composed
-    # again (ruling 46).
+    # again.
     if yaml_content != sent:
         refusal = _backstop(yaml_content, neutralized, organization_requirements)
         if refusal is not None:
@@ -567,8 +562,7 @@ def _prepare_text(
 
     # ``${env:VAR}``: typed placeholders in the collector's environment only,
     # found on the decoded values, never for a name its fixed environment
-    # holds (ruling 46); a directory-valued one a fresh directory in the
-    # check's own (ruling 63).
+    # holds; a directory-valued one a fresh directory in the check's own.
     env_overlay, env_requirements = _build_env_var_placeholders(yaml_content, _fixed_env_names(), directory)
 
     return _Prepared(
@@ -598,11 +592,11 @@ def _backstop(
     yaml_content: str, neutralized: list[str], organization_requirements: list[dict]
 ) -> ValidationResult | None:
     """Run the fail-closed check on the exact text a collector run reads (the
-    first run's and the rerun's, after every splice and insert: D13b ruling
-    44). None when the run may go ahead; otherwise the refusal (the
-    collector isn't run), naming the schemes neutralised and any that
-    survived, and keeping the organization variables' requirements. Both
-    should be impossible: every splice is total and adds no structure."""
+    first run's and the rerun's, after every splice and insert). None when
+    the run may go ahead; otherwise the refusal (the collector isn't run),
+    naming the schemes neutralised and any that survived, and keeping the
+    organization variables' requirements. Both should be impossible: every
+    splice is total and adds no structure."""
     if not _still_references(yaml_content):
         return None
     schemes = set(neutralized)
@@ -631,17 +625,17 @@ def _log_outcome(kind: str, errors: int, requirements: int, elapsed_ms: int) -> 
 # ---------------------------------------------------------------------------
 
 
-# What an answer says in place of the check's own directory (D13b ruling 64).
+# What an answer says in place of the check's own directory.
 PRIVATE_PATH_TOKEN = "<validator>"
 
-# What one answer holds at most (D13b rulings 69 and 71). A text's own
-# references (`${org:X}`, `${env:X}`, TLS paths) each make a requirement,
-# and a multi-line key aliased into many pipelines made the collector print
-# 130,746 errors (4.61 MiB on 0.162.0): without these bounds an answer could
-# outgrow what the platform's client reads (4 MiB). Each string is cut to
-# its budget in bytes of the answer's JSON (UTF-8, escapes counted), "…"
-# included; past MAX_ERRORS the errors end with MORE_ERRORS_MESSAGE, so the
-# answer stays invalid and says some weren't shown.
+# What one answer holds at most. A text's own references (`${org:X}`,
+# `${env:X}`, TLS paths) each make a requirement, and a multi-line key
+# aliased into many pipelines made the collector print 130,746 errors
+# (4.61 MiB on 0.162.0): without these bounds an answer could outgrow what
+# the platform's client reads (4 MiB). Each string is cut to its budget in
+# bytes of the answer's JSON (UTF-8, escapes counted), "…" included; past
+# MAX_ERRORS the errors end with MORE_ERRORS_MESSAGE, so the answer stays
+# invalid and says some weren't shown.
 MAX_ERRORS = 200
 MAX_REQUIREMENTS = 200
 MORE_ERRORS_MESSAGE = "The collector reported more errors than shown."
@@ -689,12 +683,12 @@ def _clipped_path(path: object) -> object:
 
 
 def bounded(result: ValidationResult) -> ValidationResult:
-    """`result` within an answer's bounds (D13b rulings 69 and 71): each
-    error's message and path and each requirement's fields cut to their
-    budgets; at most MAX_ERRORS errors, then MORE_ERRORS_MESSAGE when more
-    were reported; requirements, once cut, de-duplicated by (category,
-    title, componentPath), the first of each kept in order, and at most
-    MAX_REQUIREMENTS of them. Bounding a bounded result changes nothing."""
+    """`result` within an answer's bounds: each error's message and path and
+    each requirement's fields cut to their budgets; at most MAX_ERRORS
+    errors, then MORE_ERRORS_MESSAGE when more were reported; requirements,
+    once cut, de-duplicated by (category, title, componentPath), the first of
+    each kept in order, and at most MAX_REQUIREMENTS of them. Bounding a
+    bounded result changes nothing."""
     errors = [
         {"message": clipped(error["message"], MESSAGE_BUDGET), "componentPath": _clipped_path(error["componentPath"])}
         for error in result.errors[:MAX_ERRORS]
@@ -731,8 +725,8 @@ def _private_paths(directory: str | None) -> tuple[str, ...]:
 
 def scrubbed(result: ValidationResult, directory: str | None) -> ValidationResult:
     """`result` with every mention of the check's directory, in every string
-    it returns, replaced by PRIVATE_PATH_TOKEN (D13b ruling 64): the
-    validator's own paths never reach an answer."""
+    it returns, replaced by PRIVATE_PATH_TOKEN: the validator's own paths
+    never reach an answer."""
     paths = _private_paths(directory)
     if not paths:
         return result
@@ -760,12 +754,11 @@ async def check_text(
     organization_variables: Mapping[str, str] | None = None,
 ) -> ValidationResult:
     """Check one text with one collector, start to finish: what the check's
-    child runs (`app/check.py`). The caller bounds it (the child's
-    deadline); only the collector has a time limit of its own. The answer
-    never names the check's directory (ruling 64), and lists at most
-    MAX_REQUIREMENTS requirements, each once (ruling 69).
-    `organization_variables` (name to value) are filled in before anything
-    else (D20 decision 13)."""
+    child runs (`app/check.py`). The caller bounds it (the child's deadline);
+    only the collector has a time limit of its own. The answer never names
+    the check's directory, and lists at most MAX_REQUIREMENTS requirements,
+    each once. `organization_variables` (name to value) are filled in before
+    anything else."""
     result = await _check_text(
         binary_path,
         yaml_content,
@@ -808,15 +801,15 @@ async def _check_text(
         # Every collector complaint was a deployment requirement, so a
         # validate-stage requirement (file_storage's missing directory, a
         # custom node_from_env_var) stopped the collector before the build
-        # stage and hid any build-stage error (the review of b25c81a: M2).
+        # stage and hid any build-stage error.
         # Meet what the sandbox can and run once more, inside the same
         # deadline; the second run's errors are the answer's, the
-        # requirements stay from the first run (D13b ruling 40).
+        # requirements stay from the first run.
         met = _meet_requirements(prepared.yaml_content, requirements, directory, prepared.env_overlay)
         if met is not None:
             met_yaml, env_additions = met
             # The rerun's text (the directory splice) gets the same backstop
-            # as the first run's (ruling 44).
+            # as the first run's.
             refusal = _backstop(met_yaml, prepared.neutralized, prepared.organization_requirements)
             if refusal is not None:
                 return refusal
@@ -839,7 +832,7 @@ def _collector_first(requirements: list[dict], stderr_requirements: list[dict]) 
     reported (by category and title, as `_merge_requirements` matches them)
     and the confmap providers', then the text scan's (organization and
     environment variables, TLS files, …), which a text can multiply. So the
-    cut at MAX_REQUIREMENTS drops the text's own first (D13b ruling 71)."""
+    cut at MAX_REQUIREMENTS drops the text's own first."""
     reported = {(item["category"], item["title"]) for item in stderr_requirements}
 
     def first(item: dict) -> bool:
@@ -853,8 +846,8 @@ def _outcome_errors(
 ) -> tuple[list[dict], list[dict], str]:
     """One collector run's errors, its stderr requirements, and the outcome's
     kind. `submitted_text` is the text that run was given, as the collector
-    read it: a requirement phrase it holds is an echo, never a requirement
-    (D13b ruling 29)."""
+    read it: a requirement phrase it holds is an echo, never a
+    requirement."""
     kind = outcome.kind
     if outcome.kind == "timeout":
         return [{"message": TIMEOUT_MESSAGE.format(seconds=timeout_seconds), "componentPath": None}], [], kind
@@ -878,7 +871,7 @@ def _outcome_errors(
 
 
 # ---------------------------------------------------------------------------
-# Meeting a requirement so the collector reaches the build stage (ruling 40)
+# Meeting a requirement so the collector reaches the build stage
 # ---------------------------------------------------------------------------
 
 _FILE_STORAGE_PREFIX = "file_storage"
@@ -894,7 +887,7 @@ def _meet_requirements(
     when none is meetable. Returns `(rewritten_yaml, env_additions)`:
     file_storage extensions are repointed at fresh writable subdirectories of
     the per-check directory (so the directory check passes), so is
-    hostmetrics' `root_path` (Linux's validate stage stats it; D13b Task 7's
+    hostmetrics' `root_path` (Linux's validate stage stats it; the
     host_filesystem template), and every
     named-environment-variable requirement is set to a placeholder in the
     collector's environment — unless the name is already in that
@@ -902,7 +895,7 @@ def _meet_requirements(
     first run's `env_overlay`) or is one the collector's runtime, loader or
     network stack reads (`_PROTECTED_ENV_NAME_RE`): the name comes from a
     requirement's title, which a text shapes through `${env:NAME}`, so such
-    a requirement simply isn't met (ruling 44)."""
+    a requirement simply isn't met."""
     present = _fixed_env_names() | set(env_overlay or ())
     env_additions: dict[str, str] = {}
     for requirement in requirements:
@@ -940,21 +933,20 @@ def _env_name_from_title(title: str) -> str | None:
 def _repoint_file_storage(yaml_content: str, directory: str | None) -> str | None:
     """Splice each `file_storage` extension's `directory:` value to a
     placeholder directory inside the per-check directory (one per distinct
-    value: equal values share one, D13b ruling 64), so the collector's
-    validate-stage directory check passes on the rerun. Returns the rewritten
-    text, or None when there is nothing to repoint (so no rerun is forced for
-    a requirement the sandbox can't meet). No re-dump: only the directory
-    scalars' spans change (ruling 39/40)."""
+    value: equal values share one), so the collector's validate-stage
+    directory check passes on the rerun. Returns the rewritten text, or None
+    when there is nothing to repoint (so no rerun is forced for a requirement
+    the sandbox can't meet). No re-dump: only the directory scalars' spans
+    change."""
     return _repoint(yaml_content, directory, "extensions", (_FILE_STORAGE_PREFIX,), "directory")
 
 
 def _repoint_hostmetrics_root(yaml_content: str, directory: str | None) -> str | None:
     """The same for each hostmetrics receiver's `root_path:` (either
     spelling, `hostmetrics` or `host_metrics`): all of them the check's one
-    root directory (the collector refuses differing root_paths; ruling 64),
-    the one a `${env:}` root_path gets too, which the collector's
-    validate-stage stat finds (D13b Task 7: an empty directory passes, as
-    the image's /hostfs does)."""
+    root directory (the collector refuses differing root_paths), the one a
+    `${env:}` root_path gets too, which the collector's validate-stage stat
+    finds (an empty directory passes, as the image's /hostfs does)."""
     return _repoint(yaml_content, directory, "receivers", _HOSTMETRICS_TYPES, "root_path")
 
 
@@ -971,11 +963,11 @@ def _repoint(
     """Splice `field`'s scalar value in every `section` component whose type
     is one of `types` (`type` or `type/name`) to its placeholder directory
     inside `directory` (`placeholder_directory`: past its cap, the shared
-    overflow, so every value is met; ruling 66); None when there is nothing
+    overflow, so every value is met); None when there is nothing
     to repoint or no check directory.
     A scalar several components reach through one anchor is spliced once, by
-    its start index, as the provider neutralisation dedupes its splices (D13b
-    ruling 63: two splices of one span left the text unreadable)."""
+    its start index, as the provider neutralisation dedupes its splices (two
+    splices of one span would leave the text unreadable)."""
     if directory is None:
         return None
     try:
@@ -1032,9 +1024,9 @@ async def run_validation(
 ) -> ValidationResult:
     """Check one text with one collector, in a child process, while holding
     a slot, the organization's values (`organization_variables`, name to
-    value) filled in first, in the child (D20 decision 13). Raises SlotUnavailable when no slot frees up in time,
-    CollectorUnavailable (an OSError) when the collector can't be run, and
-    CheckFailed when the child fails otherwise.
+    value) filled in first, in the child. Raises SlotUnavailable when no slot
+    frees up in time, CollectorUnavailable (an OSError) when the collector
+    can't be run, and CheckFailed when the child fails otherwise.
 
     `deadline_seconds` (default: `timeout_seconds` plus
     `DEADLINE_MARGIN_SECONDS`) bounds the whole check; the slot is released
@@ -1103,7 +1095,7 @@ async def _run_child(
                 "organization_variables": dict(organization_variables or {}),
             },
             # Every character as itself, not as `\uXXXX` escapes: 150 values of
-            # 1,024 four-byte characters (Q104) are 600 KiB on the child's stdin,
+            # 1,024 four-byte characters are 600 KiB on the child's stdin,
             # not 1.8 MB. The text and the values are Unicode (parse_body refuses a
             # lone surrogate), so the encoding can't fail.
             ensure_ascii=False,
@@ -1121,8 +1113,7 @@ async def _run_child(
             )
         if pipes.dropped[1]:
             raise CheckFailed("answer_too_long")
-        # The child scrubs and bounds its answer; so does the service
-        # (rulings 64 and 69).
+        # The child scrubs and bounds its answer; so does the service.
         return bounded(scrubbed(_decode_answer(bytes(pipes.kept[1]), transport.get_returncode()), directory))
     finally:
         if await _end_check(child, directory):
@@ -1202,10 +1193,10 @@ async def _end_check(child: tuple[asyncio.SubprocessTransport, _Pipes] | None, d
                     cancelled = True
             ending.result()
     finally:
-        # Off the event loop (ruling 64): a large directory takes a while,
+        # Off the event loop: a large directory takes a while,
         # and the loop serves every other request meanwhile. Waited for, never
         # cancelled (a cancellation of the wait leaves the removal running),
-        # so it isn't left half done; how it ended is read after (ruling 66).
+        # so it isn't left half done; how it ended is read after.
         removing = asyncio.ensure_future(asyncio.to_thread(_remove_directory, directory))
         while not removing.done():
             try:
@@ -1217,14 +1208,14 @@ async def _end_check(child: tuple[asyncio.SubprocessTransport, _Pipes] | None, d
         except Exception as error:  # noqa: BLE001 - logged, never raised: the answer stands
             failures = [type(error).__name__]
         if failures:
-            # The errors' types only: their text names the directory (ruling 64).
+            # The errors' types only: their text names the directory.
             logger.warning("a check's directory could not be removed (%s)", ", ".join(sorted(set(failures))))
     return cancelled
 
 
 def _remove_directory(directory: str) -> list[str]:
     """Remove the check's directory and everything in it, carrying on past
-    any entry that can't be removed (Ruling 67: a failure doesn't leave the
+    any entry that can't be removed (a failure doesn't leave the
     rest, the configuration's file included, behind). Returns the type of
     each failure, in order; an entry already gone is no failure."""
     failures: list[str] = []

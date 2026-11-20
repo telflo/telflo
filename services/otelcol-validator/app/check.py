@@ -1,4 +1,4 @@
-"""The check's child process (D13b ruling 27): `python -m app.check`.
+"""The check's child process: `python -m app.check`.
 
 The service starts one per check, in its own process group, with the
 collector's allowlisted environment (never the service's secret), and kills

@@ -34,9 +34,9 @@ func TestHealthNeedsNoAuth(t *testing.T) {
 	}
 }
 
-// GET /health logs nothing: the kubelet's probes and the API's health
-// monitor call it every few seconds (D33-1 decision 18, Ruling 335). Every
-// other request, on the health path or not, keeps its one line.
+// GET /health logs nothing: the kubelet's probes and the API's health monitor
+// call it every few seconds. Every other request, on the health path or not,
+// keeps its one line.
 func TestAHealthCheckWritesNoLogLine(t *testing.T) {
 	ts := newTestServer(t)
 	for _, target := range []string{"/health", "/health?x=1"} {
@@ -261,9 +261,9 @@ func TestValidateEndpoint(t *testing.T) {
 	}
 }
 
-// D15a Task 1 (spec decision 10): GET /ottl/v1/functions had no caller and
-// is gone. With the secret, so that the 404 is the route's absence and not
-// the secret's refusal; without it, 401 (TestAnUnknownPathWithoutTheSecretIs401Not404).
+// GET /ottl/v1/functions is not a route. With the secret, so that the 404 is
+// the route's absence and not the secret's refusal; without it, 401
+// (TestAnUnknownPathWithoutTheSecretIs401Not404).
 func TestFunctionsEndpointIsGone(t *testing.T) {
 	ts := newTestServer(t)
 	for _, target := range []string{"/ottl/v1/functions", "/ottl/v1/functions?context=log"} {
@@ -278,8 +278,8 @@ func TestFunctionsEndpointIsGone(t *testing.T) {
 }
 
 // A retired kind or an unknown one isn't one of the five, so each is refused by
-// the request's shape, the whole request, never evaluated (plan Preflight
-// rulings 9 and 14): no rule of them can pass.
+// the request's shape, the whole request, never evaluated: no rule of them
+// can pass.
 func TestRetiredAndUnknownKindsAreRefused(t *testing.T) {
 	ts := newTestServer(t)
 	output := "{}"

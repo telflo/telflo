@@ -1,8 +1,6 @@
 """Read the collector's captured output (the ``file/test_out`` exporter
 target) into the shape the run answers, with a hard byte cap.
 
-D14a Task 4, Preflight ruling 1:
-
 - **The answer's form** (``encode_output``): a single record unwrapped,
   several as ``{"records": [...]}``, serialised compact
   (``ensure_ascii=False``, no spaces; the default separators add 8%, and
@@ -10,8 +8,7 @@ D14a Task 4, Preflight ruling 1:
   cap, trailing records are dropped until it fits, and R-006 is added.
 - The file is opened without following a symlink and read only if it is a
   regular file, decoded leniently (bytes that aren't UTF-8 never raise).
-- An unparseable line is skipped silently: output never reaches a log line
-  (ADR 0024).
+- An unparseable line is skipped silently: output never reaches a log line.
 
 Why the cap: a pipeline that
 produces 10 GB of output (transform setting 1 MB attributes on every record,
@@ -33,7 +30,7 @@ from pathlib import Path
 
 from app.yaml_mutations import MutationAdvisory
 
-# R-006: the most of a run's output an answer carries (ruling 1).
+# R-006: the most of a run's output an answer carries.
 MAX_OUTPUT_BYTES = 10 * 1024 * 1024
 
 
@@ -117,7 +114,7 @@ _WRAPPER_BYTES = len(b'{"records":[]}')
 
 
 def encode_output(path: Path, cap: int = MAX_OUTPUT_BYTES) -> EncodedOutput:
-    """The collector's output in the answer's form (ruling 1): one record
+    """The collector's output in the answer's form: one record
     unwrapped, several as ``{"records":[…]}``, compact. At most ``cap``
     bytes of the file are read, and trailing records are dropped until the
     form fits in ``cap`` bytes; either way, R-006."""

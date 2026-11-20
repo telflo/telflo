@@ -1,15 +1,14 @@
 #!/usr/bin/env bash
 # Verifies scripts/check-licenses.sh rejects a disallowed or unknown license,
 # passes an allowed one, and admits an MPL-2.0 module only when the policy's
-# "goModules" names it at the version the build uses (D15a Preflight ruling
-# 3). The fixtures in scripts/testdata are tiny modules, each with its own
-# LICENSE; mpl-module depends on an MPL-2.0 module, example.com/mpl-fixture
-# v1.9.0, vendored inside it, so its version is known with no network. This
-# needs no network once go-licenses is built. (Go leaves testdata out of
-# ./..., so they are never part of the service's build.) Since D15a Task 3's
-# follow-up (the controller's Ruling 34) the check scans linux/amd64 and
-# linux/arm64 whatever machine runs it: a module only one of them imports is
-# checked too.
+# "goModules" names it at the version the build uses. The fixtures in
+# scripts/testdata are tiny modules, each with its own LICENSE; mpl-module
+# depends on an MPL-2.0 module, example.com/mpl-fixture v1.9.0, vendored
+# inside it, so its version is known with no network. This needs no network
+# once go-licenses is built. (Go leaves testdata out of ./..., so they are
+# never part of the service's build.) The check scans linux/amd64 and
+# linux/arm64 whatever machine runs it: a module only one of them imports
+# is checked too.
 set -uo pipefail
 cd "$(dirname "$0")/.."
 FAILURES=0
@@ -70,7 +69,7 @@ expect pass "a GPL-3.0 module under a policy that allows it" scripts/testdata/gp
 echo '{ "allowed": ["Apache-2.0"] }' > "$scratch/apache-only.json"
 expect fail "an MIT module under a policy without MIT" scripts/testdata/mit-module "$scratch/apache-only.json"
 
-# goModules (D15a): the MPL-2.0 module passes only when it is named at the
+# goModules: the MPL-2.0 module passes only when it is named at the
 # version the build uses.
 cat > "$scratch/named.json" <<'EOF'
 { "allowed": ["MIT"],

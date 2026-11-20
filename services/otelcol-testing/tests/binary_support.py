@@ -1,11 +1,11 @@
 """What the binary and kwok tests share (`tests/test_binary_*.py`, marked
 `binary` or `kwok`, run inside the image with `pytest -m "binary or kwok"`
-under `--network none`; D14a Task 5, Preflight ruling 6): where the
-collectors and the catalogue are, which versions the catalogue offers, the
-tester's app over the image's collectors, and running one test through it.
+under `--network none`): where the collectors and the catalogue are, which
+versions the catalogue offers, the tester's app over the image's collectors,
+and running one test through it.
 
 An offered version the image doesn't hold is skipped, unless the image was
-built to hold it (the validator's D13b ruling 53): the `test` target sets
+built to hold it (as the validator's): the `test` target sets
 `OTELCOL_EXPECTED_VERSIONS` to its `OTELCOL_VERSIONS` build argument (`all`,
 `default` or a comma-separated list), and a version it names that isn't held
 fails the test instead, so a build that silently baked fewer collectors

@@ -1,7 +1,7 @@
-// New in D15a Task 2 (plan Preflight ruling 10): the in-flight caps. An
-// evaluation waits at most 5 s for one of its 4 slots, a validation 1 s for
-// one of its 8; then 503 evaluator_busy. The slot is taken before the body
-// is read and freed only once the request's child is reaped.
+// The in-flight caps. An evaluation waits at most 5 s for one of its 4
+// slots, a validation 1 s for one of its 8; then 503 evaluator_busy. The
+// slot is taken before the body is read and freed only once the request's
+// child is reaped.
 
 package server
 

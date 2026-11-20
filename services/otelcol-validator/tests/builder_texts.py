@@ -1,5 +1,5 @@
-"""Texts the builder writes, for the validation cases D13b's binary tests
-answer (D13b ruling 68; `test_binary_builder_texts.py`).
+"""Texts the builder writes, for the validation cases the binary tests answer
+(`test_binary_builder_texts.py`).
 
 Each is a copy of a file in the web's corpus
 (`telflo-core/apps/web/app/lib/graph/corpus/`), the YAML the generator

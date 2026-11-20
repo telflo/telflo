@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Downloads kwok's five release binaries for the tester's image, each
-checked against its pinned sha256 before it is used (D14a spec decision 6,
-Preflight ruling 19). The Dockerfile's download stage runs it; nothing it
-fetches reaches a layer unchecked, and no archive is left behind.
+checked against its pinned sha256 before it is used. The Dockerfile's
+download stage runs it; nothing it fetches reaches a layer unchecked, and no
+archive is left behind.
 
     download-kwok.py --manifest kwok/binaries.json --arch ARCH --dest DIR
 

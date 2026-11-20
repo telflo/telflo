@@ -1,13 +1,13 @@
-"""D13b ruling 27: each check runs in its own child process and process
-group, under one hard deadline; the service kills the group at the deadline
-or on cancellation, holds the slot until the group is dead, and removes the
-check's directory however the check ends. The event loop parses nothing.
-Ruling 33: a check killed while its child still writes always ends.
+"""Each check runs in its own child process and process group, under one hard
+deadline; the service kills the group at the deadline or on cancellation,
+holds the slot until the group is dead, and removes the check's directory
+however the check ends. The event loop parses nothing.
+A check killed while its child still writes always ends.
 
 Processes are followed by pid (each fake collector records its own, its
 parent's, which is the check's child, and its configuration's path). Every
-test that kills a check runs it under a hang guard (`tests/guard.py`, ruling
-36): a check that never ends fails the test instead of hanging the suite.
+test that kills a check runs it under a hang guard (`tests/guard.py`): a
+check that never ends fails the test instead of hanging the suite.
 Waits are safety nets, never what a test asserts."""
 
 from __future__ import annotations
@@ -212,14 +212,14 @@ def test_the_service_passes_the_deadline_the_settings_give() -> None:
 
 
 # ---------------------------------------------------------------------------
-# D13b ruling 33: a check killed while its child writes always ends
+# A check killed while its child writes always ends
 # ---------------------------------------------------------------------------
 
 # Children that never read their request (so a service that waits to hand it
 # over reads nothing meanwhile) and write more than asyncio's streams keep
-# unread before they pause the pipe (128 KiB). 207bc02's service then never
-# saw the pipe's end, and `Process.wait()` waits for it: the check never
-# ended, its slot was never released, its directory stayed.
+# unread before they pause the pipe (128 KiB). A service on those streams
+# would never see the pipe's end, and `Process.wait()` waits for it: the
+# check would never end, its slot never be released, its directory stay.
 FLOODING_CHILD = (
     "import os, pathlib, sys\n"
     "chunk = b'x' * 16384\n"
@@ -324,8 +324,8 @@ def test_a_check_cancelled_while_its_child_writes_ends(
 def test_a_collector_flooding_its_output_past_its_time_limit_ends_at_that_limit(
     binary_dir: Path,
 ) -> None:
-    """The same inside the child (207bc02: the collector's own limit never
-    ended a flooding collector; only the service's deadline did)."""
+    """The same inside the child: the collector's own limit ends a flooding
+    collector, not only the service's deadline."""
     binary = write_collector(binary_dir, "0.162.0", "exec yes 'E1006 reflector.go:1] dial tcp: i/o timeout' >&2\n")
 
     async def scenario():
@@ -345,8 +345,8 @@ def test_a_collector_killed_while_another_process_holds_its_pipe_ends_at_its_tim
     """A reap waits for the process's exit, never for its pipes: here the
     collector runs past its limit and has left a process holding its stderr
     open, so its output never ends. The collector's own limit ends the run
-    (the service's group kill then ends the holder). 207bc02's reap waited
-    for every pipe to close, so only the service's deadline ended it."""
+    (the service's group kill then ends the holder). A reap that waited for
+    every pipe to close would leave only the service's deadline to end it."""
     holder = tmp_path / "holder"
     binary = write_collector(binary_dir, "0.162.0", f"sleep 300 >&2 &\necho $! > {holder}\nexec sleep 300\n")
 
@@ -594,7 +594,7 @@ def test_the_service_process_never_parses_yaml_or_classifies_stderr(
     assert resp.status_code == 200
     body = resp.json()
     assert body["errors"] == [{"message": "must specify at least one protocol", "componentPath": "receivers::otlp"}]
-    # The collector's first, then the text's (D13b ruling 71).
+    # The collector's first, then the text's.
     assert [r["title"] for r in body["requirements"]] == [
         "Ensure /var/lib/otel exists at runtime",  # read from the collector's output
         "Directory /var/log/otel must exist",  # read from the text
@@ -630,9 +630,8 @@ async def test_the_checks_child_never_holds_the_secret(
 
 
 async def test_the_collector_runs_in_the_checks_own_directory(binary_dir: Path, tmp_path: Path) -> None:
-    """D13b ruling 38: the collector's working directory is the check's
-    directory (a relative path in the text lands there, and goes with it),
-    never the service's."""
+    """The collector's working directory is the check's directory (a relative
+    path in the text lands there, and goes with it), never the service's."""
     record = tmp_path / "record"
     binary = _recording_collector(binary_dir, record, then="exit 0")
 
@@ -647,8 +646,8 @@ async def test_the_collector_runs_in_the_checks_own_directory(binary_dir: Path, 
 def test_a_child_that_cannot_be_started_is_503_with_its_own_log_line(
     binary_dir: Path, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """D13b ruling 38: an OSError starting the check's child isn't logged as
-    a collector that can't be run; the answer is still 503."""
+    """An OSError starting the check's child isn't logged as a collector that
+    can't be run; the answer is still 503."""
     monkeypatch.setattr(runner, "CHECK_COMMAND", (str(binary_dir / "no-such-interpreter"),))
     write_collector(binary_dir, "0.162.0", "exit 0\n")
     made = _recording_directories(monkeypatch)

@@ -1,7 +1,6 @@
-// New in D15a Task 1 (spec decision 9; plan Preflight ruling 2): the
-// evaluator moved from OTTL 0.147.0 to 0.162.0, which added the converters
-// Coalesce and IsEmpty. This test shows that rules may use
-// them: they parse, in lint and in a rule, and evaluate per record.
+// OTTL 0.162.0 has the converters Coalesce and IsEmpty, which 0.147.0
+// lacked. This test shows that rules may use them: they parse, in lint and
+// in a rule, and evaluate per record.
 
 package ottlassert
 

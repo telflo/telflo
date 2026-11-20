@@ -1,11 +1,10 @@
 """In-cluster requirement phrasings (7), never filed as `k8s_in_cluster`
 requirements by a phrase found anywhere in a line.
 
-D13b ruling 34 classifies with templates, each taken from an output the
-collector really printed and matched against a whole cause: none of these phrasings
-has a recorded output yet (the image's placeholder CA and blocked apiserver
-are Linux, in-image cases; Task 7 records them and may add templates), so
-each is an error for now.
+The parser classifies with templates, each taken from an output the
+collector really printed and matched against a whole cause: none of these
+phrasings has a recorded output (in the image, `validate` printed none of
+them), so each is an error.
 """
 from __future__ import annotations
 

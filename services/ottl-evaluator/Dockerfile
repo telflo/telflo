@@ -1,10 +1,10 @@
-# The OTTL evaluator's image (D15a spec decision 10; plan Preflight ruling
-# 13), built from this directory, as the root docker-compose.yml does:
+# The OTTL evaluator's image, built from this directory, as the root
+# docker-compose.yml does:
 #
 #   docker build -t telflo-ottl-evaluator services/ottl-evaluator
 #
 # Built as the opamp-server's is. One binary, six subcommands
-# (cmd/server/main.go; D25 added lint-child):
+# (cmd/server/main.go):
 #
 #   serve            the default: the API on OTTL_EVALUATOR_PORT (8003)
 #   healthcheck      asks this container's own /health, for the container
@@ -17,17 +17,16 @@
 #                    (scripts/check-container.sh runs it)
 
 # ---- build stage ----------------------------------------------------------
-# The Go 1.26 line go.mod names (go 1.26.9; pkg/ottl has needed Go 1.26
-# since v0.160.0), pinned by its index digest: golang:1.26-alpine was Go
-# 1.26.9 on Alpine 3.24 when resolved, on 2026-10-11. To move it, take the
-# new digest from `docker buildx imagetools inspect golang:1.26-alpine`.
-# Alpine keeps the build image small; CGO is disabled in the build step so
-# the binary is fully static and runs on distroless/static without libc.
+# The Go 1.26 line go.mod names (go 1.26.9; pkg/ottl has needed Go 1.26 since
+# v0.160.0), pinned by its index digest: golang:1.26-alpine was Go 1.26.9 on
+# Alpine 3.24 when resolved, on 2026-10-11. To move it, take the new digest
+# from `docker buildx imagetools inspect golang:1.26-alpine`. Alpine keeps
+# the build image small; CGO is disabled in the build step so the binary is
+# fully static and runs on distroless/static without libc.
 # --platform=$BUILDPLATFORM: this stage is the builder's platform's, whatever
 # the target, and cross-compiles (GOOS and GOARCH below), as the
 # opamp-server's does: an emulated amd64 build crashes at `go mod download`
-# under QEMU (D33-1 decision 12, Preflight ruling 12). Only the runtime stage
-# is per platform.
+# under QEMU. Only the runtime stage is per platform.
 FROM --platform=$BUILDPLATFORM golang:1.26-alpine@sha256:3082400e369fa24d5fc60bca20edab3f6d604e0c5a690ec66b295eff4dd87ade AS builder
 
 # go.mod's toolchain is the one this image carries: never let a go command
@@ -62,9 +61,9 @@ RUN --mount=type=cache,target=/go/pkg/mod \
 # ---- runtime stage --------------------------------------------------------
 # distroless/static: no shell, no package manager, ~2MB base. The :nonroot
 # tag's user is uid 65532. The opamp-server's index digest, a reviewed
-# component (ADR 0019, amended by D13b and D15a); resolved on 2026-10-07. To
-# move it, take the new digest from `docker buildx imagetools inspect
-# gcr.io/distroless/static-debian12:nonroot`, and move both images together.
+# component; resolved on 2026-10-07. To move it, take the new digest from
+# `docker buildx imagetools inspect gcr.io/distroless/static-debian12:nonroot`,
+# and move both images together.
 FROM gcr.io/distroless/static-debian12:nonroot@sha256:afa5c872c891853ca7fcf1f12c3edb23f7eeef36189728842dd51042ff57f7ab
 
 LABEL org.opencontainers.image.title="telflo ottl-evaluator"
@@ -101,7 +100,7 @@ COPY --from=builder /out/ottl-evaluator /app/ottl-evaluator
 EXPOSE 8003
 
 # The base's nonroot user, by number, so an orchestrator can check
-# runAsNonRoot (D33-1 decision 12).
+# runAsNonRoot.
 USER 65532:65532
 
 ENTRYPOINT ["/app/ottl-evaluator"]

@@ -1,4 +1,3 @@
-// New in D25 Task 3 (D25 spec decision 33; plan Preflight ruling 13, B16):
 // POST /ottl/v1/lint. Each text's verdict in order, no text echoed; the
 // 200-text cap; the secret; the validations' slots it shares; the nesting
 // guard before the parse; the hard deadline's "Not checked" for the items
@@ -79,7 +78,7 @@ func TestLintAnswersEachTextsVerdictInOrderWithoutTheText(t *testing.T) {
 		{"condition", 3, false, "single-escaped regex sequence '\\d'"},
 		{"statement", 0, true, ""},
 		// The transform processor's own functions aren't registered: the
-		// API turns this one into a note, by these words (decision 33).
+		// API turns this one into a note, by these words.
 		{"statement", 1, false, `undefined function "convert_sum_to_gauge"`},
 		{"valueExpression", 0, true, ""},
 		{"valueExpression", 1, false, rules.SyntaxErrorPrefix},

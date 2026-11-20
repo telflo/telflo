@@ -1,11 +1,10 @@
-"""D9's handoff cases against every offered collector (D13b decision 9 and
-the spec's Handoffs; Preflight rulings 2 and 8; marked `binary`, run inside
-the image with `pytest -m binary`).
+"""Configurations the component forms can write, checked against every
+offered collector (marked `binary`, run inside the image with
+`pytest -m binary`).
 
-Each case D9b, D9c and D9d handed to D13b has its expected answer per offered
-version, established by D13b Task 7 on 0.159.0-0.162.0 with the real
-binaries in the image (the preflight's table was 0.147.0 and 0.162.0). Every
-one is refused on every offered version but:
+Each case has its expected answer per offered version, established on
+0.159.0-0.162.0 with the real binaries in the image. Every one is refused on
+every offered version but:
 - resourcedetection's `client_config.timeout` and Datadog's dropped keys
   (`hostname_source`, `logs.dump_payloads`, `idle_connection_timeout`),
   accepted from 0.160.0: an upstream regression (from 0.160.0 sections
@@ -14,14 +13,15 @@ one is refused on every offered version but:
 - netflow's `queue_size: 0` and spanmetrics' bare-number buckets, accepted
   (and run); failover's duplicate level is test_binary_connectors.py's F4;
 - the controls, accepted, each beside the case it guards.
-D9d's redaction case did not reproduce: `validate` refuses each malformed
-regex. A case the collector starts accepting (or refusing) fails here, a
-question for the controller rather than a skipped test.
+No redaction case needs the service: `validate` itself refuses each
+malformed regex. A case the collector starts accepting (or refusing) fails
+here rather than being skipped.
 
-Preflight ruling 2's start-only cases: `validate` accepts each (checked on
-the raw collector, so an upstream change is noticed) and the service reports
-what the host must provide, from the text; a tail_sampling OTTL policy with
-no conditions is an error from the service.
+The start-only cases: `validate` accepts each (checked on the raw collector,
+so an upstream change is noticed) and the service reports what the host must
+provide, from the text.
+
+A tail_sampling OTTL policy with no conditions is an error from the service.
 """
 
 from __future__ import annotations
@@ -35,7 +35,7 @@ from tests.binary_support import OFFERED, check, errors_match, raw_validate, ver
 
 pytestmark = pytest.mark.binary
 
-# ---- the texts (the preflight's, unchanged) ---------------------------------
+# ---- the texts -----------------------------------------------------------------
 
 R = "receivers:\n  otlp:\n    protocols:\n      grpc:\n"
 
@@ -151,48 +151,48 @@ def transform_refusal(statements: str, before: str, after: str) -> Answer:
 
 
 CASES: dict[str, tuple[str, Answer]] = {
-    # ---- D9b
-    "D9b attributes' top-level cacheenabled": (
+    # ---- keys the collector refuses
+    "attributes' top-level cacheenabled": (
         processor("attributes", "    cacheenabled: true\n    actions:\n      - key: a\n        value: b\n        action: insert\n"),
         refused(invalid_keys("attributesprocessor.Config", "cacheenabled", "processors::attributes")),
     ),
-    "D9b client_ca_file on an exporter": (
+    "client_ca_file on an exporter": (
         exporter("otlp", "    endpoint: localhost:4317\n    tls:\n      client_ca_file: /tmp/ca.pem\n"),
         refused(invalid_keys("tls", "client_ca_file", "exporters::otlp")),
     ),
-    "D9b client_ca_file_reload on an exporter": (
+    "client_ca_file_reload on an exporter": (
         exporter("otlp", "    endpoint: localhost:4317\n    tls:\n      client_ca_file_reload: true\n"),
         refused(invalid_keys("tls", "client_ca_file_reload", "exporters::otlp")),
     ),
-    # ---- D9c: keys already in a text
-    "D9c a per-object include_initial_state": (
+    # ---- keys already in a text
+    "a per-object include_initial_state": (
         receiver(
             "k8sobjects",
             "    auth_type: none\n    objects:\n      - name: pods\n        mode: watch\n        include_initial_state: true\n",
         ),
         refused(invalid_keys("objects[0]", "include_initial_state", "receivers::k8sobjects")),
     ),
-    "D9c control: a top-level include_initial_state": (
+    "control: a top-level include_initial_state": (
         receiver(
             "k8sobjects", "    auth_type: none\n    include_initial_state: true\n    objects:\n      - name: pods\n        mode: watch\n"
         ),
         accepted(),
     ),
-    "D9c deployment_name_from_replicaset": (
+    "deployment_name_from_replicaset": (
         processor("k8sattributes", "    auth_type: none\n    deployment_name_from_replicaset: true\n"),
         refused(
             invalid_keys("k8sattributesprocessor.Config", "deployment_name_from_replicaset", "processors::k8sattributes")
         ),
     ),
-    "D9c resourcedetection ecs client_config.timeout": (
+    "resourcedetection ecs client_config.timeout": (
         processor("resourcedetection", "    detectors: [ecs]\n    ecs:\n      client_config:\n        timeout: 5s\n"),
         accepted_from("0.160.0", invalid_keys("ecs", "client_config", "processors::resourcedetection")),
     ),
-    "D9c resourcedetection gcp client_config.timeout": (
+    "resourcedetection gcp client_config.timeout": (
         processor("resourcedetection", "    detectors: [gcp]\n    gcp:\n      client_config:\n        timeout: 5s\n"),
         accepted_from("0.160.0", invalid_keys("gcp", "client_config", "processors::resourcedetection")),
     ),
-    "D9c resourcedetection's openstack detector": (
+    "resourcedetection's openstack detector": (
         processor("resourcedetection", "    detectors: [openstack]\n"),
         refused(
             build(
@@ -204,40 +204,40 @@ CASES: dict[str, tuple[str, Answer]] = {
             )
         ),
     ),
-    "D9c control: resourcedetection's nova detector": (
+    "control: resourcedetection's nova detector": (
         processor("resourcedetection", "    detectors: [nova]\n"),
         accepted(),
     ),
-    "D9c filelog in a metrics pipeline": (
+    "filelog in a metrics pipeline": (
         receiver("filelog", "    include: [/tmp/x.log]\n", "metrics"),
         refused(
             build("filelog", "receiver", ' for data type "metrics"', "telemetry type is not supported", "receivers::filelog")
         ),
     ),
-    "D9c syslog in a metrics pipeline": (
+    "syslog in a metrics pipeline": (
         receiver("syslog", "    tcp:\n      listen_address: 0.0.0.0:54526\n    protocol: rfc5424\n", "metrics"),
         refused(
             build("syslog", "receiver", ' for data type "metrics"', "telemetry type is not supported", "receivers::syslog")
         ),
     ),
-    # ---- D9c: refused values its forms write as typed
-    "D9c a regex_parser without named groups": (
+    # ---- refused values the forms write as typed
+    "a regex_parser without named groups": (
         receiver("filelog", FILELOG + "      - type: regex_parser\n        regex: '^\\d+ .*$'\n"),
         refused(filelog_refusal("no named capture groups in regex pattern")),
     ),
-    "D9c a csv_parser header of one column": (
+    "a csv_parser header of one column": (
         receiver("filelog", FILELOG + "      - type: csv_parser\n        header: a\n"),
         refused(filelog_refusal("missing field delimiter in header")),
     ),
-    "D9c a key_value_parser with equal delimiters": (
+    "a key_value_parser with equal delimiters": (
         receiver("filelog", FILELOG + "      - type: key_value_parser\n        delimiter: ','\n        pair_delimiter: ','\n"),
         refused(filelog_refusal("delimiter and pair_delimiter cannot be the same value")),
     ),
-    "D9c netflow's queue_size 0": (
+    "netflow's queue_size 0": (
         receiver("netflow", "    scheme: netflow\n    port: 2055\n    queue_size: 0\n"),
         accepted(),
     ),
-    "D9c a lowercase journald match": (
+    "a lowercase journald match": (
         receiver("journald", "    matches:\n      - _systemd_unit: ssh.service\n"),
         refused(
             build(
@@ -249,7 +249,7 @@ CASES: dict[str, tuple[str, Answer]] = {
             )
         ),
     ),
-    "D9c a duplicate operator id": (
+    "a duplicate operator id": (
         receiver(
             "filelog",
             FILELOG + "      - type: move\n        id: m\n        from: body\n        to: attributes.x\n"
@@ -257,15 +257,15 @@ CASES: dict[str, tuple[str, Answer]] = {
         ),
         refused(filelog_refusal("operator with id 'm' already exists in pipeline")),
     ),
-    "D9c filelog's empty include": (
+    "filelog's empty include": (
         receiver("filelog", "    include: []\n"),
         refused(filelog_refusal("'include' must be specified")),
     ),
-    "D9c an operator's on_error silent": (
+    "an operator's on_error silent": (
         receiver("filelog", FILELOG + "      - type: json_parser\n        on_error: silent\n"),
         refused(filelog_refusal('operator config has an invalid `on_error` field.: {"on_error":"silent"}')),
     ),
-    "D9c hostmetrics' process include without match_type": (
+    "hostmetrics' process include without match_type": (
         receiver("hostmetrics", "    scrapers:\n      process:\n        include:\n          names: [nginx]\n", "metrics"),
         refused(
             build(
@@ -277,7 +277,7 @@ CASES: dict[str, tuple[str, Answer]] = {
             )
         ),
     ),
-    "D9c a time_parser epoch layout of %s": (
+    "a time_parser epoch layout of %s": (
         receiver(
             "filelog",
             FILELOG + "      - type: time_parser\n        parse_from: body\n        layout_type: epoch\n        layout: '%s'\n",
@@ -287,13 +287,13 @@ CASES: dict[str, tuple[str, Answer]] = {
             error("invalid `layout` for `epoch` type", "receivers::filelog::baseconfig::operators::0::builder::timeparser"),
         ),
     ),
-    "D9c a regex_replace with an empty regex": (
+    "a regex_replace with an empty regex": (
         receiver(
             "filelog", FILELOG + "      - type: regex_replace\n        regex: ''\n        replace_with: x\n        field: body\n"
         ),
         refused(filelog_refusal("either regex or regex_name must be set")),
     ),
-    "D9c syslog's octet_counting and an empty framing trailer": (
+    "syslog's octet_counting and an empty framing trailer": (
         receiver(
             "syslog",
             "    tcp:\n      listen_address: 0.0.0.0:54526\n    protocol: rfc5424\n"
@@ -301,8 +301,8 @@ CASES: dict[str, tuple[str, Answer]] = {
         ),
         refused(invalid_keys("syslogreceiver.SysLogConfig", "octet_counting", "receivers::syslog")),
     ),
-    # ---- D9d: structural
-    "D9d a routing table naming a deleted pipeline": (
+    # ---- structural
+    "a routing table naming a deleted pipeline": (
         routing(
             "    default_pipelines: [traces/b]\n    table:\n      - condition: 'attributes[\"x\"] == \"y\"'\n"
             "        pipelines: [traces/gone]\n",
@@ -310,7 +310,7 @@ CASES: dict[str, tuple[str, Answer]] = {
         ),
         refused(error('pipeline not found: missing consumer: "traces/gone"', None)),
     ),
-    "D9d a routing target whose receivers disagree": (
+    "a routing target whose receivers disagree": (
         routing(
             "    default_pipelines: [traces/b]\n    table:\n      - condition: 'attributes[\"x\"] == \"y\"'\n"
             "        pipelines: [traces/c]\n",
@@ -318,11 +318,11 @@ CASES: dict[str, tuple[str, Answer]] = {
         ),
         refused(error('pipeline not found: missing consumer: "traces/c"', None)),
     ),
-    "D9d a held route's pipelines before its expression": (
+    "a held route's pipelines before its expression": (
         routing("    default_pipelines: [traces/b]\n    table:\n      - pipelines: [traces/b]\n", TRACES_B),
         refused(error("invalid route: no condition or statement provided", "connectors::routing")),
     ),
-    "D9d control: a request condition request[name] == value": (
+    "control: a request condition request[name] == value": (
         routing(
             "    default_pipelines: [traces/b]\n    table:\n      - context: request\n"
             "        condition: 'request[\"X-Tenant\"] == \"acme\"'\n        pipelines: [traces/b]\n",
@@ -330,7 +330,7 @@ CASES: dict[str, tuple[str, Answer]] = {
         ),
         accepted(),
     ),
-    "D9d a request condition other than ==|!=": (
+    "a request condition other than ==|!=": (
         routing(
             "    default_pipelines: [traces/b]\n    table:\n      - context: request\n"
             "        condition: 'IsMatch(request[\"X-Tenant\"], \"ac.*\")'\n        pipelines: [traces/b]\n",
@@ -338,7 +338,7 @@ CASES: dict[str, tuple[str, Answer]] = {
         ),
         refused(error("condition does not contain a valid comparator", "connectors::routing")),
     ),
-    "D9d a request condition against nil": (
+    "a request condition against nil": (
         routing(
             "    default_pipelines: [traces/b]\n    table:\n      - context: request\n"
             "        condition: 'request[\"X-Tenant\"] != nil'\n        pipelines: [traces/b]\n",
@@ -348,27 +348,27 @@ CASES: dict[str, tuple[str, Answer]] = {
             error("condition must have format 'request[\"<name>\"] <comparator> \"<value>\"'", "connectors::routing")
         ),
     ),
-    "D9d an empty route": (
+    "an empty route": (
         routing("    default_pipelines: [traces/b]\n    table:\n      - condition: ''\n        pipelines: []\n", TRACES_B),
         refused(error("invalid route: no condition or statement provided", "connectors::routing")),
     ),
-    "D9d a failover level naming a deleted pipeline": (
+    "a failover level naming a deleted pipeline": (
         failover("    priority_levels:\n      - [traces/a]\n      - [traces/gone]\n", TRACES_A),
         refused(error("Error registering consumer", None)),
     ),
-    "D9d a failover target whose receivers disagree": (
+    "a failover target whose receivers disagree": (
         failover(
             "    priority_levels:\n      - [traces/a]\n      - [traces/c]\n",
             TRACES_A + "    traces/c:\n      receivers: [otlp]\n      exporters: [debug]\n",
         ),
         refused(error("Error registering consumer", None)),
     ),
-    "D9d an empty failover level": (
+    "an empty failover level": (
         failover("    priority_levels:\n      - [traces/a]\n      - []\n", TRACES_A),
         refused(error("Error registering consumer", None)),
     ),
-    # ---- D9d: keys already in a text
-    "D9d prometheus' report_extra_scrape_metrics": (
+    # ---- keys already in a text
+    "prometheus' report_extra_scrape_metrics": (
         receiver(
             "prometheus",
             "    report_extra_scrape_metrics: true\n    config:\n      scrape_configs:\n        - job_name: a\n"
@@ -377,29 +377,29 @@ CASES: dict[str, tuple[str, Answer]] = {
         ),
         refused(invalid_keys("prometheusreceiver.Config", "report_extra_scrape_metrics", "receivers::prometheus")),
     ),
-    "D9d cumulativetodelta's max_streams": (
+    "cumulativetodelta's max_streams": (
         processor("cumulativetodelta", "    max_streams: 10\n", "metrics"),
         refused(invalid_keys("cumulativetodeltaprocessor.Config", "max_streams", "processors::cumulativetodelta")),
     ),
-    "D9d Datadog's top-level hostname_source": (
+    "Datadog's top-level hostname_source": (
         exporter("datadog", DATADOG + "    hostname_source: first_resource\n"),
         accepted_from("0.160.0", invalid_keys("config.Config", "hostname_source", "exporters::datadog")),
     ),
-    "D9d Datadog's logs.dump_payloads": (
+    "Datadog's logs.dump_payloads": (
         exporter("datadog", DATADOG + "    logs:\n      dump_payloads: true\n", "logs"),
         accepted_from("0.160.0", invalid_keys("logs", "dump_payloads", "exporters::datadog")),
     ),
-    "D9d Datadog's headers": (
+    "Datadog's headers": (
         exporter("datadog", DATADOG + "    headers:\n      x-a: b\n"),
         refused(
             error("these confighttp client configs are currently not respected by Datadog exporter: headers", "exporters::datadog")
         ),
     ),
-    "D9d Datadog's idle_connection_timeout": (
+    "Datadog's idle_connection_timeout": (
         exporter("datadog", DATADOG + "    idle_connection_timeout: 30s\n"),
         accepted_from("0.160.0", invalid_keys("config.Config", "idle_connection_timeout", "exporters::datadog")),
     ),
-    "D9d a v2 protobuf_message without its feature gate": (
+    "a v2 protobuf_message without its feature gate": (
         exporter(
             "prometheusremotewrite",
             "    endpoint: http://localhost:9090/api/v1/write\n    protobuf_message: io.prometheus.write.v2.Request\n",
@@ -413,7 +413,7 @@ CASES: dict[str, tuple[str, Answer]] = {
             )
         ),
     ),
-    "D9d a redaction regex unclosed": (
+    "a redaction regex unclosed": (
         processor("redaction", "    allow_all_keys: true\n    blocked_values: ['(unclosed']\n"),
         refused(
             redaction_refusal(
@@ -422,7 +422,7 @@ CASES: dict[str, tuple[str, Answer]] = {
             )
         ),
     ),
-    "D9d a redaction regex with a lookahead": (
+    "a redaction regex with a lookahead": (
         processor("redaction", "    allow_all_keys: true\n    blocked_values: ['(?=x)abc']\n"),
         refused(
             redaction_refusal(
@@ -431,7 +431,7 @@ CASES: dict[str, tuple[str, Answer]] = {
             )
         ),
     ),
-    "D9d a redaction blocked_key_pattern unclosed": (
+    "a redaction blocked_key_pattern unclosed": (
         processor("redaction", "    allow_all_keys: true\n    blocked_key_patterns: ['[bad']\n"),
         refused(
             redaction_refusal(
@@ -440,7 +440,7 @@ CASES: dict[str, tuple[str, Answer]] = {
             )
         ),
     ),
-    "D9d a redaction allowed_values regex": (
+    "a redaction allowed_values regex": (
         processor("redaction", "    allow_all_keys: true\n    allowed_values: ['*bad']\n"),
         refused(
             redaction_refusal(
@@ -449,7 +449,7 @@ CASES: dict[str, tuple[str, Answer]] = {
             )
         ),
     ),
-    "D9d redaction's hash_function sha256": (
+    "redaction's hash_function sha256": (
         processor("redaction", "    allow_all_keys: true\n    blocked_values: ['4[0-9]{12}']\n    hash_function: sha256\n"),
         refused(
             error(
@@ -459,8 +459,8 @@ CASES: dict[str, tuple[str, Answer]] = {
             )
         ),
     ),
-    # ---- D9d: refused values its forms write as typed
-    "D9d metricstransform's empty include": (
+    # ---- refused values the forms write as typed
+    "metricstransform's empty include": (
         processor("metricstransform", "    transforms:\n      - include: ''\n        action: update\n        new_name: b\n", "metrics"),
         refused(
             build(
@@ -472,7 +472,7 @@ CASES: dict[str, tuple[str, Answer]] = {
             )
         ),
     ),
-    "D9d metricstransform's add_label without new_label": (
+    "metricstransform's add_label without new_label": (
         processor(
             "metricstransform",
             "    transforms:\n      - include: a\n        action: update\n        operations:\n          - action: add_label\n",
@@ -488,11 +488,11 @@ CASES: dict[str, tuple[str, Answer]] = {
             )
         ),
     ),
-    "D9d cumulativetodelta's include without match_type": (
+    "cumulativetodelta's include without match_type": (
         processor("cumulativetodelta", "    include:\n      metrics: [a]\n", "metrics"),
         refused(error("match_type must be set if metrics are supplied", "processors::cumulativetodelta")),
     ),
-    "D9d filter's spans without match_type": (
+    "filter's spans without match_type": (
         processor("filter", "    spans:\n      include:\n        services: [a]\n"),
         refused(
             build(
@@ -504,11 +504,11 @@ CASES: dict[str, tuple[str, Answer]] = {
             )
         ),
     ),
-    "D9d transform's empty statement": (
+    "transform's empty statement": (
         processor("transform", "    trace_statements:\n      - ''\n"),
         transform_refusal('[""]', ': 1:1: unexpected token "<EOF>"', " at 1:1:"),
     ),
-    "D9d transform's group after a flat statement": (
+    "transform's group after a flat statement": (
         processor(
             "transform",
             '    trace_statements:\n      - set(span.name, "a")\n      - statements:\n          - set(span.name, "b")\n',
@@ -521,7 +521,7 @@ CASES: dict[str, tuple[str, Answer]] = {
             )
         ),
     ),
-    "D9d transform's contains()": (
+    "transform's contains()": (
         processor(
             "transform", '    log_statements:\n      - set(log.severity_text, "ERROR") where contains(log.body, "error")\n', "logs"
         ),
@@ -531,14 +531,14 @@ CASES: dict[str, tuple[str, Answer]] = {
             " at 1:66: (expected <opcomparison> Value)",
         ),
     ),
-    "D9d loadbalancing's routing_key attributes alone": (
+    "loadbalancing's routing_key attributes alone": (
         exporter(
             "loadbalancing",
             "    routing_key: attributes\n    protocol:\n      otlp: {}\n    resolver:\n      static:\n        hostnames: [a:4317]\n",
         ),
         refused(error('routing_attributes must be specified when routing_key is "attributes"', "exporters::loadbalancing")),
     ),
-    "D9d loadbalancing's traceID in a metrics pipeline": (
+    "loadbalancing's traceID in a metrics pipeline": (
         exporter(
             "loadbalancing",
             "    routing_key: traceID\n    protocol:\n      otlp: {}\n    resolver:\n      static:\n        hostnames: [a:4317]\n",
@@ -554,17 +554,17 @@ CASES: dict[str, tuple[str, Answer]] = {
             )
         ),
     ),
-    "D9d the awss3 receiver without a mode": (
+    "the awss3 receiver without a mode": (
         receiver("awss3", "    s3downloader:\n      s3_bucket: b\n      region: us-east-1\n", "traces"),
         refused(error("either starttime/endtime or sqs configuration must be provided", "receivers::awss3")),
     ),
-    "D9d statsd's socket_permissions quoted": (
+    "statsd's socket_permissions quoted": (
         receiver(
             "statsd", "    endpoint: /tmp/statsd.sock\n    transport: unixgram\n    socket_permissions: '622'\n", "metrics"
         ),
         refused(error("'socket_permissions' expected type 'fs.FileMode', got unconvertible type 'string'", "receivers::statsd")),
     ),
-    "D9d a prometheus scrape TLS version 1.2": (
+    "a prometheus scrape TLS version 1.2": (
         receiver(
             "prometheus",
             "    config:\n      scrape_configs:\n        - job_name: a\n          tls_config:\n            min_version: '1.2'\n"
@@ -579,7 +579,7 @@ CASES: dict[str, tuple[str, Answer]] = {
             )
         ),
     ),
-    "D9d spanmetrics' bare-number buckets": (
+    "spanmetrics' bare-number buckets": (
         f"{R}exporters:\n  debug:\nconnectors:\n  spanmetrics:\n    histogram:\n      explicit:\n"
         "        buckets: [2, 4, 6]\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n"
         "      exporters: [spanmetrics]\n    metrics:\n      receivers: [spanmetrics]\n      exporters: [debug]\n",
@@ -600,7 +600,7 @@ async def test_the_collector_answers_a_handoff_case(version: str, name: str) -> 
     assert result.valid is (expected == [])
 
 
-# ---- Preflight ruling 2: what `validate` passes but a start refuses ----------------
+# ---- what `validate` passes but a start refuses --------------------------------
 
 IN_CLUSTER = ("k8s_in_cluster", "Runs inside a Kubernetes cluster")
 

@@ -1,10 +1,9 @@
-# kwokctl's configuration for the tester's fake Kubernetes cluster (D14a
-# Preflight ruling 5), passed as `kwokctl -c <this file>` on every call
-# (app/kwok_cluster.py). It is configuration only: kwok's own code is never
-# touched (spec decision 6). Without it, kwokctl 0.7.0 defaults to
-# Kubernetes v1.33.0 and, with no route out, retries a kubectl download
-# forever; kube-apiserver exits with "no default routes found"; and etcd
-# listens on every address.
+# kwokctl's configuration for the tester's fake Kubernetes cluster, passed
+# as `kwokctl -c <this file>` on every call (app/kwok_cluster.py). It is
+# configuration only: kwok's own code is never touched. Without it, kwokctl
+# 0.7.0 defaults to Kubernetes v1.33.0 and, with no route out, retries a
+# kubectl download forever; kube-apiserver exits with "no default routes
+# found"; and etcd listens on every address.
 #
 # - kubeVersion: the version whose binaries the image bakes;
 # - bindAddress: every component listens on 127.0.0.1 only;

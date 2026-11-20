@@ -1,9 +1,8 @@
-"""A probe's health request writes no access line (D33-1 decision 18):
-probes call it every few seconds. The filter on `uvicorn.access` drops only
-uvicorn's line for `GET` on the health path (its query aside); every other
-request's line logs as before. The records here have the shape uvicorn
-logs each request with: (client, method, path with query, HTTP version,
-status)."""
+"""A probe's health request writes no access line: probes call it every few
+seconds. The filter on `uvicorn.access` drops only uvicorn's line for `GET`
+on the health path (its query aside); every other request's line logs as
+before. The records here have the shape uvicorn logs each request with:
+(client, method, path with query, HTTP version, status)."""
 
 from __future__ import annotations
 

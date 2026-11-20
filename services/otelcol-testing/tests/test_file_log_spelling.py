@@ -1,12 +1,10 @@
-"""`file_log`, filelog's name from collector 0.149.0 (D14a Ruling 49).
+"""`file_log`, filelog's name from collector 0.149.0.
 
 The catalogue renamed the `filelog` receiver to `file_log`
 (catalog/distributions/otelcol-contrib.json's `renamedTypes`), and every
-version the platform offers knows it by both names. Before this ruling only
-`filelog` was a testable receiver: a `file_log` pipeline took the OTLP path,
-R-001 replaced the receiver, and its operators were silently dropped. Now
-the same text with either spelling takes the same strategy, the same checks
-and the same mutations, through the service and in each piece the run uses.
+version the platform offers knows it by both names. The same text with either
+spelling takes the same strategy, the same checks and the same mutations,
+through the service and in each piece the run uses.
 """
 
 from __future__ import annotations
@@ -237,8 +235,8 @@ def test_either_spelling_runs_the_same_with_the_same_mutations(client: TestClien
 
 
 # ---------------------------------------------------------------------------
-# A `container` operator (Ruling 51(2)): the same staging path and the same
-# R-008 advisory under either name
+# A `container` operator: the same staging path and the same R-008 advisory
+# under either name
 # ---------------------------------------------------------------------------
 
 CONTAINER_TEXT = (

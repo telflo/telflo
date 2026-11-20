@@ -1,6 +1,5 @@
-// New in the follow-up to D15a Task 2's review (the controller's Ruling 33,
-// refining Preflight ruling 20): Save (validate) and a run (evaluate) word a
-// rule's problem identically, since the platform shows the message as it is.
+// Save (validate) and a run (evaluate) word a rule's problem identically,
+// since the platform shows the message as it is.
 
 package server
 

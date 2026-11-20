@@ -1,6 +1,5 @@
-"""The seeded flows against their collectors (D12 decisions 4 and 15,
-Preflight rulings 2 and 20, Ruling 37; marked `binary`, run inside the
-image with `pytest -m binary`).
+"""The seeded flows against their collectors (marked `binary`, run inside
+the image with `pytest -m binary`).
 
 `fixtures/seeded-flows.json` holds each of the 13 seeded flows' slug, pin
 and YAML, from migration 1700000000026's `seededFlows`. The db workspace
@@ -8,20 +7,19 @@ writes it (`npm run fixture:seeded-flows --workspace @telflo/db`,
 telflo-core/packages/db/src/seeded-flows-fixture.ts) and its suite fails
 when it is stale. Each flow must pass the service's check on its checked
 version (below) with no error, its requirements exactly the ones listed
-below (Ruling 2: every one an unset `${env:…}` but
-kubernetes-telemetry-stack's in-cluster one), each asserted in the
-service's and the collector's words (category, title, componentPath), so
-an upstream change is noticed.
+below (every one an unset `${env:…}` but kubernetes-telemetry-stack's
+in-cluster one), each asserted in the service's and the collector's words
+(category, title, componentPath), so an upstream change is noticed.
 
-Each flow is checked on the version a copy of it gets (D12 Ruling 37):
-its pin while the catalogue offers it, else the distribution's default,
-the rule "Use this flow" follows (the web's `flowCopyPin`, decision 16).
+Each flow is checked on the version a copy of it gets: its pin while the
+catalogue offers it, else the distribution's default, the rule "Use this
+flow" follows (the web's `flowCopyPin`).
 So retiring a seeded pin moves its flow's check to the default, as it
 moves the copies, and nothing here needs editing; the fixture still holds
 the old pin, which must stay a version of the catalogue (offered or
 deprecated: the catalogue never deletes one). A version the image was
-built to hold but doesn't fails rather than skips (binary_support's rule,
-D13b ruling 53), and every checked version is an offered one, so a flow
+built to hold but doesn't fails rather than skips (binary_support's
+rule), and every checked version is an offered one, so a flow
 is never skipped because its pin was retired.
 """
 
@@ -47,8 +45,8 @@ def env(name: str) -> tuple[str, str, None]:
 
 
 # Each seeded flow's requirements on its checked version, in the order the
-# check lists them (Preflight ruling 2: the preflight's run of this branch's
-# image, the same on 0.159.0 and 0.162.0).
+# check lists them (recorded from a run of the image, the same on 0.159.0
+# and 0.162.0).
 EXPECTED_REQUIREMENTS: dict[str, list[tuple[str, str, str | None]]] = {
     "log-volume-cost-control": [env("OTLP_LOGS_ENDPOINT")],
     "kubernetes-telemetry-stack": [
@@ -100,9 +98,8 @@ def test_the_fixture_holds_every_listed_flow_once() -> None:
 
 
 def checked_version(flow: dict) -> str:
-    """The version `flow` is checked on (Ruling 37): its pin while the
-    catalogue offers it, else the distribution's default, where a copy of
-    it is created (decision 16)."""
+    """The version `flow` is checked on: its pin while the catalogue offers
+    it, else the distribution's default, where a copy of it is created."""
     pin = flow["collectorVersion"]
     return pin if pin in OFFERED else _default_version()
 

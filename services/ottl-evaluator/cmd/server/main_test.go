@@ -1,5 +1,5 @@
-// New in D15a Task 2: main dispatches its subcommands, the children's
-// included. D25 Task 3 added lint-child.
+// Main dispatches its subcommands, the children's (lint-child among them)
+// included.
 
 package main
 

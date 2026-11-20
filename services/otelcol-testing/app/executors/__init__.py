@@ -2,7 +2,7 @@
 push.
 
 A text that doesn't read as a mapping takes the OTLP-replay path instead
-of raising (D14a Task 4; the run refuses such a text before it gets here,
+of raising (the run refuses such a text before it gets here,
 `app/compatibility.py`). The run's child (`app/run.py`) picks the strategy
 and drives it.
 

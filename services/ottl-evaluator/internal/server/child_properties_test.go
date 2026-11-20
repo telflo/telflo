@@ -1,10 +1,9 @@
-// New in the follow-up to D15a Task 2's review (the controller's Ruling 33):
-// the properties a child gets from childRunner, seen from inside a
+// The properties a child gets from childRunner, seen from inside a
 // stand-in child (main_test.go's TestMain answers reportChild): its whole
 // environment is the allowed set, it leads its own process group, and the
-// kill at its limit takes the whole group, a grandchild included. D15a Task
-// 3's follow-up (the controller's Ruling 34) registers the cleanup that kills
-// the child's group before anything in the test can fail.
+// kill at its limit takes the whole group, a grandchild included. A cleanup
+// that kills the child's group is registered before anything in the test can
+// fail.
 
 package server
 

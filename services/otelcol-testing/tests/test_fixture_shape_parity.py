@@ -1,12 +1,12 @@
 """Cross-implementation parity: the Python fixture-shape module must agree
-with the shared corpus that the platform web app's mirror (D14a Task 9) is
+with the shared corpus that the platform web app's mirror is
 also tested against. If detection rules, advisory message text, or
 strategy-picking drift between the two modules, the offending corpus row
 fails here AND in the web app's suite — that's the whole point of the
 shared file.
 
-The corpus is ``tests/fixtures/fixture-shape-corpus.json`` (D14a Preflight
-ruling 18), the one copy both suites read.
+The corpus is ``tests/fixtures/fixture-shape-corpus.json``, the one copy
+both suites read.
 """
 
 from __future__ import annotations
@@ -82,8 +82,8 @@ def test_strategy_kind_matches_corpus(case: dict) -> None:
     "case", _CORPUS["target_strategies"], ids=lambda c: c["name"]
 )
 def test_target_strategy_kind_matches_corpus(case: dict) -> None:
-    # The run's target pipeline decides the strategy (D14a Task 9, Ruling
-    # 43): the web's mirror reads the same section, so both sides check it.
+    # The run's target pipeline decides the strategy: the web's mirror
+    # reads the same section, so both sides check it.
     _strategy, kind = pick_strategy(
         case["yaml"], case["signal_type"], target_pipeline=case["target_pipeline"]
     )

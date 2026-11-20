@@ -1,8 +1,7 @@
-"""The validate route and the catalogue (D13b spec decision 10): a
-distribution or version the catalogue doesn't list is 404, a deprecated
-version 409 `version_retired`, an offered version the validator doesn't
-hold 503, each before the body is read. There is no contrib-only route, no
-`/versions` and no `/distributions`.
+"""The validate route and the catalogue: a distribution or version the
+catalogue doesn't list is 404, a deprecated version 409 `version_retired`, an
+offered version the validator doesn't hold 503, each before the body is read.
+There is no contrib-only route, no `/versions` and no `/distributions`.
 """
 
 from __future__ import annotations
@@ -43,7 +42,7 @@ def test_catalog_load_refuses_a_missing_directory(tmp_path: Path) -> None:
 def test_catalog_loads_the_repository_catalogue() -> None:
     """Run from the checkout, the default directory is the repository's
     `catalog/distributions`: its offered versions are offered and a version
-    it retired (D13b ruling 48) is retired."""
+    it retired is retired."""
     catalog = Catalog.load(DEFAULT_CATALOG_DIR)
 
     assert catalog.state("otelcol-contrib", "0.162.0") is VersionState.OFFERED
@@ -108,7 +107,7 @@ def test_validate_contrib_raises_503_when_binary_missing(client: TestClient) -> 
 
 def test_retired_version_answers_409_version_retired(client: TestClient) -> None:
     """A version pinned to a deprecated one is never checked against another
-    version (spec decision 4)."""
+    version."""
     resp = client.post("/validator/v1/validate/otelcol-contrib/0.155.0", json=BODY, headers=auth_headers())
 
     assert resp.status_code == 409

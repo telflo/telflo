@@ -1,6 +1,5 @@
-"""What a run's answer must never hold, replaced in every field of it (D14a
-spec decision 5; Preflight ruling 3): raw stderr and absolute workspace
-paths never reach the person.
+"""What a run's answer must never hold, replaced in every field of it: raw
+stderr and absolute workspace paths never reach the person.
 
 - **The run's workspace**: each file the run writes there (`<sandbox/config>`,
   `<sandbox/input>`, `<sandbox/output>`), then the directory itself
@@ -66,7 +65,7 @@ def _segments(path: str) -> int:
 class Scrub:
     """The replacements for one run's answer, in the order they apply."""
 
-    # Never in a repr: the pairs hold the secrets' exact values (Ruling 27).
+    # Never in a repr: the pairs hold the secrets' exact values.
     pairs: tuple[tuple[str, str], ...] = field(default=(), repr=False)
 
     @classmethod

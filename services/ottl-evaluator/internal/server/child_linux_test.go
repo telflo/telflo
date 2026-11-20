@@ -1,5 +1,4 @@
-// New in the follow-up to D15a Task 2's review (the controller's Ruling 33):
-// on Linux, a child dies with serve (Pdeathsig), even when serve is killed
+// On Linux, a child dies with serve (Pdeathsig), even when serve is killed
 // before it can kill its children.
 
 //go:build linux

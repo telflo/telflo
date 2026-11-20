@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# The tester's copy of the validator's self-test (D14a Preflight ruling 19).
+# The tester's copy of the validator's self-test.
 # Verifies scripts/check-licenses.sh refuses a disallowed or unknown license
 # and passes an allowed one, from each place a package can state it (PEP 639
 # expression, the License field, trove classifiers). Each fixture is a tiny
@@ -75,7 +75,7 @@ expect() {
 wheel fixture-mit "License-Expression: MIT"
 expect pass "an MIT expression" "$scratch/fixture-mit.lock"
 wheel fixture-psf "License-Expression: PSF-2.0"
-expect pass "a PSF-2.0 expression (ADR 0019, amended by D13b)" "$scratch/fixture-psf.lock"
+expect pass "a PSF-2.0 expression" "$scratch/fixture-psf.lock"
 wheel fixture-gpl "License-Expression: GPL-3.0-only"
 expect fail "a GPL-3.0-only expression" "$scratch/fixture-gpl.lock"
 wheel fixture-or "License-Expression: Apache-2.0 OR GPL-3.0-only"

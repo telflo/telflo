@@ -1,5 +1,5 @@
-"""Nothing logged holds the text or what the collector printed (D13b spec
-decision 10, ADR 0024): the collector's messages echo configuration values.
+"""Nothing logged holds the text or what the collector printed: the
+collector's messages echo configuration values.
 Every log record of every logger is captured while the validator checks a
 text whose collector echoes it back, fails unexpectedly, and refuses."""
 

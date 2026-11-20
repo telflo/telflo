@@ -1,7 +1,7 @@
 """Resolve vendored kwok binaries by version.
 
-The tester's image bakes the binaries under ``/opt/kwok/v0.7.0/`` (D14a
-Preflight ruling 5), each checked against its sha256 (ruling 19).
+The tester's image bakes the binaries under ``/opt/kwok/v0.7.0/``, each
+checked against its sha256.
 
 Mirrors `app/catalog.py`'s ``binary_path`` but
 returns a :class:`KwokBinaries` bundle because kwok needs three (Mac) or four

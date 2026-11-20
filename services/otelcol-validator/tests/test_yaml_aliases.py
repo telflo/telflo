@@ -1,5 +1,5 @@
-"""D13b ruling 24: YAML aliases are bounded, and the pre-processing runs after
-the slot is taken (ruling 27: in the check's child process).
+"""YAML aliases are bounded, and the pre-processing runs after the slot is
+taken (in the check's child process).
 
 A 462-byte text whose aliases nest seven deep expands to ten million nodes;
 unbounded walks would visit every one, on the event loop, before a slot and
@@ -26,8 +26,8 @@ SERVICE = Path(__file__).resolve().parents[1]
 
 
 def bomb(levels: int, width: int = 10) -> str:
-    """The reviewer's probe: each level a list of `width` aliases to the one
-    before, under a real receiver."""
+    """Each level a list of `width` aliases to the one before, under a real
+    receiver."""
     lines = ["a0: &a0 'x'"]
     for i in range(1, levels + 1):
         lines.append(f"a{i}: &a{i} [" + ",".join([f"*a{i - 1}"] * width) + "]")
@@ -126,10 +126,10 @@ def test_the_bomb_is_refused_by_the_loader_and_is_not_a_yaml_error() -> None:
 
 
 def test_what_one_caller_changes_no_other_caller_sees() -> None:
-    """The last texts' documents are kept for the check's other steps
-    (D13b ruling 27); each caller gets its own copy, so one step changing
-    its document in place (the provider neutralisation does) can't change
-    what the next step reads."""
+    """The last texts' documents are kept for the check's other steps;
+    each caller gets its own copy, so one step changing its document in place
+    (the provider neutralisation does) can't change what the next step
+    reads."""
     first = bounded_yaml.safe_load(ANCHORED)
     first["processors"]["memory_limiter"]["limit_mib"] = 1
     first["service"]["pipelines"]["traces"]["processors"].append("changed")
@@ -152,8 +152,8 @@ def test_no_module_but_the_loader_imports_yaml() -> None:
     bound. `import yaml` (any form) and `from yaml import …` (the package
     root, which exposes `load` / `safe_load`) are forbidden; the node *types*
     `from yaml.nodes import …` carry no parser and are allowed, as the
-    neutraliser walks composed nodes (D13b ruling 39). providers.py binds the
-    loader as `yaml` (its functions stay verbatim)."""
+    neutraliser walks composed nodes. providers.py binds the loader as `yaml`
+    (its functions stay verbatim)."""
     allowed_from = {"yaml.nodes", "yaml.events", "yaml.constructor"}
     offenders = []
     for path in sorted([*(SERVICE / "app").glob("*.py"), SERVICE / "telemetry.py"]):
@@ -248,7 +248,7 @@ async def test_a_configuration_with_a_few_anchors_still_works(binary_dir: Path, 
 
 
 # ---------------------------------------------------------------------------
-# After the slot (D13b ruling 27 moved the work into the check's child:
+# After the slot (the work runs in the check's child:
 # tests/test_check_process.py)
 # ---------------------------------------------------------------------------
 

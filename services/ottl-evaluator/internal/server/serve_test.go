@@ -1,7 +1,7 @@
-// New in D15a Task 2 (plan Preflight ruling 12): the process refuses to
-// start without a valid secret (there is no running without one), with OTTL_EVALUATOR_SECRET set, or with a secret's text in any
+// The process refuses to start without a valid secret (there is no running
+// without one), with OTTL_EVALUATOR_SECRET set, or with a secret's text in any
 // environment variable; the settings refuse what doesn't parse; healthcheck.
-// D25 Task 3 added the lint's body cap and deadline to the settings' test.
+// The settings' test includes the lint's body cap and deadline.
 
 package server
 
@@ -58,9 +58,9 @@ func TestServeRefusesToStartWithoutAValidSecret(t *testing.T) {
 		{"the secret in another variable", env{SecretFileVariable: good, "SOMETHING": "prefix-" + testSecret}, "a secret is also in the environment"},
 		{"a previous secret in a variable", env{SecretFileVariable: good, PreviousSecretsFileVariable: writeFile(t, previousSecret), "OTHER": previousSecret}, "a secret is also in the environment"},
 		{"a cap that doesn't parse", env{SecretFileVariable: good, MaxEvaluationsVariable: "four"}, MaxEvaluationsVariable + " must be a whole number from 1 to 4"},
-		{"more evaluations than the ruling's", env{SecretFileVariable: good, MaxEvaluationsVariable: "5"}, MaxEvaluationsVariable + " must be a whole number from 1 to 4"},
-		{"more validations than the ruling's", env{SecretFileVariable: good, MaxValidationsVariable: "9"}, MaxValidationsVariable + " must be a whole number from 1 to 8"},
-		{"a cap raised past its ruling", env{SecretFileVariable: good, MaxEvaluateBodyVariable: "37748737"}, MaxEvaluateBodyVariable + " must be a whole number"},
+		{"more evaluations than the default", env{SecretFileVariable: good, MaxEvaluationsVariable: "5"}, MaxEvaluationsVariable + " must be a whole number from 1 to 4"},
+		{"more validations than the default", env{SecretFileVariable: good, MaxValidationsVariable: "9"}, MaxValidationsVariable + " must be a whole number from 1 to 8"},
+		{"a cap raised past its default", env{SecretFileVariable: good, MaxEvaluateBodyVariable: "37748737"}, MaxEvaluateBodyVariable + " must be a whole number"},
 		{"a host that isn't an IP address", env{SecretFileVariable: good, HostVariable: "localhost"}, HostVariable + " must be an IP address"},
 	}
 	for _, c := range cases {

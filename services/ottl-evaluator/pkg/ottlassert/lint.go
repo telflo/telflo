@@ -33,7 +33,7 @@ type LintResult struct {
 
 // Lint parse-checks OTTL conditions, statements, and value expressions
 // against the given context using the standard OTTL function set (editors +
-// converters). D15a: no route calls it, and Save never uses it. Because it
+// converters). No route calls it, and Save never uses it. Because it
 // registers the editors, it accepts what a run can't evaluate; a rule is
 // checked at Save and in a run alike by internal/rules' Check, with the
 // converters-only parsers (ParseCondition, ParseValueExpression).

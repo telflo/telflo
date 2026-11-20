@@ -1,17 +1,17 @@
-"""The security fixes, as D14a Preflight ruling 6 maps them:
+"""The security fixes, each with its tests:
 
-- S3 (5): the Bearer middleware with the secret in a file (ADRs 0026, 0027;
-  Task 3), with no opt-out;
+- S3 (5): the Bearer middleware with the secret in a file, with no
+  opt-out;
 - S6 (7), S7 (6) and S8 (2): S6 calls ``scrub_stderr`` (`app/scrub.py`),
   S7 the merged sandbox environment, and S8 reads the modules that wire a
   kubeconfig;
 - S9 (8) and the ``org`` scheme test (1), against the validator's
   neutraliser (`app/providers.py`, `app/neutralise.py`);
 - none for S5 (storage upserts: the tester stores nothing); S4 (RE2 rules)
-  is D15's.
+  is the OTTL evaluator's.
 
-Each test pins a specific guarantee from the security review so the fix
-doesn't quietly regress.
+Each test pins a specific security guarantee so the fix doesn't quietly
+regress.
 """
 
 from __future__ import annotations
@@ -460,8 +460,8 @@ def test_s9_force_telemetry_off_removes_any_provider_defense_in_depth() -> None:
 
 # ---------------------------------------------------------------------------
 # `org` pseudo-scheme (rewritten). `${org:NAME}` is telflo's own token,
-# substituted by the platform before a run is queued (D14a Preflight ruling
-# 12); one that reaches the tester is neutralised like any foreign scheme.
+# substituted by the platform before a run is queued; one that reaches the
+# tester is neutralised like any foreign scheme.
 # ---------------------------------------------------------------------------
 
 

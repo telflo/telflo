@@ -1,5 +1,4 @@
-"""The organization's values filled in before every check (D20 decisions 8,
-13, 16, 27 and 36; Preflight rulings 12 and 30; Ruling 55): the port of the
+"""The organization's values filled in before every check: the port of the
 opamp-server's fill-in against the shared corpus, the fill-in FIRST in
 `_prepare_text`, the requirement rows, the 1 MiB refusal, and the request's
 `organizationVariables`."""
@@ -25,7 +24,7 @@ BINARY = Path("/fake/otelcol-contrib")
 
 
 # ---------------------------------------------------------------------------
-# The port, against the corpus (decision 36)
+# The port, against the corpus
 # ---------------------------------------------------------------------------
 
 
@@ -67,8 +66,8 @@ def test_a_text_with_nothing_filled_in_comes_back_as_it_is() -> None:
     [("a$b", "a$$b"), ("$$", "$$$$"), ("${env:HOME}", "$${env:HOME}"), ("${org:P}", "$${org:P}"), ("$", "$$")],
 )
 def test_a_values_dollars_are_doubled(value: str, written: str) -> None:
-    """Decision 8: every `$` of a value written `$$`, so confmap's pass,
-    which collapses `$$` to `$`, reads the value exactly."""
+    """Every `$` of a value written `$$`, so confmap's pass, which collapses
+    `$$` to `$`, reads the value exactly."""
     rendered, _ = org_variables.render("a: ${org:P}\n", {"P": value})
 
     assert rendered == f"a: {written}\n"
@@ -111,8 +110,8 @@ def test_a_value_whose_yaml_escape_spells_a_provider_is_neutralised() -> None:
 
 
 def test_a_value_that_adds_yaml_structure_is_checked_as_the_rest_of_the_text() -> None:
-    """The owner's case (Q92): a value `x, tls: {…}` in a flow mapping adds
-    a key. The checks read the filled-in text, so its TLS file is found."""
+    """A value `x, tls: {…}` in a flow mapping adds a key. The checks read
+    the filled-in text, so its TLS file is found."""
     text = "exporters: {otlp: {endpoint: ${org:EP}}}\n"
 
     prepared = _prepared(text, {"EP": "x, tls: {cert_file: /etc/otel/value.crt}"})
@@ -165,10 +164,10 @@ _DIRECTORY_STDERR = (
 
 
 async def test_the_rerun_reads_the_filled_in_text_too(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    """The review of 37896d1 (Ruling 70): a first run that reports only a
-    requirement the sandbox meets (file_storage's directory) is run again
-    on a repointed text, built from the filled-in one: the value, its `$`
-    doubled, and no `${org:` left for the backstop to refuse."""
+    """A first run that reports only a requirement the sandbox meets
+    (file_storage's directory) is run again on a repointed text, built from
+    the filled-in one: the value, its `$` doubled, and no `${org:` left for
+    the backstop to refuse."""
     texts: list[str] = []
     outcomes = [
         runner.RunOutcome(kind="failed", returncode=1, stderr=_DIRECTORY_STDERR),
@@ -195,7 +194,7 @@ async def test_the_rerun_reads_the_filled_in_text_too(monkeypatch: pytest.Monkey
 
 
 # ---------------------------------------------------------------------------
-# The requirement rows (decisions 16 and 27; Ruling 55)
+# The requirement rows
 # ---------------------------------------------------------------------------
 
 
@@ -231,7 +230,7 @@ def test_without_values_every_reference_stays_unresolved_and_no_row_says_filled_
 
 
 def test_the_legacy_form_is_unsupported_and_stays_literal() -> None:
-    """Decision 16: `$orgvar:NAME` is filled in by nothing; the editor says
+    """`$orgvar:NAME` is filled in by nothing; the editor says
     how to write it. A value's `$orgvar:` (its `$` doubled) is no legacy
     reference, nor is one in a comment."""
     text = "# $orgvar:IN_COMMENT\na: $orgvar:HOST\nb: ${org:V}\nc: $$orgvar:ESCAPED\n"
@@ -254,8 +253,8 @@ def test_the_legacy_form_is_unsupported_and_stays_literal() -> None:
 
 
 async def test_three_hundred_defined_names_answer_one_filled_in_row(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Preflight ruling 30: one row in all, so the defined names never use
-    up the answer's 200 requirements."""
+    """One row in all, so the defined names never use up the answer's 200
+    requirements."""
 
     async def collector(binary_path, yaml_content, env_overlay, *, timeout_seconds, directory=None):  # noqa: ANN001
         return runner.RunOutcome(kind="passed", returncode=0)
@@ -281,7 +280,7 @@ def _name(length: int) -> str:
 
 
 def test_a_reference_to_a_name_over_128_characters_has_its_own_row() -> None:
-    """Ruling 55: no variable can have the name, and Publish refuses it; the
+    """No variable can have the name, and Publish refuses it; the
     reference also stays unresolved, since no value fills it."""
     long_name, other = _name(129), _name(130)
 
@@ -307,14 +306,15 @@ def test_a_reference_to_a_name_of_128_characters_has_no_such_row() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Over 1 MiB once filled in: refused, never built (Preflight ruling 12)
+# Over 1 MiB once filled in: refused, never built
 # ---------------------------------------------------------------------------
 
 
 def test_a_filled_in_text_over_1_mib_is_refused_without_being_built(monkeypatch: pytest.MonkeyPatch) -> None:
-    """32,768 references to a value of 1,024 `$` (Q104's longest) fill in to
-    about 67 MB: refused with the opamp-server's message, the text never
-    built, and the pre-processing never more than a few MiB in memory."""
+    """32,768 references to a value of 1,024 `$` (the longest a value can be)
+    fill in to about 67 MB: refused with the opamp-server's message, the text
+    never built, and the pre-processing never more than a few MiB in
+    memory."""
     text = "${org:P}" * (MAX_YAML_CHARACTERS // len("${org:P}"))
     values = {"P": "$" * 1024}
     assert org_variables.rendered_length(text, values)[0] == 32_768 * 2048
@@ -389,8 +389,8 @@ def test_the_values_reach_the_check_and_are_filled_in(binary_dir: Path, tmp_path
 def test_the_longest_body_the_platform_sends_is_accepted_under_the_cap(binary_dir: Path) -> None:
     """A text of 262,144 characters, four-byte ones but its first line, and
     150 names of 128 characters, each a value of 1,024 four-byte characters
-    (Q104), sent unescaped as the platform sends them: about 1.61 MiB, under
-    2 MiB."""
+    (the longest), sent unescaped as the platform sends them: about 1.61 MiB,
+    under 2 MiB."""
     write_collector(binary_dir, "0.162.0", PASSING_COLLECTOR)
     head = "receivers: {}\n# "
     text = head + "\U0001f600" * (MAX_YAML_CHARACTERS - len(head) - 1) + "\n"

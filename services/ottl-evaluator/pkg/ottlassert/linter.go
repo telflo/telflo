@@ -1,5 +1,4 @@
-// New in D25 Task 3 (D25 spec decision 33; plan Preflight ruling 13, B16):
-// the public API's OTTL lint parses one text at a time, so the lint child
+// The public API's OTTL lint parses one text at a time, so the lint child
 // (internal/rules' RunLintChild) can apply the rule checks' guards before
 // each parse and write each item's verdict as it finishes. It parses as
 // Lint does, with the standard function set (editors and converters), so a

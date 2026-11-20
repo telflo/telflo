@@ -1,5 +1,4 @@
-"""The validator's HTTP API (D13b spec decision 11; `openapi.yaml` is its
-contract):
+"""The validator's HTTP API (`openapi.yaml` is its contract):
 
   GET  /health                                         — liveness, no secret
   POST /validator/v1/validate/{distribution}/{version} — check a text
@@ -42,11 +41,11 @@ VALIDATE_PATH = "/validator/v1/validate/{distribution}/{version}"
 
 
 class _HealthAccessFilter(logging.Filter):
-    """Drops uvicorn's access line for a probe's `GET /health` (D33-1
-    decision 18): probes call it every few seconds. uvicorn logs each
-    request as `'%s - "%s %s HTTP/%s" %d'` with (client, method, path with
-    query, HTTP version, status); every other line, and every other request's,
-    logs as before."""
+    """Drops uvicorn's access line for a probe's `GET /health`: probes call
+    it every few seconds. uvicorn logs each request as
+    `'%s - "%s %s HTTP/%s" %d'` with (client, method, path with query, HTTP
+    version, status); every other line, and every other request's, logs as
+    before."""
 
     def filter(self, record: logging.LogRecord) -> bool:
         args = record.args
@@ -61,24 +60,22 @@ class _HealthAccessFilter(logging.Filter):
 # process. uvicorn configures its loggers before it imports the app, so the
 # filter stays.
 logging.getLogger("uvicorn.access").addFilter(_HealthAccessFilter())
-# 2 MiB, enforced while the body is read (D20 Preflight ruling 30's method,
-# re-derived on Q104's bounds). The longest body these limits allow is about
-# 1.61 MiB (the platform's own is about 1.4 MB: its limit counts UTF-16
-# units, at most 3 bytes each): the text at most 262,144 characters, 1 MiB
-# as four-byte ones;
-# 150 values of 1,024 four-byte characters, 600 KiB; 150 names of 128,
-# 18.75 KiB; and the JSON around them. JSON.stringify writes every
-# character as itself: only `"`, `\` and a tab, line feed or carriage return
-# are escaped, in 2 bytes, fewer than a four-byte character's (the text
-# holds no other control character, a value none at all).
+# 2 MiB, enforced while the body is read. The longest body these limits allow
+# is about 1.61 MiB (the platform's own is about 1.4 MB: its limit counts
+# UTF-16 units, at most 3 bytes each): the text at most 262,144 characters,
+# 1 MiB as four-byte ones; 150 values of 1,024 four-byte characters, 600 KiB;
+# 150 names of 128, 18.75 KiB; and the JSON around them. JSON.stringify
+# writes every character as itself: only `"`, `\` and a tab, line feed or
+# carriage return are escaped, in 2 bytes, fewer than a four-byte character's
+# (the text holds no other control character, a value none at all).
 MAX_BODY_BYTES = 2 * 1024 * 1024
-# The platform's limit on a configuration's text (D8's
-# CONFIGURATION_YAML_MAXIMUM_LENGTH), in characters.
+# The platform's limit on a configuration's text
+# (CONFIGURATION_YAML_MAXIMUM_LENGTH), in characters.
 MAX_YAML_CHARACTERS = 262_144
-# The opamp-server's bounds on an organization's variables (D20 decision 11,
-# `store/orgvariables`; Q104): at most 150, a name of the grammar of at most
-# 128 characters, a value of at most 1,024 characters on one line (no C0,
-# DEL, C1, U+2028 or U+2029, written here as escapes).
+# The opamp-server's bounds on an organization's variables
+# (`store/orgvariables`): at most 150, a name of the grammar of at most 128
+# characters, a value of at most 1,024 characters on one line (no C0, DEL,
+# C1, U+2028 or U+2029, written here as escapes).
 MAX_ORGANIZATION_VARIABLES = 150
 MAX_VARIABLE_NAME_CHARACTERS = 128
 MAX_VARIABLE_VALUE_CHARACTERS = 1024
@@ -87,7 +84,7 @@ _VALUE_REFUSED_RE = re.compile(r"[\x00-\x1f\x7f-\x9f\u2028\u2029]")
 
 # Matched whole (fullmatch: `$` would let a trailing line break through) and
 # ASCII only (`[0-9]`, not `\d`, which takes any Unicode digit), as
-# openapi.yaml's patterns read (D13b ruling 69).
+# openapi.yaml's patterns read.
 _DISTRIBUTION_RE = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*")
 _VERSION_RE = re.compile(r"[0-9]+\.[0-9]+\.[0-9]+")
 _MAX_PATH_PART = 64
@@ -192,13 +189,13 @@ def parse_body(body: bytes) -> tuple[str, dict[str, str]]:
     out): 400 for anything but `{"yaml": "<non-empty>"}` with an optional
     name-to-value object within the opamp-server's bounds (a text or a value
     that isn't Unicode included), 413 for a text longer than the platform
-    allows (D13b ruling 27). No message quotes a name or a value."""
+    allows. No message quotes a name or a value."""
     try:
         document = json.loads(body)
     except Exception:
         # Whatever stops the decoding (bad JSON or encoding: ValueError;
         # nesting deeper than the parser recurses: RecursionError), the
-        # body is unreadable (D13b ruling 26), never a 500.
+        # body is unreadable, never a 500.
         raise ApiError(400, "invalid_request", MESSAGES["body_unreadable"]) from None
     if not isinstance(document, dict):
         raise ApiError(400, "invalid_request", MESSAGES["body_not_object"])
@@ -211,7 +208,7 @@ def parse_body(body: bytes) -> tuple[str, dict[str, str]]:
         raise ApiError(413, "payload_too_large", MESSAGES["yaml_too_long"])
     try:
         # JSON can spell a lone surrogate (`"\ud800"`), which no file holds
-        # (D13b ruling 38: a 400, where it was a 500).
+        # (a 400, never a 500).
         yaml_content.encode("utf-8")
     except UnicodeEncodeError:
         raise ApiError(400, "invalid_request", MESSAGES["yaml_not_unicode"]) from None
@@ -329,7 +326,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             raise ApiError(503, "validator_busy", MESSAGES["validator_busy"]) from None
         except ChildNotStarted as error:
             # The service's own interpreter or directory is unusable: not the
-            # collector's fault, but nothing is checked either (ruling 38).
+            # collector's fault, but nothing is checked either.
             logger.error("the check's child process could not be started: %s", error.kind)
             raise ApiError(503, "version_unavailable", MESSAGES["version_unavailable"]) from None
         except OSError as error:

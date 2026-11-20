@@ -1,10 +1,9 @@
-"""The answer never holds a path inside the tester, nor the shared secret
-(D14a spec decision 5, Preflight ruling 3): raw stderr and absolute
-workspace paths never reach the person. `app/scrub.py`
+"""The answer never holds a path inside the tester, nor the shared secret:
+raw stderr and absolute workspace paths never reach the person. `app/scrub.py`
 replaces the run's workspace (its files first), kwok's kubeconfig, the
 service's own directories and the secret's exact value in every field: the
-logs, the text it ran, the mutations, the findings, the error, the output
-and the decoded input. The logs are then cut to 256 KiB at a line."""
+logs, the text it ran, the mutations, the findings, the error, the output and
+the decoded input. The logs are then cut to 256 KiB at a line."""
 
 from __future__ import annotations
 
@@ -96,7 +95,7 @@ def test_bounded_logs_keep_whole_lines_within_256_kib() -> None:
 
 def test_finish_answer_scrubs_every_field_and_both_files(tmp_path: Path) -> None:
     """With the scrub the service builds (the workspace included, as the
-    runner records it: Ruling 27); the run's own path to it is tested end to
+    runner records it); the run's own path to it is tested end to
     end below."""
     workspace = str(tmp_path / "otelcol-run-abc")
     scrub = Scrub.for_run(workspace=workspace, secrets=(SECRET,))
@@ -194,7 +193,7 @@ def test_the_logs_are_cut_to_256_kib_at_a_line(binary_dir: Path) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Ruling 27: the workspace scrubbed from every field, and the files scrubbed
+# The workspace scrubbed from every field, and the files scrubbed
 # before they are cut
 # ---------------------------------------------------------------------------
 
@@ -235,7 +234,7 @@ def test_the_workspace_is_scrubbed_from_every_field_of_an_answer(
 ) -> None:
     """The child scrubs only the logs, the files and the text it ran; the
     service's scrub, which knows the workspace, replaces it in the error, the
-    mutations and the compatibility findings too (Ruling 27, M1)."""
+    mutations and the compatibility findings too."""
     write_fake_collector(binary_dir, VERSION)
     monkeypatch.setattr(runner, "RUN_COMMAND", (sys.executable, "-c", WORKSPACE_IN_EVERY_FIELD_CHILD))
     with TestClient(create_app(make_settings(binary_dir))) as client:
@@ -306,9 +305,9 @@ def test_a_secret_across_the_outputs_10_mib_cut_never_leaves_part_of_itself(
     """The child's output passes 10 MiB, the secret in its first record and
     in one crossing the cut: the service scrubs, then cuts at a record, so
     the first is `<redacted>`, the one across the cut is dropped whole, and
-    what is left is whole records (Ruling 27, m1). 32cc2b4's service scrubbed,
-    then cut at a byte: the record across the cut, its `<redacted>` and the
-    form's JSON were left cut short (Ruling 29's nit: this test fails there)."""
+    what is left is whole records. Scrubbing, then cutting at a byte, would
+    leave the record across the cut, its `<redacted>` and the form's JSON
+    cut short, and this test would fail."""
     write_fake_collector(binary_dir, VERSION)
     monkeypatch.setattr(runner, "RUN_COMMAND", (sys.executable, "-c", SECRET_ACROSS_THE_CUT_CHILD))
     with TestClient(create_app(make_settings(binary_dir))) as client:
@@ -365,7 +364,7 @@ def test_a_record_across_the_collectors_10_mib_mark_is_never_read(binary_dir: Pa
 def test_a_secret_across_the_decoded_inputs_10_mib_cut_never_leaves_part_of_itself(binary_dir: Path) -> None:
     """A UTF-16 input whose UTF-8 decoding passes 10 MiB, the secret crossing
     the 10 MiB mark: the child sends a little more than the cap, the service
-    replaces the secret, then cuts (Ruling 27, m1)."""
+    replaces the secret, then cuts."""
     write_fake_collector(binary_dir, VERSION)
     wide = "中"  # 2 bytes in UTF-16, 3 in UTF-8
     before = TEN_MIB - 10  # the secret's first byte, in UTF-8

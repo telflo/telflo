@@ -1,10 +1,9 @@
-"""The neutraliser in a run, on the fake path (D14a spec decision 5,
-Preflight ruling 3): a canary file stands for a file a run must never read
-(the secret's, another run's), and each text below references it in one of
-the forms a collector decodes and expands: a plain value, a `\\x24` escape,
-a `\\u`-escaped dollar, an escaped line break, a tagged scalar, a key, a
-tagged key, an alias, a flow mapping, and duplicate keys (with a clean
-fixture of duplicate keys beside them).
+"""The neutraliser in a run, on the fake path: a canary file stands for a
+file a run must never read (the secret's, another run's), and each text below
+references it in one of the forms a collector decodes and expands: a plain
+value, a `\\x24` escape, a `\\u`-escaped dollar, an escaped line break, a
+tagged scalar, a key, a tagged key, an alias, a flow mapping, and duplicate
+keys (with a clean fixture of duplicate keys beside them).
 
 The fake collector (`tests/conftest.py`'s, with a prelude) does what the
 collector's confmap layer does with the text it reads: it decodes the YAML
@@ -14,14 +13,14 @@ value (an odd run of `$` before `{`), writing what it expanded to its output
 and its logs. So a reference that reached it would put the canary in the
 answer.
 
-D14a Task 4: the run mutates the text (R-001 to R-008), so
-the same canaries are checked after the mutations that add or move text:
+The run mutates the text (R-001 to R-008), so the same canaries are checked
+after the mutations that add or move text:
 R-001 (the receivers replaced), R-004 (the telemetry replaced), R-005 (the
 other pipelines dropped) and R-008 (a filelog receiver's operators carried
 into the synthesized receiver). Duplicate keys are refused before any
 collector by the run's ruamel read (C-000), as the collector itself
 refuses them; the canary never appears either way. The real collector's
-canaries are binary tests (Task 5).
+canaries are binary tests.
 """
 
 from __future__ import annotations
@@ -235,7 +234,7 @@ def test_env_references_are_left_for_the_sandbox(started: TestClient) -> None:
 
 
 # ---------------------------------------------------------------------------
-# After the mutations that add or move text (Task 4)
+# After the mutations that add or move text
 # ---------------------------------------------------------------------------
 
 # Each a whole configuration whose reference sits where a mutation adds,

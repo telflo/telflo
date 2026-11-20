@@ -1,7 +1,6 @@
 """Singleton lifecycle manager for the kwok-simulated Kubernetes cluster.
 
-Kwok's own code is never touched (D14a spec decision 6). Preflight ruling
-5, Ruling 26:
+Kwok's own code is never touched.
 
 - **A baked kwokctl configuration** (``config``, the service's
   ``kwok/kwokctl.yaml``) is passed as ``kwokctl -c <file>`` on every call:
@@ -18,21 +17,20 @@ Kwok's own code is never touched (D14a spec decision 6). Preflight ruling
 - ``kubeconfig`` and ``pki_dir`` (the cluster's CA and admin certificate,
   which the informer wait uses) are exposed; log lines name no output of
   kwok's (its messages name paths).
-- ``is_alive`` (Ruling 29): the supervisor re-checks a started
-  cluster's liveness through it.
+- ``is_alive``: the supervisor re-checks a started cluster's liveness through
+  it.
 - ``start_from_environment`` is the service's starter: it resolves the
   image's binaries, starts the cluster, and on a failed start removes what
-  it began (`app/kwok.py` retries it, Ruling 26).
+  it began (`app/kwok.py` retries it).
 
 The test runner spins this up once at service startup and tears it down on
 shutdown. All test runs share the same cluster — kwok-touching processors
-(``k8sattributes``, ``k8s_cluster``, ``k8sobjects``) only ever read from
-the apiserver, so concurrent runs cannot corrupt state. (The kubeconfig is
-an admin certificate that could write the cluster; no component that
-survives the sandbox's mutations writes to it. D14a's ADR 0028 records
-this.) The cluster is seeded with a deterministic Deployment → ReplicaSet →
-Pod chain at start so processors that walk owner references resolve to
-stable values.
+(``k8sattributes``, ``k8s_cluster``, ``k8sobjects``) only ever read from the
+apiserver, so concurrent runs cannot corrupt state. (The kubeconfig is an
+admin certificate that could write the cluster; no component that survives
+the sandbox's mutations writes to it.) The cluster is seeded with a
+deterministic Deployment → ReplicaSet → Pod chain at start so processors that
+walk owner references resolve to stable values.
 
 Runtime selection is auto:
 
@@ -69,7 +67,7 @@ SEED_MANIFEST = SERVICE_ROOT / "fixtures" / "kwok" / "default-cluster.yaml"
 KWOK_VERSION = "0.7.0"
 CLUSTER_NAME = "telflo-test"
 
-# The liveness probe (Ruling 29): the seed pod read from the apiserver, as the
+# The liveness probe: the seed pod read from the apiserver, as the
 # informer wait reads it, retried for at most this long before the cluster is
 # taken to be dead (a busy apiserver gets a few seconds; a dead one refuses at
 # once and is retried until then).
@@ -165,7 +163,7 @@ class KwokCluster:
     runtime: KwokRuntime
     seed_manifest: Path
     # The baked kwokctl configuration, passed with ``-c`` on every kwokctl
-    # call (Preflight ruling 5); None only in the tests' fakes.
+    # call; None only in the tests' fakes.
     config: Path | None = None
 
     _started: bool = field(default=False, init=False)
@@ -214,9 +212,9 @@ class KwokCluster:
         return self._seed_pod_uid or SEED_POD_UID
 
     async def is_alive(self, *, timeout_seconds: float = LIVENESS_TIMEOUT_SECONDS) -> bool:
-        """Whether the started cluster still answers (Ruling 29): its
-        apiserver serves the seed pod, verified with the cluster's CA and the
-        admin certificate, within ``timeout_seconds``. The supervisor
+        """Whether the started cluster still answers: its apiserver serves
+        the seed pod, verified with the cluster's CA and the admin
+        certificate, within ``timeout_seconds``. The supervisor
         (`app/kwok.py`) asks on health and before each run."""
         if not self._started or self._apiserver_url is None:
             return False
@@ -236,7 +234,7 @@ class KwokCluster:
         if self._started:
             return
         # The baked configuration names the image's kubectl, so no kubectl
-        # cache is seeded (Preflight ruling 5).
+        # cache is seeded.
         # Idempotency: tear down any leftover cluster of the same name
         # from a crashed previous process.
         await self._delete_cluster(quiet=True)

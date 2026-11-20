@@ -1,10 +1,9 @@
-// The evaluator's settings (D15a spec decision 10; plan Preflight rulings 10
-// and 12): the secret's files (secrets.go), the in-flight caps, the body caps
-// and the OTTL object cap. A cap may be lowered, never raised past the
-// ruling's value (the in-flight caps too, the controller's Ruling 33); a
-// setting that doesn't parse refuses the start, never falling back to its
-// default. D25 Task 3 added the lint's body cap
-// (OTTL_EVALUATOR_MAX_LINT_BODY_BYTES) and its hard deadline.
+// The evaluator's settings: the secret's files (secrets.go), the in-flight
+// caps, the body caps and the OTTL object cap. A cap may be lowered, never
+// raised past its default (the in-flight caps too); a setting that doesn't
+// parse refuses the start, never falling back to its default. The lint has
+// its own body cap (OTTL_EVALUATOR_MAX_LINT_BODY_BYTES) and its own hard
+// deadline.
 
 package server
 
@@ -30,15 +29,14 @@ const (
 	MaxOutputObjectsVariable = "OTTL_EVALUATOR_MAX_OUTPUT_OBJECTS"
 )
 
-// The rulings' values (Preflight ruling 10).
+// The defaults.
 const (
 	DefaultPort = 8003
 	// DefaultMaxEvaluations is how many evaluations run at once, as the
 	// tester's runs at once (its OTELCOL_TESTING_MAX_CONCURRENCY). It and
-	// DefaultMaxValidations may be lowered, never raised (the controller's
-	// Ruling 33): each child is a whole Go runtime with its own threads, and
-	// compose's pids_limit, which counts threads, is sized for serve and
-	// these many children at once.
+	// DefaultMaxValidations may be lowered, never raised: each child is a
+	// whole Go runtime with its own threads, and compose's pids_limit, which
+	// counts threads, is sized for serve and these many children at once.
 	DefaultMaxEvaluations = 4
 	DefaultMaxValidations = 8
 	// DefaultMaxEvaluateBodyBytes: a 10 MiB output in base64 (13.3 MiB),
@@ -48,16 +46,15 @@ const (
 	DefaultMaxValidateBodyBytes = 64 << 10
 	DefaultEvaluateWait         = 5 * time.Second
 	DefaultValidateWait         = 1 * time.Second
-	// DefaultMaxLintBodyBytes (D25 Task 3; plan Preflight ruling 13): 200
-	// texts of up to 8,192 characters each, escaped (up to six bytes a
-	// character as \u00XX).
+	// DefaultMaxLintBodyBytes: 200 texts of up to 8,192 characters each,
+	// escaped (up to six bytes a character as \u00XX).
 	DefaultMaxLintBodyBytes = 10 << 20
 	// DefaultEvaluateSoftDeadline is checked inside the child; the child's
 	// process group is killed at DefaultEvaluateHardDeadline.
 	DefaultEvaluateSoftDeadline = 20 * time.Second
 	DefaultEvaluateHardDeadline = 25 * time.Second
 	DefaultValidateHardDeadline = 2 * time.Second
-	// DefaultLintHardDeadline is when a lint's child is killed (D25 Task 3):
+	// DefaultLintHardDeadline is when a lint's child is killed:
 	// the items it hasn't reached are "Not checked". 200 texts nested 12
 	// deep parse in about half a second.
 	DefaultLintHardDeadline = 10 * time.Second
@@ -85,7 +82,7 @@ type Settings struct {
 	LintHardDeadline     time.Duration
 }
 
-// DefaultSettings are the rulings' values.
+// DefaultSettings are the defaults.
 func DefaultSettings() Settings {
 	return Settings{
 		Port:                 DefaultPort,

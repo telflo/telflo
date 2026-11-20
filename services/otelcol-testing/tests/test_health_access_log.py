@@ -1,5 +1,5 @@
-"""A probe's health request writes no log line (D33-1 decision 18, Ruling
-335): probes and the platform's health monitor call it every few seconds.
+"""A probe's health request writes no log line: probes and the platform's
+health monitor call it every few seconds.
 The filter on `uvicorn.access` drops only uvicorn's line for `GET` on the
 health path (its query aside); every other request's line logs as before.
 The records here have the shape uvicorn logs each request with: (client,

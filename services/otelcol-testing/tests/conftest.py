@@ -2,16 +2,16 @@
 reads it), the test catalogue, fake collectors (scripts standing in for
 `otelcol-contrib`, as the validator's conftest has), and a request body.
 
-`write_fake_collector` writes the fake that behaves as a collector does for
-the run (D14a Task 4): it reads the configuration the run wrote, listens
-where the sandbox's receiver says (the OTLP/HTTP receiver, accepting an
-OTLP document of the right signal and refusing anything else with 400; the
-syslog TCP listener), reads the filelog receiver's staged file, writes what
-it received to the file exporter's path one JSON line per document, prints
-the collector's "Everything is ready" line, and exits 0 on SIGTERM. Code a
-test gives runs before it reads anything (``prelude``) and once it is ready
-(``after_ready``). `write_collector` writes a shell script for the tests
-whose fake never becomes ready (the kill tests)."""
+`write_fake_collector` writes the fake that behaves as a collector does for the
+run: it reads the configuration the run wrote, listens where the sandbox's
+receiver says (the OTLP/HTTP receiver, accepting an OTLP document of the right
+signal and refusing anything else with 400; the syslog TCP listener), reads the
+filelog receiver's staged file, writes what it received to the file exporter's
+path one JSON line per document, prints the collector's "Everything is ready"
+line, and exits 0 on SIGTERM. Code a test gives runs before it reads anything
+(``prelude``) and once it is ready (``after_ready``). `write_collector` writes
+a shell script for the tests whose fake never becomes ready (the kill
+tests)."""
 
 from __future__ import annotations
 

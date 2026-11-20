@@ -1,5 +1,5 @@
-"""The shared secret (D13b spec decision 11, ADR 0026's pattern): a bearer
-token compared in constant time with OTELCOL_VALIDATOR_SECRET and each of
+"""The shared secret (the opamp-server's pattern): a bearer token compared in
+constant time with OTELCOL_VALIDATOR_SECRET and each of
 OTELCOL_VALIDATOR_SECRETS_PREVIOUS; no secret, no start."""
 
 from __future__ import annotations

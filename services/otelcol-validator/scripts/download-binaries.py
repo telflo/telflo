@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 """Downloads what the validator's image bakes in, each file checked against
-its pinned sha256 before it is used (D13b spec decision 8, Preflight ruling
-13). The Dockerfile's download stage runs it; nothing it fetches reaches a
-layer unchecked, and no tarball is left behind.
+its pinned sha256 before it is used. The Dockerfile's download stage runs it;
+nothing it fetches reaches a layer unchecked, and no tarball is left behind.
 
     download-binaries.py collectors --catalog DIR --versions SPEC --arch ARCH --dest DIR
 

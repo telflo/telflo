@@ -1,4 +1,4 @@
-// New in D15a Task 2: the rules package's test helpers.
+// The rules package's test helpers.
 
 package rules
 

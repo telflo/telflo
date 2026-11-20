@@ -1,6 +1,6 @@
-# The collector validator's image (D13b spec decisions 8, 10 and 17), built
-# with the REPOSITORY'S ROOT as the context, so it can read catalog/ (the
-# root .dockerignore lets in only telflo-core/, catalog/ and this service):
+# The collector validator's image, built with the REPOSITORY'S ROOT as the
+# context, so it can read catalog/ (the root .dockerignore lets in only
+# telflo-core/, catalog/ and this service):
 #
 #   docker build -f services/otelcol-validator/Dockerfile -t telflo-otelcol-validator .
 #   docker build -f services/otelcol-validator/Dockerfile --build-arg OTELCOL_VERSIONS=default ...
@@ -24,8 +24,8 @@
 # so the service's default catalogue directory (app/settings.py, three
 # directories above its package) is the copy the image carries.
 
-# python:3.12-slim (Debian trixie), pinned by its index digest (ADR 0019: a
-# reviewed component). Resolved on 2026-10-07 (3.12.15); to move it, take
+# python:3.12-slim (Debian trixie), pinned by its index digest (a reviewed
+# component). Resolved on 2026-10-07 (3.12.15); to move it, take
 # the new index digest from `docker buildx imagetools inspect python:3.12-slim`.
 ARG PYTHON_IMAGE=python:3.12-slim@sha256:05cda9777409a9c3ffddd94a4c476b79f0769a0b4857f0c7ed9226b6800b0d6f
 
@@ -35,9 +35,9 @@ FROM ${PYTHON_IMAGE} AS download
 # linux_${TARGETARCH}.
 ARG TARGETARCH
 # tini (MIT, krallin/tini): PID 1, so a collector whose check was killed is
-# reaped (D13b ruling 32). The dynamically linked build, against the base
-# image's glibc; each hash is the release's own .sha256sum file, checked
-# against a fresh download on 2026-10-07.
+# reaped. The dynamically linked build, against the base image's glibc; each
+# hash is the release's own .sha256sum file, checked against a fresh download
+# on 2026-10-07.
 ARG TINI_VERSION=v0.19.0
 ARG TINI_SHA256_AMD64=93dcc18adc78c65a028a84799ecf8ad40c936fdfc5f2a57b1acda5a8117fa82c
 ARG TINI_SHA256_ARM64=07952557df20bfd2a95f9bef198b445e006171969499a1d361bd9e6f8e5e0e81
@@ -64,7 +64,7 @@ RUN python download-binaries.py collectors \
 # (made here with openssl, its key thrown away, so neither openssl nor the
 # key reaches the runtime). In-cluster Kubernetes clients built by
 # `validate` (k8sattributes, the k8snode detector, ...) read them, then fail
-# TLS against the placeholder CA, as intended (D13b Preflight ruling 9).
+# TLS against the placeholder CA, as intended.
 FROM ${PYTHON_IMAGE} AS staging
 RUN apt-get update \
  && apt-get install -y --no-install-recommends openssl \
@@ -93,7 +93,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 # The service's user (uid 10001, numeric so an orchestrator can check
 # runAsNonRoot), with a home directory; and the directories the contrib
 # packages create, plus the host and Kubernetes mount points components
-# stat at validate time (D13b ruling 41), owned by the user.
+# stat at validate time, owned by the user.
 # The base image has no curl or jq; it has the openssl command, whose
 # package ca-certificates depends on, so only the command is removed: the
 # runtime needs none of the three.
@@ -116,10 +116,10 @@ COPY --from=download /out/tini /usr/local/bin/tini
 # The collectors before the Python dependencies: the largest layer changes
 # only with the catalogue or OTELCOL_VERSIONS. Owned by root, read-only to
 # the service. Each must run here and say its own version.
-# Under emulation (a cross-platform build: the other processor type's
-# stage) Go binaries crash at random (D36-2 Ruling 405: QEMU, both ways), so
-# the "run and say its version" checks below run in a native build only
-# (BUILDPLATFORM = TARGETPLATFORM; a plain docker build sets neither: native).
+# Under emulation (a cross-platform build: the other processor type's stage)
+# Go binaries crash at random (QEMU, both ways), so the "run and say its
+# version" checks below run in a native build only (BUILDPLATFORM =
+# TARGETPLATFORM; a plain docker build sets neither: native).
 # The release builds amd64 natively on the runner and the rehearsal arm64
 # natively on an Apple machine; every binary's sha256 is checked at download.
 ARG BUILDPLATFORM
@@ -134,9 +134,9 @@ RUN if [ "${BUILDPLATFORM:-}" != "${TARGETPLATFORM:-}" ]; then \
     done; fi
 
 WORKDIR /app/services/otelcol-validator
-# The hash-pinned runtime lock only (D13b Preflight ruling 10): wheels, no
-# dependency outside the lock. PyYAML's wheels carry libyaml, which the
-# service's loader needs (CSafeLoader; D13b ruling 32): checked here.
+# The hash-pinned runtime lock only: wheels, no dependency outside the lock.
+# PyYAML's wheels carry libyaml, which the service's loader needs
+# (CSafeLoader): checked here.
 COPY services/otelcol-validator/requirements.txt ./
 RUN pip install --require-hashes --no-deps --only-binary=:all: -r requirements.txt \
  && python -c "import yaml; yaml.CSafeLoader"
@@ -188,7 +188,7 @@ CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8001"]
 # otelcol-validator job): the binary tests run the image's own collectors
 # against every version it holds. OTELCOL_EXPECTED_VERSIONS tells them which
 # versions this build baked in (its OTELCOL_VERSIONS), so a version it should
-# hold and doesn't fails them instead of being skipped (D13b ruling 53).
+# hold and doesn't fails them instead of being skipped.
 FROM runtime AS test
 ARG OTELCOL_VERSIONS=all
 ENV OTELCOL_EXPECTED_VERSIONS=${OTELCOL_VERSIONS}
@@ -204,9 +204,9 @@ RUN pip install --require-hashes --no-deps --only-binary=:all: -r requirements-d
 COPY services/otelcol-validator/pytest.ini services/otelcol-validator/openapi.yaml ./
 COPY services/otelcol-validator/scripts/ ./scripts/
 COPY services/otelcol-validator/tests/ ./tests/
-# The opamp-server's org-token corpus (vendor/opamp-server, D26), which
+# The opamp-server's org-token corpus (vendor/opamp-server), which
 # tests/test_org_variables.py reads three folders above its own, as in the
-# repository: here only, never in the runtime (D33-1 Ruling 329).
+# repository: here only, never in the runtime.
 COPY vendor/opamp-server/org-token-corpus.json /app/vendor/opamp-server/org-token-corpus.json
 # pytest can't write its cache here as the service's user, and warnings fail
 # the run (pytest.ini).

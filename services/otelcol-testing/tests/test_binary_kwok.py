@@ -1,8 +1,8 @@
-"""Runs with kwok's fake cluster on the real collectors (marked `kwok`; D14a
-Task 5, Preflight ruling 6's binary tests 3 and 5), on every offered version
-the image holds, under `--network none`: the service starts kwok's cluster
-from the image's binaries and `kwok/kwokctl.yaml` (as it does in compose),
-and a run whose pipeline has `k8sattributes` reaches it through `KUBECONFIG`.
+"""Runs with kwok's fake cluster on the real collectors (marked `kwok`), on
+every offered version the image holds, under `--network none`: the service
+starts kwok's cluster from the image's binaries and `kwok/kwokctl.yaml` (as
+it does in compose), and a run whose pipeline has `k8sattributes` reaches it
+through `KUBECONFIG`.
 
 - `from: connection`: an OTLP replay from 127.0.0.1 (the seeded pod's
   address) is enriched with the pod's name, namespace, node and container.

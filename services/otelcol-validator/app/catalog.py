@@ -3,7 +3,7 @@
 The platform's migration step owns the catalogue's rules (catalog/README.md);
 the validator reads only what it needs, each file's `distribution` and each
 version's `version` and `deprecated`, and ignores every other field, so a
-field added to the format later (D13b Task 3's `renamedTypes`) changes
+field added to the format later (such as `renamedTypes`) changes
 nothing here. A version is offered (not deprecated), retired (deprecated) or
 unknown; a distribution the catalogue doesn't list makes every version
 unknown.

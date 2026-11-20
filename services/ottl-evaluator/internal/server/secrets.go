@@ -1,6 +1,5 @@
-// New in D15a Task 2 (spec decision 10; plan Preflight ruling 12), after
-// the opamp-server's management/secrets.go (ADR 0026) and the collector
-// tester's secret file (ADR 0028). There is no opt-out.
+// After the opamp-server's management/secrets.go and the collector
+// tester's secret file. There is no opt-out.
 
 package server
 
@@ -123,7 +122,7 @@ func LoadSecrets(getenv func(string) string, environ []string) (*Secrets, error)
 		return nil, err
 	}
 	if secretInEnvironment(append(all, previous...), environ) {
-		return nil, errors.New("a secret is also in the environment: it must be in no environment (D15a Preflight ruling 12)")
+		return nil, errors.New("a secret is also in the environment: it must be in no environment")
 	}
 	return secrets, nil
 }

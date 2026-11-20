@@ -1,6 +1,5 @@
-// New in D15a Task 2 (spec decision 8; plan Preflight ruling 6): the text
-// rules' whitespace-tolerant matcher, and the byte-bounded cuts every shown
-// text gets.
+// The text rules' whitespace-tolerant matcher, and the byte-bounded cuts
+// every shown text gets.
 
 package rules
 

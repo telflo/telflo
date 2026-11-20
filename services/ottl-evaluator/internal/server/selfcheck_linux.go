@@ -1,9 +1,7 @@
-// New in D15a Task 3 (plan Preflight ruling 13; the ledger's A4e): the
-// selfcheck subcommand's checks, which read /proc. Run in the container
-// (scripts/check-container.sh), next to the serve process that is its PID 1.
-// D15a Task 3's follow-up (the controller's Ruling 34) adds the network's
-// positive control: the evaluator's own service name resolves to it, and
-// serve answers there.
+// The selfcheck subcommand's checks, which read /proc. Run in the
+// container (scripts/check-container.sh), next to the serve process that
+// is its PID 1. The network's positive control: the evaluator's own
+// service name resolves to it, and serve answers there.
 
 //go:build linux
 

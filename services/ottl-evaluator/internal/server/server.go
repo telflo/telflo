@@ -1,5 +1,4 @@
-// The evaluator's HTTP server (D15a spec decisions 2, 3, 10 and 11; plan
-// Preflight rulings 5 and 8-12):
+// The evaluator's HTTP server:
 //
 //   - One wrapper, before the mux, checks `Authorization: Bearer <secret>`
 //     against the secrets' SHA-256 digests (secrets.go) on every path but
@@ -14,9 +13,8 @@
 //     logs carry the method, the route's pattern, the status and the
 //     duration only, never the path.
 //   - A path that isn't its cleaned form is 404 not_found after the secret's
-//     check, never the mux's redirect (the controller's Ruling 33).
-//   - D25 Task 3 (D25 spec decision 33; plan Preflight ruling 13): POST
-//     /ottl/v1/lint, the public API's OTTL lint, in a child (lint-child)
+//     check, never the mux's redirect.
+//   - POST /ottl/v1/lint, the public API's OTTL lint, in a child (lint-child)
 //     sharing the validations' slots.
 
 package server
@@ -157,10 +155,10 @@ func (s *Server) Handler() http.Handler {
 }
 
 // requireCleanPath answers 404 not_found for a path that isn't its own
-// cleaned form (`//health`, `/x/../health`, `/ottl/v1//evaluate`, a
-// trailing slash), and for one that doesn't start with "/" (`OPTIONS *`),
-// where the mux would answer a redirect in plain text (the controller's
-// Ruling 33). It runs after the secret's check.
+// cleaned form (`//health`, `/x/../health`, `/ottl/v1//evaluate`, a trailing
+// slash), and for one that doesn't start with "/" (`OPTIONS *`), where the
+// mux would answer a redirect in plain text. It runs after the secret's
+// check.
 func requireCleanPath(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !isCleanPath(r.URL.Path) {
@@ -178,7 +176,7 @@ func isCleanPath(p string) bool {
 
 // --- errors -----------------------------------------------------------------
 
-// The error codes (Preflight ruling 9).
+// The error codes.
 const (
 	codeUnauthorized     = "unauthorized"
 	codeNotFound         = "not_found"
@@ -320,8 +318,8 @@ func (s *Server) recoverPanics(next http.Handler) http.Handler {
 // observe logs each request: its method, its route's pattern, its status and
 // its duration. Never a header, a body, the path or the query, a rule's
 // text, a message or a snippet. GET /health, exactly, logs nothing: the
-// kubelet's probes and the API's health monitor call it every few seconds
-// (D33-1 decision 18, Ruling 335); every other request logs as before.
+// kubelet's probes and the API's health monitor call it every few seconds;
+// every other request logs as before.
 func (s *Server) observe(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet && r.URL.Path == healthPath {
@@ -590,11 +588,10 @@ type lintAnswer struct {
 	Items       []rules.LintVerdict `json:"items"`
 }
 
-// lint answers the public API's OTTL lint (D25 Task 3): each text's
-// verdict, in the order conditions, statements, value expressions, with no
-// text echoed. The texts are parsed in a child (lint-child) holding one of
-// the validations' slots, killed at LintHardDeadline; the items it hadn't
-// reached are "Not checked".
+// lint answers the public API's OTTL lint: each text's verdict, in the order
+// conditions, statements, value expressions, with no text echoed. The texts
+// are parsed in a child (lint-child) holding one of the validations' slots,
+// killed at LintHardDeadline; the items it hadn't reached are "Not checked".
 func (s *Server) lint(w http.ResponseWriter, r *http.Request) {
 	body, release, ok := s.admit(w, r, s.settings.MaxLintBodyBytes, s.validations, s.settings.ValidateWait)
 	if !ok {

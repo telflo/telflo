@@ -98,15 +98,14 @@ VALIDATION_ENV_OVERRIDES = {
 # (?P<default>:-[^}]*)?\}` finds the references, but on a value of
 # unterminated `${env:A:-` each attempt's `[^}]*` runs to the end of the
 # value, so the scan costs the square of its length (236 KB: 47 s). `_env_references` finds the same matches in
-# one pass (D13b ruling 37; the differential test in
-# tests/test_linear_scans.py runs the expression, kept in tests/verbatim.py).
+# one pass (the differential test in tests/test_linear_scans.py runs the
+# expression, kept in tests/verbatim.py).
 _ENV_PREFIX = "${env:"
 
 # Names the validator never sets in the collector's environment, neither as a
-# first-run placeholder nor on the rerun (D13b rulings 44 to 46): Go's
-# runtime and toolchain (`GODEBUG`, `GOMEMLIMIT`, `GOMAXPROCS`, `GO111MODULE`,
-# …: `GO` then capitals and digits, never an underscore, so `GOOGLE_*` names
-# are ordinary), the
+# first-run placeholder nor on the rerun: Go's runtime and toolchain
+# (`GODEBUG`, `GOMEMLIMIT`, `GOMAXPROCS`, `GO111MODULE`, …: `GO` then capitals
+# and digits, never an underscore, so `GOOGLE_*` names are ordinary), the
 # dynamic loaders (`LD_*`, `DYLD_*`), proxies (`HTTPS_PROXY`, `no_proxy`, …),
 # TLS roots (`SSL_CERT_FILE`, `SSL_CERT_DIR`), and the allowlisted process
 # basics. A text names them through `${env:NAME}`; a placeholder there could
@@ -188,10 +187,10 @@ _FIELD_HEURISTICS: list[tuple[re.Pattern, str]] = [
 # any minimum-length check we've seen (datadog's is 32, honeycomb's is 22).
 # Lowercase alphanumeric only so the value is safe to embed inside a URL
 # without escaping.
-# The substring every placeholder this module injects carries, so a cause
-# the collector echoed from a placeholder can be recognised and never filed
-# as a deployment requirement (D13b ruling 41): a requirement's title would
-# otherwise name the validator's own placeholder, not the user's value.
+# The substring every placeholder this module injects carries, so a cause the
+# collector echoed from a placeholder can be recognised and never filed as a
+# deployment requirement: a requirement's title would otherwise name the
+# validator's own placeholder, not the user's value.
 _PLACEHOLDER_MARKER = "otelvalidatorplaceholder"
 _DEFAULT_PLACEHOLDER = "otelvalidatorplaceholder00000000"
 
@@ -273,23 +272,22 @@ def _infer_placeholder(field_key: str | None, is_whole_value: bool = True) -> st
     return _DEFAULT_PLACEHOLDER
 
 
-# Directory-valued fields (D13b ruling 63): hostmetrics' `root_path` and
-# file_storage's `directory` are stat'ed at validate time, so a string
-# placeholder there is an error naming the placeholder. When the reference is
-# the whole value, its placeholder is an empty directory made inside the
-# check's own directory (never anywhere else); with no check directory the
-# generic placeholder stays. Any key named `root_path` or `directory`
-# qualifies, whatever its component.
+# Directory-valued fields: hostmetrics' `root_path` and file_storage's
+# `directory` are stat'ed at validate time, so a string placeholder there is
+# an error naming the placeholder. When the reference is the whole value, its
+# placeholder is an empty directory made inside the check's own directory
+# (never anywhere else); with no check directory the generic placeholder
+# stays. Any key named `root_path` or `directory` qualifies, whatever its
+# component.
 _DIRECTORY_FIELD_RE = re.compile(r"^(root_path|directory)$")
 
-# The check's placeholder directories (D13b ruling 64): each named with the
-# placeholder marker, so a requirement that captures one is never emitted
-# (ruling 41), and made once per check for each key. A check makes at most
-# MAX_PLACEHOLDER_DIRECTORIES of its own, one per key; past that, every
-# further key shares one overflow directory (ruling 66), so a value past the
-# cap still names an existing directory and a rerun still meets it. The
-# hostmetrics root's directory is reserved: it never counts towards the cap
-# and is never the overflow.
+# The check's placeholder directories: each named with the placeholder marker,
+# so a requirement that captures one is never emitted, and made once per check
+# for each key. A check makes at most MAX_PLACEHOLDER_DIRECTORIES of its own,
+# one per key; past that, every further key shares one overflow directory, so
+# a value past the cap still names an existing directory and a rerun still
+# meets it. The hostmetrics root's directory is reserved: it never counts
+# towards the cap and is never the overflow.
 PLACEHOLDER_DIRECTORY_PREFIX = _PLACEHOLDER_MARKER + "-"
 MAX_PLACEHOLDER_DIRECTORIES = 64
 # Every hostmetrics root_path in one check is this one directory: the
@@ -354,16 +352,14 @@ def _build_env_var_placeholders(
     A protected name (``_PROTECTED_ENV_NAME_RE``), or one in ``fixed_names``
     (the runner passes every name the collector's fixed environment holds or
     may hold: the parent allowlist and ``_build_subprocess_env()``), gets no
-    placeholder but keeps its requirement (D13b rulings 45 and 46).
+    placeholder but keeps its requirement.
 
     A whole-value reference under a directory-valued key (any `root_path` or
     `directory`) gets a placeholder directory inside `directory`, the check's
-    own (D13b rulings 63 and 64: every `root_path` the same one; past
-    MAX_PLACEHOLDER_DIRECTORIES, the shared overflow, ruling 66); without
-    one, the generic placeholder. A
-    variable's first reference decides its placeholder: one named under a
-    directory key and then elsewhere keeps the directory everywhere, and the
-    other way round.
+    own (every `root_path` the same one; past MAX_PLACEHOLDER_DIRECTORIES, the
+    shared overflow); without one, the generic placeholder. A variable's first
+    reference decides its placeholder: one named under a directory key and
+    then elsewhere keeps the directory everywhere, and the other way round.
     """
     env_overlay: dict[str, str] = {}
     seen: set[str] = set()
@@ -483,8 +479,8 @@ def _inject_datadog_hostname_placeholder(yaml_content: str) -> str:
 
     # Locate the top-level ``exporters:`` block mapping and where it ends
     # (the next non-blank, non-comment line at column 0).
-    # A leading byte-order mark is not part of the first line's key (D13b
-    # ruling 46); the line itself keeps it.
+    # A leading byte-order mark is not part of the first line's key; the
+    # line itself keeps it.
     def _section_line(i: int) -> str:
         line = lines[i].rstrip("\r\n")
         return line.removeprefix("\ufeff") if i == 0 else line

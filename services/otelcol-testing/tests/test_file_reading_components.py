@@ -1,7 +1,6 @@
-"""Processors that read files the text names (D14a Ruling 28, the owner's):
-every run's collector runs as the same user in the same container, so a
-processor that reads a path from the text could read another run's files or
-the tester's and pass them on.
+"""Processors that read files the text names: every run's collector runs as
+the same user in the same container, so a processor that reads a path from
+the text could read another run's files or the tester's and pass them on.
 
 - R-106: resourcedetection's ``consul``, ``openshift`` and ``docker``
   detectors are stripped, with their own settings, from either spelling of
@@ -11,8 +10,8 @@ the tester's and pass them on.
 - C-005: a ``geoip`` processor is refused (its database is a file; the
   catalogue knows it by that one spelling).
 
-- C-006 (Ruling 31): any other processor setting whose key ends in
-  ``_file`` or ``_path`` and holds a value, at any depth, is refused.
+- C-006: any other processor setting whose key ends in ``_file`` or ``_path``
+  and holds a value, at any depth, is refused.
 
 The "no path outside the workspace survives the mutations" test walks the
 processors too (`tests/test_run_fixes.py`).
@@ -301,7 +300,7 @@ REFUSED_OUTRIGHT = {
 
 @pytest.mark.parametrize("name", ["schema", "schema/x", "remotetap", "remotetap/x"])
 def test_schema_and_remotetap_are_refused_outright(name: str) -> None:
-    """Ruling 33: C-005, each with its own message; their file settings are
+    """C-005, each with its own message; their file settings are
     left to it (no C-006 beside), and the message holds no value."""
     block, message = REFUSED_OUTRIGHT[name.split("/", 1)[0]]
     text = _processors(block.format(name=name))
@@ -330,7 +329,7 @@ def test_a_geoip_run_is_refused_before_any_collector_starts(binary_dir: Path, tm
 
 
 # ---------------------------------------------------------------------------
-# C-006: any processor setting that names a file (Ruling 31)
+# C-006: any processor setting that names a file
 # ---------------------------------------------------------------------------
 
 SECRET_PATH = "/run/secrets/otelcol_testing_secret"
@@ -365,7 +364,7 @@ NAMED_CASES = {
         f"    tls: {{ca_file: {SECRET_PATH}, cert_file: /a/c, key_file: /a/k}}\n",
         [("resourcedetection/x", "tls.ca_file"), ("resourcedetection/x", "tls.cert_file"), ("resourcedetection/x", "tls.key_file")],
     ),
-    # Ruling 32: refused though R-106 would strip them.
+    # Refused though R-106 would strip them.
     "consul's token_file": (
         f"  resourcedetection:\n    detectors: [env, consul]\n    consul: {{token_file: {SECRET_PATH}}}\n",
         [("resourcedetection", "consul.token_file")],
@@ -420,7 +419,7 @@ def test_keys_that_only_contain_file_or_path_pass() -> None:
 
 
 def test_r106s_settings_are_refused_and_the_other_refusals_keep_their_own() -> None:
-    """Ruling 32: consul's and openshift's file settings are refused (C-006)
+    """Consul's and openshift's file settings are refused (C-006)
     though R-106 would strip them; geoip keeps C-005 alone, kube_config_path
     C-002 alone."""
     text = _processors(
@@ -459,7 +458,7 @@ def test_a_run_whose_processor_names_the_secrets_file_is_refused_before_any_coll
 
 
 # ---------------------------------------------------------------------------
-# Ruling 34: the final check walks the composed graph, through tags, and
+# The final check walks the composed graph, through tags, and
 # refuses what it can't read
 # ---------------------------------------------------------------------------
 
@@ -533,8 +532,8 @@ def test_the_final_check_refuses_a_text_it_cant_compose(text: str) -> None:
 
 
 # ---------------------------------------------------------------------------
-# The tagged-empty minor (Ruling 35's note): both passes agree that an empty
-# value passes whatever its tag, and that a set one is refused
+# A tagged empty value: both passes agree that an empty value passes whatever
+# its tag, and that a set one is refused
 # ---------------------------------------------------------------------------
 
 

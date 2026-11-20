@@ -2,10 +2,10 @@
 
 Its detection, IDs and messages are held to the parity corpus (the web runs
 the same check). The filelog receiver is named `file_log`, with its old
-spelling (D14a Ruling 49). ``run_advisory`` (D14a Task 4) sniffs a run's
-input once and picks the strategy kind for the run's own target pipeline,
-as the run itself does (``pick_strategy`` with the target), so a filelog in
-a sibling pipeline can't change which advisory fires.
+spelling. ``run_advisory`` sniffs a run's input once and picks the strategy
+kind for the run's own target pipeline, as the run itself does
+(``pick_strategy`` with the target), so a filelog in a sibling pipeline can't
+change which advisory fires.
 
 The test runner picks a strategy (OTLP replay / filelog pull / syslog push)
 from the user's YAML alone (see ``executors/__init__.py:pick_strategy``).
@@ -28,11 +28,11 @@ proceeds — users sometimes feed deliberately mis-shapen fixtures to
 exercise edge behavior — but they aren't left wondering why.
 
 The platform's web app re-implements this logic to drive its pre-run "Run
-anyway?" dialog (D14a Task 9). The two are kept in lock-step by one parity
-corpus, ``services/otelcol-testing/tests/fixtures/fixture-shape-corpus.json``:
-this package's ``tests/test_fixture_shape_parity.py`` and the web app's
-parity test both assert against it, so any divergence in detection,
-message text, or strategy picking fails on both sides at once.
+anyway?" dialog. The two are kept in lock-step by one parity corpus,
+``services/otelcol-testing/tests/fixtures/fixture-shape-corpus.json``: this
+package's ``tests/test_fixture_shape_parity.py`` and the web app's parity
+test both assert against it, so any divergence in detection, message text, or
+strategy picking fails on both sides at once.
 """
 
 from __future__ import annotations
@@ -77,7 +77,7 @@ SYSLOG_KIND = "syslog"
 # How the advisories name a strategy's receiver: the name, and its first
 # mention. The filelog strategy's receiver is `file_log` on every collector
 # the platform offers (renamed from `filelog` in 0.149.0, which still works),
-# so its words give both (D14a Ruling 49).
+# so its words give both.
 _RECEIVER_WORDS = {
     FILELOG_KIND: ("file_log", "`file_log` (or `filelog`)"),
     SYSLOG_KIND: ("syslog", "`syslog`"),
@@ -409,9 +409,8 @@ def run_advisory(
     signal_type: str,
     target_pipeline: str | None = None,
 ) -> MutationAdvisory | None:
-    """F-001/F-002/F-003 for a run (D14a Task 4): the first
-    :data:`SNIFF_BYTES` of its input against the strategy its target
-    pipeline takes."""
+    """F-001/F-002/F-003 for a run: the first :data:`SNIFF_BYTES` of its
+    input against the strategy its target pipeline takes."""
     from app.executors import pick_strategy  # the executors import this module
 
     _strategy, kind = pick_strategy(yaml_config, signal_type, target_pipeline=target_pipeline)

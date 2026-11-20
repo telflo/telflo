@@ -1,5 +1,4 @@
-// New in D25 Task 3 (D25 spec decision 33; plan Preflight ruling 13, B16):
-// the lint child's work. The public API's OTTL lint sends up to 200
+// The lint child's work. The public API's OTTL lint sends up to 200
 // conditions, statements and value expressions against one context; OTTL's
 // parser can't be interrupted, so they are parsed in a child process the
 // server kills at its limit (internal/server's lint), as a rule's check is.

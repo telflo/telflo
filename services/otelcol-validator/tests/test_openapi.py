@@ -1,8 +1,8 @@
-"""The contract test (D13b spec decision 11): `openapi.yaml` is what the
-platform's client and its test double are written against, so every route's
-real answers, every status the file documents, are produced here through the
-real app and validated against the file, as are the requests sent. A route
-the app has that the file doesn't document (or the reverse) fails too."""
+"""The contract test: `openapi.yaml` is what the platform's client and its
+test double are written against, so every route's real answers, every status
+the file documents, are produced here through the real app and validated
+against the file, as are the requests sent. A route the app has that the file
+doesn't document (or the reverse) fails too."""
 
 from __future__ import annotations
 

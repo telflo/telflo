@@ -1,19 +1,18 @@
 """References are found where the collector finds them, and spliced, not
-re-dumped (D13b ruling 39).
+re-dumped.
 
-The review of b25c81a found that a YAML escape (``"\\x24{file:…}"``,
-``"\\u0024{file:…}"``, an escaped line break between ``$`` and ``{``, …) hides
-a live ``${file:…}`` from a raw-text scan, yet the collector decodes the
-escape and expands the reference and the file's contents come back in the
-error; and that neutralising by re-dumping the whole document changed
-untouched scalars' types (``1:30`` → 90, ``on`` → true), so a text answered
-differently from how its raw form does.
+A YAML escape (``"\\x24{file:…}"``, ``"\\u0024{file:…}"``, an escaped line
+break between ``$`` and ``{``, …) hides a live ``${file:…}`` from a raw-text
+scan, yet the collector decodes the escape and expands the reference and the
+file's contents come back in the error; and neutralising by re-dumping the
+whole document would change untouched scalars' types (``1:30`` → 90, ``on`` →
+true), so a text would answer differently from how its raw form does.
 
-These tests exercise the pre-processing (`_prepare`) over the stable surface,
-so they fail on b25c81a: detection is on the decoded keys and values (every
-escape form, in plain/single/double/block scalars, behind anchors and aliases
-and tags, in keys as well as values), a text PyYAML can't read as one document
-is answered invalid, and every byte outside a spliced reference is unchanged.
+These tests exercise the pre-processing (`_prepare`) over the stable surface:
+detection is on the decoded keys and values (every escape form, in
+plain/single/double/block scalars, behind anchors and aliases and tags, in
+keys as well as values), a text PyYAML can't read as one document is answered
+invalid, and every byte outside a spliced reference is unchanged.
 """
 
 from __future__ import annotations
@@ -24,7 +23,7 @@ from app import bounded_yaml
 from app.providers import _neutralize_str
 from app.runner import _Prepared, _prepare
 
-# The five escape forms the review found, each rendering a literal ``$`` that a
+# The five escape forms, each rendering a literal ``$`` that a
 # raw ``${`` scan misses but PyYAML decodes to a live reference.
 ESCAPES = {
     "x24": r"\x24{file:/etc/canary}",

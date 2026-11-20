@@ -1,5 +1,5 @@
-"""One check end to end with a fake collector (a shell script), for D13b spec
-decision 10's fixes and the protections a real subprocess exercises."""
+"""One check end to end with a fake collector (a shell script): the run's
+failures and the protections a real subprocess exercises."""
 
 from __future__ import annotations
 
@@ -89,10 +89,10 @@ async def test_a_go_panic_is_invalid_with_the_stopped_message(binary_dir: Path) 
 async def test_a_collector_past_the_time_limit_is_killed_and_reported(binary_dir: Path) -> None:
     binary = write_collector(binary_dir, "0.162.0", "exec sleep 30\n")
 
-    # A hang guard, not a timing assertion (D13b rulings 36, 41): if the
-    # collector past its limit were not killed, the check would hold the
-    # slot's task and `_check` would never return; the generous bound's
-    # expiry is the failure, and nothing asserts how fast the kill was.
+    # A hang guard, not a timing assertion: if the collector past its limit
+    # were not killed, the check would hold the slot's task and `_check`
+    # would never return; the generous bound's expiry is the failure, and
+    # nothing asserts how fast the kill was.
     try:
         result = await asyncio.wait_for(_check(binary, YAML, timeout_seconds=1), timeout=guard.GUARD_SECONDS)
     except TimeoutError:
@@ -249,13 +249,13 @@ async def test_the_texts_requirements_reach_the_answer(binary_dir: Path) -> None
 
 
 # ---------------------------------------------------------------------------
-# D13b ruling 25: a requirement never hides an error the collector echoes
+# A requirement never hides an error the collector echoes
 # ---------------------------------------------------------------------------
 
 
 async def test_a_key_named_like_a_requirement_is_an_error_end_to_end(binary_dir: Path) -> None:
-    """The reviewer's probe: the collector's recorded refusal of a receiver
-    key named `envvar "X" is not set` is an error, never filed as
+    """The collector's recorded refusal of a receiver key named
+    `envvar "X" is not set` is an error, never filed as
     `Set environment variable X` and answered valid."""
     case = json.loads((Path(__file__).parent / "fixtures" / "collector-outputs.json").read_text())["cases"][
         "echo-invalid-key"
@@ -276,7 +276,7 @@ async def test_a_key_named_like_a_requirement_is_an_error_end_to_end(binary_dir:
 
 
 # ---------------------------------------------------------------------------
-# D13b ruling 26: a cancelled check kills and reaps its collector
+# A cancelled check kills and reaps its collector
 # ---------------------------------------------------------------------------
 
 
@@ -311,7 +311,7 @@ def test_a_cancelled_check_kills_and_reaps_its_collector_before_it_lets_go(
     (a server shutdown, a dropped request) must leave no collector behind:
     it is killed and reaped before its temporary file goes and before the
     slot is released, not only on its time limit. Run
-    under a hang guard (ruling 36)."""
+    under a hang guard."""
     pid_file = tmp_path / "collector.pid"
     config_file = tmp_path / "collector.config"
     binary = write_collector(
@@ -358,7 +358,7 @@ def test_a_cancelled_check_kills_and_reaps_its_collector_before_it_lets_go(
 
 
 # ---------------------------------------------------------------------------
-# D13b ruling 38: the child's answer is checked, never trusted
+# The child's answer is checked, never trusted
 # ---------------------------------------------------------------------------
 
 _GOOD_ANSWER = {

@@ -1,9 +1,9 @@
 # otelcol-testing
 
-The collector tester (D14a, ADR 0028). It runs one test of an
-OpenTelemetry Collector configuration: it starts the pinned
-`otelcol-contrib` in a sandbox, feeds it the test's input, holds it for the
-run's duration, and answers what came out. Two things shape it:
+The collector tester. It runs one test of an OpenTelemetry Collector
+configuration: it starts the pinned `otelcol-contrib` in a sandbox, feeds
+it the test's input, holds it for the run's duration, and answers what
+came out. Two things shape it:
 
 - **It is database-free.** It holds no database or storage credentials.
   The platform's API queues runs in its own Postgres. Its dispatcher sends
@@ -73,9 +73,9 @@ as base64.
   run that may have started is never sent twice. When the tester's
   catalogue and the platform's disagree, the run fails with its own code,
   logged at warn: on `version_retired`, "Collector v{x} is no longer
-  offered by the tester. Pick a newer collector version." (D14a Ruling
-  50); on `version_unknown`, "Collector v{x} isn't available in the
-  tester. Pick another collector version." (Ruling 51).
+  offered by the tester. Pick a newer collector version."; on
+  `version_unknown`, "Collector v{x} isn't available in the tester. Pick
+  another collector version."
 
 ## A run
 
@@ -101,8 +101,7 @@ child (`app/run.py`):
      replay** to a sandbox OTLP/HTTP receiver, **filelog pull** of the input
      staged as a file, or **syslog push** over TCP. The `filelog` receiver
      is spelt either way: `file_log` is its name from collector 0.149.0
-     (the catalogue's `renamedTypes`), and both take the pull (D14a Ruling
-     49);
+     (the catalogue's `renamedTypes`), and both take the pull;
    - the fixture-shape advisory, F-001 to F-003 (`app/fixture_shape.py`);
    - the strategy's mutations (`app/yaml_mutations.py`).
 3. **Two checks on the exact text the collector will read**, just before
@@ -139,9 +138,8 @@ finish 3 s. A run's process group is killed 57 + d s after its child
 starts, and a request has 64 + d s in all. At the deadline, or when the
 request is cancelled or its client goes away, the whole group is killed
 (`killpg`) and reaped. The workspace is removed before the slot frees. The
-platform's client waits 74 + d s, and its lease is 174 + d s (since D15a,
-which follows a run's answer with the OTTL evaluator's check of its rules;
-ADR 0028, amended).
+platform's client waits 74 + d s, and its lease is 174 + d s (the platform
+follows a run's answer with the OTTL evaluator's check of its rules).
 
 ## Codes
 
@@ -199,8 +197,6 @@ read.
 
 ## The protections
 
-ADR 0028 records them, and what doesn't protect the service yet.
-
 - **The secret is in a file** (`OTELCOL_TESTING_SECRET_FILE`, at least 32
   bytes; previous secrets in `OTELCOL_TESTING_SECRETS_PREVIOUS_FILE`). A
   token is checked against their SHA-256 digests, in constant time; their
@@ -241,7 +237,7 @@ cluster with kwok, started in the background once the service listens:
   kubectl and kube-apiserver v1.31.6, and etcd v3.5.21. They are listed in
   `kwok/binaries.json` with each one's sha256, fetched and checked by
   `scripts/download-kwok.py`, and baked under `/opt/kwok/v0.7.0/`. All are
-  Apache-2.0 (ADR 0019). kwok's code is never changed.
+  Apache-2.0. kwok's code is never changed.
 - **Its configuration**, `kwok/kwokctl.yaml`, is passed with `-c`: it pins
   Kubernetes v1.31.6, binds 127.0.0.1, names the baked binaries, and gives
   kube-apiserver `advertise-address=127.0.0.1`. Without it, kwokctl retries
@@ -344,11 +340,10 @@ docker run --rm --network none telflo-otelcol-testing-test pytest -m "binary or 
 the validator's lock (`-c ../otelcol-validator/requirements.txt`), so the
 packages both services ship are pinned alike. `requirements-dev.in` is
 compiled to `requirements-dev.txt` the same way. `httpx2` (BSD-3-Clause)
-stands in for `httpx`, whose `certifi` is MPL-2.0 (D14a Preflight ruling
-19).
+stands in for `httpx`, whose `certifi` is MPL-2.0.
 
 These two commands check every runtime package's license against the
-repository's `scripts/license-policy.json` (ADR 0019), and test the check
+repository's `scripts/license-policy.json`, and test the check
 itself:
 
 ```sh
@@ -356,5 +351,5 @@ PYTHON=/path/to/venv/bin/python ./scripts/check-licenses.sh
 PYTHON=/path/to/venv/bin/python ./scripts/check-licenses.test.sh
 ```
 
-The image's base, the collectors, tini and kwok's binaries are ADR 0019's
-reviewed components, pinned by digest or sha256.
+The image's base, the collectors, tini and kwok's binaries are reviewed
+components, pinned by digest or sha256.

@@ -1,5 +1,4 @@
-"""The service's process made non-dumpable (D14a spec decision 5, Preflight
-ruling 4).
+"""The service's process made non-dumpable.
 
 `prctl(PR_SET_DUMPABLE, 0)` makes the kernel refuse another process of the
 same uid (a run's collector, kwok) `ptrace` and the service's

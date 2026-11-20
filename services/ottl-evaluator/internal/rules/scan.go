@@ -1,5 +1,4 @@
-// New in D15a Task 2 (spec decision 8; plan Preflight rulings 5 and 10):
-// linear scans of the output's JSON. One finds the output's shape once per
+// Linear scans of the output's JSON. One finds the output's shape once per
 // request (how many objects it holds, for the OTTL cap; whether it is the
 // tester's `{"records":[…]}` wrapper, and where each record is); the other
 // names the record and the JSON path of each shown match, instead of a line

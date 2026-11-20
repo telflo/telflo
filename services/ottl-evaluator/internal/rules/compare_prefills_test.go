@@ -1,5 +1,4 @@
-// New in D15b Task 5 (decision 4; plan Preflight ruling 10; Ruling 24):
-// every condition Compare's "Create an OTTL rule" writes is one the
+// Every condition Compare's "Create an OTTL rule" writes is one the
 // evaluator accepts, in each record context, and tests exactly its own key
 // and value, comparing numbers as the web's detection does (an int and a
 // double as float64(int) == double; two ints exactly). The fixture,
@@ -47,7 +46,7 @@ func comparePrefills(t *testing.T) []comparePrefill {
 	if err := decoder.Decode(&fixture); err != nil {
 		t.Fatalf("decoding the fixture: %v", err)
 	}
-	// Ruling 10's 7 keys × 6 shapes, and the number and string cases.
+	// 7 keys × 6 shapes, and the number and string cases.
 	if len(fixture.Cases) < 42 {
 		t.Fatalf("the fixture holds %d cases, want at least 42", len(fixture.Cases))
 	}
@@ -55,7 +54,7 @@ func comparePrefills(t *testing.T) []comparePrefill {
 }
 
 // The record context of each signal, as the prefill's context follows the
-// run's signal (decision 6).
+// run's signal.
 var prefillContexts = []struct{ signal, context string }{
 	{"logs", "log"},
 	{"traces", "span"},
