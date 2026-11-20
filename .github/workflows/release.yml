@@ -1,19 +1,18 @@
-# A release, from its annotated tag v<version> on main (docs/releasing.md;
-# D36-2 decisions 59-61, 68, 71, 75-84, 86, 87 and 103-105): the tag checked
-# before anything builds; the five platform images built once for amd64 and
-# arm64 with their attestations; the chart and the Compose archive packaged;
-# the stack smoke (open-source mode), the install from the Compose archive
-# and the packaged chart in kind, each on those exact bytes; only then the
-# same bytes copied to ghcr.io/telflo/telflo (digests kept), pulled back by
-# digest, and a GitHub Release made with the archive, create-secrets.sh and
-# SHA256SUMS.
+# A release, from its annotated tag v<version> on main (docs/releasing.md):
+# the tag checked before anything builds; the five platform images built
+# once for amd64 and arm64 with their attestations; the chart and the
+# Compose archive packaged; the stack smoke (open-source mode), the install
+# from the Compose archive and the packaged chart in kind, each on those
+# exact bytes; only then the same bytes copied to ghcr.io/telflo/telflo
+# (digests kept), pulled back by digest, and a GitHub Release made with the
+# archive, create-secrets.sh and SHA256SUMS.
 #
 # Every `run:` is tool setup, artifact handling or one call of a committed
 # script (scripts/release/rehearse.sh runs the same scripts locally); values
 # reach a script only through `env:`, never `${{ }}` inside `run:`. The
 # three smokes run through steps.sh, their output through
-# scripts/gates/redact.sh (decision 84, Ruling 408).
-# scripts/release/check-workflows.sh holds these rules.
+# scripts/gates/redact.sh. scripts/release/check-workflows.sh holds these
+# rules.
 #
 # There is no workflow_dispatch: a run that stopped part way is resumed with
 # "Re-run failed jobs", which reuses this run's artifacts, so the bytes
@@ -28,22 +27,22 @@ on:
 permissions: {}
 
 # One release at a time, never cancelled part way: two runs can't race
-# between a publish's "is it there?" and its push (Task 5's review, minor 4).
-# A newer run waiting for the group cancels an older waiting one (GitHub's
-# rule): push one release tag at a time (docs/releasing.md).
+# between a publish's "is it there?" and its push. A newer run waiting for
+# the group cancels an older waiting one (GitHub's rule): push one release
+# tag at a time (docs/releasing.md).
 concurrency:
   group: release
   cancel-in-progress: false
 
 jobs:
-  # Refused before anything builds (decision 76): a tree in which gitleaks
-  # finds a secret .gitleaksignore doesn't list; a tag that isn't v<x.y.z>,
-  # isn't annotated, doesn't match charts/telflo/Chart.yaml at its commit,
-  # isn't on main, or whose version is already published; then the collector
-  # artefacts the release points at must exist (decision 86), and the default
-  # collector's image is kept for the smokes. The full history (fetch-depth
-  # 0) brings every tag; one the checkout holds as lightweight is asked of
-  # GitHub's API with this job's read-only token (Ruling 396).
+  # Refused before anything builds: a tree in which gitleaks finds a secret
+  # .gitleaksignore doesn't list; a tag that isn't v<x.y.z>, isn't
+  # annotated, doesn't match charts/telflo/Chart.yaml at its commit, isn't
+  # on main, or whose version is already published; then the collector
+  # artefacts the release points at must exist, and the default collector's
+  # image is kept for the smokes. The full history (fetch-depth 0) brings
+  # every tag; one the checkout holds as lightweight is asked of GitHub's
+  # API with this job's read-only token.
   version:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
@@ -77,8 +76,8 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       # GH_TOKEN (this job's read-only token, this step only): if the checkout
       # holds the tag as a lightweight one, verify-tag.sh asks GitHub's API
-      # whether it is annotated there (Ruling 396), then unsets it before its
-      # registry reads (Ruling 399).
+      # whether it is annotated there, then unsets it before its registry
+      # reads.
       - name: The tag
         id: tag
         env:
@@ -105,8 +104,8 @@ jobs:
           compression-level: 0
           if-no-files-found: error
 
-  # The static gates (decision 96) on the tag's commit. The opamp-server's
-  # pin check reads the public repository at the PIN's tag (0.3.0).
+  # The static gates on the tag's commit. The opamp-server's pin check reads
+  # the public repository at the PIN's tag (0.3.0).
   static:
     needs: version
     runs-on: ubuntu-24.04
@@ -134,8 +133,8 @@ jobs:
       - run: bash scripts/gates/static.sh --work "$RUNNER_TEMP/static"
 
   # One image per job, both processor types (arm64 under QEMU), from the
-  # commit's files only, with SBOM and provenance attestations (decisions 72
-  # and 78), into an OCI archive kept as an artifact.
+  # commit's files only, with SBOM and provenance attestations, into an OCI
+  # archive kept as an artifact.
   build:
     needs: version
     runs-on: ubuntu-24.04
@@ -180,8 +179,8 @@ jobs:
           compression-level: 0
           if-no-files-found: error
 
-  # The chart's package (decision 79), the Compose archive (decision 88),
-  # create-secrets.sh and SHA256SUMS: the release's files, as one artifact.
+  # The chart's package, the Compose archive, create-secrets.sh and
+  # SHA256SUMS: the release's files, as one artifact.
   package:
     needs: version
     runs-on: ubuntu-24.04
@@ -207,9 +206,8 @@ jobs:
           retention-days: 3
           if-no-files-found: error
 
-  # The stack smoke in open-source mode (decision 97) on the amd64 images
-  # taken from the archives (decision 71): load-images.sh names linux/amd64,
-# the runner's platform (Ruling 400).
+  # The stack smoke in open-source mode on the amd64 images taken from the
+  # archives: load-images.sh names linux/amd64, the runner's platform.
   stack-smoke:
     needs: [version, build]
     runs-on: ubuntu-24.04
@@ -253,7 +251,7 @@ jobs:
           VERSION: ${{ needs.version.outputs.version }}
         run: bash scripts/release/steps.sh stack-smoke --version "$VERSION" --work "$RUNNER_TEMP/stack-smoke"
 
-  # The Quick start from the Compose archive, as the README says (decision 98);
+  # The Quick start from the Compose archive, as the README says;
   # its output through redact.sh (steps.sh archive-smoke).
   archive-smoke:
     needs: [version, build, package]
@@ -293,7 +291,7 @@ jobs:
           VERSION: ${{ needs.version.outputs.version }}
         run: bash scripts/release/steps.sh archive-smoke --version "$VERSION" --release "$RUNNER_TEMP/release" --work "$RUNNER_TEMP/archive-smoke"
 
-  # The packaged chart installed into kind with the images loaded (decision 99);
+  # The packaged chart installed into kind with the images loaded;
   # its output through redact.sh (steps.sh kind-smoke).
   kind-smoke:
     needs: [version, build, package]
@@ -344,13 +342,11 @@ jobs:
           VERSION: ${{ needs.version.outputs.version }}
         run: bash scripts/release/steps.sh kind-smoke --version "$VERSION" --release "$RUNNER_TEMP/release" --work "$RUNNER_TEMP/kind-smoke"
 
-  # The publish (decisions 80-82), after every test job passed. The `release`
-  # environment admits only v* tags (the owner's setting). On the Team plan a
-  # private repository can't have required reviewers (Q280, Preflight ruling
-  # 7): until D36-3 makes the repository public and adds the owner as the
-  # environment's reviewer, pushing the tag is the owner's yes to publish.
-  # The only token is this job's GITHUB_TOKEN; Docker's and Helm's logins go
-  # to files under the runner's temporary folder, never the runner's home.
+  # The publish, after every test job passed. The `release` environment
+  # admits only v* tags (a repository setting); pushing the tag is the
+  # maintainers' go-ahead to publish. The only token is this job's
+  # GITHUB_TOKEN; Docker's and Helm's logins go to files under the runner's
+  # temporary folder, never the runner's home.
   publish:
     needs: [version, static, build, package, stack-smoke, archive-smoke, kind-smoke]
     runs-on: ubuntu-24.04
@@ -360,7 +356,7 @@ jobs:
       contents: write # the GitHub Release
       packages: write # the images and the chart, in GHCR
     env:
-      # crane is tools.sh's checked one only (Rulings 391 and 392).
+      # crane is tools.sh's checked one only.
       TELFLO_CRANE: ""
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -419,7 +415,7 @@ jobs:
           HELM_REGISTRY_CONFIG: ${{ runner.temp }}/helm/registry/config.json
         run: bash scripts/release/verify-collector-artifacts.sh
       # The tag asked of GitHub's API once more first: still the annotated tag
-      # of the commit the version job checked (Ruling 399).
+      # of the commit the version job checked.
       - name: The GitHub Release (last)
         env:
           DOCKER_CONFIG: ${{ runner.temp }}/docker

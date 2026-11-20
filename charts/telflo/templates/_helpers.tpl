@@ -207,7 +207,7 @@ and args) from the variables listed before it, and reads "$$" as one "$".
 So every plain env value taken from values goes through these: each "$"
 doubled, the container sees the value exactly as given, and no value can
 name another variable (a secret's, say). envEscape is the bare text,
-envLiteral the quoted value. (D26's.)
+envLiteral the quoted value.
 */}}
 {{- define "telflo.envEscape" -}}
 {{- toString . | replace "$" "$$" }}
@@ -217,13 +217,12 @@ envLiteral the quoted value. (D26's.)
 {{- end }}
 
 {{/*
-The site's variables (D36-1 decision 27), the same eleven on the API and the
-web app, from site.* (every one rendered, so both pods always agree, an
-empty value included). Each value is literal (envLiteral). The guards
-refuse a value of another type (a null one included, Ruling 347); even so,
-nothing here renders Go's "<nil>": a missing string is "", a missing
-boolean "false". Pre-indented by the caller: nindent 12 under a container's
-env.
+The site's variables, the same eleven on the API and the web app, from
+site.* (every one rendered, so both pods always agree, an empty value
+included). Each value is literal (envLiteral). The guards refuse a value of
+another type (a null one included); even so, nothing here renders Go's
+"<nil>": a missing string is "", a missing boolean "false". Pre-indented by
+the caller: nindent 12 under a container's env.
 */}}
 {{- define "telflo.siteEnv" -}}
 {{- $site := ternary .Values.site dict (kindIs "map" .Values.site) -}}
@@ -357,12 +356,12 @@ naming the value's path, never its value.
 {{- end }}
 {{- $_ = required "opamp-server.server.publicUrl is required: the agent endpoint's URL as collectors reach it, such as https://opamp.example.com/opamp/api/v1" (dig "server" "publicUrl" "" $o) }}
 {{- /*
-The agent URL (Ruling 338): the API hands it to every collector and its
-start-up error would quote it, so it has the contracts' agent-endpoint
-shape (AGENT_ENDPOINT_PATTERN, TELFLO_OPAMP_AGENT_PUBLIC_URL's rule): http,
-https, ws or wss, a host or an IP address, an optional port, a path; no
-user name, password, query or fragment. (The opamp-server chart's own
-schema refuses a scheme other than http or https first, quoting it.)
+The agent URL: the API hands it to every collector and its start-up error
+would quote it, so it has the contracts' agent-endpoint shape
+(AGENT_ENDPOINT_PATTERN, TELFLO_OPAMP_AGENT_PUBLIC_URL's rule): http, https,
+ws or wss, a host or an IP address, an optional port, a path; no user name,
+password, query or fragment. (The opamp-server chart's own schema refuses a
+scheme other than http or https first, quoting it.)
 */}}
 {{- if not (regexMatch "^(https?|wss?)://([A-Za-z0-9]([A-Za-z0-9.-]*[A-Za-z0-9])?|\\[[0-9A-Fa-f:.]+\\])(:[0-9]{1,5})?(/[A-Za-z0-9._~%/+-]*)?$" (toString (dig "server" "publicUrl" "" $o))) }}
 {{- fail "opamp-server.server.publicUrl must be an http, https, ws or wss URL with a host, an optional port and a path of letters, digits and ._~%/+- (no user name, password, query or fragment)" }}
@@ -386,20 +385,18 @@ colons at least, so a host:port never passes as one), as nodemailer takes it.
 {{- end }}
 
 {{- /*
-The site (D36-1 decision 27): the rules the API's settings and the web's
-loader refuse at start, refused here first with fixed words naming the
-value, never quoting it. A URL is an https URL with a host (letters, digits,
-. and -), an optional port and an optional path, query or fragment of URL
-characters, or a path starting with a single / (the contracts'
-SITE_URL_PATTERN).
+The site: the rules the API's settings and the web's loader refuse at start,
+refused here first with fixed words naming the value, never quoting it. A
+URL is an https URL with a host (letters, digits, . and -), an optional port
+and an optional path, query or fragment of URL characters, or a path
+starting with a single / (the contracts' SITE_URL_PATTERN).
 */}}
 {{- /*
-Each value of its own type (Rulings 347 and 351): site and site.terms maps
-(checked before any field is read), a null value (which Helm drops before
-the schema sees it) or one of another type refused, never rendered (Go
-would print "<nil>"), and the API would refuse it only at start. A null
-site or site.terms is an empty map here, its values then refused one by
-one.
+Each value of its own type: site and site.terms maps (checked before any
+field is read), a null value (which Helm drops before the schema sees it) or
+one of another type refused, never rendered (Go would print "<nil>"), and
+the API would refuse it only at start. A null site or site.terms is an empty
+map here, its values then refused one by one.
 */}}
 {{- if not (or (kindIs "invalid" $v.site) (kindIs "map" $v.site)) }}
 {{- fail "site must be a map of the site's values" }}
@@ -521,20 +518,19 @@ user and password).
 {{- end }}
 
 {{- /*
-gateway.extraRoutes (D36-1 decision 24, Preflight ruling 15). The schema's
-checks repeated (a render with --skip-schema-validation must not write
-anything else into nginx's configuration; a port a number, never text),
-no empty, . or .. segment in a path (Ruling 351: nginx matches the
-normalised path, so such a route would only look like a hole), then the
-shadow guard: no route
-may take a path the platform answers. React Router matches without case,
-so the comparison is in lower case: a prefix / is refused; and for each
-platform root R (telflo.platformRoots), a path equal to /R,
-starting /R/ (its pages) or /R. (its data requests, /login.data; a file's
-name), or a prefix route that /R starts with (/ap would take /api and
-/app). An exact /, /robots.txt and /home/ are allowed. Two routes of the
-same match and path are refused too (nginx wouldn't start). Fixed words,
-naming the entry's index and the platform's root, never the value.
+gateway.extraRoutes. The schema's checks repeated (a render with
+--skip-schema-validation must not write anything else into nginx's
+configuration; a port a number, never text), no empty, . or .. segment in a
+path (nginx matches the normalised path, so such a route would only look
+like a hole), then the shadow guard: no route may take a path the platform
+answers. React Router matches without case, so the comparison is in lower
+case: a prefix / is refused; and for each platform root R
+(telflo.platformRoots), a path equal to /R, starting /R/ (its pages) or /R.
+(its data requests, /login.data; a file's name), or a prefix route that /R
+starts with (/ap would take /api and /app). An exact /, /robots.txt and
+/home/ are allowed. Two routes of the same match and path are refused too
+(nginx wouldn't start). Fixed words, naming the entry's index and the
+platform's root, never the value.
 */}}
 {{- $routes := $v.gateway.extraRoutes }}
 {{- if not (or (kindIs "invalid" $routes) (kindIs "slice" $routes)) }}
@@ -604,11 +600,11 @@ equal to those sources.
 {{- define "telflo.platformRoots" -}}__manifest _root.data accept-invitation api app assets check-your-email cli-auth docs editor favicon.ico fleet-management forgot-password library library-links login org-admin playground product-admin public-editor quick-deploy register reset-password schemas settings telflo-logo-dark.svg telflo-logo-full.svg variables verify-email{{- end }}
 
 {{/*
-gateway.extraRoutes as nginx locations (Preflight ruling 15), the file
-default.conf includes (/etc/nginx/telflo/extra-routes.conf), inside its
-server block: each `location = <path>` (exact) or `location ^~ <path>`
-(prefix: nginx's regex locations never take its paths), logging crit and
-worse only (an upstream's failure would quote the request line), proxied to
+gateway.extraRoutes as nginx locations, the file default.conf includes
+(/etc/nginx/telflo/extra-routes.conf), inside its server block: each
+`location = <path>` (exact) or `location ^~ <path>` (prefix: nginx's regex
+locations never take its paths), logging crit and worse only (an upstream's
+failure would quote the request line), proxied to
 <service>.<namespace>.svc:<port> with no URI (the request's own passes
 through). Empty when the list is. The guards have checked every value.
 */}}

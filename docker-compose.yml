@@ -2,19 +2,18 @@
 # it publishes is on the host's loopback. To install Telflo, use a release's
 # Compose install (deploy/compose/, docs/compose.md).
 #
-# The whole product, built from source (ADR 0017), but for the opamp-server,
-# which runs its published release, pinned by version and digest
-# (vendor/opamp-server/PIN, D26 decision 37). To run a change to the
-# opamp-server before it is released, add docker-compose.opamp-server-dev.yml,
-# which builds it from a sibling checkout (docs/conventions/opamp-server.md).
+# The whole product, built from source, but for the opamp-server, which runs
+# its published release, pinned by version and digest
+# (vendor/opamp-server/PIN). To run a change to the opamp-server before it is
+# released, add docker-compose.opamp-server-dev.yml, which builds it from a
+# sibling checkout (docs/conventions/opamp-server.md).
 #
 #   docker compose up --build --wait     everything, at http://localhost:50080,
 #                                        the API's files on its volume
 #   TELFLO_FILE_STORE=s3 docker compose --profile s3 up --build -d
 #                                        the same, the API's files in the
 #                                        object store (object-store,
-#                                        SeaweedFS, D23-1 spec decisions 30
-#                                        and 31) instead. A plain `up -d`
+#                                        SeaweedFS) instead. A plain `up -d`
 #                                        afterwards recreates the API on the
 #                                        volume, and a plain `down -v`
 #                                        deletes the object store's volume
@@ -30,74 +29,68 @@
 #                                        running the API and web natively
 #                                        with hot reload
 #
-# Kept evergreen: every component ported from the previous codebase is added
-# here by the deliverable that ports it, and CI's `stack` job builds and
-# smoke-tests this file on every change (scripts/smoke-test-stack.sh). The
-# opamp-server's image is public: the first `up` pulls it, with no login.
+# Kept evergreen: every component is added here, and CI's `stack` job builds
+# and smoke-tests this file on every change (scripts/smoke-test-stack.sh).
+# The opamp-server's image is public: the first `up` pulls it, with no login.
 # This file is the development stack; the self-host Compose install is a
-# separate file, deploy/compose/compose.yaml (D36-2: the published images,
-# secrets setup.sh generates, and Mailpit only under its `mailpit` profile,
-# for trying Telflo; docs/compose.md).
+# separate file, deploy/compose/compose.yaml (the published images, secrets
+# setup.sh generates, and Mailpit only under its `mailpit` profile, for
+# trying Telflo; docs/compose.md).
 #
-# Host ports are deliberately project-specific (55432/51025/58025/50080)
-# rather than the services' standard ports, to avoid colliding with a
-# developer's own Postgres, SMTP or web listener already bound to the
-# standard ports on their machine. Container ports stay standard. The
-# opamp-server's management API is published on 51235, its own port, on
-# the host's 127.0.0.1 only, for development only (D11a spec decisions 7
-# and 16), its agent endpoint, where collectors poll, on 51234 the same way
-# (D16a decisions 4 and 20), the collector validator's API on 51236 the
-# same way (D13b spec decision 11), the collector tester's on 51237, through its forwarder
-# (D14a Preflight ruling 4), the OTTL evaluator's on 51238, through its
-# own forwarder (D15a Preflight ruling 13), and the object store's S3 port
-# on 51240 the same way (D23-1 spec decision 30; 51239 is the stack smoke's
-# second opamp-server replica), its other ports unpublished.
+# Host ports are deliberately project-specific (55432/51025/58025/50080) rather
+# than the services' standard ports, to avoid colliding with a developer's own
+# Postgres, SMTP or web listener already bound to the standard ports on their
+# machine. Container ports stay standard. The opamp-server's management API is
+# published on 51235, its own port, on the host's 127.0.0.1 only, for
+# development only, its agent endpoint, where collectors poll, on 51234 the
+# same way, the collector validator's API on 51236 the same way, the collector
+# tester's on 51237, through its forwarder, the OTTL evaluator's on 51238,
+# through its own forwarder, and the object store's S3 port on 51240 the same
+# way (51239 is the stack smoke's second opamp-server replica), its other ports
+# unpublished.
 
-# The development stack's project name (D36-2 decision 109): the checkout's
-# folder is `telflo`, which Compose would otherwise take as the project, the
-# same as the self-host install's `name: telflo`, and two stacks would share
-# volumes. `-p` or COMPOSE_PROJECT_NAME still override it (the throwaway
-# stacks' own names).
+# The development stack's project name: the checkout's folder is `telflo`,
+# which Compose would otherwise take as the project, the same as the
+# self-host install's `name: telflo`, and two stacks would share volumes.
+# `-p` or COMPOSE_PROJECT_NAME still override it (the throwaway stacks' own
+# names).
 name: telflo-dev
 
-# The collector tester's shared secret (D14a spec decision 30), development
-# only. The tester reads it from docker/otelcol-testing/development-secret
-# (the `otelcol_testing_secret` secret below), never from its environment;
-# the API, which keeps it in its environment (Preflight ruling 4), takes it
-# from this anchor (TELFLO_OTELCOL_TESTING_SECRET below). Defined before the
-# API's settings, which name it. The file's text and this value must stay
-# the same: apps/api/src/otelcol-testing/development-secret.test.ts checks
-# them, and .env.example's.
+# The collector tester's shared secret, development only. The tester reads
+# it from docker/otelcol-testing/development-secret (the
+# `otelcol_testing_secret` secret below), never from its environment; the
+# API, which keeps it in its environment, takes it from this anchor
+# (TELFLO_OTELCOL_TESTING_SECRET below). Defined before the API's settings,
+# which name it. The file's text and this value must stay the same:
+# apps/api/src/otelcol-testing/development-secret.test.ts checks them, and
+# .env.example's.
 x-otelcol-testing-secret: &otelcol-testing-secret development-only-otelcol-testing-secret-not-for-production
 
-# The OTTL evaluator's shared secret (D15a Preflight ruling 12), development
-# only, as the tester's: the evaluator reads it from
-# docker/ottl-evaluator/development-secret (the `ottl_evaluator_secret`
-# secret below), never from its environment; the API's
-# TELFLO_OTTL_EVALUATOR_SECRET (its settings, D15a Task 5) takes it from this
-# anchor. The file's text and this value must stay the same, and
-# .env.example's: apps/api/src/ottl-evaluator/development-secret.test.ts
-# checks them.
+# The OTTL evaluator's shared secret, development only, as the tester's: the
+# evaluator reads it from docker/ottl-evaluator/development-secret (the
+# `ottl_evaluator_secret` secret below), never from its environment; the API's
+# TELFLO_OTTL_EVALUATOR_SECRET (its settings) takes it from this anchor. The
+# file's text and this value must stay the same, and .env.example's:
+# apps/api/src/ottl-evaluator/development-secret.test.ts checks them.
 x-ottl-evaluator-secret: &ottl-evaluator-secret development-only-ottl-evaluator-secret-not-for-production
 
-# The object store's keys (D23-1 spec decisions 30 and 34), development
-# only: they unlock only object-store below, a local SeaweedFS
-# container, never a real bucket. object-store makes them its admin
-# identity, and the API's AWS SDK reads the same two from its environment
-# (AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY below), so the two can't
-# drift. Literal values, never a developer's own AWS_* variables. The same
-# as .env.example's TELFLO_TEST_S3_* values, which `npm run dev:services`'
-# object store serves the API's tests with.
+# The object store's keys, development only: they unlock only object-store
+# below, a local SeaweedFS container, never a real bucket. object-store
+# makes them its admin identity, and the API's AWS SDK reads the same two
+# from its environment (AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY
+# below), so the two can't drift. Literal values, never a developer's own
+# AWS_* variables. The same as .env.example's TELFLO_TEST_S3_* values,
+# which `npm run dev:services`' object store serves the API's tests with.
 x-object-store-access-key: &object-store-access-key telflo-development-only-object-store-key
 x-object-store-secret-key: &object-store-secret-key telflo-development-only-object-store-secret-not-for-production
 
 # The API's settings. The values are development-only: fixed database
 # passwords and a cleartext mail relay.
 x-telflo-api-environment: &telflo-api-environment
-  # The API's own login role, which row-level security constrains (D5
-  # decision 1); migrate creates it. Its password matches .env.example's,
-  # because local development shares this Postgres server and provisioning
-  # resets the server-wide role's password.
+  # The API's own login role, which row-level security constrains; migrate
+  # creates it. Its password matches .env.example's, because local
+  # development shares this Postgres server and provisioning resets the
+  # server-wide role's password.
   TELFLO_DATABASE_URL: postgresql://telflo_platform:telflo-api-local@db:5432/telflo_platform
   TELFLO_API_PORT: "8080"
   TELFLO_PUBLIC_WEB_URL: http://localhost:50080
@@ -108,8 +101,8 @@ x-telflo-api-environment: &telflo-api-environment
   # mailpit is not a loopback host, so the SMTP adapter's cleartext
   # interlock must be opened explicitly. Never set this against a real relay.
   TELFLO_SMTP_ALLOW_INSECURE: "true"
-  # Mailpit takes plain SMTP (D36-1 decision 30: development sets none; the
-  # default, starttls, is a real relay's).
+  # Mailpit takes plain SMTP (development sets none; the default, starttls, is
+  # a real relay's).
   TELFLO_SMTP_TLS: none
   TELFLO_VERIFICATION_TOKEN_TTL_HOURS: "24"
   # Development only, like everything here: a fixed, public signing secret.
@@ -122,16 +115,16 @@ x-telflo-api-environment: &telflo-api-environment
   # Without this, every user would share the gateway's address and one
   # per-IP rate-limit budget.
   TELFLO_TRUST_PROXY_HOPS: "1"
-  # Sign in with Google (D2c): optional, passed through from the env file
+  # Sign in with Google: optional, passed through from the env file
   # compose reads, so a developer's own client reaches the stack. Unset (as
   # in CI), Google is off. Its redirect URI here is on port 50080.
   TELFLO_OIDC_GOOGLE_CLIENT_ID: ${TELFLO_OIDC_GOOGLE_CLIENT_ID:-}
   TELFLO_OIDC_GOOGLE_CLIENT_SECRET: ${TELFLO_OIDC_GOOGLE_CLIENT_SECRET:-}
   TELFLO_OIDC_GOOGLE_ISSUER: ${TELFLO_OIDC_GOOGLE_ISSUER:-}
-  # The site's switches and links (D36-1 decision 27; Preflight ruling 19),
-  # the same on web: the open source's defaults (Q251) unless the
-  # environment compose reads sets one (the stack smoke sets the SaaS's).
-  # TELFLO_DOCS_URL without the colon: set empty, it hides the docs links.
+  # The site's switches and links, the same on web: the open source's
+  # defaults unless the environment compose reads sets one (the stack
+  # smoke sets the SaaS's). TELFLO_DOCS_URL without the colon: set empty,
+  # it hides the docs links.
   TELFLO_REGISTRATION: ${TELFLO_REGISTRATION:-invite-only}
   TELFLO_PLAYGROUND: ${TELFLO_PLAYGROUND:-false}
   TELFLO_ANONYMOUS_VALIDATE: ${TELFLO_ANONYMOUS_VALIDATE:-false}
@@ -145,29 +138,27 @@ x-telflo-api-environment: &telflo-api-environment
   TELFLO_COOKIE_POLICY_URL: ${TELFLO_COOKIE_POLICY_URL:-}
   # Where the sales inquiries go, required while TELFLO_SALES_INQUIRY is true.
   TELFLO_SALES_INQUIRY_TO: ${TELFLO_SALES_INQUIRY_TO:-}
-  # The opamp-server's management API (D11a spec decision 12), reached over
-  # the compose network. The secret is development-only, like everything
-  # here, the same as .env.example's; opamp-server reads the same
-  # value through the anchor, so the two can't drift.
+  # The opamp-server's management API, reached over the compose network. The
+  # secret is development-only, like everything here, the same as
+  # .env.example's; opamp-server reads the same value through the anchor, so
+  # the two can't drift.
   TELFLO_OPAMP_MANAGEMENT_URL: http://opamp-server:51235
   TELFLO_OPAMP_MANAGEMENT_SECRET: &opamp-management-secret development-only-opamp-management-secret-not-for-production
-  # The collector validator (D13b spec decision 12), reached over the compose
-  # network, its secret shared with otelcol-validator through the
-  # anchor in the same way. Development-only. Both are required (D13b
-  # decision 12).
+  # The collector validator, reached over the compose network, its secret
+  # shared with otelcol-validator through the anchor in the same way.
+  # Development-only. Both are required.
   TELFLO_OTELCOL_VALIDATOR_URL: http://otelcol-validator:8001
   TELFLO_OTELCOL_VALIDATOR_SECRET: &otelcol-validator-secret development-only-otelcol-validator-secret-not-for-production
-  # The file store's root (D14a decision 2): api's `file-store`
-  # volume, mounted here. The image creates the directory and gives it to
-  # `node`, so a new volume starts owned by the API's user. Required on the
-  # local disk; ignored on S3.
+  # The file store's root: api's `file-store` volume, mounted here. The
+  # image creates the directory and gives it to `node`, so a new volume
+  # starts owned by the API's user. Required on the local disk; ignored on
+  # S3.
   TELFLO_FILE_STORE_ROOT: /var/lib/telflo/file-store
-  # Which file store (D23-1 spec decision 31): the volume above unless the
-  # environment compose reads sets TELFLO_FILE_STORE=s3, then the profile
-  # s3's object-store, over its own network, with the keys above. The
-  # S3 values are ignored on the local disk. Run on S3 with
-  # `TELFLO_FILE_STORE=s3 docker compose --profile s3 up --build -d` (an image
-  # built before D23-1 ignores TELFLO_FILE_STORE).
+  # Which file store: the volume above unless the environment compose reads
+  # sets TELFLO_FILE_STORE=s3, then the profile s3's object-store, over its
+  # own network, with the keys above. The S3 values are ignored on the local
+  # disk. Run on S3 with
+  # `TELFLO_FILE_STORE=s3 docker compose --profile s3 up --build -d`.
   TELFLO_FILE_STORE: ${TELFLO_FILE_STORE:-local}
   TELFLO_FILE_STORE_BUCKET: telflo-files
   TELFLO_FILE_STORE_S3_REGION: us-east-1
@@ -175,51 +166,47 @@ x-telflo-api-environment: &telflo-api-environment
   TELFLO_FILE_STORE_S3_FORCE_PATH_STYLE: "true"
   AWS_ACCESS_KEY_ID: *object-store-access-key
   AWS_SECRET_ACCESS_KEY: *object-store-secret-key
-  # The collector tester (D14a spec decision 30), which the API calls
-  # directly on the tester's internal network (Preflight ruling 21), its
-  # secret the anchor above, shared with otelcol-testing's secret
-  # file. Development-only. Both are required.
+  # The collector tester, which the API calls directly on the tester's
+  # internal network, its secret the anchor above, shared with
+  # otelcol-testing's secret file. Development-only. Both are required.
   TELFLO_OTELCOL_TESTING_URL: http://otelcol-testing:8002
   TELFLO_OTELCOL_TESTING_SECRET: *otelcol-testing-secret
   # At most 4 runs at once across the API's processes, the tester's own cap;
-  # waiting runs fail once the tester has been down 10 minutes (decisions 1,
-  # 12 and 30). Both optional: these are their defaults.
+  # waiting runs fail once the tester has been down 10 minutes. Both optional:
+  # these are their defaults.
   TELFLO_TEST_RUNS_PER_TESTER: "4"
   TELFLO_TESTING_DOWN_FAIL_AFTER_SECONDS: "600"
-  # The OTTL evaluator (D15a spec detail 26), which the API calls directly on
-  # the evaluator's own internal network (Preflight ruling 13), its secret
-  # the anchor above, shared with ottl-evaluator's secret file.
-  # Development-only. Both are required.
+  # The OTTL evaluator, which the API calls directly on the evaluator's own
+  # internal network, its secret the anchor above, shared with
+  # ottl-evaluator's secret file. Development-only. Both are required.
   TELFLO_OTTL_EVALUATOR_URL: http://ottl-evaluator:8003
   TELFLO_OTTL_EVALUATOR_SECRET: *ottl-evaluator-secret
-  # Installing collectors (D17c-1 decision 34, Preflight ruling 9). The agent
-  # endpoint written into install commands and bundles is the opamp-server's
-  # own OPAMP_SERVER_URL expression, so one value feeds both; plain http in
-  # development, hence insecure connections allowed. For a VM on your
-  # network, set OPAMP_SERVER_URL to this machine's LAN address (and publish
-  # the agent port beyond 127.0.0.1). The templates are api's
-  # read-only mount of the repository's install-templates/, so an edit
-  # applies at the next render.
+  # Installing collectors. The agent endpoint written into install commands
+  # and bundles is the opamp-server's own OPAMP_SERVER_URL expression, so
+  # one value feeds both; plain http in development, hence insecure
+  # connections allowed. For a VM on your network, set OPAMP_SERVER_URL to
+  # this machine's LAN address (and publish the agent port beyond
+  # 127.0.0.1). The templates are api's read-only mount of the repository's
+  # install-templates/, so an edit applies at the next render.
   TELFLO_OPAMP_AGENT_PUBLIC_URL: ${OPAMP_SERVER_URL:-http://host.docker.internal:51234/opamp/api/v1}
   TELFLO_COLLECTOR_IMAGE_REPOSITORY: ghcr.io/telflo/telflo/collector
   TELFLO_OPAMP_ALLOW_INSECURE_CONNECTIONS: "true"
   TELFLO_INSTALL_TEMPLATES_DIR: /etc/telflo/install-templates
-  # Quick-deploy links (D17c-2 decision 24, Preflight rulings 7 and 8). The
-  # API's base URL as a host running a Quick Deploy command reaches it: the
-  # gateway's origin, which a container on this machine reaches at
-  # host.docker.internal (localhost would be its own loopback). For a VM on
-  # your network, set TELFLO_PUBLIC_API_URL to this machine's LAN address (and
-  # publish the gateway's port beyond 127.0.0.1). The key seals the values
-  # typed with a link: a development-only value, public in the repository, the
-  # same as .env.example's; every real deployment sets its own (openssl rand
-  # -base64 32).
+  # Quick-deploy links. The API's base URL as a host running a Quick Deploy
+  # command reaches it: the gateway's origin, which a container on this
+  # machine reaches at host.docker.internal (localhost would be its own
+  # loopback). For a VM on your network, set TELFLO_PUBLIC_API_URL to this
+  # machine's LAN address (and publish the gateway's port beyond 127.0.0.1).
+  # The key seals the values typed with a link: a development-only value,
+  # public in the repository, the same as .env.example's; every real
+  # deployment sets its own (openssl rand -base64 32).
   TELFLO_PUBLIC_API_URL: ${TELFLO_PUBLIC_API_URL:-http://host.docker.internal:50080}
   TELFLO_QUICK_DEPLOY_ENCRYPTION_KEY: ZGV2ZWxvcG1lbnQtb25seS1xZC1rZXktbm90LXByb2Q=
-  # The library's Copy curl links (D23-2 decision 46): the key that signs
-  # them (HMAC-SHA256, at least 32 bytes), a development-only value, public in
-  # the repository, the same as .env.example's; every real deployment sets
-  # its own (openssl rand -base64 32), and its old keys in
-  # TELFLO_LIBRARY_LINK_SIGNING_KEYS_PREVIOUS during a rotation.
+  # The library's Copy curl links: the key that signs them (HMAC-SHA256, at
+  # least 32 bytes), a development-only value, public in the repository, the
+  # same as .env.example's; every real deployment sets its own (openssl rand
+  # -base64 32), and its old keys in TELFLO_LIBRARY_LINK_SIGNING_KEYS_PREVIOUS
+  # during a rotation.
   TELFLO_LIBRARY_LINK_SIGNING_KEY: telflo-development-only-library-link-signing-key
 
 services:
@@ -250,9 +237,8 @@ services:
   # Captures every outbound email in development. SMTP on 51025; the web UI and
   # the REST API used by integration tests are on 58025.
   mailpit:
-    # Pinned to match .github/workflows/ci.yml — see finding 10 of the D1
-    # final review: :latest in one place and a pin in the other is exactly
-    # the drift that finding exists to prevent.
+    # Pinned to match .github/workflows/ci.yml: :latest in one place and a
+    # pin in the other would drift apart.
     image: axllent/mailpit:v1.31
     ports:
       - "127.0.0.1:51025:1025"
@@ -266,12 +252,12 @@ services:
   # so it never starts against an unmigrated schema or a missing role. Only
   # this service knows the owner's URL.
   migrate:
-    # The repository's root is the build context (D13a Preflight ruling 6):
-    # this image also carries catalog/, the collector catalogue it syncs.
+    # The repository's root is the build context: this image also carries
+    # catalog/, the collector catalogue it syncs.
     build: { context: ., dockerfile: telflo-core/Dockerfile, target: api }
     image: telflo-api:dev
-    # The API image's compiled migrate (D36-1 decisions 43 and 45), as the
-    # chart's migrate init container runs it: node directly, never npm.
+    # The API image's compiled migrate, as the chart's migrate init container
+    # runs it: node directly, never npm.
     working_dir: /app/packages/db
     command: ["node", "dist/migrate.js"]
     environment:
@@ -281,20 +267,19 @@ services:
       db: { condition: service_healthy }
     restart: "no"
 
-  # The object store (D23-1 spec decision 30, Preflight ruling 16): SeaweedFS
-  # `mini`, an S3 server, only under the profile s3 (`--profile s3`, or named,
-  # as `npm run dev:services` does), so a plain `up` leaves it out. Pinned by
-  # tag and index digest (4.48, Apache-2.0). Its bucket telflo-files is made
-  # at start; a PUT to any other bucket is refused, never creates one
-  # (-s3.autoCreateBucket=false), and its telemetry, WebDAV, admin UI, Iceberg
-  # and Lance ports are off. Its keys are the development-only anchors above,
-  # its admin identity; every S3 request is signed with them. Its filer,
-  # master and volume ports answer without credentials, so it sits only on
-  # its own network, which only api and file-store-ready join,
-  # and only its S3 port is published, on the host's loopback. Its log names
-  # the access key id (never the secret): no gate, report or wait prints it.
-  # Nothing may depend on it: a plain `up -d` would then fail (Preflight
-  # ruling 15), so the API waits through file-store-ready below.
+  # The object store: SeaweedFS `mini`, an S3 server, only under the profile s3
+  # (`--profile s3`, or named, as `npm run dev:services` does), so a plain `up`
+  # leaves it out. Pinned by tag and index digest (4.48, Apache-2.0). Its
+  # bucket telflo-files is made at start; a PUT to any other bucket is refused,
+  # never creates one (-s3.autoCreateBucket=false), and its telemetry, WebDAV,
+  # admin UI, Iceberg and Lance ports are off. Its keys are the
+  # development-only anchors above, its admin identity; every S3 request is
+  # signed with them. Its filer, master and volume ports answer without
+  # credentials, so it sits only on its own network, which only api and
+  # file-store-ready join, and only its S3 port is published, on the host's
+  # loopback. Its log names the access key id (never the secret): no gate,
+  # report or wait prints it. Nothing may depend on it: a plain `up -d` would
+  # then fail, so the API waits through file-store-ready below.
   object-store:
     image: chrislusf/seaweedfs:4.48@sha256:4e61d15fd35994cb1e43e1e553dff106794841fd9a99ade2fc8c8bfce4d7872d
     profiles: [s3]
@@ -321,14 +306,14 @@ services:
       timeout: 5s
       retries: 20
 
-  # One-shot (D23-1 spec decision 31, Preflight ruling 15): what api
-  # waits for, since nothing may depend on the profiled object store. It
-  # exits 0 at once unless TELFLO_FILE_STORE is s3 (the API's own value, from
-  # the same environment); on s3 it asks the object store's filer for the
-  # bucket, at most 60 times a second apart, exits 0 once it answers 200, or
-  # exits 1 saying to start the stack with the profile. The API's image, for
-  # its node; built as migrate's is, so a fresh machine builds it
-  # rather than pulling it. On the object store's network only.
+  # One-shot: what api waits for, since nothing may depend on the profiled
+  # object store. It exits 0 at once unless TELFLO_FILE_STORE is s3 (the
+  # API's own value, from the same environment); on s3 it asks the object
+  # store's filer for the bucket, at most 60 times a second apart, exits 0
+  # once it answers 200, or exits 1 saying to start the stack with the
+  # profile. The API's image, for its node; built as migrate's is, so a fresh
+  # machine builds it rather than pulling it. On the object store's network
+  # only.
   file-store-ready:
     build: { context: ., dockerfile: telflo-core/Dockerfile, target: api }
     image: telflo-api:dev
@@ -360,20 +345,19 @@ services:
     build: { context: ., dockerfile: telflo-core/Dockerfile, target: api }
     environment: *telflo-api-environment
     volumes:
-      # Test inputs and runs' files (D14a decisions 2 and 3), kept across
-      # restarts as the database is. TELFLO_FILE_STORE_ROOT names it.
+      # Test inputs and runs' files, kept across restarts as the database is.
+      # TELFLO_FILE_STORE_ROOT names it.
       - file-store:/var/lib/telflo/file-store
-      # The install templates (D17c-1 decision 35): the repository's set
-      # over the image's copy, read-only, as an operator's directory would
-      # be (TELFLO_INSTALL_TEMPLATES_DIR names it).
+      # The install templates: the repository's set over the image's copy,
+      # read-only, as an operator's directory would be
+      # (TELFLO_INSTALL_TEMPLATES_DIR names it).
       - ./install-templates:/etc/telflo/install-templates:ro
     # The default network (the database, the opamp-server, the validator, the
     # gateway's way in), the collector tester's internal one, the OTTL
-    # evaluator's and the object store's: the API calls the tester (D14a
-    # Preflight ruling 21), the evaluator (D15a Preflight ruling 13) and, on
-    # S3, the object store (D23-1 spec decision 30) directly. telflo-api is
-    # the gateway's upstream name: docker/gateway/default.conf is the
-    # chart's, byte for byte, which names the chart's Services.
+    # evaluator's and the object store's: the API calls the tester, the
+    # evaluator and, on S3, the object store directly. telflo-api is the
+    # gateway's upstream name: docker/gateway/default.conf is the chart's,
+    # byte for byte, which names the chart's Services.
     networks:
       default: { aliases: [telflo-api] }
       otelcol-testing: {}
@@ -383,22 +367,22 @@ services:
       migrate: { condition: service_completed_successfully }
       # On S3, the object store's bucket answers before the API starts (its
       # startup check refuses an unready store); on the local disk this
-      # exits at once (D23-1 spec decision 31).
+      # exits at once.
       file-store-ready: { condition: service_completed_successfully }
       mailpit: { condition: service_started }
-      # The API calls the opamp-server to register organizations (D11a
-      # decision 20) and on every publish (D11b), and requires its settings:
-      # it starts only once the server it is configured for answers.
+      # The API calls the opamp-server to register organizations and on every
+      # publish, and requires its settings: it starts only once the server it
+      # is configured for answers.
       opamp-server: { condition: service_healthy }
-      # The API checks a version's text with the validator (D13b spec
-      # decisions 12 and 17), so it starts once the validator answers too.
+      # The API checks a version's text with the validator, so it starts once
+      # the validator answers too.
       otelcol-validator: { condition: service_healthy }
-      # The API sends test runs to the tester (D14a). Started, not healthy
-      # (Preflight ruling 4): kwok takes a few seconds, and the health
-      # monitor (decision 12) copes with a tester that is starting or down.
+      # The API sends test runs to the tester. Started, not healthy: kwok takes
+      # a few seconds, and the health monitor copes with a tester that is
+      # starting or down.
       otelcol-testing: { condition: service_started }
       # The API checks rules with the evaluator when they are saved and when
-      # a run ends (D15a spec decisions 2 and 6); it starts in a second.
+      # a run ends; it starts in a second.
       ottl-evaluator: { condition: service_healthy }
     healthcheck:
       # /health runs `select 1`, so healthy means the database answers too.
@@ -407,26 +391,26 @@ services:
       timeout: 5s
       retries: 20
 
-  # The opamp-server (D11a, ADR 0026; its own repository since D26): its own
-  # database, telflo_opamp_server, on the same Postgres server, reached by the
-  # platform only through its management API. Three steps, each waiting for
-  # the one before: bootstrap the roles and database, migrate, serve. The
-  # migrations and serve run the release vendor/opamp-server/PIN names, its
-  # published image pinned by version and digest (the engine resolves it by
-  # the digest; scripts/check-opamp-server-pin.sh checks the tag, the PIN and
-  # these two lines agree). The passwords are development-only, the ones the
+  # The opamp-server: its own database, telflo_opamp_server, on the same
+  # Postgres server, reached by the platform only through its management API.
+  # Three steps, each waiting for the one before: bootstrap the roles and
+  # database, migrate, serve. The migrations and serve run the release
+  # vendor/opamp-server/PIN names, its published image pinned by version and
+  # digest (the engine resolves it by the digest;
+  # scripts/check-opamp-server-pin.sh checks the tag, the PIN and these two
+  # lines agree). The passwords are development-only, the ones the
   # opamp-server's Go test harness gives these server-wide roles too, since
   # local development shares this Postgres server; the secret is
   # .env.example's development value.
   #
   # One-shot: the release's deploy/bootstrap.sql, vendored as
-  # vendor/opamp-server/bootstrap.sql, as the telflo_platform_owner superuser, which creates
-  # the opamp-server's three roles and its database if missing and resets
-  # the two passwords. Idempotent, so every `up` runs it, on a new volume or
-  # an existing one (docker-entrypoint-initdb.d runs only on an empty one).
-  # It reads the passwords from its environment, never from psql's command
-  # line (D11a Ruling 24). Its image is only for psql 18; the smoke test
-  # reuses it as a psql client on the compose network.
+  # vendor/opamp-server/bootstrap.sql, as the telflo_platform_owner superuser,
+  # which creates the opamp-server's three roles and its database if missing
+  # and resets the two passwords. Idempotent, so every `up` runs it, on a new
+  # volume or an existing one (docker-entrypoint-initdb.d runs only on an empty
+  # one). It reads the passwords from its environment, never from psql's
+  # command line. Its image is only for psql 18; the smoke test reuses it as a
+  # psql client on the compose network.
   opamp-bootstrap:
     image: postgres:18
     command: ["psql", "-h", "db", "-U", "telflo_platform_owner", "-d", "postgres", "-X", "-q",
@@ -454,39 +438,37 @@ services:
     restart: "no"
 
   # serve: the management API and the agent endpoint, as telflo_opamp_server (a
-  # member of telflo_opamp_server_runtime, which owns nothing). The management port
-  # is published for development and the owner's walkthrough only; a
-  # self-host install (D36-2's Compose file) shouldn't publish it. The image
-  # is distroless, with no shell or curl, so its health check is the
-  # binary's own `healthcheck`, which asks the management API's /health.
+  # member of telflo_opamp_server_runtime, which owns nothing). The management
+  # port is published for development only; a self-host install
+  # (deploy/compose/compose.yaml) shouldn't publish it. The image is
+  # distroless, with no shell or curl, so its health check is the binary's own
+  # `healthcheck`, which asks the management API's /health.
   #
-  # The agent endpoint (D16a decisions 4, 20 and 26) is where collectors
-  # poll, with an enrollment token's bearer: its own port, 51234, apart from
-  # the management API's, never behind the gateway (production puts it
-  # behind its own load balancer). OPAMP_SERVER_URL is the URL a collector
-  # is handed with its rotate token, where it polls from then on, so it must
-  # be one the collectors can reach (Preflight ruling 23): the default, the
-  # host's 51234, reaches it from a container on Docker Desktop; a collector
-  # run natively on the Mac needs http://localhost:51234/opamp/api/v1, and a
-  # stack whose collectors join the compose network (CI's, the throwaway
-  # gate stacks') http://opamp-server:51234/opamp/api/v1, each set
-  # through the environment compose reads. The bearers' encryption key is a
-  # file (Compose's `secrets:`, read-only at /run/secrets/opamp_encryption_key),
-  # never in the environment: docker/opamp-server/development-encryption-key,
-  # a committed development value, as the collector tester's secret is,
-  # committed without a final newline (serve strips one final line ending,
-  # \n or \r\n, from a key file, uses the rest exactly as written, and
-  # refuses whitespace at its ends). Compose 2.6.0 ignores a secret's uid,
-  # gid and mode, so it is committed world-readable (0644); a production
-  # file must be readable by uid 65532.
+  # The agent endpoint is where collectors poll, with an enrollment token's
+  # bearer: its own port, 51234, apart from the management API's, never behind
+  # the gateway (production puts it behind its own load balancer).
+  # OPAMP_SERVER_URL is the URL a collector is handed with its rotate token,
+  # where it polls from then on, so it must be one the collectors can reach:
+  # the default, the host's 51234, reaches it from a container on Docker
+  # Desktop; a collector run natively on the Mac needs
+  # http://localhost:51234/opamp/api/v1, and a stack whose collectors join the
+  # compose network (CI's, the throwaway gate stacks')
+  # http://opamp-server:51234/opamp/api/v1, each set through the environment
+  # compose reads. The bearers' encryption key is a file (Compose's `secrets:`,
+  # read-only at /run/secrets/opamp_encryption_key), never in the environment:
+  # docker/opamp-server/development-encryption-key, a committed development
+  # value, as the collector tester's secret is, committed without a final
+  # newline (serve strips one final line ending, \n or \r\n, from a key file,
+  # uses the rest exactly as written, and refuses whitespace at its ends).
+  # Compose 2.6.0 ignores a secret's uid, gid and mode, so it is committed
+  # world-readable (0644); a production file must be readable by uid 65532.
   opamp-server:
     image: ghcr.io/telflo/opamp-server:0.3.0@sha256:525595dc26a5d601aed05a763475de9614fa11b44b5152d63c75086a7835ce5f
     command: ["serve"]
     # SIGTERM keeps the listeners open 5 s while /ready answers 503
-    # (OPAMP_SHUTDOWN_DRAIN_SECONDS, D16a Ruling 57), gives requests in
-    # flight 10 s (ShutdownTimeout) and those cut off 2 s more, then the
-    # telemetry flush takes up to 10 s: Docker's default of 10 s would
-    # SIGKILL it part way (D11a Ruling 31).
+    # (OPAMP_SHUTDOWN_DRAIN_SECONDS), gives requests in flight 10 s
+    # (ShutdownTimeout) and those cut off 2 s more, then the telemetry flush
+    # takes up to 10 s: Docker's default of 10 s would SIGKILL it part way.
     stop_grace_period: 30s
     environment:
       OPAMP_DATABASE_URL: postgresql://telflo_opamp_server:telflo-opamp-local@db:5432/telflo_opamp_server
@@ -494,11 +476,11 @@ services:
       OPAMP_ENCRYPTION_KEY_FILE: /run/secrets/opamp_encryption_key
       OPAMP_SERVER_URL: ${OPAMP_SERVER_URL:-http://host.docker.internal:51234/opamp/api/v1}
     secrets: [opamp_encryption_key]
-    # On the host's loopback only (D11a Ruling 30): the secret above is a
-    # committed development value and the listener speaks plain HTTP, so the
-    # port must not be reachable from the developer's network. Inside the
-    # stack the platform reaches it as opamp-server:51235. The agent
-    # endpoint likewise: the bearers' key is a committed development value.
+    # On the host's loopback only: the secret above is a committed
+    # development value and the listener speaks plain HTTP, so the port must
+    # not be reachable from the developer's network. Inside the stack the
+    # platform reaches it as opamp-server:51235. The agent endpoint
+    # likewise: the bearers' key is a committed development value.
     ports:
       - "127.0.0.1:51235:51235"
       - "127.0.0.1:51234:51234"
@@ -510,16 +492,16 @@ services:
       timeout: 5s
       retries: 20
 
-  # The collector validator (D13b, services/otelcol-validator): checks a
-  # configuration with `otelcol-contrib validate` of its pinned version.
-  # api is its only caller; it is never behind the gateway. The
-  # repository's root is its build context, so the image carries catalog/
-  # (D13b spec decision 17). It bakes every collector version the catalogue
-  # offers, unless OTELCOL_VERSIONS (in the environment compose reads) names
-  # some: `default` bakes only the catalogue's default, as CI's stack job and
-  # the throwaway gate stacks do (spec decision 8); a version the image
-  # doesn't hold answers "unavailable". tini is the image's PID 1 (it reaps
-  # the collectors a killed check leaves), so no `init: true` here.
+  # The collector validator (services/otelcol-validator): checks a
+  # configuration with `otelcol-contrib validate` of its pinned version. api
+  # is its only caller; it is never behind the gateway. The repository's root
+  # is its build context, so the image carries catalog/. It bakes every
+  # collector version the catalogue offers, unless OTELCOL_VERSIONS (in the
+  # environment compose reads) names some: `default` bakes only the
+  # catalogue's default, as CI's stack job and the throwaway gate stacks do;
+  # a version the image doesn't hold answers "unavailable". tini is the
+  # image's PID 1 (it reaps the collectors a killed check leaves), so no
+  # `init: true` here.
   otelcol-validator:
     build:
       context: .
@@ -545,16 +527,16 @@ services:
       timeout: 5s
       retries: 20
 
-  # The collector tester (D14a, services/otelcol-testing): runs a test of a
+  # The collector tester (services/otelcol-testing): runs a test of a
   # configuration with the pinned otelcol-contrib in a sandbox, kwok's fake
   # Kubernetes cluster beside it. api is its only caller; it is never
   # behind the gateway. Built from the repository's root, so the image
   # carries catalog/, and it bakes every offered collector version unless
   # OTELCOL_VERSIONS names some, as the validator's does (`default` in CI's
-  # stack job and the throwaway gate stacks; spec decision 14). tini is the
-  # image's PID 1, so no `init: true`.
+  # stack job and the throwaway gate stacks). tini is the image's PID 1, so
+  # no `init: true`.
   #
-  # Locked down (spec decision 5, Preflight ruling 4):
+  # Locked down:
   # - only on the internal network below, which has no way out: from inside,
   #   no external name resolves and no external address answers
   #   (services/otelcol-testing/scripts/check-container.sh checks it);
@@ -567,8 +549,8 @@ services:
   #   2.6.0 ignores a secret's uid, gid and mode, so the development file is
   #   committed world-readable (0644); a production file must be readable by
   #   uid 10001;
-  # - no Linux capabilities and no privilege gained through exec (D14a Ruling
-  #   30): it runs as uid 10001, and neither the collectors nor kwok need any
+  # - no Linux capabilities and no privilege gained through exec: it runs as
+  #   uid 10001, and neither the collectors nor kwok need any
   #   (check-container.sh checks both).
   otelcol-testing:
     build:
@@ -589,8 +571,7 @@ services:
     secrets: [otelcol_testing_secret]
     networks: [otelcol-testing]
     # When kwok's cluster fails every start attempt, the service exits non-zero
-    # and this starts it afresh (D14a Ruling 26); it is never served without
-    # kwok.
+    # and this starts it afresh; it is never served without kwok.
     restart: unless-stopped
     # The image has no curl: Python's urllib asks /testing/v1/health, as the
     # image's own HEALTHCHECK does, more often. It answers 503 until kwok's
@@ -602,21 +583,20 @@ services:
       retries: 20
       start_period: 30s
 
-  # The collector tester's forwarder (D14a Preflight rulings 4 and 21): a TCP
-  # pass-through to otelcol-testing:8002, since Docker publishes no
-  # port for a container only on an internal network. It is for the API run
-  # natively in development (TELFLO_OTELCOL_TESTING_URL
-  # http://127.0.0.1:51237) and the smoke test; the API in the stack calls
-  # the tester directly. On the host's loopback only, as the validator's:
-  # the secret is a committed development value and the listener speaks
-  # plain HTTP. See docker/otelcol-testing/forward.conf.
+  # The collector tester's forwarder: a TCP pass-through to
+  # otelcol-testing:8002, since Docker publishes no port for a container
+  # only on an internal network. It is for the API run natively in
+  # development (TELFLO_OTELCOL_TESTING_URL http://127.0.0.1:51237) and the
+  # smoke test; the API in the stack calls the tester directly. On the
+  # host's loopback only, as the validator's: the secret is a committed
+  # development value and the listener speaks plain HTTP. See
+  # docker/otelcol-testing/forward.conf.
   #
   # The gateway's image (nginx:1.27-alpine, 1.27.5), pinned by its index
-  # digest (D14a Ruling 30; ADR 0019; the gateway's own pin is D30's). It runs
-  # as nginx's own user (uid 101) with no capabilities and no privilege
-  # gained through exec: as root without capabilities its master can't switch
-  # its workers to that user (setgid fails) and serves nothing, so the whole
-  # server runs as 101, its pid file and cache on tmpfs it owns.
+  # digest. It runs as nginx's own user (uid 101) with no capabilities and no
+  # privilege gained through exec: as root without capabilities its master
+  # can't switch its workers to that user (setgid fails) and serves nothing,
+  # so the whole server runs as 101, its pid file and cache on tmpfs it owns.
   otelcol-testing-forward:
     image: nginx:1.27-alpine@sha256:65645c7bb6a0661892a8b03b89d0743208a18dd2f3f17a54ef4b76fb8e2f2a10
     user: "101:101"
@@ -631,17 +611,16 @@ services:
     networks: [default, otelcol-testing]
     ports:
       - "127.0.0.1:51237:8002"
-    # As the tester's (D14a Ruling 33): a forwarder that stops is started
-    # again.
+    # As the tester's: a forwarder that stops is started again.
     restart: unless-stopped
 
-  # The OTTL evaluator (D15a, services/ottl-evaluator): checks a test run's
+  # The OTTL evaluator (services/ottl-evaluator): checks a test run's
   # validation rules (text, regex and OTTL) against the collector's output
   # and log, and a rule when it is saved. api is its only caller; it
   # is never behind the gateway. Built from its own directory (it needs no
   # catalog/).
   #
-  # Locked down (spec decision 10, Preflight ruling 13), as the tester is:
+  # Locked down, as the tester is:
   # - only on its own internal network below, which has no way out and which
   #   no collector a run starts can reach (the tester's network is another);
   # - a read-only root filesystem, with no tmpfs: nothing is written;
@@ -655,12 +634,12 @@ services:
   #   same binary, which raises its own oom_score_adj (no capability needed to
   #   raise it) and is killed at its limit;
   # - memory and processes bounded: four evaluations and eight validations
-  #   at once, each child with GOMEMLIMIT=640MiB and GOMAXPROCS=2 (Preflight
-  #   ruling 10, the controller's Ruling 33). pids_limit counts threads, and
-  #   each child is a whole Go runtime: with four slow evaluations and eight
-  #   validations at once, serve and its 12 children peaked at 118 threads
-  #   (measured in this container, 2026-10-11), so 256 leaves room; at 64,
-  #   serve itself died creating a thread.
+  #   at once, each child with GOMEMLIMIT=640MiB and GOMAXPROCS=2.
+  #   pids_limit counts threads, and each child is a whole Go runtime: with
+  #   four slow evaluations and eight validations at once, serve and its 12
+  #   children peaked at 118 threads (measured in this container,
+  #   2026-10-11), so 256 leaves room; at 64, serve itself died creating a
+  #   thread.
   # services/ottl-evaluator/scripts/check-container.sh checks all of it from
   # the inside, with the binary's `selfcheck` (distroless has no shell).
   ottl-evaluator:
@@ -672,16 +651,15 @@ services:
     security_opt: [no-new-privileges:true]
     environment:
       OTTL_EVALUATOR_SECRET_FILE: /run/secrets/ottl_evaluator_secret
-      # serve's own threads, which otherwise grow with the host's CPUs
-      # (D15a Ruling 34). The children don't inherit it: each gets only
-      # GOMEMLIMIT and GOMAXPROCS=2 (internal/server/child.go).
+      # serve's own threads, which otherwise grow with the host's CPUs. The
+      # children don't inherit it: each gets only GOMEMLIMIT and GOMAXPROCS=2
+      # (internal/server/child.go).
       GOMAXPROCS: "4"
     secrets: [ottl_evaluator_secret]
     networks: [ottl-evaluator]
     mem_limit: 3g
     # pids_limit counts threads: serve and its 4 + 8 children at once
-    # peaked at 118 (D15a Ruling 33's measurement), 117 with serve at
-    # GOMAXPROCS=4 (Ruling 34's).
+    # peaked at 118, 117 with serve at GOMAXPROCS=4.
     pids_limit: 256
     restart: unless-stopped
     # SIGTERM lets requests in flight finish (an evaluation takes at most its
@@ -696,17 +674,16 @@ services:
       timeout: 5s
       retries: 20
 
-  # The OTTL evaluator's forwarder (D15a Preflight ruling 13), as the
-  # tester's: a TCP pass-through to ottl-evaluator:8003, since Docker
-  # publishes no port for a container only on an internal network. It is for
-  # the API run natively in development (TELFLO_OTTL_EVALUATOR_URL
-  # http://127.0.0.1:51238) and the smoke test; the API in the stack calls
-  # the evaluator directly. Its own, not the tester's: one forwarder on both
-  # internal networks would bridge the one where a run's collector sits to
-  # the evaluator. On the host's loopback only: the secret is a committed
-  # development value and the listener speaks plain HTTP. See
-  # docker/ottl-evaluator/forward.conf. The image and its lockdown are the
-  # tester's forwarder's (D14a Ruling 30).
+  # The OTTL evaluator's forwarder, as the tester's: a TCP pass-through to
+  # ottl-evaluator:8003, since Docker publishes no port for a container only
+  # on an internal network. It is for the API run natively in development
+  # (TELFLO_OTTL_EVALUATOR_URL http://127.0.0.1:51238) and the smoke test;
+  # the API in the stack calls the evaluator directly. Its own, not the
+  # tester's: one forwarder on both internal networks would bridge the one
+  # where a run's collector sits to the evaluator. On the host's loopback
+  # only: the secret is a committed development value and the listener
+  # speaks plain HTTP. See docker/ottl-evaluator/forward.conf. The image and
+  # its lockdown are the tester's forwarder's.
   ottl-evaluator-forward:
     image: nginx:1.27-alpine@sha256:65645c7bb6a0661892a8b03b89d0743208a18dd2f3f17a54ef4b76fb8e2f2a10
     user: "101:101"
@@ -732,17 +709,17 @@ services:
     networks:
       default: { aliases: [telflo-web] }
     # The /login loader calls the API, and /login is this health check (a page
-    # under every site value: D36-1 Preflight ruling 19).
+    # under every site value).
     environment:
       TELFLO_API_INTERNAL_URL: http://api:8080
-      # The API's too: canonical URLs (D4 decision 5).
+      # The API's too: canonical URLs.
       TELFLO_PUBLIC_WEB_URL: http://localhost:50080
       # No TELFLO_POSTHOG_KEY: product analytics stays off, and no cookie
-      # banner shows (D4 decision 8).
-      # The site's switches and links (D36-1 decision 27; Preflight ruling 19),
-      # the same as api's: the open source's defaults (Q251) unless the
-      # environment compose reads sets one (the stack smoke sets the SaaS's).
-      # TELFLO_DOCS_URL without the colon: set empty, it hides the docs links.
+      # banner shows.
+      # The site's switches and links, the same as api's: the open source's
+      # defaults unless the environment compose reads sets one (the stack
+      # smoke sets the SaaS's). TELFLO_DOCS_URL without the colon: set empty,
+      # it hides the docs links.
       TELFLO_REGISTRATION: ${TELFLO_REGISTRATION:-invite-only}
       TELFLO_PLAYGROUND: ${TELFLO_PLAYGROUND:-false}
       TELFLO_ANONYMOUS_VALIDATE: ${TELFLO_ANONYMOUS_VALIDATE:-false}
@@ -784,33 +761,31 @@ services:
 volumes:
   db-data:
   file-store:
-  # The object store's data (D23-1 spec decision 30). A plain `down -v`
-  # deletes it with the others.
+  # The object store's data. A plain `down -v` deletes it with the others.
   object-store:
 
 networks:
   # Every service not listing its networks is on this one.
   default: {}
-  # The collector tester's (D14a spec decision 5, Preflight ruling 21): the
-  # tester, the API and the tester's forwarder. `internal: true` gives it no
-  # way out (Docker drops what would leave it), so a run's collector reaches
-  # nothing beyond these three.
+  # The collector tester's: the tester, the API and the tester's forwarder.
+  # `internal: true` gives it no way out (Docker drops what would leave it),
+  # so a run's collector reaches nothing beyond these three.
   otelcol-testing:
     internal: true
-  # The OTTL evaluator's (D15a Preflight ruling 13): the evaluator, the API
-  # and the evaluator's forwarder. No way out, as the tester's.
+  # The OTTL evaluator's: the evaluator, the API and the evaluator's
+  # forwarder. No way out, as the tester's.
   ottl-evaluator:
     internal: true
-  # The object store's (D23-1 spec decision 30, Preflight ruling 16): the
-  # object store, the API and file-store-ready, so the filer's,
-  # master's and volume server's ports, which take requests without
-  # credentials, are reachable from nothing else (no collector, no other
-  # service). Not internal: its S3 port is published on the host's loopback.
+  # The object store's: the object store, the API and file-store-ready, so
+  # the filer's, master's and volume server's ports, which take requests
+  # without credentials, are reachable from nothing else (no collector, no
+  # other service). Not internal: its S3 port is published on the host's
+  # loopback.
   object-store: {}
 
 secrets:
-  # The opamp-server's key for its enrollment tokens' bearers (D16a
-  # Preflight ruling 27), development only: see opamp-server above.
+  # The opamp-server's key for its enrollment tokens' bearers, development
+  # only: see opamp-server above.
   opamp_encryption_key:
     file: ./docker/opamp-server/development-encryption-key
   # The collector tester's shared secret, development only: see

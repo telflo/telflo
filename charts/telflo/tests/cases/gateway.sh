@@ -1,7 +1,5 @@
-# The gateway (D33-1 decisions 6, 16, 17, 19 and 23-25; Preflight ruling 6;
-# D36-1 decision 24, Preflight ruling 15: gateway.extraRoutes).
-# Sourced by tests/render-tests.sh, which defines every helper used here
-# (api_words is api.sh's).
+# The gateway, and gateway.extraRoutes. Sourced by tests/render-tests.sh,
+# which defines every helper used here (api_words is api.sh's).
 
 GW_D="Deployment/telflo-gateway"
 GW_POD="$GW_D.spec.template.spec"
@@ -19,7 +17,7 @@ gw_kinds() {
 }
 each_profile "gateway: its ConfigMaps telflo-gateway and telflo-gateway-extra-routes, Service and Deployment telflo-gateway" gw_kinds
 
-# --- default.conf, byte for byte (decision 16) -----------------------------------------
+# --- default.conf, byte for byte -----------------------------------------------------
 gw_copy_same() { [ -s "$GW_SOURCE" ] && cmp -s "$GW_SOURCE" "$GW_COPY"; }
 run_case "gateway: files/gateway-default.conf is docker/gateway/default.conf, byte for byte" gw_copy_same
 # The ConfigMap's text against the repository's file (not the chart's
@@ -57,7 +55,7 @@ gw_checksum() { # a changed configuration rolls the pods
 }
 each_profile "gateway: the pods' checksum/gateway-config is default.conf's sha256" gw_checksum
 
-# --- nginx as uid 101 on port 80 (decision 17) ----------------------------------------
+# --- nginx as uid 101 on port 80 -----------------------------------------------------
 gw_security() {
   eq "$1" "$GW_POD.automountServiceAccountToken" false && eq "$1" "$GW_POD.enableServiceLinks" false &&
     eq "$1" "$GW_POD.securityContext.runAsNonRoot" true && eq "$1" "$GW_POD.securityContext.runAsUser" 101 &&
@@ -91,7 +89,7 @@ gw_writable() {
     [ "$(api_words names_at "$1" "$GW_POD.volumes")" = "config extra-routes cache run " ] &&
     eq "$1" "$GW_C.volumeMounts[config].readOnly" true && eq "$1" "$GW_C.volumeMounts[extra-routes].readOnly" true
 }
-each_profile "gateway: emptyDirs at /var/cache/nginx (no sizeLimit: a full one would evict the pod, Ruling 337) and /run (1Mi: the pid file), nothing else writable" gw_writable
+each_profile "gateway: emptyDirs at /var/cache/nginx (no sizeLimit: a full one would evict the pod) and /run (1Mi: the pid file), nothing else writable" gw_writable
 gw_probes() {
   local p
   for p in readinessProbe livenessProbe; do
@@ -111,7 +109,7 @@ gw_image() {
 }
 run_case "gateway: nginx:1.27-alpine pinned by digest by default; gateway.image (full)" gw_image
 
-# --- the Service (decision 6) -------------------------------------------------------------
+# --- the Service ---------------------------------------------------------------------
 gw_service_default() {
   eq "$L" "$GW_SVC.spec.type" '"LoadBalancer"' && eq "$L" "$GW_SVC.spec.ports[http].port" 80 &&
     eq "$L" "$GW_SVC.spec.ports[http].targetPort" '"http"' && no_path "$L" "$GW_SVC.spec.ports[1]" &&
@@ -155,7 +153,7 @@ gw_full_values() {
 }
 run_case "gateway: replicas, resources, scheduling, podAnnotations (beside the two checksums) and pull secrets from values" gw_full_values
 
-# --- gateway.extraRoutes (D36-1 decision 24, Preflight ruling 15) ------------------------------
+# --- gateway.extraRoutes -------------------------------------------------------------
 GW_FIXTURE="$CHART_DIR/tests/expected/extra-routes.conf"
 GW_EMPTY_SUM=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 gw_extra_mount() {
@@ -307,9 +305,9 @@ run_case "guard: gateway.extraRoutes' path checked without the schema (no leadin
   "gateway.extraRoutes[0].path must be at most 200 characters: a leading / then letters, digits and ._~/-" "home/" prefix "$SKIP"
 run_case "guard: gateway.extraRoutes' match checked without the schema" extra_refused \
   "gateway.extraRoutes[0].match must be exact or prefix" /home/ regex "$SKIP"
-# Ruling 351: no empty, . or .. segment (inert, as nginx matches the
-# normalised path, but refused so the guard reads plainly); a segment that
-# only starts with a dot is a name.
+# No empty, . or .. segment (inert, as nginx matches the normalised path,
+# but refused so the guard reads plainly); a segment that only starts with
+# a dot is a name.
 M_SEGMENT="gateway.extraRoutes[0].path must hold no empty, . or .. segment (nginx matches the normalised path)"
 for bad in //home/ /home//x /home/./x /home/../login /./ /home/. /home/..; do
   run_case "guard: gateway.extraRoutes path $bad refused (an empty, . or .. segment)" extra_refused "$M_SEGMENT" "$bad" prefix
@@ -328,8 +326,8 @@ gw_extra_service_port() {
       --set-string gateway.extraRoutes[0].service=website --set-string 'gateway.extraRoutes[0].port=80;x' &&
     gw_port_text 010 && gw_port_text 8081
 }
-# gw_port_text <text>: a port given as text refused (Ruling 351: "010" once
-# rendered :8), whatever its digits
+# gw_port_text <text>: a port given as text refused ("010" once rendered
+# :8), whatever its digits
 gw_port_text() {
   refused "gateway.extraRoutes[0].port must be a port, 1 to 65535" "" \
     "${D[@]}" "$SKIP" --set-string 'gateway.extraRoutes[0].path=/home/' --set-string gateway.extraRoutes[0].match=prefix \

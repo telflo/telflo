@@ -11,11 +11,11 @@
 # --push-oci cases run against a committed copy of the image's inputs in a
 # throwaway git repository (its HEAD is the revision label; the dirty check is
 # tried on it). --build-oci builds from HEAD's docker/collector-image
-# extracted into the script's temporary directory (Ruling 32): the tests
-# check the context path and that ignored files never reach it. --push-oci
-# runs with the real crane against a throwaway registry:2 on 127.0.0.1
-# (tools.lock's image, local by digest), or prints SKIP lines when crane,
-# docker or that image is missing. Nothing reaches any other registry.
+# extracted into the script's temporary directory: the tests check the
+# context path and that ignored files never reach it. --push-oci runs with
+# the real crane against a throwaway registry:2 on 127.0.0.1 (tools.lock's
+# image, local by digest), or prints SKIP lines when crane, docker or that
+# image is missing. Nothing reaches any other registry.
 # Run:  bash docker/collector-image/build-collector-image_test.sh
 # bash 3.2 compatible (macOS's /bin/bash).
 set -u
@@ -309,7 +309,7 @@ check "bash check_url: another host refused" "[ $rc -ne 0 ] && has 'not an upstr
 bash_check "$base/v0.161.0/otelcol-contrib_0.161.0_linux_arm64.tar.gz" otelcol-contrib_0.162.0_linux_arm64.tar.gz
 check "bash check_url: another version's file refused" "[ $rc -ne 0 ] && has 'is not otelcol-contrib_0.162.0_linux_arm64.tar.gz'"
 
-# --- 6. the exact docker command (D18 decision 27, Preflight ruling 8) ---------
+# --- 6. the exact docker command ----------------------------------------------
 # expected_argv <root> <revision> <platform> <builder> <tag> <--load|--push> [<context>]:
 # the command, one shell-quoted argument a line.
 expected_argv() {
@@ -381,8 +381,8 @@ fi
 # The real docker parses the printed command: with the builder replaced by
 # one that doesn't exist (in an empty DOCKER_CONFIG) and the build context by
 # a path that doesn't exist, buildx gets as far as looking the builder up,
-# past every flag and the argument count (D17c-1 Ruling 70: never trust a
-# stand-in alone with an argv). Nothing is built, nothing leaves the machine.
+# past every flag and the argument count (a stand-in alone is never
+# trusted with an argv). Nothing is built, nothing leaves the machine.
 if [ -n "$real_docker" ]; then
   parse_config="$tmp/parse-docker"; mkdir -p "$parse_config"
   cp "$tmp/docker/config.json" "$parse_config/config.json"
@@ -489,8 +489,8 @@ check "a buildx too old to attest refused" "[ $rc -eq 1 ] && has \"can't attest\
 STANDIN_DRIVER=docker prun 0.162.0 --build-oci "$oci_b" --builder desktop-linux
 check "--build-oci refuses a docker-driver builder" "[ $rc -eq 1 ] && has \"uses the 'docker' driver\" && no_build"
 
-# --build-oci builds from the commit itself (Ruling 32): files the
-# repository ignores never reach the build context.
+# --build-oci builds from the commit itself: files the repository ignores
+# never reach the build context.
 mkdir -p "$repo/docker/collector-image/build"
 echo "IGNORED=c4n4ry" >"$repo/docker/collector-image/.env"
 echo ignored >"$repo/docker/collector-image/.DS_Store"
@@ -508,7 +508,7 @@ out="$(env -u DOCKER_CONFIG -u TELFLO_COLLECTOR_IMAGE_REPOSITORY -u TELFLO_COLLE
 check "DOCKER_CONFIG unset: --build-oci builds with a temporary one holding no login, removed afterwards" \
   "[ $rc -eq 0 ] && has 'DOCKER_CONFIG is unset' && [ \"\$(sed -n 2p '$logs/build-env')\" = '{\"auths\":{\"telflo-publish.invalid\":{}}}' ] && [ -z \"\$(ls -A '$tmp/scratch')\" ]"
 
-# The registry's answers (crane digest; Preflight ruling 6).
+# The registry's answers (crane digest).
 STANDIN_CRANE=present prun 0.162.0 --build-oci "$oci_b" --builder owner-builder --dry-run
 check "a tag the registry holds refused (dry run)" "[ $rc -eq 1 ] && has 'exists in the registry' && [ -z \"\$argv_out\" ]"
 STANDIN_CRANE=denied prun 0.162.0 --build-oci "$oci_b" --builder owner-builder --dry-run
@@ -518,7 +518,7 @@ STANDIN_CRANE=name-unknown prun 0.162.0 --build-oci "$oci_b" --builder owner-bui
 check "NAME_UNKNOWN is absent; --registry names <registry>/telflo/telflo/collector" \
   "[ $rc -eq 0 ] && grep -qx 'digest 127.0.0.1:5999/telflo/telflo/collector:0.162.0 ' '$logs/crane-calls.log' && has 'is not in the registry yet'"
 
-# Only ghcr.io/telflo/telflo/collector (D18 decision 9; D36-2 decision 85).
+# Only ghcr.io/telflo/telflo/collector.
 repo_case() { # <name> <repository> <mode args...>
   local name="$1" repository="$2"; shift 2
   clear_logs
@@ -539,7 +539,7 @@ out="$(env DOCKER_CONFIG="$tmp/docker" TELFLO_COLLECTOR_CATALOGUE="$catalogue" "
 check "--build-oci refuses a catalogue other than the repository's" \
   "[ $rc -eq 1 ] && has \"reads only the repository's catalogue\" && [ ! -s '$logs/docker-calls.log' ]"
 
-# --push-oci refuses a --no-attest archive for ghcr.io (decision 72), offline:
+# --push-oci refuses a --no-attest archive for ghcr.io, offline:
 # before any registry call.
 oci_na="$tmp/oci-na"; mkdir -p "$oci_na"
 tr_fixture "$oci_na/collector-0.162.0.oci.tar" 0.162.0 "$repo_revision" NA no-attest >"$oci_na/collector-0.162.0.digest"
@@ -591,7 +591,7 @@ else
 fi
 tr_registry_stop
 
-# A git checkout of this repository itself (Ruling 32).
+# A git checkout of this repository itself.
 plain="$tmp/plain"
 mkdir -p "$plain/scripts/release" "$plain/catalog/distributions" "$plain/docker"
 cp "$script" "$plain/scripts/build-collector-image.sh"
@@ -613,8 +613,8 @@ check "--build-oci refuses a copy nested in another repository that ignores it" 
   "[ -z \"\$(git -C '$parent' status --porcelain)\" ] && [ $rc -eq 1 ] && has '--build-oci needs a git checkout of this repository' && [ ! -s '$logs/docker-calls.log' ] && no_crane"
 
 # A DOCKER_CONFIG the caller set: checked before docker is asked anything,
-# its content never printed (Rulings 32 and 34). The valid shape names a
-# registry in a non-empty "auths"; Docker reads keys case-insensitively.
+# its content never printed. The valid shape names a registry in a
+# non-empty "auths"; Docker reads keys case-insensitively.
 config_case() { # <name> <config.json content, "-" for none, "-unreadable" for mode 000> <expected words>
   local dir="$tmp/caller-config-$RANDOM$RANDOM"
   mkdir -p "$dir"
@@ -674,8 +674,8 @@ run_in "$srepo/scripts/build-collector-image.sh" 0.162.0 --build-oci "$oci_b" --
 check "--build-oci refuses a symlink in HEAD's docker/collector-image, naming it" \
   "[ -z \"\$(git -C '$srepo' status --porcelain)\" ] && [ $rc -eq 1 ] && has \"HEAD's docker/collector-image/Dockerfile-link is a symlink\" && no_build && no_imagetools"
 
-# Local `git replace` objects (Ruling 37): the published bytes are HEAD's
-# real blobs, every file checked against its tree entry.
+# Local `git replace` objects: the published bytes are HEAD's real blobs,
+# every file checked against its tree entry.
 rrepo="$tmp/rrepo"
 cp -R "$repo" "$rrepo"
 real_blob="$(git -C "$rrepo" rev-parse HEAD:docker/collector-image/entrypoint.sh)"
@@ -687,9 +687,9 @@ run_in "$rrepo/scripts/build-collector-image.sh" 0.162.0 --build-oci "$(fresh_oc
 check "--build-oci's context holds HEAD's real entrypoint.sh, not the replacement" \
   "[ -z \"\$(git -C '$rrepo' status --porcelain)\" ] && [ $rc -eq 0 ] && cmp -s '$logs/build-context/entrypoint.sh' <(GIT_NO_REPLACE_OBJECTS=1 git -C '$rrepo' cat-file blob '$real_blob') && ! grep -q replaced '$logs/build-context/entrypoint.sh'"
 
-# A tampered object store (Ruling 39): entrypoint.sh's loose object
-# overwritten with the Dockerfile's. git cat-file hands over the other blob's
-# bytes and git status stays clean; only the hash check sees it.
+# A tampered object store: entrypoint.sh's loose object overwritten with the
+# Dockerfile's. git cat-file hands over the other blob's bytes and git status
+# stays clean; only the hash check sees it.
 trepo="$tmp/trepo"
 cp -R "$repo" "$trepo"
 loose_object() { # <repo> <sha>
@@ -704,7 +704,7 @@ run_in "$trepo/scripts/build-collector-image.sh" 0.162.0 --build-oci "$oci_b" --
 check "--build-oci refuses a tampered loose blob by the hash check, naming it, docker never asked" \
   "[ $rc -eq 1 ] && has \"HEAD's docker/collector-image/entrypoint.sh doesn't hash to its tree entry\" && [ ! -s '$logs/docker-calls.log' ] && no_crane"
 
-# An untracked input hidden by status.showUntrackedFiles=no (Ruling 37).
+# An untracked input hidden by status.showUntrackedFiles=no.
 urepo="$tmp/urepo"
 cp -R "$repo" "$urepo"
 git -C "$urepo" config status.showUntrackedFiles no
@@ -713,7 +713,7 @@ run_in "$urepo/scripts/build-collector-image.sh" 0.162.0 --build-oci "$oci_b" --
 check "--build-oci refuses an untracked input even with status.showUntrackedFiles=no" \
   "[ -z \"\$(git -C '$urepo' status --porcelain)\" ] && [ $rc -eq 1 ] && has 'refuses uncommitted changes' && has 'docker/collector-image/hidden.txt' && [ ! -s '$logs/docker-calls.log' ] && no_crane"
 
-# A committed submodule (a gitlink) in the image's inputs (Ruling 37).
+# A committed submodule (a gitlink) in the image's inputs.
 grepo="$tmp/grepo"
 cp -R "$repo" "$grepo"
 mkdir -p "$grepo/docker/collector-image/sub"
@@ -723,7 +723,7 @@ run_in "$grepo/scripts/build-collector-image.sh" 0.162.0 --build-oci "$oci_b" --
 check "--build-oci refuses a submodule in HEAD's docker/collector-image, naming it, docker never asked" \
   "[ -z \"\$(git -C '$grepo' status --porcelain)\" ] && [ $rc -eq 1 ] && has \"HEAD's docker/collector-image/sub is a submodule\" && [ ! -s '$logs/docker-calls.log' ] && no_crane"
 
-# Inputs flagged for git not to check (Ruling 34): refused, the flag named.
+# Inputs flagged for git not to check: refused, the flag named.
 cp "$repo/docker/collector-image/Dockerfile" "$tmp/saved-dockerfile"
 git -C "$repo" update-index --assume-unchanged docker/collector-image/Dockerfile
 echo "# a hidden change" >>"$repo/docker/collector-image/Dockerfile"
@@ -739,7 +739,7 @@ check "--build-oci refuses an input flagged skip-worktree, naming the flag" \
 git -C "$repo" update-index --no-skip-worktree catalog/distributions/otelcol-contrib.json
 check "the throwaway repository is clean again (no flag)" "[ -z \"\$(git -C '$repo' status --porcelain)\" ] && ! git -C '$repo' ls-files -v | grep -q '^[a-zS]'"
 
-# --build-oci takes its build arguments from HEAD's catalogue (Ruling 34). A
+# --build-oci takes its build arguments from HEAD's catalogue. A
 # working-tree catalogue that differs from HEAD's while git status sees it
 # clean (the same size, mtime and inode; ctime ignored) must not be read.
 cat_path="$repo/catalog/distributions/otelcol-contrib.json"
@@ -768,7 +768,7 @@ same_size_rewrite "$cat_path" "$other_sha" "$head_sha"
 git -C "$repo" config --unset core.trustctime
 check "the catalogue is HEAD's again" "cmp -s '$cat_path' '$tmp/saved-catalogue' && [ -z \"\$(git -C '$repo' status --porcelain)\" ]"
 
-# The image's inputs must be committed (Preflight ruling 8).
+# The image's inputs must be committed.
 dirty_case() { # <name> <path relative to the repo> <append|new>
   local name="$1" path="$2" how="$3"
   if [ "$how" = append ]; then cp "$repo/$path" "$tmp/saved"; echo "# a change" >>"$repo/$path"; else echo new >"$repo/$path"; fi
@@ -787,7 +787,7 @@ echo "# a change" >>"$repo/docker/collector-image/Dockerfile"
 prun 0.162.0 --platform linux/arm64 --dry-run
 check "a local build with uncommitted inputs is allowed" "[ $rc -eq 0 ] && has 'would build'"
 
-# --- 8. --list-offered (D18 decision 28, Preflight ruling 9) -----------------------
+# --- 8. --list-offered ------------------------------------------------------------
 run --list-offered
 check "--list-offered: the catalogue's offered versions, newest first" \
   "[ $rc -eq 0 ] && [ \"\$argv_out\" = \"\$(printf '0.162.0\n0.161.0\n0.160.0\n0.159.0')\" ]"

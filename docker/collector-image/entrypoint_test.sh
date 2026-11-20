@@ -34,9 +34,8 @@ chmod +x "$tmp/supervisor"
 printf 'test-host\n' > "$tmp/hostname"
 export HOSTNAME_FILE="$tmp/hostname"
 cfg="$tmp/supervisor-config.yaml"
-# Every install names its group (D17d-1: the entrypoint refuses to start
-# without one): each case inherits this one unless it sets its own or
-# unsets it.
+# Every install names its group (the entrypoint refuses to start without one):
+# each case inherits this one unless it sets its own or unsets it.
 export COLLECTOR_GROUP_ID=0c0c0c0c-0000-4000-8000-00000000000c
 
 # Reads back a value the entrypoint wrote, as the supervisor does: the first
@@ -107,7 +106,7 @@ check "storage dir points at APP_DIR/opamp" "grep -qF 'directory: \"$tmp/opamp\"
 check "supervisor exec'd with --config path" "grep -qF -- \"--config $cfg\" '$tmp/supervisor-args.txt'"
 
 # --- 4. capabilities: no reports_remote_config (deprecated in the supervisor
-# at 0.161.0, refused from 0.163.0: D16a Preflight ruling 18) ----------------
+# at 0.161.0, refused from 0.163.0) -------------------------------------------
 check "reports_remote_config absent" "! grep -q 'reports_remote_config' '$cfg'"
 check "accepts_remote_config kept" "grep -q '^  accepts_remote_config: true$' '$cfg'"
 check "reports_effective_config kept" "grep -q '^  reports_effective_config: true$' '$cfg'"
@@ -165,7 +164,7 @@ check "the description always names the group" "grep -q '^    non_identifying_at
 check "no Kubernetes attributes when none is set" "! grep -qE 'k8s\\.|host\\.ip' '$cfg'"
 
 # --- 9b. no COLLECTOR_GROUP_ID, or a blank one: refused before anything is
-# written (D17d-1) ------------------------------------------------------------
+# written ----------------------------------------------------------------------
 # The opamp-server refuses a collector naming no group, so the image refuses
 # to start without one: a nonzero exit, the message, no configuration, and
 # the supervisor never run.

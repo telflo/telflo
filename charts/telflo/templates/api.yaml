@@ -11,10 +11,9 @@
 {{- $image := include "telflo.image" (list . "api") }}
 {{- $pullPolicy := include "telflo.pullPolicy" (list . "api") }}
 {{- /*
-The API (D33-1 decisions 14, 18, 20 and 25; Preflight rulings 4, 7, 8 and 9;
-the plan's Appendix). Its pods carry app.kubernetes.io/name telflo
-and app.kubernetes.io/component api, exactly what the opamp-server chart's
-networkPolicy.management.from selects (Ruling 3).
+The API. Its pods carry app.kubernetes.io/name telflo and
+app.kubernetes.io/component api, exactly what the opamp-server chart's
+networkPolicy.management.from selects.
 
 Two containers, each with only its own credentials:
 - migrate, an init container: the migrations, the catalogue's sync and
@@ -27,8 +26,7 @@ Two containers, each with only its own credentials:
 A database URL's password variable is listed before the URL, so Kubernetes'
 $(VAR) expansion fills it in: no password is rendered. Both containers check
 their passwords are URL-safe before exec node: a password Node's URL parser
-can't read would make it throw with the whole URL, password and all
-(Preflight ruling 4).
+can't read would make it throw with the whole URL, password and all.
 */}}
 apiVersion: v1
 kind: ServiceAccount
@@ -64,7 +62,7 @@ spec:
 # The local file store's volume (fileStore.kind local): ReadWriteOnce, so
 # one API pod (a guard refuses more). `helm uninstall` leaves it, as it
 # leaves Postgres's: the database names its files, so a reinstall onto the
-# kept database finds them (Ruling 331). Delete it explicitly to remove the
+# kept database finds them. Delete it explicitly to remove the
 # files.
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -127,9 +125,8 @@ spec:
         {{- end }}
       initContainers:
         # node runs the compiled migrate.js directly, never `npm run` (npm
-        # reaches its registry and writes ~/.npm), and writes nothing (D36-1
-        # decision 43). The image carries the catalogue at /catalog, where
-        # packages/db finds it.
+        # reaches its registry and writes ~/.npm), and writes nothing. The
+        # image carries the catalogue at /catalog, where packages/db finds it.
         - name: migrate
           image: {{ $image | quote }}
           imagePullPolicy: {{ $pullPolicy | quote }}
@@ -160,8 +157,8 @@ spec:
         # the password check. The operator's commands run in this container,
         # with its environment: `kubectl exec deploy/telflo-api -c api --
         # telflo-admin bootstrap --email <email> --organization <name>` makes
-        # the site's first product admin (D36-1 decision 37) and prints its
-        # set-password link, never mailing it (decision 54, Q266).
+        # the site's first product admin and prints its set-password link,
+        # never mailing it.
         - name: api
           image: {{ $image | quote }}
           imagePullPolicy: {{ $pullPolicy | quote }}
@@ -274,10 +271,10 @@ spec:
             {{- include "telflo.secretEnv" (dict "name" "TELFLO_LIBRARY_LINK_SIGNING_KEY" "secret" $apiSecret "key" "library-link-signing-key") | nindent 12 }}
             {{- include "telflo.secretEnv" (dict "name" "TELFLO_LIBRARY_LINK_SIGNING_KEYS_PREVIOUS" "secret" $apiSecret "key" "library-link-signing-keys-previous" "optional" true) | nindent 12 }}
           # The kubelet's probes write no log line: readiness asks /health
-          # (exactly that path; the route logs nothing, even when it fails,
-          # Preflight ruling 8), which checks the database; liveness only
-          # opens a TCP connection, so a database blip never restarts the
-          # API. The startup probe gives the first start two minutes.
+          # (exactly that path; the route logs nothing, even when it fails),
+          # which checks the database; liveness only opens a TCP connection,
+          # so a database blip never restarts the API. The startup probe
+          # gives the first start two minutes.
           startupProbe:
             tcpSocket:
               port: http

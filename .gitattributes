@@ -1,18 +1,17 @@
 # The validator's fixtures are read byte for byte: the web's test compares
 # palette-defaults.json with what its script writes, and the stderr tests
-# read the recorded outputs (D13b ruling 63). LF on every checkout.
+# read the recorded outputs. LF on every checkout.
 services/otelcol-validator/tests/fixtures/*.json text eol=lf
 
-# Swagger UI, vendored unchanged for the API reference page (D25 decision
-# 49): byte for byte the npm tarball's files, whose sha256s
-# scripts/license-policy.json and docs/third-party-assets.md record, so no
-# line-ending conversion, and built code that isn't diffed.
+# Swagger UI, vendored unchanged for the API reference page: byte for byte the
+# npm tarball's files, whose sha256s scripts/license-policy.json and
+# docs/third-party-assets.md record, so no line-ending conversion, and built
+# code that isn't diffed.
 telflo-core/apps/api/src/modules/public-api/docs/swagger-ui/** -text -diff linguist-vendored
 
-# The opamp-server's contract files, vendored from its pinned release (D26
-# decision 36): byte for byte the tag's blobs, which
-# scripts/check-opamp-server-pin.sh compares, so no line-ending conversion
-# and no diffs of the server's own files here.
+# The opamp-server's contract files, vendored from its pinned release: byte for
+# byte the tag's blobs, which scripts/check-opamp-server-pin.sh compares, so no
+# line-ending conversion and no diffs of the server's own files here.
 vendor/opamp-server/** -text -diff
 # PIN is the platform's own three lines, not a vendored file: diffed, so a
 # release PR's change of pin stays readable.

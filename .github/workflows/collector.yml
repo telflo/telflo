@@ -1,13 +1,13 @@
 # The collector images and the supervisor-collector chart, started by hand
-# (docs/releasing.md; D36-2 decisions 63, 65, 85 and 111; Q277): for one
-# collector version the catalogue offers, or `all` of them (one matrix job
-# each), it builds ghcr.io/telflo/telflo/collector:<version> for amd64 and
-# arm64 with its attestations, tests it, and only with `publish` copies the
-# archive's bytes to GHCR (digests kept), pulls them back, and pushes the
+# (docs/releasing.md): for one collector version the catalogue offers, or
+# `all` of them (one matrix job each), it builds
+# ghcr.io/telflo/telflo/collector:<version> for amd64 and arm64 with its
+# attestations, tests it, and only with `publish` copies the archive's bytes
+# to GHCR (digests kept), pulls them back, and pushes the
 # supervisor-collector chart when its version isn't published yet. It makes
 # no GitHub Release. It can be started only once it is on main (Actions runs
-# a dispatched workflow from the branch named; the owner dispatches it from
-# main).
+# a dispatched workflow from the branch named; the maintainers dispatch it
+# from main).
 #
 # Every `run:` is tool setup, artifact handling or one call of a committed
 # script; values reach a script only through `env:`, never `${{ }}` inside
@@ -36,11 +36,11 @@ concurrency:
 
 jobs:
   # Each version offered and not deprecated (the catalogue); with publish, a
-  # published version is never pushed again (Ruling 399): an x.y.z already
-  # published is refused; `all` keeps the versions not yet published, and
-  # when none is left the run has nothing to build or publish (has=false:
-  # every later job is skipped, a notice says so, and the run succeeds; a
-  # matrix over an empty list would fail).
+  # published version is never pushed again: an x.y.z already published is
+  # refused; `all` keeps the versions not yet published, and when none is
+  # left the run has nothing to build or publish (has=false: every later job
+  # is skipped, a notice says so, and the run succeeds; a matrix over an
+  # empty list would fail).
   check:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
@@ -156,11 +156,9 @@ jobs:
         run: bash scripts/release/steps.sh collector-test --version "$COLLECTOR_VERSION"
 
   # Only with publish: each image's archive copied with its digests kept,
-  # then pulled back by digest (decisions 80 and 81's rules). The `release`
-  # environment admits only v* tags and main (the owner's setting); on
-  # the Team plan a private repository can't have required reviewers (Q280,
-  # Preflight ruling 7), so dispatching with publish is the owner's yes until
-  # D36-3 adds the environment's reviewer.
+  # then pulled back by digest. The `release` environment admits only v*
+  # tags and main (a repository setting); dispatching with publish is the
+  # maintainers' go-ahead.
   publish:
     if: ${{ inputs.publish && needs.check.outputs.has == 'true' }}
     needs: [check, test]
@@ -171,7 +169,7 @@ jobs:
       contents: read
       packages: write
     env:
-      # crane is tools.sh's checked one only (Rulings 391 and 392).
+      # crane is tools.sh's checked one only.
       TELFLO_CRANE: ""
     strategy:
       matrix:
@@ -213,7 +211,7 @@ jobs:
   # because there was no collector version to build (has == 'false': a chart
   # bump alone). Its if: holds the workflows' one status function (not
   # cancelled: so a skipped publish doesn't skip it), allow-listed for this
-  # job only by check-workflows.sh (Ruling 401); a failed or cancelled test
+  # job only by check-workflows.sh; a failed or cancelled test
   # or publish still stops it.
   chart:
     if: ${{ !cancelled() && inputs.publish && needs.check.result == 'success' && (needs.publish.result == 'success' || (needs.publish.result == 'skipped' && needs.check.outputs.has == 'false')) }}

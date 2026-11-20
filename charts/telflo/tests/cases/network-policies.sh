@@ -1,5 +1,5 @@
-# The platform's NetworkPolicies (D33-1 decision 19; Preflight ruling 3).
-# Sourced by tests/render-tests.sh, which defines every helper used here.
+# The platform's NetworkPolicies. Sourced by tests/render-tests.sh, which
+# defines every helper used here.
 #
 # On by default (networkPolicy.enabled), none at all when off:
 # - the validator, tester and evaluator: ingress from the API's pods only,
@@ -103,8 +103,8 @@ each_profile "web's policy: ingress from the gateway's pods only, on 3000; egres
 
 # Postgres: the API's pods (the migrate init container's) and the
 # opamp-server's, labelled as that chart labels them: its name and this
-# release, and component agent or management (D36-1 decision 17: since
-# 0.2.4 two Deployments, each with its own migrate init container, and both
+# release, and component agent or management (since its 0.2.4, two
+# Deployments, each with its own migrate init container, and both
 # serve from the database).
 OPAMP_PEER_SEL="NetworkPolicy/telflo-postgres.spec.ingress[0].from[1].podSelector"
 OPAMP_PEER="$OPAMP_PEER_SEL.matchLabels"
@@ -150,7 +150,7 @@ np_release_name() {
 run_case "every policy's selectors name the release (another release name)" np_release_name
 
 # Each policy selects the pods its component's workload runs (whatever
-# template renders the workload: the API's, web's and gateway's are Task 6's).
+# template renders the workload).
 np_matches_pods() {
   [ "$(basename "$1")" = no-network-policy ] && return 0
   local pol wl comp k

@@ -2,8 +2,7 @@
 {{- $web := .Values.web }}
 {{- $name := include "telflo.webName" . }}
 {{- /*
-The web app (D33-1 decisions 13, 18 and 25; Preflight rulings 7 and 9; the
-plan's Appendix): the image's own server (node server.mjs), which logs no
+The web app: the image's own server (node server.mjs), which logs no
 request. It holds no credential: it calls the API inside the cluster and
 renders the public origin's links. Its root stays read-only; it writes
 nothing.
@@ -69,7 +68,7 @@ spec:
             # Canonical URLs.
             - name: TELFLO_PUBLIC_WEB_URL
               value: {{ include "telflo.envLiteral" .Values.publicUrl }}
-            {{- /* The site's switches and links, as the API's (D36-1 decision 27). */}}
+            {{- /* The site's switches and links, as the API's. */}}
             {{- include "telflo.siteEnv" . | nindent 12 }}
             {{- /* Product analytics: a project's public key, never a secret. Empty: none, and no cookie banner. */}}
             {{- with $web.posthog.key }}
@@ -81,7 +80,7 @@ spec:
               value: {{ include "telflo.envLiteral" . }}
             {{- end }}
           # A static file the server answers before its request handler: no
-          # log line and no call to the API (decision 18).
+          # log line and no call to the API.
           readinessProbe:
             httpGet:
               path: /favicon.ico

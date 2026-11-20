@@ -1,8 +1,8 @@
 # telflo's collector image: otelcol-contrib and the OpAMP supervisor, one tag
 # per collector version (ghcr.io/telflo/telflo/collector:<version>).
 #
-# The base image is pinned by its index digest (ADR 0019), and the build
-# arguments are fed from the collector catalogue (D17c-1 spec decision 49).
+# The base image is pinned by its index digest, and the build arguments
+# are fed from the collector catalogue.
 #
 # Generic by design: no fleet secrets, endpoints or EXPOSE statements are
 # baked in. A collector's identity arrives in environment variables at run
@@ -12,7 +12,8 @@
 # Built by scripts/build-collector-image.sh <version>, which reads the
 # version's linux_amd64 and linux_arm64 otelcol-contrib and opampsupervisor
 # download URLs and sha256 from catalog/distributions/otelcol-contrib.json and
-# passes them as the build arguments below. Pushing the image is the owner's.
+# passes them as the build arguments below. Pushing the image is left to the
+# maintainers.
 #
 # debian:bookworm-slim, the index digest it resolved to on 2026-10-16 (the
 # image created 2026-10-05; linux/amd64 and linux/arm64 among its platforms).

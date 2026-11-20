@@ -3,8 +3,7 @@
 {{- $name := include "telflo.testerName" . }}
 {{- $secret := include "telflo.secretName" (list . "internalServices") }}
 {{- /*
-The collector tester (D33-1 decisions 19, 20, 23 and 25; Preflight rulings 7
-and 10; ADR 0028): Deployment and ClusterIP Service otelcol-testing, port
+The collector tester: Deployment and ClusterIP Service otelcol-testing, port
 8002, with kwok's fake cluster inside the pod. The API is its only caller
 (networkpolicies.yaml admits nothing else, and it reaches nothing: compose's
 internal network, in Kubernetes).

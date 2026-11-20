@@ -3,10 +3,9 @@
 {{- $name := include "telflo.validatorName" . }}
 {{- $secret := include "telflo.secretName" (list . "internalServices") }}
 {{- /*
-The collector validator (D33-1 decisions 19, 20 and 25; Preflight ruling 7):
-Deployment and ClusterIP Service otelcol-validator, port 8001. The API is its
-only caller (networkpolicies.yaml admits nothing else, and it reaches
-nothing).
+The collector validator: Deployment and ClusterIP Service otelcol-validator,
+port 8001. The API is its only caller (networkpolicies.yaml admits nothing
+else, and it reaches nothing).
 
 Its secret is in its environment, from the Secret existingSecrets.
 internalServices names (key otelcol-validator-secret): the validator reads

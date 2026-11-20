@@ -242,12 +242,11 @@ limits, sign-in's among them.
 
 ## The site
 
-`site` holds what an install offers beyond the signed-in product (D36-1
-decision 27). The chart renders all eleven of its variables on the API's and
-the web app's pods, so the two always agree;
+`site` holds what an install offers beyond the signed-in product. The chart
+renders all eleven of its variables on the API's and the web app's pods, so
+the two always agree;
 [docs/configuration.md's "The site"](../../docs/configuration.md#the-site)
-describes each. Its defaults are the open source's (the owner's
-Q248):
+describes each. Its defaults are the open source's:
 
 ```yaml
 site:
@@ -323,8 +322,8 @@ rules in full.
 
 The gateway can send some paths to another Service in the release's
 namespace, ahead of the platform's own: a site's own home page at `/`, its
-pages under `/home/`, its `robots.txt` (D36-1 decision 24). Each entry is
-a path, a match, a Service's name and its port:
+pages under `/home/`, its `robots.txt`. Each entry is a path, a match, a
+Service's name and its port:
 
 ```yaml
 gateway:
@@ -413,7 +412,7 @@ access line is still redacted). Both are known limits.
    the kubelet starts it again; then it runs the migrations, and the API
    starts. `NOTES.txt` prints the origin and the next commands.
 
-5. **The first admin**, at once (D36-1 decision 37). Under the default
+5. **The first admin**, at once. Under the default
    `site.registration: invite-only` nobody can sign up, so the first
    account comes from a command in the API's container, with its settings
    and database role:
@@ -425,15 +424,14 @@ access line is still redacted). Both are known limits.
    It makes the account and its group organization, makes it the first
    product admin, and prints a link to set its password once, as the
    output's last line (the password reset's link, once, within 60 minutes);
-   it never sends email, so mail needn't be set up yet (D36-1 decision 54,
-   Q266). The first sign-in lands in that organization. That link is a
-   secret: run it in your own terminal, never where output is kept (a CI
-   log); `kubectl exec`'s output goes to you alone, never to the pod's
-   logs. Lost or expired, `telflo-admin reset-link --email <email>` (the
-   same exec) prints a new one for any person's account, the earlier one
-   no longer working (Q258). Otherwise it prints fixed lines and the
-   address only; it works once, and is refused once any product admin
-   exists.
+   it never sends email, so mail needn't be set up yet. The first sign-in
+   lands in that organization. That link is a secret: run it in your own
+   terminal, never where output is kept (a CI log); `kubectl exec`'s output
+   goes to you alone, never to the pod's logs. Lost or expired,
+   `telflo-admin reset-link --email <email>` (the same exec) prints a new
+   one for any person's account, the earlier one no longer working.
+   Otherwise it prints fixed lines and the address only; it works once, and
+   is refused once any product admin exists.
    Until it has run, anything that can run SQL as the API's role could
    make the first product admin, so run it before anything else.
    [docs/configuration.md's "Administration"](../../docs/configuration.md#administration)

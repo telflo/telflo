@@ -1,8 +1,7 @@
 # The site's values, the mail's TLS, login and CA, and gateway.extraRoutes'
-# value (D36-1 decisions 24, 27, 30 and 39; Preflight rulings 15 and 17).
-# With every new value at its default, the rendering differs from D33-1's
-# only by the new env lines (api.sh and web.sh list them exactly). Sourced
-# by tests/render-tests.sh, which defines every helper used here; api.sh
+# value. With every value at its default, they add only env lines to the
+# rendering (api.sh and web.sh list them exactly). Sourced by
+# tests/render-tests.sh, which defines every helper used here; api.sh
 # defines SITE_ENV and the API's paths.
 
 WEB_SITE_C="Deployment/telflo-web.spec.template.spec.containers[web]"
@@ -102,7 +101,7 @@ run_case "schema: site.registration's modes, booleans, closed objects, a version
 registration_modes() { renders "${D[@]}" --set-string site.registration=open && renders "${D[@]}" --set-string site.registration=closed; }
 run_case "site.registration open and closed render" registration_modes
 # A null value (Helm drops it before the schema sees it) or one of another
-# type is refused by the guards, never rendered as Go's "<nil>" (Ruling 347).
+# type is refused by the guards, never rendered as Go's "<nil>".
 M_SITE_STR() { printf '%s must be a string, not null or another type' "$1"; }
 M_SITE_BOOL() { printf '%s must be true or false, not null or another type' "$1"; }
 for key in registration docsUrl terms.version terms.termsUrl terms.privacyUrl terms.cookiePolicyUrl; do
@@ -117,7 +116,7 @@ run_case "guard: a site.docsUrl of another type refused without the schema" refu
   "${D[@]}" --skip-schema-validation --set site.docsUrl=1
 run_case "guard: a site.playground of another type refused without the schema" refused "$(M_SITE_BOOL site.playground)" "" \
   "${D[@]}" --skip-schema-validation --set-string site.playground=true
-# Ruling 351: site and site.terms are maps before any of their fields is read.
+# site and site.terms are maps before any of their fields is read.
 run_case "guard: a site.terms that isn't a map refused without the schema" refused \
   "site.terms must be a map of version, termsUrl, privacyUrl and cookiePolicyUrl" "" "${D[@]}" --skip-schema-validation --set-string site.terms=x
 run_case "guard: a site that isn't a map refused without the schema" refused \
@@ -125,7 +124,7 @@ run_case "guard: a site that isn't a map refused without the schema" refused \
 no_nil() { ! grep -qF '<nil>' "$1.yaml"; }
 each_profile "site: nothing renders Go's <nil>" no_nil
 
-# --- the mail's TLS, login and CA (decisions 30 and 39) ----------------------------------
+# --- the mail's TLS, login and CA ----------------------------------------------------
 SMTP_CA_DIR=/etc/telflo/smtp-ca
 mail_saas() {
   eq "$SAAS" "$API_C.env[TELFLO_SMTP_TLS].value" '"implicit"' && eq "$SAAS" "$API_C.env[TELFLO_SMTP_PORT].value" '"465"' &&
@@ -184,7 +183,7 @@ run_case "guard: api.mail.smtp.host takes an IPv6 address without brackets, and 
 run_case "guard: api.mail.smtp.host with a port refused (host:port is not an IPv6 address)" refused "$M_HOST" "" "${D[@]}" --set-string 'api.mail.smtp.host=cafe:25'
 run_case "guard: api.mail.smtp.host in brackets refused" refused "$M_HOST" "" "${D[@]}" --set-string 'api.mail.smtp.host=[2001:db8::25]'
 
-# --- gateway.extraRoutes: the value and its schema (Task 6b renders it) --------------------
+# --- gateway.extraRoutes: the value and its schema (gateway.sh renders it) -----------
 # routes <file> <one route's YAML lines, already indented under a list item>
 routes() { local file="$1"; shift; { printf 'gateway:\n  extraRoutes:\n    - '; printf '%s\n      ' "$@"; printf '\n'; } >"$file"; }
 extra_routes_ok() {

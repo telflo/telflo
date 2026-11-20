@@ -1,6 +1,6 @@
-# Telflo on one machine with Docker Compose (D36-2 decisions 88-92): the
-# same images, settings and defaults as the Helm chart (charts/telflo), for
-# trying Telflo or running it for a team on one host.
+# Telflo on one machine with Docker Compose: the same images, settings and
+# defaults as the Helm chart (charts/telflo), for trying Telflo or running
+# it for a team on one host.
 #
 #   ./setup.sh --public-url <origin> --agent-url <origin> --mailpit   (./setup.sh --help)
 #   docker compose up -d

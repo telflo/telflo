@@ -1,11 +1,10 @@
 {{- include "telflo.guards" . }}
 {{- if .Values.networkPolicy.enabled }}
 {{- /*
-The platform's NetworkPolicies (D33-1 decision 19; Preflight ruling 3), on
-while networkPolicy.enabled (the default); none at all when it is false.
-They take effect only where the cluster's network plugin enforces them (the
-kind smoke runs kind's own kindnet, which enforces them: D36-2 Preflight
-ruling 4).
+The platform's NetworkPolicies, on while networkPolicy.enabled (the
+default); none at all when it is false. They take effect only where the
+cluster's network plugin enforces them (the kind smoke runs kind's own
+kindnet, which enforces them).
 
 - The sandbox: the validator, the tester and the evaluator admit only the
   API's pods, on their own port, and reach nothing at all (Egress listed

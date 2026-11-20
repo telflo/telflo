@@ -669,7 +669,7 @@ clickstack_mounts() {
 }
 run_case "node, ClickStack: the init container's and the collector's mounts paired" clickstack_mounts
 
-# Ruling 29: a volume's mountPath and hostPath are written quoted, so a path
+# A volume's mountPath and hostPath are written quoted, so a path
 # that is a YAML word (bare, as the chart takes any string), or holds one as a
 # segment, stays that exact string: never true, false or null.
 word_mount_paths() { # <role> <workload kind>

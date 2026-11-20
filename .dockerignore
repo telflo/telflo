@@ -1,16 +1,14 @@
-# The build context of the Node images (migrate, api and
-# web), of the collector validator (otelcol-validator) and of
-# the collector tester (otelcol-testing) is the repository's root
-# (D13a Preflight ruling 6, D13b spec decision 17, D14a spec decision 14), so
-# that their images can carry catalog/, the collector catalogue. This file
-# is an allowlist: only the workspace, the catalogue, the install templates
-# (the API image's default set, D17c-1 decision 35), the two Python
-# services' directories and one file of vendor/ go in. Everything else stays
-# out: .git, docs/, docker/ (the tester's and the evaluator's development
-# secrets among it), the rest of vendor/ (the opamp-server's contract
-# files), the other services (the OTTL evaluator builds from its own
-# context, with its own .dockerignore; the opamp-server, in its own
-# repository, runs its published image) and scratch files. Each
+# The build context of the Node images (migrate, api and web), of the
+# collector validator (otelcol-validator) and of the collector tester
+# (otelcol-testing) is the repository's root so that their images can carry
+# catalog/, the collector catalogue. This file is an allowlist: only the
+# workspace, the catalogue, the install templates (the API image's default
+# set), the two Python services' directories and one file of vendor/ go in.
+# Everything else stays out: .git, docs/, docker/ (the tester's and the
+# evaluator's development secrets among it), the rest of vendor/ (the
+# opamp-server's contract files), the other services (the OTTL evaluator
+# builds from its own context, with its own .dockerignore; the opamp-server,
+# in its own repository, runs its published image) and scratch files. Each
 # Python service's directory goes in whole but for what Python leaves
 # behind: its tests are needed by its Dockerfile's `test` target, and its
 # runtime stage copies only what the service runs (app/, telemetry.py, the
@@ -18,8 +16,7 @@
 # never reach a runtime image. The tester's image also reads the validator's
 # downloader (scripts/download-binaries.py). The one vendor/ file let in is
 # the opamp-server's org-token corpus, which the validator's `test` target
-# copies for tests/test_org_variables.py (D33-1 Ruling 329); no runtime
-# stage copies it.
+# copies for tests/test_org_variables.py; no runtime stage copies it.
 *
 !telflo-core/
 !catalog/

@@ -14,9 +14,9 @@ give it those at run time, the supervisor connects to your fleet's OpAMP
 server, and telflo sends the collector its group's published version.
 
 The platform's install dialog writes the command below for you. It is the
-platform's own image, published as `ghcr.io/telflo/telflo/collector`
-(D18); the older `ghcr.io/telflo/collector` isn't this repository's and is
-never written from here.
+platform's own image, published as `ghcr.io/telflo/telflo/collector`;
+the older `ghcr.io/telflo/collector` isn't this repository's and is never
+written from here.
 
 ## Quick start
 
@@ -79,7 +79,7 @@ values' `collectorEnv` reaches the collector as pipeline environment
 variables (below). A pod reads the token only as it starts, so the chart
 puts a checksum of the token's Secret on each workload's pods: a `helm
 upgrade` with a new default token changes it, and Kubernetes restarts the
-pods with the new token (D18).
+pods with the new token.
 
 Every value is written into the supervisor's configuration exactly as given,
 quoted, so a name such as `2024`, `true` or `#east` stays text and the
@@ -152,9 +152,8 @@ collector and the supervisor don't use it).
   the same binaries.
 - **0.159.0, 0.160.0, 0.161.0 and 0.162.0**, each for `linux/amd64` and
   `linux/arm64`, are built again under this name by the collector
-  workflow before the platform's first release (D36-2 decision 111); the
-  package is private until the repository goes public (D36-3), so until
-  then pulling them needs a GHCR login.
+  workflow before the platform's first release; the package is public,
+  so pulling them needs no login.
 - Each image carries the OCI labels `org.opencontainers.image.source`
   (`https://github.com/telflo/telflo`), `.version` (the collector
   version), `.revision` (the commit it was built from), `.title` and
@@ -204,8 +203,7 @@ docker logs telflo-collector
 
 ## Maintainers
 
-This directory is the source of `ghcr.io/telflo/telflo/collector`
-(D17c-1; its own repository since D18, ADR 0031).
+This directory is the source of `ghcr.io/telflo/telflo/collector`.
 
 - **Tests** run without Docker or network:
   `bash docker/collector-image/entrypoint_test.sh` (the entrypoint) and
@@ -224,12 +222,12 @@ This directory is the source of `ghcr.io/telflo/telflo/collector`
   version is refused) and builds through the Docker-driver builder
   `desktop-linux` (`BUILDX_BUILDER` overrides it). It downloads the Debian
   base, apt's `curl` and `ca-certificates`, and the two binaries.
-- **Publishing** is the collector workflow's (`.github/workflows/collector.yml`,
-  D36-2 decision 85; ADR 0031's D36-2 amendment), started by hand from
-  `main` with `collector_version` (a version the catalogue offers, or
-  `all`) and `publish` (false by default: build and test only; true is
-  the owner's yes), as `docs/releasing.md` says. Each version goes through
-  this directory's build script twice:
+- **Publishing** is the collector workflow's
+  (`.github/workflows/collector.yml`), started by hand from `main` with
+  `collector_version` (a version the catalogue offers, or `all`) and
+  `publish` (false by default: build and test only; true is the maintainers'
+  go-ahead), as `docs/releasing.md` says. Each version goes through this
+  directory's build script twice:
 
   ```bash
   scripts/build-collector-image.sh 0.162.0 --build-oci <dir> --builder <name>
@@ -249,9 +247,8 @@ This directory is the source of `ghcr.io/telflo/telflo/collector`
   any registry but a loopback one (`--registry 127.0.0.1:<port>`, the
   rehearsal's) the archive must carry its attestations. `--dry-run` with
   `--build-oci` prints the exact `docker buildx` argv, one shell-quoted
-  argument a line. There is no `--push` or `--replace` (D36-2: they built
-  and pushed in one step and re-pushed a published tag), and
-  `scripts/publish-collector-images.sh` is gone.
+  argument a line. There is no `--push` or `--replace`: building and
+  pushing are separate steps, and a published tag is never pushed again.
 
   Before anything runs, both modes refuse a repository other than
   `ghcr.io/telflo/telflo/collector` (the older registry paths

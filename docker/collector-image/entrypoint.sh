@@ -3,7 +3,7 @@ set -euo pipefail
 
 # telflo's collector image: the container's entrypoint. The supervisor's
 # configuration has no `reports_remote_config` (deprecated in the supervisor
-# at 0.161.0 and refused from 0.163.0: D16a Preflight ruling 18).
+# at 0.161.0 and refused from 0.163.0).
 #
 # The image is generic: it ships NO fleet credentials. Identity arrives in
 # environment variables at run time, and this script renders
@@ -22,11 +22,11 @@ set -euo pipefail
 #                                                (reported as
 #                                                telflo.collector_group_id):
 #                                                the opamp-server refuses a
-#                                                collector naming no group
-#                                                (D17d-1), so this script
-#                                                refuses to start without
-#                                                one, or with one that is
-#                                                blank once trimmed
+#                                                collector naming no group,
+#                                                so this script refuses to
+#                                                start without one, or with
+#                                                one that is blank once
+#                                                trimmed
 #
 # POD_NAMESPACE, POD_NAME, NODE_NAME and HOST_IP (optional) are reported as
 # Kubernetes attributes when set.

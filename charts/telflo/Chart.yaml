@@ -18,7 +18,7 @@ keywords:
   - opentelemetry
   - collector
   - opamp
-# The opamp-server chart (D26), vendored unpacked under charts/opamp-server:
+# The opamp-server chart, vendored unpacked under charts/opamp-server:
 # a copy of the opamp-server repository's charts/opamp-server at the tag
 # vendor/opamp-server/PIN names, byte for byte, its git tree id the PIN's
 # chart-tree (scripts/check-opamp-server-pin.sh holds the three equal). So
