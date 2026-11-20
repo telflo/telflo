@@ -134,7 +134,7 @@ function localDiskFileStore(root: string): IFileStore {
     // Lexically inside the root. The ids are checked already, so this never
     // fails unless that check does: it is the second of two. No key the
     // store's interface takes reaches it (keyPath joins only checked ids and
-    // fixed names), so no test does: defence in depth, should keyPath ever
+    // fixed names), so no test does: defense in depth, should keyPath ever
     // be loosened.
     const fromRoot = relative(root, file);
     if (fromRoot === "" || fromRoot.startsWith(`..${sep}`) || fromRoot === ".." || isAbsolute(fromRoot)) {

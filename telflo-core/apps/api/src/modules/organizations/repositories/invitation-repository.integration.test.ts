@@ -216,7 +216,7 @@ describe("invitation repository", () => {
       const find = (email: string) =>
         inOrganization(adminId, organizationId, (invitations) => invitations.findPendingByEmail(email));
 
-      // The neighbour's invitation to invitee@example.com isn't this organization's.
+      // The neighbor's invitation to invitee@example.com isn't this organization's.
       expect(await find("invitee@example.com")).toBeUndefined();
       await addInvitation(ownerDb, {
         organizationId,

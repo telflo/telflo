@@ -146,7 +146,7 @@ export const REQUESTER_USER_AGENT_MAXIMUM_LENGTH = 512;
 
 /** Who asked for a public download, for its audit row. */
 export interface Requester {
-  /** The client's address (`request.ip`, the trusted hops honoured), when it is a well-formed one. */
+  /** The client's address (`request.ip`, the trusted hops honored), when it is a well-formed one. */
   ipAddress: string | undefined;
   /** The User-Agent's first 512 characters, when one was sent. */
   userAgent: string | undefined;

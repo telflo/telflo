@@ -6,19 +6,19 @@ import { createDatabaseSessionService, type SessionRoutesDependencies } from "..
 import { createCollectorCatalogueRepository } from "./repositories/collector-catalogue-repository.js";
 
 /**
- * `GET /api/v1/collector-distributions`: the catalogue the create dialog's
- * and the toolbar's pickers read. Every distribution, in the catalogue's
+ * `GET /api/v1/collector-distributions`: the catalog the create dialog's
+ * and the toolbar's pickers read. Every distribution, in the catalog's
  * order, with the versions it offers, newest first; deprecated versions are
  * left out, as are each version's binaries and image, which only the images
  * that bake them read. Each distribution carries the collector's renames,
- * which the web doesn't read: it takes its own copy from the catalogue when
+ * which the web doesn't read: it takes its own copy from the catalog when
  * it is built.
  *
- * Signed in, and not under an organization: the catalogue is global, the same
+ * Signed in, and not under an organization: the catalog is global, the same
  * for every organization, as `/api/v1/organizations` is no one organization's.
  * Like that path and `/me`, it doesn't run `requireCurrentTerms`: the terms
- * gate data endpoints, and the catalogue holds no one's data. It reads through
- * the API's role, which may only read the catalogue's tables (migration
+ * gate data endpoints, and the catalog holds no one's data. It reads through
+ * the API's role, which may only read the catalog's tables (migration
  * 1700000000023); with no row-level security on them, no database context is
  * needed.
  */

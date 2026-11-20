@@ -81,7 +81,7 @@ export const PUBLIC_TEST_RUN_TEXT_NOT_RUNNABLE_MESSAGE = "The version's YAML can
  * most 1 MiB decoded, checked by the route: 413); the signal and the
  * pipeline, whose first part is the signal; the duration (1–60, 5); the
  * collector version and distribution (a version's pin and its configuration's
- * distribution by default, the catalogue's defaults for a text); and exactly
+ * distribution by default, the catalog's defaults for a text); and exactly
  * one of `rules` (1–20) and `useSavedRules: true` (a version's run only).
  * Strict.
  */

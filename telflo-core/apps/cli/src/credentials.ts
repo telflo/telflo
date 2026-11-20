@@ -1,10 +1,8 @@
 /*
  * The credentials file: `$TELFLO_CLI_CONFIG_DIR/credentials.json`, else
  * `$XDG_CONFIG_HOME/telflo/credentials.json`, else
- * `~/.config/telflo/credentials.json`. The older Telflo CLI's `~/.telflo` is
- * never read, nor `TELFLO_CONFIG_DIR`: the older CLI reads that variable and
- * names its file `credentials.json` too, so the two CLIs would share one
- * file.
+ * `~/.config/telflo/credentials.json`. Neither `~/.telflo` nor
+ * `TELFLO_CONFIG_DIR` is ever read.
  *
  * - JSON `{ version: 1, server, token, kind, tokenName, organizationId }`;
  *   no expiry (`/whoami` carries none).

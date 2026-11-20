@@ -34,7 +34,7 @@ import type * as PublishedVersionRepository from "../configurations/repositories
 
 /**
  * A test's changes to what the repositories answer (the cases the
- * catalogue the tests share can't hold: another distribution's version, a
+ * catalog the tests share can't hold: another distribution's version, a
  * version without an arch's binaries), cleared before each test.
  */
 const overrides = vi.hoisted(() => ({
@@ -1010,7 +1010,7 @@ describe("the install routes", () => {
       expect(await auditRows(world.organizationId)).toEqual([]);
     });
 
-    it("refuses an arch the catalogue has no binaries of, before rendering, and takes the other", async () => {
+    it("refuses an arch the catalog has no binaries of, before rendering, and takes the other", async () => {
       const world = await aWorld();
       overrides.withoutPlatform = "linux_arm64";
       const path = bundlePath(world.organizationId, world.fleetId, world.defaultGroupId);

@@ -129,7 +129,7 @@ export type OidcProvidersResponse = z.infer<typeof OidcProvidersResponseSchema>;
  * The codes a federated sign-in puts in `/login?error=…` when it fails. The
  * callback is a navigation, not a fetch, so it reports failure in the URL
  * rather than in the error envelope:
- * - `oauth_failed`: cancelled, a missing or wrong flow cookie, a failed
+ * - `oauth_failed`: canceled, a missing or wrong flow cookie, a failed
  *   exchange or validation, or an account that can't be signed in to;
  * - `oauth_email_unverified`: the provider's email isn't verified, or the
  *   provider isn't authoritative for it, so nothing was linked or created;

@@ -20,9 +20,9 @@ import { validatePublicReply } from "../../../testing/public-api-openapi.js";
 /*
  * POST /api/public/v1/validate/anonymous, on the real server with no token,
  * the OpenAPI-checked fake validator behind an in-process wrapper (every
- * call recorded; a test can hold one at a gate): the catalogue's defaults
+ * call recorded; a test can hold one at a gate): the catalog's defaults
  * and a named collector, the validator's errors, no organization variables,
- * the three catalogue 400s and the body's, the 503, the 1 MiB body limit,
+ * the three catalog 400s and the body's, the 503, the 1 MiB body limit,
  * the limits per address and overall (a minute's count and the slots in
  * flight), a bearer ignored and not counted, `no-store` on every reply,
  * nothing of the text in a log line, and every reply checked against the
@@ -209,7 +209,7 @@ describe("POST /api/public/v1/validate/anonymous", () => {
     expect([response.statusCode, response.json<{ error: { code: string } }>().error.code]).toEqual([statusCode, code]);
   };
 
-  it("checks the text with no token, the catalogue's defaults, the text alone sent (a ${org:NAME} as written, no variables read), no-store, no audit row", async () => {
+  it("checks the text with no token, the catalog's defaults, the text alone sent (a ${org:NAME} as written, no variables read), no-store, no audit row", async () => {
     const yaml = textWith("# ${org:HOST}\n");
     const response = checked(await validate({ yaml }));
     expect(response.statusCode).toBe(200);
@@ -291,7 +291,7 @@ describe("POST /api/public/v1/validate/anonymous", () => {
     expect((await validate({ yaml: textWith() }, { on: limited, from: "192.0.2.11" })).statusCode).toBe(200);
   });
 
-  it("counts before the catalogue's reads: an unknown version spends the address's minute", async () => {
+  it("counts before the catalog's reads: an unknown version spends the address's minute", async () => {
     const limited = await serverWith({ ...TEST_RATE_LIMITS, anonymousValidationsPerIp: { max: 1, windowMs: 60_000 } });
     expectRefusal(await validate({ yaml: textWith(), collectorVersion: "0.0.1" }, { on: limited, from: "192.0.2.12" }), 400, "collector_version_unknown");
     expectRefusal(await validate({ yaml: textWith() }, { on: limited, from: "192.0.2.12" }), 429, "rate_limited");

@@ -29,7 +29,7 @@ import type { OttlEvaluatorResult } from "../../ottl-evaluator/schemas.js";
  *   here from the outcome alone, never from an error's own text: a Node or
  *   a fetch error can name a path or quote the request, and a stored message
  *   is shown to whoever can see the run. The only value in one is a
- *   collector version, which the catalogue's foreign key holds to
+ *   collector version, which the catalog's foreign key holds to
  *   `major.minor.patch`.
  */
 
@@ -106,7 +106,7 @@ export function versionUnavailableFailure(collectorVersion: string): TestRunFail
 }
 
 /**
- * 409 `version_retired` from the tester: its catalogue retires a version
+ * 409 `version_retired` from the tester: its catalog retires a version
  * the platform's still offers.
  */
 export function versionRetiredFailure(collectorVersion: string): TestRunFailure {
@@ -117,7 +117,7 @@ export function versionRetiredFailure(collectorVersion: string): TestRunFailure 
 }
 
 /**
- * 400 `version_unknown` from the tester: its catalogue doesn't list the
+ * 400 `version_unknown` from the tester: its catalog doesn't list the
  * version. Its own code: unlike `version_unavailable` (an offered
  * version missing from the image, which may come back), nothing in this
  * tester will run it, and its words don't say the version is retired.

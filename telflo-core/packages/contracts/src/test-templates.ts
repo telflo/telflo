@@ -111,7 +111,7 @@ export type UpdateTestTemplateRequest = z.infer<typeof UpdateTestTemplateRequest
 
 /**
  * A live template. `receiverType` is checked as the table checks it, not
- * against the list: a stored row always serialises. `fileName` is the
+ * against the list: a stored row always serializes. `fileName` is the
  * upload's own name, with its extension (downloads are named by it).
  * The timestamps are ISO 8601, from the API's clock.
  */

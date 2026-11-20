@@ -69,7 +69,7 @@ import { sealValues } from "./sealed-values.js";
 import { generateQuickDeploySecret, quickDeploySecretHash } from "./secret.js";
 
 /**
- * A catalogue without one platform's binaries; an error the `downloaded`
+ * A catalog without one platform's binaries; an error the `downloaded`
  * audit row's insert throws (one that isn't Postgres's, with any `code`);
  * an error the Helm values' builder throws (one that isn't its own
  * HelmBuildError: an unexpected one). All cleared before each test.

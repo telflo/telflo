@@ -9,7 +9,7 @@ import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:
  * The associated data binds a ciphertext to its link: a fixed label, the
  * organization's id and the link's id, so a value copied into another
  * link's row (or another organization's) fails to open. The key id (16 hex
- * characters of a labelled sha-256 of the key) is stored beside it, names
+ * characters of a labeled sha-256 of the key) is stored beside it, names
  * which key of the ring opens it, and reveals nothing of the key. The
  * plaintext is the variables as JSON, [{name, value}, …], in the request's
  * order; opening checks its names are the link's `choices.envNames`, in

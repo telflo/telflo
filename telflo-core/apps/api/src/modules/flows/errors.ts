@@ -4,7 +4,7 @@ import { AppError } from "../../errors.js";
 /*
  * The flows endpoints' own refusals. The shared ones are their modules':
  * `product_admin_required` is `requireProductAdmin`'s
- * (sessions/authenticate.ts), and a pin the catalogue doesn't offer is the
+ * (sessions/authenticate.ts), and a pin the catalog doesn't offer is the
  * configurations' `collector_distribution_unknown` or
  * `collector_version_unknown` (configurations/errors.ts), so a flow's pin and
  * a configuration's are refused alike.

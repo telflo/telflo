@@ -609,7 +609,7 @@ describe("evaluate", () => {
     expect(settled).toEqual({ kind: "unavailable", reason: "timeout" });
   });
 
-  it("honours the caller's signal: ended before the call, nothing is sent (not_sent); during it, aborted", async () => {
+  it("honors the caller's signal: ended before the call, nothing is sent (not_sent); during it, aborted", async () => {
     const stopped = new AbortController();
     stopped.abort();
     const { seen, doFetch } = answering(() => json({}));

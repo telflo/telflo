@@ -14,8 +14,8 @@ import { ConfigurationValidationErrorSchema, ValidateConfigurationVersionRequest
  * by the collector validator, nothing stored. The text is a version's
  * validation's (1 to 262,144 characters, no control character but tab, line
  * feed and carriage return, no lone surrogate). `distribution` and
- * `collectorVersion` default to the catalogue's: the default distribution,
- * and the distribution's default version. A distribution the catalogue
+ * `collectorVersion` default to the catalog's: the default distribution,
+ * and the distribution's default version. A distribution the catalog
  * doesn't have is 400 `collector_distribution_unknown`, a version it
  * doesn't have 400 `collector_version_unknown`, and a retired one 400
  * `collector_version_retired`.

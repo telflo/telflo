@@ -454,7 +454,7 @@ describe("the public test runs routes", () => {
 
       expectRefusal(await call("POST", ROUTE.queue, org.write, { payload: yamlBody({ distribution: "no-such-distribution" }) }), 400, "collector_distribution_unknown");
       expectRefusal(await call("POST", ROUTE.queue, org.write, { payload: yamlBody({ collectorVersion: "0.0.1" }) }), 400, "collector_version_unknown");
-      // A retired version, added for this test alone (the catalogue is shared, so it goes again).
+      // A retired version, added for this test alone (the catalog is shared, so it goes again).
       const retired = "0.0.2";
       await ownerDb
         .insertInto("collector_versions")

@@ -46,7 +46,7 @@ afterEach(() => {
 });
 
 describe("exit codes", () => {
-  it("are 0 to 4, as the older CLI's", () => {
+  it("are 0 to 4", () => {
     expect(EXIT).toEqual({ OK: 0, API: 1, USAGE: 2, AUTH: 3, FAILED: 4 });
   });
 });

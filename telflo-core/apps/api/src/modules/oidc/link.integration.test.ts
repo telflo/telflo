@@ -765,7 +765,7 @@ describe("linking and unlinking a provider from Settings", () => {
     it("link_failed for a state mismatch, a provider error and a failed exchange, audited identity_link_failed", async () => {
       const browser = await signedIn();
 
-      // A provider error: the person cancelled at Google.
+      // A provider error: the person canceled at Google.
       expectLinkEnded(await linkWithProvider(browser, {}, { error: "access_denied" }), "link_failed");
 
       // A state mismatch: the provider's redirect answers another flow.
@@ -986,7 +986,7 @@ describe("linking and unlinking a provider from Settings", () => {
     });
 
     it("a later Google sign-in with the account's own address links it again, by sign_in, and sends no email", async () => {
-      // The documented behaviour: the account's address is this Google
+      // The documented behavior: the account's address is this Google
       // account's, which Google is authoritative for.
       const browser = await signedIn(server, gmail());
       await linked(browser, "own-address-sub");

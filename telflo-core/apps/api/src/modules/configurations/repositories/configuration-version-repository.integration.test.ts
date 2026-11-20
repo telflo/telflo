@@ -24,7 +24,7 @@ describe("configuration version repository", () => {
   /** The tables' owner: fixtures, truncation and reading rows back. */
   let ownerDb: Kysely<Database>;
   let databases: TestDatabases;
-  /** The catalogue's default distribution and version, which a version is created at. */
+  /** The catalog's default distribution and version, which a version is created at. */
   let pin: { collectorDistribution: string; collectorVersion: string };
   /** The pin as a summary reads it: the default is never deprecated. */
   let summaryPin: typeof pin & { collectorVersionDeprecated: boolean; collectorVersionDeprecatedNote: string | null };
@@ -1360,7 +1360,7 @@ describe("configuration version repository", () => {
       publicationId,
       yamlContent,
       label,
-      // The fixture's pin: the catalogue's default.
+      // The fixture's pin: the catalog's default.
       collectorVersion: pin.collectorVersion,
     });
 
@@ -1453,7 +1453,7 @@ describe("configuration version repository", () => {
 
     it("writes nothing for a version pinned to another collector version than the one given", async () => {
       const { memberId, organizationId, configuration, version } = await withDraft();
-      // Another version the catalogue offers than the fixture's pin.
+      // Another version the catalog offers than the fixture's pin.
       const { version: other } = await ownerDb
         .selectFrom("collector_versions")
         .select("version")
@@ -1497,7 +1497,7 @@ describe("configuration version repository", () => {
           ...record("receivers: {}\n", randomUUID(), label),
           publishedByUserId: memberId,
         });
-        // Labelled "Initial version": another label, or none, isn't it.
+        // Labeled "Initial version": another label, or none, isn't it.
         expect(await versions.recordPublish(configuration.id, version.id, input("Renamed"))).toBeUndefined();
         expect(await versions.recordPublish(configuration.id, version.id, input("initial version"))).toBeUndefined();
         expect(await versions.recordPublish(configuration.id, version.id, input(null))).toBeUndefined();
@@ -1556,7 +1556,7 @@ describe("configuration version repository", () => {
       const { memberId, organizationId, configuration } = await organizationWithNeighbour();
       const version = await addConfigurationVersion(ownerDb, { configurationId: configuration.id, organizationId });
       expect(version.collector_version).toBe(pin.collectorVersion);
-      // Another version the catalogue offers.
+      // Another version the catalog offers.
       const { version: other } = await ownerDb
         .selectFrom("collector_versions")
         .select("version")
@@ -1579,7 +1579,7 @@ describe("configuration version repository", () => {
       expect(await versionRow(version.id)).toMatchObject({ yaml_content: "b", collector_version: other });
     });
 
-    it("reads a pin the catalogue deprecated since as deprecated, with the catalogue's note, in every read and write, and a pin it offers with no note", async () => {
+    it("reads a pin the catalog deprecated since as deprecated, with the catalog's note, in every read and write, and a pin it offers with no note", async () => {
       const { memberId, organizationId, configuration } = await organizationWithNeighbour();
       const context = { organizationId, userId: memberId };
       const RETIRED = "0.0.1";
@@ -1587,7 +1587,7 @@ describe("configuration version repository", () => {
       const rolledBack = new Error("rolled back: the fixture never stays in telflo_platform_test");
 
       // As the tables' owner, in a transaction rolled back at the end: the
-      // deprecated version is a fixture's, and the catalogue in telflo_platform_test
+      // deprecated version is a fixture's, and the catalog in telflo_platform_test
       // stays the committed one.
       await expect(
         ownerDb.transaction().execute(async (transaction) => {
@@ -1648,7 +1648,7 @@ describe("configuration version repository", () => {
               collectorVersion: RETIRED,
             }),
           ).toMatchObject(deprecated);
-          // The pin changed to one the catalogue offers: no longer deprecated, and no note.
+          // The pin changed to one the catalog offers: no longer deprecated, and no note.
           const second = (await versions.listSummaries(configuration.id))[0]!;
           expect(
             await versions.save(

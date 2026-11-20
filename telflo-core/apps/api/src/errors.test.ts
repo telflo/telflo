@@ -64,7 +64,7 @@ describe("registerErrorHandling — the 400 branch", () => {
     const server = buildProbeServer();
     // Malformed JSON: Fastify's own content-type parser rejects this before
     // the Zod validator ever runs. Its error also carries statusCode 400,
-    // which is exactly the case the old `error.statusCode === 400` check
+    // which is exactly the case a plain `error.statusCode === 400` check
     // could not distinguish from a real validation failure — but it is
     // still a genuine client mistake, and must be reported as one.
     const response = await server.inject({

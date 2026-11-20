@@ -211,7 +211,7 @@ export interface IOrganizationService {
   changeMemberRole(actor: Actor, organizationId: string, userId: string, role: OrganizationRole): Promise<void>;
   /**
    * Removes a member softly and reassigns their sessions acting in the
-   * organization. An admin's pending invitations are cancelled with them.
+   * organization. An admin's pending invitations are canceled with them.
    */
   removeMember(actor: Actor, organizationId: string, userId: string): Promise<void>;
   restoreMember(actor: Actor, organizationId: string, userId: string): Promise<void>;
@@ -836,7 +836,7 @@ export function createOrganizationService(deps: OrganizationServiceDependencies)
 
     /**
      * The checks of a role change, then the soft removal and, in the same
-     * transaction, an admin's invitations cancelled and the reassignment of
+     * transaction, an admin's invitations canceled and the reassignment of
      * the member's sessions acting here. The member stays signed in: their
      * next request refreshes into the organization their session now names.
      *

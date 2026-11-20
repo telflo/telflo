@@ -549,7 +549,7 @@ describe("OIDC sign-in routes", () => {
   });
 
   describe("the account decision, row by row", () => {
-    it("row 1: the provider returned an error (the user cancelled): nothing changes, oauth_failed", async () => {
+    it("row 1: the provider returned an error (the user canceled): nothing changes, oauth_failed", async () => {
       const response = await signInWithProvider({}, { error: "access_denied", redirectTo: "/app/settings" });
 
       expectRefused(response, "oauth_failed", "/app/settings");
@@ -862,7 +862,7 @@ describe("OIDC sign-in routes", () => {
 
       // The starter configuration: exactly one, in the personal
       // organization, made by the new user at the sign-in's time, at the
-      // catalogue's default distribution and version.
+      // catalog's default distribution and version.
       const pin = await catalogueDefaults(ownerDb);
       const personal = await ownerDb
         .selectFrom("organizations")

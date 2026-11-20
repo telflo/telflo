@@ -157,7 +157,7 @@ export function fleetsUnavailableAtDelete(): AppError {
 
 /**
  * A save or a create changing a version's collector version to one its
- * configuration's distribution doesn't offer (not in the catalogue, or
+ * configuration's distribution doesn't offer (not in the catalog, or
  * deprecated). A pin equal to the one stored, or to the source's, is
  * never this, even if deprecated since. Nothing is written.
  */
@@ -170,7 +170,7 @@ export function collectorVersionUnknown(): AppError {
 }
 
 /**
- * A create naming a distribution the catalogue doesn't have, or one with
+ * A create naming a distribution the catalog doesn't have, or one with
  * no version to offer as its default. Nothing is written.
  */
 export function collectorDistributionUnknown(): AppError {

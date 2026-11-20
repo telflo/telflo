@@ -35,8 +35,8 @@ import { parse as parseYaml, parseDocument } from "yaml";
 //   refusal;
 // - 503 `validator_busy` when the text holds `# fake-otelcol-validator: unavailable`.
 //
-// It knows no catalogue: any distribution and version in the path's format
-// is checked. The API's tests push the catalogue's answers (404, 409, 503)
+// It knows no catalog: any distribution and version in the path's format
+// is checked. The API's tests push the catalog's answers (404, 409, 503)
 // with nextFault.
 
 /** A fixed, public test credential: 32 bytes and more. */
@@ -54,8 +54,8 @@ export const FAKE_OTELCOL_VALIDATOR_UNKNOWN_TYPE_PREFIX = "unknown_";
  * - `hang`: never answered (until close());
  * - `reset`: the connection is reset before anything is read;
  * - `error_500`: 500 `internal_error`;
- * - `not_found`: 404, as for a distribution or version its catalogue doesn't list;
- * - `version_retired`: 409, as for a version its catalogue deprecated;
+ * - `not_found`: 404, as for a distribution or version its catalog doesn't list;
+ * - `version_retired`: 409, as for a version its catalog deprecated;
  * - `version_unavailable`: 503, as for an offered version it doesn't hold;
  * - `validator_busy`: 503, as when no slot freed up;
  * - `invalid_request`: 400;

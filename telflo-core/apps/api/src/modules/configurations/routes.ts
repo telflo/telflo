@@ -215,7 +215,7 @@ function toVersionSummaryResponseBody(version: ConfigurationVersionSummary): Con
     // The publisher's email, as the creator's, goes only into a response body.
     publishedBy:
       version.publishedBy === null ? null : { userId: version.publishedBy.userId, email: version.publishedBy.email },
-    // The pin and whether the catalogue deprecated it since. The distribution is the configuration's, which carries it.
+    // The pin and whether the catalog deprecated it since. The distribution is the configuration's, which carries it.
     collectorVersion: version.collectorVersion,
     collectorVersionDeprecated: version.collectorVersionDeprecated,
     collectorVersionDeprecatedNote: version.collectorVersionDeprecatedNote,

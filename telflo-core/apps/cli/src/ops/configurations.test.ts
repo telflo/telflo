@@ -33,7 +33,7 @@ describe("parseVersionNumber", () => {
 });
 
 describe("pushConfiguration", () => {
-  it("validates on the catalogue's defaults when the configuration has no version", async () => {
+  it("validates on the catalog's defaults when the configuration has no version", async () => {
     const fake = fakeFetch((call, index) => {
       if (index === 0) return { json: { items: [], nextCursor: null } };
       if (index === 1) return { json: { valid: true, collectorVersion: "0.147.0", errors: [] } };

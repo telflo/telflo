@@ -482,7 +482,7 @@ const apiTokens: OrganizationResource<"api_tokens"> = {
 
 /**
  * A configuration's columns, created by `createdByUserId` in
- * `organizationId`, built for the catalogue's default distribution, read as
+ * `organizationId`, built for the catalog's default distribution, read as
  * the API reads it. The table has no default for the timestamps (the API
  * writes them from its clock) or the distribution, so they are written here.
  */
@@ -560,7 +560,7 @@ function seededConfigurationOf(versionId: string): string {
 /**
  * A configuration's version, with empty YAML, as the configuration's
  * create writes a version 1: a draft, every publish column null, pinned to
- * the catalogue's default version of its default distribution, which every
+ * the catalog's default version of its default distribution, which every
  * seeded configuration is built for.
  */
 async function draftVersionRow(
@@ -826,7 +826,7 @@ const testInputFiles: OrganizationResource<"test_input_files"> = {
 
 /**
  * A queued run's columns on a configuration's version, queued by
- * `queuedByUserId`, pinned to the catalogue's defaults, which every seeded
+ * `queuedByUserId`, pinned to the catalog's defaults, which every seeded
  * configuration is built for. queued_at is left to the table's now(), the
  * only time the insert policy admits.
  */

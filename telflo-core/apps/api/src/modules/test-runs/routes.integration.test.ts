@@ -56,7 +56,7 @@ const TEN_MIB = 10 * MIB;
 /** Creating, migrating and dropping a database waits for checkpoints. */
 const THROWAWAY_DATABASE_TIMEOUT = 30_000;
 
-/** The committed catalogue's distribution, and a Contrib version this file deprecates (a fixture's). */
+/** The committed catalog's distribution, and a Contrib version this file deprecates (a fixture's). */
 const CONTRIB = "otelcol-contrib";
 const RETIRED = "0.1.0";
 
@@ -177,7 +177,7 @@ async function filesUnder(root: string): Promise<string[]> {
 
 /*
  * The test files and runs API, against Postgres as the API's own role, with
- * a real FileStore on a temporary directory. The catalogue needs a
+ * a real FileStore on a temporary directory. The catalog needs a
  * deprecated Contrib version, which the committed one hasn't, so the file
  * runs on a throwaway database it prepares (migrated and synced, as
  * telflo_platform_test is) and drops afterwards. No dispatcher runs here:

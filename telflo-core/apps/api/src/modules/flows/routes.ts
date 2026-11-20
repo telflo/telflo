@@ -213,7 +213,7 @@ function writerOf(request: FastifyRequest): FlowWriter {
  *     per-address limit). The signed-in reads below are everyone's,
  *     whatever it says.
  *   * `GET /api/v1/flows` and `/api/v1/flows/:slug`: signed in, without the
- *     current terms (the catalogue's rule: the terms gate data endpoints, and
+ *     current terms (the catalog's rule: the terms gate data endpoints, and
  *     flows are no one's data). The published flows, and the hidden ones too
  *     for a product admin. The list carries each flow's YAML.
  *   * `POST /api/v1/flows`, `PATCH` and `DELETE /api/v1/flows/:id`: a

@@ -36,7 +36,7 @@ describe("the shipped skill", () => {
     expect(readFileSync(join(source, "SKILL.md"), "utf8").startsWith("---\nname: telflo-cli\n")).toBe(true);
   });
 
-  it("names this CLI's login and variables, not the older CLI's", () => {
+  it("names this CLI's login and variables, and none it doesn't have", () => {
     const text = SKILL_FILES.map((file) => readFileSync(join(skillsSourceDir(), file), "utf8")).join("\n");
     for (const gone of [
       "TELFLO_API_TOKEN",

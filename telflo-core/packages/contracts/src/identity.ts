@@ -2,9 +2,8 @@ import { z } from "zod";
 import { emailSchema, PASSWORD_MAXIMUM_LENGTH } from "./shared.js";
 
 /**
- * Twelve characters. The previous product required six (RegisterForm.tsx:72),
- * which is below current guidance; a clean break is the only free moment to
- * raise a password floor, since raising it later strands existing accounts.
+ * Twelve characters. Six would be below current guidance, and raising a
+ * password floor later strands existing accounts.
  */
 export const PASSWORD_MINIMUM_LENGTH = 12;
 

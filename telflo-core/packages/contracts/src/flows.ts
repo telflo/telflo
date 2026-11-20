@@ -157,7 +157,7 @@ const flowInputFields = {
   signals: FlowSignalsSchema,
   tags: FlowTagsSchema,
   yaml: FlowYamlSchema,
-  /** One the catalogue doesn't have is 400 `collector_distribution_unknown`. */
+  /** One the catalog doesn't have is 400 `collector_distribution_unknown`. */
   collectorDistribution: CollectorDistributionIdSchema,
   /** One the distribution doesn't offer (unknown or deprecated) is 400 `collector_version_unknown`. */
   collectorVersion: CollectorVersionNumberSchema,
@@ -379,7 +379,7 @@ export type FlowLintResponse = z.infer<typeof FlowLintResponseSchema>;
  * another flow has. Their other refusals are shared: `product_admin_required`
  * (403, IDENTITY_ERROR_CODES) for a write by anyone but a product admin;
  * `collector_distribution_unknown` and `collector_version_unknown` (400,
- * CONFIGURATION_ERROR_CODES) for a pin the catalogue doesn't offer; the
+ * CONFIGURATION_ERROR_CODES) for a pin the catalog doesn't offer; the
  * session's.
  */
 export const FLOW_ERROR_CODES = ["flow_not_found", "flow_slug_taken"] as const;

@@ -1,9 +1,8 @@
 /*
- * The fleet calls (routes 17-20 and 19's install), on the platform's names
- * where the older CLI's differ: a deployment is a collector group,
- * `server-supervisor` is `server`, install's `server_name` is
- * `displayName`, `root_deploy_path` is `rootPath`, its `env` a list of
- * `{ name, value }`. Data only: `commands/fleet.ts` prints.
+ * The fleet calls (routes 17-20 and 19's install), in the platform's names:
+ * collector groups, the `server` type, install's `displayName` and
+ * `rootPath`, its `env` a list of `{ name, value }`. Data only:
+ * `commands/fleet.ts` prints.
  *
  * - A linux install always sends `arch` (default amd64), `rootPath`
  *   (default the web's `DEFAULT_INSTALL_ROOT_PATH`) and `systemd` (default

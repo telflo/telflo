@@ -68,7 +68,7 @@ export interface FakeOidcProvider {
    * form. One shot; vitest only, since it runs serially.
    */
   nextSignIn(claims?: FakeOidcClaims, options?: FakeSignInOptions): void;
-  /** The next /authorize request redirects back with `error` (the user cancelled). One shot. */
+  /** The next /authorize request redirects back with `error` (the user canceled). One shot. */
   nextAuthorizeError(error?: string): void;
   close(): Promise<void>;
 }

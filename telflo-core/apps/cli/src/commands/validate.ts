@@ -9,7 +9,7 @@
  *   install's default) answers it 404: the CLI says to log in (exit 3), in
  *   fixed words.
  * - Exit 0 valid, 4 invalid (the collector's errors as the output), 2 for
- *   a version or distribution the catalogue doesn't have (a 400), 1 when
+ *   a version or distribution the catalog doesn't have (a 400), 1 when
  *   the validator couldn't check the text (503: not a verdict).
  */
 

@@ -307,7 +307,7 @@ export type HelmInstallFacts = z.infer<typeof HelmInstallFactsSchema>;
  * (`collectorEnv`, `collectorEnv.N`, `collectorEnv.N.name`,
  * `collectorEnv.N.value`: what a person typed, a Helm values link's stored
  * values), `operator` for every other field (the group's settings, the
- * install's settings and the catalogue's version in the facts, the revealed
+ * install's settings and the catalog's version in the facts, the revealed
  * token, the chart's settings: none a person typed for the install, so a
  * refusal is the operator's to fix).
  */

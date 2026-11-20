@@ -44,7 +44,7 @@ const SAVED_B = "7a5d3e4f-6c7b-4d8e-8f9a-1b2c3d4e5f6a";
 const PIPELINES = `/configurations/${CONFIGURATION}/versions/3/validation-pipelines`;
 
 const SPEC = `
-name: the older CLI's pipeline name
+name: a pipeline name
 signal: logs
 pipeline: logs/in
 sample_text: '{"resourceLogs":[]}'
@@ -531,7 +531,7 @@ describe("telflo test's refusals", () => {
     expect(result.stderr.startsWith("Rate limited: retrying in 12 s.\n")).toBe(true);
   });
 
-  it("a collector the catalogue doesn't offer is exit 2, as validate's, its code and status kept", async () => {
+  it("a collector the catalog doesn't offer is exit 2, as validate's, its code and status kept", async () => {
     for (const code of ["collector_version_unknown", "collector_version_retired", "collector_distribution_unknown"]) {
       use(routes([], { "POST /test-runs": { status: 400, json: envelope(code, "That collector isn't in the catalogue.") } }));
       const human = await cli(["test", "--spec", specFile(), "-f", yamlFile(), "--collector-version", "0.1.0"]);

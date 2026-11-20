@@ -93,7 +93,7 @@ export function personalOrganizationOwnerProtected(): AppError {
 }
 
 /*
- * Inviting, resending and cancelling.
+ * Inviting, resending and canceling.
  */
 
 /** The address belongs to an active member, the caller's own included. */
@@ -128,7 +128,7 @@ export function personalOrganizationInvitationsDisabled(): AppError {
   );
 }
 
-/** Resending or cancelling anything but a pending invitation of the active organization. */
+/** Resending or canceling anything but a pending invitation of the active organization. */
 export function pendingInvitationNotFound(): AppError {
   return organizationError("invitation_not_found", "No pending invitation found for this user", 404);
 }

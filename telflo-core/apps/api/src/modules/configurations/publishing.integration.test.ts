@@ -508,7 +508,7 @@ describe("publishing a version", () => {
       payload: { yamlContent: yaml, ...EMPTY_GRAPH, collectorVersion },
     });
 
-  /** A version of `distribution` the catalogue offers other than `pin`. */
+  /** A version of `distribution` the catalog offers other than `pin`. */
   const anotherOfferedPin = async (distribution: string, pin: string) =>
     (
       await ownerDb
@@ -581,7 +581,7 @@ describe("publishing a version", () => {
 
   /**
    * A personal user with a configuration whose version 1 holds `yaml`
-   * (saved at the clock's time), labelled `label` unless null.
+   * (saved at the clock's time), labeled `label` unless null.
    */
   const withSavedVersion = async ({
     yaml = yamlWith(`marker-${randomUUID()}`),
@@ -664,7 +664,7 @@ describe("publishing a version", () => {
           updatedAt: savedAt.toISOString(),
           publishedAt: clock.toISOString(),
           publishedBy: { userId: account.user.id, email: account.user.email },
-          // Its pin, which the catalogue offers.
+          // Its pin, which the catalog offers.
           collectorVersion: version.collector_version,
           collectorVersionDeprecated: false,
           collectorVersionDeprecatedNote: null,

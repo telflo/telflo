@@ -31,19 +31,19 @@ import { createConfigurationService, type ConfigurationTransaction, type FleetUs
 const NOW = new Date("2030-01-01T00:00:00.000Z");
 const EARLIER = new Date("2029-06-01T00:00:00.000Z");
 const origin = { ipAddress: "203.0.113.7", userAgent: "vitest" };
-/** The fake catalogue's defaults: a fixture's, not the real catalogue's, which the integration tests read. */
+/** The fake catalog's defaults: a fixture's, not the real catalog's, which the integration tests read. */
 const CATALOGUE_DEFAULTS = { distribution: "fixture-distribution", version: "1.2.3" };
-/** Another version of the default distribution the fake catalogue offers. */
+/** Another version of the default distribution the fake catalog offers. */
 const OFFERED_VERSION = "1.1.0";
-/** A version of the default distribution the fake catalogue has deprecated, and its note. */
+/** A version of the default distribution the fake catalog has deprecated, and its note. */
 const DEPRECATED_VERSION = "1.0.0";
 const DEPRECATED_NOTE = "Retired: upgrade to 1.2.3.";
-/** Another distribution of the fake catalogue, not the default, and its default version. */
+/** Another distribution of the fake catalog, not the default, and its default version. */
 const OTHER_DISTRIBUTION = { distribution: "other-distribution", version: "2.0.0" };
 
 /**
- * The fake catalogue's versions, by `distribution@version`: whether each is
- * deprecated, and its note. A version missing here isn't in the catalogue.
+ * The fake catalog's versions, by `distribution@version`: whether each is
+ * deprecated, and its note. A version missing here isn't in the catalog.
  */
 const CATALOGUE = new Map<string, { deprecated: boolean; note: string | null }>([
   [`${CATALOGUE_DEFAULTS.distribution}@${CATALOGUE_DEFAULTS.version}`, { deprecated: false, note: null }],
@@ -52,7 +52,7 @@ const CATALOGUE = new Map<string, { deprecated: boolean; note: string | null }>(
   [`${OTHER_DISTRIBUTION.distribution}@${OTHER_DISTRIBUTION.version}`, { deprecated: false, note: null }],
 ]);
 
-/** A pin's deprecation, as the real repository's join to the catalogue reads it. */
+/** A pin's deprecation, as the real repository's join to the catalog reads it. */
 function deprecationOf(distribution: string, version: string) {
   const entry = CATALOGUE.get(`${distribution}@${version}`);
   return {
@@ -325,7 +325,7 @@ function buildHarness() {
     }),
   } satisfies IConfigurationVersionSelectionRepository;
 
-  /** The collector catalogue: CATALOGUE's versions, the two distributions' defaults. */
+  /** The collector catalog: CATALOGUE's versions, the two distributions' defaults. */
   const catalogue = {
     findDefaults: vi.fn(async () => {
       calls.push("catalogue.findDefaults");
@@ -497,7 +497,7 @@ function buildHarness() {
       publishedBy: null,
       collectorDistribution: CATALOGUE_DEFAULTS.distribution,
       collectorVersion: CATALOGUE_DEFAULTS.version,
-      // As the catalogue holds the pin, unless the test says otherwise.
+      // As the catalog holds the pin, unless the test says otherwise.
       ...deprecationOf(
         overrides.collectorDistribution ?? CATALOGUE_DEFAULTS.distribution,
         overrides.collectorVersion ?? CATALOGUE_DEFAULTS.version,
@@ -922,7 +922,7 @@ describe("createConfigurationService", () => {
         "versions.create",
         "audit:configuration.created",
       ]);
-      // The catalogue's defaults, read in the transaction.
+      // The catalog's defaults, read in the transaction.
       expect(harness.configurations.create).toHaveBeenCalledWith({
         name: "Gateway",
         description: "Prod",
@@ -1799,7 +1799,7 @@ describe("createConfigurationService", () => {
     it("locks the configuration, checks the source, creates the next version at the clock's time, touches the configuration, and audits it without its YAML, graph or label", async () => {
       const actor = harness.memberActor();
       const row = harness.configuration();
-      // Pinned to another version than the catalogue's default: the new one copies the source's.
+      // Pinned to another version than the catalog's default: the new one copies the source's.
       const source = harness.version(row.id, { versionNumber: 1, yamlContent: "saved: true\n", collectorVersion: "1.1.0" });
       harness.version(row.id, { versionNumber: 4 });
 
@@ -2398,7 +2398,7 @@ describe("createConfigurationService", () => {
         );
       });
 
-      it("refuses a distribution the catalogue doesn't offer with collector_distribution_unknown, after the membership's checks, writing nothing", async () => {
+      it("refuses a distribution the catalog doesn't offer with collector_distribution_unknown, after the membership's checks, writing nothing", async () => {
         const actor = harness.memberActor();
 
         await expectRefusal(
@@ -2413,7 +2413,7 @@ describe("createConfigurationService", () => {
         expect(harness.auditEvents).toEqual([]);
       });
 
-      it("answers organization_not_found before it reads the catalogue", async () => {
+      it("answers organization_not_found before it reads the catalog", async () => {
         const actor = harness.memberActor();
         harness.state.isOrganizationLive = false;
         await expectRefusal(
@@ -2518,7 +2518,7 @@ describe("createConfigurationService", () => {
         expect(harness.calls).toContain(`catalogue.isOffered:${OTHER_DISTRIBUTION.distribution}@${OFFERED_VERSION}`);
       });
 
-      it("takes the distribution's default given again without asking the catalogue whether it is offered", async () => {
+      it("takes the distribution's default given again without asking the catalog whether it is offered", async () => {
         const actor = harness.memberActor();
 
         await harness.service.create(actor, harness.organizationId, {
@@ -2651,7 +2651,7 @@ describe("createConfigurationService", () => {
         expect(harness.versionRows.get(saved.id)).toEqual(saved);
       });
 
-      it("accepts the stored collector version even though the catalogue deprecated it since, asking the catalogue nothing and writing no pin", async () => {
+      it("accepts the stored collector version even though the catalog deprecated it since, asking the catalog nothing and writing no pin", async () => {
         const actor = harness.memberActor();
         const row = harness.configuration();
         const saved = harness.version(row.id, { collectorVersion: DEPRECATED_VERSION });
@@ -2687,7 +2687,7 @@ describe("createConfigurationService", () => {
         ["a version the catalogue offers", OFFERED_VERSION],
         ["one it doesn't have", "9.9.9"],
         ["the stored one", CATALOGUE_DEFAULTS.version],
-      ])("refuses a published version's save naming %s with 409 configuration_version_published, before the catalogue is asked", async (_label, collectorVersion) => {
+      ])("refuses a published version's save naming %s with 409 configuration_version_published, before the catalog is asked", async (_label, collectorVersion) => {
         const actor = harness.memberActor();
         const row = harness.configuration();
         const published = harness.version(row.id, PUBLISHED);
@@ -2717,7 +2717,7 @@ describe("createConfigurationService", () => {
           ...(collectorVersion === undefined ? {} : { collectorVersion }),
         });
 
-      it("copies the source's saved collector version when none is given, even a deprecated one, asking the catalogue nothing", async () => {
+      it("copies the source's saved collector version when none is given, even a deprecated one, asking the catalog nothing", async () => {
         const actor = harness.memberActor();
         const row = harness.configuration();
         const source = harness.version(row.id, { collectorVersion: DEPRECATED_VERSION });

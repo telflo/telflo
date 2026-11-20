@@ -11,7 +11,7 @@ import { AppError } from "../../errors.js";
  * Who may create an account (settings' `site.registration`,
  * TELFLO_REGISTRATION):
  * - `open`: anyone, by registering, by an invitation or by a provider's
- *   sign-in (today's behaviour);
+ *   sign-in (today's behavior);
  * - `invite-only`: only by an invitation. Registering and a provider's
  *   sign-in with no matching account are refused;
  * - `closed`: nobody. An invitation can still be accepted by an existing

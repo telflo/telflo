@@ -168,9 +168,9 @@ export interface RateLimits {
   ottlLintsPerUser: RateLimit;
   /**
    * The public surface's anonymous validations, per client IP (`request.ip`,
-   * which honours the trusted hops): every request to
+   * which honors the trusted hops): every request to
    * `POST /api/public/v1/validate/anonymous` that passed its body's checks,
-   * counted before the catalogue's reads, with
+   * counted before the catalog's reads, with
    * ANONYMOUS_VALIDATIONS_IN_FLIGHT_PER_IP at once. Here `max` counts every
    * request admitted; a refusal (this level's or the overall's) counts
    * nothing.
@@ -199,7 +199,7 @@ export interface RateLimits {
    */
   feedbackPerUser: RateLimit;
   /**
-   * The open flow read, per client IP (`request.ip`, which honours the trusted
+   * The open flow read, per client IP (`request.ip`, which honors the trusted
    * hops): every request to `GET /api/v1/published-flows` and
    * `GET /api/v1/published-flows/:slug` together, one count for both, in an
    * `onRequest` hook before anything is read (an unknown slug's request counts
@@ -581,7 +581,7 @@ export interface RateLimiters {
   /**
    * The public surface's anonymous validations: per address and overall, each
    * a minute's count and slots in flight. Not a hook: the route admits a
-   * request once its body passed its checks, before the catalogue's reads; the
+   * request once its body passed its checks, before the catalog's reads; the
    * refusal is the generic 429 `rate_limited` with Retry-After.
    */
   anonymousValidations: AnonymousValidationLimiter;

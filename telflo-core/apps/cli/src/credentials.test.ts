@@ -71,7 +71,7 @@ describe("the folder", () => {
     expect(credentialsPath({ TELFLO_CLI_CONFIG_DIR: "/a" })).toBe(join("/a", "credentials.json"));
   });
 
-  it("never reads TELFLO_CONFIG_DIR, the older CLI's variable", () => {
+  it("never reads TELFLO_CONFIG_DIR", () => {
     expect(configDir({ TELFLO_CONFIG_DIR: "/older-cli" })).toBe(join(homedir(), ".config", "telflo"));
     expect(configDir({ TELFLO_CONFIG_DIR: "/older-cli", XDG_CONFIG_HOME: "/b" })).toBe(join("/b", "telflo"));
   });
@@ -211,7 +211,7 @@ describe("loading", () => {
 
   it.each([
     ["an unknown version", { version: 2 }],
-    ["the older credentials format", { api_url: "https://telflo.example" }],
+    ["another credentials format", { api_url: "https://telflo.example" }],
     ["a server that isn't an origin", { server: "https://telflo.example/api" }],
     ["a plain-http server", { server: "http://telflo.example" }],
     ["a malformed token", { token: "tf_short" }],

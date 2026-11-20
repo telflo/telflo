@@ -129,7 +129,7 @@ import type { TestRunsTransaction, WithTestRunsTransaction } from "./transaction
  *     route passes it; every other run keeps the database's snapshot;
  *   * a YAML run through `queueFromYaml`: no configuration, so steps 1 and 2
  *     are the membership and the pin (the distribution and version named,
- *     else the catalogue's defaults: 400 `collector_distribution_unknown`,
+ *     else the catalog's defaults: 400 `collector_distribution_unknown`,
  *     `collector_version_unknown`, `collector_version_retired`), step 3 the
  *     caller's own file (the sample the public route stored), and its rules
  *     always inline. Its audit row's metadata is
@@ -218,9 +218,9 @@ interface PreparedRun {
 
 /**
  * A YAML run's pin, as `validateText` reads one: a named distribution must be
- * the catalogue's (400 `collector_distribution_unknown`), whatever its
+ * the catalog's (400 `collector_distribution_unknown`), whatever its
  * versions offer; the version named is taken as it is, and a default is needed
- * only when it is left out (the catalogue's default distribution's, or the
+ * only when it is left out (the catalog's default distribution's, or the
  * named one's: 400 `collector_distribution_unknown` when it has none). Whether
  * the version is offered is assertPinOffered's.
  */
@@ -317,7 +317,7 @@ export interface QueueTestRunOptions {
 export interface QueueYamlTestRunRequest {
   /** The text, as written (a run's text's limits). Never logged. */
   yaml: string;
-  /** Left out, the catalogue's default distribution. */
+  /** Left out, the catalog's default distribution. */
   distribution?: string | undefined;
   /** Left out, the distribution's default version. */
   collectorVersion?: string | undefined;
@@ -778,7 +778,7 @@ export function createTestRunService(deps: TestRunServiceDependencies): ITestRun
       const fileId = canonicalIdOf(request.inputFileId);
 
       // 1–3, read in one transaction, committed before anything else: the
-      // membership, the pin (the catalogue's defaults for what isn't named),
+      // membership, the pin (the catalog's defaults for what isn't named),
       // and the caller's own file. A refusal gives the route's minute back.
       const prepared = await refundingOnRefusal(request.admission, () => {
         assertActiveOrganization(actor, organizationId);

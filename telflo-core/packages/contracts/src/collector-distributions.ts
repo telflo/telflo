@@ -1,19 +1,19 @@
 import { z } from "zod";
 
 /*
- * The collector catalogue: the distributions a configuration can be built
+ * The collector catalog: the distributions a configuration can be built
  * for and the collector versions a version can be pinned to. The
- * catalogue's file is the source
+ * catalog's file is the source
  * (catalog/distributions/<distribution>.json); the migration step syncs it
  * into two global tables, which the API reads.
  */
 
 /**
  * A distribution's id as a request names it (`otelcol-contrib`): lowercase
- * words joined by hyphens, at most 64 characters, the catalogue's and the
- * opamp-server's format. Anything else is no distribution of the catalogue,
+ * words joined by hyphens, at most 64 characters, the catalog's and the
+ * opamp-server's format. Anything else is no distribution of the catalog,
  * so the contract refuses it (400 `invalid_request`); one in this format
- * the catalogue doesn't offer is the service's
+ * the catalog doesn't offer is the service's
  * `collector_distribution_unknown`.
  */
 export const CollectorDistributionIdSchema = z
@@ -23,7 +23,7 @@ export const CollectorDistributionIdSchema = z
 
 /**
  * A collector version as a request names it (`0.162.0`): `major.minor.patch`,
- * at most 64 characters, the catalogue's and the opamp-server's format
+ * at most 64 characters, the catalog's and the opamp-server's format
  * (`[0-9]`, not `\d`). Anything else is refused here (400 `invalid_request`);
  * one in this format the distribution doesn't offer is the service's
  * `collector_version_unknown`.
@@ -82,7 +82,7 @@ export const COLLECTOR_COMPONENT_KINDS = ["receiver", "processor", "exporter", "
 
 export type CollectorComponentKind = (typeof COLLECTOR_COMPONENT_KINDS)[number];
 
-/** A component type's name as the collector spells it (`file_log`): the catalogue's rule. */
+/** A component type's name as the collector spells it (`file_log`): the catalog's rule. */
 const ComponentTypeNameSchema = z
   .string()
   .max(64)
@@ -106,15 +106,15 @@ export const CollectorRenamedTypeSchema = z
 
 export type CollectorRenamedType = z.infer<typeof CollectorRenamedTypeSchema>;
 
-/** A distribution's renames, in its catalogue file's order. */
+/** A distribution's renames, in its catalog file's order. */
 export const CollectorRenamedTypesSchema = z.array(CollectorRenamedTypeSchema);
 
 /**
- * A distribution of the catalogue: its id, the name and sentence pickers
+ * A distribution of the catalog: its id, the name and sentence pickers
  * show, which icon the web shows (`otel`, or null for none), whether it is
  * the one a new configuration gets when it names none, the versions it
  * offers, newest first, and the collector's renames (the web reads its own
- * copy from the catalogue at build time).
+ * copy from the catalog at build time).
  */
 export const CollectorDistributionSchema = z
   .object({
@@ -132,7 +132,7 @@ export type CollectorDistribution = z.infer<typeof CollectorDistributionSchema>;
 
 /**
  * `GET /api/v1/collector-distributions`: every distribution, in the
- * catalogue's order, each with its non-deprecated versions, newest first by
+ * catalog's order, each with its non-deprecated versions, newest first by
  * version (each part compared as a number).
  */
 export const CollectorDistributionsResponseSchema = z

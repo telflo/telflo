@@ -38,7 +38,7 @@ const api = useApiServer(() => ({
   }),
 }));
 
-/** The collector version the catalogue offers with binaries for every Linux platform (the api's install tests'). */
+/** The collector version the catalog offers with binaries for every Linux platform (the api's install tests'). */
 const COLLECTOR_VERSION = "0.162.0";
 /** A YAML reading two variables, NGINX_ENV and BACKEND_API_KEY. */
 const YAML = [

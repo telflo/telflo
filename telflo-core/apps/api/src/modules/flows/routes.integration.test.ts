@@ -30,7 +30,7 @@ const opamp = useFakeOpampServer();
 const csrfHeaders = { [CSRF_HEADER_NAME]: CSRF_HEADER_VALUE };
 const PASSWORD = "a-sufficiently-long-password";
 
-/** The committed catalogue's distribution, its default version, another it offers, and one it deprecated. */
+/** The committed catalog's distribution, its default version, another it offers, and one it deprecated. */
 const CONTRIB = "otelcol-contrib";
 const CONTRIB_DEFAULT = "0.162.0";
 const OFFERED = "0.161.0";
@@ -132,7 +132,7 @@ function cardOf(row: Selectable<FlowsTable>) {
  * The flows endpoints against Postgres. Every flow here is the test's own,
  * slugged `test-…`, inserted as the tables' owner or created through the API:
  * truncateAll empties the seeded ones before every test, and the one test that
- * needs them puts them back with insertSeededFlows. The catalogue is the
+ * needs them puts them back with insertSeededFlows. The catalog is the
  * committed one: Contrib, offering 0.159.0 to 0.162.0, with 0.147.0
  * deprecated.
  */
@@ -274,7 +274,7 @@ describe("the flows endpoints", () => {
       .orderBy("id")
       .execute();
 
-  /** The admin dialog's fields for a flow, every one set, on a pin the catalogue offers but not its default. */
+  /** The admin dialog's fields for a flow, every one set, on a pin the catalog offers but not its default. */
   const flowInput = (overrides: Record<string, unknown> = {}) => ({
     slug: "test-created",
     name: "Created Flow",
@@ -292,7 +292,7 @@ describe("the flows endpoints", () => {
     ...overrides,
   });
 
-  it("the committed catalogue offers 0.161.0 and 0.162.0 and deprecated 0.147.0, as these tests assume", async () => {
+  it("the committed catalog offers 0.161.0 and 0.162.0 and deprecated 0.147.0, as these tests assume", async () => {
     const rows = await databases.ownerDb
       .selectFrom("collector_versions")
       .select(["version", "deprecated"])
@@ -636,7 +636,7 @@ describe("the flows endpoints", () => {
       expect(response.json()).toEqual({ flows: [bodyOf(hidden), bodyOf(shown)] });
     });
 
-    it("answers a user who hasn't accepted the current terms, as the catalogue does: flows are no one's data", async () => {
+    it("answers a user who hasn't accepted the current terms, as the catalog does: flows are no one's data", async () => {
       const flow = await addFlow();
       const { access } = await signedIn("organizationAdmin", { accepted_terms_version: "2025-01-01" });
       const response = await call("GET", "/api/v1/flows", access);
@@ -789,7 +789,7 @@ describe("the flows endpoints", () => {
       expect(await flowAudits()).toEqual([]);
     });
 
-    it("refuses a pin the catalogue doesn't offer: an unknown distribution 400 collector_distribution_unknown, an unknown or deprecated version 400 collector_version_unknown, writing nothing", async () => {
+    it("refuses a pin the catalog doesn't offer: an unknown distribution 400 collector_distribution_unknown, an unknown or deprecated version 400 collector_version_unknown, writing nothing", async () => {
       const { access } = await signedIn("productAdmin");
       const refusals: Array<[Record<string, unknown>, unknown]> = [
         [{ collectorDistribution: "clickstack" }, DISTRIBUTION_UNKNOWN],

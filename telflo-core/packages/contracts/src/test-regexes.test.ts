@@ -204,7 +204,7 @@ describe("a change (UpdateTestRegexRequestSchema)", () => {
 describe("an entry (TestRegexSchema) and the bodies", () => {
   const entry = { id: ID, ...valid, createdAt: NOW, updatedAt: NOW };
 
-  it("serialises a stored row: a null description, and bounds counted as the table counts them (code points, bytes)", () => {
+  it("serializes a stored row: a null description, and bounds counted as the table counts them (code points, bytes)", () => {
     expect(TestRegexSchema.parse(entry)).toEqual(entry);
     expect(TestRegexSchema.parse({ ...entry, description: null }).description).toBeNull();
     // 200 characters outside the BMP: 400 UTF-16 units, 200 for char_length.

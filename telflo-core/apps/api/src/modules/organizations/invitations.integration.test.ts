@@ -47,7 +47,7 @@ import { TEST_TERMS_VERSION } from "../../testing/site.js";
 const opamp = useFakeOpampServer();
 
 /*
- * Inviting, listing, resending and cancelling, and the invitee's
+ * Inviting, listing, resending and canceling, and the invitee's
  * previewing, accepting and creating an account, against the real database,
  * as the application role.
  */
@@ -444,7 +444,7 @@ describe("organization invitations", () => {
       expect(mailer.sent[0]!.text).toContain(`join ${account.organization.name}'s organization on Telflo, the visual`);
     });
 
-    it("allows another invitation once the address's earlier one was cancelled or accepted", async () => {
+    it("allows another invitation once the address's earlier one was canceled or accepted", async () => {
       const { group, access } = await memberActiveInGroup("admin");
       await addInvitation(ownerDb, { organizationId: group.id, email: "again@example.com", revoked_at: new Date() });
       await addInvitation(ownerDb, { organizationId: group.id, email: "again@example.com", accepted_at: new Date() });
@@ -1004,7 +1004,7 @@ describe("organization invitations", () => {
       expect((await preview(token)).json()).toMatchObject({ invitation: { email: human.user.email, hasAccount: true } });
     });
 
-    it("answers an unknown, a cancelled and a superseded token, and a deleted organization, with 404", async () => {
+    it("answers an unknown, a canceled and a superseded token, and a deleted organization, with 404", async () => {
       const revoked = await pendingInvitation({ revoked_at: new Date() });
       const inDeleted = await pendingInvitation();
       await ownerDb
@@ -1133,7 +1133,7 @@ describe("organization invitations", () => {
         await expectNothingJoined(setup, unknown, 404, "invitation_not_found", MESSAGES.invalidLink);
       });
 
-      it("answers a cancelled invitation with 404", async () => {
+      it("answers a canceled invitation with 404", async () => {
         const setup = await invitedAccount();
         await ownerDb
           .updateTable("organization_invitations")
@@ -1335,7 +1335,7 @@ describe("organization invitations", () => {
       ]);
 
       // The starter configuration: in the invitee's own personal
-      // organization, and none in the inviting one, at the catalogue's
+      // organization, and none in the inviting one, at the catalog's
       // default distribution and version.
       const pin = await catalogueDefaults(ownerDb);
       const configurations = await configurationsIn(personal.id);
@@ -1412,7 +1412,7 @@ describe("organization invitations", () => {
         expect(mailer.sent).toEqual([]);
       };
 
-      it("answers an unknown token and a cancelled invitation with 404", async () => {
+      it("answers an unknown token and a canceled invitation with 404", async () => {
         const { invitation, token } = await pendingInvitation({ revoked_at: new Date() });
         await expectNoAccount(
           invitation.email,
@@ -1849,7 +1849,7 @@ describe("organization invitations", () => {
 
     /**
      * Two admins of one group. The second has invited two addresses (one of
-     * them since expired), and has an accepted and a cancelled invitation;
+     * them since expired), and has an accepted and a canceled invitation;
      * the first has invited one address of their own.
      */
     const twoAdminsInviting = async () => {

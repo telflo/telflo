@@ -268,7 +268,7 @@ export function collectorDistributionNotInstallableMessage(distribution: string)
   return `Collector distribution ${distribution} can't be installed here. Publish a version built for ${INSTALL_DISTRIBUTION}, then assign it.`;
 }
 
-/** A version the catalogue holds no binaries of for the arch (`collector_version_not_offered`). */
+/** A version the catalog holds no binaries of for the arch (`collector_version_not_offered`). */
 export function collectorBinariesMissingMessage(version: string, arch: string): string {
   return `Collector v${version} has no ${arch} binaries to install. Choose the other arch, or publish a version that has them.`;
 }

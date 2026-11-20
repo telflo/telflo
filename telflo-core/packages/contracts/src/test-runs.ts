@@ -46,7 +46,7 @@ export { codePointLength, TEST_RUN_PIPELINE_MAXIMUM_LENGTH, TEST_RUN_SIGNALS, Te
  * (the whole answer is bounded by its 32 MiB). The results' bounds are the
  * tester's contract's (services/otelcol-testing/openapi.yaml) or tighter:
  * the dispatcher cuts what it stores to them, so a stored run always
- * serialises. They count code points, as the tester (Python's `len`, JSON
+ * serializes. They count code points, as the tester (Python's `len`, JSON
  * Schema's `maxLength`) and Postgres (`char_length`) do, never UTF-16
  * units, as zod's `.max` does: a run whose logs hold emoji would pass both
  * and then fail its response, every time.

@@ -145,7 +145,7 @@ export function rulesUnavailableAtQueue(): AppError {
   return new AppError("rules_unavailable" satisfies ValidationRulesErrorCode, RULES_UNAVAILABLE_AT_QUEUE_MESSAGE, 503);
 }
 
-/** A pin the catalogue has deprecated, in fixed words. */
+/** A pin the catalog has deprecated, in fixed words. */
 export function collectorVersionRetired(): AppError {
   return new AppError("collector_version_retired" satisfies TestingErrorCode, COLLECTOR_VERSION_RETIRED_MESSAGE, 400);
 }

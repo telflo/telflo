@@ -514,7 +514,7 @@ describe("an organization's delete, retried", () => {
     expect(hooks.pendingDeletes()).toEqual([]);
   });
 
-  it("empties the pending set as retries finish, and at close logs those still pending at error, cancelling their timers", async () => {
+  it("empties the pending set as retries finish, and at close logs those still pending at error, canceling their timers", async () => {
     const [first, second, third] = [randomUUID(), randomUUID(), randomUUID()];
     const { registration: hooks, deleteOrganization } = scripted({
       [first]: [TIMEOUT, { kind: "deleted" }],
@@ -652,7 +652,7 @@ describe("unrefTimer", () => {
     }
   });
 
-  it("runs the callback after the delay, and never once cancelled", () => {
+  it("runs the callback after the delay, and never once canceled", () => {
     vi.useFakeTimers();
     const ran: string[] = [];
     unrefTimer(() => ran.push("kept"), 1_000);

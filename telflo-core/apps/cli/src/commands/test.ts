@@ -15,7 +15,7 @@
  *   that hasn't ended by the deadline (`--timeout`, else the run's duration
  *   and 120 s) exits 1. `--saved` with no saved rules is the API's 422
  *   `configuration_invalid` (exit 1); a full queue's 429 has no
- *   `Retry-After` and isn't retried (exit 1). A collector the catalogue
+ *   `Retry-After` and isn't retried (exit 1). A collector the catalog
  *   doesn't offer (400 `collector_version_unknown`, `…_retired`,
  *   `collector_distribution_unknown`) is exit 2, as validate's.
  *
@@ -173,7 +173,7 @@ export function configurationRefusalOf(error: unknown): ApiError | undefined {
 }
 
 /**
- * A 400 naming a collector the catalogue doesn't offer (`--collector-version`,
+ * A 400 naming a collector the catalog doesn't offer (`--collector-version`,
  * `--distribution`, the spec's or the pin's): a usage error, exit 2, as
  * validate's (a deliberate mapping: its code and status kept).
  */

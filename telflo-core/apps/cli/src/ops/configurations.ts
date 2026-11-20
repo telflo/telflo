@@ -1,10 +1,10 @@
 /*
  * The configurations' calls, on routes 4-12 with the public API's field names:
  * `versionNumber`, `publishedVersionNumber` (the highest published),
- * `distribution`, `collectorVersion`, and a version's `label` (the older CLI's
- * `description`). Ids are canonicalized before they're sent (exit 2 when
- * malformed). Nothing here prints; the YAML is configuration text and never
- * reaches an error's message.
+ * `distribution`, `collectorVersion`, and a version's `label`. Ids are
+ * canonicalized before they're sent (exit 2 when malformed). Nothing here
+ * prints; the YAML is configuration text and never reaches an error's
+ * message.
  */
 
 import { InvalidArgumentError } from "commander";
@@ -92,7 +92,7 @@ export async function pullConfiguration(client: ApiClient, id: string, versionNu
   };
 }
 
-/** Route 6: the configuration and its draft version 1, at the catalogue's default distribution. */
+/** Route 6: the configuration and its draft version 1, at the catalog's default distribution. */
 export async function createConfiguration(client: ApiClient, name: string, yaml: string): Promise<PublicConfigurationDetail> {
   return client.request<PublicConfigurationDetail>("POST", "/configurations", { body: { name, yaml } });
 }

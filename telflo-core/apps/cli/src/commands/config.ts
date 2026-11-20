@@ -139,9 +139,9 @@ export async function configPublish(id: string, options: { version: number }): P
 }
 
 /**
- * `--label`, or `--description` (its alias, the older CLI's name): both is a
- * usage error, and so is a label the API would refuse (trimmed, 1 to 80
- * characters: the contracts' `ConfigurationVersionLabelSchema`).
+ * `--label`, or `--description` (its alias): both is a usage error, and so
+ * is a label the API would refuse (trimmed, 1 to 80 characters: the
+ * contracts' `ConfigurationVersionLabelSchema`).
  */
 export function labelOf(options: { label?: string; description?: string }): string | undefined {
   if (options.label !== undefined && options.description !== undefined) throw new ExitError(LABEL_AND_DESCRIPTION_MESSAGE, EXIT.USAGE);
@@ -224,7 +224,7 @@ export function registerConfigCommands(config: Command): void {
     .requiredOption("-f, --file <file>", "the YAML file, or - for stdin")
     .option("--publish", "publish the version pushed")
     .option("--label <text>", "the new version's label (when one is added)")
-    .option("--description <text>", "the same as --label (the older CLI's name)")
+    .option("--description <text>", "the same as --label")
     .action((id: string, options: { file: string; publish?: boolean; label?: string; description?: string }) =>
       configPush(id, options),
     );

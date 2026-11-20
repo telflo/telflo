@@ -15,7 +15,7 @@ import {
 // Unlike the opamp-server's, it never throws for an answer: every failure is
 // `unavailable`, with a reason the caller logs. A timeout, a network error, a
 // 401 (the validator doesn't take the platform's secret), a 404 or 409 (the
-// catalogue and the validator's disagree), a 400 or 413, a 503 (busy, or the
+// catalog and the validator's disagree), a 400 or 413, a 503 (busy, or the
 // version isn't baked in), any other status, an answer its schema refuses and
 // one over the size cap are all the same to the person: their text wasn't
 // checked.
@@ -24,9 +24,9 @@ import {
 // never put in a result: this module logs nothing, and a result names a
 // reason and a status only, never the validator's words.
 
-/** What to check: the text, with one collector of the catalogue. */
+/** What to check: the text, with one collector of the catalog. */
 export interface ValidateRequest {
-  /** A catalogue distribution's id, e.g. `otelcol-contrib`. */
+  /** A catalog distribution's id, e.g. `otelcol-contrib`. */
   distribution: string;
   /** One of its versions, `major.minor.patch`. */
   version: string;
@@ -51,9 +51,9 @@ export type ValidatorUnavailableReason =
   | "network"
   /** 401: the validator doesn't take TELFLO_OTELCOL_VALIDATOR_SECRET. A deployment to fix. */
   | "unauthorized"
-  /** 404: the validator's catalogue lists no such distribution or version. */
+  /** 404: the validator's catalog lists no such distribution or version. */
   | "not_found"
-  /** 409: the validator's catalogue deprecated the version. */
+  /** 409: the validator's catalog deprecated the version. */
   | "version_retired"
   /** 400: the validator refused the request as malformed. */
   | "invalid_request"

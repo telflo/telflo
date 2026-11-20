@@ -91,7 +91,7 @@ describe("published version repository", () => {
       collectorDistribution: world.version.collector_distribution,
       collectorVersion: world.version.collector_version,
     });
-    // A version pinned to a collector version other than the catalogue's default reads its own.
+    // A version pinned to a collector version other than the catalog's default reads its own.
     const other = await ownerDb
       .selectFrom("collector_versions")
       .select("version")

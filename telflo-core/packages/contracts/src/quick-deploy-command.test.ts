@@ -255,7 +255,7 @@ describe("quickDeployCommands: the lines", () => {
       const closes = index === lines.length - 1 && line.endsWith(" )");
       expect(opens || closes || line.endsWith(" &&"), `line ${index}`).toBe(true);
     });
-    // curl's -q is honoured only as its first argument; --retry 3 retries only transient failures (never a 410 or 404).
+    // curl's -q is honored only as its first argument; --retry 3 retries only transient failures (never a 410 or 404).
     expect(command).toContain("| curl -q -g -fsS --retry 3");
   });
 

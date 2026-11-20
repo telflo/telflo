@@ -327,7 +327,7 @@ interface Stub {
 }
 
 /**
- * An S3 stand-in on 127.0.0.1:0, path style, its behaviour chosen by the
+ * An S3 stand-in on 127.0.0.1:0, path style, its behavior chosen by the
  * bucket. The startup check's probes are answered as S3 answers them (PUT
  * 200, a missing name 404 NoSuchKey, DELETE 204) unless the bucket says
  * otherwise; every other request gets the bucket's failure.

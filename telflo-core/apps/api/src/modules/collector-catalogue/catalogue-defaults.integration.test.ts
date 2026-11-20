@@ -28,20 +28,20 @@ const PASSWORD = "a-sufficiently-long-password";
 const THROWAWAY_DATABASE_TIMEOUT = 30_000;
 
 /*
- * One default, read from the catalogue's tables: a configuration created
+ * One default, read from the catalog's tables: a configuration created
  * through the API, its version 1, and the sign-up starter take whatever the
  * tables call the default, never a constant. So the default moves here, to
  * another version, and every writer follows it. On a throwaway database the
  * test prepares itself (migrated and synced, as telflo_platform_test is), since
- * telflo_platform_test's catalogue must stay the committed one.
+ * telflo_platform_test's catalog must stay the committed one.
  */
-describe("the catalogue's default, as new configurations and the sign-up starter take it", () => {
+describe("the catalog's default, as new configurations and the sign-up starter take it", () => {
   let databases: TestDatabases;
   let throwawayName: string;
   let ownerDb: Kysely<Database>;
   let db: Kysely<Database>;
   let server: FastifyInstance;
-  /** The version the default moves to: not the committed catalogue's default. */
+  /** The version the default moves to: not the committed catalog's default. */
   let movedTo: { distribution: string; version: string };
 
   beforeAll(async () => {

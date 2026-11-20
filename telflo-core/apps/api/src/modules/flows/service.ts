@@ -15,7 +15,7 @@ import {
 
 /**
  * The repositories a write uses, bound to one transaction: the flows, the
- * collector catalogue (a flow's pin is checked against it), and the audit
+ * collector catalog (a flow's pin is checked against it), and the audit
  * trail. All three are global: no database context is needed.
  */
 export interface FlowTransaction {
@@ -67,7 +67,7 @@ export interface IFlowService {
   get(reader: FlowReader, slug: string): Promise<Flow>;
   /**
    * A new flow from the admin dialog's fields, its source `telflo` and no
-   * author link. The pin must be offered: a distribution the catalogue
+   * author link. The pin must be offered: a distribution the catalog
    * doesn't have is 400 `collector_distribution_unknown`, a version it
    * doesn't offer (unknown or deprecated) 400 `collector_version_unknown`.
    * A slug another flow has is 409 `flow_slug_taken`. Nothing is written on
@@ -140,7 +140,7 @@ function auditEvent(writer: FlowWriter, flow: Flow, action: string, metadata: Re
 
 /**
  * The checks a pin a write sets must pass: the distribution is the
- * catalogue's (by the create's rule for a configuration: one with a default
+ * catalog's (by the create's rule for a configuration: one with a default
  * version to offer), and it offers the version (not deprecated).
  */
 async function assertOfferedPin(transaction: FlowTransaction, distribution: string, version: string): Promise<void> {
@@ -208,7 +208,7 @@ export function createFlowService(deps: FlowServiceDependencies): IFlowService {
           const changedFields = FIELDS.filter((field) => field in to);
           if (changedFields.length === 0) return current;
           // The pin as it will be: kept as it is, even if deprecated since; a
-          // change must name one the catalogue offers.
+          // change must name one the catalog offers.
           const distribution = to.collectorDistribution ?? current.collectorDistribution;
           const version = to.collectorVersion ?? current.collectorVersion;
           if (distribution !== current.collectorDistribution || version !== current.collectorVersion) {

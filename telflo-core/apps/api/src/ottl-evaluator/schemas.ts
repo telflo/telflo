@@ -13,7 +13,7 @@ import { z } from "zod";
 // A result also keeps the file's prose: an error means `passed` is false and
 // `detail` null; a rule that passed has no detail. So whatever the client
 // returns passes the contracts' strict ValidationRuleResultSchema, which a
-// run's detail serialises with. An answer these refuse is a malformed
+// run's detail serializes with. An answer these refuse is a malformed
 // answer, which the client reports as unavailable, never as the rules' own
 // results. The lint's answer is LintAnswer.
 

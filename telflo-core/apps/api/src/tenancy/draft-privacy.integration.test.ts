@@ -59,7 +59,7 @@ describe("draft privacy within an organization", () => {
   /** The tables' owner: fixtures, truncation and reading rows back. */
   let ownerDb: Kysely<Database>;
   let databases: TestDatabases;
-  /** The catalogue's default distribution and version, which a version inserted by hand is pinned to. */
+  /** The catalog's default distribution and version, which a version inserted by hand is pinned to. */
   let pin: { collector_distribution: string; collector_version: string };
 
   beforeAll(async () => {

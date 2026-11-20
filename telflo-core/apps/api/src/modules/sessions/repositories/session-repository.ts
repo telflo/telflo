@@ -312,7 +312,7 @@ export function createSessionRepository(db: Kysely<Database> | Transaction<Datab
     /**
      * One update, scoped by the user and live as listed: `revoked_at is
      * null` keeps the first revocation's reason and time, as `revoke` does.
-     * `id <> currentSessionId` is defence in depth behind the route's 409.
+     * `id <> currentSessionId` is defense in depth behind the route's 409.
      */
     async findMostRecentlyUsedOrganizationId(userId: string): Promise<string | undefined> {
       const row = await db

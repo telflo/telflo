@@ -113,7 +113,7 @@ export interface PublicationRequest {
 }
 
 /**
- * openapi.yaml's Collector: a catalogue distribution's id and one of its
+ * openapi.yaml's Collector: a catalog distribution's id and one of its
  * versions, both required. The server refuses null.
  */
 export interface PublicationCollector {

@@ -423,7 +423,7 @@ export function createUserRepository(db: Kysely<Database> | Transaction<Database
           // locks only rows this transaction made.
           await setDatabaseContext(transaction, { userId: user.id, organizationId: organization.id });
           const personal = { organizationId: organization.id, userId: user.id };
-          // The catalogue's default distribution and its default version,
+          // The catalog's default distribution and its default version,
           // read in this transaction, as a configuration created through
           // the API gets them.
           const pin = await createCollectorCatalogueRepository(transaction).findDefaults();

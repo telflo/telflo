@@ -7,7 +7,7 @@
 #
 # Built by the root docker-compose.yml, with the repository's root as the
 # build context, so every path below is from there: telflo-core/ for the
-# workspace, catalog/ for the collector catalogue, install-templates/ for the
+# workspace, catalog/ for the collector catalog, install-templates/ for the
 # install templates. The root .dockerignore lets only those (and the Python
 # services' directories) in. scripts/publish-platform-images.sh builds both
 # targets for linux/amd64 and linux/arm64 from HEAD's committed files, as
@@ -55,7 +55,7 @@ COPY telflo-core/ ./
 # ---- api-build: tsc to dist/, the packages pointed at it -------------------
 # Each package the API runs is compiled to its dist/, at the same depth as
 # its src/, so the files read relative to import.meta.url (the migrations,
-# the catalogue, the reference page's assets) resolve as they do from src/;
+# the catalog, the reference page's assets) resolve as they do from src/;
 # the tests and test support are left out (tsconfig.build.json).
 # image/point-at-dist.mjs then copies the non-TypeScript files beside the
 # code and points the three package.json files at dist/ (here only).
@@ -81,7 +81,7 @@ COPY --from=api-build /app/packages/db/dist /app/packages/db/dist
 COPY --from=api-build /app/packages/db/migrations /app/packages/db/migrations
 COPY --from=api-build /app/apps/api/package.json /app/apps/api/package.json
 COPY --from=api-build /app/apps/api/dist /app/apps/api/dist
-# The collector catalogue, which the migrations (this image) sync into the
+# The collector catalog, which the migrations (this image) sync into the
 # database: packages/db finds it at /catalog, four levels above
 # /app/packages/db/dist, as above src/. The API process never reads it.
 COPY catalog/ /catalog/
@@ -121,7 +121,7 @@ CMD ["node", "dist/index.js"]
 
 # ---- web-build: the server build ---------------------------------------------
 FROM deps AS web-build
-# The collector catalogue's renames: the build bundles each file's
+# The collector catalog's renames: the build bundles each file's
 # renamedTypes, found at /catalog, six levels above
 # /app/apps/web/app/lib/collector. The server never reads the files. Vite
 # bundles whatever the glob finds, even nothing, so the build is refused here

@@ -586,7 +586,7 @@ function checkSecrets(section: unknown, sectionName: string, add: Add): void {
       (key.toLowerCase() === "key" && SECRET_PARENTS.has(parent));
     if (!looksSecret) return;
 
-    // Fully parameterised, the `Bearer ${env:TOKEN}` form included.
+    // Fully parameterized, the `Bearer ${env:TOKEN}` form included.
     const residue = credentialResidue(value);
     if (!residue) return;
 

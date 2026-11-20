@@ -32,7 +32,7 @@ import { openValues } from "../quick-deploy/sealed-values.js";
 import { quickDeploySecretHash } from "../quick-deploy/secret.js";
 import type * as CatalogueRepository from "../collector-catalogue/repositories/collector-catalogue-repository.js";
 
-/** A catalogue without one platform's binaries (a case the shared catalogue can't hold), cleared before each test. */
+/** A catalog without one platform's binaries (a case the shared catalog can't hold), cleared before each test. */
 const overrides = vi.hoisted(() => ({ withoutPlatform: undefined as string | undefined }));
 
 vi.mock("../collector-catalogue/repositories/collector-catalogue-repository.js", async (importOriginal) => {
@@ -491,7 +491,7 @@ describe("the quick-deploy links' routes", () => {
       expect(await ownerDb.selectFrom("quick_deploy_links").selectAll().execute()).toEqual([]);
     });
 
-    it("refuses an arch the catalogue has no binaries of, before anything is stored", async () => {
+    it("refuses an arch the catalog has no binaries of, before anything is stored", async () => {
       const world = await aWorld();
       overrides.withoutPlatform = "linux_arm64";
       expectRefusal(

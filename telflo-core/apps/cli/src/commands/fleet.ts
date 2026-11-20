@@ -1,8 +1,6 @@
 /*
- * `telflo fleet list|create|groups|install`, on the platform's names, the
- * older CLI's renamed (`fleet deployments` is `fleet groups`, `--deployment`
- * is `--group`, `--server-name` is `--display-name`, `server-supervisor` is
- * `server`).
+ * `telflo fleet list|create|groups|install`, in the platform's names
+ * (collector groups, `--group`, `--display-name`, the `server` type).
  *
  * `fleet install` prints a SECRET: its command holds the fleet's bearer, or
  * a link's secret whose download answers it. The command goes to stdout

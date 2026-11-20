@@ -10,7 +10,7 @@ import {
 
 /*
  * Rendering a Linux bundle's templates. The server fills every placeholder
- * from validated fields and the catalogue only, in one pass: a value is
+ * from validated fields and the catalog only, in one pass: a value is
  * never read again for placeholders, so a typed `${ROOT_PATH}` stays text
  * (a sequential replace would substitute it).
  *
@@ -42,7 +42,7 @@ import {
  * template's own commands safe.
  *
  * The values are checked again here before they reach a script run as root:
- * paths by the contract's rule, the catalogue's version, URLs and sha256 by
+ * paths by the contract's rule, the catalog's version, URLs and sha256 by
  * its own allow-lists (catalogue.ts's), the group's id a UUID, and nothing
  * written into YAML holds a control character, a Unicode line break, `"`,
  * `\` or `$` (yamlQuoted). A template's text and a render's output are
@@ -222,12 +222,12 @@ const NOT_FOR_YAML = /[\u0000-\u001f\u007f-\u009f\u2028\u2029"\\$]/;
  * configuration and into the collector's, where otelcol-contrib expands
  * `${env:…}` again (a `$$` doubling isn't enough there). None of the
  * server's values can hold one (a UUID, paths, the endpoint, the
- * catalogue's URLs); the ServerName header, the one free text, is the
+ * catalog's URLs); the ServerName header, the one free text, is the
  * script's to write (start_supervisor.sh's yaml_quoted).
  */
 export function yamlQuoted(value: string): string {
   // The operator's: what YAML takes passed its rule first, and a person's paths (installPathProblem) can't hold
-  // these characters, so a value refused here is the server's own (the settings', the catalogue's).
+  // these characters, so a value refused here is the server's own (the settings', the catalog's).
   if (NOT_FOR_YAML.test(value)) throw new InstallRenderError("a value for the supervisor's configuration holds a character it can't take", "operator");
   return `"${value}"`;
 }
@@ -236,7 +236,7 @@ export function yamlQuoted(value: string): string {
  * Whose a refused value is: `choices` for what the install was asked for
  * (the method, the arch, the root and executable paths, the variables' names
  * and values: a person's request, a quick-deploy link's stored choices),
- * `operator` for the rest (the catalogue's binaries and their allow-lists,
+ * `operator` for the rest (the catalog's binaries and their allow-lists,
  * the templates, the agent endpoint, the group's id, the version's collector
  * version: the operator's to fix).
  */
@@ -321,7 +321,7 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
 // The agent endpoint's form is the contracts' AGENT_ENDPOINT_PATTERN (the Helm values' rule too).
 
-/** One platform's binary, as the catalogue holds it. */
+/** One platform's binary, as the catalog holds it. */
 export interface BinaryDownload {
   downloadUrl: string;
   sha256: string;

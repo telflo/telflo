@@ -17,7 +17,7 @@ import type { IValidationService } from "../../configurations/validation.js";
  * answer too, `no-store` (every reply of this route, its refusals
  * included). Once the body passed its checks, the anonymous limits admit
  * it (per address and overall, a minute's count and slots in flight: 429
- * `rate_limited` with Retry-After), before the catalogue's reads; then the
+ * `rate_limited` with Retry-After), before the catalog's reads; then the
  * validation service's `validateAnonymousText` (no organization variables;
  * the same 400s as `/validate`, and 503 `validation_unavailable`).
  *
@@ -82,7 +82,7 @@ export function registerAnonymousValidateRoute(
       },
     },
     async (request, reply) => {
-      // Counted before the catalogue's reads; the slots are held until the answer.
+      // Counted before the catalog's reads; the slots are held until the answer.
       const admission = anonymousValidationLimiter.admit(request.ip);
       try {
         const answer = await validation.validateAnonymousText(request.body);

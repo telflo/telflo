@@ -101,8 +101,8 @@ export type PublicListConfigurationsQuery = z.input<typeof PublicListConfigurati
 /**
  * `POST /configurations`: the configuration and its version 1 in one
  * transaction, holding `yaml` as given. `distribution` is the one it is
- * built for, fixed for its life; left out, the catalogue's default. One the
- * catalogue doesn't offer is 400 `collector_distribution_unknown`.
+ * built for, fixed for its life; left out, the catalog's default. One the
+ * catalog doesn't offer is 400 `collector_distribution_unknown`.
  */
 export const PublicCreateConfigurationRequestSchema = z
   .object({

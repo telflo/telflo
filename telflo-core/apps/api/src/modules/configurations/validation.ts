@@ -38,7 +38,7 @@ import type { WithConfigurationTransaction } from "./service.js";
  * 1. The read, in one transaction as getVersion's, no lock: the
  *    configuration and the version are ones the caller can see (the draft
  *    rules: another member's draft is 404), and where the collector
- *    version stands in the catalogue. It commits before anything else.
+ *    version stands in the catalog. It commits before anything else.
  * 2. A version the distribution doesn't have is 400
  *    `collector_version_unknown`.
  * 3. The person's limits: 60 checks a minute, a retired answer counted too,
@@ -64,8 +64,8 @@ import type { WithConfigurationTransaction } from "./service.js";
  *
  * `validateText` checks a text that belongs to no configuration, for the
  * public API's `POST /validate`: the distribution and version named, else the
- * catalogue's defaults (the default distribution, and the distribution's
- * default version). A distribution the catalogue doesn't have is 400
+ * catalog's defaults (the default distribution, and the distribution's
+ * default version). A distribution the catalog doesn't have is 400
  * `collector_distribution_unknown` (as is one with no default version when
  * the version is left out: a default is asked only then), a version it
  * doesn't have 400 `collector_version_unknown`, a retired one 400
@@ -75,7 +75,7 @@ import type { WithConfigurationTransaction } from "./service.js";
  * `validateAnonymousText` checks a text for the public API's open
  * `POST /validate/anonymous`: no actor, no organization. It resolves the
  * distribution and version as `validateText` does, with its three 400s, on
- * the plain database (the catalogue is a global table), and never reads an
+ * the plain database (the catalog is a global table), and never reads an
  * organization's variables: the validator is sent the text alone, so a
  * `${org:NAME}` stays as written (no opamp-server read; its only 503 is
  * `validation_unavailable`). Its limits are the route's, taken before it is
@@ -93,7 +93,7 @@ export interface ValidationDependencies {
   limiter: ValidationLimiter;
   log: Pick<FastifyBaseLogger, "info" | "warn" | "error">;
   /**
-   * The catalogue (a global table), on the plain database: `validateText`
+   * The catalog (a global table), on the plain database: `validateText`
    * checks a named distribution's existence there, whatever its versions;
    * `validateAnonymousText` reads all it needs there, outside any
    * organization's transaction.
@@ -113,7 +113,7 @@ export interface ValidationInput {
 export interface TextValidationInput {
   /** The text. Never logged. */
   yaml: string;
-  /** Left out, the catalogue's default distribution. */
+  /** Left out, the catalog's default distribution. */
   distribution?: string | undefined;
   /** Left out, the distribution's default version. */
   collectorVersion?: string | undefined;
@@ -155,7 +155,7 @@ export interface IValidationService {
   ): Promise<ConfigurationValidation>;
   /**
    * Checks a text that belongs to no configuration with the distribution and
-   * version named, or the catalogue's defaults. 400
+   * version named, or the catalog's defaults. 400
    * `collector_distribution_unknown`, `collector_version_unknown` or
    * `collector_version_retired`; 429 `validation_rate_limited`; 503
    * `variables_unavailable` and `validation_unavailable`, as validateVersion.
@@ -170,12 +170,12 @@ export interface IValidationService {
   validateAnonymousText(input: TextValidationInput): Promise<TextValidation>;
 }
 
-/** The catalogue's reads a text's validation resolves its collector with: a transaction's, or the plain database's. */
+/** The catalog's reads a text's validation resolves its collector with: a transaction's, or the plain database's. */
 type CatalogueReads = Pick<ICollectorCatalogueRepository, "findDefaults" | "findDistributionDefault" | "findVersionState">;
 
 /**
  * The distribution and version a text is checked with: the ones named, else
- * the catalogue's defaults (a default version is asked only when the version
+ * the catalog's defaults (a default version is asked only when the version
  * is left out), and the version's state. 400 `collector_distribution_unknown`
  * for a named distribution with no default when the version is left out.
  */

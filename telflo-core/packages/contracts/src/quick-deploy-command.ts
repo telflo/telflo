@@ -38,12 +38,12 @@ import { QUICK_DEPLOY_MASKED_SECRET, QUICK_DEPLOY_URL_PATTERN } from "./quick-de
  * line: alone, it left the line before it whole, and csh ran that line
  * (the service's restart, or the start script).
  *
- * curl starts `-q` (its first argument, or it isn't honoured: no
+ * curl starts `-q` (its first argument, or it isn't honored: no
  * `~/.curlrc` of the person's applies, a `location`, `proxy` or
  * `trace-ascii` line in it among them) and `-g` (no globbing: a bracketed
  * IPv6 base reaches it whole, whatever curl's version). `--retry 3`: curl
  * retries only a transient failure (a timeout, or a 408, 429, 500, 502, 503
- * or 504 reply) and honours its `Retry-After` (the cap's 503 and the
+ * or 504 reply) and honors its `Retry-After` (the cap's 503 and the
  * per-IP 429 carry one), so a fleet-wide rollout rides out a busy moment
  * (curl's `-S` still prints each refused try's error, even when a retry
  * then succeeds); a 404, 409 or 410 (an unknown, unusable, revoked or

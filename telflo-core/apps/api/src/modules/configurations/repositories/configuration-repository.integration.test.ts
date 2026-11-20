@@ -24,7 +24,7 @@ describe("configuration repository", () => {
   /** The tables' owner: fixtures, truncation and reading rows back. */
   let ownerDb: Kysely<Database>;
   let databases: TestDatabases;
-  /** The catalogue's default distribution, which a configuration is created for. */
+  /** The catalog's default distribution, which a configuration is created for. */
   let distribution: string;
 
   beforeAll(async () => {

@@ -129,7 +129,7 @@ export const UpdateTestRegexRequestSchema = z
 
 export type UpdateTestRegexRequest = z.input<typeof UpdateTestRegexRequestSchema>;
 
-/** A string of at most `maximum` code points, as Postgres's char_length counts: a stored row always serialises. */
+/** A string of at most `maximum` code points, as Postgres's char_length counts: a stored row always serializes. */
 const atMostCodePoints = (maximum: number) =>
   z.string().refine((text) => codePointLength(text) <= maximum, {
     message: `String must contain at most ${maximum} character(s)`,

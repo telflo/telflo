@@ -48,7 +48,7 @@ export interface Configuration {
   createdBy: ConfigurationCreator | null;
   /** True when at least one of its versions is published; else it is a draft. */
   published: boolean;
-  /** The catalogue distribution it is built for, chosen when it was created and never changed. */
+  /** The catalog distribution it is built for, chosen when it was created and never changed. */
   collectorDistribution: string;
 }
 
@@ -101,8 +101,8 @@ export interface CreateConfigurationInput {
   description: string;
   createdByUserId: string;
   /**
-   * The distribution it is built for, a distribution of the catalogue
-   * (23503 otherwise): the catalogue's default, read in the same
+   * The distribution it is built for, a distribution of the catalog
+   * (23503 otherwise): the catalog's default, read in the same
    * transaction. Never changed afterwards.
    */
   collectorDistribution: string;

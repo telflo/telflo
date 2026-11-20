@@ -48,7 +48,7 @@ import type { IConfigurationVersionSelectionRepository } from "./repositories/co
  * The repositories a unit of work uses, bound to one transaction that
  * carries the request's database context: the active organization, its
  * members, its configurations, their versions, each person's selected
- * version, the collector catalogue (global), the test suites (a new
+ * version, the collector catalog (global), the test suites (a new
  * version's copy of its source's), the validation pipelines (likewise), and
  * the audit trail. The configurations, versions, suites and validation
  * pipelines are the caller's view of them: their own drafts and every
@@ -134,7 +134,7 @@ export interface CreateConfigurationInput {
   name: string;
   description: string;
   /**
-   * The distribution it is built for; left out, the catalogue's default.
+   * The distribution it is built for; left out, the catalog's default.
    */
   collectorDistribution?: string | undefined;
   /**
@@ -286,9 +286,9 @@ export interface IConfigurationService {
   /**
    * A new configuration, created by the caller, with its version 1 holding
    * empty YAML, or the content given, exactly as given, built for the
-   * distribution named or the catalogue's default, its version 1 at that
+   * distribution named or the catalog's default, its version 1 at that
    * distribution's default version or the collector version given. A
-   * distribution the catalogue doesn't offer is 400
+   * distribution the catalog doesn't offer is 400
    * `collector_distribution_unknown`; then a collector version it doesn't
    * offer, or has deprecated, is 400 `collector_version_unknown`. Either
    * refusal writes nothing. A graph the table's checks refuse rejects with
@@ -505,7 +505,7 @@ export async function lockedConfiguration(
 /**
  * The collector version a write leaves a version at: `requested` when it names
  * one, else `current`. The current one is always accepted, even if the
- * catalogue deprecated it since (a pin is never changed silently, and keeping
+ * catalog deprecated it since (a pin is never changed silently, and keeping
  * it is no change); a change must name a version `distribution` offers, else
  * 400 `collector_version_unknown`.
  */
@@ -523,7 +523,7 @@ async function collectorVersionFor(
 /**
  * The distribution a create builds a configuration for and its version 1's
  * collector version: the one named at its default version, else the
- * catalogue's defaults. One the catalogue doesn't offer is 400
+ * catalog's defaults. One the catalog doesn't offer is 400
  * `collector_distribution_unknown`.
  */
 async function collectorPinFor(
@@ -882,9 +882,9 @@ export function createConfigurationService(deps: ConfigurationServiceDependencie
       return withTransaction(actor.context, async (transaction) => {
         await lockAsMember(transaction, actor);
         const at = now();
-        // The distribution named at its default version, or the catalogue's
+        // The distribution named at its default version, or the catalog's
         // default distribution and its default version, read in this
-        // transaction: one default, the catalogue's, never a constant.
+        // transaction: one default, the catalog's, never a constant.
         const pin = await collectorPinFor(transaction, input.collectorDistribution);
         // A collector version given is checked against that distribution,
         // before anything is written: the default is accepted as it is, any

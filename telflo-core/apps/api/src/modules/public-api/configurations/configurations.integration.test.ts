@@ -733,9 +733,9 @@ describe("the public configurations routes", () => {
           is_default: false,
           deprecated: true,
           deprecated_note: "Retired fixture.",
-          // The test-only mark: a killed run's row is removed before the next run's catalogue sync.
+          // The test-only mark: a killed run's row is removed before the next run's catalog sync.
           description: TEST_CATALOGUE_FIXTURE_NOTE,
-          // The JSON columns as text, as the catalogue's sync writes them.
+          // The JSON columns as text, as the catalog's sync writes them.
           supported_components: template.supported_components === null ? null : (JSON.stringify(template.supported_components) as never),
           otelcol_contrib: JSON.stringify(template.otelcol_contrib) as never,
           opamp_supervisor: JSON.stringify(template.opamp_supervisor) as never,

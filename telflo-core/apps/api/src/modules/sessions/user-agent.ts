@@ -52,7 +52,7 @@ function firstMatch<Family>(text: string, rules: readonly Rule<Family>[]): Famil
  * A session's user agent as the two families the sessions list shows: our own
  * table of fixed tokens, plain substring tests on the first 512 characters, so
  * nothing can backtrack whatever the string. No dependency: ua-parser-js v2 is
- * AGPL. Anything unrecognised, no user agent included, is `other`. The raw
+ * AGPL. Anything unrecognized, no user agent included, is `other`. The raw
  * string never leaves the API and is never logged: only these two words do.
  */
 export function parseUserAgent(userAgent: string | null): { browser: SessionBrowser; os: SessionSystem } {

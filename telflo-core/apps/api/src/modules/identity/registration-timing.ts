@@ -6,7 +6,7 @@
  *
  * `sample()` returns one of the recent observations at random rather than
  * their mean, so the padded duplicate path reproduces the spread of the
- * real path's latency, not just its centre: a constant delay would give the
+ * real path's latency, not just its center: a constant delay would give the
  * duplicate path a visibly tighter distribution than the path it imitates.
  */
 export interface RegistrationTimingOptions {

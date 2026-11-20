@@ -76,7 +76,7 @@ export function refreshCookieOptions(settings: SessionCookieSettings): CookieSer
 /**
  * A clear must name the same path the cookie was set with: a browser treats a
  * cookie with another path as a different cookie and silently keeps the
- * original. Not `reply.clearCookie`, which drops `maxAge` in favour of an
+ * original. Not `reply.clearCookie`, which drops `maxAge` in favor of an
  * `Expires` in 1970; `Max-Age=0` is the contract.
  */
 export function clearedAccessCookieOptions(settings: SessionCookieSettings): CookieSerializeOptions {

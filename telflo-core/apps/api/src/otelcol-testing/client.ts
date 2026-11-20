@@ -36,7 +36,7 @@ import {
 // expect (a 400, 409, 413 or 500, a redirect), a reply it can't read, and a
 // duration it refused, with the reason, the status and the tester's error code
 // from its envelope (the contract's fixed list), never the body. A version the
-// tester's catalogue retires (409 `version_retired`) or doesn't list (400
+// tester's catalog retires (409 `version_retired`) or doesn't list (400
 // `version_unknown`) is its own reason, each logged at warn.
 
 /** One run, as the dispatcher sends it (openapi.yaml's RunRequest, the input as bytes). */
@@ -82,15 +82,15 @@ export type TesterUnavailableReason =
   /** 503 `version_unavailable`: an offered version this tester doesn't hold. Not a health failure; the run fails. */
   | "version_unavailable"
   /**
-   * 409 `version_retired`: the tester's catalogue retires a version the
+   * 409 `version_retired`: the tester's catalog retires a version the
    * platform's still offers (the tester's image is newer than the
-   * platform's catalogue). The run fails with its own message; logged at
+   * platform's catalog). The run fails with its own message; logged at
    * warn.
    */
   | "version_retired"
   /**
-   * 400 `version_unknown`: the tester's catalogue doesn't list the version
-   * (its image is older than the platform's catalogue). The run fails with
+   * 400 `version_unknown`: the tester's catalog doesn't list the version
+   * (its image is older than the platform's catalog). The run fails with
    * its own, neutral message; logged at warn.
    */
   | "version_unknown"
@@ -173,7 +173,7 @@ export interface OtelcolTestingClient {
 
 /** Where the client logs what a deployment must fix. A pino/Fastify logger fits. */
 export interface OtelcolTestingClientLog {
-  /** A version the tester no longer offers: the catalogues disagree for a while. */
+  /** A version the tester no longer offers: the catalogs disagree for a while. */
   warn(details: Record<string, unknown>, message: string): void;
   error(details: Record<string, unknown>, message: string): void;
 }
@@ -254,7 +254,7 @@ const RELEASED_503_CODES: Readonly<Partial<Record<OtelcolTestingErrorCode, Teste
   version_unavailable: "version_unavailable",
 };
 
-/** A version the tester's catalogue doesn't offer, by its status and code. */
+/** A version the tester's catalog doesn't offer, by its status and code. */
 const VERSION_REPLIES: ReadonlyArray<readonly [number, OtelcolTestingErrorCode, "version_retired" | "version_unknown"]> = [
   [409, "version_retired", "version_retired"],
   [400, "version_unknown", "version_unknown"],

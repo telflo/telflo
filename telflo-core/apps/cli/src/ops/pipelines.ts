@@ -2,7 +2,7 @@
  * A version's validation pipelines: route 13's list (`config rules`,
  * `test --saved`'s rule names) and route 14's replace (`test --save`). Route
  * 14's pipeline keeps its `/` (`pipelineSegment`); its body is strict:
- * `{ signal, rules }`, no pipeline `name` (the older CLI's is dropped).
+ * `{ signal, rules }`, no pipeline `name` (a spec file's is never sent).
  * Rules and names are configuration text: they travel in these bodies only,
  * never a URL or a message.
  */

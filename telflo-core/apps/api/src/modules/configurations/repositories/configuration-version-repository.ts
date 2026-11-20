@@ -31,8 +31,8 @@ import { visibleTo, type ConfigurationCreator, type ConfigurationViewerContext }
  * expression, `written`, joined to `users` by a plain read that locks nothing
  * there.
  *
- * Every version carries whether the catalogue has deprecated its collector
- * version since, and the catalogue's note: an inner join to the global
+ * Every version carries whether the catalog has deprecated its collector
+ * version since, and the catalog's note: an inner join to the global
  * `collector_versions` (no organization, no row-level security; the API's
  * role reads it), which the pin's foreign key guarantees a row for.
  *
@@ -72,12 +72,12 @@ export interface ConfigurationVersionSummary {
   collectorDistribution: string;
   /**
    * The collector version it is pinned to, a version of
-   * `collectorDistribution` in the catalogue, possibly deprecated since.
+   * `collectorDistribution` in the catalog, possibly deprecated since.
    */
   collectorVersion: string;
-  /** Whether the catalogue has deprecated `collectorVersion` since it was pinned. */
+  /** Whether the catalog has deprecated `collectorVersion` since it was pinned. */
   collectorVersionDeprecated: boolean;
-  /** The catalogue's note on why, the deprecated pin's tooltip; null unless deprecated. */
+  /** The catalog's note on why, the deprecated pin's tooltip; null unless deprecated. */
   collectorVersionDeprecatedNote: string | null;
 }
 
@@ -110,9 +110,9 @@ export interface SaveConfigurationVersionInput extends StoredGraph {
 
 /**
  * What a save writes: the content, and the collector version when given, a
- * version of the configuration's distribution in the catalogue (23503
+ * version of the configuration's distribution in the catalog (23503
  * otherwise); left out, the stored one stays. The service decides it: the one
- * stored, or a change it has checked the catalogue offers.
+ * stored, or a change it has checked the catalog offers.
  */
 export interface SavedConfigurationVersion extends SaveConfigurationVersionInput {
   collectorVersion?: string | undefined;
@@ -178,7 +178,7 @@ export interface CreateConfigurationVersionInput {
   createdByUserId: string;
   /**
    * Its pin: the configuration's distribution and a version of it in the
-   * catalogue (23503 otherwise). A configuration's first version gets the
+   * catalog (23503 otherwise). A configuration's first version gets the
    * distribution's default, or the version its create named.
    */
   collectorDistribution: string;
@@ -393,7 +393,7 @@ function toConfigurationVersionSummary(row: SummaryRow): ConfigurationVersionSum
     collectorDistribution: row.collector_distribution,
     collectorVersion: row.collector_version,
     collectorVersionDeprecated: row.collector_version_deprecated,
-    // The note is the deprecation's: a version the catalogue offers has none to show.
+    // The note is the deprecation's: a version the catalog offers has none to show.
     collectorVersionDeprecatedNote: row.collector_version_deprecated ? row.collector_version_deprecated_note : null,
   };
 }
@@ -425,7 +425,7 @@ const summaryColumns = [
 
 /**
  * What a read joins: the creator's and the publisher's emails (by the same
- * rule for both), and whether the catalogue deprecated the pin (`pins`).
+ * rule for both), and whether the catalog deprecated the pin (`pins`).
  */
 const emails = [
   "creators.email as creator_email",
@@ -531,7 +531,7 @@ export function createConfigurationVersionRepository(
   /**
    * The context's organization's versions of the live configurations the
    * viewer can see, as `ofLiveConfigurations` without its joins to `users`
-   * and the catalogue: for reads that need none of their columns.
+   * and the catalog: for reads that need none of their columns.
    */
   const ofLiveConfigurationsOnly = () =>
     scope
@@ -573,8 +573,8 @@ export function createConfigurationVersionRepository(
   // changes, so no check of theirs runs and nothing on `users` or
   // `configurations` is locked by one; the creator's email is a plain read
   // of the written row's. A changed collector version runs its foreign
-  // key's check, which takes `key share` on that catalogue row: only the
-  // migration step writes the catalogue.
+  // key's check, which takes `key share` on that catalog row: only the
+  // migration step writes the catalog.
   async function save(
     configurationId: string,
     versionId: string,

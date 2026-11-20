@@ -21,7 +21,7 @@ export const MAXIMUM_EXPRESSIONS = 200;
 /** An expression's longest text (the contract's `PUBLIC_OTTL_LINT_EXPRESSION_MAXIMUM_LENGTH`). */
 export const MAXIMUM_EXPRESSION_LENGTH = 8_192;
 
-/** `--kind`'s values: the older CLI's three, and `valueExpression` (the platform's name) as `value`'s alias. */
+/** `--kind`'s values: `condition`, `statement` and `value`, and `valueExpression` (the platform's name) as `value`'s alias. */
 export const OTTL_KINDS = ["condition", "statement", "value", "valueExpression"] as const;
 
 export type OttlKind = (typeof OTTL_KINDS)[number];

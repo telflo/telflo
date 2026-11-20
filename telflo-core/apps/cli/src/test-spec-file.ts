@@ -1,10 +1,10 @@
 /*
- * A `telflo test` spec file: the older Telflo CLI's YAML as it is, its rules
- * converted to the platform's OTTL rule `{ kind: "ottl", target: "output",
- * name?, ottl: { context, quantifier, condition?, expression?, count? } }`
- * and checked first as the API would (`CreateValidationRuleRequestSchema`
- * and `OTTL_CONTEXTS_BY_SIGNAL`), so a bad rule is exit 2 naming its index
- * and field before anything is sent.
+ * A `telflo test` spec file: YAML read as it is, its rules converted to
+ * the platform's OTTL rule `{ kind: "ottl", target: "output", name?, ottl:
+ * { context, quantifier, condition?, expression?, count? } }` and checked
+ * first as the API would (`CreateValidationRuleRequestSchema` and
+ * `OTTL_CONTEXTS_BY_SIGNAL`), so a bad rule is exit 2 naming its index and
+ * field before anything is sent.
  *
  * The constants are the contracts' own, copied (the CLI imports nothing from
  * a workspace at run time); each has a drift test importing the contracts.
@@ -47,7 +47,7 @@ export const TEST_DURATION_MINIMUM_SECONDS = 1;
 export const TEST_DURATION_MAXIMUM_SECONDS = 60;
 export const TEST_DEFAULT_DURATION_SECONDS = 5;
 
-/** The keys a spec's rule may have (the older CLI's). */
+/** The keys a spec's rule may have. */
 const RULE_KEYS = new Set(["name", "context", "quantifier", "condition", "expression", "count"]);
 const COUNT_KEYS = new Set(["operator", "value", "value2"]);
 
@@ -82,7 +82,7 @@ export interface TestRule {
 }
 
 export interface TestSpec {
-  /** The older CLI's pipeline display name: read, never sent (the platform's pipeline has none). */
+  /** A pipeline display name: read, never sent (the platform's pipeline has none). */
   name?: string;
   signal: TestSignal;
   pipeline: string;

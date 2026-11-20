@@ -178,7 +178,7 @@ export const registerConfigurationPublicRoutes: PublicApiArea = (api, { deps }) 
 
   // The configuration and its version 1 in one transaction (the service's
   // create), holding the text as given with an empty graph, at the
-  // distribution named or the catalogue's default.
+  // distribution named or the catalog's default.
   typed.post(
     "/configurations",
     {

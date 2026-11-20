@@ -25,7 +25,7 @@ import { withDatabaseContext, withDispatcherContext, type DatabaseContext } from
  * only for the runs they can see, so it tells organization B nothing of A's
  * queue, and a teammate nothing of another member's draft.
  *
- * The SQL's own behaviour (the turns, the cap, the lease) is
+ * The SQL's own behavior (the turns, the cap, the lease) is
  * packages/db's test-runs.integration.test.ts's.
  */
 

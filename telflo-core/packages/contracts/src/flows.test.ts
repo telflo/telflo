@@ -237,7 +237,7 @@ describe("CreateFlowRequestSchema", () => {
     }
   });
 
-  it("checks the pin's formats only: the catalogue decides whether it is offered", () => {
+  it("checks the pin's formats only: the catalog decides whether it is offered", () => {
     expect(createAccepts("collectorDistribution", "clickstack")).toBe(true);
     expect(createAccepts("collectorVersion", "0.147.0")).toBe(true);
     expect(createAccepts("collectorDistribution", "Contrib")).toBe(false);

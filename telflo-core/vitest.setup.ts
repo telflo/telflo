@@ -138,7 +138,7 @@ for (const devOnly of [
 // The site's switches: the tests run the SaaS's values, whatever a
 // developer's .env says, so the API and CLI tests that call the switched
 // routes (registration, Terms, the playground's anonymous reads, the
-// published flows) keep their behaviour; a test of the open source's
+// published flows) keep their behavior; a test of the open source's
 // defaults passes its own settings. The sales inquiries stay off (their
 // tests switch them on with an address of their own), and the docs link is
 // the default. Mail goes to the test's own Mailpit in plain SMTP

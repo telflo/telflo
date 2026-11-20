@@ -42,7 +42,7 @@ describe("an install's read with no person (the public download)", () => {
     return { userId: person.user.id, organizationId, publicationId, otherOrganizationId: otherGroup.organization.id };
   };
 
-  it("finds the group's published version and its catalogue state in the link's organization, with no viewer", async () => {
+  it("finds the group's published version and its catalog state in the link's organization, with no viewer", async () => {
     const { organizationId, publicationId } = await seed();
     const read = await withOrganizationContext(db, organizationId, async (transaction) => {
       const version = await createPublishedVersionRepository(transaction, { organizationId, userId: null }).findForInstall(publicationId);

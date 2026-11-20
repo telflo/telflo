@@ -1,9 +1,9 @@
 /*
  * What the CLI writes, and how it ends.
  *
- * Exit codes, kept from the older Telflo CLI: 0 OK, 1 an API or network failure, 2 a usage
- * error, 3 an authentication or access refusal, 4 a check that found a
- * problem (invalid YAML, a lint failure, a failed test). Only fixed words
+ * Exit codes: 0 OK, 1 an API or network failure, 2 a usage error, 3 an
+ * authentication or access refusal, 4 a check that found a problem
+ * (invalid YAML, a lint failure, a failed test). Only fixed words
  * reach the terminal: an envelope's `message` (the API's own fixed words),
  * or the CLI's. Nothing prints a request, a header, a reply body or a token.
  */

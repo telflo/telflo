@@ -47,16 +47,16 @@ const PASSWORD = "a-sufficiently-long-password";
 /** Creating, migrating and dropping a database waits for checkpoints. */
 const THROWAWAY_DATABASE_TIMEOUT = 30_000;
 
-/** The committed catalogue's distribution. */
+/** The committed catalog's distribution. */
 const CONTRIB = "otelcol-contrib";
-/** A Contrib version this file deprecates: a fixture's, never the committed catalogue's. */
+/** A Contrib version this file deprecates: a fixture's, never the committed catalog's. */
 const RETIRED = "0.1.0";
 /** A fixture distribution, and its versions: none of them is Contrib's. */
 const FIXTURE = "fixture-build";
 const FIXTURE_DEFAULT = "9.9.1";
 const FIXTURE_OTHER = "9.9.0";
 
-/** The refusals' words, exactly: the validation's, the catalogue's and the envelope's. */
+/** The refusals' words, exactly: the validation's, the catalog's and the envelope's. */
 const MESSAGES = {
   unavailable: "Validation is unavailable. Your YAML was not checked — retry shortly.",
   perMinute: "Too many checks in the last minute. Checking again shortly.",
@@ -117,7 +117,7 @@ async function closedUrl(): Promise<string> {
  * wrapped in process: every call is recorded, and a test can put a hook in
  * front of it (a gate, a look at the pool) or swap the client (a wrong secret,
  * a short timeout, nothing listening). A version of another distribution needs
- * a catalogue the committed one isn't, so the file runs on a throwaway
+ * a catalog the committed one isn't, so the file runs on a throwaway
  * database it prepares (migrated and synced, as telflo_platform_test is) and
  * drops afterwards, with a fixture distribution and a deprecated Contrib
  * version.
@@ -454,7 +454,7 @@ describe("a version's validation", () => {
       expect(await snapshot()).toEqual(before);
     });
 
-    it("retired: a saved pin the catalogue deprecated answers 200 retired without asking the validator", async () => {
+    it("retired: a saved pin the catalog deprecated answers 200 retired without asking the validator", async () => {
       const subject = await personalWithVersion({ collectorVersion: RETIRED });
 
       const response = await validateAs(subject, { yaml: INVALID_TEXT });
@@ -483,7 +483,7 @@ describe("a version's validation", () => {
       expect(calls).toHaveLength(1);
     });
 
-    it("400 collector_version_unknown for a version the catalogue doesn't have, asking nothing", async () => {
+    it("400 collector_version_unknown for a version the catalog doesn't have, asking nothing", async () => {
       const subject = await personalWithVersion();
 
       expectRefusal(

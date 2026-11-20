@@ -87,7 +87,7 @@ describe("telflo validate, logged in", () => {
     ]);
   });
 
-  it("is exit 2 for a version the catalogue doesn't have, the validator never asked", async () => {
+  it("is exit 2 for a version the catalog doesn't have, the validator never asked", async () => {
     await loggedIn();
     const result = await cli(["--json", "validate", "-", "--collector-version", "0.0.1"], VALID_YAML);
     expect(result.code).toBe(2);

@@ -309,7 +309,7 @@ export function collectorGroupAssignmentDeleted(): AppError {
   return new AppError("collector_group_assignment_deleted" satisfies FleetErrorCode, COLLECTOR_GROUP_ASSIGNMENT_DELETED_MESSAGE, 409);
 }
 
-/** A published version built for a collector version the catalogue no longer offers (deprecated, or gone). */
+/** A published version built for a collector version the catalog no longer offers (deprecated, or gone). */
 export function collectorVersionNotOffered(version: string): AppError {
   return new AppError("collector_version_not_offered" satisfies FleetErrorCode, collectorVersionNotOfferedMessage(version), 409);
 }
@@ -319,7 +319,7 @@ export function collectorDistributionNotInstallable(distribution: string): AppEr
   return new AppError("collector_version_not_offered" satisfies FleetErrorCode, collectorDistributionNotInstallableMessage(distribution), 409);
 }
 
-/** A version the catalogue has no binaries of for the bundle's arch: refused before rendering. */
+/** A version the catalog has no binaries of for the bundle's arch: refused before rendering. */
 export function collectorBinariesMissing(version: string, arch: string): AppError {
   return new AppError("collector_version_not_offered" satisfies FleetErrorCode, collectorBinariesMissingMessage(version, arch), 409);
 }

@@ -216,10 +216,10 @@ import {
  *
  * Installing: an install's facts (one read admission) and a Linux bundle
  * (one write) read the fleet and the group from the opamp-server, then the
- * group's published version's YAML and collector and the catalogue in one
+ * group's published version's YAML and collector and the catalog in one
  * short committed transaction (`installable`'s order of refusals). The
  * bundle is rendered from the request's validated fields, the settings and
- * the catalogue only (install/render.ts), its templates read again from
+ * the catalog only (install/render.ts), its templates read again from
  * the directory (install/templates.ts), and audited
  * `fleet.install_bundle_downloaded` with ids, the method and the arch.
  * Neither carries a bearer; a configuration's YAML, a template's text, a
@@ -272,7 +272,7 @@ export interface FleetsTransaction {
   configurations: Pick<IConfigurationRepository, "find">;
   /** A configuration version and its published copy, both ways. */
   publishedVersions: IPublishedVersionRepository;
-  /** The collector catalogue (global): an install's version state and binaries. */
+  /** The collector catalog (global): an install's version state and binaries. */
   catalogue: Pick<ICollectorCatalogueRepository, "findVersionState" | "findVersionBinaries" | "listOfferedBinaries">;
   /** The organization's quick-deploy links. */
   quickDeployLinks: IQuickDeployLinkRepository;
@@ -299,7 +299,7 @@ export type WithOrganizationTransaction = <Result>(
   work: (transaction: QuickDeployDownloadTransaction) => Promise<Result>,
 ) => Promise<Result>;
 
-/** An install's reads (the published version, the catalogue) in one short committed transaction: a member's, or the public download's. */
+/** An install's reads (the published version, the catalog) in one short committed transaction: a member's, or the public download's. */
 type InstallRead = <Result>(work: (transaction: Pick<FleetsTransaction, "publishedVersions" | "catalogue">) => Promise<Result>) => Promise<Result>;
 
 /** What a bundle is rendered from: the request's validated fields, or a link's stored choices and opened values. */
@@ -1095,7 +1095,7 @@ export function createFleetsService(deps: FleetsServiceDependencies): IFleetsSer
    * `collector_group_unassigned`); a version the platform holds no live one
    * of, a deleted configuration's (409 `collector_group_assignment_deleted`);
    * one built for another distribution than the image's and the bundles'
-   * (otelcol-contrib), or for a collector version the catalogue doesn't offer
+   * (otelcol-contrib), or for a collector version the catalog doesn't offer
    * (409 `collector_version_not_offered`).
    */
   async function installable(
@@ -1258,7 +1258,7 @@ export function createFleetsService(deps: FleetsServiceDependencies): IFleetsSer
   /**
    * A Linux bundle, for `installable`'s group and version: the method's
    * templates read now, the binaries for the arch, every placeholder filled
-   * from `choices` (validated fields only), the settings and the catalogue.
+   * from `choices` (validated fields only), the settings and the catalog.
    * No actor, no audit: the caller's.
    */
   async function renderBundle(
@@ -2428,7 +2428,7 @@ export function createFleetsService(deps: FleetsServiceDependencies): IFleetsSer
       // The link's organization, no person: the published version read with no viewer.
       const read: InstallRead = (work) => withOrganization(link.organizationId, work);
       try {
-        // The group's CURRENT version, templates and catalogue, refused as the signed-in bundle.
+        // The group's CURRENT version, templates and catalog, refused as the signed-in bundle.
         const { group, version } = await installable(read, ids, "server");
         const offered = new Set(requiredEnvVarNames(version.yaml));
         if (!link.choices.envNames.every((name) => offered.has(name))) throw downloadVariablesChanged();
@@ -2465,7 +2465,7 @@ export function createFleetsService(deps: FleetsServiceDependencies): IFleetsSer
         } catch (error) {
           if (!(error instanceof InstallRenderError)) throw error;
           // A refusal by its cause, as the Helm values' below: the link's own data (a value stored before the
-          // lone-surrogate check, say) at warn; the operator's (the catalogue, the templates, the endpoint, the
+          // lone-surrogate check, say) at warn; the operator's (the catalog, the templates, the endpoint, the
           // group's id, the collector version) at error. Ids, the cause and the rule's fixed words only (an
           // InstallRenderError names no value), no stack.
           const fields = { operation: "quickDeployBundle", ...ids, source: error.source, reason: error.message };

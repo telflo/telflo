@@ -6,11 +6,11 @@ import { createCollectorCatalogueRepository } from "./collector-catalogue-reposi
 
 /*
  * A version's binaries and the offered versions' binaries, which a Linux
- * bundle downloads, read from the committed collector catalogue as the test
+ * bundle downloads, read from the committed collector catalog as the test
  * setup's migration step (db:migrate's runMigrationStep) synced it into
  * telflo_platform_test (the API reads only the database), as the API's role.
  */
-describe("the collector catalogue's binaries", () => {
+describe("the collector catalog's binaries", () => {
   let databases: TestDatabases;
   let db: Kysely<Database>;
 

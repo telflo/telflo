@@ -98,7 +98,7 @@ describe("the responses", () => {
   it("carry a template, alone and in a list", () => {
     expect(TestTemplateResponseSchema.parse({ template })).toEqual({ template });
     expect(TestTemplatesResponseSchema.parse({ templates: [template] })).toEqual({ templates: [template] });
-    // A stored receiver type the list no longer offers still serialises.
+    // A stored receiver type the list no longer offers still serializes.
     expect(TestTemplateSchema.safeParse({ ...template, receiverType: "kafka" }).success).toBe(true);
   });
 

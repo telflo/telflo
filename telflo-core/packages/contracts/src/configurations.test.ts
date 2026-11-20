@@ -175,14 +175,14 @@ describe("CreateConfigurationRequestSchema", () => {
     );
   });
 
-  it("accepts a collector distribution, left out meaning the catalogue's default", () => {
+  it("accepts a collector distribution, left out meaning the catalog's default", () => {
     expect(CreateConfigurationRequestSchema.parse({ name: "Gateway", collectorDistribution: "otelcol-contrib" })).toEqual({
       name: "Gateway",
       description: "",
       collectorDistribution: "otelcol-contrib",
     });
     expect(CreateConfigurationRequestSchema.parse({ name: "Gateway" })).not.toHaveProperty("collectorDistribution");
-    // In the catalogue's format but not in it: the service's to refuse (collector_distribution_unknown).
+    // In the catalog's format but not in it: the service's to refuse (collector_distribution_unknown).
     expect(CreateConfigurationRequestSchema.safeParse({ name: "Gateway", collectorDistribution: "clickstack" }).success).toBe(
       true,
     );
@@ -197,7 +197,7 @@ describe("CreateConfigurationRequestSchema", () => {
     ["U+0000", "otelcol\u0000"],
     ["null", null],
     ["a number", 1],
-  ])("refuses a collector distribution that is %s: not the catalogue's format", (_label, collectorDistribution) => {
+  ])("refuses a collector distribution that is %s: not the catalog's format", (_label, collectorDistribution) => {
     expect(CreateConfigurationRequestSchema.safeParse({ name: "Gateway", collectorDistribution }).success).toBe(false);
   });
 
@@ -345,7 +345,7 @@ describe("CreateConfigurationRequestSchema from a flow", () => {
     expect(CreateConfigurationRequestSchema.safeParse({ ...fromFlow, yamlContent: null }).success).toBe(false);
   });
 
-  it.each(COLLECTOR_VERSIONS_REFUSED)("refuses a collector version that is %s: not the catalogue's format", (_label, collectorVersion) => {
+  it.each(COLLECTOR_VERSIONS_REFUSED)("refuses a collector version that is %s: not the catalog's format", (_label, collectorVersion) => {
     expect(CreateConfigurationRequestSchema.safeParse({ ...fromFlow, collectorVersion }).success).toBe(false);
   });
 
@@ -554,7 +554,7 @@ describe("ConfigurationVersionSchema", () => {
     expect(ConfigurationVersionSchema.safeParse({ ...version, publishedByUserId: null }).success).toBe(false);
   });
 
-  it("carries its collector version and whether the catalogue deprecated it since, with the catalogue's note", () => {
+  it("carries its collector version and whether the catalog deprecated it since, with the catalog's note", () => {
     expect(ConfigurationVersionSummarySchema.parse(summary)).toMatchObject({
       collectorVersion: "0.162.0",
       collectorVersionDeprecated: false,
@@ -771,7 +771,7 @@ describe("CreateConfigurationVersionRequestSchema", () => {
     expect(CreateConfigurationVersionRequestSchema.parse(request)).not.toHaveProperty("collectorVersion");
   });
 
-  it.each(COLLECTOR_VERSIONS_REFUSED)("refuses a collector version that is %s: not the catalogue's format", (_label, collectorVersion) => {
+  it.each(COLLECTOR_VERSIONS_REFUSED)("refuses a collector version that is %s: not the catalog's format", (_label, collectorVersion) => {
     expect(CreateConfigurationVersionRequestSchema.safeParse({ ...request, collectorVersion }).success).toBe(false);
   });
 
@@ -934,14 +934,14 @@ describe("SaveConfigurationVersionRequestSchema", () => {
     expect(SaveConfigurationVersionRequestSchema.parse({ yamlContent: "", ...EMPTY_GRAPH })).not.toHaveProperty(
       "collectorVersion",
     );
-    // In the catalogue's format but not in it: the service's to refuse (collector_version_unknown).
+    // In the catalog's format but not in it: the service's to refuse (collector_version_unknown).
     expect(
       SaveConfigurationVersionRequestSchema.safeParse({ yamlContent: "", ...EMPTY_GRAPH, collectorVersion: "9.9.9" })
         .success,
     ).toBe(true);
   });
 
-  it.each(COLLECTOR_VERSIONS_REFUSED)("refuses a collector version that is %s: not the catalogue's format", (_label, collectorVersion) => {
+  it.each(COLLECTOR_VERSIONS_REFUSED)("refuses a collector version that is %s: not the catalog's format", (_label, collectorVersion) => {
     expect(
       SaveConfigurationVersionRequestSchema.safeParse({ yamlContent: "", ...EMPTY_GRAPH, collectorVersion }).success,
     ).toBe(false);
@@ -1422,7 +1422,7 @@ describe("the graph's schemas", () => {
       expect(edgeOk({ ...EDGE, type: "default" })).toBe(false);
     });
 
-    it("refuses a missing field: a label, a component's config, a group's colour, an edge's target, a pipeline's name", () => {
+    it("refuses a missing field: a label, a component's config, a group's color, an edge's target, a pipeline's name", () => {
       expect(nodeOk(changed(RECEIVER, (node) => delete node.data.label))).toBe(false);
       expect(nodeOk(changed(RECEIVER, (node) => delete node.data.config))).toBe(false);
       expect(nodeOk(changed(GROUP, (node) => delete node.data.color))).toBe(false);
@@ -1462,9 +1462,9 @@ describe("the graph's schemas", () => {
     });
   });
 
-  describe("colours and signals", () => {
+  describe("colors and signals", () => {
     it.each(["#f9731", "#f973166", "f97316", "#g97316", "orange", "", "rgb(0,0,0)"])(
-      "refuse the colour %j on a group and on a pipeline",
+      "refuse the color %j on a group and on a pipeline",
       (color) => {
         expect(nodeOk(changed(GROUP, (node) => (node.data.color = color)))).toBe(false);
         expect(pipelineOk({ ...PIPELINE, color })).toBe(false);

@@ -61,7 +61,7 @@ const ROUTE = {
 
 type Route = (typeof ROUTE)[keyof typeof ROUTE];
 
-/** The collector version the catalogue offers with binaries for every Linux platform (the quick-deploy suites'). */
+/** The collector version the catalog offers with binaries for every Linux platform (the quick-deploy suites'). */
 const COLLECTOR_VERSION = "0.162.0";
 
 /** Two variables read, NGINX_ENV and BACKEND_API_KEY. */

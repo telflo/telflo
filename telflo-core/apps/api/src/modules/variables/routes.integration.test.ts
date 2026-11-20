@@ -1011,7 +1011,7 @@ describe("the variables and variable groups routes", () => {
       expect(await draftsOf(world.admin, world.organizationId, variable.id)).toEqual([publishedThenDraft, mine, escapedAndLive]);
       // A published configuration's draft every member sees; another's draft configuration only its author.
       expect(await draftsOf(world.contributor, world.organizationId, variable.id)).toEqual([publishedThenDraft, theirs]);
-      // Only the variable's id travelled: the name was read from the opamp-server.
+      // Only the variable's id traveled: the name was read from the opamp-server.
       expect(operations().filter((operation) => operation === "listVariables")).toHaveLength(2);
       expectNotLogged(variable.name, "b-mine-draft", "endpoint");
     });

@@ -84,7 +84,7 @@ export type ConfigurationCreator = z.infer<typeof ConfigurationCreatorSchema>;
  * A configuration in a response. The timestamps are ISO 8601; `createdBy` is
  * null once the creator's account is hard-deleted. `published` is true when
  * at least one of its versions is, else it is a draft, which only its creator
- * sees. `collectorDistribution` is the catalogue distribution it is built
+ * sees. `collectorDistribution` is the catalog distribution it is built
  * for, chosen when it was created and never changed.
  */
 export const ConfigurationSchema = z
@@ -183,8 +183,8 @@ export const ConfigurationVersionLabelSchema = z
  * published it, by `createdBy`'s rule: null on a draft, and once the
  * publisher's account is hard-deleted. `collectorVersion` is the collector
  * version it is pinned to, a version of its configuration's distribution.
- * The catalogue may have deprecated it since; the pin is kept, and
- * `collectorVersionDeprecated` says so, with the catalogue's
+ * The catalog may have deprecated it since; the pin is kept, and
+ * `collectorVersionDeprecated` says so, with the catalog's
  * `collectorVersionDeprecatedNote` (null unless deprecated).
  */
 export const ConfigurationVersionSummarySchema = z
@@ -664,15 +664,15 @@ const CREATE_CONTENT_FIELDS = ["yamlContent", "nodes", "edges", "pipelines"] as 
 /**
  * `POST /api/v1/organizations/:organizationId/configurations`. A description
  * left out is `''`. `collectorDistribution` is the distribution it is built
- * for, fixed for its life; left out, the catalogue's default. One the
- * catalogue doesn't offer is 400 `collector_distribution_unknown`.
+ * for, fixed for its life; left out, the catalog's default. One the
+ * catalog doesn't offer is 400 `collector_distribution_unknown`.
  *
  * A create from a flow carries its version 1's content as the browser
  * parsed the flow: `yamlContent`, `nodes`, `edges` and `pipelines`, with
  * the save's schemas and limits, all four or none (a subset is 400
  * `invalid_request`); left out, version 1 holds `''` and an empty graph, as
  * before. `collectorVersion` is version 1's collector version, which must
- * be one the distribution (the one named, else the catalogue's default)
+ * be one the distribution (the one named, else the catalog's default)
  * offers and hasn't deprecated, else 400 `collector_version_unknown`; left
  * out, the distribution's default. `sourceFlowSlug` names the flow it was
  * made from, checked for the slug's format only (a flow may be deleted
@@ -816,7 +816,7 @@ export function hasYamlControlCharacter(text: string): boolean {
  * checks `yaml` with the collector the version is pinned to.
  * `collectorVersion` is the tab's unsaved pick, left out to use the version's
  * saved pin; it must be a version of the configuration's distribution in the
- * catalogue, else 400 `collector_version_unknown`. There is no distribution:
+ * catalog, else 400 `collector_version_unknown`. There is no distribution:
  * it is always the configuration's. Strict: an unknown field (a
  * `distribution` among them) is 400 `invalid_request`. Nothing is stored.
  */
@@ -831,7 +831,7 @@ export type ValidateConfigurationVersionRequest = z.infer<typeof ValidateConfigu
 
 /**
  * A validation's outcome: the collector accepted the text, refused it, or
- * wasn't asked because the version is retired (deprecated in the catalogue;
+ * wasn't asked because the version is retired (deprecated in the catalog;
  * the validator holds only offered ones).
  */
 export const CONFIGURATION_VALIDATION_STATUSES = ["valid", "invalid", "retired"] as const;
@@ -914,7 +914,7 @@ export type ConfigurationValidationResponse = z.infer<typeof ConfigurationValida
  * publishing an empty version (409). `collector_version_unknown`, a save or a
  * create naming a collector version the configuration's distribution doesn't
  * offer (400); `collector_distribution_unknown`, a create naming a
- * distribution the catalogue doesn't offer (400). `validation_unavailable`,
+ * distribution the catalog doesn't offer (400). `validation_unavailable`,
  * the collector validator couldn't check the text (503);
  * `validation_rate_limited`, too many checks by the caller in the last minute,
  * or too many at once (429, with `Retry-After`). `configuration_in_use`, a

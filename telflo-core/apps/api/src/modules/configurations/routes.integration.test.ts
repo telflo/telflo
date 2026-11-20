@@ -245,9 +245,9 @@ describe("configuration routes", () => {
   /** The server's log lines since the test began, at info and above. */
   let logLines: string[] = [];
 
-  /** The catalogue's default distribution and its default version, as the tables hold them. */
+  /** The catalog's default distribution and its default version, as the tables hold them. */
   let pin: { distribution: string; version: string };
-  /** Another, non-deprecated version of that distribution in the catalogue. */
+  /** Another, non-deprecated version of that distribution in the catalog. */
   let otherVersion: string;
   /** A summary's pin fields for a version at the default version: offered, so not deprecated. */
   let pinned: { collectorVersion: string; collectorVersionDeprecated: false; collectorVersionDeprecatedNote: null };
@@ -911,7 +911,7 @@ describe("configuration routes", () => {
         created_at: clock,
         updated_at: clock,
         deleted_at: null,
-        // The catalogue's default distribution, read from its table.
+        // The catalog's default distribution, read from its table.
         collector_distribution: pin.distribution,
       });
       expect(await configurationAudits()).toEqual([
@@ -951,7 +951,7 @@ describe("configuration routes", () => {
       expect(names(await page(access, organization.id))).toEqual(["Twin", "Twin"]);
     });
 
-    it("creates exactly one version with it: number 1, '', unnamed, created by the caller, both timestamps the clock's, the graph '[]', and pinned to the catalogue's default version of its distribution", async () => {
+    it("creates exactly one version with it: number 1, '', unnamed, created by the caller, both timestamps the clock's, the graph '[]', and pinned to the catalog's default version of its distribution", async () => {
       const { account, organization, access } = await personalUser();
 
       const configuration = await created(access, organization.id, "Gateway");
@@ -1006,7 +1006,7 @@ describe("configuration routes", () => {
       return flow;
     };
 
-    /** A version of the default distribution the catalogue has deprecated. */
+    /** A version of the default distribution the catalog has deprecated. */
     const deprecatedVersion = async () =>
       (
         await ownerDb
@@ -1176,7 +1176,7 @@ describe("configuration routes", () => {
         });
       });
 
-      it("checks one sent with no distribution against the catalogue's default distribution, and builds for it", async () => {
+      it("checks one sent with no distribution against the catalog's default distribution, and builds for it", async () => {
         const { organization, access } = await personalUser();
         const { collectorDistribution: _left, ...withoutDistribution } = fromFlow();
 
@@ -1229,7 +1229,7 @@ describe("configuration routes", () => {
         expect(await snapshot()).toEqual(before);
       });
 
-      it("refuses a version the catalogue doesn't have: 400 collector_version_unknown, creating and auditing nothing", async () => {
+      it("refuses a version the catalog doesn't have: 400 collector_version_unknown, creating and auditing nothing", async () => {
         const { organization, access } = await personalUser();
         const before = await snapshot();
         expectRefusal(await create(access, organization.id, fromFlow({ collectorVersion: "9.9.9" })), 400, ...VERSION_UNKNOWN);
@@ -1247,7 +1247,7 @@ describe("configuration routes", () => {
         expect(await snapshot()).toEqual(before);
       });
 
-      it("refuses a version that isn't in the catalogue's format: 400 invalid_request", async () => {
+      it("refuses a version that isn't in the catalog's format: 400 invalid_request", async () => {
         const { organization, access } = await personalUser();
         const before = await snapshot();
         expectInvalid(await create(access, organization.id, fromFlow({ collectorVersion: "v0.162.0" })));
@@ -2587,9 +2587,9 @@ describe("configuration routes", () => {
       expect(read_.json<WithVersionBody>().versions.map((summary) => summary.versionNumber)).toEqual([3, 2, 1]);
     });
 
-    it("pins the new version to its source's collector version, not the catalogue's default", async () => {
+    it("pins the new version to its source's collector version, not the catalog's default", async () => {
       const { organization, access, configuration, first, second } = await withTwoVersions();
-      // The source, a draft, pinned to another version of the catalogue than the default.
+      // The source, a draft, pinned to another version of the catalog than the default.
       await ownerDb
         .updateTable("configuration_versions")
         .set({ collector_version: otherVersion })
@@ -4072,7 +4072,7 @@ describe("configuration routes", () => {
       ["a 201-character name", { name: "a".repeat(201) }],
       ["a 501-character description", { name: "A", description: "a".repeat(501) }],
       ["a null description", { name: "A", description: null }],
-      ["telflo-api's yaml", { name: "A", yaml: "receivers: {}" }],
+      ["a yaml field", { name: "A", yaml: "receivers: {}" }],
       // Postgres can't store these exactly: 400, never a 500 or a U+FFFD stored.
       ["U+0000 in the name", { name: "Gate\u0000way" }],
       ["a lone surrogate in the name", { name: "Gate\ud800way" }],
@@ -4097,7 +4097,7 @@ describe("configuration routes", () => {
       ["a null name", { name: null }],
       ["a null description", { description: null }],
       ["a 201-character name", { name: "a".repeat(201) }],
-      ["telflo-api's yaml", { yaml: "receivers: {}" }],
+      ["a yaml field", { yaml: "receivers: {}" }],
       ["U+0000 in the name", { name: "Re\u0000named" }],
       ["a lone surrogate in the name", { name: "Re\ud800named" }],
       ["U+0000 in the description", { description: "Edge\u0000" }],
@@ -4318,7 +4318,7 @@ describe("configuration routes", () => {
     });
 
     describe("creating a configuration", () => {
-      it("with no distribution: the catalogue's default, which the configuration carries, its version 1 at that distribution's default version", async () => {
+      it("with no distribution: the catalog's default, which the configuration carries, its version 1 at that distribution's default version", async () => {
         const { organization, access } = await personalUser();
 
         const configuration = await created(access, organization.id, "Gateway");
@@ -4351,7 +4351,7 @@ describe("configuration routes", () => {
         });
       });
 
-      it("refuses a distribution the catalogue doesn't have: 400 collector_distribution_unknown, writing and auditing nothing", async () => {
+      it("refuses a distribution the catalog doesn't have: 400 collector_distribution_unknown, writing and auditing nothing", async () => {
         const { organization, access } = await personalUser();
         const before = await snapshot();
 
@@ -4363,7 +4363,7 @@ describe("configuration routes", () => {
         expect(await snapshot()).toEqual(before);
       });
 
-      it("refuses a distribution that isn't in the catalogue's format: 400 invalid_request", async () => {
+      it("refuses a distribution that isn't in the catalog's format: 400 invalid_request", async () => {
         const { organization, access } = await personalUser();
         expectInvalid(await create(access, organization.id, { name: "Gateway", collectorDistribution: "OpenTelemetry Contrib" }));
         expect(await configurationRows()).toEqual([]);
@@ -4416,7 +4416,7 @@ describe("configuration routes", () => {
         });
       });
 
-      it("refuses a version the catalogue doesn't have: 400 collector_version_unknown, writing, touching and auditing nothing", async () => {
+      it("refuses a version the catalog doesn't have: 400 collector_version_unknown, writing, touching and auditing nothing", async () => {
         const { organization, access } = await personalUser();
         const configuration = await created(access, organization.id, "Gateway");
         const version = await versionOf(configuration.id);
@@ -4431,7 +4431,7 @@ describe("configuration routes", () => {
         expect(await snapshot()).toEqual(before);
       });
 
-      it("refuses a version that isn't in the catalogue's format: 400 invalid_request", async () => {
+      it("refuses a version that isn't in the catalog's format: 400 invalid_request", async () => {
         const { organization, access } = await personalUser();
         const configuration = await created(access, organization.id, "Gateway");
         const version = await versionOf(configuration.id);
@@ -4510,7 +4510,7 @@ describe("configuration routes", () => {
         expect(await versionNumbered(configuration.id, 3)).toMatchObject({ collector_version: first.collector_version });
       });
 
-      it("refuses a collector version the catalogue doesn't have: 400 collector_version_unknown, creating, touching and auditing nothing", async () => {
+      it("refuses a collector version the catalog doesn't have: 400 collector_version_unknown, creating, touching and auditing nothing", async () => {
         const { organization, access, configuration, first } = await withTwoVersions();
         const before = await snapshot();
 

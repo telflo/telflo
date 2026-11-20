@@ -187,7 +187,7 @@ describe("identity routes", () => {
       });
     });
 
-    it("gives the personal organization exactly one configuration, the Initial Configuration, created by the new user, built for the catalogue's default distribution at its default version", async () => {
+    it("gives the personal organization exactly one configuration, the Initial Configuration, created by the new user, built for the catalog's default distribution at its default version", async () => {
       await register();
       const pin = await catalogueDefaults(ownerDb);
       const user = await ownerDb.selectFrom("users").selectAll().executeTakeFirstOrThrow();

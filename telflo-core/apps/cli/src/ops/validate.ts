@@ -16,7 +16,7 @@ export const VALIDATE_PATH = "/validate";
 export const ANONYMOUS_VALIDATE_PATH = "/validate/anonymous";
 
 /**
- * A 400 naming a collector the catalogue doesn't offer (its version or its
+ * A 400 naming a collector the catalog doesn't offer (its version or its
  * distribution): a usage error, exit 2, its code and status kept, for
  * `validate` and `test` alike (a deliberate mapping).
  */

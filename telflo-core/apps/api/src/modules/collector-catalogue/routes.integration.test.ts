@@ -26,16 +26,16 @@ const PASSWORD = "a-sufficiently-long-password";
 /** Creating, migrating and dropping a database waits for checkpoints. */
 const THROWAWAY_DATABASE_TIMEOUT = 30_000;
 
-/** The committed catalogue's distribution. */
+/** The committed catalog's distribution. */
 const CONTRIB = "otelcol-contrib";
 
-/** Two Contrib versions this file deprecates, with their notes: fixtures, never the committed catalogue's. */
+/** Two Contrib versions this file deprecates, with their notes: fixtures, never the committed catalog's. */
 const RETIRED = "0.150.0";
 const RETIRED_NOTE = "Retired fixture: upgrade to the default.";
 const ALSO_RETIRED = "0.149.0";
 
 /**
- * A fixture distribution, before Contrib in the catalogue's order and not the
+ * A fixture distribution, before Contrib in the catalog's order and not the
  * default: its versions sort differently by number than as text, one is
  * deprecated, and they support a fixture palette.
  */
@@ -109,14 +109,14 @@ function compareVersionsDesc(a: string, b: string): number {
 }
 
 /*
- * The catalogue endpoint, and every rule that needs a catalogue the committed
+ * The catalog endpoint, and every rule that needs a catalog the committed
  * one isn't: a deprecated version, a second distribution, a distribution that
  * offers nothing. On a throwaway database the test prepares itself (migrated
  * and synced, as telflo_platform_test is), then adds the fixtures as the
- * tables' owner, since telflo_platform_test's catalogue must stay the
+ * tables' owner, since telflo_platform_test's catalog must stay the
  * committed one. It is dropped afterwards, whatever happens.
  */
-describe("the collector catalogue, with fixture distributions and deprecated versions", () => {
+describe("the collector catalog, with fixture distributions and deprecated versions", () => {
   let databases: TestDatabases;
   let throwawayName: string;
   let ownerDb: Kysely<Database>;
@@ -290,7 +290,7 @@ describe("the collector catalogue, with fixture distributions and deprecated ver
     return { configuration, version };
   };
 
-  /** A version's pin moved to `version` as the tables' owner: what a catalogue that later deprecated it leaves. */
+  /** A version's pin moved to `version` as the tables' owner: what a catalog that later deprecated it leaves. */
   const pinnedTo = (versionId: string, version: string) =>
     ownerDb.updateTable("configuration_versions").set({ collector_version: version }).where("id", "=", versionId).execute();
 
@@ -308,7 +308,7 @@ describe("the collector catalogue, with fixture distributions and deprecated ver
   };
 
   describe("GET /api/v1/collector-distributions", () => {
-    it("answers every distribution in the catalogue's order, each with the versions it offers, newest first by number, deprecated ones left out, and its renames as stored", async () => {
+    it("answers every distribution in the catalog's order, each with the versions it offers, newest first by number, deprecated ones left out, and its renames as stored", async () => {
       const { access } = await signedIn();
       const contribOffered = await ownerDb
         .selectFrom("collector_versions")
@@ -398,7 +398,7 @@ describe("the collector catalogue, with fixture distributions and deprecated ver
       expect(offeredContrib).not.toContain(ALSO_RETIRED);
       expect(offeredContrib[0]).toBe(contribDefault);
       expect(body.distributions[1]!.versions.filter((offer) => offer.isDefault)).toHaveLength(1);
-      // Contrib's are the committed catalogue's, as the sync wrote them.
+      // Contrib's are the committed catalog's, as the sync wrote them.
       expect(body.distributions[1]!.renamedTypes.length).toBeGreaterThan(0);
       expect(body.distributions[1]!.renamedTypes).toContainEqual({
         kind: "receiver",
@@ -412,14 +412,14 @@ describe("the collector catalogue, with fixture distributions and deprecated ver
       expectBody(await catalogue(), 401, { error: { code: "unauthenticated", message: "You need to sign in." } });
     });
 
-    it("answers a member who hasn't accepted the current terms, as /me and /api/v1/organizations do: the catalogue is no one's data", async () => {
+    it("answers a member who hasn't accepted the current terms, as /me and /api/v1/organizations do: the catalog is no one's data", async () => {
       const { access } = await signedIn({ accepted_terms_version: "2025-01-01" });
       expect((await catalogue(access)).statusCode).toBe(200);
     });
   });
 
   describe("creating a configuration for a distribution", () => {
-    it("builds it for the distribution named, its version 1 at that distribution's default from the tables, not the catalogue's default", async () => {
+    it("builds it for the distribution named, its version 1 at that distribution's default from the tables, not the catalog's default", async () => {
       const { access, organizationId } = await signedIn();
 
       const { configuration, version } = await createdWithVersion(access, organizationId, FIXTURE);
@@ -444,8 +444,8 @@ describe("the collector catalogue, with fixture distributions and deprecated ver
     });
   });
 
-  describe("a pin the catalogue deprecated since", () => {
-    it("is read as deprecated, with the catalogue's note, in the version and in its summary", async () => {
+  describe("a pin the catalog deprecated since", () => {
+    it("is read as deprecated, with the catalog's note, in the version and in its summary", async () => {
       const { access, organizationId } = await signedIn();
       const { configuration, version } = await createdWithVersion(access, organizationId);
       await pinnedTo(version.id, RETIRED);
@@ -539,7 +539,7 @@ describe("the collector catalogue, with fixture distributions and deprecated ver
   // The distribution a new version is stamped with: the server stamps it,
   // from the configuration it holds locked.
   describe("a new version's distribution", () => {
-    it("stamps the new version with the configuration's locked distribution, not the catalogue's default", async () => {
+    it("stamps the new version with the configuration's locked distribution, not the catalog's default", async () => {
       const { access, organizationId } = await signedIn();
       const { configuration, version } = await createdWithVersion(access, organizationId, FIXTURE);
 

@@ -129,7 +129,7 @@ describe("telflo fleet create", () => {
     expect(result.stdout.startsWith('Created fleet "]0;edge" (')).toBe(true);
   });
 
-  it("refuses the older CLI's server-supervisor, an unknown expiry and a missing type before any request (exit 2)", async () => {
+  it("refuses an unknown type (server-supervisor), an unknown expiry and a missing type before any request (exit 2)", async () => {
     for (const args of [
       ["--label", "edge", "--type", "server-supervisor"],
       ["--label", "edge", "--type", "server", "--expires-in", "3y"],
