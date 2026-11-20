@@ -3,14 +3,14 @@ import { CATALOGUE_RENAMED_TYPES } from "~/lib/collector/renamed-types.js";
 import { useCollectorCatalogueStore } from "~/lib/stores/collector-catalogue-store.js";
 
 /*
- * The collector catalogue as the API answers it (D13a decision 11), for the
- * web's tests: Contrib, the catalogue's one distribution and its default,
- * offering three versions, newest first, 0.162.0 the default with its
- * catalogue description. 0.155.0 is a version it no longer offers
- * (deprecated), which a pin can still name, with its note. A second
- * distribution, with no mark of its own, is a fixture only: every picker is
- * built for several (decision 1). Contrib carries the catalogue's renames,
- * as the API serves them (D13b decision 6); the fixture distribution none.
+ * The collector catalogue as the API answers it, for the web's tests:
+ * Contrib, the catalogue's one distribution and its default, offering three
+ * versions, newest first, 0.162.0 the default with its catalogue
+ * description. 0.155.0 is a version it no longer offers (deprecated), which
+ * a pin can still name, with its note. A second distribution, with no mark
+ * of its own, is a fixture only: every picker is built for several. Contrib
+ * carries the catalogue's renames, as the API serves them; the fixture
+ * distribution none.
  */
 
 export const CONTRIB_ID = "otelcol-contrib";

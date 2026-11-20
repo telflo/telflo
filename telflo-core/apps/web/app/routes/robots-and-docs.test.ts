@@ -23,7 +23,7 @@ async function request(file: string, loader: () => Response, url: string): Promi
   return response;
 }
 
-describe("/robots.txt (D36-1 decision 21, Preflight ruling 12)", () => {
+describe("/robots.txt", () => {
   it("disallows every path and names no sitemap, whatever the public URL", async () => {
     vi.stubEnv("TELFLO_PUBLIC_WEB_URL", "https://telflo.example/");
     const response = await request("routes/robots[.]txt.tsx", robotsLoader, "http://web.example/robots.txt");
@@ -45,7 +45,7 @@ describe("/robots.txt (D36-1 decision 21, Preflight ruling 12)", () => {
   });
 });
 
-describe("/docs (D36-1 decisions 21 and 34)", () => {
+describe("/docs", () => {
   it.each(["/docs", "/docs/anything", "/docs/deeply/nested/page"])(
     "%s answers 301 to the docs home, docs.telflo.com by default (the tests' setup)",
     async (path) => {

@@ -8,9 +8,9 @@ import type { ThemeHandle } from "~/lib/theme.js";
 
 /**
  * A signed-in visitor goes straight to `redirectTo` (cleaned) or `/app`. One
- * whose access token has expired sees the form, like a signed-out one (D2b
- * decision 7). An unreachable API throws from fetchCurrentUser rather than
- * reading as signed out, so the error boundary shows it.
+ * whose access token has expired sees the form, like a signed-out one. An
+ * unreachable API throws from fetchCurrentUser rather than reading as signed
+ * out, so the error boundary shows it.
  *
  * The providers for the federated buttons are fetched alongside. They are
  * optional: if the list can't be had, the page shows the email form alone.
@@ -27,7 +27,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 }
 
 // An auth screen: root's Layout renders the theme this browser was last
-// told, the remembered one or the `telflo_theme` cookie's (D21 decision 22).
+// told, the remembered one or the `telflo_theme` cookie's.
 export const handle = { theme: "remembered" } satisfies ThemeHandle;
 
 export function meta(_args: Route.MetaArgs) {

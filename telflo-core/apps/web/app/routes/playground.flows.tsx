@@ -8,19 +8,17 @@ import { ApiError, getPublishedFlows } from "~/lib/api-client.js";
 import { PLAYGROUND_HANDLE, PLAYGROUND_TITLES, playgroundMeta } from "~/lib/playground/meta.js";
 
 /*
- * `/playground/flows`, the playground's flows gallery (ADR 0018; D31-1
- * decision 33), on the platform's FlowPicker and FlowCard with the
- * signed-in gallery's search and filters. Its rules (the spec's Parity
- * Notes):
+ * `/playground/flows`, the playground's flows gallery, on the platform's
+ * FlowPicker and FlowCard with the signed-in gallery's search and filters. Its
+ * rules:
  * - the flows are the flows table's published ones, through the open flow
- *   read (decision 5), never a copy in the bundle;
- * - they are read in the BROWSER only, after mount (decision 5, Preflight
- *   ruling 1): never a server loader, so the read's per-address limit
- *   counts the visitor, never the web server. The server renders the
- *   spinner;
+ *   read, never a copy in the bundle;
+ * - they are read in the BROWSER only, after mount: never a server loader, so
+ *   the read's per-address limit counts the visitor, never the web server. The
+ *   server renders the spinner;
  * - a read that fails says so in fixed words, with "Try again".
  * A card opens `/playground/flows/:slug`. A flow's name and summary are
- * text inside the shell's mask, never an attribute (ADR 0024).
+ * text inside the shell's mask, never an attribute.
  */
 
 type GalleryState =

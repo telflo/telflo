@@ -12,9 +12,9 @@ import { signedInMember } from "~/test/configurations.js";
 vi.mock("~/lib/api-client.server.js", () => ({ fetchCurrentUser: vi.fn(), fetchPendingFeedbackCount: vi.fn() }));
 
 /*
- * Product admin's gate (D12 decision 3, Preflight ruling 5): the flag is
- * checked on the server before anything renders, so a non-admin is sent to
- * /app by a 302 and never sees the page, not even before a redirect.
+ * Product admin's gate: the flag is checked on the server before anything
+ * renders, so a non-admin is sent to /app by a 302 and never sees the
+ * page, not even before a redirect.
  */
 
 const MEMBER = signedInMember();
@@ -77,7 +77,7 @@ function renderGate(path: string) {
 }
 
 describe("product admin's routes", () => {
-  it("are /product-admin and its User Feedback, Test Templates, Test Regex, Library, Flows, Users and Product admins pages, under the signed-in layout (D29 decision 36)", () => {
+  it("are /product-admin and its User Feedback, Test Templates, Test Regex, Library, Flows, Users and Product admins pages, under the signed-in layout", () => {
     const layout = routes.find((route) => route.file === "routes/app-layout.tsx");
     const productAdmin = layout?.children?.find((route) => route.path === "product-admin");
     expect(productAdmin?.file).toBe("routes/product-admin.tsx");
@@ -93,7 +93,7 @@ describe("product admin's routes", () => {
   });
 });
 
-describe("product admin's server gate (D12 Preflight ruling 5)", () => {
+describe("product admin's server gate", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
     vi.mocked(fetchCurrentUser).mockReset();
@@ -118,7 +118,7 @@ describe("product admin's server gate (D12 Preflight ruling 5)", () => {
     });
   });
 
-  it("lets a product admin through, with the pending feedback's count read after the gate (D29 decision 37, Preflight ruling 14)", async () => {
+  it("lets a product admin through, with the pending feedback's count read after the gate", async () => {
     vi.mocked(fetchCurrentUser).mockResolvedValue({ status: "signed_in", currentUser: PRODUCT_ADMIN });
     vi.mocked(fetchPendingFeedbackCount).mockResolvedValue({ status: "loaded", data: 3 });
     const args = loaderArgs("http://localhost/product-admin/flows");
@@ -208,7 +208,7 @@ describe("product admin's server gate (D12 Preflight ruling 5)", () => {
     },
   );
 
-  it("renders the Admin Dashboard shell, with its User Feedback (and its count), Test Templates, Test Regex, Library, Flows, Users and Product admins items in that order (D29 decision 36; D15b decision 9; D23-2 decision 25), and the page for a product admin", async () => {
+  it("renders the Admin Dashboard shell, with its User Feedback (and its count), Test Templates, Test Regex, Library, Flows, Users and Product admins items in that order, and the page for a product admin", async () => {
     vi.mocked(fetchCurrentUser).mockResolvedValue({ status: "signed_in", currentUser: PRODUCT_ADMIN });
     vi.mocked(fetchPendingFeedbackCount).mockResolvedValue({ status: "loaded", data: 7 });
     renderGate("/product-admin/flows");
@@ -227,7 +227,7 @@ describe("product admin's server gate (D12 Preflight ruling 5)", () => {
     ]);
   });
 
-  it("shows a pending count of 0, and hides the badge only when the count couldn't be read (D29 decision 37)", async () => {
+  it("shows a pending count of 0, and hides the badge only when the count couldn't be read", async () => {
     vi.mocked(fetchCurrentUser).mockResolvedValue({ status: "signed_in", currentUser: PRODUCT_ADMIN });
     renderGate("/product-admin/flows");
     await screen.findByText("the flows admin page");
@@ -247,7 +247,7 @@ describe("product admin's server gate (D12 Preflight ruling 5)", () => {
     ["User Feedback", /^User Feedback/, "the user feedback admin page"],
     ["Users", "Users", "the users admin page"],
     ["Product admins", "Product admins", "the product admins admin page"],
-  ])("goes to the %s page from its nav item, marking it as the one shown (D29 decision 36)", async (_label, name, page) => {
+  ])("goes to the %s page from its nav item, marking it as the one shown", async (_label, name, page) => {
     vi.mocked(fetchCurrentUser).mockResolvedValue({ status: "signed_in", currentUser: PRODUCT_ADMIN });
     renderGate("/product-admin/flows");
     await screen.findByText("the flows admin page");
@@ -288,7 +288,7 @@ describe("product admin's server gate (D12 Preflight ruling 5)", () => {
     expect(screen.getByRole("button", { name: "Flows" }).querySelector("span[aria-hidden]")).toBeNull();
   });
 
-  it("goes to the Library page from its nav item, marking it as the one shown (D23-2 decision 56)", async () => {
+  it("goes to the Library page from its nav item, marking it as the one shown", async () => {
     vi.mocked(fetchCurrentUser).mockResolvedValue({ status: "signed_in", currentUser: PRODUCT_ADMIN });
     renderGate("/product-admin/flows");
     await screen.findByText("the flows admin page");
@@ -315,7 +315,7 @@ describe("product admin's server gate (D12 Preflight ruling 5)", () => {
     expect(fetchCurrentUser).toHaveBeenCalledTimes(2);
   });
 
-  it("runs again on a move to Test Regex too: a flag cleared on Test Templates sends the nav to Test Regex to /app, that page never shown (D14b Ruling 44)", async () => {
+  it("runs again on a move to Test Regex too: a flag cleared on Test Templates sends the nav to Test Regex to /app, that page never shown", async () => {
     vi.mocked(fetchCurrentUser).mockResolvedValue({ status: "signed_in", currentUser: PRODUCT_ADMIN });
     renderGate("/product-admin/test-templates");
     await screen.findByText("the test templates admin page");
@@ -329,7 +329,7 @@ describe("product admin's server gate (D12 Preflight ruling 5)", () => {
     expect(fetchCurrentUser).toHaveBeenCalledTimes(2);
   });
 
-  it("runs again on every move between its pages: a flag cleared on Flows sends the nav to Test Templates to /app, that page never shown (D14b Ruling 44)", async () => {
+  it("runs again on every move between its pages: a flag cleared on Flows sends the nav to Test Templates to /app, that page never shown", async () => {
     vi.mocked(fetchCurrentUser).mockResolvedValue({ status: "signed_in", currentUser: PRODUCT_ADMIN });
     renderGate("/product-admin/flows");
     await screen.findByText("the flows admin page");
@@ -374,7 +374,7 @@ describe("product admin's server gate (D12 Preflight ruling 5)", () => {
   });
 });
 
-describe("product admin's client gate (D12 Preflight ruling 5)", () => {
+describe("product admin's client gate", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
   });

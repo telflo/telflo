@@ -130,7 +130,7 @@ describe("app layout client loader", () => {
     expect(getCurrentUser).not.toHaveBeenCalled();
   });
 
-  it("numbers its /me read before asking, so a save sent meanwhile counts as newer (Ruling 86)", async () => {
+  it("numbers its /me read before asking, so a save sent meanwhile counts as newer", async () => {
     let sentMeanwhile = 0;
     const data = await clientLoader(
       clientLoaderArgs(async () => {
@@ -160,7 +160,7 @@ describe("app layout client loader", () => {
 
   it("sends the browser to sign in, and back to this page afterwards, when the session is over", async () => {
     // Whether the refresh was refused or the session was revoked just after
-    // it, the layout doesn't rely on the session-ended handler (Ruling 9).
+    // it, the layout doesn't rely on the session-ended handler.
     window.history.pushState({}, "", "/app?tab=yaml&x=1");
     vi.spyOn(apiClient, "getCurrentUser").mockRejectedValue(
       new ApiError("unauthenticated", "Your session has ended. Sign in again."),
@@ -208,7 +208,7 @@ describe("app layout route", () => {
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
-  describe("the terms dialog (D2c decision 6)", () => {
+  describe("the terms dialog", () => {
     const REQUIRES_TERMS: CurrentUserResponse = { ...SIGNED_IN_USER, termsAcceptanceRequired: true };
 
     function renderLayout(loader: () => AppLayoutData | Promise<AppLayoutData>) {
@@ -264,7 +264,7 @@ describe("app layout route", () => {
       expect(screen.getByRole("heading", { name: "Configurations" })).toBeInTheDocument();
     });
 
-    it("shows the dialog when the client loader's refresh path answers (D2b decision 4)", async () => {
+    it("shows the dialog when the client loader's refresh path answers", async () => {
       // The server loader said a refresh was needed; the browser client's
       // /me, after its refresh, says the terms need accepting.
       const getCurrentUser = vi.spyOn(apiClient, "getCurrentUser").mockResolvedValue(REQUIRES_TERMS);
@@ -289,7 +289,7 @@ describe("app layout route", () => {
     const { container } = render(<Stub initialEntries={["/app"]} />);
 
     await waitFor(() => expect(container.querySelector('[aria-busy="true"]')).not.toBeNull());
-    // The app's floor in the cookie's theme, not Tailwind's palette (D21 Preflight ruling 22, B5).
+    // The app's floor in the cookie's theme, not Tailwind's palette.
     expect(container.querySelector('[aria-busy="true"]')).toHaveClass("tf-app");
     expect(screen.queryByText("Workspace")).not.toBeInTheDocument();
     expect(screen.queryByRole("navigation")).not.toBeInTheDocument();
@@ -297,7 +297,7 @@ describe("app layout route", () => {
     expect(useUserStore.getState().current).toBeNull();
   });
 
-  it("revalidates on a navigation between two different child paths (Ruling 10)", async () => {
+  it("revalidates on a navigation between two different child paths", async () => {
     // React Router's default keeps a pathless layout's data here, so a
     // navigation after the access token expired would skip the refresh.
     const layoutLoader = vi.fn((): AppLayoutData => ({ status: "signed_in", currentUser: SIGNED_IN_USER }));
@@ -329,7 +329,7 @@ describe("app layout route", () => {
     ).toBe(true);
   });
 
-  describe("re-seeding the user store (D5 decision 11)", () => {
+  describe("re-seeding the user store", () => {
     const GROUP = { id: "00000000-0000-4000-8000-000000000003", name: "Group", type: "group", logoId: null, role: "contributor" } as const;
     const WITH_GROUP: CurrentUserResponse = {
       ...SIGNED_IN_USER,
@@ -387,7 +387,7 @@ describe("app layout route", () => {
       expect(useUserStore.getState().current?.organizations[1]?.name).toBe("Renamed");
     });
 
-    it("re-seeds when the list of organizations changes, so a restored membership shows in the switcher (D5 Task 9)", async () => {
+    it("re-seeds when the list of organizations changes, so a restored membership shows in the switcher", async () => {
       const layoutLoader = renderRevalidating(SIGNED_IN_USER, WITH_GROUP);
       await waitFor(() => expect(useUserStore.getState().current?.organizations).toHaveLength(1));
 
@@ -410,7 +410,7 @@ describe("app layout route", () => {
       expect(screen.queryByRole("link", { name: "Permissions" })).not.toBeInTheDocument();
     });
 
-    it("re-seeds when the product-admin flag changes, so a revocation reaches the store on the next navigation (D12 decision 3)", async () => {
+    it("re-seeds when the product-admin flag changes, so a revocation reaches the store on the next navigation", async () => {
       const productAdmin: CurrentUserResponse = { ...SIGNED_IN_USER, isProductAdmin: true };
       const layoutLoader = renderRevalidating(productAdmin, SIGNED_IN_USER);
       await waitFor(() => expect(useUserStore.getState().current?.isProductAdmin).toBe(true));
@@ -422,7 +422,7 @@ describe("app layout route", () => {
       await waitFor(() => expect(useUserStore.getState().current?.isProductAdmin).toBe(false));
     });
 
-    it("re-seeds the store when only the preferences change (D21 decision 20)", async () => {
+    it("re-seeds the store when only the preferences change", async () => {
       const navy: CurrentUserResponse = {
         ...SIGNED_IN_USER,
         preferences: { ...DEFAULT_USER_PREFERENCES, theme: "navy", editor: { ...DEFAULT_USER_PREFERENCES.editor, fontSize: 16 } },
@@ -437,7 +437,7 @@ describe("app layout route", () => {
       await waitFor(() => expect(useUserStore.getState().current?.preferences).toEqual(navy.preferences));
     });
 
-    it("another tab's revert reaches the store, though /me says again what it said before this tab's save (Ruling 86)", async () => {
+    it("another tab's revert reaches the store, though /me says again what it said before this tab's save", async () => {
       // /me answers 13 both times: this tab saved 16 between them, another tab set 13 again.
       const layoutLoader = renderRevalidating(SIGNED_IN_USER, SIGNED_IN_USER);
       await waitFor(() => expect(useUserStore.getState().current?.preferences.editor.fontSize).toBe(13));
@@ -454,7 +454,7 @@ describe("app layout route", () => {
       expect(useUserStore.getState().confirmedPreferences?.editor.fontSize).toBe(13);
     });
 
-    it("re-seeds only the preferences, leaving a name the Edit dialog renamed (Ruling 86)", async () => {
+    it("re-seeds only the preferences, leaving a name the Edit dialog renamed", async () => {
       const navy: CurrentUserResponse = { ...WITH_GROUP, preferences: { ...DEFAULT_USER_PREFERENCES, theme: "navy" } };
       renderRevalidating(WITH_GROUP, navy);
       await waitFor(() => expect(useUserStore.getState().current?.organizations).toHaveLength(2));
@@ -466,7 +466,7 @@ describe("app layout route", () => {
       expect(useUserStore.getState().current?.organizations[1]?.name).toBe("Renamed");
     });
 
-    it("remembers the stored theme when it changes (D21 decision 22)", async () => {
+    it("remembers the stored theme when it changes", async () => {
       // What the auth screens render after Logout's client-side way to /login.
       function Remembered() {
         return <p>remembered: {useRememberedTheme() ?? "none"}</p>;
@@ -525,7 +525,7 @@ describe("app layout route", () => {
     });
   });
 
-  describe("the welcome callout after joining (D6 decision 13)", () => {
+  describe("the welcome callout after joining", () => {
     const JOINED = { id: "00000000-0000-4000-8000-000000000004", name: "Joined Group", type: "group", logoId: null, role: "contributor" } as const;
     const WITH_JOINED: CurrentUserResponse = {
       ...SIGNED_IN_USER,
@@ -574,7 +574,7 @@ describe("app layout route", () => {
       expect(startTour).toHaveBeenCalledWith("Joined Group", "group");
     });
 
-    it("hands the callout a personal organization's type with its name, for its <email>'s organization words (D36-1 Q264)", async () => {
+    it("hands the callout a personal organization's type with its name, for its <email>'s organization words", async () => {
       const startTour = vi.spyOn(welcomeTour, "startOrgWelcomeTour").mockImplementation(() => {});
       const personal = { id: "00000000-0000-4000-8000-000000000005", name: "owner@example.com", type: "personal", logoId: null, role: "contributor" } as const;
       renderAt(`/app?joined_org=${personal.id}`, () => ({
@@ -627,7 +627,7 @@ describe("app layout route", () => {
     });
   });
 
-  describe("identifying the user to PostHog (D4 decision 8)", () => {
+  describe("identifying the user to PostHog", () => {
     afterEach(() => {
       vi.restoreAllMocks();
     });

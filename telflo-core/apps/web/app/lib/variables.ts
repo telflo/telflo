@@ -35,20 +35,19 @@ import { seedVariableGroupNames } from "~/lib/variable-group-display.js";
 import { useCurrentUser } from "~/lib/use-current-user.js";
 
 /*
- * The Variables pages' data and words (D20 defaults 19–22, decision 39;
- * Preflight rulings 26 and 37; Ruling 50): the reads of the variables, the
+ * The Variables pages' data and words: the reads of the variables, the
  * variable groups and one variable group, which refusals the dialogs show,
  * the in-use refusals' lists, the drafts warning, and the search.
  *
  * A variable's value, name and description, and a variable group's name and
- * description, are configuration text (Q88). Nothing here puts one anywhere
+ * description, are configuration text. Nothing here puts one anywhere
  * but the data it returns and the text the pages show: every toast, dialog
  * title and page title is fixed words; no attribute, URL, analytics property
  * or browser storage holds one; the search runs in the browser over the one
  * list (≤ 500), never in a URL.
  */
 
-/** Each read's hang guard: the browser's client has no timeout (the fleet screens' 10 s, D17a Preflight ruling 10). */
+/** Each read's hang guard: the browser's client has no timeout (the fleet screens' 10 s). */
 export const VARIABLES_READ_TIMEOUT_MS = 10_000;
 
 /** Each write's hang guard: above the API's worst case of an opamp-server call and its audit write (the fleet screens' 30 s). */
@@ -59,7 +58,7 @@ export const VARIABLE_GROUPS_LOAD_FAILED_MESSAGE = "Failed to load variable grou
 export const VARIABLE_GROUP_LOAD_FAILED_MESSAGE = "Failed to load variable group";
 export const VARIABLE_GROUP_NOT_FOUND_MESSAGE = "Variable group not found";
 
-/** The fixed toasts (decision 39): never a name, a value or a description. */
+/** The fixed toasts: never a name, a value or a description. */
 export const VARIABLE_ADDED_MESSAGE = "Variable added";
 export const VARIABLE_SAVED_MESSAGE = "Variable saved";
 export const VARIABLE_DELETED_MESSAGE = "Variable deleted";
@@ -80,21 +79,21 @@ export const RESET_OVERRIDE_FAILED_MESSAGE = "Failed to reset override";
 /**
  * A write whose outcome is unknown (no connection, the hang guard, a reply
  * that doesn't parse) says the API's own 503 words (the contracts' one
- * message, neutral about whether a change was made; Ruling 78). The page
+ * message, neutral about whether a change was made). The page
  * reads its list again.
  */
 export { VARIABLES_UNAVAILABLE_MESSAGE };
 
-/** The page's note under its title (default 20; Ruling 80), exact. */
+/** The page's note under its title, exact. */
 export const VARIABLES_NOTE_REFERENCE = "${org:NAME}";
 export const VARIABLES_NOTE = "Referenced in configurations as ${org:NAME}.";
 
 /**
- * The warning atop each page (defaults 20 and 22; Q106, Ruling 80), exact:
- * fixed words, its lead in bold and each reference in a code element. The
- * Variables page's adds that a test run fills in the organization's values
- * and keeps its filled-in Test YAML and the collector's logs with its
- * results; the Variable groups page's stops at the shared sentence (Q107).
+ * The warning atop each page, exact: fixed words, its lead in bold and
+ * each reference in a code element. The Variables page's adds that a test
+ * run fills in the organization's values and keeps its filled-in Test YAML
+ * and the collector's logs with its results; the Variable groups page's
+ * stops at the shared sentence.
  */
 export const SECRETS_WARNING_LEAD = "Not for secrets.";
 export const SECRETS_WARNING_ENV_REFERENCE = "${env:NAME}";
@@ -103,7 +102,7 @@ export const VARIABLES_SECRETS_WARNING =
 export const VARIABLE_GROUPS_SECRETS_WARNING =
   "Not for secrets. Keep passwords, tokens and keys in environment variables (${env:NAME}), set when you install.";
 
-/** Default 21's warning when the drafts couldn't be read: the delete or rename stays allowed. */
+/** The warning when the drafts couldn't be read: the delete or rename stays allowed. */
 export const DRAFTS_UNREAD_MESSAGE = "Drafts using this variable couldn't be checked.";
 
 // ---------------------------------------------------------------------------
@@ -161,8 +160,8 @@ export function variableGroupInUseDetailsOf(error: unknown): VariableGroupInUseD
 }
 
 // ---------------------------------------------------------------------------
-// The in-use lists (default 21; Q102; Preflight ruling 26; Ruling 50). A name
-// the API couldn't look up came back null, and is said in fixed words.
+// The in-use lists. A name the API couldn't look up came back null, and is
+// said in fixed words.
 
 export const DELETED_CONFIGURATION_VERSION = "a published version of a deleted configuration";
 export const ANOTHER_FLEET = "another fleet";
@@ -184,9 +183,9 @@ export function pinnedText(count: number): string {
 }
 
 /**
- * One used published version: "edge-config v3 (gateways in edge-prod,
- * pinned on 2 collectors)", or Ruling 50's "a published version of a
- * deleted configuration (a group in another fleet)".
+ * One used published version: "edge-config v3 (gateways in edge-prod, pinned
+ * on 2 collectors)", or, for a deleted configuration, "a published version of
+ * a deleted configuration (a group in another fleet)".
  */
 export function describeVersionUse(use: VariableInUseDetails["usedBy"][number]): string {
   const version =
@@ -205,7 +204,7 @@ export function pinnedCollectorsLine(count: number): string {
   return `Pinned on ${plural(count, "collector")}`;
 }
 
-/** Q102's last line, from the totals: "… and 3 more published versions". */
+/** A versions list's last line, from the totals: "… and 3 more published versions". */
 export function moreVersionsText(count: number): string {
   return `… and ${count} more published version${count === 1 ? "" : "s"}`;
 }
@@ -222,8 +221,8 @@ export function versionsLeftOut(details: VariableInUseDetails): number {
 
 /**
  * How many of the versions' collector groups the list leaves out: the 100
- * entries are counted as group rows (Preflight ruling 43), so a version's
- * groups can be cut short while every version is listed; the total is exact.
+ * entries are counted as group rows, so a version's groups can be cut short
+ * while every version is listed; the total is exact.
  */
 export function versionGroupsLeftOut(details: VariableInUseDetails): number {
   const listed = details.usedBy.reduce((sum, use) => sum + use.groups.length, 0);
@@ -235,7 +234,7 @@ export function groupsLeftOut(details: VariableGroupInUseDetails): number {
   return Math.max(0, details.totalCollectorGroups - details.collectorGroups.length);
 }
 
-/** Default 21's warning, exact: "Drafts using OTLP_EP: edge-config". */
+/** The drafts warning, exact: "Drafts using OTLP_EP: edge-config". */
 export function draftsWarning(name: string, configurations: VariableDraftsResponse["configurations"]): string {
   return `Drafts using ${name}: ${configurations.map((configuration) => configuration.name).join(", ")}`;
 }
@@ -243,7 +242,7 @@ export function draftsWarning(name: string, configurations: VariableDraftsRespon
 // ---------------------------------------------------------------------------
 // The page's words.
 
-/** Default 20's search, over name, description and value, case-insensitive; an empty search matches all. */
+/** The Variables page's search, over name, description and value, case-insensitive; an empty search matches all. */
 export function matchesVariableSearch(variable: OrganizationVariable, search: string): boolean {
   const query = search.toLowerCase();
   if (query === "") return true;
@@ -254,12 +253,12 @@ export function matchesVariableSearch(variable: OrganizationVariable, search: st
   );
 }
 
-/** A row's Changed: the time, and who (decision 15). */
+/** A row's Changed: the time, and who. */
 export function changedLines(changedAt: string, changedBy: FleetActor | null): { at: string; by: string | null } {
   return { at: formatDateTime(changedAt), by: changedBy?.email ?? null };
 }
 
-/** The groups list's Used by (default 22): collector groups and pins, counted; "Unused" for neither. */
+/** The groups list's Used by: collector groups and pins, counted; "Unused" for neither. */
 export function usageText(usage: VariableGroup["usage"]): string {
   const parts: string[] = [];
   if (usage.collectorGroups > 0) parts.push(plural(usage.collectorGroups, "collector group"));
@@ -267,7 +266,7 @@ export function usageText(usage: VariableGroup["usage"]): string {
   return parts.length === 0 ? "Unused" : parts.join(", ");
 }
 
-/** ASCII white space at either end (never `trim()`, which strips a U+FEFF a description may hold; D17d-1 Preflight ruling 30). */
+/** ASCII white space at either end (never `trim()`, which strips a U+FEFF a description may hold). */
 const ASCII_SPACE_AT_ENDS = /^[\t\n\r ]+|[\t\n\r ]+$/g;
 
 /** A typed description as the contract takes it: its ASCII white space at either end dropped, and none for an empty one. */
@@ -434,8 +433,8 @@ function useVariablesRead<Value>({
 }
 
 /**
- * The Variables page's list (default 20): every variable of the organization
- * with its value, by name. Each answer also seeds the picker's shared names
+ * The Variables page's list: every variable of the organization with its
+ * value, by name. Each answer also seeds the picker's shared names
  * (`seedOrgVariableNames`), so a change made here is in the picker after.
  */
 export function useOrganizationVariablesList(): VariablesRead<OrganizationVariable[]> {
@@ -448,10 +447,10 @@ export function useOrganizationVariablesList(): VariablesRead<OrganizationVariab
 }
 
 /**
- * The Variable groups page's list (default 22): every variable group, with
- * its overrides counted and what uses it. Each answer also seeds the fleet
- * screens' shared names (`seedVariableGroupNames`), so a group renamed here
- * is named so there after (D20 final review side 2, Minor 1).
+ * The Variable groups page's list: every variable group, with its overrides
+ * counted and what uses it. Each answer also seeds the fleet screens'
+ * shared names (`seedVariableGroupNames`), so a group renamed here is named
+ * so there after.
  */
 export function useVariableGroupsList(): VariablesRead<VariableGroup[]> {
   return useVariablesRead({
@@ -469,9 +468,9 @@ export interface VariableGroupPage {
 }
 
 /**
- * A variable group's page (default 22): the group and the organization's
- * variables, read together. An address whose id isn't a canonical UUID
- * reads nothing and is "not found", as is a 404 `variable_group_not_found`.
+ * A variable group's page: the group and the organization's variables, read
+ * together. An address whose id isn't a canonical UUID reads nothing and is
+ * "not found", as is a 404 `variable_group_not_found`.
  */
 export function useVariableGroupPage(variableGroupId: string): VariablesRead<VariableGroupPage> {
   return useVariablesRead({
@@ -500,7 +499,7 @@ export interface VariableGroupRow {
   source: "Override" | "Organization value";
 }
 
-/** Every organization variable with its value in the group and its source (default 22), in the list's order. */
+/** Every organization variable with its value in the group and its source, in the list's order. */
 export function variableGroupRows(page: VariableGroupPage): VariableGroupRow[] {
   const overrides = new Map(page.detail.overrides.map((override) => [override.variableId, override]));
   return page.variables.map((variable) => {

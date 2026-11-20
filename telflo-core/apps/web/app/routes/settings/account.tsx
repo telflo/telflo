@@ -15,16 +15,16 @@ import { getSignInMethods } from "~/lib/api-client.js";
 import { useCurrentUser } from "~/lib/use-current-user.js";
 
 /**
- * Settings › Account (D21 decision 34), its cards in order: Account; Change
- * Password, or Set a Password for an account with none; Sign-in methods,
- * hidden when no provider is configured and the account has no identity;
- * Sessions; API tokens, the person's own (D25 decision 50), last. The sign-in methods are read once for the second and third
- * cards ("Loading…", or "Failed to load sign-in methods" with "Try again").
- * Set a Password and "Set a password first" share one request.
+ * Settings › Account, its cards in order: Account; Change Password, or Set a
+ * Password for an account with none; Sign-in methods, hidden when no provider
+ * is configured and the account has no identity; Sessions; API tokens, the
+ * person's own, last. The sign-in methods are read once for the second and
+ * third cards ("Loading…", or "Failed to load sign-in methods" with "Try
+ * again"). Set a Password and "Set a password first" share one request.
  *
- * A link's way back, `?link=<code>` (decision 38), toasts the code's fixed
- * words (`linked` a success, the rest errors) and is removed with `replace`,
- * as `?joined_org=` is (routes/app-layout.tsx), so a refresh or Back never
+ * A link's way back, `?link=<code>`, toasts the code's fixed words (`linked`
+ * a success, the rest errors) and is removed with `replace`, as
+ * `?joined_org=` is (routes/app-layout.tsx), so a refresh or Back never
  * shows it again; an unknown code is removed and shows nothing. Handled once
  * per code, so a second run of the effect never toasts twice.
  */

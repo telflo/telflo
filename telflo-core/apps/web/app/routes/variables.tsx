@@ -5,20 +5,19 @@ import { cn } from "~/lib/utils.js";
 import { VARIABLES_NOTE_REFERENCE } from "~/lib/variables.js";
 
 /*
- * `/variables`, the Sidebar's "Variables" (D20 default 19; ADR 0018), not
- * named a vault, since nothing in it is secret (Q88), with its left nav
- * (Q106, Ruling 80; the panel Settings, Org admin and Product admin port):
- * "Variables" (the index) and "Variable groups" (`/variables/groups`, and a
- * group's page under it). Its items are links, not buttons calling navigate:
- * a link opens in a new tab and says which page is shown (`aria-current`).
- * The title, and the note under it (default 20: "Referenced in configurations
- * as `${org:NAME}`."), are fixed words; each page's warning says secrets stay
- * in `${env:NAME}`. The signed-in layout supplies the shell, its mask and its
- * terms dialog.
+ * `/variables`, the Sidebar's "Variables", not named a vault, since nothing
+ * in it is secret, with its left nav (the panel Settings, Org admin and
+ * Product admin have): "Variables" (the index) and "Variable groups"
+ * (`/variables/groups`, and a group's page under it). Its items are links,
+ * not buttons calling navigate: a link opens in a new tab and says which page
+ * is shown (`aria-current`). The title, and the note under it ("Referenced in
+ * configurations as `${org:NAME}`."), are fixed words; each page's warning
+ * says secrets stay in `${env:NAME}`. The signed-in layout supplies the
+ * shell, its mask and its terms dialog.
  *
  * Every address names ids only: the search stays in the page's state (no
  * `?q=`, nothing in the search params), and a variable group's page is
- * `/variables/groups/{id}`, never a name (decision 39).
+ * `/variables/groups/{id}`, never a name.
  */
 
 const NAV_ITEMS = [

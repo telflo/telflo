@@ -18,7 +18,7 @@ export const REFUSAL = {
   componentPath: "exporters::otlp/marker-path-4d1a",
 };
 
-/** Every attribute value under `root`, for checking none holds a message, a path or the text (ADR 0024). */
+/** Every attribute value under `root`, for checking none holds a message, a path or the text. */
 export function attributeValues(root: Element): string[] {
   return [root, ...root.querySelectorAll("*")].flatMap((element) => [...element.attributes].map((attribute) => attribute.value));
 }

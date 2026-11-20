@@ -98,7 +98,7 @@ describe("the configurations page (/app)", () => {
     window.localStorage.clear();
     resetCollectorCatalogue();
     vi.spyOn(apiClient, "getCollectorDistributions").mockResolvedValue({ distributions: CATALOGUE });
-    // The create dialog reads the flows when it opens (D12 Preflight ruling 8).
+    // The create dialog reads the flows when it opens.
     vi.spyOn(apiClient, "getFlows").mockResolvedValue({ flows: [] });
   });
 
@@ -111,7 +111,7 @@ describe("the configurations page (/app)", () => {
     expect(layout?.children?.find((route) => route.path === "app")?.file).toBe("routes/configurations.tsx");
   });
 
-  it("reads the collector catalogue once, for the tags, and still lists when it can't (D13a decision 10)", async () => {
+  it("reads the collector catalogue once, for the tags, and still lists when it can't", async () => {
     serveList(() => page([MINE, THEIRS]));
     const read = vi
       .spyOn(apiClient, "getCollectorDistributions")
@@ -186,7 +186,7 @@ describe("the configurations page (/app)", () => {
     expect(screen.queryByRole("button", { name: "Load more" })).toBeNull();
   });
 
-  it("offers All configurations, Mine and Published (D11b decision 6)", async () => {
+  it("offers All configurations, Mine and Published", async () => {
     serveList(() => page([MINE]));
     const { user } = renderPage();
     await screen.findByRole("heading", { level: 3, name: "Production Monitoring" });
@@ -200,7 +200,7 @@ describe("the configurations page (/app)", () => {
     ]);
   });
 
-  it("shows Draft or Published on each card, and in the list's Status column (D11b decision 6)", async () => {
+  it("shows Draft or Published on each card, and in the list's Status column", async () => {
     serveList(() => page([MINE, THEIRS]));
     const { user } = renderPage();
     const mine = (await screen.findByRole("heading", { level: 3, name: "Production Monitoring" })).closest(
@@ -537,7 +537,7 @@ describe("the configurations page (/app)", () => {
       expect(screen.getByRole("button", { name: "Load more" })).toBeEnabled();
     });
 
-    it("toasts nothing when the next page finds the session over (401 unauthenticated), and keeps the list (D12 Ruling 39)", async () => {
+    it("toasts nothing when the next page finds the session over (401 unauthenticated), and keeps the list", async () => {
       const getConfigurations = serveList((_organizationId, { cursor }) => {
         if (cursor !== undefined) throw new ApiError("unauthenticated", "You need to sign in.", { status: 401 });
         return page([MINE], "cursor-1");
@@ -611,7 +611,7 @@ describe("the configurations page (/app)", () => {
       ["Mine", "mine"],
       ["Published", "published"],
       ["All configurations", "all"],
-    ] as const)("sends %s's filter (%s) with the first page and with Load more's next (D11b decision 6)", async (label, filter) => {
+    ] as const)("sends %s's filter (%s) with the first page and with Load more's next", async (label, filter) => {
       const getConfigurations = serveList((_organizationId, query) => {
         if (query.cursor === undefined) return page([query.filter === "published" ? THEIRS : MINE], `cursor-${query.filter}`);
         return page([ORPHANED]);
@@ -744,7 +744,7 @@ describe("the configurations page (/app)", () => {
       expect(error).toHaveBeenCalledTimes(1);
     });
 
-    it("toasts nothing when the session is over (401 unauthenticated): the session-ended handler, or Logout, has the page (D12 Ruling 39)", async () => {
+    it("toasts nothing when the session is over (401 unauthenticated): the session-ended handler, or Logout, has the page", async () => {
       serveList(() => {
         throw new ApiError("unauthenticated", "You need to sign in.", { status: 401 });
       });
@@ -756,7 +756,7 @@ describe("the configurations page (/app)", () => {
     });
   });
 
-  describe("the terms (D7 decision 10)", () => {
+  describe("the terms", () => {
     async function accept(user: ReturnType<typeof userEvent.setup>) {
       const dialog = await screen.findByRole("dialog", { name: "Updated Terms of Service" });
       await user.click(within(dialog).getByLabelText("I agree to the Terms of Service and Privacy Policy"));
@@ -883,7 +883,7 @@ describe("the configurations page (/app)", () => {
   });
 
   describe("creating and deleting", () => {
-    it("creates from the header, and opens the new configuration's editor rather than reloading the list (D8 decision 16)", async () => {
+    it("creates from the header, and opens the new configuration's editor rather than reloading the list", async () => {
       const getConfigurations = serveList(() => page([THEIRS]));
       const createConfiguration = vi.spyOn(apiClient, "createConfiguration").mockResolvedValue({ configuration: MINE });
       const { user } = renderPage();
@@ -894,7 +894,7 @@ describe("the configurations page (/app)", () => {
       await user.type(await screen.findByLabelText("Configuration Name"), "Production Monitoring{Enter}");
 
       expect(await screen.findByText(`landed on /editor/${MINE.id}`)).toBeInTheDocument();
-      // The catalogue's default distribution, preselected (D13a decision 5).
+      // The catalogue's default distribution, preselected.
       expect(createConfiguration).toHaveBeenCalledWith(PERSONAL_ID, {
         name: "Production Monitoring",
         description: "",
@@ -939,7 +939,7 @@ describe("the configurations page (/app)", () => {
     });
   });
 
-  describe("who sees Delete (D11b decision 2)", () => {
+  describe("who sees Delete", () => {
     /** The member as an admin of the group organization, not a contributor. */
     function signedInGroupAdmin(): CurrentUserResponse {
       const member = signedInMember(GROUP_ID);
@@ -1028,7 +1028,7 @@ describe("the configurations page (/app)", () => {
     ]);
   });
 
-  it("puts no name, description or email in any attribute, in the grid, the list or the delete dialog (ADR 0024)", async () => {
+  it("puts no name, description or email in any attribute, in the grid, the list or the delete dialog", async () => {
     serveList(() => page([MINE, THEIRS, ORPHANED]));
     const { user } = renderPage();
     await screen.findByRole("heading", { level: 3, name: "Production Monitoring" });

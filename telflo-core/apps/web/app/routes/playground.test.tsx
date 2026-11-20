@@ -22,13 +22,12 @@ import PlaygroundFlows, { meta as flowsMeta } from "./playground.flows.js";
 import { meta as publicEditorMeta } from "./public-editor.js";
 
 /*
- * The playground's routes (D31-1 decisions 8, 17, 25 and 32; Preflight ruling
- * 15): registered outside the signed-in layout, each with its own fixed title
- * and canonical; the configurations page on the sample, read through the
- * seam, never the API; the per-kind fleet paths redirecting to the one fleet
- * page. The other pages are tested in their own files, inside the shell, with
- * their reads stubbed (a render here would send the flows page's open read
- * from jsdom).
+ * The playground's routes: registered outside the signed-in layout, each with
+ * its own fixed title and canonical; the configurations page on the sample,
+ * read through the seam, never the API; the per-kind fleet paths redirecting
+ * to the one fleet page. The other pages are tested in their own files, inside
+ * the shell, with their reads stubbed (a render here would send the flows
+ * page's open read from jsdom).
  */
 
 function Where() {
@@ -76,7 +75,7 @@ afterEach(() => {
   document.body.className = "";
 });
 
-describe("the routes (decision 25)", () => {
+describe("the routes", () => {
   /** The route config's entries with their paths, nested ones under their parent's. */
   function paths(entries: ReadonlyArray<{ path?: string; index?: boolean; file: string; children?: unknown }>, parent = ""): Array<[string, string]> {
     return entries.flatMap((entry) => {
@@ -122,7 +121,7 @@ describe("the routes (decision 25)", () => {
   });
 });
 
-describe("the head (decision 17)", () => {
+describe("the head", () => {
   const BASE = "https://telflo.example";
   it.each([
     ["the layout", () => layoutMeta(metaArgs<typeof layoutMeta>(BASE)), PLAYGROUND_TITLES.configurations, "/playground"],
@@ -142,7 +141,7 @@ describe("the head (decision 17)", () => {
       "/playground/fleet-management/abc",
     ],
     ["the editor", () => editorMeta(metaArgs<typeof editorMeta>(BASE)), PLAYGROUND_TITLES.editor, "/playground/editor"],
-    // A sample's editor has the blank editor's canonical (Ruling 304).
+    // A sample's editor has the blank editor's canonical.
     [
       "a sample's editor",
       () => editorMeta({ ...metaArgs<typeof editorMeta>(BASE), params: { configurationId: SAMPLE_CONFIGURATION_IDS.cost } } as never),
@@ -169,7 +168,7 @@ describe("the head (decision 17)", () => {
   });
 });
 
-describe("the configurations page (decision 32)", () => {
+describe("the configurations page", () => {
   it("lists the sample's ten through the seam, never the API, with their count", async () => {
     const spies = spyOnTheClient();
     renderPlayground();

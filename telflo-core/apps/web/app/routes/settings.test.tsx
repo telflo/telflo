@@ -48,7 +48,7 @@ function loaderArgs(url: string): Parameters<typeof loader>[0] {
 /**
  * A Settings page (Organization by default) under the signed-in layout, as the
  * app routes it, for `currentUser`, on `site` (the SaaS's by default:
- * Settings › Notifications shown, Q270).
+ * Settings › Notifications shown).
  */
 function renderSettings(path = "/settings/organization", currentUser: CurrentUserResponse = CONTRIBUTOR, site: SiteSettings = SAAS_SITE) {
   const Stub = createRoutesStub(underSite(site, [
@@ -85,11 +85,11 @@ describe("the settings routes", () => {
     vi.restoreAllMocks();
     useUserStore.getState().clear();
     vi.spyOn(apiClient, "getOrganizationSettings").mockResolvedValue({ publicInstallLinks: true });
-    // Settings › Account's reads (D21 Task 10).
+    // Settings › Account's reads.
     vi.spyOn(apiClient, "getSignInMethods").mockResolvedValue({ hasPassword: true, identities: [], providers: [] });
     vi.spyOn(apiClient, "listSessions").mockResolvedValue({ items: [], total: 0 });
     vi.spyOn(apiClient, "getPersonalApiTokens").mockResolvedValue({ items: [] });
-    // Settings › Service Accounts' reads (D22 Task 8).
+    // Settings › Service Accounts' reads.
     vi.spyOn(apiClient, "getServiceAccounts").mockResolvedValue({ items: [] });
   });
 
@@ -141,7 +141,7 @@ describe("the settings routes", () => {
     const nav = groups[0]!.closest("nav")!;
     const items = within(nav).getAllByRole("button");
     expect(items.map((button) => button.textContent)).toEqual(["Appearance", "Account", "Editor", "Notifications", "Organization"]);
-    // Each item's icon (Preflight ruling 37).
+    // Each item's icon.
     expect(items.map((button) => button.querySelector("svg")?.getAttribute("class"))).toEqual([
       expect.stringContaining("lucide-palette"),
       expect.stringContaining("lucide-user"),
@@ -166,7 +166,7 @@ describe("the settings routes", () => {
     expect(screen.getByRole("link", { name: "Settings" })).toHaveAttribute("aria-current", "page");
   });
 
-  // D36-1 decision 58 (Q270): the open source's default leaves Notifications out of the nav.
+  // The open source's default leaves Notifications out of the nav.
   it("leaves Notifications out of the Personal group with TELFLO_EMAIL_NOTIFICATIONS off, the open source's default", async () => {
     renderSettings("/settings/appearance", CONTRIBUTOR, OPEN_SOURCE_SITE);
     const groups = (await screen.findAllByRole("heading", { level: 3 })).filter((heading) => heading.classList.contains("tf-label"));
@@ -201,7 +201,7 @@ describe("the settings routes", () => {
     expect(await screen.findByText(CONTRIBUTOR.user.email)).toBeInTheDocument();
   });
 
-  // D22 decision 41: Service Accounts after Organization, for admins of the active organization only.
+  // Service Accounts after Organization, for admins of the active organization only.
   it("an admin sees Service Accounts after Organization, with the Bot icon; a contributor doesn't", async () => {
     renderSettings("/settings/organization", ADMIN);
     const groups = (await screen.findAllByRole("heading", { level: 3 })).filter((heading) => heading.classList.contains("tf-label"));
@@ -239,13 +239,13 @@ describe("the settings routes", () => {
     }
   });
 
-  it("a personal organization's owner, its admin, sees Service Accounts too (Preflight ruling 19)", async () => {
+  it("a personal organization's owner, its admin, sees Service Accounts too", async () => {
     const personal = { ...CONTRIBUTOR.organizations[0]! };
     renderSettings("/settings/appearance", { ...CONTRIBUTOR, organization: personal });
     expect(await screen.findByRole("button", { name: "Service Accounts" })).toBeInTheDocument();
   });
 
-  // D17d-2 decision 20: the current organization's switch, below the list; a contributor's disabled.
+  // The current organization's switch, below the list; a contributor's disabled.
   it("show the current organization's Public install links card below the list, read for a contributor and disabled", async () => {
     renderSettings();
     const toggle = await screen.findByRole("switch", { name: "Public install links" });
@@ -291,9 +291,9 @@ describe("the settings routes", () => {
   });
 });
 
-// D36-1 decision 58 (Q270): Settings › Notifications' page answers from its
-// server loader, read at request time; the tests' setup pins the SaaS's
-// values (on), and each case here sets its own.
+// Settings › Notifications' page answers from its server loader, read at
+// request time; the tests' setup pins the SaaS's values (on), and each case
+// here sets its own.
 describe("Settings › Notifications' switch", () => {
   afterEach(() => {
     vi.unstubAllEnvs();

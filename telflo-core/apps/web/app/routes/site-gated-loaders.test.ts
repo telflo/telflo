@@ -4,12 +4,12 @@ import { loader as playgroundEditorLoader } from "./playground.editor.js";
 import { loader as publicEditorLoader } from "./public-editor.js";
 
 /*
- * The pages a site switch turns off answer 404 from their server loader
- * (D36-1 decision 31, Preflight ruling 6): the playground's layout (for every
- * page under it), its full-screen editor and the public editor, each behind
- * TELFLO_PLAYGROUND, read at request time. The tests' setup pins the SaaS's
- * values (the playground on); each case here sets its own. Root's boundary
- * shows the 404 (SSR and client navigation: site-switches.e2e.ts).
+ * The pages a site switch turns off answer 404 from their server loader:
+ * the playground's layout (for every page under it), its full-screen editor
+ * and the public editor, each behind TELFLO_PLAYGROUND, read at request
+ * time. The tests' setup pins the SaaS's values (the playground on); each
+ * case here sets its own. Root's boundary shows the 404 (SSR and client
+ * navigation: site-switches.e2e.ts).
  */
 
 afterEach(() => {

@@ -11,16 +11,14 @@ import { useCurrentUser } from "~/lib/use-current-user.js";
 import { VARIABLE_GROUPS_LOAD_FAILED_MESSAGE, useVariableGroupsList } from "~/lib/variables.js";
 
 /*
- * `/variables/groups`, the left nav's "Variable groups" (D20 default 22;
- * ADR 0018), with D20's columns (`VariableGroupsTable.tsx`), "Add variable
- * group" in the header and the empty state ("No variable groups yet"),
- * "Loading variable groups…", and a failed read with "Try again". A row's
- * name opens
- * the group's page (`/variables/groups/{id}`). Under the header, the warning
- * that secrets stay in `${env:NAME}` (a test run uses the organization's
- * values only); below the list, "How variable groups work", as the Variables
- * page's "How variables work" (Q106, Ruling 80). The title is fixed. An
- * organization switch closes the dialogs.
+ * `/variables/groups`, the left nav's "Variable groups", with its columns
+ * (`VariableGroupsTable.tsx`), "Add variable group" in the header and the
+ * empty state ("No variable groups yet"), "Loading variable groups…", and a
+ * failed read with "Try again". A row's name opens the group's page
+ * (`/variables/groups/{id}`). Under the header, the warning that secrets stay
+ * in `${env:NAME}` (a test run uses the organization's values only); below the
+ * list, "How variable groups work", as the Variables page's "How variables
+ * work". The title is fixed. An organization switch closes the dialogs.
  */
 
 export function meta(_args: Route.MetaArgs) {

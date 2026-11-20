@@ -25,20 +25,19 @@ import { selectIsCanvasLocked, useEditorStore } from "~/lib/stores/editor-store.
 import { SAMPLE_ORGANIZATION_ID } from "~/lib/workspace-reads.js";
 
 /*
- * `/public-editor` (D31-1 decisions 7, 15, 16, 25, 29, 30 and 38; Q209,
- * Q210; Preflight rulings 10, 14 and 18): the blank anonymous editor, full
- * screen, in the playground's provider and the editors'
- * surface (masked as the signed-in shell; the phone page below `md`, its
- * link to sign-in, so Monaco never mounts and nothing is validated on a phone).
- * No playground sidebar or banner. D31-2 adds `:id`.
+ * `/public-editor`: the blank anonymous editor, full screen, in the
+ * playground's provider and the editors' surface (masked as the signed-in
+ * shell; the phone page below `md`, its link to sign-in, so Monaco never
+ * mounts and nothing is validated on a phone). No playground sidebar or
+ * banner.
  *
  * It composes the signed-in editor's pieces, as the playground editor
- * does, WITHOUT the Testing tab:
- * the toolbox, the canvas with its actions, the panel's Configuration and
- * YAML tabs, under the public editor's toolbar (PublicEditorToolbar: the
- * Telflo mark, the name as text, the fixed collector picker, the shared
- * edit actions, Save, Publish locked). No pill over the canvas (only the
- * playground editor has one; Q209 parity, Ruling 304).
+ * does, WITHOUT the Testing tab: the toolbox, the canvas with its
+ * actions, the panel's Configuration and YAML tabs, under the public
+ * editor's toolbar (PublicEditorToolbar: the Telflo mark, the name as
+ * text, the fixed collector picker, the shared edit actions, Save,
+ * Publish locked). No pill over the canvas (only the playground editor
+ * has one).
  *
  * The editor store loads with no API, under `SAMPLE_ORGANIZATION_ID` (so a
  * reader the seam missed answers from the sample, never the API), a
@@ -49,22 +48,22 @@ import { SAMPLE_ORGANIZATION_ID } from "~/lib/workspace-reads.js";
  * (`PUBLIC_EDITOR_EXAMPLE_YAML`, its exporter's host rewritten to
  * `acme.example`), and the editor tour unless "Skip tour" is ticked
  * (`startEditorTour({ versionHistory: false })`: there is no version
- * picker; leaving the page stops it). Nothing it shows is stored (decision
- * 18): the example is the bundle's, the edit lives in the store until Save.
+ * picker; leaving the page stops it). Nothing it shows is stored: the
+ * example is the bundle's, the edit lives in the store until Save.
  *
- * The open text is checked by D27's anonymous validate (`ANONYMOUS_VALIDATION`).
- * No navigation or unload guard (Preflight ruling 14). Save and Cmd/Ctrl+S,
- * here or inside Monaco, run the playground's Save (`useStagePlaygroundSave`):
- * staged in this browser, then "Sign in to save" (or, signed in, `/app`).
- * Leaving the page forgets what was open (the editor store).
+ * The open text is checked by the anonymous validate (`ANONYMOUS_VALIDATION`).
+ * No navigation or unload guard. Save and Cmd/Ctrl+S, here or inside Monaco,
+ * run the playground's Save (`useStagePlaygroundSave`): staged in this
+ * browser, then "Sign in to save" (or, signed in, `/app`). Leaving the page
+ * forgets what was open (the editor store).
  *
- * No attribute carries the name or the text (ADR 0024): they are text,
- * which replay masks; the text is inside `ph-no-capture` (YamlEditor).
+ * No attribute carries the name or the text: they are text, which replay
+ * masks; the text is inside `ph-no-capture` (YamlEditor).
  */
 
 export const handle = PLAYGROUND_HANDLE;
 
-/** The public editor is the playground's, behind its switch: a 404 with TELFLO_PLAYGROUND off (D36-1 decision 31). */
+/** The public editor is the playground's, behind its switch: a 404 with TELFLO_PLAYGROUND off. */
 export function loader() {
   notFoundUnless(siteSettings().playground);
   return null;
@@ -177,7 +176,7 @@ function open(start: PublicEditorStart): void {
 }
 
 function PublicEditor() {
-  // The Welcome dialog waits while the cookie banner asks (Ruling 301).
+  // The Welcome dialog waits while the cookie banner asks.
   const consentPending = useConsentPending();
   const stage = useStagePlaygroundSave();
   const save = useCallback(() => stage(useEditorStore.getState()), [stage]);
@@ -186,7 +185,7 @@ function PublicEditor() {
   const selectedNodeId = useEditorStore((state) => state.selectedNode?.id ?? null);
   const stopTour = useRef<(() => void) | null>(null);
 
-  // The anonymous validate checks the open text (decision 29).
+  // The anonymous validate checks the open text.
   useCollectorValidation(ANONYMOUS_VALIDATION);
 
   // Opens the blank configuration with no API; leaving forgets it, and stops a tour under way.

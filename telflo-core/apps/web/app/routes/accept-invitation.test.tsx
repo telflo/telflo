@@ -89,7 +89,7 @@ describe("accept-invitation loader", () => {
   });
 });
 
-describe("accept-invitation client loader (D6 Preflight ruling 3)", () => {
+describe("accept-invitation client loader", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
     window.sessionStorage.clear();
@@ -214,7 +214,7 @@ describe("accept-invitation page", () => {
     const { unmount } = renderRoute({ visitor: { status: "signed_out" }, providers: [] });
 
     expect(await screen.findByText("Processing your invitation...")).toBeInTheDocument();
-    // The auth shell marks <body> in an effect, which can come after the text appears under load (D8 Ruling 33).
+    // The auth shell marks <body> in an effect, which can come after the text appears under load.
     await waitFor(() => expect(document.body).toHaveClass("tf-app"));
     expect(suspend).toHaveBeenCalled();
     expect(release).not.toHaveBeenCalled();

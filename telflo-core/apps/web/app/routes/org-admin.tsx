@@ -8,19 +8,17 @@ import { useCurrentUser } from "~/lib/use-current-user.js";
 import { cn } from "~/lib/utils.js";
 
 /*
- * The Permissions page (`/org-admin`; ADR 0018; D5 decision 11 and D6
- * decision 13). Its Members nav has
- * "Invited", the index, "Active" and "Deleted", each with its count. The
- * signed-in layout route supplies the shell and the session check, so this
- * neither wraps itself in AppLayout nor loads the user. There is no "No
- * organization defined" panel: D1b's invariant means everyone has an active
- * organization.
+ * The Permissions page (`/org-admin`). Its Members nav has "Invited", the
+ * index, "Active" and "Deleted", each with its count. The signed-in layout
+ * route supplies the shell and the session check, so this neither wraps
+ * itself in AppLayout nor loads the user. There is no "No organization
+ * defined" panel: everyone has an active organization.
  *
  * The members and the invitations load here, together, once for the three
  * pages, through the browser client, so an expired access token is
- * refreshed by its interceptor (D2b's handoff: a child route doesn't assume
- * a fresh token in a server loader of its own). The counts come from the
- * same lists.
+ * refreshed by its interceptor (a child route doesn't assume a fresh
+ * token in a server loader of its own). The counts come from the same
+ * lists.
  */
 
 /** What the member pages get from this layout, through the outlet. */
@@ -33,7 +31,7 @@ export type OrgAdminOutletContext = {
   organizationId: string;
   /** The organization's name, shown in the invite dialog (organization content: visible text in the masked shell only). */
   organizationName: string;
-  /** Its type: a personal workspace's default name reads differently in the invite dialog (Q262). */
+  /** Its type: a personal workspace's default name reads differently in the invite dialog. */
   organizationType: OrganizationType;
   /** Loads the members again, after a change. */
   reloadMembers: () => Promise<void>;
@@ -54,9 +52,9 @@ function normalized(pathname: string): string {
  * boundary.
  *
  * A load that finds the session over (`unauthenticated`, isSessionEnded) is
- * neither: nothing is shown, and the list stays as it was (D12 Ruling 40).
- * The session-ended handler owns that case and takes the browser to sign
- * in, and while Logout has the handler suspended the page is leaving for
+ * neither: nothing is shown, and the list stays as it was. The
+ * session-ended handler owns that case and takes the browser to sign in,
+ * and while Logout has the handler suspended the page is leaving for
  * Logout's `/login`. Thrown, it reached root's error boundary, the only one
  * there is, which replaced the whole app, the sidebar and Logout's toast
  * with "Oops!" until `/login` loaded.
@@ -127,7 +125,7 @@ export default function OrgAdminRoute() {
   const members = useAdminList(fetchMembers, leaveOnce);
   const invitations = useAdminList(fetchInvitations, leaveOnce);
 
-  // Only admins of the active organization manage its members (decision 7):
+  // Only admins of the active organization manage its members:
   // anyone else is sent to /app, replacing the history entry. From an
   // effect rather than by rendering <Navigate>, which warns when rendered on
   // the server, as it is when a non-admin loads /org-admin directly.

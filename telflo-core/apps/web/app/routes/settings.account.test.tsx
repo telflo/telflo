@@ -21,8 +21,7 @@ import {
 import { expectNoAttributeHolds } from "~/test/fleets.js";
 
 /*
- * Settings › Account (D21 decisions 34, 38 and 45; D25 decision 50's API
- * tokens card last): the cards in order, the
+ * Settings › Account (the API tokens card last): the cards in order, the
  * Sign-in methods card hidden with no provider and no identity, the link's
  * `?link=<code>` toasted and removed with replace, and the personal data
  * only as text.

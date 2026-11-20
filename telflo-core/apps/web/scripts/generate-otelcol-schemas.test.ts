@@ -28,9 +28,8 @@ import {
  * one whose schema is `{}` and one without settings, a component another
  * refers to, an embedded open definition, a hand-copied set of definitions,
  * optional sections, settings named after Go fields, and a release
- * manifest), never on the network;
- * then the committed schemas against the catalogue (decision 6, Preflight
- * ruling 5).
+ * manifest), never on the network; then the committed schemas against the
+ * catalogue.
  */
 
 const FIXTURES = fileURLToPath(new URL("./otelcol-schemas/fixtures/", import.meta.url));

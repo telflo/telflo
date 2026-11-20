@@ -11,9 +11,9 @@ import { ACCOUNT_ID, apiToken, renderServiceAccountPages, serviceAccount, viewer
 import SettingsServiceAccountRoute from "./settings/service-accounts.$serviceAccountId.js";
 
 /*
- * A service account's page's route (D22 decision 41; Preflight ruling 20):
- * by id only, for admins; a contributor is sent to /settings, replacing the
- * entry; management lost while open leaves the page.
+ * A service account's page's route: by id only, for admins; a contributor
+ * is sent to /settings, replacing the entry; management lost while open
+ * leaves the page.
  */
 
 describe("a service account's route (/settings/service-accounts/:serviceAccountId)", () => {

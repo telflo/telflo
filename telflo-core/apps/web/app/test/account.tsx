@@ -8,9 +8,8 @@ import type { AppLayoutData } from "~/routes/app-layout.js";
 import { signedInMember } from "~/test/configurations.js";
 
 /*
- * Settings › Account's test fixtures (D21 Task 10). The personal data are
- * canaries (decision 45): a test looks for them in every attribute, the
- * URL, the toasts and browser storage.
+ * Settings › Account's test fixtures. The personal data are canaries: a test
+ * looks for them in every attribute, the URL, the toasts and browser storage.
  */
 
 export const ACCOUNT_EMAIL = "canary-owner-3b7d@example.com";
@@ -33,7 +32,7 @@ export function signInMethods(over: Partial<SignInMethodsResponse> = {}): SignIn
   return { hasPassword: true, identities: [], providers: [GOOGLE], ...over };
 }
 
-/** Google linked as the canary identity email; Google re-links by email (Ruling 92). */
+/** Google linked as the canary identity email; Google re-links by email. */
 export const LINKED_GOOGLE = {
   provider: "google",
   email: IDENTITY_EMAIL,

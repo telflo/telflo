@@ -17,44 +17,42 @@ import { canonicalMeta, publicWebUrlFrom } from "~/lib/seo.js";
 import { findDistribution, useCollectorDistributions } from "~/lib/stores/collector-catalogue-store.js";
 
 /*
- * `/app/flows/:slug`, a flow's page in the signed-in gallery (ADR 0018; D12
- * decisions 5 and 13): the badges, the name and summary, "Use this flow" and
- * the source link, the description as plain paragraphs, "Before you use
- * this", the configuration with its collector, the tags, and its TechArticle
- * JSON-LD. Its rules (the D12 Parity Notes):
- * - no FlowsShell (Preflight ruling 18), and no signed-out "Open in the
- *   editor" (decision 14): the signed-in layout signs a visitor in first;
+ * `/app/flows/:slug`, a flow's page in the signed-in gallery: the badges, the
+ * name and summary, "Use this flow" and the source link, the description as
+ * plain paragraphs, "Before you use this", the configuration with its
+ * collector, the tags, and its TechArticle JSON-LD. Its rules:
+ * - no FlowsShell, and no signed-out "Open in the editor": the signed-in
+ *   layout signs a visitor in first;
  * - the collector is the flow's own pin, always, never coerced to another
- *   distribution (decision 14). "Validated against" names the distribution
+ *   distribution. "Validated against" names the distribution
  *   with the catalogue's label (a built-in map, read before the catalogue
  *   is, as the server renders it);
  * - the canonical link, og:url and the JSON-LD's URLs follow
- *   TELFLO_PUBLIC_WEB_URL, left out without it (D4 decision 5); the
- *   publisher logo is `telflo-logo-full.svg` (Preflight ruling 14);
+ *   TELFLO_PUBLIC_WEB_URL, left out without it; the publisher logo is
+ *   `telflo-logo-full.svg`;
  * - while the browser refreshes an expired access token, the title is the
  *   gallery's until the flow is read;
  * - "Define these in your organization's variables" marks each name
- *   "defined" or "not defined" (D20 default 28; Preflight ruling 31), from
- *   the organization's variables' names (`useOrgVariables`, the picker's one
- *   shared read): no mark before the organization is known, while they
- *   are read, or when they couldn't be.
- *   A name is text, in the masked shell; the marks are fixed words.
+ *   "defined" or "not defined", from the organization's variables' names
+ *   (`useOrgVariables`, the picker's one shared read): no mark before the
+ *   organization is known, while they are read, or when they couldn't be. A
+ *   name is text, in the masked shell; the marks are fixed words.
  *
- * Replay (ADR 0024; the Global constraints): a flow's YAML is public, but it
- * is configuration text, so it sits inside the replay-blocked container
- * (`ph-no-capture`), as the editor's text does. The rest of the page's body
- * is text under the signed-in shell's mask, but for the source link, whose
- * `href` is the flow's source URL. The head carries the flow too: its name
- * in the title, its name and summary in the description, Open Graph,
- * Twitter and JSON-LD metas (with its author's name), and its address in
- * the canonical link and og:url; replay records the head unmasked, and
- * PostHog's pageview carries the title. Accepted (D12 Ruling 34): a flow is
- * Telflo's catalogue content, public once published, and a hidden one is
- * seen only by product admins. Nothing of a customer's own is there (the
- * editor's fixed title keeps configuration names out).
+ * Replay: a flow's YAML is public, but it is configuration text, so it sits
+ * inside the replay-blocked container (`ph-no-capture`), as the editor's
+ * text does. The rest of the page's body is text under the signed-in
+ * shell's mask, but for the source link, whose `href` is the flow's source
+ * URL. The head carries the flow too: its name in the title, its name and
+ * summary in the description, Open Graph, Twitter and JSON-LD metas (with
+ * its author's name), and its address in the canonical link and og:url;
+ * replay records the head unmasked, and PostHog's pageview carries the
+ * title. Accepted: a flow is Telflo's catalogue content, public once
+ * published, and a hidden one is seen only by product admins. Nothing of a
+ * customer's own is there (the editor's fixed title keeps configuration
+ * names out).
  */
 
-/** Default 28's marks beside each organization variable a flow references. */
+/** The marks beside each organization variable a flow references. */
 export const FLOW_VARIABLE_DEFINED = "defined";
 export const FLOW_VARIABLE_NOT_DEFINED = "not defined";
 

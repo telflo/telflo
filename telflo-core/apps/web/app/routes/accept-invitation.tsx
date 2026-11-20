@@ -13,10 +13,10 @@ export type AcceptInvitationData = { visitor: InvitationVisitor; providers: Oidc
 
 /**
  * Who is signed in, whoever it is: unlike `/login`, a signed-in visitor stays,
- * since they may be the one invited (D6 decision 13). The preview runs in the
- * browser, because the token is only there. The providers for the Google
- * button are optional, as on `/login`. An unreachable API throws from
- * fetchCurrentUser rather than reading as signed out.
+ * since they may be the one invited. The preview runs in the browser, because
+ * the token is only there. The providers for the Google button are optional,
+ * as on `/login`. An unreachable API throws from fetchCurrentUser rather than
+ * reading as signed out.
  */
 export async function loader({ request }: Route.LoaderArgs): Promise<AcceptInvitationData> {
   const [visitor, providers] = await Promise.all([
@@ -29,14 +29,14 @@ export async function loader({ request }: Route.LoaderArgs): Promise<AcceptInvit
 /**
  * Runs on hydration and on every revalidation, as the signed-in layout's does.
  * First it moves the link's token out of the address bar, before this page
- * makes any request (D6 decision 2).
+ * makes any request.
  *
  * Someone following an emailed link usually has an expired access token, and
- * must not read as signed out (D6 Preflight ruling 3). So when the server
- * says a refresh is needed, the browser client asks for the current user and
- * its interceptor refreshes. The session-ended handler is suspended for it,
- * so a refused refresh reads as signed out here instead of going to
- * `/login`. Any other failure goes to the error boundary.
+ * must not read as signed out. So when the server says a refresh is needed,
+ * the browser client asks for the current user and its interceptor
+ * refreshes. The session-ended handler is suspended for it, so a refused
+ * refresh reads as signed out here instead of going to `/login`. Any other
+ * failure goes to the error boundary.
  */
 export async function clientLoader({ serverLoader }: Route.ClientLoaderArgs): Promise<AcceptInvitationData> {
   takeInvitationToken();
@@ -61,7 +61,7 @@ clientLoader.hydrate = true as const;
 // page's loading card, and hydration keeps it while the client loader runs.
 
 // An auth screen: root's Layout renders the theme this browser was last
-// told, the remembered one or the `telflo_theme` cookie's (D21 decision 22).
+// told, the remembered one or the `telflo_theme` cookie's.
 export const handle = { theme: "remembered" } satisfies ThemeHandle;
 
 /*
@@ -82,9 +82,9 @@ export function meta(_args: Route.MetaArgs) {
 
 export default function AcceptInvitationPage({ loaderData }: Route.ComponentProps) {
   // While the page is shown, a session that ends leaves it here, signed out,
-  // rather than going to `/login` (D6 Preflight ruling 3).
+  // rather than going to `/login`.
   useEffect(() => suspendSessionEndedHandler(), []);
-  // The site's Terms, as root's loader read them: none when it asks for none (D36-1 decisions 29 and 32).
+  // The site's Terms, as root's loader read them: none when it asks for none.
   const { terms } = useSite();
 
   return (

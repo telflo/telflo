@@ -7,10 +7,9 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "~/comp
 import { TOOLTIP_TRIGGERS, anyStateHolds, expectNoAttributeHoldsInOpenTooltips, expectTextOnlyInsideNoCapture } from "./fleets.js";
 
 /**
- * The tooltip canaries' own test (D17b-1 Preflight ruling 15): the
- * collectors grid puts a Radix checkbox and a Select trigger beside its
- * tooltips, and each carries `data-state` and is focusable, but opens no
- * tooltip.
+ * The tooltip canaries' own test: the collectors grid puts a Radix checkbox
+ * and a Select trigger beside its tooltips, and each carries `data-state` and
+ * is focusable, but opens no tooltip.
  */
 describe("expectNoAttributeHoldsInOpenTooltips", () => {
   function renderControls() {
@@ -64,7 +63,7 @@ describe("expectNoAttributeHoldsInOpenTooltips", () => {
   });
 });
 
-/** The bearer canary's own test (D17b-2 Preflight ruling 15): text only inside `ph-no-capture`. */
+/** The bearer canary's own test: text only inside `ph-no-capture`. */
 describe("expectTextOnlyInsideNoCapture", () => {
   const BEARER = "tfr_bearer-canary-41d9";
 
@@ -133,7 +132,7 @@ describe("expectTextOnlyInsideNoCapture", () => {
     }
   });
 
-  // Ruling 22 (F2's Minor): no single node outside holds it, but their text joined does.
+  // No single node outside holds it, but their text joined does.
   it.each([
     [
       "text nodes",
@@ -161,7 +160,7 @@ describe("expectTextOnlyInsideNoCapture", () => {
     expect(() => expectTextOnlyInsideNoCapture(BEARER)).toThrow(/split across nodes/);
   });
 
-  // Ruling 28 (the fix-wave review's n1): a root inside a ph-no-capture ancestor has nothing outside it.
+  // A root inside a ph-no-capture ancestor has nothing outside it.
   it("passes for a root inside a ph-no-capture ancestor, the root itself unclassed; fails for the same root outside one", () => {
     const { unmount } = render(
       <div className="ph-no-capture">
@@ -214,7 +213,7 @@ function StateHolder({ value }: { value: unknown }) {
   return held === undefined ? null : <span>held</span>;
 }
 
-// D17d-2 Ruling 49 (the review's Nit 2): a dialog's typed env values are a Map, which Object.values sees nothing of.
+// A dialog's typed env values are a Map, which Object.values sees nothing of.
 describe("anyStateHolds", () => {
   const CANARY = "state-canary";
 

@@ -12,29 +12,26 @@ import { useLockedAction } from "~/lib/playground/context.js";
 import { PLAYGROUND_HANDLE, PLAYGROUND_TITLES, playgroundMeta } from "~/lib/playground/meta.js";
 
 /*
- * `/playground/flows/:slug`, a flow's page in the playground (ADR 0018;
- * D31-1 decisions 6 and 33): the badges, the name and summary, "Use this
- * flow", the description as plain paragraphs, "Before you use this" (the
- * exporters and the environment variables), the configuration with its pin,
- * read-only, and the tags. Its rules (the spec's Parity Notes):
- * - the flow is the flows table's, through the open slug read (decision 5),
+ * `/playground/flows/:slug`, a flow's page in the playground: the badges, the
+ * name and summary, "Use this flow", the description as plain paragraphs,
+ * "Before you use this" (the exporters and the environment variables), the
+ * configuration with its pin, read-only, and the tags. Its rules:
+ * - the flow is the flows table's, through the open slug read,
  *   read in the BROWSER only, after mount (never a server loader, so its
  *   per-address limit counts the visitor). A slug the read doesn't answer
  *   (unknown or hidden: one 404, `flow_not_found`) is "Flow not found."; any
  *   other failure says so in fixed words, with "Try again";
- * - the pin is the flow's own, always, never coerced to another
- *   distribution (D12 decision 14); the provenance badge is the platform's
- *   (`SourceBadge`);
- * - "Use this flow" opens the playground's one sign-up prompt (decision 6,
- *   the lock at the button).
+ * - the pin is the flow's own, always, never coerced to another distribution;
+ *   the provenance badge is the platform's (`SourceBadge`);
+ * - "Use this flow" opens the playground's one sign-up prompt (the lock
+ *   at the button).
  *
- * Replay (ADR 0024, decision 39): the flow's YAML is public, but it is
- * configuration text, so it sits inside `ph-no-capture`, as on the
- * signed-in page; the rest is text inside the shell's mask. The title is
- * fixed words, never the flow's name (decision 17).
+ * Replay: the flow's YAML is public, but it is configuration text, so it sits
+ * inside `ph-no-capture`, as on the signed-in page; the rest is text inside
+ * the shell's mask. The title is fixed words, never the flow's name.
  */
 
-/** The sign-up prompt's words for "Use this flow" (decision 6). */
+/** The sign-up prompt's words for "Use this flow". */
 export const USE_FLOW_LOCKED_ACTION = "start from this flow";
 
 /** The words of a flow's page that couldn't be read. */
@@ -134,7 +131,7 @@ function FlowDetail({ flow }: { flow: PublishedFlow }) {
           <h1 className="mt-3 text-2xl font-semibold tracking-[-0.01em] text-foreground">{flow.name}</h1>
           <p className="mt-2 text-[15px] leading-[1.55] text-muted-foreground">{flow.summary}</p>
           <div className="mt-5">
-            {/* Locked at the button (decision 24): the playground has no account to own a copy. */}
+            {/* Locked at the button: the playground has no account to own a copy. */}
             <Button onClick={(event) => locked?.(USE_FLOW_LOCKED_ACTION, event.currentTarget)}>Use this flow</Button>
           </div>
         </header>

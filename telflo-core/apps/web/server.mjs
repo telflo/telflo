@@ -1,15 +1,15 @@
-// The web app's own server (D33-1 decision 13, Preflight ruling 14). It does
-// what `react-router-serve` 7.18.4 does (@react-router/serve's dist/cli.js)
-// for this app's build, without morgan, get-port or source-map-support:
-// compression, `/assets` cached for a year as immutable, the build's client
-// files, `public/` for an hour, then React Router's request handler.
+// The web app's own server. It does what `react-router-serve` 7.18.4 does
+// (@react-router/serve's dist/cli.js) for this app's build, without morgan,
+// get-port or source-map-support: compression, `/assets` cached for a year
+// as immutable, the build's client files, `public/` for an hour, then React
+// Router's request handler.
 //
 // The invariant: this server's stdout and stderr never hold a request's URL
 // or path. Nothing is logged per request (the gateway's redacted access log
 // is the record of requests); the start line is fixed; a failed request is
 // logged only when it is the server's own failure (5xx), with the request's
 // URL and path taken out of the error's text. React Router's own error log
-// is app/entry.server.tsx's `handleError` (Preflight ruling 15).
+// is app/entry.server.tsx's `handleError`.
 //
 // The image runs `node server.mjs` (never npx, which writes ~/.npm). Paths are
 // resolved against this file's folder, never the working directory.
@@ -77,13 +77,13 @@ export function decodes(target) {
 
 /**
  * Drops React Router's one console call that can carry request text and
- * passes every other `console.warn` call through unchanged (Ruling 327).
- * React Router's `decodePath` warns `The URL path "<path>" could not be
- * decoded …` when a path it is handed doesn't decode. The edge refusal above
- * stops a raw path or query that doesn't decode, but a value that decodes
- * once to something that doesn't decode again (the manifest route's `paths`,
- * e.g. `%25E0%25A4%25A`) still reaches it, and refusing every such value at
- * the edge would refuse a legitimate `?q=100%25`.
+ * passes every other `console.warn` call through unchanged. React Router's
+ * `decodePath` warns `The URL path "<path>" could not be decoded …` when a
+ * path it is handed doesn't decode. The edge refusal above stops a raw path
+ * or query that doesn't decode, but a value that decodes once to something
+ * that doesn't decode again (the manifest route's `paths`, e.g.
+ * `%25E0%25A4%25A`) still reaches it, and refusing every such value at the
+ * edge would refuse a legitimate `?q=100%25`.
  *
  * The stop rule: two sweeps of react-router 7.18.4's server code found that
  * warning to be the ONLY console call that can carry a request's text.

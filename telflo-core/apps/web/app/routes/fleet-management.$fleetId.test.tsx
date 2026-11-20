@@ -49,13 +49,11 @@ import { SUSPENDED_BANNER, TOKEN_BANNER_LABEL } from "~/components/fleets/TokenB
 vi.mock("~/lib/api-client.server.js", () => ({ fetchCurrentUser: vi.fn() }));
 
 /*
- * A fleet's page (D17a decision 19; Preflight rulings 9, 14 and 17): its
- * header, its tabs in `?tab=`, "Fleet not found", the poll the header
- * follows, and the rename, archive and delete dialogs opened from it; a
- * server fleet's stats strip and Collectors tab (D17b-1 decisions 20 and
- * 21, Preflight rulings 8 and 16), whose own tests are CollectorsTab's and
- * StatsStrip's. Every server fleet's page mounts the tab, so each test's
- * fleet has no collectors unless it says otherwise.
+ * A fleet's page: its header, its tabs in `?tab=`, "Fleet not found", the poll
+ * the header follows, and the rename, archive and delete dialogs opened from
+ * it; a server fleet's stats strip and Collectors tab, whose own tests are
+ * CollectorsTab's and StatsStrip's. Every server fleet's page mounts the tab,
+ * so each test's fleet has no collectors unless it says otherwise.
  */
 
 /** Where the page is: its path and query, and a Back (the browser's). */
@@ -147,7 +145,7 @@ describe("a fleet's page (/fleet-management/{fleetId})", () => {
     );
   });
 
-  it("has a fixed title, never the fleet's label (Preflight ruling 9)", () => {
+  it("has a fixed title, never the fleet's label", () => {
     expect(meta({} as Parameters<typeof meta>[0])).toEqual([{ title: "Fleet - Telflo" }]);
   });
 
@@ -171,7 +169,7 @@ describe("a fleet's page (/fleet-management/{fleetId})", () => {
     }
   });
 
-  describe("its tabs, in ?tab= (Preflight ruling 9)", () => {
+  describe("its tabs, in ?tab=", () => {
     it.each([
       ["no tab", "", "Collectors", "Install your first collector"],
       ["?tab=collectors", "?tab=collectors", "Collectors", "Install your first collector"],
@@ -202,7 +200,7 @@ describe("a fleet's page (/fleet-management/{fleetId})", () => {
       }
     });
 
-    // D17d-1 decisions 9, 11, 23 and 26; Preflight ruling 22: where D17a said "Not available yet.".
+    // A Kubernetes-supervisor fleet's tabs are its own, never "Not available yet.".
     it.each([
       ["no tab", "", "Collectors"],
       ["?tab=groups", "?tab=groups", "Groups"],
@@ -220,7 +218,7 @@ describe("a fleet's page (/fleet-management/{fleetId})", () => {
       expect(screen.getByText("Version drift")).toBeInTheDocument();
       expect(screen.getByText("Token expires")).toBeInTheDocument();
       if (tab === "Collectors") {
-        // The grid's one Group column (Ruling 66): the Default group's collector is the Agent's, its badge alone.
+        // The grid's one Group column: the Default group's collector is the Agent's, its badge alone.
         expect(await within(panel).findByRole("button", { name: "agent-pod" })).toBeInTheDocument();
         expect(within(panel).queryByRole("columnheader", { name: "Role" })).toBeNull();
         const groupColumn = within(panel).getAllByRole("columnheader").findIndex((header) => header.textContent === "Group");
@@ -230,7 +228,7 @@ describe("a fleet's page (/fleet-management/{fleetId})", () => {
         expect(apiClient.getCollectors).not.toHaveBeenCalled();
       }
       if (tab === "Groups") {
-        // D17d-1 Task 6's tab: the Agent, the Cluster before its group exists, then the gateways (one Group column: Ruling 66).
+        // Its own Groups tab: the Agent, the Cluster before its group exists, then the gateways (one Group column).
         await waitFor(() =>
           expect(
             within(panel)
@@ -248,7 +246,7 @@ describe("a fleet's page (/fleet-management/{fleetId})", () => {
         expect(await within(panel).findByText("Fleet tokens")).toBeInTheDocument();
         expect(apiClient.getEnrollmentTokens).toHaveBeenCalledWith(GROUP_ID, FLEET_ID, expect.anything());
         expect(apiClient.getEnrollmentTokenEvents).toHaveBeenCalledWith(GROUP_ID, FLEET_ID, { limit: 50 }, expect.anything());
-        // D17d-2 decision 22: Install links shown on a Kubernetes fleet too, in its words.
+        // Install links shown on a Kubernetes fleet too, in its words.
         expect(apiClient.getQuickDeployLinks).toHaveBeenCalledWith(GROUP_ID, FLEET_ID, { limit: 50 }, expect.anything());
         expect(await within(panel).findByRole("heading", { name: "Install links" })).toBeInTheDocument();
         expect(panel).toHaveTextContent("Links appear here when you make a Quick Deploy command in the Helm install dialog.");
@@ -256,7 +254,7 @@ describe("a fleet's page (/fleet-management/{fleetId})", () => {
         expect(apiClient.getEnrollmentTokens).not.toHaveBeenCalled();
       }
       expect(screen.queryByText("Not available yet.")).toBeNull();
-      // D17d-2 (Preflight ruling 28): an active Kubernetes fleet installs with Helm; with collectors, Setup guide reopens its checklist.
+      // An active Kubernetes fleet installs with Helm; with collectors, Setup guide reopens its checklist.
       expect(screen.queryByRole("button", { name: "Install collector" })).toBeNull();
       expect(screen.getByRole("button", { name: "Install with Helm" })).toBeInTheDocument();
       expect(screen.getByRole("button", { name: "Setup guide" })).toBeInTheDocument();
@@ -276,7 +274,7 @@ describe("a fleet's page (/fleet-management/{fleetId})", () => {
       expect(within(panel).getByRole("button", { name: "New group" })).toBeInTheDocument();
     });
 
-    it("links the strip's Token tile to the Tokens tab (D17b-2 decision 22): a new entry, the tab chosen and its tokens read", async () => {
+    it("links the strip's Token tile to the Tokens tab: a new entry, the tab chosen and its tokens read", async () => {
       serveFleet(() => fleetDetail({ summary: populatedSummary(Date.now()) }));
       const { user } = renderPage();
       await heading();
@@ -489,7 +487,7 @@ describe("a fleet's page (/fleet-management/{fleetId})", () => {
     expect(await heading()).toBeInTheDocument();
   });
 
-  it("follows its poll: a rename and an archive made elsewhere show within one (Preflight ruling 17)", async () => {
+  it("follows its poll: a rename and an archive made elsewhere show within one", async () => {
     vi.useFakeTimers({ toFake: ["setInterval", "clearInterval"] });
     Object.defineProperty(document, "visibilityState", { configurable: true, get: () => "visible" });
     let changed = false;
@@ -552,7 +550,7 @@ describe("a fleet's page (/fleet-management/{fleetId})", () => {
     expect(getFleet).toHaveBeenCalledTimes(3);
   });
 
-  // D17b-1's final fix wave (D14b Ruling 46's pattern): the header's dialogs have no Radix trigger.
+  // The header's dialogs have no Radix trigger.
   describe("the focus as a header's dialog closes", () => {
     const focusIsOn = async (element: () => HTMLElement) => waitFor(() => expect(document.activeElement).toBe(element()));
 
@@ -673,7 +671,7 @@ describe("a fleet's page (/fleet-management/{fleetId})", () => {
       await focusIsOn(backLink);
     });
 
-    // Final review B's M2: the Groups and Tokens tabs' onFleetGone is the route's read again too.
+    // The Groups and Tokens tabs' onFleetGone is the route's read again too.
     it.each([
       ["Groups", "groups", "getCollectorGroups", "Assign Default", "Refresh groups"],
       ["Tokens", "tokens", "getEnrollmentTokens", "Reveal the default token", "Refresh tokens"],
@@ -722,7 +720,7 @@ describe("a fleet's page (/fleet-management/{fleetId})", () => {
       await focusIsOn(backLink);
     });
 
-    // The last review: only a page shown, then gone, gives the focus away (`wasShown`); a direct load never moves it.
+    // Only a page shown, then gone, gives the focus away (`wasShown`); a direct load never moves it.
     it('leaves the focus on the body when a direct load answers "Fleet not found"', async () => {
       serveFleet(() => {
         throw GONE();
@@ -826,7 +824,7 @@ describe("a fleet's page (/fleet-management/{fleetId})", () => {
     expect(screen.queryByText("landed on the list")).toBeNull();
   });
 
-  it("holds the label in no attribute with the dialogs closed; with Rename open, only the Name's value (Preflight ruling 15's exception)", async () => {
+  it("holds the label in no attribute with the dialogs closed; with Rename open, only the Name's value", async () => {
     const canary = "canary-label-41d9";
     serveFleet(() => fleetDetail({ label: canary, summary: populatedSummary(Date.now()) }));
     const { user } = renderPage();
@@ -853,9 +851,9 @@ describe("a fleet's page (/fleet-management/{fleetId})", () => {
     expect(name).toHaveAttribute("value", canary);
   });
 
-  // The final review's Minor: the label canary with an archived fleet's
-  // Unarchive open, and after the delete's toast (the root's Toaster, mounted
-  // beside the page), on the list the delete goes to.
+  // The label canary with an archived fleet's Unarchive open, and after the
+  // delete's toast (the root's Toaster, mounted beside the page), on the list
+  // the delete goes to.
   it("holds the label in no attribute with Unarchive open, nor in the delete's toast", async () => {
     const canary = "canary-label-c05e";
     let deleted = false;
@@ -883,8 +881,9 @@ describe("a fleet's page (/fleet-management/{fleetId})", () => {
     expectNoAttributeHolds(canary);
   });
 
-  // The final review's Minor 2 (D17b-1 Preflight ruling 8): the tab's onFleetChanged and onFleetGone are the route's
-  // read.reload, so the strip and the total follow a collector's write at once, not at the next poll.
+  // The tab's onFleetChanged and onFleetGone are the route's read.reload, so
+  // the strip and the total follow a collector's write at once, not at the
+  // next poll.
   describe("the fleet read again after the Collectors tab's writes", () => {
     /** The fleet's API: its collectors, and the summary counting them. */
     function serveCollectorsAndFleet(count: number) {
@@ -960,8 +959,8 @@ describe("a fleet's page (/fleet-management/{fleetId})", () => {
     });
   });
 
-  // Final review B's M2 (D17b-1 Ruling 32's gap): the Groups and Tokens tabs' onFleetChanged is the route's
-  // read.reload, so the strip and the banner follow a write at once, not at the next poll.
+  // The Groups and Tokens tabs' onFleetChanged is the route's read.reload, so
+  // the strip and the banner follow a write at once, not at the next poll.
   describe("the fleet read again after the Groups and Tokens tabs' writes", () => {
     const strip = () => screen.getByText("Version drift").closest("div.grid") as HTMLElement;
     const banner = () => screen.queryByRole("region", { name: TOKEN_BANNER_LABEL });
@@ -983,7 +982,7 @@ describe("a fleet's page (/fleet-management/{fleetId})", () => {
       await heading();
       const revokeButton = await screen.findByRole("button", { name: /^Revoke the rotate token created / });
       expect(within(strip()).getByRole("link", { name: "Never (open the Tokens tab)" })).toBeInTheDocument();
-      // No banner: nothing of it rendered, hidden or not (Ruling 31).
+      // No banner: nothing of it rendered, hidden or not.
       expect(banner()).toBeNull();
       expect(screen.queryByRole("region", { name: TOKEN_BANNER_LABEL, hidden: true })).toBeNull();
       const reads = getFleet.mock.calls.length;
@@ -1020,7 +1019,7 @@ describe("a fleet's page (/fleet-management/{fleetId})", () => {
       await user.click(await screen.findByRole("button", { name: "New group" }));
       const dialog = await screen.findByRole("dialog", { name: "New group" });
       await user.type(within(dialog).getByRole("textbox", { name: "Name" }), "db-hosts");
-      // A new group requires a published version (Ruling 34): a configuration picked selects its newest.
+      // A new group requires a published version: a configuration picked selects its newest.
       await user.click(within(dialog).getByRole("combobox", { name: "Configuration" }));
       await user.click(await screen.findByRole("option", { name: "checkout-otel" }));
       await waitFor(() => expect(within(dialog).getByRole("combobox", { name: "Version" })).toHaveTextContent("@v4"));
@@ -1034,10 +1033,10 @@ describe("a fleet's page (/fleet-management/{fleetId})", () => {
     });
   });
 
-  // A to B and back to A (the review's Nit): in B the fleet isn't found and
-  // the page unmounts the dialogs, which would close them anyway; back in A
-  // the page shows them again, so only the switch's reset keeps the dialog
-  // asked for in A before the switch from reopening.
+  // A to B and back to A: in B the fleet isn't found and the page unmounts
+  // the dialogs, which would close them anyway; back in A the page shows
+  // them again, so only the switch's reset keeps the dialog asked for in A
+  // before the switch from reopening.
   it("closes an open dialog when the active organization changes, reads the fleet in the new one, and doesn't reopen it on the way back", async () => {
     const getFleet = serveFleet((organizationId) => {
       if (organizationId === PERSONAL_ID) throw GONE();
@@ -1095,7 +1094,7 @@ describe("a fleet's page (/fleet-management/{fleetId})", () => {
   });
 });
 
-// D17c-1 decisions 13, 44 and 51; Preflight rulings 19 to 22 and 33: the page owns the install dialog, "install started" and the setup guide.
+// The page owns the install dialog, "install started" and the setup guide.
 describe("installing from a fleet's page", () => {
   const OTHER_FLEET_ID = "0a1b2c3d-4e5f-4061-8728-394a5b6c7d8f";
   const BEARER = "bearer-route-canary-11aa";
@@ -1212,7 +1211,7 @@ describe("installing from a fleet's page", () => {
     await focusIsOn(() => screen.getByRole("button", { name: "Install into gateways" }));
   });
 
-  // D17d-2 (Preflight ruling 28): a Kubernetes-supervisor fleet's install is its Helm install, offered while it is active.
+  // A Kubernetes-supervisor fleet's install is its Helm install, offered while it is active.
   it.each([
     ["an archived server fleet", fleetDetail({ status: "archived" })],
     ["an archived Kubernetes-supervisor fleet", fleetDetail({ type: "kubernetes-supervisor", status: "archived" })],
@@ -1276,7 +1275,7 @@ describe("installing from a fleet's page", () => {
   });
 });
 
-// D17d-2 decisions 19, 23 and 24; Preflight rulings 28 and 29: a Kubernetes-supervisor fleet's Helm install from its page.
+// A Kubernetes-supervisor fleet's Helm install from its page.
 describe("installing a Kubernetes-supervisor fleet's groups with Helm", () => {
   const BEARER = "helmRouteBearerCanary22bb";
   const focusIsOn = async (element: () => HTMLElement) => waitFor(() => expect(document.activeElement).toBe(element()));

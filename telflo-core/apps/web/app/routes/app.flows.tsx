@@ -11,24 +11,22 @@ import { canonicalMeta } from "~/lib/seo.js";
 import { useCurrentUser } from "~/lib/use-current-user.js";
 
 /*
- * `/app/flows`, the signed-in flows gallery (ADR 0018; D12 decisions 2 and
- * 13). Its rules (the D12 Parity Notes):
- * - no FlowsShell (Preflight ruling 18): the signed-in layout wraps the page
- *   in AppLayout, and signs a visitor without a session in first, back to
- *   this page afterwards;
+ * `/app/flows`, the signed-in flows gallery. Its rules:
+ * - no FlowsShell: the signed-in layout wraps the page in AppLayout, and
+ *   signs a visitor without a session in first, back to this page
+ *   afterwards;
  * - the canonical link and og:url follow TELFLO_PUBLIC_WEB_URL, left out
- *   without it (D4 decision 5);
+ *   without it;
  * - a product admin's gallery lists the published flows, as everyone's,
- *   until their "Show hidden flows" switch is on (Ruling 42).
+ *   until their "Show hidden flows" switch is on.
  *
  * The flows are read by the server loader with the visitor's cookie, so the
  * gallery is in the server's render; the API decides which (the hidden ones
- * too for a product admin, `published: false`). The switch is the page's
- * own state, off on every visit, in neither the address nor storage. An
- * expired access token can't be refreshed on
- * the server, so the loader says so and the client loader reads again
- * through the browser client, whose interceptor refreshes (D12 Preflight
- * rulings 5 and 18, the signed-in layout's pattern).
+ * too for a product admin, `published: false`). The switch is the page's own
+ * state, off on every visit, in neither the address nor storage. An expired
+ * access token can't be refreshed on the server, so the loader says so and the
+ * client loader reads again through the browser client, whose interceptor
+ * refreshes (the signed-in layout's pattern).
  */
 
 export type FlowsGalleryData = { status: "loaded"; flows: Flow[] } | { status: "refresh_needed" };
@@ -79,7 +77,7 @@ clientLoader.hydrate = true as const;
 
 /**
  * The product admin's "Show hidden flows" switch, sized to the filter row's
- * controls. Its name is the visible static text it points to (ADR 0024: no
+ * controls. Its name is the visible static text it points to (no
  * flow's text in an attribute).
  */
 function ShowHiddenFlowsSwitch({ checked, onCheckedChange }: { checked: boolean; onCheckedChange: (next: boolean) => void }) {

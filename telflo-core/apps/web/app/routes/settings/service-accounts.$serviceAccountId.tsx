@@ -4,11 +4,11 @@ import { ServiceAccountDetailSection } from "~/components/settings/ServiceAccoun
 import { useCurrentUser } from "~/lib/use-current-user.js";
 
 /**
- * A service account's page (D22 decision 41), by its id only: for admins of
- * the active organization, anyone else sent to `/settings`, replacing the
- * history entry, as the list's route. The section is keyed by the
- * organization and the account (Preflight ruling 20), so an answer read for
- * an account no longer shown lands nowhere.
+ * A service account's page, by its id only: for admins of the active
+ * organization, anyone else sent to `/settings`, replacing the history
+ * entry, as the list's route. The section is keyed by the organization
+ * and the account, so an answer read for an account no longer shown lands
+ * nowhere.
  */
 export default function SettingsServiceAccountRoute() {
   const currentUser = useCurrentUser();

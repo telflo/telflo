@@ -21,80 +21,74 @@ import { useLockedAction } from "~/lib/playground/context.js";
 import { useCurrentUser } from "~/lib/use-current-user.js";
 
 /*
- * `/fleet-management/{fleetId}`, a fleet's page (D17a decision 19; Preflight
- * rulings 9, 14 and 17): one route for every type of fleet (decision 7).
+ * `/fleet-management/{fleetId}`, a fleet's page: one route for every type of
+ * fleet.
  *
  * - The fleet is read through the browser client in an effect (`useFleet`,
  *   as the list), and read again every 15 s while the tab is visible and no
  *   dialog is open, so the header follows a rename or an archive made
- *   elsewhere (ruling 17). Nothing loads while the layout says the terms need
+ *   elsewhere. Nothing loads while the layout says the terms need
  *   accepting.
  * - "Fleet not found" (`FleetNotFound`) for a fleet the API answers 404, a
  *   fleet deleted while the page is open (a poll's 404), and an id that isn't
  *   a canonical UUID, which makes no request at all (it also keeps a decoded
  *   `..` off the API's paths).
- * - The header (`FleetHeader`): the back link, the label, its status and
- *   type, "Created {date}", and Rename, Archive or Unarchive, and Delete, an
- *   archived fleet's included (ruling 14). A rename or an archive reads the
- *   fleet again; a delete goes to the list, replacing the entry so Back
- *   doesn't land on "Fleet not found" (a 404 too, the fleet already gone); a
- *   delete whose outcome is unknown (a 503, its hang guard) reads the
- *   fleet again, "Fleet not found" once it finished. Each dialog's close
- *   gives the focus back to the header's button that opened it (D14b Ruling
- *   46's pattern). When the page turns to "Fleet not found" (a rename's
- *   404, a delete's unknown outcome then gone, a tab's fleet
- *   gone, a poll's 404) the focus lost with its content goes to the back
+ * - The header (`FleetHeader`): the back link, the label, its status and type,
+ *   "Created {date}", and Rename, Archive or Unarchive, and Delete, an
+ *   archived fleet's included. A rename or an archive reads the fleet again; a
+ *   delete goes to the list, replacing the entry so Back doesn't land on
+ *   "Fleet not found" (a 404 too, the fleet already gone); a delete whose
+ *   outcome is unknown (a 503, its hang guard) reads the fleet again, "Fleet
+ *   not found" once it finished. Each dialog's close gives the focus back to
+ *   the header's button that opened it. When the page turns to "Fleet not
+ *   found" (a rename's 404, a delete's unknown outcome then gone, a tab's
+ *   fleet gone, a poll's 404) the focus lost with its content goes to the back
  *   link "Fleets", as does a dialog's close once its button is gone.
  * - The tabs Collectors (the default), Groups and Tokens, the chosen one in
  *   `?tab=` (`parseTab`): choosing Collectors deletes the param, the others
- *   set it, each pushed so Back moves between tabs; an unknown one is
- *   deleted once, replacing the entry. The tabs activate manually (arrow
- *   keys move the focus, Enter or Space chooses): Radix's automatic
- *   activation chose again on the focus a click gives, before the URL had
- *   changed, so one click navigated twice (two layout revalidations). A
- *   server fleet's Collectors tab is its collectors (`CollectorsTab`, D17b-1
- *   decision 21), its Groups tab its groups (`GroupsTab`, D17b-2 decision
- *   22) and its Tokens tab its tokens, their banner and history
- *   (`TokensTab`, D17b-2 decision 22), each mounted only while chosen
- *   (Radix Tabs unmounts the others) and keyed by the fleet, which reads the
- *   fleet again after a write. A Kubernetes-supervisor fleet's (D17d-1
- *   decisions 9, 23 and 26; Preflight ruling 22) are the same Collectors and
- *   Tokens tabs, told the fleet's type, and its own Groups tab
- *   (`KubernetesGroupsTab`: the Agent, the Cluster and the gateway pools).
- * - The stats strip (`StatsStrip`, D17b-1 decision 20; D17d-1 decision 11:
- *   every type's) between the header and the tabs, from the fleet's
- *   summary, which the page's poll keeps current; its Token tile links to
- *   the Tokens tab (D17b-2 decision 22).
- * - Installing (D17c-1 decisions 13 and 44; Preflight rulings 19 to 22 and
- *   33), an active fleet's only: the page owns one install dialog
- *   (`InstallDialog`; a Kubernetes-supervisor fleet's `HelmInstallDialog`,
- *   D17d-2 decisions 19, 23 and 24, Preflight ruling 28: "Install with
- *   Helm" in the header and the empty tab, a row's Install, the Kubernetes
- *   checklist whose Assign chooses the Groups tab) and its focus, "install started" and the setup
- *   guide's state, all reset for another fleet (`FleetPage` is keyed by
- *   the fleet; nothing stored: "install started" lasts the visit), since
- *   Radix unmounts the tabs not chosen. The dialog opens from the header's
- *   "Install collector", the empty Collectors tab's and the checklist's
- *   "Install" (the Default group), and a group's row (its group); "install
- *   started" turns true on a reveal's or a download's success. The setup
- *   checklist (`SetupChecklist`) shows between the strip and the tabs while
- *   the fleet has no collectors, else while "Setup guide" has it open;
- *   hiding it puts the focus on "Setup guide". An assignment made in the
- *   dialog or the checklist has the Groups tab read its groups again, and a
- *   Groups tab's write the checklist. Each opener gets the focus back as
+ *   set it, each pushed so Back moves between tabs; an unknown one is deleted
+ *   once, replacing the entry. The tabs activate manually (arrow keys move the
+ *   focus, Enter or Space chooses): Radix's automatic activation chose again
+ *   on the focus a click gives, before the URL had changed, so one click
+ *   navigated twice (two layout revalidations). A server fleet's Collectors
+ *   tab is its collectors (`CollectorsTab`), its Groups tab its groups
+ *   (`GroupsTab`) and its Tokens tab its tokens, their banner and history
+ *   (`TokensTab`), each mounted only while chosen (Radix Tabs unmounts the
+ *   others) and keyed by the fleet, which reads the fleet again after a write.
+ *   A Kubernetes-supervisor fleet's are the same Collectors and Tokens tabs,
+ *   told the fleet's type, and its own Groups tab (`KubernetesGroupsTab`: the
+ *   Agent, the Cluster and the gateway pools).
+ * - The stats strip (`StatsStrip`, every type's) between the header and the
+ *   tabs, from the fleet's summary, which the page's poll keeps current; its
+ *   Token tile links to the Tokens tab.
+ * - Installing, an active fleet's only: the page owns one install dialog
+ *   (`InstallDialog`; a Kubernetes-supervisor fleet's `HelmInstallDialog`:
+ *   "Install with Helm" in the header and the empty tab, a row's Install, the
+ *   Kubernetes checklist whose Assign chooses the Groups tab) and its focus,
+ *   "install started" and the setup guide's state, all reset for another fleet
+ *   (`FleetPage` is keyed by the fleet; nothing stored: "install started"
+ *   lasts the visit), since Radix unmounts the tabs not chosen. The dialog
+ *   opens from the header's "Install collector", the empty Collectors tab's
+ *   and the checklist's "Install" (the Default group), and a group's row (its
+ *   group); "install started" turns true on a reveal's or a download's
+ *   success. The setup checklist (`SetupChecklist`) shows between the strip
+ *   and the tabs while the fleet has no collectors, else while "Setup guide"
+ *   has it open; hiding it puts the focus on "Setup guide". An assignment made
+ *   in the dialog or the checklist has the Groups tab read its groups again,
+ *   and a Groups tab's write the checklist. Each opener gets the focus back as
  *   the dialog closes, else the header's "Install collector", else the back
  *   link. An organization switch, or the fleet archived, closes the dialog.
  *
- * The title is fixed, never the fleet's label (ruling 9: posthog-js sends
+ * The title is fixed, never the fleet's label (posthog-js sends
  * `document.title` with every page view, and replay records `<head>`,
- * outside `ph-mask`). No attribute and no URL carries the label (decision
- * 29), the open rename dialog's Name `value` excepted (Preflight ruling 15).
- * The layout route supplies the shell, and its terms dialog.
+ * outside `ph-mask`). No attribute and no URL carries the label, the open
+ * rename dialog's Name `value` excepted. The layout route supplies the
+ * shell, and its terms dialog.
  *
- * The playground's fleet page (`playground.fleet-management.$fleetId.tsx`,
- * D31-1 decision 35) is this page on the sample: every install entry (the
- * header's, the empty tab's, the checklist's, a group row's) is locked at
- * `openInstall`, the sign-up prompt opening in place of the dialog.
+ * The playground's fleet page (`playground.fleet-management.$fleetId.tsx`)
+ * is this page on the sample: every install entry (the header's, the empty
+ * tab's, the checklist's, a group row's) is locked at `openInstall`, the
+ * sign-up prompt opening in place of the dialog.
  */
 
 /** The sign-up prompt's words for installing, by the fleet's type, in the playground. */
@@ -127,7 +121,7 @@ export function parseTab(raw: string | null): FleetTab {
   return raw !== null && isFleetTab(raw) ? raw : "collectors";
 }
 
-/** The page's tab, kept in `?tab=` (Preflight ruling 9). */
+/** The page's tab, kept in `?tab=`. */
 function useFleetTab(): [FleetTab, (tab: string) => void] {
   const [searchParams, setSearchParams] = useSearchParams();
   const raw = searchParams.get(TAB_PARAM);
@@ -247,7 +241,7 @@ interface FleetPageProps {
   onDeleted: () => void;
 }
 
-/** One fleet's page, keyed by the fleet: its install state starts afresh for another (Preflight ruling 19). */
+/** One fleet's page, keyed by the fleet: its install state starts afresh for another. */
 function FleetPage({ fleet, read, organizationId, dialogs, backLink, onDeleted }: FleetPageProps) {
   const [tab, chooseTab] = useFleetTab();
   const installable = fleet.status === "active";

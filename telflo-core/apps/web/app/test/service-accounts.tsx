@@ -12,12 +12,11 @@ import { GROUP_ID, MEMBER_ID, signedInMember } from "~/test/configurations.js";
 import { attributesHolding } from "~/test/fleets.js";
 
 /*
- * Settings › Service Accounts' test fixtures (D22 Task 8). A `tf_` token is
- * a secret like a bearer (decision 48): tests build it at run time (never a
- * literal: Preflight ruling 32) and never print it (Rulings 99 and 102): no
- * `getByText(token)`, no matcher whose failure prints a structure holding
- * it, no element, node or container that could hold one handed to a
- * matcher that prints it (`toBeNull`, `toBeInTheDocument`,
+ * Settings › Service Accounts' test fixtures. A `tf_` token is a secret
+ * like a bearer: tests build it at run time (never a literal) and never
+ * print it: no `getByText(token)`, no matcher whose failure prints a
+ * structure holding it, no element, node or container that could hold one
+ * handed to a matcher that prints it (`toBeNull`, `toBeInTheDocument`,
  * `toHaveTextContent`, `toBe(element)`…: booleans with fixed labels
  * instead, `waitUntilGone`, `showsText`), and, while one is on the page,
  * queries whose failure would print the DOM are quieted (`quietQueries`).
@@ -30,7 +29,7 @@ export const TOKEN_ID = "5b000000-0000-4000-8000-000000000001";
 export const SECOND_TOKEN_ID = "5b000000-0000-4000-8000-000000000002";
 export const ADMIN_EMAIL = "admin@example.com";
 
-/** A token's first three characters, kept apart so no committed text matches decision 48's redaction pattern. */
+/** A token's first three characters, kept apart so no committed text matches the redaction pattern. */
 export const TOKEN_START = "tf_";
 
 /** The signed-in member in the group organization, an admin unless `role` says. */
@@ -66,7 +65,7 @@ export function apiToken(over: Partial<ApiToken> = {}): ApiToken {
   };
 }
 
-/** A token as the API mints one (decision 7): `tf_` and the base64url of 32 random bytes, made now. */
+/** A token as the API mints one: `tf_` and the base64url of 32 random bytes, made now. */
 export function buildApiToken(): string {
   const bytes = crypto.getRandomValues(new Uint8Array(32));
   const base64url = btoa(String.fromCharCode(...bytes))
@@ -84,21 +83,20 @@ export function holdsText(value: unknown, text: string): boolean {
 /**
  * Waits until `find()` answers null (a dialog closed, a row gone), failing
  * with `label` alone: a matcher handed the element would print it, and it
- * may hold a token (Ruling 102).
+ * may hold a token.
  */
 export async function waitUntilGone(find: () => Element | null, label: string): Promise<void> {
   await waitFor(() => expect(find() === null, label).toBe(true));
 }
 
-/** Whether an element holding exactly `text` is on the page: for a boolean with a fixed label (Ruling 102). */
+/** Whether an element holding exactly `text` is on the page: for a boolean with a fixed label. */
 export function showsText(text: string, root: Element = document.body): boolean {
   return [...root.querySelectorAll("*")].some((element) => element.children.length === 0 && element.textContent === text);
 }
 
 /**
  * Quiets Testing Library's failed queries: their error says what was looked
- * for and leaves out the DOM, which may hold a token (Ruling 99). Returns
- * the undo.
+ * for and leaves out the DOM, which may hold a token. Returns the undo.
  */
 export function quietQueries(): () => void {
   const before = getConfig().getElementError;
@@ -113,10 +111,10 @@ export function quietQueries(): () => void {
 }
 
 /**
- * The token-safe twin of `expectTextOnlyInsideNoCapture` (Preflight ruling
- * 25): fails, with fixed words and booleans only, unless `token` is shown in
- * a text node inside `ph-no-capture` and nowhere else: no text node outside
- * one, not split across nodes outside, no attribute, not the title.
+ * The token-safe twin of `expectTextOnlyInsideNoCapture`: fails, with fixed
+ * words and booleans only, unless `token` is shown in a text node inside
+ * `ph-no-capture` and nowhere else: no text node outside one, not split
+ * across nodes outside, no attribute, not the title.
  */
 export function expectTokenOnlyInsideNoCapture(token: string, root: Element = document.body): void {
   let inside = 0;

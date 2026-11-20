@@ -4,15 +4,14 @@ import { ResetPasswordForm } from "~/components/auth/ResetPasswordForm.js";
 import type { ThemeHandle } from "~/lib/theme.js";
 
 // An auth screen: root's Layout renders the theme this browser was last
-// told, the remembered one or the `telflo_theme` cookie's (D21 decision 22).
+// told, the remembered one or the `telflo_theme` cookie's.
 export const handle = { theme: "remembered" } satisfies ThemeHandle;
 
 /*
- * No loader: the token is checked only when the form is submitted (D3
- * decision 9). The token is in the URL's fragment, which never reaches a
- * server (Ruling 14), and is gone from the address bar once the form has
- * mounted (D4 Ruling 14). The page still sends no Referer, as a backstop, and
- * stays out of search indexes.
+ * No loader: the token is checked only when the form is submitted. The token
+ * is in the URL's fragment, which never reaches a server, and is gone from the
+ * address bar once the form has mounted. The page still sends no Referer, as a
+ * backstop, and stays out of search indexes.
  */
 export function meta(_args: Route.MetaArgs) {
   return [

@@ -2,11 +2,10 @@
  * Test helper utilities for building pipeline data structures.
  * Constructs valid OTelNode[], OTelEdge[], and Pipeline[] for use in tests.
  *
- * Pipelines and their groups take D9a's opaque ids (`pipeline_<n>`,
- * `group_<n>`, decision 7); component nodes keep the fixture's readable ids,
- * which are test data, not anything a person wrote. The configurations it
- * builds are also written as YAML in `lib/graph/corpus/`, for the round-trip
- * invariant.
+ * Pipelines and their groups take opaque ids (`pipeline_<n>`, `group_<n>`);
+ * component nodes keep the fixture's readable ids, which are test data, not
+ * anything a person wrote. The configurations it builds are also written as
+ * YAML in `lib/graph/corpus/`, for the round-trip invariant.
  */
 import { findPaletteEntry, paletteDefaultConfig } from "~/lib/graph/palette.js";
 import { groupIdForPipeline } from "~/lib/graph/node-builders.js";

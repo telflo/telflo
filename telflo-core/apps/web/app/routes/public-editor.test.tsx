@@ -1,13 +1,11 @@
 /**
- * `/public-editor` (D31-1 decisions 7, 15, 16, 18, 25, 29, 30 and 38; Q210;
- * Preflight rulings 10, 14 and 18): the blank public editor, its own
- * configuration and draft opened under the sample's organization with no
- * API, the public toolbar (the name as text, the fixed pin, Save staging the
- * edit and opening "Sign in to save", Publish locked), no Testing tab, the
- * Welcome dialog until done (Start from Scratch, Use a Template, the tour
- * with no version-history step), Cmd/Ctrl+S, no unload guard, the
- * anonymous validate as the only request, everything forgotten on leaving,
- * and the phone page.
+ * `/public-editor`: the blank public editor, its own configuration and draft
+ * opened under the sample's organization with no API, the public toolbar
+ * (the name as text, the fixed pin, Save staging the edit and opening "Sign
+ * in to save", Publish locked), no Testing tab, the Welcome dialog until
+ * done (Start from Scratch, Use a Template, the tour with no version-history
+ * step), Cmd/Ctrl+S, no unload guard, the anonymous validate as the only
+ * request, everything forgotten on leaving, and the phone page.
  *
  * Monaco is stubbed (as routes/playground.editor.test.tsx's).
  */
@@ -137,7 +135,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  // The anonymous validate is the only request the page makes (decision 22).
+  // The anonymous validate is the only request the page makes.
   for (const spy of spies) if ((spy as unknown) !== validate) expect(spy, spy.getMockName()).not.toHaveBeenCalled();
   useUserStore.getState().clear();
   document.body.className = "";
@@ -163,12 +161,12 @@ describe("the blank public editor", () => {
     expect(editor.text).toBe("");
     expect(screen.queryByRole("button", { name: "Rename configuration" })).toBeNull();
     expect(screen.getByRole("combobox", { name: `Collector version v${NEW_CONFIGURATION_PIN}` })).toBeInTheDocument();
-    // No canvas pill: only the playground editor has one (Q209 parity, Ruling 304).
+    // No canvas pill: only the playground editor has one.
     expect(screen.queryByText("Build and validate freely — Save to keep your work.")).toBeNull();
     expect(screen.queryByRole("link", { name: "Create a free account" })).toBeNull();
     for (const tab of ["Configuration", "YAML"]) expect(screen.getAllByRole("tab", { name: tab }).length).toBeGreaterThan(0);
     expect(screen.queryByRole("tab", { name: "Testing" })).toBeNull();
-    // No playground shell; masked as the signed-in shell (decision 13).
+    // No playground shell; masked as the signed-in shell.
     expect(screen.queryByText("You're in the playground")).toBeNull();
     expect(document.body).toHaveClass("tf-app", "ph-mask");
   });
@@ -184,7 +182,7 @@ describe("the blank public editor", () => {
     expect(request.yaml === PUBLIC_EDITOR_EXAMPLE_YAML).toBe(true);
   });
 
-  it("locks a pick of another collector version, as the playground's (Q210)", async () => {
+  it("locks a pick of another collector version, as the playground's", async () => {
     const user = userEvent.setup();
     renderEditor();
     await screen.findByRole("heading", { level: 1, name: "Untitled configuration" });
