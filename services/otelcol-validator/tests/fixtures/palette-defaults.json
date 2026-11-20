@@ -1,5 +1,5 @@
 {
-  "description": "What a drop of each palette entry writes, per offered collector version, in the smallest configuration around it (D13b decision 9). Generated: never edit by hand.",
+  "description": "What a drop of each palette entry writes, per offered collector version, in the smallest configuration around it. Generated: never edit by hand.",
   "script": "npm run fixture:palette-defaults --workspace @telflo/web",
   "cases": [
     {

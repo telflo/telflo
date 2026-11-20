@@ -1,5 +1,5 @@
 {
-  "$comment": "The parts of each collector schema upstream doesn't describe, written by hand (D13c decisions 8 and 9) in the generated schema's own form: the service section, the definitions it refers to, and the components that take no settings (each closed: an empty map, null or a ${…} reference).",
+  "$comment": "The parts of each collector schema upstream doesn't describe, written by hand in the generated schema's own form: the service section, the definitions it refers to, and the components that take no settings (each closed: an empty map, null or a ${…} reference).",
   "service": {
     "description": "The service: the extensions the collector starts, its pipelines, and its own telemetry.",
     "type": ["object", "string", "null"],
@@ -30,7 +30,7 @@
       },
       "telemetry": {
         "description": "The collector's own telemetry: its logs, metrics and traces.",
-        "$comment": "Open: the collector's telemetry settings aren't checked (D13c decision 8)."
+        "$comment": "Open: the collector's telemetry settings aren't checked."
       }
     },
     "additionalProperties": false

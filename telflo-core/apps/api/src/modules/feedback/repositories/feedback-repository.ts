@@ -2,18 +2,18 @@ import { sql, type Kysely, type Transaction } from "kysely";
 import type { Database } from "@telflo/db";
 
 /*
- * "Contact us"'s two reads and writes (D29 decisions 22 and 26).
+ * "Contact us"'s two reads and writes.
  *
  * - The insert, in the sender's own request and database context: the API's
- *   role holds INSERT only on user_feedback (decision 21), so the id comes
- *   from the API (`select uuidv7()`) and the insert never uses RETURNING,
- *   which would need SELECT (Preflight rulings 8 and 13).
+ *   role holds INSERT only on user_feedback, so the id comes from the API
+ *   (`select uuidv7()`) and the insert never uses RETURNING, which would
+ *   need SELECT.
  * - The recipients: every live, verified human who is a product admin, read
- *   in the sender's request, which isn't a product admin's. Decision 12's
- *   first named exception to the audited path: a plain query on `users` (a
- *   global table, no row-level security), written here and nowhere else (a
- *   test pins the files naming the flag's column). Their emails go only to
- *   the mailer: never a log line, an error or an audit row.
+ *   in the sender's request, which isn't a product admin's. An exception to
+ *   the audited path: a plain query on `users` (a global table, no
+ *   row-level security), written here and nowhere else (a test pins the
+ *   files naming the flag's column). Their emails go only to the mailer:
+ *   never a log line, an error or an audit row.
  */
 
 export interface NewFeedback {
@@ -56,7 +56,7 @@ export function createFeedbackRepository(transaction: Transaction<Database>): IF
   };
 }
 
-/** Every live, verified human product admin, by id (decision 26): who is emailed about a new item. */
+/** Every live, verified human product admin, by id: who is emailed about a new item. */
 export async function listFeedbackRecipients(db: Kysely<Database>): Promise<FeedbackRecipient[]> {
   const rows = await db
     .selectFrom("users")

@@ -24,9 +24,9 @@ describe("configuration version repository", () => {
   /** The tables' owner: fixtures, truncation and reading rows back. */
   let ownerDb: Kysely<Database>;
   let databases: TestDatabases;
-  /** The catalogue's default distribution and version (D13a), which a version is created at. */
+  /** The catalogue's default distribution and version, which a version is created at. */
   let pin: { collectorDistribution: string; collectorVersion: string };
-  /** The pin as a summary reads it: the default is never deprecated (D13a decision 4). */
+  /** The pin as a summary reads it: the default is never deprecated. */
   let summaryPin: typeof pin & { collectorVersionDeprecated: boolean; collectorVersionDeprecatedNote: string | null };
 
   beforeAll(async () => {
@@ -48,7 +48,7 @@ describe("configuration version repository", () => {
   /** A clock's reading, with milliseconds, as the API's clock gives them. */
   const at = (iso: string) => new Date(iso);
 
-  /** A small graph in the stored shape (D9a decision 6): anything JSON at this layer. */
+  /** A small graph in the stored shape: anything JSON at this layer. */
   const GRAPH = {
     nodes: [
       {
@@ -118,9 +118,9 @@ describe("configuration version repository", () => {
 
   /**
    * Fails with 55P03 while another transaction holds a conflicting lock on
-   * the row: the deterministic way to see a lock held (D2a Ruling 6). `for
-   * update` conflicts with every row lock, a foreign key check's `for key
-   * share` included.
+   * the row: the deterministic way to see a lock held. `for update`
+   * conflicts with every row lock, a foreign key check's `for key share`
+   * included.
    */
   const probeLock = (table: "configurations" | "users", id: string) =>
     ownerDb
@@ -145,8 +145,8 @@ describe("configuration version repository", () => {
         }),
       );
 
-      // The graph is the table's '[]': a new version is laid out on open (D9a decision 6).
-      // Unnamed when no label is given (D10 decision 14), with its creator's email.
+      // The graph is the table's '[]': a new version is laid out on open.
+      // Unnamed when no label is given, with its creator's email.
       expect(version).toEqual({
         id: expect.any(String),
         configurationId: configuration.id,
@@ -176,7 +176,7 @@ describe("configuration version repository", () => {
         nodes: [],
         edges: [],
         pipelines: [],
-        // A new version is a draft (D11b decision 10).
+        // A new version is a draft.
         published_at: null,
         published_by_user_id: null,
         publication_id: null,
@@ -185,7 +185,7 @@ describe("configuration version repository", () => {
       });
     });
 
-    it("stores the label given, as the starter's version 1 is named (D10 decision 14)", async () => {
+    it("stores the label given, as the starter's version 1 is named", async () => {
       const { memberId, organizationId, configuration } = await organizationWithNeighbour();
 
       const version = await inOrganization(memberId, organizationId, (versions) =>
@@ -223,7 +223,7 @@ describe("configuration version repository", () => {
       expect(opened?.updatedAt.toISOString()).toBe("2030-06-15T12:34:56.789Z");
     });
 
-    it("refuses a version of another organization's configuration (42501): the scope names the context's organization, where no such configuration is visible, so row-level security refuses it before the composite foreign key would (D11b Preflight ruling 15)", async () => {
+    it("refuses a version of another organization's configuration (42501): the scope names the context's organization, where no such configuration is visible, so row-level security refuses it before the composite foreign key would", async () => {
       const { memberId, organizationId, elsewhere } = await organizationWithNeighbour();
       await expect(
         inOrganization(memberId, organizationId, (versions) =>
@@ -370,7 +370,7 @@ describe("configuration version repository", () => {
     });
   });
 
-  describe("findSummary (D10 Ruling 41)", () => {
+  describe("findSummary", () => {
     it("finds the version's summary when it belongs to that configuration: its label and creator, no content", async () => {
       const { memberId, memberEmail, organizationId, configuration } = await organizationWithNeighbour();
       const version = await addConfigurationVersion(ownerDb, {
@@ -620,7 +620,7 @@ describe("configuration version repository", () => {
     });
   });
 
-  describe("the creator's email (D10 Preflight ruling 13)", () => {
+  describe("the creator's email", () => {
     it("keeps a soft-deleted creator's email, and is null for a hard-deleted creator or none, on every read and write", async () => {
       const { memberId, organizationId, configuration } = await organizationWithNeighbour();
       // Members of the group, so deleting their accounts leaves the configuration.
@@ -672,7 +672,7 @@ describe("configuration version repository", () => {
     });
   });
 
-  describe("the publisher (D11b decision 10; D10 Preflight ruling 13's rule)", () => {
+  describe("the publisher", () => {
     it("reads a published version's time and publisher on every read, a soft-deleted publisher keeping their email, a hard-deleted one none, and a draft neither", async () => {
       const { memberId, organizationId, configuration } = await organizationWithNeighbour();
       const soft = await createUserWithOrganization(ownerDb);
@@ -743,7 +743,7 @@ describe("configuration version repository", () => {
       });
     });
 
-    it("never copies a publish column into the next version (Preflight ruling 15)", async () => {
+    it("never copies a publish column into the next version", async () => {
       const { memberId, organizationId, configuration } = await organizationWithNeighbour();
       await addConfigurationVersion(ownerDb, {
         configurationId: configuration.id,
@@ -773,7 +773,7 @@ describe("configuration version repository", () => {
     });
   });
 
-  describe("the viewer (D11b decision 1)", () => {
+  describe("the viewer", () => {
     /**
      * A colleague's draft (v1) and their published configuration (v1
      * published, v2 a draft), beside the member's own.
@@ -998,7 +998,7 @@ describe("configuration version repository", () => {
       expect(summaries.map(({ id, createdBy }) => ({ id, createdBy }))).toEqual([{ id: version.id, createdBy: null }]);
     });
 
-    it("lists only the published versions, highest number first, when publishedOnly (D17b-1 decision 31)", async () => {
+    it("lists only the published versions, highest number first, when publishedOnly", async () => {
       const { memberId, organizationId, configuration } = await organizationWithNeighbour();
       const publishedAt = at("2030-01-05T00:00:00.000Z");
       const first = await addConfigurationVersion(ownerDb, { configurationId: configuration.id, organizationId, publishedAt });
@@ -1037,7 +1037,7 @@ describe("configuration version repository", () => {
     });
   });
 
-  describe("findIdByNumber and listFacts (D25 Preflight ruling 6)", () => {
+  describe("findIdByNumber and listFacts", () => {
     /** Another member of the organization, with a draft of their own (versions 1 and 2). */
     const othersDraft = async (organizationId: string) => {
       const other = await createUserWithOrganization(ownerDb);
@@ -1118,7 +1118,7 @@ describe("configuration version repository", () => {
     });
   });
 
-  describe("createNext (D10 decision 5)", () => {
+  describe("createNext", () => {
     /** createNext's input for `configurationId`, by `createdByUserId`: unnamed and now unless given. */
     const nextInput = (
       configurationId: string,
@@ -1168,7 +1168,7 @@ describe("configuration version repository", () => {
         created_by_user_id: memberId,
         created_at: now,
         updated_at: now,
-        // A new version is a draft (D11b decision 10).
+        // A new version is a draft.
         published_at: null,
         published_by_user_id: null,
         publication_id: null,
@@ -1251,7 +1251,7 @@ describe("configuration version repository", () => {
     });
   });
 
-  describe("rename (D10 decision 6)", () => {
+  describe("rename", () => {
     it("sets only the label, leaving updated_at and the content, and returns the summary", async () => {
       const { memberId, memberEmail, organizationId, configuration } = await organizationWithNeighbour();
       const created = at("2030-01-01T00:00:00.000Z");
@@ -1336,7 +1336,7 @@ describe("configuration version repository", () => {
     });
   });
 
-  describe("recordPublish (D11b decisions 9 and 10, Preflight ruling 8)", () => {
+  describe("recordPublish", () => {
     /** A draft version 1 of the member's configuration, saved earlier. */
     const withDraft = async () => {
       const fixture = await organizationWithNeighbour();
@@ -1360,7 +1360,7 @@ describe("configuration version repository", () => {
       publicationId,
       yamlContent,
       label,
-      // The fixture's pin: the catalogue's default (D13a Preflight ruling 12).
+      // The fixture's pin: the catalogue's default.
       collectorVersion: pin.collectorVersion,
     });
 
@@ -1426,7 +1426,7 @@ describe("configuration version repository", () => {
       expect(await versionRow(versionElsewhere.id)).toEqual(versionElsewhere);
     });
 
-    it("writes nothing on another member's draft (D11b decision 1)", async () => {
+    it("writes nothing on another member's draft", async () => {
       const fixture = await organizationWithNeighbour();
       const colleague = await createUserWithOrganization(ownerDb);
       await addMembership(ownerDb, { userId: colleague.user.id, organizationId: fixture.organizationId });
@@ -1451,7 +1451,7 @@ describe("configuration version repository", () => {
       expect(await versionRow(theirV1.id)).toEqual(theirV1);
     });
 
-    it("writes nothing for a version pinned to another collector version than the one given (D13a Preflight ruling 3)", async () => {
+    it("writes nothing for a version pinned to another collector version than the one given", async () => {
       const { memberId, organizationId, configuration, version } = await withDraft();
       // Another version the catalogue offers than the fixture's pin.
       const { version: other } = await ownerDb
@@ -1483,7 +1483,7 @@ describe("configuration version repository", () => {
       ).toMatchObject({ id: version.id, collectorVersion: pin.collectorVersion, publishedAt: at("2030-01-01T00:00:00.456Z") });
     });
 
-    it("writes nothing for a version whose label isn't the one given (Ruling 29): renamed, named, or unnamed since", async () => {
+    it("writes nothing for a version whose label isn't the one given: renamed, named, or unnamed since", async () => {
       const { memberId, organizationId, configuration, version } = await withDraft();
       const unnamed = await addConfigurationVersion(ownerDb, {
         configurationId: configuration.id,
@@ -1518,7 +1518,7 @@ describe("configuration version repository", () => {
     });
   });
 
-  describe("isPublicationRecorded (D11b Ruling 29)", () => {
+  describe("isPublicationRecorded", () => {
     it("answers whether a version of the organization records the id: live or deleted configuration, and nothing else", async () => {
       const { memberId, organizationId, configuration, elsewhere } = await organizationWithNeighbour();
       const recordedId = randomUUID();
@@ -1551,7 +1551,7 @@ describe("configuration version repository", () => {
     });
   });
 
-  describe("the collector pin (D13a decisions 4 and 8)", () => {
+  describe("the collector pin", () => {
     it("save writes a collector version given, and leaves the stored one when none is", async () => {
       const { memberId, organizationId, configuration } = await organizationWithNeighbour();
       const version = await addConfigurationVersion(ownerDb, { configurationId: configuration.id, organizationId });

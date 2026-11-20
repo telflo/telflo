@@ -60,17 +60,17 @@ import {
 } from "./service.js";
 import { createValidationService } from "./validation.js";
 
-/** What the configurations' services are built from, once, in buildServer (D25 decision 15, Preflight ruling 4). */
+/** What the configurations' services are built from, once, in buildServer. */
 export interface ConfigurationServicesDependencies extends ServerDependencies {
   now: () => Date;
-  /** buildServer's runner: a delete's clean-up runs on it (D11b decision 12). */
+  /** buildServer's runner: a delete's clean-up runs on it. */
   runAfterResponse: RunAfterResponse;
 }
 
 /**
  * The configurations' services, one instance each, shared by the browser
- * routes here and the public routes (D25 decision 15): configurations,
- * D11b's publishing and D13b's validation, with one validation limiter.
+ * routes here and the public routes: configurations, publishing and
+ * validation, with one validation limiter.
  */
 export interface ConfigurationServices {
   service: ReturnType<typeof createConfigurationService>;
@@ -84,42 +84,40 @@ export interface ConfigurationRoutesDependencies extends ConfigurationServicesDe
 }
 
 /**
- * The list's path. Its query holds the search text, usually a
- * configuration's name, so the request log drops it (Preflight ruling 4):
- * `http/request-log.ts` names this path too.
+ * The list's path. Its query holds the search text, usually a configuration's
+ * name, so the request log drops it: `http/request-log.ts` names this path
+ * too.
  */
 const CONFIGURATIONS_LIST_ROUTE = "/api/v1/organizations/:organizationId/configurations";
 
 /**
- * A version's save allows 5 MiB, five times the server's 1 MiB (D9a decision
- * 6): 262,144 characters of YAML, up to 1.5 MiB once JSON escapes them
- * (D8 decision 7), and the graph's three columns, at most 1 MiB of JSON each
- * (about 4.4 MiB in all). A version's create carries the same content, and
- * gets the same (D10 decision 4), and so does a configuration's create,
- * which may carry a flow's (D12 Preflight ruling 7): its name, description
+ * A version's save allows 5 MiB, five times the server's 1 MiB: 262,144
+ * characters of YAML, up to 1.5 MiB once JSON escapes them, and the graph's
+ * three columns, at most 1 MiB of JSON each (about 4.4 MiB in all). A
+ * version's create carries the same content, and gets the same, and so does
+ * a configuration's create, which may carry a flow's: its name, description
  * and slug add under 1 KiB. The gateway allows the same on the three paths
  * (`docker/gateway/default.conf`).
  */
 const VERSION_CONTENT_BODY_LIMIT = 5 * 1024 * 1024;
 
 /**
- * A validation's body (D13b decision 12): the text, 262,144 characters, up
- * to 1.5 MiB once JSON escapes them, as a save's (D8 decision 7), with
- * nothing else of size. The gateway allows the same on its path.
+ * A validation's body: the text, 262,144 characters, up to 1.5 MiB once JSON
+ * escapes them, as a save's, with nothing else of size. The gateway allows
+ * the same on its path.
  */
 const VALIDATION_BODY_LIMIT = 2 * 1024 * 1024;
 
-// The four routes with these limits (the create, a version's save and
-// create, and a validation) check the session in `onRequest`, before
-// Fastify reads the body (D36-1 decision 42, Preflight ruling 9): a request
-// without a valid session is 401 whatever its body, never 413 (only the
-// server-wide CSRF guard runs before it). The Terms check stays in
-// `preHandler`.
+// The four routes with these limits (the create, a version's save and create,
+// and a validation) check the session in `onRequest`, before Fastify reads
+// the body: a request without a valid session is 401 whatever its body, never
+// 413 (only the server-wide CSRF guard runs before it). The Terms check stays
+// in `preHandler`.
 
 /**
  * The responses that carry a configuration's YAML, which can hold secrets,
- * tell every cache to keep no copy (D8; D10 decision 4;
- * docs/conventions/security.md): both reads, the save and the create.
+ * tell every cache to keep no copy (docs/conventions/security.md): both reads,
+ * the save and the create.
  */
 const NO_STORE = "no-store";
 
@@ -133,27 +131,26 @@ const errorResponses = {
   404: ErrorResponseSchema,
 };
 
-/** A write to a version, which a published one refuses (D11b decision 4): the save and the rename. */
+/** A write to a version, which a published one refuses: the save and the rename. */
 const versionWriteErrorResponses = { ...errorResponses, 409: ErrorResponseSchema };
 
-/** A publish's refusals: a version's write's, and 503 when the opamp-server can't take it (D11b decision 11). */
+/** A publish's refusals: a version's write's, and 503 when the opamp-server can't take it. */
 const publishErrorResponses = { ...versionWriteErrorResponses, 503: ErrorResponseSchema };
 
 /**
  * A validation's refusals: a read's, 429 for the person's limits and 503 when
- * the validator can't check (D13b decision 12) or the organization's variables
- * can't be read (D20 decision 27).
+ * the validator can't check or the organization's variables can't be read.
  */
 const validationErrorResponses = { ...errorResponses, 429: ErrorResponseSchema, 503: ErrorResponseSchema };
 
 /**
- * A delete's refusals (D16b decision 19, Preflight ruling 6): a read's, 409
- * when a fleet uses a published version, 429 for the person's fleet limit
- * and 503 when the opamp-server can't say.
+ * A delete's refusals: a read's, 409 when a fleet uses a published
+ * version, 429 for the person's fleet limit and 503 when the opamp-server
+ * can't say.
  */
 const deleteErrorResponses = { ...errorResponses, 409: ErrorResponseSchema, 429: ErrorResponseSchema, 503: ErrorResponseSchema };
 
-/** Any string: a path naming anything but the active organization is the same 404 (D5 decision 7), not a 400. */
+/** Any string: a path naming anything but the active organization is the same 404, not a 400. */
 const OrganizationParamsSchema = z.object({ organizationId: z.string() });
 
 /** Any string for the configuration too: the service answers one that isn't a UUID with 404 configuration_not_found. */
@@ -161,8 +158,8 @@ const ConfigurationParamsSchema = z.object({ organizationId: z.string(), configu
 
 /**
  * And for the version: a malformed one is 404 configuration_not_found for the
- * save (D8 decision 4), and configuration_version_not_found for the read,
- * the rename (D10 decision 4) and the publish (D11b Preflight ruling 15).
+ * save, and configuration_version_not_found for the read, the rename and
+ * the publish.
  */
 const ConfigurationVersionParamsSchema = z.object({
   organizationId: z.string(),
@@ -188,7 +185,7 @@ function toResponseBody(configuration: Configuration): ConfigurationResponseBody
 
 /**
  * The YAML and the graph go only into a response body, never into a log line
- * or an audit row (D8 Global constraints; D9a decision 6).
+ * or an audit row.
  */
 function toVersionResponseBody(version: ConfigurationVersion): ConfigurationVersionResponseBody {
   return {
@@ -202,8 +199,8 @@ function toVersionResponseBody(version: ConfigurationVersion): ConfigurationVers
 }
 
 /**
- * A version as the picker lists it (D10 decision 4): no content. The label
- * and the creator's email go only into a response body (ADR 0024).
+ * A version as the picker lists it: no content. The label and the
+ * creator's email go only into a response body.
  */
 function toVersionSummaryResponseBody(version: ConfigurationVersionSummary): ConfigurationVersionSummaryResponseBody {
   return {
@@ -215,11 +212,10 @@ function toVersionSummaryResponseBody(version: ConfigurationVersionSummary): Con
     createdAt: version.createdAt.toISOString(),
     updatedAt: version.updatedAt.toISOString(),
     publishedAt: version.publishedAt === null ? null : version.publishedAt.toISOString(),
-    // The publisher's email, as the creator's, goes only into a response body (ADR 0024).
+    // The publisher's email, as the creator's, goes only into a response body.
     publishedBy:
       version.publishedBy === null ? null : { userId: version.publishedBy.userId, email: version.publishedBy.email },
-    // The pin and whether the catalogue deprecated it since (D13a decisions
-    // 4 and 8). The distribution is the configuration's, which carries it.
+    // The pin and whether the catalogue deprecated it since. The distribution is the configuration's, which carries it.
     collectorVersion: version.collectorVersion,
     collectorVersionDeprecated: version.collectorVersionDeprecated,
     collectorVersionDeprecatedNote: version.collectorVersionDeprecatedNote,
@@ -227,9 +223,9 @@ function toVersionSummaryResponseBody(version: ConfigurationVersionSummary): Con
 }
 
 /**
- * A version as the versions route lists it (D17b-1 decision 31, the owner's
- * Q17): its id, number, label and published date only, never a member's
- * email, its times or its collector version.
+ * A version as the versions route lists it: its id, number, label and
+ * published date only, never a member's email, its times or its collector
+ * version.
  */
 function toVersionListItemBody(version: ConfigurationVersionSummary): ConfigurationVersionListItemBody {
   return {
@@ -240,7 +236,7 @@ function toVersionListItemBody(version: ConfigurationVersionSummary): Configurat
   };
 }
 
-/** Both reads' answer (D10 decision 4): the configuration, the version, and every version's summary. */
+/** Both reads' answer: the configuration, the version, and every version's summary. */
 function toWithVersionResponseBody({
   configuration,
   version,
@@ -255,8 +251,8 @@ function toWithVersionResponseBody({
 
 /**
  * A create's body as the service takes it: the content's four fields as one
- * (the contract lets them come only together, D12 Preflight ruling 7), each
- * other field only when given.
+ * (the contract lets them come only together), each other field only when
+ * given.
  */
 function createInputOf(body: z.infer<typeof CreateConfigurationRequestSchema>): CreateConfigurationInput {
   const { yamlContent, nodes, edges, pipelines, collectorDistribution, collectorVersion, sourceFlowSlug } = body;
@@ -274,9 +270,9 @@ function createInputOf(body: z.infer<typeof CreateConfigurationRequestSchema>): 
 }
 
 /**
- * A content write's graph within the contract that the table's backstop
- * still refuses (D9a Preflight ruling 3): the request's fault, so 400, and
- * the database's error, whose detail holds the row, goes nowhere.
+ * A content write's graph within the contract that the table's backstop still
+ * refuses: the request's fault, so 400, and the database's error, whose
+ * detail holds the row, goes nowhere.
  */
 async function refusingStoredGraphViolations<Result>(write: () => Promise<Result>): Promise<Result> {
   try {
@@ -288,9 +284,9 @@ async function refusingStoredGraphViolations<Result>(write: () => Promise<Result
 }
 
 /**
- * D16b decision 19, Preflight rulings 6 and 12: a delete's question to the
- * opamp-server, one read and one in-flight slot of the person's fleet
- * limits in the organization, the slot given back whatever the call does.
+ * A delete's question to the opamp-server, one read and one in-flight
+ * slot of the person's fleet limits in the organization, the slot given
+ * back whatever the call does.
  */
 function createFleetUsage(opampServer: OpampServerClient, limiter: FleetLimiter): ConfigurationServiceDependencies["fleetUsage"] {
   return async (context, configurationId) => {
@@ -305,10 +301,9 @@ function createFleetUsage(opampServer: OpampServerClient, limiter: FleetLimiter)
 }
 
 /**
- * The configurations' services (D25 Preflight ruling 4), moved verbatim from
- * the routes: built once in buildServer and shared by the browser and the
- * public routes. Each transaction carries the actor's context (a session's
- * or a token's) as its database context.
+ * The configurations' services, built once in buildServer and shared by the
+ * browser and the public routes. Each transaction carries the actor's context
+ * (a session's or a token's) as its database context.
  */
 export function createConfigurationServices(
   deps: ConfigurationServicesDependencies,
@@ -348,27 +343,25 @@ export function createConfigurationServices(
     variables: opampOrganizationVariables(opampServer),
     limiter: rateLimiters.validationsPerUser,
     log,
-    // Global, so read outside any organization's transaction (D25 Ruling 168: validateText's distribution check).
+    // Global, so read outside any organization's transaction (validateText's distribution check).
     catalogue: createCollectorCatalogueRepository(db),
   });
   return { service, publishing, validation };
 }
 
 /**
- * D7 decision 5's four endpoints, D8 decision 4's read of one configuration
- * and save of its version, D10 decision 4's read of one version, create,
- * rename and selection, D11b decision 11's publish, D13b decision 12's
- * validation, and D17b-1 decision 31's list of a configuration's versions.
- * Each needs a session and the current terms (decision 10), and
- * none is rate limited (D2c decision 7) but two: the validation, which the
- * validation service limits per person after its read (D13b decision 12,
- * Ruling 37), and a published configuration's delete, whose fleet usage
- * check spends the person's fleet limits after its read (D16b decision 19,
- * Preflight rulings 6 and 12). Each transaction carries the request's context as its
- * database context, so row-level security on `configurations`,
- * `configuration_versions` and `configuration_version_selections` admits
- * only the active organization's rows, and of those only the caller's
- * drafts and the published ones (D11b decision 1). The repositories are the caller's view by the same rule.
+ * The configurations' endpoints: the list and the create, a configuration's
+ * read, change and delete, a version's save, read, create, rename,
+ * selection, publish and validation, and the list of a configuration's
+ * versions. Each needs a session and the current terms, and none is rate
+ * limited but two: the validation, which the validation service limits per
+ * person after its read, and a published configuration's delete, whose
+ * fleet usage check spends the person's fleet limits after its read. Each
+ * transaction carries the request's context as its database context, so
+ * row-level security on `configurations`, `configuration_versions` and
+ * `configuration_version_selections` admits only the active organization's
+ * rows, and of those only the caller's drafts and the published ones. The
+ * repositories are the caller's view by the same rule.
  *
  * The validator/serializer compilers are server-wide and set once in
  * buildServer, not here.
@@ -401,11 +394,10 @@ export function registerConfigurationRoutes(server: FastifyInstance, deps: Confi
     },
   );
 
-  // D7 decision 5's create, which D12 decision 12 lets carry a flow's
-  // content, collector version and slug (Preflight ruling 7): the version
-  // routes' body limit, and the save's answer to a graph the table's
-  // backstop refuses. The answer is the configuration alone, without the
-  // slug (Preflight ruling 9) or the content.
+  // The create, which may carry a flow's content, collector version and
+  // slug: the version routes' body limit, and the save's answer to a graph
+  // the table's backstop refuses. The answer is the configuration alone,
+  // without the slug or the content.
   typed.post(
     CONFIGURATIONS_LIST_ROUTE,
     {
@@ -508,10 +500,9 @@ export function registerConfigurationRoutes(server: FastifyInstance, deps: Confi
     },
   );
 
-  // D17b-1 decisions 7 and 31 (the owner's Q17): the pickers' read of a
-  // configuration's versions, with the configuration's read's visibility and
-  // refusals: each version's id, number, label and published date only. No
-  // YAML or layout, so cacheable, as the list.
+  // The pickers' read of a configuration's versions, with the configuration's
+  // read's visibility and refusals: each version's id, number, label and
+  // published date only. No YAML or layout, so cacheable, as the list.
   typed.get(
     "/api/v1/organizations/:organizationId/configurations/:configurationId/versions",
     {
@@ -573,16 +564,15 @@ export function registerConfigurationRoutes(server: FastifyInstance, deps: Confi
     },
   );
 
-  // D11b decision 11 (Ruling 23's path). The body is optional (Ruling 30):
-  // none at all (no content type, as D25's public API may send it; Fastify
-  // hands the validator null, so a JSON `null` is the same), or the
-  // contract's JSON, whose `expectedUpdatedAt` the editor sends so a save
-  // its tab didn't see is refused. A body that isn't the contract's is 400
-  // as every other route's: invalid JSON, an unknown field, a timestamp
-  // that isn't a summary's, or a JSON content type with an empty body
-  // (Fastify's own refusal). The answer is the version's summary, now
-  // published, as a rename's is. The YAML goes only to the opamp-server, so
-  // nothing here needs `no-store`.
+  // The publish. The body is optional: none at all (no content type, as the
+  // public API may send it; Fastify hands the validator null, so a JSON
+  // `null` is the same), or the contract's JSON, whose `expectedUpdatedAt`
+  // the editor sends so a save its tab didn't see is refused. A body that
+  // isn't the contract's is 400 as every other route's: invalid JSON, an
+  // unknown field, a timestamp that isn't a summary's, or a JSON content
+  // type with an empty body (Fastify's own refusal). The answer is the
+  // version's summary, now published, as a rename's is. The YAML goes only
+  // to the opamp-server, so nothing here needs `no-store`.
   typed.post(
     "/api/v1/organizations/:organizationId/configurations/:configurationId/versions/:versionId/publish",
     {
@@ -607,11 +597,10 @@ export function registerConfigurationRoutes(server: FastifyInstance, deps: Confi
     },
   );
 
-  // D13b decision 12 (Preflight ruling 17's path): the text the editor holds,
-  // checked with the configuration's distribution at the version's saved
-  // pin, or the tab's unsaved pick. Nothing is stored. The answer carries
-  // the collector's messages, which can echo the text's values, so no cache
-  // keeps a copy.
+  // The validation: the text the editor holds, checked with the
+  // configuration's distribution at the version's saved pin, or the tab's
+  // unsaved pick. Nothing is stored. The answer carries the collector's
+  // messages, which can echo the text's values, so no cache keeps a copy.
   typed.post(
     "/api/v1/organizations/:organizationId/configurations/:configurationId/versions/:versionId/validation",
     {

@@ -17,16 +17,16 @@ import { UNCALLED_FILE_STORE } from "../../testing/file-store.js";
 import { UNCALLED_TESTING } from "../../testing/otelcol-testing.js";
 import { hashPassword } from "../identity/password.js";
 
-// The opamp-server every server needs (D11b decision 8): this file's own fake.
+// The opamp-server every server needs: this file's own fake.
 const opamp = useFakeOpampServer();
 
 const csrfHeaders = { [CSRF_HEADER_NAME]: CSRF_HEADER_VALUE };
 const PASSWORD = "a-sufficiently-long-password";
 
-/** Creating, migrating and dropping a database waits for checkpoints (D7 Ruling 15). */
+/** Creating, migrating and dropping a database waits for checkpoints. */
 const THROWAWAY_DATABASE_TIMEOUT = 30_000;
 
-/** The committed catalogue's distribution (D13a decision 1). */
+/** The committed catalogue's distribution. */
 const CONTRIB = "otelcol-contrib";
 
 /** Two Contrib versions this file deprecates, with their notes: fixtures, never the committed catalogue's. */
@@ -37,7 +37,7 @@ const ALSO_RETIRED = "0.149.0";
 /**
  * A fixture distribution, before Contrib in the catalogue's order and not the
  * default: its versions sort differently by number than as text, one is
- * deprecated, and they support a fixture palette (decision 6).
+ * deprecated, and they support a fixture palette.
  */
 const FIXTURE = "fixture-build";
 const FIXTURE_DEFAULT = "0.10.0";
@@ -49,7 +49,7 @@ const FIXTURE_SUPPORTED = {
   extensions: ["health_check"],
 };
 
-/** The fixture distribution's renames (D13b decision 6), in an order the test checks is kept. */
+/** The fixture distribution's renames, in an order the test checks is kept. */
 const FIXTURE_RENAMES = [
   { kind: "exporter", name: "debug_out", deprecatedName: "debug", since: "0.11.0" },
   { kind: "receiver", name: "otlp_in", deprecatedName: "otlp", since: "0.9.0" },
@@ -109,14 +109,12 @@ function compareVersionsDesc(a: string, b: string): number {
 }
 
 /*
- * The catalogue endpoint (D13a decision 11, Ruling 26), and every rule that
- * needs a catalogue the committed one isn't: a deprecated version
- * (decision 4, Preflight rulings 13 and 16), a second distribution
- * (Preflight rulings 14 and 18), a distribution that offers nothing. On a
- * throwaway database the test prepares itself (migrated and synced, as
- * telflo_platform_test is), then adds the fixtures as the tables' owner, since
- * telflo_platform_test's catalogue must stay the committed one. It is dropped
- * afterwards, whatever happens.
+ * The catalogue endpoint, and every rule that needs a catalogue the committed
+ * one isn't: a deprecated version, a second distribution, a distribution that
+ * offers nothing. On a throwaway database the test prepares itself (migrated
+ * and synced, as telflo_platform_test is), then adds the fixtures as the
+ * tables' owner, since telflo_platform_test's catalogue must stay the
+ * committed one. It is dropped afterwards, whatever happens.
  */
 describe("the collector catalogue, with fixture distributions and deprecated versions", () => {
   let databases: TestDatabases;
@@ -309,8 +307,8 @@ describe("the collector catalogue, with fixture distributions and deprecated ver
     expect(response.json()).toEqual(body);
   };
 
-  describe("GET /api/v1/collector-distributions (decision 11, Ruling 26)", () => {
-    it("answers every distribution in the catalogue's order, each with the versions it offers, newest first by number, deprecated ones left out, and its renames as stored (D13b decision 6)", async () => {
+  describe("GET /api/v1/collector-distributions", () => {
+    it("answers every distribution in the catalogue's order, each with the versions it offers, newest first by number, deprecated ones left out, and its renames as stored", async () => {
       const { access } = await signedIn();
       const contribOffered = await ownerDb
         .selectFrom("collector_versions")
@@ -420,7 +418,7 @@ describe("the collector catalogue, with fixture distributions and deprecated ver
     });
   });
 
-  describe("creating a configuration for a distribution (Preflight ruling 14)", () => {
+  describe("creating a configuration for a distribution", () => {
     it("builds it for the distribution named, its version 1 at that distribution's default from the tables, not the catalogue's default", async () => {
       const { access, organizationId } = await signedIn();
 
@@ -446,7 +444,7 @@ describe("the collector catalogue, with fixture distributions and deprecated ver
     });
   });
 
-  describe("a pin the catalogue deprecated since (decision 4, Preflight rulings 13, 15 and 16)", () => {
+  describe("a pin the catalogue deprecated since", () => {
     it("is read as deprecated, with the catalogue's note, in the version and in its summary", async () => {
       const { access, organizationId } = await signedIn();
       const { configuration, version } = await createdWithVersion(access, organizationId);
@@ -539,8 +537,8 @@ describe("the collector catalogue, with fixture distributions and deprecated ver
   });
 
   // The distribution a new version is stamped with: the server stamps it,
-  // from the configuration it holds locked (Preflight ruling 18).
-  describe("a new version's distribution (Preflight ruling 18)", () => {
+  // from the configuration it holds locked.
+  describe("a new version's distribution", () => {
     it("stamps the new version with the configuration's locked distribution, not the catalogue's default", async () => {
       const { access, organizationId } = await signedIn();
       const { configuration, version } = await createdWithVersion(access, organizationId, FIXTURE);

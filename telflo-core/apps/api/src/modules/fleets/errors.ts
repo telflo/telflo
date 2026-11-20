@@ -22,11 +22,11 @@ import { AppError } from "../../errors.js";
 import { rateLimited } from "../../http/rate-limits.js";
 
 /*
- * The fleet routes' own refusals (D16b decisions 13, 14 and 16, Preflight
- * rulings 5, 8, 9 and 19). The organization's (`organization_not_found`) are the
- * organization module's, so every route answers alike. Each message is the
- * platform's own words: never the opamp-server's text, and never a value (a
- * label, a name, an id) of the request's.
+ * The fleet routes' own refusals. The organization's
+ * (`organization_not_found`) are the organization module's, so every route
+ * answers alike. Each message is the platform's own words: never the
+ * opamp-server's text, and never a value (a label, a name, an id) of the
+ * request's.
  */
 
 /**
@@ -80,8 +80,8 @@ export function collectorNameTaken(): AppError {
 
 /**
  * An assignment or a pin naming a version of a configuration the person can
- * see that isn't published (decision 14): only a published version can be
- * served. Refused before any call.
+ * see that isn't published: only a published version can be served. Refused
+ * before any call.
  */
 export function configurationVersionNotPublished(): AppError {
   return new AppError(
@@ -97,7 +97,7 @@ export function configurationVersionNotPublished(): AppError {
  * the contract's own 400s give (fastify-type-provider-zod's: each zod issue
  * as {keyword, instancePath, schemaPath, params: {issue}, message}, the
  * instance path "/" and the segments joined by "/"), so a client reads both
- * alike (Ruling 31). The message is the platform's own words, never a value
+ * alike. The message is the platform's own words, never a value
  * of the request's.
  */
 export interface InvalidRequestDetail {
@@ -121,10 +121,10 @@ export function fieldDetail(path: string | readonly (string | number)[], message
 }
 
 /*
- * A group's annotations against its fleet's type (D17d-1 decisions 17 and
- * 18; Preflight ruling 13): the platform reads the fleet first, then
- * refuses, 400 `invalid_request`, its detail at the field's path. The
- * messages are fixed words: a name, a namespace or a path never reaches one.
+ * A group's annotations against its fleet's type: the platform reads the fleet
+ * first, then refuses, 400 `invalid_request`, its detail at the field's path.
+ * The messages are fixed words: a name, a namespace or a path never reaches
+ * one.
  */
 
 /** A server fleet's group carrying the annotations' `telflo.kubernetes`. */
@@ -134,7 +134,7 @@ export function kubernetesOnServerFleet(): AppError {
   ]);
 }
 
-/** A Kubernetes fleet's group carrying the annotations' `telflo.dockerMounts` (D17c-1's handoff: the mounts are a `docker run`'s). */
+/** A Kubernetes fleet's group carrying the annotations' `telflo.dockerMounts` (the mounts are a `docker run`'s). */
 export function dockerMountsOnKubernetesFleet(): AppError {
   return new AppError("invalid_request", "Only a server fleet's groups take Docker mounts.", 400, [
     fieldDetail(["annotations", "telflo", "dockerMounts"], "Only a server fleet's groups take it."),
@@ -150,9 +150,9 @@ export function kubernetesGroupNameRefused(problem: string): AppError {
 
 /**
  * A Kubernetes fleet's group whose write carries annotations without its
- * settings (Ruling 48): a create, or an update that sends `annotations`
- * (null, `telflo: {}` or other keys only), would leave the group without the
- * settings D17d-2's Helm values read.
+ * settings: a create, or an update that sends `annotations` (null,
+ * `telflo: {}` or other keys only), would leave the group without the
+ * settings the Helm values read.
  */
 export function kubernetesSettingsRequired(): AppError {
   return new AppError("invalid_request", "A Kubernetes fleet's group keeps its Kubernetes settings in its annotations.", 400, [
@@ -171,7 +171,7 @@ export function kubernetesRoleRefused(role: KubernetesRole): AppError {
   ]);
 }
 
-/** Any rename of a Kubernetes fleet's group (D17d-1 decision 18): D17d-2's Helm release is named after it. */
+/** Any rename of a Kubernetes fleet's group: its Helm release is named after it. */
 export function collectorGroupNameFixed(): AppError {
   return new AppError("collector_group_name_fixed" satisfies FleetErrorCode, COLLECTOR_GROUP_NAME_FIXED_MESSAGE, 409);
 }
@@ -203,9 +203,8 @@ export function enrollmentTokenExpired(): AppError {
 }
 
 /**
- * A new default token asked for while the fleet holds a valid one (D17c-1
- * decisions 29 and 45): another member issued one first, or the default
- * token was never revoked.
+ * A new default token asked for while the fleet holds a valid one: another
+ * member issued one first, or the default token was never revoked.
  */
 export function enrollmentTokenDefaultExists(): AppError {
   return new AppError(
@@ -216,9 +215,9 @@ export function enrollmentTokenDefaultExists(): AppError {
 }
 
 /**
- * Preflight ruling 8's one 503 (ruling 19's words): the opamp-server down,
- * slow, oversized, refusing the secret, or answering what the API doesn't
- * document. A write's can follow a change it made.
+ * The one 503: the opamp-server down, slow, oversized, refusing the
+ * secret, or answering what the API doesn't document. A write's can
+ * follow a change it made.
  */
 export function fleetsUnavailable(): AppError {
   return new AppError("fleets_unavailable" satisfies FleetErrorCode, FLEETS_UNAVAILABLE_MESSAGE, 503);
@@ -257,17 +256,17 @@ export function graceAfterExpiry(): AppError {
 }
 
 // ---------------------------------------------------------------------------
-// Installing (D17c-1 decisions 36, 38, 39 and 47; Preflight ruling 14).
+// Installing.
 
-/** A Kubernetes-supervisor fleet's group: its install (Helm) is D17d's. */
+/** A Kubernetes-supervisor fleet's group: it installs with Helm instead. */
 export function fleetTypeNotInstallable(): AppError {
   return new AppError("fleet_type_not_installable" satisfies FleetErrorCode, FLEET_TYPE_NOT_INSTALLABLE_MESSAGE, 409);
 }
 
 /**
- * The public install's platform that doesn't suit the fleet's type (D25
- * decision 37): 422, the browser's code in the API's words (docker and
- * linux are a server fleet's, kubernetes a Kubernetes-supervisor fleet's).
+ * The public install's platform that doesn't suit the fleet's type: 422, the
+ * browser's code in the API's words (docker and linux are a server fleet's,
+ * kubernetes a Kubernetes-supervisor fleet's).
  */
 export function installPlatformNotSuited(): AppError {
   return new AppError("fleet_type_not_installable" satisfies FleetErrorCode, INSTALL_PLATFORM_NOT_SUITED_MESSAGE, 422);
@@ -275,23 +274,22 @@ export function installPlatformNotSuited(): AppError {
 
 /**
  * The public install named no group, and the fleet holds no single one to
- * install in (D25 decision 37): a Kubernetes fleet with several groups (or a
- * server fleet without its Default group, which the opamp-server never
- * answers). The ids in `details.groupIds`; the words name no group.
+ * install in: a Kubernetes fleet with several groups (or a server fleet
+ * without its Default group, which the opamp-server never answers). The
+ * ids in `details.groupIds`; the words name no group.
  */
 export function collectorGroupRequired(groupIds: readonly string[]): AppError {
   return new AppError("collector_group_required" satisfies FleetErrorCode, COLLECTOR_GROUP_REQUIRED_MESSAGE, 422, { groupIds: [...groupIds] });
 }
 
-/** A server fleet's group asked for a Helm install (D17d-2 Preflight ruling 2): the other direction's words. */
+/** A server fleet's group asked for a Helm install: the other direction's words. */
 export function fleetTypeNotHelmInstallable(): AppError {
   return new AppError("fleet_type_not_installable" satisfies FleetErrorCode, FLEET_TYPE_NOT_HELM_INSTALLABLE_MESSAGE, 409);
 }
 
 /**
- * A Kubernetes group whose settings refuse its Helm install (D17d-2
- * decision 15, Preflight ruling 3): unreadable, a stored role that isn't
- * the group's, a Cluster or a gateway without any.
+ * A Kubernetes group whose settings refuse its Helm install: unreadable, a
+ * stored role that isn't the group's, a Cluster or a gateway without any.
  */
 export function collectorGroupSettingsUnreadable(): AppError {
   return new AppError(
@@ -301,7 +299,7 @@ export function collectorGroupSettingsUnreadable(): AppError {
   );
 }
 
-/** A group with no published version: its collector version picks what to install (Q28). */
+/** A group with no published version: its collector version picks what to install. */
 export function collectorGroupUnassigned(): AppError {
   return new AppError("collector_group_unassigned" satisfies FleetErrorCode, COLLECTOR_GROUP_UNASSIGNED_MESSAGE, 409);
 }
@@ -316,17 +314,17 @@ export function collectorVersionNotOffered(version: string): AppError {
   return new AppError("collector_version_not_offered" satisfies FleetErrorCode, collectorVersionNotOfferedMessage(version), 409);
 }
 
-/** A published version built for a distribution the image and the bundles don't hold (Ruling 47). */
+/** A published version built for a distribution the image and the bundles don't hold. */
 export function collectorDistributionNotInstallable(distribution: string): AppError {
   return new AppError("collector_version_not_offered" satisfies FleetErrorCode, collectorDistributionNotInstallableMessage(distribution), 409);
 }
 
-/** A version the catalogue has no binaries of for the bundle's arch (Ruling 47): refused before rendering. */
+/** A version the catalogue has no binaries of for the bundle's arch: refused before rendering. */
 export function collectorBinariesMissing(version: string, arch: string): AppError {
   return new AppError("collector_version_not_offered" satisfies FleetErrorCode, collectorBinariesMissingMessage(version, arch), 409);
 }
 
-/** The install templates can't be read (decision 36): the operator's to fix. */
+/** The install templates can't be read: the operator's to fix. */
 export function installUnavailable(): AppError {
   return new AppError("install_unavailable" satisfies FleetErrorCode, INSTALL_UNAVAILABLE_MESSAGE, 503);
 }
@@ -342,7 +340,7 @@ export function envVarsNotOffered(indexes: readonly number[]): AppError {
 }
 
 // ---------------------------------------------------------------------------
-// Quick-deploy links (D17c-2 decisions 22 and 25, Preflight ruling 15).
+// Quick-deploy links.
 
 function quickDeployLinkError(code: QuickDeployLinkErrorCode, statusCode: number): AppError {
   return new AppError(code, QUICK_DEPLOY_LINK_ERROR_MESSAGES[code], statusCode);
@@ -353,34 +351,33 @@ export function quickDeployLinkNotFound(): AppError {
   return quickDeployLinkError("quick_deploy_link_not_found", 404);
 }
 
-/** An extend of a revoked link: a revoked link is never re-enabled (decision 5). */
+/** An extend of a revoked link: a revoked link is never re-enabled. */
 export function quickDeployLinkRevoked(): AppError {
   return quickDeployLinkError("quick_deploy_link_revoked", 409);
 }
 
 /**
  * A create while the fleet holds the most active links, or any extend while the fleet's OTHER active links are at
- * the cap (normally an expired link's: an active link of a full fleet has one fewer others) (decision 22, Rulings 36
- * and 40).
+ * the cap (normally an expired link's: an active link of a full fleet has one fewer others).
  */
 export function quickDeployLinkLimitReached(): AppError {
   return quickDeployLinkError("quick_deploy_link_limit_reached", 409);
 }
 
-/** A create while the fleet has no valid default token: the command carries its bearer (decision 10). */
+/** A create while the fleet has no valid default token: the command carries its bearer. */
 export function enrollmentTokenDefaultMissing(): AppError {
   return quickDeployLinkError("enrollment_token_default_missing", 409);
 }
 
-/** A link's create while the organization's "Public install links" switch is off (D17d-2 decision 20). */
+/** A link's create while the organization's "Public install links" switch is off. */
 export function publicInstallLinksDisabled(): AppError {
   return quickDeployLinkError("public_install_links_disabled", 409);
 }
 
 /**
- * A Helm link's variables the chart sets itself (HELM_CHART_ENV_NAMES;
- * D17d-2 Ruling 41): its `env` beats `collectorEnv`'s, so a typed value
- * would be ignored. Each at its index, never the name.
+ * A Helm link's variables the chart sets itself (HELM_CHART_ENV_NAMES): its
+ * `env` beats `collectorEnv`'s, so a typed value would be ignored. Each at its
+ * index, never the name.
  */
 export function helmChartEnvNamesRefused(indexes: readonly number[]): AppError {
   return new AppError(
@@ -391,7 +388,7 @@ export function helmChartEnvNamesRefused(indexes: readonly number[]): AppError {
   );
 }
 
-/** The person's fleet limits (Preflight ruling 12): the generic 429 with its Retry-After. */
+/** The person's fleet limits: the generic 429 with its Retry-After. */
 export function fleetsRateLimited(retryAfterSeconds: number): AppError {
   return rateLimited(retryAfterSeconds);
 }

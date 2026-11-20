@@ -6,21 +6,21 @@ import { isPublished, visibleTo, type ConfigurationViewerContext } from "./confi
 
 /*
  * A configuration version and its published copy in the opamp-server, both
- * ways (D16b decision 14, Preflight ruling 5): the fleet routes take a
- * configuration version from the browser and send the opamp-server its
- * `publication_id`, and answer each publication id the opamp-server names
- * with the platform's configuration and version beside it.
+ * ways: the fleet routes take a configuration version from the browser and
+ * send the opamp-server its `publication_id`, and answer each publication
+ * id the opamp-server names with the platform's configuration and version
+ * beside it.
  *
  * The configuration repository's pattern: through the organization scope
  * (row-level security on both tables behind it), each version joined to its
  * configuration on the composite foreign key's two columns, a deleted
  * configuration skipped, and only what the viewer can see (`visibleTo`: their
- * own drafts and every published configuration). With no viewer (D17c-2's
- * public download, Preflight ruling 9: `userId` null, the database context's
- * user empty), only what needs none: a published configuration's versions
- * (`isPublished`; `visibleTo('')` would raise 22P02). Another organization's
- * version, another member's draft and a deleted configuration's version are
- * as absent as an unknown one.
+ * own drafts and every published configuration). With no viewer (the public
+ * download: `userId` null, the database context's user empty), only what
+ * needs none: a published configuration's versions (`isPublished`;
+ * `visibleTo('')` would raise 22P02). Another organization's version, another
+ * member's draft and a deleted configuration's version are as absent as an
+ * unknown one.
  *
  * A configuration's name and a version's label are the user's text (ADR
  * 0024): nothing here logs them.
@@ -31,9 +31,9 @@ export interface ResolvedVersion {
   publicationId: string | null;
 }
 
-/** A published version as an install reads it (D17c-1 decisions 33 and 38): its YAML and the collector it is built for. */
+/** A published version as an install reads it: its YAML and the collector it is built for. */
 export interface InstallableVersion {
-  /** Configuration text (ADR 0024): never logged. */
+  /** Configuration text: never logged. */
   yaml: string;
   collectorDistribution: string;
   collectorVersion: string;
@@ -48,19 +48,19 @@ export interface IPublishedVersionRepository {
   resolve(versionId: string): Promise<ResolvedVersion | undefined>;
   /**
    * The configuration and version each of `publicationIds` records (with
-   * the collector the version is built for, D17c-1 decision 33), keyed by
-   * the publication id in lower case; an id no live version of the
-   * organization's records (an orphan, a deleted configuration's, another
-   * organization's) has no entry. One query (on
-   * `configuration_versions.publication_id`, `= any($1)`, served by
-   * uq_configuration_versions_publication_id); none for no ids.
+   * the collector the version is built for), keyed by the publication id
+   * in lower case; an id no live version of the organization's records
+   * (an orphan, a deleted configuration's, another organization's) has no
+   * entry. One query (on `configuration_versions.publication_id`,
+   * `= any($1)`, served by uq_configuration_versions_publication_id);
+   * none for no ids.
    */
   describe(publicationIds: readonly string[]): Promise<Map<string, PublishedVersion>>;
   /**
-   * The YAML and the collector of the version `publicationId` records
-   * (Preflight ruling 8), under the same filter: a live configuration's
-   * version the viewer can see. Undefined for a deleted configuration's
-   * version, an orphan, or another organization's.
+   * The YAML and the collector of the version `publicationId` records, under
+   * the same filter: a live configuration's version the viewer can see.
+   * Undefined for a deleted configuration's version, an orphan, or another
+   * organization's.
    */
   findForInstall(publicationId: string): Promise<InstallableVersion | undefined>;
 }

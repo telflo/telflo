@@ -3,9 +3,9 @@ import type { ConfigurationPagePosition } from "./repositories/configuration-rep
 import { invalidCursor } from "./errors.js";
 
 /*
- * The list's opaque cursor (D7 decision 6): the base64url of JSON holding
- * the last item's `updatedAt`, as ISO 8601, and its `id`. The next page is
- * the rows strictly after that pair.
+ * The list's opaque cursor: the base64url of JSON holding the last item's
+ * `updatedAt`, as ISO 8601, and its `id`. The next page is the rows
+ * strictly after that pair.
  *
  * The timestamp round-trips exactly because the API writes every
  * configuration timestamp from its clock, in whole milliseconds (decision

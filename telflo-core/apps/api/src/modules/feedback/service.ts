@@ -9,8 +9,8 @@ import { buildFeedbackAdminEmail, feedbackReviewUrl } from "./emails.js";
 import { createFeedbackRepository, listFeedbackRecipients, type FeedbackRecipient } from "./repositories/feedback-repository.js";
 
 /*
- * "Contact us" (D29 decisions 6, 15, 32 and 35): a signed-in person's
- * message to Telflo, in the organization they act in.
+ * "Contact us": a signed-in person's message to Telflo, in the organization
+ * they act in.
  *
  * The item and its `feedback.created` audit row (the person's organization,
  * the item's id, no text) are written in one transaction in the person's
@@ -18,10 +18,10 @@ import { createFeedbackRepository, listFeedbackRecipients, type FeedbackRecipien
  * separately: the sender's email and a link to the page, never the text.
  *
  * A failed send is logged with the item's and the recipient's ids and fixed
- * words only, never the error (Preflight ruling 11: an SMTP or SendGrid
- * error can quote the recipient's address); one admin's failure doesn't
- * stop the others. The recipients' read is caught the same way, so nothing
- * reaches the after-response runner's catch-all, which logs `err`.
+ * words only, never the error (an SMTP or SendGrid error can quote the
+ * recipient's address); one admin's failure doesn't stop the others. The
+ * recipients' read is caught the same way, so nothing reaches the
+ * after-response runner's catch-all, which logs `err`.
  */
 
 /** The sender: their session's context, their email (the admins' email names it), and where the request came from. */

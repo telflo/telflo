@@ -43,8 +43,8 @@ describe("configuration version selection repository", () => {
   /**
    * A member acting in a live group organization (they keep their personal
    * one) with a colleague, the member's configuration with versions 1
-   * (published, so the colleague sees it too: D11b decision 1) and 2, and
-   * another organization with a configuration and its version 1.
+   * (published, so the colleague sees it too) and 2, and another
+   * organization with a configuration and its version 1.
    */
   const organizationWithNeighbour = async () => {
     const member = await createUserWithOrganization(ownerDb);
@@ -268,7 +268,7 @@ describe("configuration version selection repository", () => {
       expect(await selectionRows()).toEqual([theirs]);
     });
 
-    it("returns false and writes nothing for another member's draft, and finds none of the author's selection of it (D11b decision 1)", async () => {
+    it("returns false and writes nothing for another member's draft, and finds none of the author's selection of it", async () => {
       const { memberId, colleagueId, organizationId } = await organizationWithNeighbour();
       const draft = await addConfiguration(ownerDb, { organizationId, created_by_user_id: memberId });
       const draftVersion = await addConfigurationVersion(ownerDb, { configurationId: draft.id, organizationId });

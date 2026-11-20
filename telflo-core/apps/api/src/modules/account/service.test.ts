@@ -8,11 +8,10 @@ import type { User } from "../identity/repositories/user-repository.js";
 import { createAccountService, type AccountServiceDependencies, type AccountTransaction } from "./service.js";
 
 /*
- * The password change's order and refusals (D21 decision 35, Preflight
- * rulings 10 and 11) on hand-built fakes that write every call to one log.
- * The races themselves run on Postgres (password.integration.test.ts,
- * Preflight ruling 20); here, the order the service makes its calls in, and
- * what each refusal leaves unwritten.
+ * The password change's order and refusals on hand-built fakes that write
+ * every call to one log. The races themselves run on Postgres
+ * (password.integration.test.ts); here, the order the service makes its
+ * calls in, and what each refusal leaves unwritten.
  */
 
 const CURRENT_PASSWORD = "the-current-sufficiently-long-password";
@@ -144,7 +143,7 @@ async function refusal(promise: Promise<unknown>): Promise<AppError> {
   return error as AppError;
 }
 
-describe("createAccountService().changePassword (D21 decision 35)", () => {
+describe("createAccountService().changePassword", () => {
   it("reads, verifies and hashes outside, then locks the user first, rereads, sets, consumes and audits in one transaction, and only then queues the email", async () => {
     const harness = buildHarness();
 

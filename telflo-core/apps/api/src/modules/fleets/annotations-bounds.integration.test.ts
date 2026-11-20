@@ -11,19 +11,17 @@ import type { Database } from "@telflo/db";
 import { openTestDatabases, type TestDatabases } from "@telflo/db/testing";
 
 /*
- * D17c-1 Preflight ruling 6: a group's annotations are bounded in the
- * contract by both the opamp-server's canonical bytes and Postgres's jsonb
- * text, which its table's check counts (octet_length(annotations::text) <=
- * 16384, migrations/00011_collector_group_annotations.sql in the opamp-server's
- * repository),
- * so annotations the opamp-server's table would refuse are the person's 400
- * before any call, not its 400 answered 503. Here the contract's count of
- * the second is held equal to Postgres's own, on the same major version the
- * opamp-server runs, and the bound is checked on the whole object a mounts
- * write sends (the "telflo" key merged into the object read). Since D17d-1
- * (decision 2) a Kubernetes group's volumes are in its annotations too, so
- * this bound is theirs (volumes-bounds.integration.test.ts, D16b Ruling 23's,
- * went with the opamp-server's volumes column).
+ * A group's annotations are bounded in the contract by both the opamp-server's
+ * canonical bytes and Postgres's jsonb text, which its table's check counts
+ * (octet_length(annotations::text) <= 16384,
+ * migrations/00011_collector_group_annotations.sql in the opamp-server's
+ * repository), so annotations the opamp-server's table would refuse are the
+ * person's 400 before any call, not its 400 answered 503. Here the contract's
+ * count of the second is held equal to Postgres's own, on the same major
+ * version the opamp-server runs, and the bound is checked on the whole object
+ * a mounts write sends (the "telflo" key merged into the object read). A
+ * Kubernetes group's volumes are in its annotations too, so this bound is
+ * theirs.
  */
 /** An object holding `depth - 1` more containers, arrays and objects in turn, with a key and an item beside each. */
 function nestedAnnotations(depth: number): Record<string, unknown> {
@@ -100,7 +98,7 @@ describe("a group's annotations as Postgres writes them back", () => {
     expect(CollectorGroupAnnotationsSchema.safeParse(keys(533)).success).toBe(false);
   });
 
-  it("counts U+2028 and U+2029 as Postgres does (three bytes) and as the opamp-server's canonical form does (six): Ruling 45", async () => {
+  it("counts U+2028 and U+2029 as Postgres does (three bytes) and as the opamp-server's canonical form does (six)", async () => {
     // The opamp-server checks this same pair, so the platform takes nothing it refuses.
     const separators = "\u2028\u2029".repeat(500);
     const atCanonical = { z: separators + "v".repeat(16_384 - 8 - 6_000) };
@@ -133,7 +131,7 @@ describe("a group's annotations as Postgres writes them back", () => {
     const kubernetes = KUBERNETES as Parameters<typeof annotationsWithKubernetes>[1];
     const merged = annotationsWithKubernetes(theirs, kubernetes);
     expect(await postgresBytes(merged)).toBeGreaterThan(COLLECTOR_GROUP_ANNOTATIONS_MAXIMUM_BYTES);
-    // Past the bound the walk stops (Ruling 37 n5): some count above it.
+    // Past the bound the walk stops: some count above it.
     expect(annotationsTextBytes(merged)?.jsonb).toBeGreaterThan(COLLECTOR_GROUP_ANNOTATIONS_MAXIMUM_BYTES);
     expect(CollectorGroupAnnotationsSchema.safeParse(merged).success).toBe(false);
     const fewer = annotationsWithKubernetes(theirs, { ...KUBERNETES, volumes: KUBERNETES.volumes.slice(0, 2) } as Parameters<typeof annotationsWithKubernetes>[1]);

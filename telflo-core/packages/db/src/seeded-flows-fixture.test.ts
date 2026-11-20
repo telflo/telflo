@@ -15,10 +15,9 @@ import { loadFlowsMigration } from "./testing.js";
 
 /*
  * The seeded flows' fixture the validator's binary tests and the web's
- * schema tests read (D12 Preflight ruling 20): the committed file is what
- * seeded-flows-fixture.ts makes of migration 1700000000026's `seededFlows`
- * today. This test reads it and never writes it (but for a temporary
- * directory's copy).
+ * schema tests read: the committed file is what seeded-flows-fixture.ts
+ * makes of migration 1700000000026's `seededFlows` today. This test reads
+ * it and never writes it (but for a temporary directory's copy).
  */
 
 function committedFixture(): string {

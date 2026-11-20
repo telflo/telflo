@@ -24,9 +24,9 @@ import type { PaletteComponent } from "~/lib/graph/types.js";
 
 /*
  * The palette-defaults fixture the validator's binary tests run every
- * offered collector over (D13b decision 9, Preflight ruling 22): the
- * committed file is what scripts/palette-defaults.ts produces from the
- * palette and the catalogue today. This test reads it and never writes it.
+ * offered collector over: the committed file is what
+ * scripts/palette-defaults.ts produces from the palette and the catalogue
+ * today. This test reads it and never writes it.
  */
 
 const REPOSITORY_ROOT = new URL("../../../../", import.meta.url);

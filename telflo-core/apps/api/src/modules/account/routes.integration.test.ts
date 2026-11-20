@@ -15,10 +15,10 @@ import { UNCALLED_FILE_STORE } from "../../testing/file-store.js";
 import { UNCALLED_TESTING } from "../../testing/otelcol-testing.js";
 
 /*
- * GET and PATCH /api/v1/auth/me/preferences (D21 decisions 19, 20 and 23):
- * the whole preferences, defaults filled in; the merge; the validator's
- * refusals; no audit row; a session needed, the current terms not; the
- * caller's own row only; and the theme cookie a PATCH with a theme sets.
+ * GET and PATCH /api/v1/auth/me/preferences: the whole preferences, defaults
+ * filled in; the merge; the validator's refusals; no audit row; a session
+ * needed, the current terms not; the caller's own row only; and the theme
+ * cookie a PATCH with a theme sets.
  */
 
 const opamp = useFakeOpampServer();
@@ -270,7 +270,7 @@ describe("the preferences routes", () => {
     });
   });
 
-  describe("the theme cookie (D21 decision 23)", () => {
+  describe("the theme cookie", () => {
     it("a PATCH with theme sets it, and one without theme doesn't", async () => {
       const account = await person();
       const access = await signedIn(account.user.email);

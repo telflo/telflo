@@ -2,10 +2,9 @@ import { writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 /*
- * The seeded flows as the collector checks see them (D12 decisions 4 and 15,
- * Preflight rulings 2 and 20): each flow's slug, its pin and its YAML, from
- * migration 1700000000026's `seededFlows`, committed as
- * `services/otelcol-validator/tests/fixtures/seeded-flows.json`. The
+ * The seeded flows as the collector checks see them: each flow's slug, its
+ * pin and its YAML, from migration 1700000000026's `seededFlows`, committed
+ * as `services/otelcol-validator/tests/fixtures/seeded-flows.json`. The
  * validator's binary tests run each flow's pin over it
  * (`tests/test_binary_flows.py`), and the web's schema tests read it
  * (`otelcol-schema.test.ts`, `otelcol-schema-warnings.test.ts`), so all of
@@ -56,8 +55,8 @@ export interface SeededFlowsFixture {
 export function seededFlowsFixture(flows: readonly FixtureSourceFlow[]): SeededFlowsFixture {
   return {
     description:
-      "The seeded flows' slugs, pins and YAML, from migration 1700000000026's seededFlows (D12 decision 4, " +
-      "Preflight ruling 20). Generated: never edit by hand.",
+      "The seeded flows' slugs, pins and YAML, from migration 1700000000026's seededFlows. " +
+      "Generated: never edit by hand.",
     script: SEEDED_FLOWS_SCRIPT,
     flows: flows.map((flow) => ({
       slug: flow.slug,

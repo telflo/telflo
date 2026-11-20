@@ -14,8 +14,8 @@ import {
   unlinkRequiresPassword,
 } from "./errors.js";
 
-describe("the account's refusals (D21 decision 21)", () => {
-  it("are decision 21's table word for word: one builder per code, with its status and fixed message", () => {
+describe("the account's refusals", () => {
+  it("are one builder per code, with its status and fixed message, word for word", () => {
     const built = [
       currentPasswordIncorrect(),
       passwordNotSet(),
@@ -52,7 +52,7 @@ describe("the account's refusals (D21 decision 21)", () => {
     expect(built.map(({ code }) => code)).toEqual([...ACCOUNT_ERROR_CODES]);
   });
 
-  it("a personal token's refusals are D22's codes with a person's words (D25 Preflight ruling 14)", () => {
+  it("a personal token's refusals are the service-account token codes with a person's words", () => {
     const built = [personalApiTokenNotFound(), personalApiTokenNameTaken(), personalApiTokenLimitReached()].map(
       ({ code, statusCode, message }) => ({ code, statusCode, message }),
     );

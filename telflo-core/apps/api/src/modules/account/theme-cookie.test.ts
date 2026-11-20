@@ -3,9 +3,9 @@ import type { FastifyReply } from "fastify";
 import { setStoredThemeCookie, setThemeCookie } from "./theme-cookie.js";
 
 /*
- * The theme cookie's writers (D21 decision 23, Preflight ruling 4). The
- * replies that set it are the routes' integration tests; here, the
- * best-effort read: a failure never reaches the sign-in or the refresh.
+ * The theme cookie's writers. The replies that set it are the routes'
+ * integration tests; here, the best-effort read: a failure never reaches the
+ * sign-in or the refresh.
  */
 
 const USER_ID = "0b9f4e0e-6f55-4a8e-9d1c-2f3a4b5c6d7e";

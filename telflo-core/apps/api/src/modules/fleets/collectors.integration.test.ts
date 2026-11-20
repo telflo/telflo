@@ -26,10 +26,10 @@ import { UNCALLED_TESTING } from "../../testing/otelcol-testing.js";
 import type * as PublishedVersionRepository from "../configurations/repositories/published-version-repository.js";
 import { hashPassword } from "../identity/password.js";
 
-// The opamp-server every server needs (D11b decision 8): this file's own fake.
+// The opamp-server every server needs: this file's own fake.
 const opamp = useFakeOpampServer();
 
-/** How many reverse lookups (decision 14's one query per reply) the server has made: the repository's `describe`, counted. */
+/** How many reverse lookups (one query per reply) the server has made: the repository's `describe`, counted. */
 const reverseLookups = vi.hoisted(() => ({ count: 0 }));
 
 vi.mock("../configurations/repositories/published-version-repository.js", async (importOriginal) => {
@@ -134,12 +134,10 @@ function createGate() {
 }
 
 /**
- * D16b decisions 3, 6, 13, 14, 16, 17, 21 and 23 and Preflight rulings 5,
- * 8, 9, 12 and 16, for the collector groups', collectors' and a
- * configuration's fleet usage routes (Task 4), against Postgres through the
- * API as its own role, with the OpenAPI-checked fake as the opamp-server.
- * The server's client is the fake's, wrapped: every call is recorded, and a
- * test can put a hook in front of any method.
+ * The collector groups', collectors' and a configuration's fleet usage routes,
+ * against Postgres through the API as its own role, with the OpenAPI-checked
+ * fake as the opamp-server. The server's client is the fake's, wrapped: every
+ * call is recorded, and a test can put a hook in front of any method.
  */
 describe("the collector group, collector and fleet usage routes", () => {
   let settings: AppSettings;
@@ -225,7 +223,7 @@ describe("the collector group, collector and fleet usage routes", () => {
     if (message !== undefined) expect(response.json<{ error: { message: string } }>().error.message).toBe(message);
   }
 
-  /** The fields a 400's `details` name, by their instancePath (Ruling 31). */
+  /** The fields a 400's `details` name, by their instancePath. */
   function detailPaths(response: LightMyRequestResponse): string[] {
     return (response.json<{ error: { details?: { instancePath: string }[] } }>().error.details ?? []).map((detail) => detail.instancePath);
   }
@@ -276,7 +274,7 @@ describe("the collector group, collector and fleet usage routes", () => {
       payload: { organizationId },
     });
     expect(response.statusCode).toBe(200);
-    // A no-op when the sign-in already landed there (D36-1 decision 56): no new cookie, the token sent stands.
+    // A no-op when the sign-in already landed there: no new cookie, the token sent stands.
     return response.headers["set-cookie"] === undefined ? access : cookieValue(response, "telflo_access");
   };
 
@@ -355,7 +353,7 @@ describe("the collector group, collector and fleet usage routes", () => {
     expect(["created", "unchanged"]).toContain(result.kind);
   };
 
-  /** The opamp-server's published copy of a version, as D11b's publish puts it. */
+  /** The opamp-server's published copy of a version, as a publish puts it. */
   const postPublication = async (
     organizationId: string,
     publicationId: string,
@@ -381,7 +379,7 @@ describe("the collector group, collector and fleet usage routes", () => {
   }
 
   /**
-   * A version of a configuration `creatorUserId` made, published as D11b
+   * A version of a configuration `creatorUserId` made, published as a publish
    * leaves one: the platform's rows (as the owner: the API's role can't
    * insert a published version) and the opamp-server's published copy.
    */
@@ -463,7 +461,7 @@ describe("the collector group, collector and fleet usage routes", () => {
 
   /**
    * The organization's audit rows of any action but a session's: a member switching to it, or signing in
-   * there (a sign-in lands in the newest membership, D36-1 decision 56).
+   * there (a sign-in lands in the newest membership).
    */
   const auditActions = async (organizationId: string) =>
     (
@@ -500,7 +498,7 @@ describe("the collector group, collector and fleet usage routes", () => {
 
   type World = Awaited<ReturnType<typeof aWorld>>;
 
-  /** Every Task 4 route under the fleet, naming the world's ids, with a valid body, and the operation it calls. */
+  /** Every group and collector route under the fleet, naming the world's ids, with a valid body, and the operation it calls. */
   function taskRoutes(organizationId: string, fleetId: string, ids: { group: string; collector: string }) {
     const fleet = fleetPath(organizationId, fleetId);
     return [
@@ -518,7 +516,7 @@ describe("the collector group, collector and fleet usage routes", () => {
     ] as const satisfies readonly (readonly [Method, string, Record<string, unknown> | undefined, keyof OpampServerClient])[];
   }
 
-  /** Every Task 4 route of the world, the fleet usage included. */
+  /** Every group and collector route of the world, the fleet usage included. */
   function worldRoutes(world: Pick<World, "organizationId" | "fleetId" | "group" | "collector" | "published">) {
     return [
       ...taskRoutes(world.organizationId, world.fleetId, { group: world.group.id, collector: world.collector.id }),
@@ -528,8 +526,8 @@ describe("the collector group, collector and fleet usage routes", () => {
 
   // -------------------------------------------------------------------------
 
-  // D36-1 decision 15: the opamp-server (0.2.4) names a collector's state
-  // `sync`; the platform's contract keeps `drift`, the same values.
+  // The opamp-server (0.2.4) names a collector's state `sync`; the
+  // platform's contract keeps `drift`, the same values.
   it("answers the opamp-server's sync as each collector's drift, every value, in the list and a read", async () => {
     const world = await aWorld();
     const collectors = `${fleetPath(world.organizationId, world.fleetId)}/collectors`;
@@ -560,7 +558,7 @@ describe("the collector group, collector and fleet usage routes", () => {
     }
   });
 
-  describe.each(["admin", "contributor"] as const)("for a %s (decision 6: every member)", (role) => {
+  describe.each(["admin", "contributor"] as const)("for a %s (every member)", (role) => {
     it("creates a group assigned a published version (the platform's names beside it), lists, reads, renames, unassigns and deletes it, auditing nothing", async () => {
       const world = await aWorld();
       const person = world[role];
@@ -575,7 +573,7 @@ describe("the collector group, collector and fleet usage routes", () => {
         assignedPublishedVersionId: world.published.publicationId,
         assignedVersion: expectedVersion(world.published),
       });
-      // The opamp-server is sent the published copy's id, never the version's (the fleet's type read first: D17d-1).
+      // The opamp-server is sent the published copy's id, never the version's (the fleet's type read first).
       expect(operations()).toEqual(["getFleet", "createCollectorGroup"]);
       expect(calls[1]?.args[2]).toEqual({ name: "gateways", assignedPublicationId: world.published.publicationId });
 
@@ -597,7 +595,7 @@ describe("the collector group, collector and fleet usage routes", () => {
       expect(unassigned.json<{ group: GroupBody }>().group).toMatchObject({ assignedPublishedVersionId: null, assignedVersion: null });
       expect(calls.at(-1)?.args[3]).toEqual({ assignedPublicationId: null });
 
-      // A group's delete deletes its collectors (D17d-1 decision 3).
+      // A group's delete deletes its collectors.
       const removed = await send(person, "DELETE", `${groups}/${world.group.id}`);
       expect(removed.statusCode).toBe(204);
       const gone = await send(person, "GET", `${fleetPath(world.organizationId, world.fleetId)}/collectors/${world.collector.id}`);
@@ -616,7 +614,7 @@ describe("the collector group, collector and fleet usage routes", () => {
       const list = await send(person, "GET", `${collectors}?sort=name&order=asc`);
       expect(list.statusCode).toBe(200);
       expect(list.json<{ collectors: CollectorBody[] }>().collectors.map((c) => c.name)).toEqual([world.collector.name, "edge-02"].sort());
-      // Reported attributes and error text: no cache keeps a copy (D17b-1 decision 30; Preflight ruling 1).
+      // Reported attributes and error text: no cache keeps a copy.
       expect(list.headers["cache-control"]).toBe("no-store");
       const searched = await send(person, "GET", `${collectors}?q=10.0.0&groupId=${world.defaultGroupId}`);
       expect(searched.json<{ collectors: CollectorBody[]; nextCursor: null }>()).toMatchObject({ collectors: [{ id: other.id }], nextCursor: null });
@@ -679,7 +677,7 @@ describe("the collector group, collector and fleet usage routes", () => {
       expect((await send(person, "DELETE", `${collectors}/${other.id}`)).statusCode).toBe(204);
       const gone = await send(person, "GET", `${collectors}/${other.id}`);
       expectRefusal(gone, 404, "collector_not_found", MESSAGES.collectorNotFound);
-      // A refusal carries no header (Preflight ruling 1).
+      // A refusal carries no header.
       expect(gone.headers["cache-control"]).toBeUndefined();
       expectRefusal(await send(person, "GET", `${collectors}/${other.id}/errors`), 404, "collector_not_found");
 
@@ -721,7 +719,7 @@ describe("the collector group, collector and fleet usage routes", () => {
 
   // -------------------------------------------------------------------------
 
-  describe("published versions on the wire (decision 14; Preflight ruling 5)", () => {
+  describe("published versions on the wire", () => {
     /** Each write naming a configuration version, as its route takes it. */
     const versionWrites = (world: World, versionId: string) => {
       const fleet = fleetPath(world.organizationId, world.fleetId);
@@ -785,7 +783,7 @@ describe("the collector group, collector and fleet usage routes", () => {
       }
     });
 
-    it("refuses a pin of an import (D16c removed importing) 400 invalid_request, single and bulk, calling nothing", async () => {
+    it("refuses a pin of an import 400 invalid_request, single and bulk, calling nothing", async () => {
       const world = await aWorld();
       const before = opamp.fake.snapshotOf(world.organizationId);
       const collectors = `${fleetPath(world.organizationId, world.fleetId)}/collectors`;
@@ -837,7 +835,7 @@ describe("the collector group, collector and fleet usage routes", () => {
       expect(byId.get(servedGone.id)?.served).toEqual({ kind: "version", publishedVersionId: null, sha256: "b".repeat(64), at: null, version: null });
       expect(operations()).toEqual(["listCollectorInstances"]);
 
-      // A reply naming an import as what was served (crafted: the opamp-server sends none since D16c)
+      // A reply naming an import as what was served (crafted: the opamp-server sends none)
       // isn't the API's: the client refuses it, and the platform answers the one 503.
       const craftingClient = createOpampServerClient({
         url: opamp.fake.url,
@@ -943,7 +941,7 @@ describe("the collector group, collector and fleet usage routes", () => {
 
   // -------------------------------------------------------------------------
 
-  describe("a group against its fleet's type (D17d-1 decisions 17 and 18; Preflight ruling 13)", () => {
+  describe("a group against its fleet's type", () => {
     const VOLUME = { hostPath: "/var/log/journal", hostPathType: "Directory", mountPath: "/var/log/journal", readOnly: true };
     /** A group's annotations holding Kubernetes settings of `role`, beside another client's key. */
     const settings = (role: string, extra: Record<string, unknown> = {}) => ({
@@ -999,7 +997,7 @@ describe("the collector group, collector and fleet usage routes", () => {
       expect(await auditActions(organizationId)).toEqual(["fleet.created"]);
     });
 
-    // D17d-1 Ruling 52: settings are required only on a write carrying annotations; an assignment alone needs none,
+    // Settings are required only on a write carrying annotations; an assignment alone needs none,
     // even on the Agent, which holds none until its first save.
     it("takes a never-saved Agent's assignment alone, its annotations still null, calling updateCollectorGroup only", async () => {
       const { organizationId, admin } = await team();
@@ -1105,7 +1103,7 @@ describe("the collector group, collector and fleet usage routes", () => {
       expect(opamp.fake.snapshotOf(organizationId)).toEqual(before);
     });
 
-    // Ruling 48: once written, a Kubernetes group's settings are never dropped by a write of its annotations.
+    // Once written, a Kubernetes group's settings are never dropped by a write of its annotations.
     it("refuses a Kubernetes group's create or annotations update without its settings 400 at telflo.kubernetes, keeping what is saved", async () => {
       const { organizationId, admin } = await team();
       const { fleetId, defaultGroupId } = await created(admin, organizationId, "kubernetes-supervisor");
@@ -1352,7 +1350,7 @@ describe("the collector group, collector and fleet usage routes", () => {
 
   // -------------------------------------------------------------------------
 
-  describe("a group's annotations (D17c-1 decisions 30 and 31)", () => {
+  describe("a group's annotations", () => {
     const MOUNT = { hostPath: "/var/log/nginx", containerPath: "/var/log/nginx", readOnly: true };
     const ANNOTATIONS = { "acme.io/owner": { team: "ops", n: [1.5, 100] }, telflo: { dockerMounts: [MOUNT] } };
 
@@ -1457,7 +1455,7 @@ describe("the collector group, collector and fleet usage routes", () => {
     });
   });
 
-  describe("the refusals that are the person's to fix (Preflight ruling 8)", () => {
+  describe("the refusals that are the person's to fix", () => {
     it("answers a name another group of the fleet has 409, and the Default group's rename or delete 409 collector_group_is_default", async () => {
       const world = await aWorld();
       const groups = `${fleetPath(world.organizationId, world.fleetId)}/groups`;
@@ -1540,7 +1538,7 @@ describe("the collector group, collector and fleet usage routes", () => {
       ["a publication id instead of a version", "POST", "groups", { name: "edge", assignedPublicationId: randomUUID() }],
       ["a published version's id instead of a version", "PATCH", "groups/:group", { assignedPublishedVersionId: randomUUID() }],
       ["a malformed version id", "POST", "groups", { name: "edge", assignedVersionId: "42" }],
-      // D17d-1 decision 2: the four Kubernetes fields are gone from the request (the settings are the annotations').
+      // The four Kubernetes fields aren't in the request (the settings are the annotations').
       ["a role", "POST", "groups", { name: "edge", role: "gateway" }],
       ["a namespace", "PATCH", "groups/:group", { namespace: "telemetry" }],
       ["replicas", "POST", "groups", { name: "edge", replicas: 1 }],
@@ -1563,7 +1561,7 @@ describe("the collector group, collector and fleet usage routes", () => {
       expect(calls).toEqual([]);
     });
 
-    // D17d-1 decision 17: the settings' rules are the contract's, so the fleet's type is never read for them.
+    // The settings' rules are the contract's, so the fleet's type is never read for them.
     it.each([
       ["an unknown role", { role: "sidecar" }],
       ["a namespace that isn't a DNS label", { namespace: "Telemetry" }],
@@ -1609,7 +1607,7 @@ describe("the collector group, collector and fleet usage routes", () => {
 
   // -------------------------------------------------------------------------
 
-  describe("a configuration's fleet usage: D11b's draft rules", () => {
+  describe("a configuration's fleet usage: the draft rules", () => {
     it("answers a configuration the person can see (theirs, or published), and 404 configuration_not_found for any other, calling nothing", async () => {
       const world = await aWorld();
       const contributorsDraft = await draftVersion(world.organizationId, world.contributor.userId);
@@ -1640,7 +1638,7 @@ describe("the collector group, collector and fleet usage routes", () => {
 
   // -------------------------------------------------------------------------
 
-  describe("tenancy (decisions 4 and 5)", () => {
+  describe("tenancy", () => {
     it("answers another organization's fleet, group, collector and version ids 404, changing nothing of theirs", async () => {
       const mine = await aWorld();
       const theirs = await aWorld();
@@ -1688,8 +1686,8 @@ describe("the collector group, collector and fleet usage routes", () => {
       expect(calls.every((call) => call.args[0] === mine.organizationId)).toBe(true);
     });
 
-    // D17d-1 Preflight rulings 13 and 16: the fleet's type is read under the session's organization, so another
-    // organization's Kubernetes fleet answers as any fleet it doesn't hold, never with its type's refusals.
+    // The fleet's type is read under the session's organization, so another organization's
+    // Kubernetes fleet answers as any fleet it doesn't hold, never with its type's refusals.
     it("answers another organization's Kubernetes fleet and group 404 for a rename or a settings write, with or without the settings, never its type's 409 or 400, changing nothing of theirs", async () => {
       const mine = await team();
       const theirs = await team();
@@ -1711,7 +1709,7 @@ describe("the collector group, collector and fleet usage routes", () => {
           ["POST", theirGroups, { name: "node", ...kubernetes("gateway") }],
           ["POST", theirGroups, { name: "spans", ...kubernetes("cluster") }],
           ["POST", theirGroups, { name: "spans", ...kubernetes("gateway") }],
-          // Without the Kubernetes settings (Ruling 48): a fleet it doesn't hold, never the settings' 400 (Ruling 52).
+          // Without the Kubernetes settings: a fleet it doesn't hold, never the settings' 400.
           ["POST", theirGroups, { name: "spans" }],
           ["POST", theirGroups, { name: "cluster", annotations: { acme: 1 } }],
           ["PATCH", `${theirGroups}/${theirGateway.id}`, { annotations: { acme: 1 } }],
@@ -1851,7 +1849,7 @@ describe("the collector group, collector and fleet usage routes", () => {
       expect(calls).toEqual([]);
     });
 
-    it("answers the former imports routes 404 not_found, calling nothing (D16c)", async () => {
+    it("answers the imports routes, which don't exist, 404 not_found, calling nothing", async () => {
       const world = await aWorld();
       const fleet = fleetPath(world.organizationId, world.fleetId);
       for (const url of [`${fleet}/imports`, `${fleet}/imports/${randomUUID()}`]) {
@@ -1878,7 +1876,7 @@ describe("the collector group, collector and fleet usage routes", () => {
 
   // -------------------------------------------------------------------------
 
-  describe("the one 503 (Preflight rulings 8 and 19)", () => {
+  describe("the one 503", () => {
     const FAULTS = ["error_500", "hang", "reset", "malformed_reply", "oversized"] as const;
     const OPERATIONS = [
       "listCollectorGroups",
@@ -1950,7 +1948,7 @@ describe("the collector group, collector and fleet usage routes", () => {
 
   // -------------------------------------------------------------------------
 
-  describe("the person's limits (decision 17; Preflight ruling 12)", () => {
+  describe("the person's limits", () => {
     let limited: FastifyInstance;
 
     beforeAll(async () => {
@@ -2119,7 +2117,7 @@ describe("the collector group, collector and fleet usage routes", () => {
 
   // -------------------------------------------------------------------------
 
-  describe("D20's bindings: a group's variable group and a collector's (decisions 4, 5 and 7; Preflight ruling 39; Q103)", () => {
+  describe("variable bindings: a group's variable group and a collector's", () => {
     const ref = (name: string) => "${org:" + name + "}";
     const uniqueName = (prefix: string) => `${prefix}_${randomUUID().replaceAll("-", "").toUpperCase()}`;
 
@@ -2211,7 +2209,7 @@ describe("the collector group, collector and fleet usage routes", () => {
       calls = [];
       expect((await bulk({})).statusCode).toBe(400);
       expect(operations()).toEqual([]);
-      // A binding's change is unaudited (decision 15).
+      // A binding's change is unaudited.
       expect(await auditActions(world.organizationId)).toEqual(["fleet.created"]);
     });
 
@@ -2264,7 +2262,7 @@ describe("the collector group, collector and fleet usage routes", () => {
     });
   });
 
-  describe("privacy (decisions 3 and 21; Preflight ruling 16)", () => {
+  describe("privacy", () => {
     it("logs no attribute, error text, group or collector name, and writes none into an audit row or an error answer (canaries)", async () => {
       const world = await aWorld();
       const canary = (what: string) => `CANARY-${what}-${randomUUID()}`;

@@ -2,14 +2,13 @@ import { sql, type Transaction } from "kysely";
 import type { ApiTokenAccess, Database } from "@telflo/db";
 
 /*
- * A person's own API tokens (D25 decisions 27 to 29; migration
- * 1700000000038's personal_api_tokens). Row-level security shows the
- * context's user their own rows only, whatever organization the context
- * names, so the transaction must carry a database context naming the
- * person (`{ userId, organizationId }`, the organization's null or the
- * session's, it doesn't matter to these rows). Every query here filters by
- * the person too, as the first condition: the policies are the backstop,
- * not the only guard.
+ * A person's own API tokens (migration 1700000000038's personal_api_tokens).
+ * Row-level security shows the context's user their own rows only, whatever
+ * organization the context names, so the transaction must carry a database
+ * context naming the person (`{ userId, organizationId }`, the organization's
+ * null or the session's, it doesn't matter to these rows). Every query here
+ * filters by the person too, as the first condition: the policies are the
+ * backstop, not the only guard.
  *
  * The token is never here, and its hash enters only through `create` and
  * leaves no method. The prefix and the name are the person's to see in the
@@ -17,10 +16,10 @@ import type { ApiTokenAccess, Database } from "@telflo/db";
  *
  * The browser's routes (personal-api-tokens.ts) and the token check (the
  * public surface's "Last used" and /whoami's name, in `{ userId,
- * organizationId: null }`: D25 decision 21) share it.
+ * organizationId: null }`) share it.
  */
 
-/** "Last used" is written at most once a minute per token (D22 decision 38). */
+/** "Last used" is written at most once a minute per token. */
 const LAST_USED_INTERVAL_MS = 60_000;
 
 /** Postgres error code for a unique-constraint (or unique-index) violation. */
@@ -81,8 +80,8 @@ export interface IPersonalApiTokenRepository {
   list(userId: string): Promise<PersonalApiToken[]>;
   /**
    * How many of the person's tokens are live at `at`: neither revoked nor
-   * expired (the limit's count, as D22's: the owner's Q137, Ruling 180). An
-   * expired token doesn't count, though it keeps its name until revoked.
+   * expired (the limit's count). An expired token doesn't count, though it
+   * keeps its name until revoked.
    */
   countLive(userId: string, at: Date): Promise<number>;
   /** Whether a token of the person's not yet revoked, expired ones included, has the name, case aside. */
@@ -92,9 +91,9 @@ export interface IPersonalApiTokenRepository {
   /** Revokes the person's token once, at `at`, in one conditional update. False when they have no such token not yet revoked. */
   revoke(userId: string, id: string, at: Date): Promise<boolean>;
   /**
-   * "Last used" (D22 decision 38, D25 decision 21): sets the token's
-   * last_used_at to `at`, unless it was set less than a minute before `at`
-   * or the token is revoked, in one conditional update. True when it wrote.
+   * "Last used": sets the token's last_used_at to `at`, unless it was set
+   * less than a minute before `at` or the token is revoked, in one
+   * conditional update. True when it wrote.
    */
   touchLastUsed(userId: string, id: string, at: Date): Promise<boolean>;
   /** The name of the person's token with this id, not revoked, or undefined (/whoami's read). */

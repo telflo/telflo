@@ -5,11 +5,10 @@ import { openTestDatabases, type TestDatabases } from "@telflo/db/testing";
 import { createCollectorCatalogueRepository } from "./collector-catalogue-repository.js";
 
 /*
- * D17c-1 Preflight ruling 14: a version's binaries and the offered
- * versions' binaries, which a Linux bundle downloads, read from the
- * committed collector catalogue as the test setup's migration step
- * (db:migrate's runMigrationStep) synced it into telflo_platform_test (the API reads
- * only the database: D13a Preflight ruling 7), as the API's role.
+ * A version's binaries and the offered versions' binaries, which a Linux
+ * bundle downloads, read from the committed collector catalogue as the test
+ * setup's migration step (db:migrate's runMigrationStep) synced it into
+ * telflo_platform_test (the API reads only the database), as the API's role.
  */
 describe("the collector catalogue's binaries", () => {
   let databases: TestDatabases;

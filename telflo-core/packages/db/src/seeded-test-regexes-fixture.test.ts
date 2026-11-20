@@ -15,10 +15,10 @@ import { loadTestRegexMigration } from "./testing.js";
 
 /*
  * The regex library's seeded entries' fixture, which the evaluator's RE2
- * check and the web's REGEX_LIBRARY check read (D15b Preflight ruling 2):
- * the committed file is what seeded-test-regexes-fixture.ts makes of
- * migration 1700000000031's `seededTestRegexes` today. This test reads it
- * and never writes it (but for a temporary directory's copy). No database.
+ * check and the web's REGEX_LIBRARY check read: the committed file is what
+ * seeded-test-regexes-fixture.ts makes of migration 1700000000031's
+ * `seededTestRegexes` today. This test reads it and never writes it (but
+ * for a temporary directory's copy). No database.
  */
 
 function committedFixture(): string {

@@ -4,14 +4,13 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 /*
- * D11b decision 9 and Preflight ruling 8: a version is published only by
- * the publish's record, `recordPublish` in the version repository, whose
- * one statement writes the three publish columns only for a draft still
- * holding the YAML the opamp-server took. Row-level security lets the
- * API's role update a draft it can see (Task 2's review): so any other
- * write of those columns in the API's code could publish text no snapshot
- * holds. This scan keeps `recordPublish` the only writer, in the style of
- * database/context-source.test.ts.
+ * A version is published only by the publish's record, `recordPublish` in
+ * the version repository, whose one statement writes the three publish
+ * columns only for a draft still holding the YAML the opamp-server took.
+ * Row-level security lets the API's role update a draft it can see: so
+ * any other write of those columns in the API's code could publish text
+ * no snapshot holds. This scan keeps `recordPublish` the only writer, in
+ * the style of database/context-source.test.ts.
  */
 
 /** apps/api/src: the API's source. */
@@ -38,10 +37,10 @@ const read = (path: string) => readFileSync(join(apiSourceRoot, path), "utf8");
 const VERSION_REPOSITORY = "modules/configurations/repositories/configuration-version-repository.ts";
 
 /**
- * The cross-tenant suite's registry (D5 decision 5): test support, which
- * seeds a published version as the tables' owner, past row-level security,
- * as packages/db's fixtures do. Not the API's code: only test files import
- * it, which a test below checks.
+ * The cross-tenant suite's registry: test support, which seeds a published
+ * version as the tables' owner, past row-level security, as packages/db's
+ * fixtures do. Not the API's code: only test files import it, which a test
+ * below checks.
  */
 const OWNER_SEEDS = "tenancy/resource-registry.ts";
 
@@ -84,7 +83,7 @@ function recordPublishBody(source: string): { body: string; rest: string } {
   throw new Error("recordPublish's body has no end");
 }
 
-describe("the publish columns' only writer (D11b decision 9, Preflight ruling 8)", () => {
+describe("the publish columns' only writer", () => {
   it("finds writes, and only writes, of the columns", () => {
     const writes = [
       `.updateTable("configuration_versions", { published_at: at })`,

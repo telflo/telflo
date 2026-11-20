@@ -18,23 +18,22 @@ import { UNCALLED_TESTING } from "../../testing/otelcol-testing.js";
 import { hashPassword } from "../identity/password.js";
 import { TEST_TERMS_VERSION } from "../../testing/site.js";
 
-// The opamp-server every server needs (D11b decision 8): this file's own fake.
+// The opamp-server every server needs: this file's own fake.
 const opamp = useFakeOpampServer();
 
 const csrfHeaders = { [CSRF_HEADER_NAME]: CSRF_HEADER_VALUE };
 const PASSWORD = "a-sufficiently-long-password";
 
-/** Creating, migrating and dropping a database waits for checkpoints (D7 Ruling 15). */
+/** Creating, migrating and dropping a database waits for checkpoints. */
 const THROWAWAY_DATABASE_TIMEOUT = 30_000;
 
 /*
- * One default, read from the catalogue's tables (D13a decisions 3 and 9):
- * a configuration created through the API, its version 1, and the sign-up
- * starter take whatever the tables call the default, never a constant. So
- * the default moves here, to another version, and every writer follows it.
- * On a throwaway database the test prepares itself (migrated and synced, as
- * telflo_platform_test is), since telflo_platform_test's catalogue must stay the committed
- * one.
+ * One default, read from the catalogue's tables: a configuration created
+ * through the API, its version 1, and the sign-up starter take whatever the
+ * tables call the default, never a constant. So the default moves here, to
+ * another version, and every writer follows it. On a throwaway database the
+ * test prepares itself (migrated and synced, as telflo_platform_test is), since
+ * telflo_platform_test's catalogue must stay the committed one.
  */
 describe("the catalogue's default, as new configurations and the sign-up starter take it", () => {
   let databases: TestDatabases;
@@ -181,7 +180,7 @@ describe("the catalogue's default, as new configurations and the sign-up starter
     ]);
   });
 
-  it("shows the sign-up starter's pin in its version and its summary, as the tables now hold the default (D13a decision 9, Preflight ruling 15)", async () => {
+  it("shows the sign-up starter's pin in its version and its summary, as the tables now hold the default", async () => {
     const email = `starter-read-${randomUUID()}@example.com`;
     const registered = await server.inject({
       method: "POST",

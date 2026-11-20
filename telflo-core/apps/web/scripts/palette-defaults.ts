@@ -11,13 +11,12 @@ import { editText, valuesEqual } from "~/lib/graph/text-edits.js";
 import type { PaletteComponent, PipelineSignalType } from "~/lib/graph/types.js";
 
 /*
- * The palette's defaults, as every offered collector is asked about them
- * (D13b decision 9, Preflight ruling 22): for each distribution in the
- * catalogue, each version it offers and each palette entry that version's
- * toolbox shows (D13a decision 6), the text a drop of that entry writes,
- * spelled as the version's pin knows it (decision 5), wired into the
- * smallest configuration the collector accepts (a receiver and an exporter around it, in
- * one pipeline of a signal it supports; an extension enabled in
+ * The palette's defaults, as every offered collector is asked about them:
+ * for each distribution in the catalogue, each version it offers and each
+ * palette entry that version's toolbox shows, the text a drop of that entry
+ * writes, spelled as the version's pin knows it, wired into the smallest
+ * configuration the collector accepts (a receiver and an exporter around
+ * it, in one pipeline of a signal it supports; an extension enabled in
  * `service.extensions`; a connector between two pipelines).
  *
  * The drop is the store's (`dropComponent`): `droppedNode` with
@@ -322,8 +321,8 @@ export function paletteDefaultsFixture(
   }
   return {
     description:
-      "What a drop of each palette entry writes, per offered collector version, in the smallest configuration around it " +
-      "(D13b decision 9). Generated: never edit by hand.",
+      "What a drop of each palette entry writes, per offered collector version, in the smallest configuration around it. " +
+      "Generated: never edit by hand.",
     script: PALETTE_DEFAULTS_SCRIPT,
     cases,
   };

@@ -31,11 +31,11 @@ import { createConfigurationService, type ConfigurationTransaction, type FleetUs
 const NOW = new Date("2030-01-01T00:00:00.000Z");
 const EARLIER = new Date("2029-06-01T00:00:00.000Z");
 const origin = { ipAddress: "203.0.113.7", userAgent: "vitest" };
-/** The fake catalogue's defaults (D13a): a fixture's, not the real catalogue's, which the integration tests read. */
+/** The fake catalogue's defaults: a fixture's, not the real catalogue's, which the integration tests read. */
 const CATALOGUE_DEFAULTS = { distribution: "fixture-distribution", version: "1.2.3" };
 /** Another version of the default distribution the fake catalogue offers. */
 const OFFERED_VERSION = "1.1.0";
-/** A version of the default distribution the fake catalogue has deprecated, and its note (D13a decision 4). */
+/** A version of the default distribution the fake catalogue has deprecated, and its note. */
 const DEPRECATED_VERSION = "1.0.0";
 const DEPRECATED_NOTE = "Retired: upgrade to 1.2.3.";
 /** Another distribution of the fake catalogue, not the default, and its default version. */
@@ -61,7 +61,7 @@ function deprecationOf(distribution: string, version: string) {
   };
 }
 
-/** A save's content: the text, and a small graph (D9a decision 6), which the service passes on as it is. */
+/** A save's content: the text, and a small graph, which the service passes on as it is. */
 const GRAPH = {
   nodes: [{ id: "node_0", type: "receiver", position: { x: 1, y: 2 }, data: { label: "OTLP", config: {} } }],
   edges: [{ id: "edge_0", source: "node_0", target: "node_1", type: "smoothstep" }],
@@ -201,7 +201,7 @@ function buildHarness() {
         label: input.label ?? null,
         createdBy: creatorEmail(input.createdByUserId),
         yamlContent: input.yamlContent,
-        // The table's `[]` unless a graph is given (D12 Preflight ruling 7).
+        // The table's `[]` unless a graph is given.
         nodes: input.graph?.nodes ?? [],
         edges: input.graph?.edges ?? [],
         pipelines: input.graph?.pipelines ?? [],
@@ -267,7 +267,7 @@ function buildHarness() {
       }
       return { ...version };
     }),
-    // The public API's reads by number and its list's facts (D25 Preflight ruling 6).
+    // The public API's reads by number and its list's facts.
     findIdByNumber: vi.fn(async (configurationId: string, versionNumber: number) => {
       calls.push("versions.findIdByNumber");
       if (!isLive(configurationId)) return undefined;
@@ -307,7 +307,7 @@ function buildHarness() {
    * Each person's selected version, keyed by person and configuration, as
    * the real repository keeps them: `find` answers only a live
    * configuration's, and `record` writes only a version of that live
-   * configuration (D10 Preflight ruling 1).
+   * configuration.
    */
   const selectionRows = new Map<string, string>();
   const selectionKey = (userId: string, configurationId: string) => `${userId}/${configurationId}`;
@@ -325,7 +325,7 @@ function buildHarness() {
     }),
   } satisfies IConfigurationVersionSelectionRepository;
 
-  /** The collector catalogue (D13a): CATALOGUE's versions, the two distributions' defaults. */
+  /** The collector catalogue: CATALOGUE's versions, the two distributions' defaults. */
   const catalogue = {
     findDefaults: vi.fn(async () => {
       calls.push("catalogue.findDefaults");
@@ -346,7 +346,7 @@ function buildHarness() {
   } satisfies ConfigurationTransaction["catalogue"];
 
   /**
-   * The test suites' version copy (D14b Preflight ruling 8), which
+   * The test suites' version copy, which
    * test-suites/routes.integration.test.ts proves against Postgres: here,
    * only that createVersion asks for it, in order, and audits its counts.
    */
@@ -358,7 +358,7 @@ function buildHarness() {
   } satisfies ConfigurationTransaction["suites"];
 
   /**
-   * The validation pipelines' version copy (D15a Preflight ruling 24), which
+   * The validation pipelines' version copy, which
    * validation-pipelines/routes.integration.test.ts proves against Postgres:
    * here, only that createVersion asks for it after the suites' and audits
    * its counts.
@@ -408,12 +408,12 @@ function buildHarness() {
     },
   };
 
-  /** Each delete's clean-up scheduled (D11b decision 12): its organization and configuration. */
+  /** Each delete's clean-up scheduled: its organization and configuration. */
   const afterDeletes: Array<[organizationId: string, configurationId: string]> = [];
 
   /**
-   * A delete's fleet usage check (D16b decision 19): in the calls' order as
-   * `fleetUsage`, answering not in use unless a test says otherwise.
+   * A delete's fleet usage check: in the calls' order as `fleetUsage`,
+   * answering not in use unless a test says otherwise.
    */
   const fleetUsage = vi.fn(async (_context: ActorContext, configurationId: string): Promise<FleetUsageAnswer> => {
     calls.push("fleetUsage");
@@ -567,7 +567,7 @@ const DELETE_FORBIDDEN = [
   "Only the configuration's author or an organization admin can delete it.",
 ] as const;
 
-/** A published version's two fields (D11b decision 10), for `harness.version`. */
+/** A published version's two fields, for `harness.version`. */
 const PUBLISHED = {
   publishedAt: new Date("2029-12-01T00:00:00.000Z"),
   publishedBy: { userId: randomUUID(), email: "publisher@example.com" },
@@ -602,7 +602,7 @@ const summaryOf = ({
   collectorVersionDeprecatedNote,
 });
 
-/** Malformed version ids: none reaches a repository (D10 Preflight ruling 6). */
+/** Malformed version ids: none reaches a repository. */
 const MALFORMED_IDS = ["42", "not-a-uuid", "0192f1a47b3c7d2e8f101a2b3c4d5e6f", "{0192f1a4-7b3c-7d2e-8f10-1a2b3c4d5e6f}"];
 
 describe("createConfigurationService", () => {
@@ -662,7 +662,7 @@ describe("createConfigurationService", () => {
         (h: Harness, actor: Actor, organizationId: string) =>
           h.service.selectVersion(actor, organizationId, randomUUID(), randomUUID()),
       ],
-      // The public API's (D25 decision 31).
+      // The public API's.
       [
         "listWithFacts",
         (h: Harness, actor: Actor, organizationId: string) => h.service.listWithFacts(actor, organizationId, { limit: 50 }),
@@ -712,7 +712,7 @@ describe("createConfigurationService", () => {
     });
 
     it.each(["all", "mine", "published"] as const)(
-      "passes the limit, the decoded cursor, the search and the filter (%s, D11b decision 6)",
+      "passes the limit, the decoded cursor, the search and the filter (%s)",
       async (filter) => {
         const actor = harness.memberActor();
         const after = { updatedAt: EARLIER, id: randomUUID() };
@@ -817,7 +817,7 @@ describe("createConfigurationService", () => {
       expect(found.versions).toEqual([summaryOf(second), summaryOf(first)]);
     });
 
-    it("opens the caller's selection, though a higher version exists (D10 decision 4)", async () => {
+    it("opens the caller's selection, though a higher version exists", async () => {
       const actor = harness.memberActor();
       const row = harness.configuration();
       const first = harness.version(row.id, { versionNumber: 1 });
@@ -922,7 +922,7 @@ describe("createConfigurationService", () => {
         "versions.create",
         "audit:configuration.created",
       ]);
-      // The catalogue's defaults, read in the transaction (D13a decisions 3 and 9).
+      // The catalogue's defaults, read in the transaction.
       expect(harness.configurations.create).toHaveBeenCalledWith({
         name: "Gateway",
         description: "Prod",
@@ -963,8 +963,8 @@ describe("createConfigurationService", () => {
       (h: Harness, actor: Actor) =>
         h.service.update(actor, h.organizationId, h.configuration().id, { name: "Renamed" }),
     ],
-    // Its author's own: whatever their role, an author may delete it (D11b
-    // decision 2); another member's is the remove block's.
+    // Its author's own: whatever their role, an author may delete it;
+    // another member's is the remove block's.
     [
       "remove",
       (h: Harness, actor: Actor) =>
@@ -1000,7 +1000,7 @@ describe("createConfigurationService", () => {
         return h.service.renameVersion(actor, h.organizationId, row.id, h.version(row.id).id, "Renamed");
       },
     ],
-  ] as const)("%s, under the organization's lock (decision 9)", (_name, write) => {
+  ] as const)("%s, under the organization's lock", (_name, write) => {
     it("refuses when the organization is no longer live, with 404 organization_not_found, writing nothing", async () => {
       const actor = harness.memberActor();
       harness.state.isOrganizationLive = false;
@@ -1024,14 +1024,14 @@ describe("createConfigurationService", () => {
       expect(harness.calls).toEqual(["organization.findActiveForShare", "members.find"]);
     });
 
-    it.each(["admin", "contributor"] as const)("never checks the role: a %s may (decision 3)", async (role) => {
+    it.each(["admin", "contributor"] as const)("never checks the role for the write: a %s may", async (role) => {
       const actor = harness.memberActor(role);
       await write(harness, actor);
       expect(harness.auditEvents).toHaveLength(1);
     });
   });
 
-  describe("selectVersion, under the organization's lock (D10 decision 7)", () => {
+  describe("selectVersion, under the organization's lock", () => {
     const select = (actor: Actor) => {
       const row = harness.configuration();
       const version = harness.version(row.id);
@@ -1131,7 +1131,7 @@ describe("createConfigurationService", () => {
       await harness.service.remove(actor, harness.organizationId, row.id);
 
       expect(harness.calls).toEqual([
-        // The rights first, read and committed (D16b Preflight ruling 6): a draft asks no fleet.
+        // The rights first, read and committed: a draft asks no fleet.
         "organization.findActiveForShare",
         "members.find",
         "configurations.find",
@@ -1154,7 +1154,7 @@ describe("createConfigurationService", () => {
       ]);
     });
 
-    describe("its snapshots' clean-up (D11b decision 12)", () => {
+    describe("its snapshots' clean-up", () => {
       it("schedules it once, with the organization and the configuration, after the delete", async () => {
         const actor = harness.memberActor();
         const row = harness.configuration({ createdByUserId: actor.context.userId });
@@ -1186,7 +1186,7 @@ describe("createConfigurationService", () => {
       });
     });
 
-    describe("a published one, only when no fleet uses it (D16b decision 19; Preflight rulings 6, 7 and 12)", () => {
+    describe("a published one, only when no fleet uses it", () => {
       const IN_USE = [
         409,
         "configuration_in_use",
@@ -1339,7 +1339,7 @@ describe("createConfigurationService", () => {
         ]);
       });
 
-      it("refuses 503 for any other failure too (Ruling 34), logged at error with its name only, deleting nothing", async () => {
+      it("refuses 503 for any other failure too, logged at error with its name only, deleting nothing", async () => {
         const author = harness.memberActor();
         const row = published(author);
         harness.fleetUsage.mockRejectedValueOnce(new RangeError("a plain failure quoting CANARY-MESSAGE"));
@@ -1405,7 +1405,7 @@ describe("createConfigurationService", () => {
       });
     });
 
-    describe("only its author or an organization admin (D11b decision 2)", () => {
+    describe("only its author or an organization admin", () => {
       it("lets its author delete it, whatever their role", async () => {
         const author = harness.memberActor("contributor");
         const row = harness.configuration({ createdByUserId: author.context.userId });
@@ -1426,7 +1426,7 @@ describe("createConfigurationService", () => {
         const author = harness.memberActor("admin");
         const teammate = harness.memberActor("contributor");
         const row = harness.configuration({ createdByUserId: author.context.userId });
-        // Published: still refused before any fleet is asked (D16b Preflight ruling 6).
+        // Published: still refused before any fleet is asked.
         harness.version(row.id, PUBLISHED);
         await expectRefusal(harness.service.remove(teammate, harness.organizationId, row.id), ...DELETE_FORBIDDEN);
         expect(harness.calls).toEqual([
@@ -1499,7 +1499,7 @@ describe("createConfigurationService", () => {
         `configurations.touch:${NOW.toISOString()}`,
         "audit:configuration.version_saved",
       ]);
-      // The text and the graph, together (D9a decision 6).
+      // The text and the graph, together.
       expect(harness.versions.save).toHaveBeenCalledWith(row.id, saved.id, { yamlContent: YAML, ...GRAPH }, NOW);
       expect(version).toEqual({ ...saved, yamlContent: YAML, ...GRAPH, updatedAt: NOW });
       expect(harness.auditEvents).toEqual([
@@ -1531,7 +1531,7 @@ describe("createConfigurationService", () => {
       expect(harness.auditEvents).toHaveLength(1);
     });
 
-    it("refuses a published version with 409 configuration_version_published, under the lock and before any write (D11b decision 4)", async () => {
+    it("refuses a published version with 409 configuration_version_published, under the lock and before any write", async () => {
       const actor = harness.memberActor();
       const row = harness.configuration({ createdByUserId: actor.context.userId });
       const published = harness.version(row.id, PUBLISHED);
@@ -1574,7 +1574,7 @@ describe("createConfigurationService", () => {
       ]);
     });
 
-    it("moves the version's updatedAt strictly forward when two saves read the same millisecond (D11b Ruling 33), the configuration's staying the clock's", async () => {
+    it("moves the version's updatedAt strictly forward when two saves read the same millisecond, the configuration's staying the clock's", async () => {
       const actor = harness.memberActor();
       const row = harness.configuration();
       const saved = harness.version(row.id);
@@ -1607,7 +1607,7 @@ describe("createConfigurationService", () => {
       ]);
     });
 
-    it("moves a version saved past the clock a millisecond past its last save (D11b Ruling 33)", async () => {
+    it("moves a version saved past the clock a millisecond past its last save", async () => {
       const actor = harness.memberActor();
       const row = harness.configuration();
       const ahead = new Date(NOW.getTime() + 5_000);
@@ -1799,7 +1799,7 @@ describe("createConfigurationService", () => {
     it("locks the configuration, checks the source, creates the next version at the clock's time, touches the configuration, and audits it without its YAML, graph or label", async () => {
       const actor = harness.memberActor();
       const row = harness.configuration();
-      // Pinned to another version than the catalogue's default: the new one copies the source's (D13a decision 9).
+      // Pinned to another version than the catalogue's default: the new one copies the source's.
       const source = harness.version(row.id, { versionNumber: 1, yamlContent: "saved: true\n", collectorVersion: "1.1.0" });
       harness.version(row.id, { versionNumber: 4 });
 
@@ -1820,11 +1820,11 @@ describe("createConfigurationService", () => {
         `validationPipelines.copyToVersion:${NOW.toISOString()}`,
         "audit:configuration.version_created",
       ]);
-      // The source's suites, copied to the new version as the caller, at its time (D14b Preflight ruling 8),
-      // then its validation pipelines and rules likewise (D15a Preflight ruling 24).
+      // The source's suites, copied to the new version as the caller, at its
+      // time, then its validation pipelines and rules likewise.
       expect(harness.suites.copyToVersion).toHaveBeenCalledWith(row.id, source.id, created.id, NOW);
       expect(harness.validationPipelines.copyToVersion).toHaveBeenCalledWith(row.id, source.id, created.id, NOW);
-      // The source's summary: its content isn't read (Ruling 41).
+      // The source's summary: its content isn't read.
       expect(harness.versions.findSummary).toHaveBeenCalledWith(row.id, source.id);
       expect(harness.versions.find).not.toHaveBeenCalled();
       expect(harness.versions.createNext).toHaveBeenCalledWith({
@@ -1854,7 +1854,7 @@ describe("createConfigurationService", () => {
         collectorVersionDeprecated: false,
         collectorVersionDeprecatedNote: null,
       });
-      // The source is left as it was saved (D10 decision 5).
+      // The source is left as it was saved.
       expect(harness.versionRows.get(source.id)).toEqual(source);
       expect(harness.rows.get(row.id)!.updatedAt).toEqual(NOW);
       expect(harness.auditEvents).toEqual([
@@ -1865,7 +1865,7 @@ describe("createConfigurationService", () => {
           organizationId: harness.organizationId,
           subjectType: "configuration",
           subjectId: row.id,
-          // The copies' counts (D14b Preflight ruling 8, D15a Preflight ruling 24): never a suite's, a definition's or a rule's text.
+          // The copies' counts: never a suite's, a definition's or a rule's text.
           metadata: {
             versionId: created.id,
             versionNumber: 5,
@@ -1930,7 +1930,7 @@ describe("createConfigurationService", () => {
     });
 
     it.each(MALFORMED_IDS)(
-      "refuses a source that isn't a canonical UUID (%s) with 404 configuration_version_not_found, after the configuration's lock and writing nothing (Preflight ruling 6)",
+      "refuses a source that isn't a canonical UUID (%s) with 404 configuration_version_not_found, after the configuration's lock and writing nothing",
       async (sourceVersionId) => {
         const actor = harness.memberActor();
         const row = harness.configuration();
@@ -1970,7 +1970,7 @@ describe("createConfigurationService", () => {
       expect(harness.auditEvents).toEqual([]);
     });
 
-    it("lets a failed suites' copy through, auditing nothing: the transaction rolls the version back with it (D14b Preflight ruling 8)", async () => {
+    it("lets a failed suites' copy through, auditing nothing: the transaction rolls the version back with it", async () => {
       const actor = harness.memberActor();
       const row = harness.configuration();
       const source = harness.version(row.id);
@@ -1984,7 +1984,7 @@ describe("createConfigurationService", () => {
       expect(harness.auditEvents).toEqual([]);
     });
 
-    it("lets a failed validation pipelines' copy through, auditing nothing: the transaction rolls the version and the suites' copy back with it (D15a Preflight ruling 24)", async () => {
+    it("lets a failed validation pipelines' copy through, auditing nothing: the transaction rolls the version and the suites' copy back with it", async () => {
       const actor = harness.memberActor();
       const row = harness.configuration();
       const source = harness.version(row.id);
@@ -1999,7 +1999,7 @@ describe("createConfigurationService", () => {
     });
   });
 
-  describe("the public API's version writes (D25 decision 31)", () => {
+  describe("the public API's version writes", () => {
     it("patchVersion merges the text over the stored content under the lock, keeping the stored graph and pin", async () => {
       const actor = harness.memberActor();
       const row = harness.configuration();
@@ -2057,7 +2057,7 @@ describe("createConfigurationService", () => {
       expect(harness.auditEvents).toEqual([]);
     });
 
-    it("patchVersion with expectedUpdatedAt writes only over that save: a save since is 409 configuration_version_changed, nothing written (Ruling 165)", async () => {
+    it("patchVersion with expectedUpdatedAt writes only over that save: a save since is 409 configuration_version_changed, nothing written", async () => {
       const actor = harness.memberActor();
       const row = harness.configuration();
       const stored = harness.version(row.id, { yamlContent: "stored: 1\n", updatedAt: EARLIER });
@@ -2139,7 +2139,7 @@ describe("createConfigurationService", () => {
         "versions.rename:New",
         "audit:configuration.version_renamed",
       ]);
-      // The old label from the version's summary: its content isn't read (Ruling 41).
+      // The old label from the version's summary: its content isn't read.
       expect(harness.versions.findSummary).toHaveBeenCalledWith(row.id, version.id);
       expect(harness.versions.find).not.toHaveBeenCalled();
       expect(harness.versions.rename).toHaveBeenCalledWith(row.id, version.id, "New");
@@ -2173,7 +2173,7 @@ describe("createConfigurationService", () => {
       });
     });
 
-    it("refuses a published version with 409 configuration_version_published, under the lock and before any write, even with its own label (D11b decision 4)", async () => {
+    it("refuses a published version with 409 configuration_version_published, under the lock and before any write, even with its own label", async () => {
       const actor = harness.memberActor();
       const row = harness.configuration();
       const published = harness.version(row.id, { ...PUBLISHED, label: "Released" });
@@ -2293,7 +2293,7 @@ describe("createConfigurationService", () => {
     });
 
     it.each(MALFORMED_IDS)(
-      "refuses a version id that isn't a canonical UUID (%s) with 404 configuration_version_not_found, recording nothing (Preflight ruling 6)",
+      "refuses a version id that isn't a canonical UUID (%s) with 404 configuration_version_not_found, recording nothing",
       async (versionId) => {
         const actor = harness.memberActor();
         const row = harness.configuration();
@@ -2363,7 +2363,7 @@ describe("createConfigurationService", () => {
     });
   });
 
-  describe("collector distributions and versions (D13a decisions 5, 8, 9 and 11)", () => {
+  describe("collector distributions and versions", () => {
     const VERSION_UNKNOWN = [400, "collector_version_unknown", "That collector version isn't available."] as const;
     const DISTRIBUTION_UNKNOWN = [
       400,
@@ -2371,7 +2371,7 @@ describe("createConfigurationService", () => {
       "That collector distribution isn't available.",
     ] as const;
 
-    describe("create (Preflight ruling 14)", () => {
+    describe("create, for a named distribution", () => {
       it("builds the configuration for the distribution named, its version 1 at that distribution's default, read in the transaction", async () => {
         const actor = harness.memberActor();
 
@@ -2424,7 +2424,7 @@ describe("createConfigurationService", () => {
       });
     });
 
-    describe("create from a flow (D12 decision 12, Preflight ruling 7)", () => {
+    describe("create from a flow", () => {
       /** A flow's text, exactly as the seed holds one: an env reference, a trailing newline. */
       const FLOW_YAML = "exporters:\n  otlp:\n    endpoint: ${env:OTLP_ENDPOINT}\n";
       const fromFlow = {
@@ -2580,8 +2580,8 @@ describe("createConfigurationService", () => {
       });
     });
 
-    describe("saveVersion (Preflight ruling 13)", () => {
-      it("stores a collector version the configuration's distribution offers, as an ordinary save: the lock, Ruling 33's updatedAt, the configuration touched, the audit", async () => {
+    describe("saveVersion's collector version", () => {
+      it("stores a collector version the configuration's distribution offers, as an ordinary save: the lock, the updatedAt moved strictly forward, the configuration touched, the audit", async () => {
         const actor = harness.memberActor();
         const row = harness.configuration();
         const saved = harness.version(row.id, { updatedAt: NOW });
@@ -2651,7 +2651,7 @@ describe("createConfigurationService", () => {
         expect(harness.versionRows.get(saved.id)).toEqual(saved);
       });
 
-      it("accepts the stored collector version even though the catalogue deprecated it since, asking the catalogue nothing and writing no pin (decision 4)", async () => {
+      it("accepts the stored collector version even though the catalogue deprecated it since, asking the catalogue nothing and writing no pin", async () => {
         const actor = harness.memberActor();
         const row = harness.configuration();
         const saved = harness.version(row.id, { collectorVersion: DEPRECATED_VERSION });
@@ -2704,7 +2704,7 @@ describe("createConfigurationService", () => {
       });
     });
 
-    describe("createVersion (decision 9, Preflight rulings 16 and 18)", () => {
+    describe("createVersion's pin and distribution", () => {
       const created = (
         actor: Actor,
         configurationId: string,
@@ -2777,7 +2777,7 @@ describe("createConfigurationService", () => {
         await expectRefusal(created(actor, row.id, randomUUID(), collectorVersion), ...VERSION_NOT_FOUND);
       });
 
-      it("stamps the new version with the configuration's distribution, read under its lock, never the source's (Preflight ruling 18)", async () => {
+      it("stamps the new version with the configuration's distribution, read under its lock, never the source's", async () => {
         const actor = harness.memberActor();
         const row = harness.configuration({ collectorDistribution: OTHER_DISTRIBUTION.distribution });
         // A source whose distribution disagrees (the database's composite

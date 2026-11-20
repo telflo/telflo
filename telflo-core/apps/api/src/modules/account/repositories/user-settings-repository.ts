@@ -8,11 +8,10 @@ import {
 } from "@telflo/contracts";
 
 /**
- * A person's own settings (D21 decisions 4, 18 and 19), in `user_settings`
- * (migration 034). The row is lazy: no row reads as the defaults, and the
- * first save inserts it. It belongs to the user, not to an organization, and
- * has no row-level security, so it is read and written outside any
- * organization's context.
+ * A person's own settings, in `user_settings` (migration 034). The row is
+ * lazy: no row reads as the defaults, and the first save inserts it. It
+ * belongs to the user, not to an organization, and has no row-level
+ * security, so it is read and written outside any organization's context.
  *
  * Every read goes through `readStoredPreferences`, which fills in each
  * missing or invalid key with its default: a stored value never makes a read
@@ -52,13 +51,12 @@ export function createUserSettingsRepository(db: Kysely<Database> | Transaction<
     },
 
     /**
-     * One upsert (D21 decision 20, Preflight ruling 3). On the first save it
-     * inserts the groups the change carries; afterwards each group present
-     * is merged with `||` onto the stored group (a stored group that isn't
-     * an object is replaced), and the theme column is set only when given.
-     * The row lock of `on conflict do update` serializes concurrent changes,
-     * so each lands its own keys: the last write wins per key, with no
-     * read-modify-write here.
+     * One upsert. On the first save it inserts the groups the change carries;
+     * afterwards each group present is merged with `||` onto the stored group
+     * (a stored group that isn't an object is replaced), and the theme column
+     * is set only when given. The row lock of `on conflict do update`
+     * serializes concurrent changes, so each lands its own keys: the last
+     * write wins per key, with no read-modify-write here.
      *
      * The groups travel as JSON text cast `::jsonb` at every use: a
      * JavaScript array or object handed to the driver would not arrive as
