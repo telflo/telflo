@@ -11,9 +11,8 @@ import { selectIsDirty, useEditorStore } from "~/lib/stores/editor-store.js";
 import { builderStore, groupNamed, openText } from "~/test/builder-store.js";
 
 /*
- * The CanvasActions tests (D9a decision 15), with self-monitoring's two
- * that D9a deferred (D9b decision 7), and the lock.
- * The Self-monitoring dialog's own tests are in `SelfMonitoringDialog.test.tsx`.
+ * The CanvasActions tests, with self-monitoring's two, and the lock. The
+ * Self-monitoring dialog's own tests are in `SelfMonitoringDialog.test.tsx`.
  */
 
 const STARTER = corpusText("starter.yaml");
@@ -68,7 +67,7 @@ describe("CanvasActions", () => {
     expect(action().querySelector("span.bg-ok")).toHaveAttribute("aria-hidden", "true");
     unmount();
 
-    // Read through aliases and merges; an explicit null isn't configured (decision 7).
+    // Read through aliases and merges; an explicit null isn't configured.
     const cases: Array<[string, "true" | "false"]> = [
       ["x-telemetry: &telemetry\n  logs:\n    level: info\nservice:\n  telemetry: *telemetry\n  pipelines: {}\n", "true"],
       ["x-base: &base\n  telemetry: {}\nservice:\n  <<: *base\n  pipelines: {}\n", "true"],

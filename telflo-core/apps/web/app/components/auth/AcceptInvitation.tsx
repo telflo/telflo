@@ -50,12 +50,12 @@ import { PasswordVisibilityToggle, TermsAgreement, type TermsToAccept } from "./
 const UNEXPECTED_ERROR_MESSAGE = "An unexpected error occurred. Please try again.";
 
 /**
- * Where the page keeps the invitation link's token (D6 decision 2). The
- * emailed link carries it in its fragment, `/accept-invitation#token=…`,
- * which the browser never sends to a server. The page takes it out of the
- * address bar into `sessionStorage` (lib/address-bar-token.ts), so it
- * survives a sign-in or a round trip to Google in this tab and isn't left
- * in the history, and sends it only in the bodies of the three invitee
+ * Where the page keeps the invitation link's token. The emailed link
+ * carries it in its fragment, `/accept-invitation#token=…`, which the
+ * browser never sends to a server. The page takes it out of the address
+ * bar into `sessionStorage` (lib/address-bar-token.ts), so it survives a
+ * sign-in or a round trip to Google in this tab and isn't left in the
+ * history, and sends it only in the bodies of the three invitee
  * endpoints: not in a path or query, not in a log.
  */
 export const INVITATION_TOKEN_STORAGE_KEY = "telflo.invitationToken";
@@ -90,8 +90,7 @@ const DEAD_TOKEN_CODES: ReadonlySet<string> = new Set([
 /**
  * Who is looking at the page, from its loader. `refresh_needed` comes only
  * from the server's render: the client loader refreshes it into one of the
- * other two before the page leaves "Processing your invitation..." (D6
- * Preflight ruling 3).
+ * other two before the page leaves "Processing your invitation...".
  */
 export type InvitationVisitor =
   | { status: "signed_in"; currentUser: CurrentUserResponse }
@@ -114,18 +113,18 @@ export interface AcceptInvitationProps {
   visitor: InvitationVisitor;
   /** The configured providers, from the page's loader; empty for none. */
   providers: readonly OidcProvider[];
-  /** The site's Terms (lib/use-site.ts' termsToAccept), or null when it asks for none (D36-1 decision 32). */
+  /** The site's Terms (lib/use-site.ts' termsToAccept), or null when it asks for none. */
   terms: TermsToAccept | null;
 }
 
 /*
- * The accept page (D6 decision 13; ADR 0018): one page for everyone, deciding
- * from the invitation's preview and whoever is signed in. The token is read
- * after hydration, since it is only in the browser (the fragment, then
- * `sessionStorage`): until then, and while the preview loads, the card says
- * "Processing your invitation...". A second link opened in the same tab
- * changes only the fragment, which loads nothing, so the page takes the token
- * again on every `hashchange`.
+ * The accept page: one page for everyone, deciding from the invitation's
+ * preview and whoever is signed in. The token is read after hydration, since
+ * it is only in the browser (the fragment, then `sessionStorage`): until
+ * then, and while the preview loads, the card says "Processing your
+ * invitation...". A second link opened in the same tab changes only the
+ * fragment, which loads nothing, so the page takes the token again on every
+ * `hashchange`.
  *
  * Joining, by any path, goes to `/app?joined_org={id}`, where the signed-in
  * layout shows the welcome callout. There is no success alert, since the
@@ -161,7 +160,7 @@ export function AcceptInvitation({ visitor, providers, terms }: AcceptInvitation
       ({ invitation }) => {
         if (!isCurrent) return;
         // Expired and accepted are final for this token: a resend issues a
-        // new one (D6 Ruling 15).
+        // new one.
         if (invitation.status === "expired" || invitation.status === "accepted") clearInvitationToken();
         setPreview({ kind: "found", invitation });
       },
@@ -228,7 +227,7 @@ export function AcceptInvitation({ visitor, providers, terms }: AcceptInvitation
 
   if (visitor.status === "signed_in") {
     const signedInEmail = visitor.currentUser.user.email;
-    // Decision 3: only the invited address can accept, ignoring case.
+    // Only the invited address can accept, ignoring case.
     if (signedInEmail.toLowerCase() === invitation.email.toLowerCase()) {
       return (
         <JoinCard
@@ -246,8 +245,8 @@ export function AcceptInvitation({ visitor, providers, terms }: AcceptInvitation
         error={error}
         onSignOut={async () => {
           // Signed out on this page alone: the store is cleared, PostHog
-          // forgets the user as a Logout does (D4 Ruling 14), and the page
-          // loads again, now showing the form for the invited address.
+          // forgets the user as a Logout does, and the page loads again, now
+          // showing the form for the invited address.
           try {
             await deleteCurrentSession();
           } catch (caught) {
@@ -258,7 +257,7 @@ export function AcceptInvitation({ visitor, providers, terms }: AcceptInvitation
             }
           }
           useUserStore.getState().clear();
-          // PostHog reset, and the staged playground edit removed (Q211).
+          // PostHog reset, and the staged playground edit removed.
           signedOutInThisBrowser();
           setError(null);
           await revalidator.revalidate();
@@ -267,9 +266,9 @@ export function AcceptInvitation({ visitor, providers, terms }: AcceptInvitation
     );
   }
 
-  // An invitation that can't make an account here (D36-1 decisions 35 and
-  // 52: invite-only and a personal organization's, or a closed site) offers
-  // sign-in only, saying why, to an address with no account as to one with.
+  // An invitation that can't make an account here (invite-only and a personal
+  // organization's, or a closed site) offers sign-in only, saying why, to an
+  // address with no account as to one with.
   if (invitation.hasAccount || !invitation.mayRegister) {
     return (
       <SignInAndJoinForm
@@ -366,8 +365,8 @@ function ErrorAlert({ error }: { error: string | null }) {
 /**
  * The organization as the cards' titles name it: a personal workspace named
  * by its owner's email reads "<email>'s organization", any other name is
- * itself (D36-1 Q264, the invite dialog's rule). Visible text, as the name
- * always was here.
+ * itself (the invite dialog's rule). Visible text, as the name always is
+ * here.
  */
 function invitedOrganization(invitation: Invitation): string {
   return organizationInSentence(invitation.organizationName, invitation.organizationType);
@@ -382,7 +381,7 @@ function SignedInAs({ email }: { email: string }) {
   );
 }
 
-/** The invited address, shown and fixed: only it can accept (decision 3). */
+/** The invited address, shown and fixed: only it can accept. */
 function InvitedEmailField({ email }: { email: string }) {
   return (
     <div className="space-y-2">
@@ -479,10 +478,10 @@ function MismatchCard({
 }
 
 /**
- * The existing-user form, for the invited address: its password,
- * then acceptance. "Forgot password?" stays in view, for an account whose
- * email was never confirmed ("Email not confirmed"): a reset confirms it
- * (D6 Preflight minor). The Google button comes back here.
+ * The existing-user form, for the invited address: its password, then
+ * acceptance. "Forgot password?" stays in view, for an account whose email
+ * was never confirmed ("Email not confirmed"): a reset confirms it. The
+ * Google button comes back here.
  */
 function SignInAndJoinForm({
   invitation,
@@ -494,7 +493,7 @@ function SignInAndJoinForm({
 }: {
   invitation: Invitation;
   providers: readonly OidcProvider[];
-  /** Why only sign-in is offered, when it is (D36-1 decision 52); null otherwise. */
+  /** Why only sign-in is offered, when it is; null otherwise. */
   notice: string | null;
   error: string | null;
   onError: (error: string | null) => void;
@@ -575,10 +574,10 @@ function SignInAndJoinForm({
 }
 
 /**
- * The new-user form, as registration at the invited address: its
- * password rule and terms checkbox (D6 decision 9; none on a site that asks
- * for no Terms, D36-1 decision 32). The account is verified,
- * since the link proved the mailbox, so it joins signed in.
+ * The new-user form, as registration at the invited address: its password
+ * rule and terms checkbox (none on a site that asks for no Terms). The
+ * account is verified, since the link proved the mailbox, so it joins signed
+ * in.
  */
 function CreateAccountAndJoinForm({
   invitation,
@@ -687,7 +686,7 @@ function CreateAccountAndJoinForm({
             </div>
           </div>
 
-          {/* No Terms on a site that asks for none (D36-1 decision 32). */}
+          {/* No Terms on a site that asks for none. */}
           {terms !== null && (
             <>
               <AuthDivider>Usage policies</AuthDivider>

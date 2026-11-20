@@ -4,35 +4,34 @@ import { RetryConfigSection } from "./shared/RetryConfigSection.js";
 import { SendingQueueSection } from "./shared/SendingQueueSection.js";
 
 /*
- * The ClickHouse exporter's form (ADR 0018), over the form's fields
- * (D9d decision 2, D9b's contract): each field writes its own key.
- * Collector claims are contrib v0.162.0's `exporter/clickhouseexporter`.
+ * The ClickHouse exporter's form, over the form's fields: each field writes
+ * its own key. Collector claims are contrib v0.162.0's
+ * `exporter/clickhouseexporter`.
  *
- * - Changed (decision 4): the Exponential Histogram table's default is
+ * - The Exponential Histogram table's default is
  *   `otel_metrics_exponential_histogram` (`config.go:109, 137`), not
  *   `otel_metrics_exp_histogram`. Database's placeholder is `default`, the
  *   default (`config.go:102, 125`; not `otel`); Data TTL's is `0`
  *   (`config.go:129`; not `72h`).
- * - New hints (decision 4; Preflight ruling 17): setting a certificate,
- *   key, CA, server name or Skip Verify loads TLS whatever the endpoint
- *   (`config.go:223-234`); Async Insert and Compression apply only when
- *   the endpoint and connection params don't set them (`config.go:182-191`);
- *   Engine Parameters are dropped while Table Engine is unset
- *   (`config.go:281-284`).
- * - Kept: the metric tables sit in a pruning scope two levels deep:
- *   clearing a kind's name removes the kind, and the last kind removes
+ * - Hints: setting a certificate, key, CA, server name or Skip Verify loads
+ *   TLS whatever the endpoint (`config.go:223-234`); Async Insert and
+ *   Compression apply only when the endpoint and connection params don't set
+ *   them (`config.go:182-191`); Engine Parameters are dropped while Table
+ *   Engine is unset (`config.go:281-284`).
+ * - The metric tables sit in a pruning scope two levels deep: clearing a
+ *   kind's name removes the kind, and the last kind removes
  *   `metrics_tables`; Table Engine and its parameters in one on
  *   `table_engine`. TLS is four plain fields (`tls` is a
- *   `configtls.ClientConfig`, `config.go:44`), not D9b's TLS section, which
- *   would add controls (decision 6).
- * - Kept (decision 11): Password is a plain text field: the usual value is
- *   a `${env:…}` reference, the YAML beside it shows it, and replay masks
- *   the editor (ADR 0024).
- * - Endpoint cleared removes the key (D9b's contract; `""` is refused
- *   either way, `config.go:143-146`). The queue and retry are
- *   on by default (`configoptional.Some`, `config.go:122-123`), as D9b's.
+ *   `configtls.ClientConfig`, `config.go:44`), not `TLSConfigSection`, which
+ *   would add controls.
+ * - Password is a plain text field: the usual value is a `${env:…}`
+ *   reference, the YAML beside it shows it, and replay masks the editor.
+ * - Endpoint cleared removes the key (`""` is refused either way,
+ *   `config.go:143-146`). The queue and retry are on by default
+ *   (`configoptional.Some`, `config.go:122-123`), as `SendingQueueSection`
+ *   and `RetryConfigSection` show them.
  *
- * Ids are fixed, the metric tables' by their fixed kind (decision 13).
+ * Ids are fixed, the metric tables' by their fixed kind.
  */
 
 /** Ignored when the endpoint sets compress (`config.go:187-191`). */

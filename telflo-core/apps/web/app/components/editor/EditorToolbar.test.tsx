@@ -47,7 +47,7 @@ beforeEach(() => {
 });
 
 describe("EditorToolbar", () => {
-  it("shows the name as text only, with its classes and no title (ADR 0024)", async () => {
+  it("shows the name as text only, with its classes and no title", async () => {
     renderToolbar();
 
     const name = await screen.findByRole("heading", { level: 1, name: "Production Monitoring" });
@@ -56,7 +56,7 @@ describe("EditorToolbar", () => {
     expect(name.closest(".h-12")).toHaveClass("bg-card", "border-b");
   });
 
-  it("puts the version picker first in the actions, then a divider, then Undo (D10 decision 10)", async () => {
+  it("puts the version picker first in the actions, then a divider, then Undo", async () => {
     renderToolbar();
 
     const picker = await screen.findByRole("combobox", { name: /^Version:/ });
@@ -121,7 +121,7 @@ describe("EditorToolbar", () => {
     });
   });
 
-  describe("renaming (D8 decision 14)", () => {
+  describe("renaming", () => {
     it("opens the field from the pencil, with the name, focused, at the name's size", async () => {
       const { user } = renderToolbar();
 
@@ -130,7 +130,7 @@ describe("EditorToolbar", () => {
       expect(field).toHaveValue("Production Monitoring");
       expect(field).toHaveFocus();
       expect(field).toHaveAttribute("maxlength", "200");
-      // A fixed label, never the name (ADR 0024: attributes aren't masked in replay).
+      // A fixed label, never the name (attributes aren't masked in replay).
       expect(field).toHaveAttribute("aria-label", "Configuration name");
       expect(field).toHaveClass("h-7");
       // 9 px a character, from 180 to 420 px: "Production Monitoring" is 21.

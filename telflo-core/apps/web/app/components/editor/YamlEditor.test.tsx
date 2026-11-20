@@ -6,9 +6,9 @@
  * records the command registered and lets a test set the markers, and renders
  * the text as text, as Monaco does. Its model holds the text; an edit written
  * into it fires `onChange`, as Monaco's does, and the stub records the calls
- * that make a store-set text its own undo step (Preflight ruling 16). The
- * browser tests and the hand check cover the real Monaco (builder.e2e.ts
- * shows a canvas change doesn't enter manual edit mode there).
+ * that make a store-set text its own undo step. The browser tests and
+ * manual checks cover the real Monaco (builder.e2e.ts shows a canvas change
+ * doesn't enter manual edit mode there).
  */
 
 import { act, render, screen, waitFor } from "@testing-library/react";
@@ -63,7 +63,7 @@ const monaco = {
 
 const model = {
   uri: MODEL_URI,
-  // The options set on the model, as Monaco's keeps them (the tab size, D21 Preflight ruling 33).
+  // The options set on the model, as Monaco's keeps them (the tab size).
   options: { tabSize: 2, indentSize: 2 } as Record<string, unknown>,
   getOptions: () => model.options,
   updateOptions: (next: Record<string, unknown>) => {
@@ -194,7 +194,7 @@ async function renderEditor(onSave: () => void = vi.fn()) {
   return { ...view, user: userEvent.setup() };
 }
 
-/** The collector validator found the text on screen valid (D13b decision 2's gate then opens). */
+/** The collector validator found the text on screen valid (Apply's validation gate then opens). */
 function answerValid() {
   act(() => answerValidation({ status: "valid", collectorVersion: "0.162.0", requirements: [] }));
 }
@@ -256,7 +256,7 @@ describe("YamlEditor", () => {
     render(<YamlEditor onSave={vi.fn()} />);
 
     expect(screen.getByText("Loading editor…")).toBeInTheDocument();
-    // A mount before loader.config would fetch Monaco from a CDN (Preflight ruling 16).
+    // A mount before loader.config would fetch Monaco from a CDN.
     expect(screen.queryByTestId("monaco-stub")).not.toBeInTheDocument();
     expect(fake.props).toBeNull();
 
@@ -335,17 +335,17 @@ describe("YamlEditor", () => {
         scrollbar: { vertical: "visible", horizontal: "visible" },
       },
     });
-    // The tab size goes on the model, never through the options (Preflight ruling 30).
+    // The tab size goes on the model, never through the options.
     expect(fake.props?.options).not.toHaveProperty("tabSize");
     expect(model.options).toMatchObject({ tabSize: 2, indentSize: 2 });
     for (const name of ["telflo-dark", "telflo-navy"]) {
       expect(monaco.editor.defineTheme).toHaveBeenCalledWith(name, expect.objectContaining({ base: "vs-dark", inherit: true }));
     }
-    // Light is Monaco's built-in `vs` (Q128): nothing is defined for it.
+    // Light is Monaco's built-in `vs`: nothing is defined for it.
     expect(monaco.editor.defineTheme).toHaveBeenCalledTimes(2);
   });
 
-  it("takes the theme and all four preferences from the store (D21 decisions 27 and 28)", async () => {
+  it("takes the theme and all four preferences from the store", async () => {
     choose("navy", { tabSize: 4, fontSize: 16, lineNumbers: false, minimap: true });
     await renderEditor();
 
@@ -378,7 +378,7 @@ describe("YamlEditor", () => {
     expect(screen.getByText("YAML").closest(".nokey")).not.toBeNull();
   });
 
-  it("is blocked from session replay: ph-no-capture on Monaco's container, its widgets and live region inside it, word-based suggestions off (ADR 0024)", async () => {
+  it("is blocked from session replay: ph-no-capture on Monaco's container, its widgets and live region inside it, word-based suggestions off", async () => {
     await renderEditor();
 
     // posthog-js's default replay blockClass; initOptions doesn't change it.
@@ -392,14 +392,14 @@ describe("YamlEditor", () => {
       overflowWidgetsDomNode?: HTMLElement;
     };
     // Completion's rows and details, and hover, carry the schema's keys and
-    // descriptions in attributes (D13c decision 12): Monaco renders them in
-    // its own element, inside the container, unless given another node for
-    // them. jsdom can't render them; the browser tests find them there.
+    // descriptions in attributes: Monaco renders them in its own element,
+    // inside the container, unless given another node for them. jsdom can't
+    // render them; the browser tests find them there.
     expect(options.overflowWidgetsDomNode === undefined || blocked!.contains(options.overflowWidgetsDomNode)).toBe(true);
     // Monaco would offer the configuration's words as suggestions, each word in a row's aria-label.
     expect(options.wordBasedSuggestions).toBe("off");
     // Monaco's screen-reader live region goes where it is given, not <body>:
-    // the shell's one replay-blocked host, shared by every Monaco (Ruling 48).
+    // the shell's one replay-blocked host, shared by every Monaco.
     expect(options.ariaContainerElement).toBeInstanceOf(HTMLElement);
     expect(options.ariaContainerElement).toBe(monacoAriaHost());
     expect(options.ariaContainerElement!.closest(".ph-no-capture")).not.toBeNull();
@@ -407,7 +407,7 @@ describe("YamlEditor", () => {
     expect(Object.keys(options.ariaContainerElement!)).toEqual([]);
   });
 
-  it("sets no path or defaultPath, which Monaco would write into a data-uri attribute (Preflight ruling 16)", async () => {
+  it("sets no path or defaultPath, which Monaco would write into a data-uri attribute", async () => {
     await renderEditor();
 
     expect(fake.props).not.toHaveProperty("path");
@@ -519,7 +519,7 @@ describe("YamlEditor", () => {
     expect(blob.type).toBe("text/yaml");
   });
 
-  describe("manual edit mode (D9a decision 2)", () => {
+  describe("manual edit mode", () => {
     const TYPED = `${YAML}exporters:\n  debug: {}\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      exporters: [debug]\n`;
 
     function applyButton() {
@@ -641,7 +641,7 @@ describe("YamlEditor", () => {
     });
   });
 
-  describe("the collector schema (D13c decisions 2, 3 and 11)", () => {
+  describe("the collector schema", () => {
     const TYPED = `${YAML}exporters:\n  debug: {}\n`;
 
     function applyButton() {
@@ -665,7 +665,7 @@ describe("YamlEditor", () => {
       await renderEditor();
 
       act(() => useEditorStore.getState().setCollectorVersion("0.161.0"));
-      // A retired pin: syntax only (decision 2).
+      // A retired pin: syntax only.
       act(() => useEditorStore.getState().setCollectorVersion("0.158.0"));
       act(() => useEditorStore.getState().setCollectorVersion("0.162.0"));
 
@@ -723,7 +723,7 @@ describe("YamlEditor", () => {
     });
   });
 
-  describe("the collector validator (D13b decisions 2, 3 and 14)", () => {
+  describe("the collector validator", () => {
     const TYPED = `${YAML}exporters:\n  debug: {}\n`;
 
     function applyButton() {
@@ -738,7 +738,7 @@ describe("YamlEditor", () => {
       expect((await screen.findAllByText(text)).length).toBeGreaterThan(0);
     }
 
-    it("Apply's gate and its four tooltips, first match wins: validating, errors, unchecked (unavailable or retired), else D9a's", async () => {
+    it("Apply's gate and its four tooltips, first match wins: validating, errors, unchecked (unavailable or retired), else the plain one", async () => {
       const { user } = await renderEditor();
       typeInMonaco(TYPED);
 
@@ -781,7 +781,7 @@ describe("YamlEditor", () => {
       expect(applyButton()).toBeDisabled();
     });
 
-    it("empty text is never checked: Apply follows the parse alone, with D9a's tooltip, and the bar shows nothing", async () => {
+    it("empty text is never checked: Apply follows the parse alone, with the plain tooltip, and the bar shows nothing", async () => {
       const { user } = await renderEditor();
       typeInMonaco("");
 
@@ -790,7 +790,7 @@ describe("YamlEditor", () => {
       expect(screen.queryByText("validating config…")).toBeNull();
     });
 
-    it("puts the status bar under the editor, inside its replay-blocked container (ADR 0024)", async () => {
+    it("puts the status bar under the editor, inside its replay-blocked container", async () => {
       await renderEditor();
       typeInMonaco(TYPED);
 
@@ -843,7 +843,7 @@ describe("YamlEditor", () => {
     });
   });
 
-  describe("a text the store sets (Preflight ruling 16)", () => {
+  describe("a text the store sets", () => {
     it("is written into Monaco as its own undo step, keeps the cursor and scroll, and doesn't enter manual edit mode", async () => {
       await renderEditor();
       const info = vi.spyOn(toast, "info");
@@ -890,7 +890,7 @@ describe("YamlEditor", () => {
       expect(fake.value).toBe(`${YAML}# typed\n`);
     });
 
-    it("a created version adopted under it clears Monaco's own undo history too, keeping the view: undo then changes nothing (D10 Ruling 22)", async () => {
+    it("a created version adopted under it clears Monaco's own undo history too, keeping the view: undo then changes nothing", async () => {
       await renderEditor();
       act(() => {
         expect(useEditorStore.getState().addPipeline("logs/extra")).not.toBeNull();
@@ -935,7 +935,7 @@ describe("YamlEditor", () => {
     });
   });
 
-  it("puts the YAML in no attribute, even with an error shown (ADR 0024)", async () => {
+  it("puts the YAML in no attribute, even with an error shown", async () => {
     const marker = "yaml-marker-4b1f";
     loadYaml(`receivers:\n  ${marker}: {}\n`);
     const { container } = await renderEditor();
@@ -951,8 +951,8 @@ describe("YamlEditor", () => {
     expect(attributes.filter((attribute) => attribute.includes(marker))).toEqual([]);
   });
 
-  describe("a published version: read-only (D11b decision 4; Preflight ruling 11)", () => {
-    it("gives Monaco readOnly, still blocked from replay with word-based suggestions off (D9a Ruling 37)", async () => {
+  describe("a published version: read-only", () => {
+    it("gives Monaco readOnly, still blocked from replay with word-based suggestions off", async () => {
       useEditorStore.getState().load({ organizationId: GROUP_ID, configuration: MINE, version: { ...VERSION, ...PUBLISHED_FIELDS } });
       await renderEditor();
 
@@ -980,7 +980,7 @@ describe("YamlEditor", () => {
       expect(useEditorStore.getState().isYamlEditing).toBe(false);
     });
 
-    it("hides Apply over text a stale tab typed before the version was published, keeping the text (ruling 12), and keeps Undo All (Ruling 31)", async () => {
+    it("hides Apply over text a stale tab typed before the version was published, keeping the text, and keeps Undo All", async () => {
       await renderEditor();
       typeInMonaco(`${YAML}# typed\n`);
       expect(screen.getByRole("button", { name: "Undo All" })).toBeInTheDocument();
@@ -993,7 +993,7 @@ describe("YamlEditor", () => {
       expect(useEditorStore.getState().text).toBe(`${YAML}# typed\n`);
     });
 
-    it("Undo All on a published version puts the published text back on screen and leaves manual edit mode (rulings 31 and 34)", async () => {
+    it("Undo All on a published version puts the published text back on screen and leaves manual edit mode", async () => {
       const { user } = await renderEditor();
       typeInMonaco(`${YAML}# typed\n`);
       act(() => useEditorStore.getState().replaceVersionSummary({ ...summaryOf(VERSION), ...PUBLISHED_FIELDS }));

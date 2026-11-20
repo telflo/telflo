@@ -11,24 +11,23 @@ import { findSupportedComponents, useCollectorCatalogueStore } from "~/lib/store
 import { selectIsEditingLocked, useEditorStore } from "~/lib/stores/editor-store.js";
 
 /*
- * The component palette (D9a decision 10): the entries, in its five
- * sections with their counts, as chips the canvas takes by drag and drop.
- * The drag carries the static palette entry, never anything a person wrote
+ * The component palette: the entries, in its five sections with their
+ * counts, as chips the canvas takes by drag and drop. The drag carries the
+ * static palette entry, never anything a person wrote
  * (`writePaletteDrag`).
  *
- * Only the components the open version's distribution supports (D13a
- * decision 6): the catalogue's `supportedComponents` for the
- * configuration's distribution and the pin on screen (a pick in the toolbar
- * changes it at once, saved or not), matched by `filterPaletteByAllowlist`.
- * Every entry for Contrib (null), and whenever the catalogue can't say
- * (unread, failed, or a pin it no longer offers): never an empty toolbox for
- * want of the catalogue. A section left with none is not shown. The filter is
- * the toolbox's only: components already on the canvas, or typed in the text,
- * stay. The palette doesn't read the catalogue itself; the editor page does
- * (`useCollectorDistributions`). Inside the playground (D31-1 decision 11,
- * Ruling 280) it shows every component, as the signed-in palette does before
- * its catalogue answers: a catalogue this tab read on a signed-in page is
- * never applied there.
+ * Only the components the open version's distribution supports: the
+ * catalogue's `supportedComponents` for the configuration's distribution and
+ * the pin on screen (a pick in the toolbar changes it at once, saved or not),
+ * matched by `filterPaletteByAllowlist`. Every entry for Contrib (null), and
+ * whenever the catalogue can't say (unread, failed, or a pin it no longer
+ * offers): never an empty toolbox for want of the catalogue. A section left
+ * with none is not shown. The filter is the toolbox's only: components already
+ * on the canvas, or typed in the text, stay. The palette doesn't read the
+ * catalogue itself; the editor page does (`useCollectorDistributions`). Inside
+ * the playground it shows every component, as the signed-in palette does
+ * before its catalogue answers: a catalogue this tab read on a signed-in page
+ * is never applied there.
  *
  * Palette chips mirror the canvas node cards: quiet hairline chips on the
  * card surface, the component type carried only by the icon's tint (the
@@ -36,7 +35,7 @@ import { selectIsEditingLocked, useEditorStore } from "~/lib/stores/editor-store
  *
  * While the canvas is locked (manual edit mode, or text it can't show) the
  * chips don't drag: the canvas under its overlay takes no drop. Nor on a
- * published version, which is read-only (D11b decision 4).
+ * published version, which is read-only.
  */
 
 const chipBox = "border-border bg-card hover:border-gray-300 hover:bg-accent dark:hover:border-gray-600";

@@ -11,13 +11,12 @@ import { RUNS_REQUEST_TIMEOUT_MS } from "~/lib/stores/testing-store.js";
 import { receiverTypeLabel } from "~/lib/test-templates/labels.js";
 
 /*
- * Product admin's Test Templates page (D14b Task 8: decisions 3, 13 and 14;
- * Preflight rulings 12 and 19), its dialog and its confirmation: the table
- * and its labels, the empty state, create (each validation message, the
+ * Product admin's Test Templates page, its dialog and its confirmation: the
+ * table and its labels, the empty state, create (each validation message, the
  * file's checks, the API's refusals), edit (metadata only, the changed
- * fields), delete (the confirmation), the toasts, the way out when the flag
- * is cleared mid-visit, and replay's rules (the hidden file input and the
- * chosen name blocked; no name in an attribute or a URL).
+ * fields), delete (the confirmation), the toasts, the way out when the flag is
+ * cleared mid-visit, and replay's rules (the hidden file input and the chosen
+ * name blocked; no name in an attribute or a URL).
  *
  * The API is its client's functions, spied on; toasts are spied on. Names,
  * descriptions and file names carry the private-text marker "zq".
@@ -144,7 +143,7 @@ async function fillNew(user: ReturnType<typeof userEvent.setup>, file: File) {
   return dialog;
 }
 
-describe("the Test Templates page (D14b Task 8)", () => {
+describe("the Test Templates page", () => {
   it("shows the header and table: Name, Receiver Type and Signal Type by their labels (raw as a fallback), Delete; the list from GET /api/v1/test-templates", async () => {
     renderPage();
 
@@ -183,7 +182,7 @@ describe("the Test Templates page (D14b Task 8)", () => {
     expect(TEMPLATES_ADMIN_LOAD_FAILED_MESSAGE).toBe("Failed to load test template files");
   });
 
-  it("gives up on a read that never answers after 10 s, as the Testing tab's reads do: 'Failed to load test template files', the loading line gone (D14b Ruling 50)", async () => {
+  it("gives up on a read that never answers after 10 s, as the Testing tab's reads do: 'Failed to load test template files', the loading line gone", async () => {
     vi.useFakeTimers();
     try {
       // Answers only by its abort, as the client does.
@@ -237,7 +236,7 @@ describe("the Test Templates page (D14b Task 8)", () => {
     expect(screen.getByRole("button", { name: OTLP_TRACES.name })).toBeInTheDocument();
   });
 
-  it("toasts nothing for an earlier read failing after a later one succeeded: only the latest read speaks (D14b Ruling 44)", async () => {
+  it("toasts nothing for an earlier read failing after a later one succeeded: only the latest read speaks", async () => {
     const first = deferred<{ templates: TestTemplate[] }>();
     listTemplates.mockReturnValueOnce(first.promise).mockResolvedValue({ templates: [OTLP_TRACES] });
     const { user } = renderPage();
@@ -481,7 +480,7 @@ describe("editing a template (metadata only)", () => {
     expect(listTemplates).toHaveBeenCalledOnce();
   });
 
-  it("closes the edit of a template deleted meanwhile (404, another admin's doing) on the API's words, and reads the list again, its row gone (D14b Ruling 43)", async () => {
+  it("closes the edit of a template deleted meanwhile (404, another admin's doing) on the API's words, and reads the list again, its row gone", async () => {
     update.mockRejectedValueOnce(NOT_FOUND);
     const { user } = renderPage();
     await user.click(await screen.findByRole("button", { name: OTLP_TRACES.name }));
@@ -497,7 +496,7 @@ describe("editing a template (metadata only)", () => {
     expect(screen.queryByRole("button", { name: OTLP_TRACES.name })).toBeNull();
     expect(screen.getByRole("button", { name: FILE_LINES.name })).toBeInTheDocument();
     expect(toastSuccess).not.toHaveBeenCalled();
-    // The name that opened it went with its row: the focus goes to "New Template", not the body (D14b Ruling 45).
+    // The name that opened it went with its row: the focus goes to "New Template", not the body.
     expect(document.activeElement).toBe(screen.getByRole("button", { name: "New Template" }));
   });
 });
@@ -537,11 +536,11 @@ describe("deleting a template (the confirmation)", () => {
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
     expect(toastSuccess).toHaveBeenCalledWith("Template deleted");
     await waitFor(() => expect(screen.queryByRole("button", { name: OTLP_TRACES.name })).toBeNull());
-    // The Delete that opened it went with its row: the focus goes to "New Template", not the body (D14b Ruling 45).
+    // The Delete that opened it went with its row: the focus goes to "New Template", not the body.
     expect(document.activeElement).toBe(screen.getByRole("button", { name: "New Template" }));
   });
 
-  it("shows a refusal by the API's own words, staying open; and nothing for a session that has ended (D14b Ruling 44)", async () => {
+  it("shows a refusal by the API's own words, staying open; and nothing for a session that has ended", async () => {
     remove
       .mockRejectedValueOnce(new ApiError("test_template_in_use", "The API's own words.", { status: 409 }))
       .mockRejectedValueOnce(SESSION_ENDED);
@@ -578,7 +577,7 @@ describe("deleting a template (the confirmation)", () => {
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
   });
 
-  it("moves the focus to 'New Template' after a delete answered 404, the row gone on the re-read, not to the body (D14b Ruling 45)", async () => {
+  it("moves the focus to 'New Template' after a delete answered 404, the row gone on the re-read, not to the body", async () => {
     remove.mockRejectedValueOnce(NOT_FOUND);
     const { user } = renderPage();
     await user.click(within(await waitFor(() => rowOf(OTLP_TRACES.name))).getByRole("button", { name: "Delete" }));
@@ -594,7 +593,7 @@ describe("deleting a template (the confirmation)", () => {
   });
 });
 
-describe("the focus as a dialog closes (D14b Ruling 46: no Radix trigger, so not the body)", () => {
+describe("the focus as a dialog closes (no Radix trigger, so not the body)", () => {
   const newTemplate = () => screen.getByRole("button", { name: "New Template" });
 
   it("goes back to 'New Template' from the new template's dialog: Cancel, Escape and a create", async () => {
@@ -695,7 +694,7 @@ describe("the flag cleared mid-visit (403 product_admin_required)", () => {
   });
 });
 
-describe("replay's rules (D14b Preflight ruling 19)", () => {
+describe("replay's rules", () => {
   it("keeps the hidden file input and the chosen file's name inside ph-no-capture, the name as text, never an input's value", async () => {
     const { user } = renderPage();
     const dialog = await fillNew(user, new File(["{}"], "zq-chosen-name.json"));

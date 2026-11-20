@@ -21,9 +21,9 @@ import { GROUP_ID, MINE, versionFixture } from "~/test/configurations.js";
 
 /*
  * The ComponentPalette tests (the allowlist's: the palette takes the
- * components from the catalogue, not a fetch of its own; D13a Preflight
- * ruling 18), with the sections, the drag, the help popover, the lock, the
- * toolbox's collapse, and the distribution's filter (D13a decision 6).
+ * components from the catalogue, not a fetch of its own), with the sections,
+ * the drag, the help popover, the lock, the toolbox's collapse, and the
+ * distribution's filter.
  */
 
 const initialState = useEditorStore.getState();
@@ -189,7 +189,7 @@ function sectionsOf(container: HTMLElement) {
   return [...container.querySelectorAll("h3")].map((heading) => [heading.textContent, heading.nextElementSibling?.textContent]);
 }
 
-describe("ComponentPalette: the distribution's components (D13a decision 6)", () => {
+describe("ComponentPalette: the distribution's components", () => {
   it("filters the palette to the distribution's supported components, without reading the catalogue itself", () => {
     const read = vi.spyOn(apiClient, "getCollectorDistributions");
     seedCatalogue([...CATALOGUE, SMALL]);
@@ -288,7 +288,7 @@ service:
   });
 });
 
-describe("ComponentPalette in the playground (D31-1 decision 11, Ruling 282)", () => {
+describe("ComponentPalette in the playground", () => {
   it("shows every component, even with a catalogue this tab read on a signed-in page that would narrow it", () => {
     seedCatalogue([...CATALOGUE, SMALL]);
     openOf(SMALL.id, "2.36.0");

@@ -3,9 +3,9 @@ import type { ReactNode } from "react";
 import { Label } from "~/components/ui/label.js";
 
 /*
- * A form field (ADR 0018): a label, the control, and a one-line hint. D9a's
- * Configuration tab uses it for the instance name; D9b's forms for every
- * field.
+ * A form field: a label, the control, and a one-line hint. The
+ * Configuration tab uses it for the instance name; the component forms for
+ * every field.
  */
 
 interface ConfigFieldProps {

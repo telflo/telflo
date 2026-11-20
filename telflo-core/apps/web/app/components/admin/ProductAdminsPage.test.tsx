@@ -21,17 +21,17 @@ import { attributesHolding } from "~/test/fleets.js";
 import { holdsText, quietQueries, showsText, waitUntilGone } from "~/test/service-accounts.js";
 
 /*
- * The Product admins page (D29 Task 3: decisions 5, 28, 39 and 41): the
- * list with "(you)", Add by exact email, Remove behind a confirmation, each
- * refusal's toast in fixed words (the last-admin 409 among them), a removal
- * of yourself going to `/app`, a 403 going there too, and replay's rules:
- * the typed email inside `ph-no-capture` with no placeholder, no email in
- * an attribute, a toast, the title or the page's address.
+ * The Product admins page: the list with "(you)", Add by exact email,
+ * Remove behind a confirmation, each refusal's toast in fixed words (the
+ * last-admin 409 among them), a removal of yourself going to `/app`, a 403
+ * going there too, and replay's rules: the typed email inside
+ * `ph-no-capture` with no placeholder, no email in an attribute, a toast,
+ * the title or the page's address.
  *
  * The API is its client's functions, spied on; toasts are spied on. Emails
  * are other people's personal data: checked as booleans with fixed labels
  * (showsText, holdsText, attributesHolding's count), the queries quieted
- * so a failure prints no DOM (Preflight ruling 17).
+ * so a failure prints no DOM.
  */
 
 const ME: ProductAdmin = { id: MEMBER_ID, email: "zq-me@example.com" };
@@ -151,7 +151,7 @@ function storageHolds(text: string): boolean {
 /** Whether any toast was called with something holding `text`. */
 const toastsHold = (text: string) => [...toastError.mock.calls, ...toastSuccess.mock.calls].some((call) => holdsText(call, text));
 
-describe("the Product admins page (D29 decision 39)", () => {
+describe("the Product admins page", () => {
   it("lists the product admins in the API's order, '(you)' on the caller's row only, each with a Remove named by fixed words and the row's email cell", async () => {
     renderPage();
     expect(await screen.findByRole("heading", { level: 1, name: "Product admins" })).toBeInTheDocument();
@@ -183,7 +183,7 @@ describe("the Product admins page (D29 decision 39)", () => {
     expect(await screen.findByRole("cell", { name: "No product admins" })).toBeInTheDocument();
   });
 
-  it("toasts 'Failed to load product admins' when the read fails, shows no table and never 'No product admins'; Try again reads it (Ruling 264's state)", async () => {
+  it("toasts 'Failed to load product admins' when the read fails, shows no table and never 'No product admins'; Try again reads it", async () => {
     list.mockRejectedValueOnce(SERVER_ERROR).mockResolvedValueOnce({ items: [] });
     const { user } = renderPage();
     await waitFor(() => expect(toastError).toHaveBeenCalledWith(PRODUCT_ADMINS_LOAD_FAILED_MESSAGE));
@@ -352,7 +352,7 @@ describe("the Product admins page (D29 decision 39)", () => {
       expect(toastSuccess).toHaveBeenCalledWith("Product admin removed");
     });
 
-    it("toasts the last-admin refusal (409 last_product_admin) in decision 5's words, closes the confirmation and stays", async () => {
+    it("toasts the last-admin refusal (409 last_product_admin) in its fixed words, closes the confirmation and stays", async () => {
       remove.mockRejectedValueOnce(LAST_ADMIN);
       const { user } = renderPage();
       const dialog = await openRemove(user, ME);
@@ -441,7 +441,7 @@ describe("the Product admins page (D29 decision 39)", () => {
     });
   });
 
-  describe("replay's rules (decision 41)", () => {
+  describe("replay's rules", () => {
     it("keeps the typed email inside ph-no-capture with no placeholder, and no email in an attribute, storage, a toast, the title or the address", async () => {
       const { user } = renderPage();
       await screen.findByRole("table");

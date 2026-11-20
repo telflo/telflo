@@ -17,17 +17,17 @@ import type { OTelNode } from "~/lib/graph/types.js";
 import { useEditorStore } from "~/lib/stores/editor-store.js";
 
 /*
- * The duplicate dialog (ADR 0018; D9a decision 12): a receiver, processor or
- * exporter is either copied into a chosen pipeline, as a new component, or
- * linked into another pipeline as the same component (one entry in the text,
- * named in each pipeline's list).
+ * The duplicate dialog: a receiver, processor or exporter is either copied
+ * into a chosen pipeline, as a new component, or linked into another
+ * pipeline as the same component (one entry in the text, named in each
+ * pipeline's list).
  *
  * An instance is named as the text names it (`otlp_grpc/2` stays so, not
  * the palette's spelling), and a pipeline already has it only when a
  * component of the same type has that name there (names alone would let an
  * `otlp` exporter hide a pipeline from an `otlp` receiver). Cancel clears the
  * choices, as closing does. The options' values are the nodes' opaque ids;
- * names are text only, never an attribute (decision 7).
+ * names are text only, never an attribute.
  */
 
 interface DuplicateNodeDialogProps {

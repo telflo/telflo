@@ -52,10 +52,9 @@ import { findPaletteEntry } from "~/lib/graph/palette.js";
 import type { ComponentType } from "~/lib/graph/types.js";
 
 /*
- * The one icon map (D9a decisions 8 and 10): the canvas's nodes, the
- * toolbox and the Configuration tab all take a component's icon from here,
- * so a component shows the same icon everywhere (never another icon on the
- * canvas).
+ * The one icon map: the canvas's nodes, the toolbox and the Configuration
+ * tab all take a component's icon from here, so a component shows the same
+ * icon everywhere (never another icon on the canvas).
  *
  * A few ecosystem components keep a vendor mark (Kubernetes, Datadog,
  * ClickStack; their provenance is beside their paths and in

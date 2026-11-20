@@ -7,7 +7,7 @@ import { GoogleIcon } from "./GoogleIcon.js";
 /**
  * The providers the sign-in and register forms can draw a button for. The
  * API lists what is configured (already sorted); a provider without an icon
- * here gets no button. In D2c that is Google alone.
+ * here gets no button. That is Google alone.
  */
 const KNOWN_PROVIDERS = {
   google: { label: "Google", Icon: GoogleIcon },
@@ -39,8 +39,8 @@ export function federatedStartHref(id: KnownProviderId, redirectTo?: string): st
  * and holds still while the browser leaves for the provider. If the person
  * comes back with the Back button, a browser that kept the page in its
  * back/forward cache restores it exactly as it left, still redirecting and
- * disabled (D2c Ruling 16). A `pageshow` with `persisted` set is that
- * restore, so the state resets and the form is usable again.
+ * disabled. A `pageshow` with `persisted` set is that restore, so the
+ * state resets and the form is usable again.
  */
 export function useRedirectingProvider(): [KnownProviderId | null, (id: KnownProviderId | null) => void] {
   const [redirectingId, setRedirectingId] = useState<KnownProviderId | null>(null);
@@ -67,12 +67,12 @@ export interface FederatedSignInButtonsProps {
 
 /**
  * A grid of outline buttons, one full-width button per provider. Each is a
- * plain link, not a client-side `<Link>` (D2c preflight): the start endpoint
- * is the API's, and the browser must leave the app to reach the provider.
- * Once one is clicked the page navigates away; the state resets only if the
- * page comes back from the back/forward cache (useRedirectingProvider). A
- * modified click (a new tab or window) leaves this page where it is, so it
- * doesn't count as redirecting.
+ * plain link, not a client-side `<Link>`: the start endpoint is the API's,
+ * and the browser must leave the app to reach the provider. Once one is
+ * clicked the page navigates away; the state resets only if the page comes
+ * back from the back/forward cache (useRedirectingProvider). A modified
+ * click (a new tab or window) leaves this page where it is, so it doesn't
+ * count as redirecting.
  */
 export function FederatedSignInButtons({
   providerIds,

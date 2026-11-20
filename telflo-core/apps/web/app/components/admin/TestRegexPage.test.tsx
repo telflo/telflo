@@ -10,9 +10,8 @@ import { ApiError, REQUEST_ABORTED } from "~/lib/api-client.js";
 import { RUNS_REQUEST_TIMEOUT_MS } from "~/lib/stores/testing-store.js";
 
 /*
- * Product admin's Test Regex page (D15b Task 3: decisions 8, 9 and 12;
- * Preflight rulings 16 and 17), its dialog and its confirmation, with D14b's
- * admin-page conventions: the table in the API's order, the empty, loading
+ * Product admin's Test Regex page, its dialog and its confirmation, with the
+ * admin pages' conventions: the table in the API's order, the empty, loading
  * and failed states, create, edit and delete with each refusal where it
  * belongs (the evaluator's under Regex, the name's clash under Name, the
  * check's 429 and 503 in a toast), the re-read after each write, the way out
@@ -73,7 +72,7 @@ const RATE_LIMITED = new ApiError("validation_rule_rate_limited", "Too many rule
 const UNAVAILABLE = new ApiError("rules_unavailable", "Rules can't be checked right now. Try again shortly.", { status: 503 });
 const SERVER_ERROR = new ApiError("unexpected_response", "Unexpected response", { status: 500 });
 
-/** A toast carrying an error's words: blocked from replay (Preflight ruling 17). */
+/** A toast carrying an error's words: blocked from replay. */
 const PRIVATE = { className: "ph-no-capture" };
 
 function Landed() {
@@ -172,7 +171,7 @@ async function openDelete(user: User, entry: TestRegex) {
   return screen.findByRole("dialog", { name: "Delete Test Regex" });
 }
 
-describe("the Test Regex page (D15b Task 3)", () => {
+describe("the Test Regex page", () => {
   it("shows the header and table, Name, Category, Regex and Actions, in the order the API answers (GET /api/v1/test-regexes)", async () => {
     renderPage();
 
@@ -189,7 +188,7 @@ describe("the Test Regex page (D15b Task 3)", () => {
     expect(listRegexes).toHaveBeenCalledWith({ signal: expect.any(AbortSignal) });
   });
 
-  it("shows each regex in full, wrapped, with no title and no disclosure (Preflight ruling 16)", async () => {
+  it("shows each regex in full, wrapped, with no title and no disclosure", async () => {
     renderPage();
     await screen.findByRole("button", { name: LONG.name });
 
@@ -230,7 +229,7 @@ describe("the Test Regex page (D15b Task 3)", () => {
     expect(toastError).not.toHaveBeenCalled();
   });
 
-  it("gives up on a read that never answers after 10 s: 'Failed to load test regexes', the loading line gone (D14b Ruling 50)", async () => {
+  it("gives up on a read that never answers after 10 s: 'Failed to load test regexes', the loading line gone", async () => {
     vi.useFakeTimers();
     try {
       // Answers only by its abort, as the client does.
@@ -347,7 +346,7 @@ describe("creating an entry (the dialog)", () => {
     expect(create).not.toHaveBeenCalled();
   });
 
-  it("trims as the API does (Ruling 22): a name of U+0085, U+FEFF, U+0085 is none; the text sent, and an edit's comparison, is the API's trimmed text", async () => {
+  it("trims as the API does: a name of U+0085, U+FEFF, U+0085 is none; the text sent, and an edit's comparison, is the API's trimmed text", async () => {
     const { user } = renderPage();
     const dialog = await fillNew(user, { name: "x" });
     // One JavaScript trim, then one of Go's, leaves U+FEFF: the API trims again and finds nothing.
@@ -615,7 +614,7 @@ describe("editing an entry", () => {
     expect(listRegexes).toHaveBeenCalledOnce();
   });
 
-  it("closes the edit of an entry deleted meanwhile (404) on the API's words, blocked from replay, and reads the list again, its row gone, the focus on 'New Regex' (D14b Rulings 43 and 45)", async () => {
+  it("closes the edit of an entry deleted meanwhile (404) on the API's words, blocked from replay, and reads the list again, its row gone, the focus on 'New Regex'", async () => {
     update.mockRejectedValueOnce(NOT_FOUND);
     const { user } = renderPage();
     const dialog = await openEdit(user, EMAIL);
@@ -706,7 +705,7 @@ describe("deleting an entry (the confirmation)", () => {
   });
 });
 
-describe("the focus as a dialog closes (D14b Ruling 46: no Radix trigger, so not the body)", () => {
+describe("the focus as a dialog closes (no Radix trigger, so not the body)", () => {
   const newRegex = () => screen.getByRole("button", { name: "New Regex" });
 
   it("goes back to 'New Regex' from the new entry's dialog: Cancel, Escape and a create", async () => {
@@ -802,7 +801,7 @@ describe("the flag cleared mid-visit (403 product_admin_required): the admin lea
   });
 });
 
-describe("replay's rules (ADR 0024; Preflight rulings 16 and 17)", () => {
+describe("replay's rules", () => {
   /** Whether `element` is inside a block replay drops. */
   const blocked = (element: Element) => element.closest(".ph-no-capture") !== null;
 

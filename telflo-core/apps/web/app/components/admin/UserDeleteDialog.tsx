@@ -19,8 +19,7 @@ import { isNamedByEmail } from "~/lib/organization-names.js";
 import { failureMessage } from "~/lib/test-runs/messages.js";
 
 /*
- * A person's delete from the Users page (D29 decisions 29, 30 and 38;
- * Preflight rulings 15 and 21; Ruling 258; Parity Notes):
+ * A person's delete from the Users page:
  *
  * - A blocked person: "Cannot delete user" and the reason, fixed words
  *   around the visible values (the email, the organization's name, the
@@ -30,11 +29,10 @@ import { failureMessage } from "~/lib/test-runs/messages.js";
  *   other members and pending invitations first." (not a transfer of
  *   ownership, which a personal organization can't make), and for a
  *   personal workspace under its default name, its owner's email, "… owns
- *   <email>'s organization. …" (D36-1 Q264; only a personal organization
- *   has an owner, migration 010's check);
- *   `product_admin` "… is a product admin. Remove their product-admin role
- *   first." When the row is gone from a re-read, the kind's sentence in
- *   fixed words only (BLOCKED_WITHOUT_ROW).
+ *   <email>'s organization. …" (only a personal organization has an owner,
+ *   migration 010's check); `product_admin` "… is a product admin. Remove
+ *   their product-admin role first." When the row is gone from a re-read,
+ *   the kind's sentence in fixed words only (BLOCKED_WITHOUT_ROW).
  * - Otherwise "Nuclear delete: <email>": what goes (said as the platform does
  *   it), "This cannot be undone. Type the user's email to confirm.", which
  *   labels an uncontrolled field inside `ph-no-capture` with no placeholder
@@ -56,14 +54,14 @@ import { failureMessage } from "~/lib/test-runs/messages.js";
  * re-read found them), never a live row. Other people's emails and
  * organization names are visible text only, inside the shell's `ph-mask`
  * (Radix portals the dialog into `<body>`, which the shell masks), never an
- * attribute, a toast or the title (decision 41).
+ * attribute, a toast or the title.
  */
 
 export const USER_DELETED_MESSAGE = "Account permanently deleted";
 export const USER_DELETE_FAILED_MESSAGE = "Failed to delete user";
 export const USER_DELETE_CONFIRM_WORDS = "This cannot be undone. Type the user's email to confirm.";
 
-/** A block's sentence in fixed words only: the re-read no longer lists the person (Preflight ruling 15). */
+/** A block's sentence in fixed words only: the re-read no longer lists the person. */
 export const BLOCKED_WITHOUT_ROW: Record<AdminUserBlockKind, string> = {
   member: "This account is a member of an organization someone else is in. Remove them from the organization before deleting this account.",
   owner: "This account owns an organization with other members or pending invitations. Remove its other members and pending invitations first.",
@@ -95,7 +93,7 @@ export function UserDeleteDialog(props: UserDeleteDialogProps) {
   return <DeleteSession key={opening} {...props} />;
 }
 
-/** The block's sentence around the visible values (decision 38). */
+/** The block's sentence around the visible values. */
 function BlockReason({ email, block }: { email: string; block: AdminUserBlock }) {
   const strong = (text: string) => <span className="font-medium text-foreground">{text}</span>;
   switch (block.kind) {
@@ -108,7 +106,7 @@ function BlockReason({ email, block }: { email: string; block: AdminUserBlock })
       );
     case "owner":
       // Only a personal organization has an owner (migration 010's check):
-      // named by its owner's email, it is "<email>'s organization" (Q264).
+      // named by its owner's email, it is "<email>'s organization".
       return (
         <>
           {strong(email)} owns{" "}

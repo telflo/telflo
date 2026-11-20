@@ -18,13 +18,12 @@ import {
 } from "~/lib/api-client.js";
 
 /*
- * Product admin's Library page (`/product-admin/library`, the third tab;
- * D23-2 decisions 5, 25 and 53): its header ("Library", "New
- * File"), the table (Name, which opens the edit; Description; File, the
- * file's own name; Actions, Delete), "Loading library files...", the empty
- * row "No library files yet", and its toasts ("Library file
- * created|updated|deleted", "Failed to load library files"). As the test
- * templates' page's (D14b):
+ * Product admin's Library page (`/product-admin/library`, the third tab): its
+ * header ("Library", "New File"), the table (Name, which opens the edit;
+ * Description; File, the file's own name; Actions, Delete), "Loading library
+ * files...", the empty row "No library files yet", and its toasts ("Library
+ * file created|updated|deleted", "Failed to load library files"). As the test
+ * templates' page's:
  * - the files come from the API (`GET /api/v1/library-files`, which a
  *   product admin reads with or without the current terms), every write
  *   goes through it, and the list is read again after each; only the
@@ -37,11 +36,10 @@ import {
  *   the dialog, shows the API's words and reads the list again;
  * - every dialog's close gives the focus back to the button that opened it,
  *   or to "New File" when that row has gone;
- * - no name reaches an attribute, a toast or a log (decision 58): the Name
- *   column's button opens the edit by the file's id and is named by its
- *   text; each Delete is described by the name's text
- *   (`aria-describedby`). The page sits under the signed-in app's
- *   `ph-mask`; nothing is captured (decision 55).
+ * - no name reaches an attribute, a toast or a log: the Name column's button
+ *   opens the edit by the file's id and is named by its text; each Delete is
+ *   described by the name's text (`aria-describedby`). The page sits under
+ *   the signed-in app's `ph-mask`; nothing is captured.
  */
 
 function isLibraryFileNotFound(error: unknown): error is ApiError {

@@ -21,11 +21,10 @@ import {
 import { GROUP_ID, MINE, PUBLISHED_FIELDS, THEIRS, versionFixture } from "~/test/configurations.js";
 
 /*
- * The toolbar's collector picker (D13a decisions 4, 5 and 8): the
- * `CollectorVersionSelect` cases (no ClickStack flag or public picker;
- * Preflight ruling 18), then the deprecated pin, the read-only published
- * version and privacy. The editor's store holds the configuration and the
- * pin (`load`), so the hydration cases are the store's loads.
+ * The toolbar's collector picker: the `CollectorVersionSelect` cases (no
+ * ClickStack flag or public picker), then the deprecated pin, the read-only
+ * published version and privacy. The editor's store holds the configuration
+ * and the pin (`load`), so the hydration cases are the store's loads.
  */
 
 const LABEL = "Tail sampling zq7c";
@@ -53,7 +52,7 @@ function findLockedDistribution() {
 
 const versionPicker = () => screen.getByRole("combobox", { name: /collector version/i });
 
-/** A deprecated pin's note mark, whose tooltip is the note (Ruling 36). */
+/** A deprecated pin's note mark, whose tooltip is the note. */
 const queryNoteMark = () => screen.queryByRole("img", { name: DEPRECATION_NOTE_LABEL });
 
 beforeEach(() => {
@@ -90,7 +89,7 @@ describe("CollectorVersionSelect", () => {
     expect(locked).not.toHaveTextContent(CONTRIB_LABEL);
   });
 
-  it("explains the lock in a tooltip, in the spec's words", async () => {
+  it("explains the lock in a tooltip, in its fixed words", async () => {
     open();
     const user = renderPicker();
     expect(screen.queryAllByText(DISTRIBUTION_LOCKED_TOOLTIP)).toHaveLength(0);
@@ -101,7 +100,7 @@ describe("CollectorVersionSelect", () => {
     expect(DISTRIBUTION_LOCKED_TOOLTIP).toBe("Set when this configuration was created.");
   });
 
-  it("is an image named for the distribution and its lock (VersionSelect's lock's pattern; Ruling 36)", async () => {
+  it("is an image named for the distribution and its lock (VersionSelect's lock's pattern)", async () => {
     open();
     renderPicker();
 
@@ -110,7 +109,7 @@ describe("CollectorVersionSelect", () => {
     );
   });
 
-  it("says \"Collector:\" to the eye only, on wide screens: the picker's name says it, so it isn't read twice (Ruling 34)", async () => {
+  it("says \"Collector:\" to the eye only, on wide screens: the picker's name says it, so it isn't read twice", async () => {
     open();
     renderPicker();
 
@@ -179,8 +178,8 @@ describe("CollectorVersionSelect", () => {
     expect(screen.getByText("v0.162.0")).toBeInTheDocument();
   });
 
-  // Every version has a pin (D13a decision 9), so the leak to guard against
-  // is the previous version's pin, not a previous distribution.
+  // Every version has a pin, so the leak to guard against is the previous
+  // version's pin, not a previous distribution.
   it("does not leak the previous version's pin when another configuration's version opens", async () => {
     open(versionFixture({ collectorVersion: "0.160.0" }));
     renderPicker();
@@ -234,7 +233,7 @@ describe("CollectorVersionSelect", () => {
   });
 });
 
-describe("CollectorVersionSelect's list (D13a decision 8)", () => {
+describe("CollectorVersionSelect's list", () => {
   it("lists the distribution's offered versions newest first, each v-prefixed with its description, the default marked", async () => {
     open();
     const user = renderPicker();
@@ -262,7 +261,7 @@ describe("CollectorVersionSelect's list (D13a decision 8)", () => {
   });
 });
 
-describe("a deprecated pin (D13a decision 4)", () => {
+describe("a deprecated pin", () => {
   const RETIRED = versionFixture({
     label: LABEL,
     collectorVersion: RETIRED_VERSION,
@@ -341,7 +340,7 @@ describe("a deprecated pin (D13a decision 4)", () => {
     expect(queryNoteMark()).toBeInTheDocument();
   });
 
-  it("the saved pin's deprecation is the server's, not the catalogue read with the page: a release it doesn't list isn't marked deprecated (Ruling 36)", async () => {
+  it("the saved pin's deprecation is the server's, not the catalogue read with the page: a release it doesn't list isn't marked deprecated", async () => {
     // A teammate picked 0.163.0, released since this page read the catalogue; the server says it is offered.
     open(versionFixture({ collectorVersion: "0.163.0" }));
     const user = renderPicker();
@@ -377,7 +376,7 @@ describe("a deprecated pin (D13a decision 4)", () => {
   });
 });
 
-describe("on a published version (D11b decision 4)", () => {
+describe("on a published version", () => {
   it("is read-only with the rest of the editor: the dropdown is disabled, showing the pin", async () => {
     open(versionFixture({ ...VERSION, ...PUBLISHED_FIELDS, collectorVersion: "0.161.0" }));
     const user = renderPicker();
@@ -391,7 +390,7 @@ describe("on a published version (D11b decision 4)", () => {
     expect(await findLockedDistribution()).toHaveTextContent(/Otel Contrib/);
   });
 
-  it("a deprecated pin's note is still reached by the keyboard while the dropdown is disabled (Ruling 36)", async () => {
+  it("a deprecated pin's note is still reached by the keyboard while the dropdown is disabled", async () => {
     open(
       versionFixture({
         ...VERSION,
@@ -423,7 +422,7 @@ describe("on a published version (D11b decision 4)", () => {
   });
 });
 
-describe("privacy (ADR 0024)", () => {
+describe("privacy", () => {
   it("puts neither the configuration's name nor the version's label in any attribute, open or closed", async () => {
     open();
     const user = renderPicker();
@@ -442,7 +441,7 @@ describe("privacy (ADR 0024)", () => {
   });
 });
 
-describe("in the toolbar (D13a decision 8)", () => {
+describe("in the toolbar", () => {
   function renderToolbar(onSave = vi.fn()) {
     const Stub = createRoutesStub([
       {

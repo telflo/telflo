@@ -20,8 +20,8 @@ function routesStub() {
 
 /**
  * Renders the form at `url`. The form reads the token from the browser's own
- * `location.hash` (D3 Ruling 14), which the router's in-memory entries don't
- * set, so the document's URL is set to match.
+ * `location.hash`, which the router's in-memory entries don't set, so the
+ * document's URL is set to match.
  */
 function renderAt(url = "/reset-password#token=from-the-email") {
   window.history.replaceState(null, "", url);
@@ -62,7 +62,7 @@ describe("ResetPasswordForm", () => {
     expect(html).not.toContain("missing its reset code");
   });
 
-  it("takes the token out of the address bar as it mounts, before analytics can record the URL (D4 Ruling 14)", async () => {
+  it("takes the token out of the address bar as it mounts, before analytics can record the URL", async () => {
     const spy = vi.spyOn(apiClient, "resetPassword").mockResolvedValue(undefined);
     const user = userEvent.setup();
     renderAt("/reset-password?utm_source=mail#token=from-the-email");
@@ -127,7 +127,7 @@ describe("ResetPasswordForm", () => {
     expect(spy).not.toHaveBeenCalled();
   });
 
-  it("shows the card, with D1's minimum as the hint", async () => {
+  it("shows the card, with the 12-character minimum as the hint", async () => {
     renderAt();
     expect(await screen.findByText("Set New Password")).toBeInTheDocument();
     expect(screen.getByText("Enter your new password below")).toBeInTheDocument();

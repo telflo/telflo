@@ -8,8 +8,8 @@ import { selectIsEditingLocked, useEditorStore } from "~/lib/stores/editor-store
 
 /**
  * The builder buttons' titles, which are also their `aria-label`s: fixed
- * text, never a label or an undo description (D9a decision 7; not
- * "Undo: <description> (Ctrl+Z)" or "Delete "<label>" (Delete)").
+ * text, never a label or an undo description (not "Undo: <description>
+ * (Ctrl+Z)" or "Delete "<label>" (Delete)").
  */
 export const UNDO_TITLE = "Undo (Ctrl+Z)";
 export const REDO_TITLE = "Redo (Ctrl+Shift+Z)";
@@ -17,21 +17,20 @@ export const DUPLICATE_TITLE = "Duplicate (Ctrl+D)";
 export const DELETE_TITLE = "Delete";
 
 /**
- * The editor toolbar's builder buttons (D9a decisions 7, 8 and 12), Undo,
- * Redo, Duplicate and Delete, with DuplicateNodeDialog and the keyboard
- * shortcuts that come with them (`useUndoRedo`): taken out of EditorToolbar
- * as they were, the same DOM, so the playground's and the public editor's
- * toolbars share them (D31-1 decision 28, Preflight ruling 10).
+ * The editor toolbar's builder buttons, Undo, Redo, Duplicate and Delete,
+ * with DuplicateNodeDialog and the keyboard shortcuts that come with them
+ * (`useUndoRedo`): taken out of EditorToolbar as they were, the same DOM,
+ * so the playground's and the public editor's toolbars share them.
  *
  * Their disabled rules: Duplicate and Delete are disabled too while the
  * canvas is locked; Undo and Redo follow the store's rules (disabled in
  * manual edit mode, not while the text can't be shown, since an undo can
- * bring back text that reads). Changed: their titles are fixed and are their
+ * bring back text that reads). Their titles are fixed and are their
  * `aria-label`s (never the undo's description or the node's label); Delete
  * asks through the one delete dialog (the canvas actions mount it). Duplicate
  * opens the `DuplicateNodeDialog` for a receiver, processor or exporter and
  * duplicates a connector or an extension in place. A published version is
- * read-only (D11b decision 4): all four are disabled.
+ * read-only: all four are disabled.
  */
 export function EditorEditActions() {
   const locked = useEditorStore(selectIsEditingLocked);

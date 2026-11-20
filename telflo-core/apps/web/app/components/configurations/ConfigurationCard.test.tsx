@@ -50,7 +50,7 @@ describe("ConfigurationCard", () => {
     expect(card).not.toHaveTextContent("@");
   });
 
-  it("puts the name in no attribute: no title (ADR 0024)", () => {
+  it("puts the name in no attribute: no title", () => {
     const { card } = renderCard(THEIRS, false);
 
     for (const element of [card, ...card.querySelectorAll("*")]) {
@@ -106,7 +106,7 @@ describe("ConfigurationCard", () => {
     expect(onOpen).not.toHaveBeenCalled();
   });
 
-  it("has no Delete where it isn't allowed, and Edit still opens (D11b decision 2)", async () => {
+  it("has no Delete where it isn't allowed, and Edit still opens", async () => {
     const { onOpen, user } = renderCard(THEIRS, false, false);
 
     expect(screen.queryByRole("button", { name: "Delete" })).toBeNull();
@@ -117,7 +117,7 @@ describe("ConfigurationCard", () => {
   it.each([
     ["Published", THEIRS, "border-brand/25"],
     ["Draft", MINE, "border-border"],
-  ])("shows %s in the footer's left slot, the badge's text the word alone (D11b decision 6)", (word, configuration, variantClass) => {
+  ])("shows %s in the footer's left slot, the badge's text the word alone", (word, configuration, variantClass) => {
     const { card } = renderCard(configuration, configuration === MINE);
 
     const badge = within(card).getByText(word);
@@ -142,7 +142,7 @@ describe("ConfigurationCard", () => {
     expect(onOpen).not.toHaveBeenCalled();
   });
 
-  describe("the distribution tag (D13a decision 10)", () => {
+  describe("the distribution tag", () => {
     it("shows the compact distribution label with its icon", () => {
       const { card } = renderCard(MINE, true);
 
@@ -161,9 +161,9 @@ describe("ConfigurationCard", () => {
       expect(within(card).getByTitle(/built for/i).querySelector("svg")).not.toBeNull();
     });
 
-    // Every configuration has a distribution here (D13a decision 9), so the
-    // tag is never omitted; while the catalogue is unread (or failed) it is
-    // found from the id alone.
+    // Every configuration has a distribution here, so the tag is never
+    // omitted; while the catalogue is unread (or failed) it is found from the
+    // id alone.
     it("shows the tag from the id alone while the catalogue is unread", () => {
       const { card } = renderCard(MINE, true, true, null);
 
@@ -171,7 +171,7 @@ describe("ConfigurationCard", () => {
       expect(within(card).getByTitle("Built for otelcol-contrib — chosen when this configuration was created.")).toBeInTheDocument();
     });
 
-    it("gives the tag a fixed tooltip naming the catalogue's label, and no name, email or description in any attribute (ADR 0024)", () => {
+    it("gives the tag a fixed tooltip naming the catalogue's label, and no name, email or description in any attribute", () => {
       const { card } = renderCard(THEIRS, false);
 
       const tag = within(card).getByTitle(`Built for ${CONTRIB_LABEL} — chosen when this configuration was created.`);

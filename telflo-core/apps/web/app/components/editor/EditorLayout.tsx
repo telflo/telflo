@@ -6,7 +6,7 @@ import { useResizablePanel } from "~/hooks/useResizablePanel.js";
 import { flushHeldEdits } from "~/lib/editor/held-edits.js";
 import { useEditorStore } from "~/lib/stores/editor-store.js";
 
-/** The panel's drag bounds (Preflight ruling 15). */
+/** The panel's drag bounds. */
 const MIN_PANEL_WIDTH = 320;
 const MAX_PANEL_WIDTH = 800;
 /** Smallest the centre may be squeezed to by the panel on its right. */
@@ -28,7 +28,7 @@ export type EditorPanelTab = {
    * Kept mounted while another tab shows, hidden (the `hidden` attribute:
    * not displayed, not in the accessibility tree), so what it holds
    * survives a switch: its scroll, open sections, expanded cards and held
-   * rows. The Configuration tab (Ruling 86; `forceMount`).
+   * rows. The Configuration tab (`forceMount`).
    */
   keepMounted?: boolean;
 };
@@ -36,7 +36,7 @@ export type EditorPanelTab = {
 type EditorLayoutProps = {
   /** Toolbar rendered above the centre and the panel */
   toolbar: ReactNode;
-  /** The column left of the centre: the builder's toolbox (D9a decision 10) */
+  /** The column left of the centre: the builder's toolbox */
   toolbox?: ReactNode;
   /** The centre: the canvas column */
   main: ReactNode;
@@ -47,11 +47,9 @@ type EditorLayoutProps = {
 };
 
 /**
- * The editor's layout, composed (D8 decision 8): the page passes the
- * toolbar, the toolbox, the centre and the panel's tabs, and the tab list and
- * the collapsed rail are built from `panelTabs`. The columns are toolbox |
- * canvas | panel (D9a's Appearance table). The AI panel is dropped
- * (ADR 0007).
+ * The editor's layout, composed: the page passes the toolbar, the toolbox,
+ * the centre and the panel's tabs, and the tab list and the collapsed rail
+ * are built from `panelTabs`. The columns are toolbox | canvas | panel.
  *
  * The active tab, the collapse and the width live in the editor's store, the
  * editor's shared memory. The active tab is the store's `activeTab` when it
@@ -59,16 +57,15 @@ type EditorLayoutProps = {
  * A disabled tab is never shown: when the store names one (or names none
  * and the first is disabled), the store is pointed at the tab shown, so the
  * panel stays there when the tab is enabled again (manual edit mode's
- * Configuration tab, D9a decision 2).
+ * Configuration tab).
  *
- * A tab kept mounted (`keepMounted`) no longer writes its fields' held
- * edits by unmounting when another tab shows, so every held edit is written
+ * A tab kept mounted (`keepMounted`) doesn't write its fields' held edits by
+ * unmounting when another tab shows, so every held edit is written
  * (`flushHeldEdits`) before the tab changes (the store's `setActiveTab` does
- * it, for every caller; Ruling 89), the panel collapses, or the rail expands
- * it (Ruling 86), once each: the YAML tab never shows text missing an edit a
- * field holds. A flush that throws holds the change, as a click elsewhere
- * that flushes does; the field that threw is released, so the next click
- * goes through.
+ * it, for every caller), the panel collapses, or the rail expands it, once
+ * each: the YAML tab never shows text missing an edit a field holds. A flush
+ * that throws holds the change, as a click elsewhere that flushes does; the
+ * field that threw is released, so the next click goes through.
  */
 export function EditorLayout({ toolbar, toolbox, main, panelTabs, dialogs }: EditorLayoutProps) {
   const activeTab = useEditorStore((state) => state.activeTab);
@@ -150,7 +147,7 @@ export function EditorLayout({ toolbar, toolbox, main, panelTabs, dialogs }: Edi
                 value={currentTab ?? ""}
                 className="flex-1 flex flex-col overflow-hidden"
                 onValueChange={(value) => {
-                  // The store writes every held edit first (Ruling 89).
+                  // The store writes every held edit first.
                   setActiveTab(value);
                 }}
               >

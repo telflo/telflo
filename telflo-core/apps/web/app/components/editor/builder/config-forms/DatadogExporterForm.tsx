@@ -7,59 +7,56 @@ import { SendingQueueSection } from "./shared/SendingQueueSection.js";
 import type { ValueChange, ValuePath } from "~/lib/graph/text-edits.js";
 
 /*
- * The Datadog exporter's form (ADR 0018), over the form's fields
- * (D9d decision 2, D9b's contract): each field writes its own key. Collector
- * claims are contrib v0.162.0's `pkg/datadog/config` (the exporter's config,
- * `exporter/datadogexporter/factory.go:211-213`) and core v0.162.0's
- * `config/confighttp/client.go`.
+ * The Datadog exporter's form, over the form's fields: each field writes its
+ * own key. Collector claims are contrib v0.162.0's `pkg/datadog/config` (the
+ * exporter's config, `exporter/datadogexporter/factory.go:211-213`) and core
+ * v0.162.0's `config/confighttp/client.go`.
  *
- * - Dropped (decision 3): Host › Hostname Source wrote a top-level
- *   `hostname_source`, which `Config` doesn't have (`config.go:75-118`; the
- *   collector refuses unknown keys); Logs › Dump Payloads wrote
- *   `logs.dump_payloads`, removed from `LogsConfig` (`logs.go:9-26`); the
- *   HTTP Headers section wrote `headers`, which the exporter refuses
- *   whatever the value (`config.go:184-209`). Any of them already in a text
- *   is left alone (D13 reports it).
- * - Fixed (decision 3): Idle Connection Timeout wrote
- *   `idle_connection_timeout`, not a key. It edits the key the text uses:
- *   the flat `idle_conn_timeout` (deprecated since v0.160.0,
- *   `client.go:106-107`) or `keepalive.idle_conn_timeout`; with neither, it
- *   writes `keepalive.idle_conn_timeout`, the current key (under the
+ * - No field writes a top-level `hostname_source`, which `Config` doesn't
+ *   have (`config.go:75-118`; the collector refuses unknown keys),
+ *   `logs.dump_payloads`, which `LogsConfig` doesn't have (`logs.go:9-26`),
+ *   or `headers`, which the exporter refuses whatever the value
+ *   (`config.go:184-209`). Any of them already in a text is left alone (the
+ *   collector validator reports it).
+ * - Idle Connection Timeout edits the key the text uses: the flat
+ *   `idle_conn_timeout` (deprecated since v0.160.0, `client.go:106-107`) or
+ *   `keepalive.idle_conn_timeout`; with neither, it writes
+ *   `keepalive.idle_conn_timeout`, the current key (under the
  *   `PrioritizeNewKeepalive` gate, beta at v0.162.0, the default is a
- *   keepalive section, `client.go:163-168`).
- *   A text using the flat keep-alive keys (`max_idle_conns`, …) gets the
- *   flat key too: the collector refuses the two forms together
- *   (`client.go:249-251`). Clearing the last key of `keepalive` removes the
- *   block (the default is the same, `client.go:163-168`).
- * - Fixed (D9b Ruling 75): Tags, Ignore Resources and Peer Tags are
- *   `ListTextField`s (comma): typing is held, so a typed comma stays until
- *   the next item; an item holding a comma (a regex's `\d{1,3}`) makes the
- *   field read-only with D9b's hint (never split on retype).
- * - Changed (decision 4): unset shows the collector's defaults: Compute
- *   Stats by Span Kind, Peer Tags Aggregation and Instrumentation Scope
- *   Metadata as Tags ticked (`config.go:360, 382-383`); Trace Buffer
- *   "Default 0" (unbuffered, `traces.go:131-133`; not 10); Host
- *   Metadata's Hostname Source "Default config_or_system"
- *   (`config.go:398`), with the hint `FIRST_RESOURCE_HINT`
- *   (`config.go:298-300` logs it); Site "Default datadoghq.com"
- *   (`config.go:350`; a hint, not a value). Peer Tags
+ *   keepalive section, `client.go:163-168`). A text using the flat
+ *   keep-alive keys (`max_idle_conns`, …) gets the flat key too: the
+ *   collector refuses the two forms together (`client.go:249-251`).
+ *   Clearing the last key of `keepalive` removes the block (the default is
+ *   the same, `client.go:163-168`).
+ * - Tags, Ignore Resources and Peer Tags are `ListTextField`s (comma):
+ *   typing is held, so a typed comma stays until the next item; an item
+ *   holding a comma (a regex's `\d{1,3}`) makes the field read-only with
+ *   `UNSHOWABLE_VALUE_MESSAGE` (never split on retype).
+ * - Unset shows the collector's defaults: Compute Stats by Span Kind, Peer
+ *   Tags Aggregation and Instrumentation Scope Metadata as Tags ticked
+ *   (`config.go:360, 382-383`); Trace Buffer "Default 0" (unbuffered,
+ *   `traces.go:131-133`; not 10); Host Metadata's Hostname Source "Default
+ *   config_or_system" (`config.go:398`), with the hint
+ *   `FIRST_RESOURCE_HINT` (`config.go:298-300` logs it); Site "Default
+ *   datadoghq.com" (`config.go:350`; a hint, not a value). Peer Tags
  *   Aggregation and Send Histogram Aggregation Metrics show the deprecated
  *   key's value while only it is in the text, as the collector applies it
  *   (`config_warnings.go:27-42`).
- * - Changed (decision 6): Site adds `ap2.datadoghq.com` (Datadog's site
- *   list; the collector takes any string, `config.go:49-51`).
- * - Changed: Summary Mode writes `summaries.mode` only (the rest of
- *   `summaries` stays).
- * - Changed (decision 7): the nine cascades, each one change with its
- *   toast: Only Metadata needs host metadata and the first_resource
- *   hostname source (`config.go:156-158`; E1–E4); nobuckets needs
- *   aggregation metrics (`metrics.go:97-102`; E5, E6); a deprecated key
- *   beside its new one is refused (`config_warnings.go:55-58`; E7, E8); the
- *   initial cumulative value only with to_delta (`config.go:324-331`; E9).
- * - Kept (decision 11): API Key is a plain text field.
- * - Retry and Queue: D9b's sections, on by default (`config.go:346-347`).
+ * - Site adds `ap2.datadoghq.com` (Datadog's site list; the collector takes
+ *   any string, `config.go:49-51`).
+ * - Summary Mode writes `summaries.mode` only (the rest of `summaries`
+ *   stays).
+ * - The nine cascades, each one change with its toast: Only Metadata needs
+ *   host metadata and the first_resource hostname source
+ *   (`config.go:156-158`); nobuckets needs aggregation metrics
+ *   (`metrics.go:97-102`); a deprecated key beside its new one is refused
+ *   (`config_warnings.go:55-58`); the initial cumulative value only with
+ *   to_delta (`config.go:324-331`).
+ * - API Key is a plain text field.
+ * - Retry and Queue: the shared sections (`RetryConfigSection`,
+ *   `SendingQueueSection`), on by default (`config.go:346-347`).
  *
- * Ids are fixed; no value reaches an attribute (decision 13).
+ * Ids are fixed; no value reaches an attribute.
  */
 
 export const DATADOG_SITES = [
@@ -75,7 +72,7 @@ export const DATADOG_SITES = [
 /** Under Host Metadata's Hostname Source (`config.go:298-300`). */
 export const FIRST_RESOURCE_HINT = "first_resource is deprecated; the collector logs a warning.";
 
-/** Decision 7's toasts (the plan's "The toasts"). */
+/** The cascades' toasts. */
 export const DATADOG_TOASTS = {
   firstResource: "Hostname source set to first_resource: Only Metadata needs it.",
   hostMetadataOn: "Turned Send Host Metadata on: Only Metadata needs it.",
@@ -131,7 +128,7 @@ export function DatadogExporterForm() {
   const form = useForm();
   const { note } = useAdjustments();
 
-  /** Writes `changes` with the cascades' changes, toasting their messages once written (decision 7). */
+  /** Writes `changes` with the cascades' changes, toasting their messages once written. */
   const write = (changes: ValueChange[], messages: string[]) => {
     const result = form.apply(changes);
     if (messages.length > 0) note(messages, result);
@@ -525,16 +522,16 @@ export function DatadogExporterForm() {
 }
 
 /**
- * Idle Connection Timeout, at the key the text uses (the controller's
- * ruling): the flat `idle_conn_timeout` while the text uses the flat
- * keep-alive keys and has no `keepalive` section, else
- * `keepalive.idle_conn_timeout` (whose block goes with its last key).
+ * Idle Connection Timeout, at the key the text uses: the flat
+ * `idle_conn_timeout` while the text uses the flat keep-alive keys and has no
+ * `keepalive` section, else `keepalive.idle_conn_timeout` (whose block goes
+ * with its last key).
  */
 function IdleConnectionTimeout() {
   const form = useForm();
   // A null `keepalive` reads as unset, as the collector has it (client.go:221-224).
   const flat = !present(form, ["keepalive"]) && FLAT_KEEPALIVE_KEYS.some((key) => present(form, [key]));
-  // One element at either key (D9d Ruling 48b): the flat key cleared moves the field to `keepalive`, its input kept.
+  // One element at either key: the flat key cleared moves the field to `keepalive`, its input kept.
   return (
     <FormScope path={flat ? [] : ["keepalive"]} prune={!flat}>
       <DurationField path={["idle_conn_timeout"]} id="datadog-idle-conn" label="Idle Connection Timeout" defaultValue="90s" />

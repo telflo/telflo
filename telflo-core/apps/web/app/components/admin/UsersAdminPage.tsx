@@ -14,31 +14,30 @@ import { formatServiceAccountDate } from "~/lib/service-accounts.js";
 import { useUserStore } from "~/lib/stores/user-store.js";
 
 /*
- * `/product-admin/users` (D29 decisions 3, 9, 38 and 41; Preflight rulings
- * 15, 17 and 21; Ruling 258): the heading "Users", "Refresh"/"Refreshing...",
- * the filter box, the table (Email with "(you)", Created, Actions: Delete on
- * every row but the caller's), "Loading users...", "No users found" / "No
- * users match the filter", and the toasts "Failed to load users" and "Failed
- * to delete user". Per the Parity Notes:
+ * `/product-admin/users`: the heading "Users", "Refresh"/"Refreshing...", the
+ * filter box, the table (Email with "(you)", Created, Actions: Delete on every
+ * row but the caller's), "Loading users...", "No users found" / "No users
+ * match the filter", and the toasts "Failed to load users" and "Failed to
+ * delete user".
  *
  * - The subtitle says what the platform does: people who share an
  *   organization with someone else can't be deleted until that's resolved.
- * - The search runs on the server (decision 9): the trimmed term, sent 300
- *   ms after the typing stops (useSettled), as `q`, by email or the name of
- *   any of the person's organizations; 50 a page, newest first, and "Load
- *   more" for the next page (the same term). Only the latest read is shown
- *   (the reads ref); a read that never answers is aborted after 10 s and
- *   toasts as a failure. The term is never in the page's address, an
- *   attribute or storage: the box is uncontrolled, inside `ph-no-capture`,
- *   and its text lives in state only.
+ * - The search runs on the server: the trimmed term, sent 300 ms after the
+ *   typing stops (useSettled), as `q`, by email or the name of any of the
+ *   person's organizations; 50 a page, newest first, and "Load more" for the
+ *   next page (the same term). Only the latest read is shown (the reads ref);
+ *   a read that never answers is aborted after 10 s and toasts as a failure.
+ *   The term is never in the page's address, an attribute or storage: the box
+ *   is uncontrolled, inside `ph-no-capture`, and its text lives in state
+ *   only.
  * - Delete opens UserDeleteDialog on the row as it was (a snapshot): its
  *   block, or the type-to-confirm. Deleted (or gone already), the row goes
  *   from the list. A 409 `user_delete_blocked` (a block that appeared since
  *   the list) reads the first page again with the same term and shows the
  *   block from the row taken by id; with the row gone, the kind's sentence
- *   in fixed words (Preflight ruling 15).
+ *   in fixed words.
  * - A failed first-page read with nothing listed shows "Try again" in the
- *   rows' place, never "No users found" (Ruling 264's, as User Feedback's).
+ *   rows' place, never "No users found" (as User Feedback's).
  * - A 403 `product_admin_required` (the flag cleared since the page opened,
  *   or while the delete waited) goes to `/app`, replacing the page; a
  *   session that ended says nothing (the session-ended handler has it).
@@ -48,13 +47,13 @@ import { useUserStore } from "~/lib/stores/user-store.js";
  *   (useReturnFocus).
  *
  * Other people's emails and organization names are visible text inside the
- * shell's `ph-mask` only (decision 41): never an attribute, a toast (fixed
- * words), the title or the page's address.
+ * shell's `ph-mask` only: never an attribute, a toast (fixed words), the
+ * title or the page's address.
  */
 
 /** A read that never answers ends after this, as a failure (the hang guard of the browser's reads). */
 export const USERS_READ_TIMEOUT_MS = 10_000;
-/** The pause after the last keystroke before the term is sent (decision 38). */
+/** The pause after the last keystroke before the term is sent. */
 export const USERS_SEARCH_DELAY_MS = 300;
 export const USERS_LOAD_FAILED_MESSAGE = "Failed to load users";
 export const USERS_SUBTITLE =
@@ -78,7 +77,7 @@ export function UsersAdminPage() {
   const term = useSettled(typed.trim(), USERS_SEARCH_DELAY_MS);
   const [listed, setListed] = useState<Listed>({ users: [], term: "", nextCursor: null, shown: 0 });
   const [loaded, setLoaded] = useState(false);
-  /** The latest first-page read failed: "Try again" in the rows' place until one succeeds, never "No users found" (Ruling 264). */
+  /** The latest first-page read failed: "Try again" in the rows' place until one succeeds, never "No users found". */
   const [loadFailed, setLoadFailed] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);

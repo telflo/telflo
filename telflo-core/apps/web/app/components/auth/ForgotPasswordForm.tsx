@@ -17,11 +17,10 @@ import { ApiError, requestPasswordReset } from "~/lib/api-client.js";
 const UNEXPECTED_ERROR_MESSAGE = "An unexpected error occurred. Please try again.";
 
 /*
- * The forgot-password form (ADR 0018). The API answers the same for every
- * well-formed address (D3 decision 2), so success always reads "If an
- * account exists…". After success the form stays disabled until a reload.
- * An ApiError, a rate limit included, shows its message; anything else gets
- * the catch-all.
+ * The forgot-password form. The API answers the same for every well-formed
+ * address, so success always reads "If an account exists…". After success
+ * the form stays disabled until a reload. An ApiError, a rate limit
+ * included, shows its message; anything else gets the catch-all.
  */
 export function ForgotPasswordForm() {
   const [email, setEmail] = useState("");

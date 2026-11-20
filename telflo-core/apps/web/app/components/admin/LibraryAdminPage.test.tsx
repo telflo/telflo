@@ -12,13 +12,12 @@ import * as apiClient from "~/lib/api-client.js";
 import { ApiError, REQUEST_ABORTED } from "~/lib/api-client.js";
 
 /*
- * Product admin's Library page (D23-2 Task 5: decisions 5, 25, 53 and 58),
- * its dialog and its confirmation, with decision 53's fixes: the table, the
- * empty and loading states, create (each validation message, the browser's
- * own refusals, the API's), edit (name and description only, the changed
- * fields), delete (the confirmation), the toasts, the way out when the flag
- * is cleared mid-visit, and replay's rules (the hidden file input and the
- * chosen name blocked; no name in an attribute or a URL).
+ * Product admin's Library page, its dialog and its confirmation: the table,
+ * the empty and loading states, create (each validation message, the
+ * browser's own refusals, the API's), edit (name and description only, the
+ * changed fields), delete (the confirmation), the toasts, the way out when
+ * the flag is cleared mid-visit, and replay's rules (the hidden file input
+ * and the chosen name blocked; no name in an attribute or a URL).
  *
  * The API is its client's functions, spied on; toasts are spied on. Names,
  * descriptions and file names carry the private-text marker "zq".
@@ -128,7 +127,7 @@ async function fillNew(user: ReturnType<typeof userEvent.setup>, file: File) {
   return dialog;
 }
 
-describe("the Library page (D23-2 decision 53)", () => {
+describe("the Library page", () => {
   it("shows the header and table: Name (a button), Description, File, Delete; the list from GET /api/v1/library-files", async () => {
     renderPage();
 
@@ -305,7 +304,7 @@ describe("adding a library file (the dialog)", () => {
     ["a Persian name with a zero-width non-joiner", "zq-\u0645\u06CC\u200C\u062E\u0648\u0627\u0647\u0645.txt"],
     ["an emoji ZWJ sequence", "zq-\u{1F469}\u200D\u{1F4BB}.txt"],
     ["a soft hyphen", "zq-re\u00ADsume.pdf"],
-  ])("takes %s: no words under the field, and Create sends it (Ruling 153)", async (_what, name) => {
+  ])("takes %s: no words under the field, and Create sends it", async (_what, name) => {
     const { user } = renderPage();
     const file = new File(["x"], name);
     const dialog = await fillNew(user, file);
@@ -544,7 +543,7 @@ describe("the flag cleared mid-visit (403 product_admin_required)", () => {
   });
 });
 
-describe("replay's rules (decisions 53 and 58)", () => {
+describe("replay's rules", () => {
   it("keeps the hidden file input and the chosen file's name inside ph-no-capture, the name as text, never an input's value", async () => {
     const { user } = renderPage();
     const dialog = await fillNew(user, new File(["{}"], "zq-chosen-name.json"));

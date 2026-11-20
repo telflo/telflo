@@ -25,7 +25,7 @@ import {
   useRedirectingProvider,
 } from "./FederatedSignIn.js";
 
-/** What the forms ask a person to accept (D36-1 Preflight ruling 14): the version and where its two documents are read. */
+/** What the forms ask a person to accept: the version and where its two documents are read. */
 export type TermsToAccept = Pick<SiteTerms, "version" | "termsUrl" | "privacyUrl">;
 
 export interface RegisterFormProps {
@@ -46,15 +46,14 @@ function isPlausibleEmail(value: string): boolean {
 }
 
 /*
- * The register form (ADR 0018): "Register with a social account", a button
- * per configured provider with an icon (D2c: Google), then "or with an email"
- * and the form. With no such provider, neither the buttons nor their dividers
+ * The register form: "Register with a social account", a button per
+ * configured provider with an icon (Google), then "or with an email" and the
+ * form. With no such provider, neither the buttons nor their dividers
  * render. Consent is an explicit checkbox, not an implied "by creating an
  * account you agree" line; a federated sign-up accepts the terms after it
- * signs in (D2c Task 4). Its "Terms of Service" and "Privacy Policy" open the
- * site's URLs in a new tab (D2c Ruling 20; D36-1 decision 32). A site that
- * asks for no Terms gets neither the "Usage policies" divider nor the
- * checkbox, and the request carries no version.
+ * signs in. Its "Terms of Service" and "Privacy Policy" open the site's URLs
+ * in a new tab. A site that asks for no Terms gets neither the "Usage
+ * policies" divider nor the checkbox, and the request carries no version.
  */
 export function RegisterForm({ terms, onSuccess, providers }: RegisterFormProps) {
   const [email, setEmail] = useState("");
@@ -94,9 +93,9 @@ export function RegisterForm({ terms, onSuccess, providers }: RegisterFormProps)
     setIsSubmitting(true);
     try {
       await postRegister({ email, password, ...(terms !== null && { acceptedTermsVersion: terms.version }) });
-      // The sign-up event (D4 decision 8), when analytics is on. The API
-      // answers the same for an address that is already registered, so every
-      // accepted registration counts.
+      // The sign-up event, when analytics is on. The API answers the same
+      // for an address that is already registered, so every accepted
+      // registration counts.
       captureEvent("user_signed_up", { method: "email" });
       onSuccess();
     } catch (caught) {
@@ -236,9 +235,8 @@ export function PasswordVisibilityToggle({
 }
 
 /**
- * The terms checkbox and its links, to the site's Terms and privacy URLs
- * (D36-1 decision 32). The accept page's account form uses it too (D6
- * decision 13).
+ * The terms checkbox and its links, to the site's Terms and privacy URLs.
+ * The accept page's account form uses it too.
  */
 export function TermsAgreement({
   terms,

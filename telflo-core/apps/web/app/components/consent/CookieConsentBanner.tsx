@@ -18,17 +18,16 @@ import { getConsentStatus, setConsentStatus } from "~/lib/cookie-consent.js";
  * stacked), each with the same `bg-black/60` dim, so moving between them keeps
  * the page dimmed by exactly one consistent layer.
  *
- * The Cookie Policy is the site's (D36-1 decision 33): with
- * TELFLO_COOKIE_POLICY_URL set, "Cookie Policy" links it in a new tab, the
- * visitor's choice still to make when they come back; with it empty, the
- * banner and the modal name no policy page.
+ * The Cookie Policy is the site's: with TELFLO_COOKIE_POLICY_URL set, "Cookie
+ * Policy" links it in a new tab, the visitor's choice still to make when they
+ * come back; with it empty, the banner and the modal name no policy page.
  *
  * Consent is stored as a binary value via {@link setConsentStatus}; the
  * analytics module (lib/analytics.ts) listens for the change event and opts
  * in to capture on "accepted".
  *
- * ADR 0018; D4 decision 8. Root renders it only when analytics is on: without
- * PostHog there is nothing to consent to.
+ * Root renders it only when analytics is on: without PostHog there is
+ * nothing to consent to.
  */
 export function CookieConsentBanner({ cookiePolicyUrl }: { cookiePolicyUrl: string }) {
   const [visible, setVisible] = useState(false);

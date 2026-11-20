@@ -25,30 +25,28 @@ interface RenameVersionDialogProps {
 }
 
 /*
- * The Rename Version dialog (ADR 0018; D10 decision 12): "Version
- * name", at most 80 characters, prefilled with the label shown ("Version N"
- * for an unnamed version) and focused; Save is disabled while the name is
- * blank, and while the rename is under way, when it reads "Saving…" and
- * everything is disabled. Differences, all in the D10 Parity Notes:
+ * The Rename Version dialog: "Version name", at most 80 characters,
+ * prefilled with the label shown ("Version N" for an unnamed version) and
+ * focused; Save is disabled while the name is blank, and while the rename is
+ * under way, when it reads "Saving…" and everything is disabled:
  * - a name unchanged from the one shown (after trimming) closes the dialog
  *   and sends nothing, so "Version N" is never stored as a label;
  * - a failure keeps the dialog open with what was typed, the focus back in
- *   the field, which was disabled meanwhile (D10 Ruling 44), toasting the
- *   refusal's message or "Failed to rename version. Please try again.", and a
- *   404 `organization_not_found` or a 403 `terms_acceptance_required`
- *   revalidates the layout, as the configuration's rename does (D8 decision
- *   14; D10 Preflight ruling 15). A 409 `configuration_version_published` (a
- *   teammate published it since the picker listed it; D11b) toasts its
- *   message and closes the dialog, since no name will be taken, and the
- *   version is read again (`rereadVersion`), as a save's refusal does, so its
- *   row shows the lock and, when it is the open version, the editor locks
- *   (Ruling 31) with its published content as the baseline (Ruling 35).
+ *   the field, which was disabled meanwhile, toasting the refusal's message
+ *   or "Failed to rename version. Please try again.", and a 404
+ *   `organization_not_found` or a 403 `terms_acceptance_required` revalidates
+ *   the layout, as the configuration's rename does. A 409
+ *   `configuration_version_published` (a teammate published it since the
+ *   picker listed it) toasts its message and closes the dialog, since no name
+ *   will be taken, and the version is read again (`rereadVersion`), as a
+ *   save's refusal does, so its row shows the lock and, when it is the open
+ *   version, the editor locks with its published content as the baseline.
  * It renames in the organization the configuration was loaded in, as saves
  * do. On success it toasts "Version renamed", and the picker's
  * row and trigger show the new label (the store's `setVersionLabel`). An
  * answer after another configuration opened, or a reload in another
  * organization, changes and toasts nothing. The label is the user's text:
- * it is the field's value, never another attribute (ADR 0024).
+ * it is the field's value, never another attribute.
  */
 export function RenameVersionDialog({ version, onOpenChange, onCloseAutoFocus }: RenameVersionDialogProps) {
   const { revalidate } = useRevalidator();
@@ -59,7 +57,7 @@ export function RenameVersionDialog({ version, onOpenChange, onCloseAutoFocus }:
   // Set before the state re-renders: Enter then a click renames once.
   const savingRef = useRef(false);
   const fieldRef = useRef<HTMLInputElement>(null);
-  // Counts failures: after each, once the field is enabled again, it takes the focus (Ruling 44).
+  // Counts failures: after each, once the field is enabled again, it takes the focus.
   const [failures, setFailures] = useState(0);
   useEffect(() => {
     if (failures > 0) fieldRef.current?.focus();

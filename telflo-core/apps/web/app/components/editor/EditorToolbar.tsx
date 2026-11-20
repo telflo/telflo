@@ -28,31 +28,28 @@ export { DELETE_TITLE, DUPLICATE_TITLE, REDO_TITLE, UNDO_TITLE } from "~/compone
 
 /** The toast for a rename. */
 export const RENAMED_MESSAGE = "Configuration updated";
-/** For a rename that failed without a refusal to show (D8 decision 14). */
+/** For a rename that failed without a refusal to show. */
 export const RENAME_FAILED_MESSAGE = "Failed to update configuration";
 
 /**
- * The editor's toolbar, cut to what D8 has (D8 decision 14): the name with
- * its inline rename, the "Unsaved" badge and Save; D9a adds Undo, Redo,
- * Duplicate and Delete before Save (D9a decision 12). D10 adds the version
- * picker first in the actions, then a divider (D10 decision 10). D13a adds
- * the collector picker at the
- * tail of the left group (decisions 5 and 8; `CollectorVersionSelect`): the
- * configuration's distribution, locked, and the version's collector
- * version, whose pick is an unsaved change Save stores. Sharing and the AI
- * toggle are in the Parity Notes; Publish is D11b's (below).
+ * The editor's toolbar: the name with its inline rename, the "Unsaved" badge
+ * and Save; Undo, Redo, Duplicate and Delete before Save; the version picker
+ * first in the actions, then a divider; and the collector picker at the tail
+ * of the left group (`CollectorVersionSelect`): the configuration's
+ * distribution, locked, and the version's collector version, whose pick is
+ * an unsaved change Save stores. Publish follows Save (below).
  *
- * The row fits beside the expanded sidebar at 1280 px (D13a Ruling 34): the
- * actions never shrink, and the left group gives way, the name truncating
- * first (its full text stays in the heading, as before); "Collector:" shows
- * on wide screens only (`CollectorVersionSelect`), and so does "Version:",
- * whose picker narrows below them (`VersionSelect`; Ruling 42).
+ * The row fits beside the expanded sidebar at 1280 px: the actions never
+ * shrink, and the left group gives way, the name truncating first (its full
+ * text stays in the heading); "Collector:" shows on wide screens only
+ * (`CollectorVersionSelect`), and so does "Version:", whose picker narrows
+ * below them (`VersionSelect`).
  *
- * Differences, all in the Parity Notes:
+ * How it behaves:
  * - the pencil also shows on keyboard focus, and is labelled "Rename
  *   configuration";
- * - the name has no `title` (ADR 0024: attributes aren't masked in replay),
- *   and the rename field is labelled with fixed text, "Configuration name";
+ * - the name has no `title` (attributes aren't masked in replay), and the
+ *   rename field is labelled with fixed text, "Configuration name";
  * - Save is disabled while a save is under way, as well as while clean;
  * - a failed rename toasts the refusal's message, or "Failed to update
  *   configuration", and keeps the field open with what was typed. A 404
@@ -62,23 +59,20 @@ export const RENAME_FAILED_MESSAGE = "Failed to update configuration";
  * blank name keeps editing, and an unchanged one sends nothing. It renames in
  * the organization the configuration was loaded in, as saves do.
  *
- * The builder buttons (D9a decisions 7, 8 and 12), with their disabled
- * rules and the keyboard shortcuts that come with them: `EditorEditActions`,
- * shared with D31-1's playground toolbars (the same DOM; Preflight ruling
- * 10).
+ * The builder buttons, with their disabled rules and the keyboard shortcuts
+ * that come with them: `EditorEditActions`, shared with the playground's
+ * toolbars (the same DOM).
  *
- * D11b adds Publish after Save (decision 13): its rocket, and
- * its tooltip as the button's `title`, as the toolbar's other tooltips are
- * (fixed text): "Publish this version so fleets can deploy it.", "Already
- * published" on a published version, and "An empty version can't be
- * published." while the editor's text is empty (Preflight ruling 9, as
- * Ruling 31 corrects it: saved-but-empty text with text typed over it
- * publishes, saving first), both disabled. It is disabled too while a save, a create or a publish is under
- * way. It opens the Publish Configuration dialog, which saves unsaved
- * changes first (decision 5; `usePublishVersion`). A published version is
- * read-only (decision 4; Preflight ruling 11): Save, Publish, Undo, Redo,
- * Duplicate and Delete are all disabled; the configuration can still be
- * renamed (decision 2).
+ * Publish follows Save: its rocket, and its tooltip as the button's `title`,
+ * as the toolbar's other tooltips are (fixed text): "Publish this version so
+ * fleets can deploy it.", "Already published" on a published version, and
+ * "An empty version can't be published." while the editor's text is empty
+ * (saved-but-empty text with text typed over it publishes, saving first),
+ * both disabled. It is disabled too while a save, a create or a publish is
+ * under way. It opens the Publish Configuration dialog, which saves unsaved
+ * changes first (`usePublishVersion`). A published version is read-only:
+ * Save, Publish, Undo, Redo, Duplicate and Delete are all disabled; the
+ * configuration can still be renamed.
  */
 export function EditorToolbar({ onSave }: { onSave: () => void }) {
   const { revalidate } = useRevalidator();
@@ -155,7 +149,7 @@ export function EditorToolbar({ onSave }: { onSave: () => void }) {
 
   return (
     <div className="h-12 bg-card border-b border-border px-3 flex items-center justify-between gap-3">
-      {/* The left group gives way first, its name truncating, so the actions stay on screen (D13a Ruling 34). */}
+      {/* The left group gives way first, its name truncating, so the actions stay on screen. */}
       <div className="flex min-w-0 items-center gap-3">
         <div className="flex min-w-0 items-center gap-2.5">
           {/* Configuration Name with inline editing */}
@@ -207,7 +201,7 @@ export function EditorToolbar({ onSave }: { onSave: () => void }) {
       </div>
 
       <div className="flex shrink-0 items-center gap-2" data-tour-step="toolbar-actions">
-        {/* The version picker (D10 decision 10), first, then a divider */}
+        {/* The version picker, first, then a divider */}
         <VersionSelect />
         <div className="w-px h-5 bg-border" />
 

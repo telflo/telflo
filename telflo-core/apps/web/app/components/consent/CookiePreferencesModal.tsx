@@ -17,8 +17,8 @@ interface CookiePreferencesModalProps {
   /** Dismiss the modal without deciding (returns to the banner). */
   onClose: () => void;
   /**
-   * The site's TELFLO_COOKIE_POLICY_URL (D36-1 decision 33): "Read more"
-   * links it in a new tab; with "" the modal names no policy.
+   * The site's TELFLO_COOKIE_POLICY_URL: "Read more" links it in a new tab;
+   * with "" the modal names no policy.
    */
   cookiePolicyUrl: string;
 }

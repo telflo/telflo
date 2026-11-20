@@ -128,7 +128,7 @@ describe("DeleteConfigurationDialog", () => {
       "a 503 fleets_unavailable (the fleet usage unreadable)",
       new ApiError("fleets_unavailable", "Couldn't check whether a fleet uses this configuration, so nothing was deleted."),
     ],
-  ])("toasts the API's own message for %s, and stays open without reloading (D16b Preflight ruling 6)", async (_why, failure) => {
+  ])("toasts the API's own message for %s, and stays open without reloading", async (_why, failure) => {
     vi.spyOn(apiClient, "deleteConfiguration").mockRejectedValue(failure);
     const error = vi.spyOn(toast, "error");
     const { user, onOpenChange, onDeleted, loader } = renderDialog();

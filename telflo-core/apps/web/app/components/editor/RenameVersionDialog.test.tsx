@@ -12,8 +12,8 @@ import { selectIsDirty, selectIsVersionPublished, useEditorStore } from "~/lib/s
 import { GROUP_ID, MINE, PUBLISHED_FIELDS, THEIRS, answerFor, versionFixture, versionSummaryOf } from "~/test/configurations.js";
 
 /*
- * The "Rename Version" dialog, with D10 decision 12's changes: an
- * unchanged name sends nothing, and a failure keeps the dialog open.
+ * The "Rename Version" dialog: an unchanged name sends nothing, and a
+ * failure keeps the dialog open.
  */
 
 const VERSION_1 = versionFixture({ yamlContent: "receivers: {}\n", label: "Initial version" });
@@ -189,7 +189,7 @@ describe("RenameVersionDialog", () => {
     expect(field()).toHaveValue("Baseline");
     expect(field()).toBeEnabled();
     expect(saveButton()).toBeEnabled();
-    // Back in the field, from Save, which was disabled meanwhile (D10 Ruling 44).
+    // Back in the field, from Save, which was disabled meanwhile.
     await waitFor(() => expect(field()).toHaveFocus());
     expect(loader.mock.calls.length).toBe(loadsBefore);
     expect(useEditorStore.getState().version?.label).toBe("Initial version");
@@ -198,7 +198,7 @@ describe("RenameVersionDialog", () => {
   it.each([
     ["organization_not_found", new ApiError("organization_not_found", "Organization not found")],
     ["terms_acceptance_required", new ApiError("terms_acceptance_required", "Accept the current Terms of Service to continue.")],
-  ])("a %s refusal toasts its message and revalidates the layout, as the configuration's rename does (Preflight ruling 15)", async (_code, failure) => {
+  ])("a %s refusal toasts its message and revalidates the layout, as the configuration's rename does", async (_code, failure) => {
     vi.spyOn(apiClient, "renameConfigurationVersion").mockRejectedValue(failure);
     const error = vi.spyOn(toast, "error");
     const { user, loader } = renderDialog();
@@ -216,7 +216,7 @@ describe("RenameVersionDialog", () => {
   it.each([
     ["the open version", VERSION_1],
     ["another row of the picker", VERSION_2],
-  ])("a version published meanwhile (%s): toasts the refusal, closes, and reads the version again, so its row shows the lock (Ruling 31)", async (_which, target) => {
+  ])("a version published meanwhile (%s): toasts the refusal, closes, and reads the version again, so its row shows the lock", async (_which, target) => {
     vi.spyOn(apiClient, "renameConfigurationVersion").mockRejectedValue(
       new ApiError("configuration_version_published", "This version is published and can't be changed."),
     );
@@ -248,7 +248,7 @@ describe("RenameVersionDialog", () => {
     expect(loader.mock.calls.length).toBe(loadsBefore);
   });
 
-  it("the open version published meanwhile, with content this clean tab never loaded: the editor locks on what was published, clean (Ruling 35)", async () => {
+  it("the open version published meanwhile, with content this clean tab never loaded: the editor locks on what was published, clean", async () => {
     vi.spyOn(apiClient, "renameConfigurationVersion").mockRejectedValue(
       new ApiError("configuration_version_published", "This version is published and can't be changed."),
     );
@@ -272,7 +272,7 @@ describe("RenameVersionDialog", () => {
     expect(selectIsDirty(state)).toBe(false);
   });
 
-  it("the open version published meanwhile, a tab that only picked: the editor locks on the published text with its pick on screen, dirty by the pin alone (Ruling 41)", async () => {
+  it("the open version published meanwhile, a tab that only picked: the editor locks on the published text with its pick on screen, dirty by the pin alone", async () => {
     vi.spyOn(apiClient, "renameConfigurationVersion").mockRejectedValue(
       new ApiError("configuration_version_published", "This version is published and can't be changed."),
     );

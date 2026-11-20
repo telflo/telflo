@@ -24,7 +24,7 @@ const ALREADY_ACCEPTED_MESSAGE = "This invitation has already been accepted.";
 // A literal, not the page's constant, so a change to the key fails here.
 const STORAGE_KEY = "telflo.invitationToken";
 const TERMS_VERSION = "2026-01-01";
-/** The site's Terms (D36-1 decision 32). */
+/** The site's Terms. */
 const TERMS = { version: TERMS_VERSION, termsUrl: "/home/terms-of-service", privacyUrl: "https://legal.example.com/privacy" };
 const GROUP_ID = "00000000-0000-4000-8000-000000000003";
 const GOOGLE: OidcProvider = { id: "google", name: "Google" };
@@ -114,7 +114,7 @@ function previewAnswers(invitation: InvitationPreviewResponse["invitation"]) {
   return vi.spyOn(apiClient, "previewInvitation").mockResolvedValue({ invitation });
 }
 
-describe("AcceptInvitation (D6 decision 13)", () => {
+describe("AcceptInvitation", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
     window.sessionStorage.clear();
@@ -291,7 +291,7 @@ describe("AcceptInvitation (D6 decision 13)", () => {
     it("offers to join in the invitation's role, and Accept joins, forgets the token and lands on /app?joined_org=", async () => {
       previewAnswers(INVITATION);
       const accept = vi.spyOn(apiClient, "acceptInvitation").mockResolvedValue(JOINED);
-      // The address comparison ignores case (decision 3).
+      // The address comparison ignores case.
       renderPage({ visitor: signedInAs("Invitee@Example.com") });
 
       expect(await screen.findByRole("heading", { name: "Join Group" })).toBeInTheDocument();
@@ -370,7 +370,7 @@ describe("AcceptInvitation (D6 decision 13)", () => {
 
       expect(await screen.findByText("Sign in to join Group")).toBeInTheDocument();
       expect(signOut).toHaveBeenCalledTimes(1);
-      // PostHog forgets the user, as a Logout does (D4 Ruling 14), and the staged playground edit goes (Q211).
+      // PostHog forgets the user, as a Logout does, and the staged playground edit goes.
       expect(signedOutLocally).toHaveBeenCalledTimes(1);
       expect(window.localStorage.getItem("telflo-playground-staged-edit") !== null).toBe(false);
       expect(loader).toHaveBeenCalledTimes(2);
@@ -449,7 +449,7 @@ describe("AcceptInvitation (D6 decision 13)", () => {
       expect(accept).not.toHaveBeenCalled();
     });
 
-    it("says Email not confirmed for an unverified account, with Forgot password? still in view (Preflight minor)", async () => {
+    it("says Email not confirmed for an unverified account, with Forgot password? still in view", async () => {
       previewAnswers(INVITATION);
       vi.spyOn(apiClient, "createSession").mockRejectedValue(
         new ApiError("email_not_verified", "Confirm your email address before signing in."),
@@ -507,7 +507,7 @@ describe("AcceptInvitation (D6 decision 13)", () => {
     });
   });
 
-  describe("signed out, an invitation that can't make an account here (D36-1 decision 52)", () => {
+  describe("signed out, an invitation that can't make an account here", () => {
     it.each([
       ["no account at the address", false],
       ["an account at the address", true],
@@ -575,7 +575,7 @@ describe("AcceptInvitation (D6 decision 13)", () => {
       expect(register).not.toHaveBeenCalled();
     });
 
-    it("on a site that asks for no Terms: no divider and no checkbox, and Create Account & Join sends no acceptedTermsVersion key (D36-1 decision 32)", async () => {
+    it("on a site that asks for no Terms: no divider and no checkbox, and Create Account & Join sends no acceptedTermsVersion key", async () => {
       previewAnswers(NEW_ADDRESS);
       const register = vi.spyOn(apiClient, "registerFromInvitation").mockResolvedValue(JOINED);
       renderPage({ visitor: SIGNED_OUT, terms: null });
@@ -593,7 +593,7 @@ describe("AcceptInvitation (D6 decision 13)", () => {
       expect(Object.keys(body)).not.toContain("acceptedTermsVersion");
     });
 
-    it("shows the API's words when the site is closed to new accounts, 403 registration_not_open, and keeps the form (D36-1 decision 35)", async () => {
+    it("shows the API's words when the site is closed to new accounts, 403 registration_not_open, and keeps the form", async () => {
       previewAnswers(NEW_ADDRESS);
       const message = "This site isn't accepting new accounts.";
       vi.spyOn(apiClient, "registerFromInvitation").mockRejectedValue(new ApiError("registration_not_open", message));
@@ -618,7 +618,7 @@ describe("AcceptInvitation (D6 decision 13)", () => {
       expect(window.sessionStorage.getItem(STORAGE_KEY)).toBe(TOKEN);
     });
 
-    it("shows the API's words for an invitation to the reserved domain, 422 email_reserved, and keeps the form (D22 decision 23)", async () => {
+    it("shows the API's words for an invitation to the reserved domain, 422 email_reserved, and keeps the form", async () => {
       previewAnswers(NEW_ADDRESS);
       vi.spyOn(apiClient, "registerFromInvitation").mockRejectedValue(
         new ApiError("email_reserved", "This address can't be used"),
@@ -665,8 +665,8 @@ describe("AcceptInvitation (D6 decision 13)", () => {
     });
   });
 
-  describe("naming the organization (D36-1 Q264)", () => {
-    // A personal workspace under its default name, its owner's email (Q263).
+  describe("naming the organization", () => {
+    // A personal workspace under its default name, its owner's email.
     const PERSONAL = { ...INVITATION, organizationName: "owner@example.com", organizationType: "personal" } as const;
 
     it.each([

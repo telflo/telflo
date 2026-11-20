@@ -13,13 +13,13 @@ import { isProductAdminRefusal } from "~/lib/flows/flow-admin.js";
 import { failureMessage } from "~/lib/test-runs/messages.js";
 
 /*
- * Deleting a library file (D23-2 decision 53): "Delete Library File", its
- * question with the file's name (as text, which replay masks; never an
- * attribute, decision 58), Cancel and Delete (Deleting…), not closable while
- * it deletes; "Failed to delete library file". As the test templates' (D14b):
- * a refusal shows the API's words (`failureMessage`), else that fixed
- * message; a 403 `product_admin_required` goes to `/app`
- * (`onProductAdminLost`); nothing is logged.
+ * Deleting a library file: "Delete Library File", its question with the
+ * file's name (as text, which replay masks; never an attribute), Cancel and
+ * Delete (Deleting…), not closable while it deletes; "Failed to delete
+ * library file". As the test templates': a refusal shows the API's words
+ * (`failureMessage`), else that fixed message; a 403
+ * `product_admin_required` goes to `/app` (`onProductAdminLost`); nothing
+ * is logged.
  */
 
 interface LibraryFileDeleteDialogProps {

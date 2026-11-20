@@ -13,12 +13,12 @@ import { PUBLISH_DIALOG_TITLE, SAVED_FIRST_MESSAGE, publishDialogMessage } from 
 interface PublishDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** The open version's number, the only thing the dialog names (ADR 0024). */
+  /** The open version's number, the only thing the dialog names. */
   versionNumber: number;
   /**
-   * Whether the editor holds unsaved changes, which the publish saves first
-   * (D11b decision 5): read as the dialog opens, so the line stays while the
-   * save first makes the editor clean (Ruling 31).
+   * Whether the editor holds unsaved changes, which the publish saves first:
+   * read as the dialog opens, so the line stays while the save first makes
+   * the editor clean.
    */
   dirty: boolean;
   /** Whether the publish is under way. */
@@ -28,21 +28,20 @@ interface PublishDialogProps {
 }
 
 /*
- * The publish dialog (ADR 0018; D11b decision 13), with the
- * platform's dialog and the spec's words: "This will publish version {N},
- * making it available to your organization members and fleet management.",
- * and "Your unsaved changes will be saved first." only when there are some
- * (no "Continue?"). While the
- * publish is under way, Publish reads "Publishing…" and both buttons are
- * disabled; Escape, an outside click and the close button do nothing, so a
- * second publish can't start beside it (as D10's create dialog). "Your
- * unsaved changes will be saved first." follows whether there were some when
- * the dialog opened, so it doesn't vanish once the save first lands mid-
- * publish (Ruling 31). It names the version by its number only (decision 14).
+ * The publish dialog, with the platform's dialog and fixed words: "This will
+ * publish version {N}, making it available to your organization members and
+ * fleet management.", and "Your unsaved changes will be saved first." only
+ * when there are some (no "Continue?"). While the publish is under way,
+ * Publish reads "Publishing…" and both buttons are disabled; Escape, an
+ * outside click and the close button do nothing, so a second publish can't
+ * start beside it (as the Copy Version dialog). "Your unsaved changes will
+ * be saved first." follows whether there were some when the dialog opened,
+ * so it doesn't vanish once the save first lands mid-publish. It names the
+ * version by its number only.
  */
 export function PublishDialog({ open, onOpenChange, versionNumber, dirty, publishing, onPublish }: PublishDialogProps) {
-  // Whether there were unsaved changes when it opened (Ruling 31), taken
-  // again each time it opens.
+  // Whether there were unsaved changes when it opened, taken again each time
+  // it opens.
   const [dirtyWhenOpened, setDirtyWhenOpened] = useState(dirty);
   const [wasOpen, setWasOpen] = useState(open);
   if (open !== wasOpen) {

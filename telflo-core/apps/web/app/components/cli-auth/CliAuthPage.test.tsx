@@ -28,12 +28,11 @@ import {
 } from "./CliAuthPage.js";
 
 /*
- * `/cli-auth` (D27 decisions 21, 22 and 35; Preflight rulings 11, 13, 15 and
- * 16): the neutral first render, the fragment read once and removed, each
- * refusal, Approve's four calls in order, the 60 s wait and the fallback,
- * another status's fallback, a late 204, Cancel, the 409s. A token is built
- * at run time and checked with boolean canaries only; the host is visible
- * text inside ph-no-capture only.
+ * `/cli-auth`: the neutral first render, the fragment read once and removed,
+ * each refusal, Approve's four calls in order, the 60 s wait and the fallback,
+ * another status's fallback, a late 204, Cancel, the 409s. A token is built at
+ * run time and checked with boolean canaries only; the host is visible text
+ * inside ph-no-capture only.
  */
 
 const STATE = `${"S".repeat(20)}-_${"t".repeat(21)}`;
@@ -155,7 +154,7 @@ afterEach(() => {
   window.history.replaceState(null, "", "/");
 });
 
-describe("the fragment (decision 21, Preflight ruling 13)", () => {
+describe("the fragment", () => {
   it("renders neutral words on the server, hydrates without a mismatch, then reads the fragment and takes it out of the address bar", async () => {
     const page = (
       <MemoryRouter initialEntries={["/cli-auth"]}>
@@ -221,7 +220,7 @@ describe("the fragment (decision 21, Preflight ruling 13)", () => {
   });
 });
 
-describe("Approve (decision 21, Preflight rulings 15 and 16)", () => {
+describe("Approve", () => {
   it("creates, lists, revokes this machine's earlier CLI tokens (never the new one), then hands the token to the listener: Done", async () => {
     const calls = stubCalls();
     renderPage();
@@ -346,7 +345,7 @@ describe("Approve (decision 21, Preflight rulings 15 and 16)", () => {
   });
 });
 
-describe("a new link in the same tab (Ruling 250)", () => {
+describe("a new link in the same tab", () => {
   const NEW_STATE = `${"N".repeat(20)}-_${"m".repeat(21)}`;
   const NEW_PORT = 54999;
   const NEW_HOST = "second-box";
@@ -405,7 +404,7 @@ describe("a new link in the same tab (Ruling 250)", () => {
     expect(window.location.hash).toBe("");
   });
 
-  it("revokes a token whose create answers after a new fragment arrived, keeping it nowhere (Ruling 254)", async () => {
+  it("revokes a token whose create answers after a new fragment arrived, keeping it nowhere", async () => {
     let finish!: (value: CreatedApiTokenResponse) => void;
     const calls = stubCalls();
     calls.create.mockImplementationOnce(() => new Promise<CreatedApiTokenResponse>((resolve) => (finish = resolve)));
@@ -483,7 +482,7 @@ describe("a new link in the same tab (Ruling 250)", () => {
   });
 });
 
-describe("Cancel and refusals (decision 21)", () => {
+describe("Cancel and refusals", () => {
   it("Cancel posts the denial and says Cancelled, with no token made", async () => {
     const calls = stubCalls();
     renderPage();

@@ -30,61 +30,56 @@ import type { ValueView } from "~/lib/graph/value-view.js";
 import { useEditorStore } from "~/lib/stores/editor-store.js";
 
 /*
- * The AWS S3 receiver's form (ADR 0018), over the form's fields
- * (D9d decision 2, D9b's contract): each field writes its own key, the
- * downloader's under `s3downloader`. Collector claims are contrib
+ * The AWS S3 receiver's form, over the form's fields: each field writes its
+ * own key, the downloader's under `s3downloader`. Collector claims are contrib
  * v0.162.0's `receiver/awss3receiver` (type `aws_s3`, `deprecated_type:
  * awss3`, `metadata.yaml:2-3`: both spellings get this form).
  *
- * The Ingest Mode (decisions 3, 7): the collector takes exactly one of a
- * time range (`starttime`, `endtime`) or an `sqs` block, and refuses
- * neither and both (`config.go:92-151`). The mode shown is the text's (`sqs`
- * present: SQS; a null `sqs` is none to the collector, `config.go:101`).
- * - Fixed: choosing SQS wrote `sqs: {queue_url: "", …}` (refused,
- *   `config.go:135-137`). It writes the palette's own seed,
+ * The Ingest Mode: the collector takes exactly one of a time range
+ * (`starttime`, `endtime`) or an `sqs` block, and refuses neither and both
+ * (`config.go:92-151`). The mode shown is the text's (`sqs` present: SQS; a
+ * null `sqs` is none to the collector, `config.go:101`).
+ * - Choosing SQS writes the palette's own seed,
  *   `{queue_url: "${env:AWS_SQS_QUEUE_URL}", region: <the downloader's
- *   region, or us-east-1>}`, and removes `starttime` and `endtime` in the
- *   same change, with `SQS_TOAST` when either was there (the controller's
- *   ruling).
- * - Fixed: choosing Time range wrote `starttime: ""`, `endtime: ""` with
- *   `sqs` removed (neither mode: refused, `config.go:99-105`). The choice is
- *   held in the form, writing nothing, until a time is typed; that write
- *   removes `sqs` in the same change, with `TIME_RANGE_TOAST`. A text
- *   already holding a time takes the choice at once. The held choice goes
- *   when `sqs`, `starttime` or `endtime` change by a write it didn't make
- *   (an undo, the YAML box), on a load or another node, and with the form;
- *   an edit to the form's other fields keeps it (D9d Ruling 48e, Ruling
- *   33a's spirit).
+ *   region, or us-east-1>}` (an empty `queue_url` is refused,
+ *   `config.go:135-137`), and removes `starttime` and `endtime` in the same
+ *   change, with `SQS_TOAST` when either was there.
+ * - Choosing Time range holds the choice in the form, writing nothing, until
+ *   a time is typed (empty times with `sqs` removed would be neither mode,
+ *   which is refused, `config.go:99-105`); that write removes `sqs` in the
+ *   same change, with `TIME_RANGE_TOAST`. A text already holding a time
+ *   takes the choice at once. The held choice goes when `sqs`, `starttime`
+ *   or `endtime` change by a write it didn't make (an undo, the YAML box),
+ *   on a load or another node, and with the form; an edit to the form's
+ *   other fields keeps it.
  *
- * - Fixed (decision 3): Add Encoding wrote `{extension: "", suffix: ""}`
- *   (an empty extension id is refused, Core `component/identifiable.go:131-141`).
- *   It holds a row (`useHeldItem`) until an extension is typed; a suffix
- *   typed first waits in it, and is written only when typed. An empty
- *   suffix matches every object (`receiver.go:312-317`): `SUFFIX_HINT`.
- *   A field cleared removes its key; an item left with no keys is removed,
- *   and the last item takes `encodings`. Rows are keyed by
- *   their items (D9c Ruling 68); an item that isn't a mapping, or whose
- *   extension or suffix isn't a one-line scalar, is a read-only row with
- *   D9b's hint (its Remove works).
- * - Kept: Expect Telemetry Type in File Prefix's ticking removes the key (the
+ * - Add Encoding holds a row (`useHeldItem`) until an extension is typed (an
+ *   empty extension id is refused, Core
+ *   `component/identifiable.go:131-141`); a suffix typed first waits in it,
+ *   and is written only when typed. An empty suffix matches every object
+ *   (`receiver.go:312-317`): `SUFFIX_HINT`. A field cleared removes its key;
+ *   an item left with no keys is removed, and the last item takes
+ *   `encodings`. Rows are keyed by their items; an item that isn't a
+ *   mapping, or whose extension or suffix isn't a one-line scalar, is a
+ *   read-only row with `UNSHOWABLE_VALUE_MESSAGE` (its Remove works).
+ * - Expect Telemetry Type in File Prefix's ticking removes the key (the
  *   default is true, `config.go:85`), unticking writes `false`
  *   (`checkedRemoves`); the lifecycle and path-style boxes write `true` or
  *   nothing (`uncheckedRemoves`); OpAMP Progress Notifications sits in a
  *   pruning scope on `notifications` (the block goes when emptied).
- * - Changed (decision 4): Partition Timezone's placeholder is `Local`, the
- *   default, not `UTC`.
- * - Bucket, SQS Queue URL and SQS Region cleared remove their keys (D9b's
- *   contract; `""` is refused either way).
+ * - Partition Timezone's placeholder is `Local`, the default, not `UTC`.
+ * - Bucket, SQS Queue URL and SQS Region cleared remove their keys (`""` is
+ *   refused either way).
  *
  * Ids are fixed, the encoding rows' labels by index; the mode's option
- * values are fixed tokens (decision 13).
+ * values are fixed tokens.
  */
 
-/** The SQS switch's toast (decision 7). */
+/** The SQS switch's toast. */
 export const SQS_TOAST = "Removed starttime and endtime: they can't be used with SQS.";
-/** The time range's first write's toast (decision 7). */
+/** The time range's first write's toast. */
 export const TIME_RANGE_TOAST = "Removed the sqs block: it can't be used with a time range.";
-/** Under the Encodings (Parity Notes). */
+/** Under the Encodings. */
 export const SUFFIX_HINT = "An empty suffix matches every object.";
 
 /** The palette's queue reference (`palette.ts`'s S3 receiver seed). */
@@ -96,7 +91,7 @@ const DOWNLOADER: ValuePath = ["s3downloader"];
 const at = (key: string): ValuePath => [...DOWNLOADER, key];
 const SQS: ValuePath = ["sqs"];
 const TIMES: readonly ValuePath[] = [["starttime"], ["endtime"]];
-/** The keys the ingest mode is read from: a held Time range belongs to them as they were (Ruling 48e). */
+/** The keys the ingest mode is read from: a held Time range belongs to them as they were. */
 const MODE_KEYS: readonly ValuePath[] = [SQS, ...TIMES];
 
 /** A held Time range: what the mode's keys held when it was chosen, the load and the node. */
@@ -162,7 +157,7 @@ export function AWSS3ReceiverForm() {
   const form = useForm();
   const { note } = useAdjustments();
   const load = useEditorStore((state) => state.loadCount);
-  // Time range chosen over `sqs`: held while the mode's keys, the load and the node are as they were then (Ruling 48e).
+  // Time range chosen over `sqs`: held while the mode's keys, the load and the node are as they were then.
   const [held, setHeld] = useState<HeldTimeRange | null>(null);
   const holding = held !== null && stillHeld(held, form, load);
   if (held !== null && !holding) setHeld(null);

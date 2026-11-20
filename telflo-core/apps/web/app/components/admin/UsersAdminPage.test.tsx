@@ -13,18 +13,17 @@ import { signedInMember } from "~/test/configurations.js";
 import { quietQueries } from "~/test/service-accounts.js";
 
 /*
- * The Users page (D29 Task 2: decisions 3, 9, 38 and 41; Preflight rulings
- * 15, 17 and 21; Ruling 258): its states (loading, the list with "(you)"
- * and no Delete on the caller's row, the two empty rows), the search sent
- * as `q` after the pause and never in the address, an attribute or
- * storage, Load more with the same term, the read's failures (a toast, the
- * way out on a 403, nothing when the session ended), and the delete's
- * outcomes through the page: the row gone; a block that appeared since the
- * list read again with the same term and shown from the row taken by id,
- * or by its kind alone when the row is gone; busy toasted with the dialog
- * kept open. Replay's rules: no email or organization name in an
- * attribute, a toast, the title or the address. Emails and organization
- * names are fixtures with the marker "zq", compared as booleans only.
+ * The Users page: its states (loading, the list with "(you)" and no Delete on
+ * the caller's row, the two empty rows), the search sent as `q` after the
+ * pause and never in the address, an attribute or storage, Load more with the
+ * same term, the read's failures (a toast, the way out on a 403, nothing when
+ * the session ended), and the delete's outcomes through the page: the row
+ * gone; a block that appeared since the list read again with the same term
+ * and shown from the row taken by id, or by its kind alone when the row is
+ * gone; busy toasted with the dialog kept open. Replay's rules: no email or
+ * organization name in an attribute, a toast, the title or the address.
+ * Emails and organization names are fixtures with the marker "zq", compared
+ * as booleans only.
  */
 
 const ME = "0199f400-0000-7000-8000-0000000000a1";
@@ -110,7 +109,7 @@ const deleteOf = (user: AdminUser) => screen.getByRole("button", { name: `Delete
 /** Whether a row shows `user`'s email (the DOM's rows: an open dialog hides them from the accessibility tree). */
 const listed = (user: AdminUser) => [...document.querySelectorAll("tbody tr")].some((row) => row.textContent?.includes(user.email) === true);
 
-describe("the Users page (D29 decision 38)", () => {
+describe("the Users page", () => {
   it("shows the heading, Refresh, the subtitle, the filter box and Loading users..., then Email with (you), Created and a Delete on every row but the caller's", async () => {
     let answer!: (page: AdminUsersPage) => void;
     list.mockReturnValueOnce(new Promise((resolve) => (answer = resolve)));
@@ -180,7 +179,7 @@ describe("the Users page (D29 decision 38)", () => {
     expect(list).toHaveBeenLastCalledWith({ q: "zq", cursor: "cursor-2" }, expect.anything());
   });
 
-  it("toasts Failed to load users on a failed first read and shows Try again, never No users found, until a read succeeds (Ruling 264)", async () => {
+  it("toasts Failed to load users on a failed first read and shows Try again, never No users found, until a read succeeds", async () => {
     list.mockRejectedValueOnce(new Error("network"));
     const user = renderPage();
     await waitFor(() => expect(toastError).toHaveBeenCalledWith(USERS_LOAD_FAILED_MESSAGE));
@@ -261,7 +260,7 @@ describe("the Users page (D29 decision 38)", () => {
     expect(toastsHold(CARA.email)).toBe(false);
   });
 
-  it("on a 409 user_delete_busy toasts its fixed words and keeps the confirmation open to try again (Ruling 258)", async () => {
+  it("on a 409 user_delete_busy toasts its fixed words and keeps the confirmation open to try again", async () => {
     remove.mockRejectedValueOnce(new ApiError("user_delete_busy", "The account changed while it was being deleted. Try again.", { status: 409 }));
     const user = renderPage();
     await user.click(await screen.findByRole("button", { name: `Delete ${CARA.email}` }));

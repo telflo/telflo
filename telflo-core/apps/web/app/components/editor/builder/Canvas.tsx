@@ -48,7 +48,7 @@ import {
 /** The manual-edit overlay. */
 export const MANUAL_EDIT_OVERLAY_MESSAGE = "In Manual Edit Mode. Exit Manual Edit mode to resume canvas updates.";
 
-/** The overlay's validation chip (D13b decision 15). */
+/** The overlay's validation chip. */
 export const CHIP_VALIDATING = "Validating...";
 export const CHIP_VALID = "Yaml is Valid";
 export const CHIP_UNCHECKED = "Validation unavailable — YAML not checked.";
@@ -70,7 +70,7 @@ function chipOf(validation: CollectorValidationOutcome): { text: string; classNa
       return { text: CHIP_ERRORS, className: "border-fail/25 bg-fail-soft text-fail" };
   }
 }
-/** The overlay while the text can't be shown (D9a decision 3); the reason follows it, as text. */
+/** The overlay while the text can't be shown; the reason follows it, as text. */
 export const UNREADABLE_OVERLAY_MESSAGE = "The canvas can't show this YAML until it reads as a configuration.";
 
 const nodeTypes: NodeTypes = {
@@ -90,23 +90,21 @@ const edgeTypes: EdgeTypes = {
 const SNAP_GRID: [number, number] = [CANVAS_GRID_SIZE, CANVAS_GRID_SIZE];
 
 /**
- * The canvas (D9a decision 8), reading and writing the editor's
- * store: every change goes through the store's actions, which take the undo
- * entry and write the text (Task 5). React Flow's own delete is off
- * (`deleteKeyCode={null}`); deleting goes through the store's one path.
+ * The canvas, reading and writing the editor's store: every change goes
+ * through the store's actions, which take the undo entry and write the
+ * text. React Flow's own delete is off (`deleteKeyCode={null}`); deleting
+ * goes through the store's one path.
  *
- * Over the canvas: manual edit mode's overlay, with a chip
- * saying what the collector validator made of the typed text (D13b
- * decision 15: hidden while idle), or, when the text can't be
- * read as a configuration, one saying so, with the reason as text. Either
- * way nodes can't be dragged, connected, selected or focused beneath it
- * (Preflight ruling 18).
+ * Over the canvas: manual edit mode's overlay, with a chip saying what the
+ * collector validator made of the typed text (hidden while idle), or, when
+ * the text can't be read as a configuration, one saying so, with the
+ * reason as text. Either way nodes can't be dragged, connected, selected
+ * or focused beneath it.
  *
- * A published version is read-only (D11b decision 4; Preflight ruling 11),
- * its own mode, with no overlay: nodes can be selected and focused, and the
- * canvas panned and zoomed, but nothing dragged, connected, dropped or
- * resized (a group's resizer doesn't show). The store refuses each change
- * too, and deleting.
+ * A published version is read-only, its own mode, with no overlay: nodes
+ * can be selected and focused, and the canvas panned and zoomed, but
+ * nothing dragged, connected, dropped or resized (a group's resizer doesn't
+ * show). The store refuses each change too, and deleting.
  *
  * React Flow mounts on the client only: the remembered viewport lives in
  * this browser's storage, so a server render couldn't match it.
@@ -186,8 +184,8 @@ function FlowCanvas({
   const graph = useEditorStore((state) => state.graph);
   const layoutRevision = useEditorStore((state) => state.layoutRevision);
 
-  // The playground's surfaces remember nothing in storage beyond the spec's
-  // named keys (D31-1 decision 18, Ruling 301): no viewport read or written.
+  // The playground's surfaces remember nothing in storage beyond their own
+  // named keys: no viewport read or written.
   const remembers = usePlayground() === null;
   // Read once, at mount, so React Flow's first paint is already at the
   // remembered viewport (no zoom flicker on load).

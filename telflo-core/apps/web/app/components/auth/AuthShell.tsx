@@ -9,14 +9,12 @@ import { setAnalyticsMasked } from "~/lib/analytics.js";
  * since these pages render outside AppLayout.
  *
  * Left rail always sits on the dark end of the active theme's gray ramp,
- * matching the in-app sidebar. Its text classes are the ones Dark already
- * showed through app.css's `html.dark .text-gray-600` and `-700` remaps
- * (gray-400 and gray-300), so the rail reads the same in Light (D21
- * Preflight ruling 22, B4).
+ * matching the in-app sidebar. Its text classes are the ones Dark shows
+ * through app.css's `html.dark .text-gray-600` and `-700` remaps (gray-400
+ * and gray-300), so the rail reads the same in Light.
  *
- * The app has no home page of its own (D36-1 decisions 20 and 23): the
- * logo and `showHomeLink`'s link go to sign-in, and the rail names no
- * site.
+ * The app has no home page of its own: the logo and `showHomeLink`'s link go
+ * to sign-in, and the rail names no site.
  */
 export function AuthShell({
   children,
@@ -29,10 +27,10 @@ export function AuthShell({
   // screens inherit the app tokens.
   useTfAppSurface();
   // ph-mask, on the root and on <body> for the same portals, has session
-  // replay mask all these screens' text: addresses, organization names (D4
-  // Ruling 14). Autocapture doesn't read it, so it sends no text or
-  // attributes while these screens are shown (D4 Ruling 16); no attribute in
-  // here may carry private data, since replay records attributes as they are.
+  // replay mask all these screens' text: addresses, organization names.
+  // Autocapture doesn't read it, so it sends no text or attributes while
+  // these screens are shown; no attribute in here may carry private data,
+  // since replay records attributes as they are.
   useEffect(() => {
     document.body.classList.add("ph-mask");
     const releaseAnalyticsMask = setAnalyticsMasked(true);
@@ -44,7 +42,7 @@ export function AuthShell({
   // No theme is applied here after the first paint: <html>'s class is already
   // in the server's HTML: these screens' routes are marked `handle = { theme:
   // "remembered" }`, so root's Layout renders the theme this browser was last
-  // told (D21 decision 22; lib/theme.ts).
+  // told (lib/theme.ts).
 
   return (
     <div className="tf-app ph-mask flex min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -97,7 +95,7 @@ export function AuthShell({
           </p>
         </div>
 
-        {/* Keeps the ledger and its line in the rail's middle, as the site's name below them once did. */}
+        {/* Keeps the ledger and its line in the rail's middle. */}
         <div aria-hidden className="h-4" />
       </aside>
 

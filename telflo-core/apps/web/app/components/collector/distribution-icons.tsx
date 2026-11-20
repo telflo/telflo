@@ -3,11 +3,10 @@ import { Box } from "lucide-react";
 import { OtelIcon } from "./OtelIcon.js";
 
 /*
- * The distribution icons and short labels (D13a decisions 1, 10 and 13),
- * Contrib only: no ClickStack (decision 1). Built for several distributions
- * all the same: another one is a row in each map, and one the maps don't know
- * yet shows the generic glyph and its catalogue label (or its id), never
- * nothing.
+ * The distribution icons and short labels, Contrib only: no ClickStack. Built
+ * for several distributions all the same: another one is a row in each map,
+ * and one the maps don't know yet shows the generic glyph and its catalogue
+ * label (or its id), never nothing.
  */
 
 export type DistributionIcon = ComponentType<{ className?: string }>;
@@ -59,9 +58,9 @@ export function shortLabelFor(distributionId: string | null | undefined, fullLab
 
 /**
  * A distribution id's name for a sentence, for a page that has the id before
- * the catalogue is read: the flow page's "Validated against …" (D12 Preflight
- * ruling 18) prefers the catalogue's label and falls back to this, so the
- * server's render names it too.
+ * the catalogue is read: the flow page's "Validated against …" prefers the
+ * catalogue's label and falls back to this, so the server's render names it
+ * too.
  */
 const distributionFullLabels: Record<string, string> = {
   "otelcol-contrib": "OpenTelemetry Collector Contrib",

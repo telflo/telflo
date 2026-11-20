@@ -14,15 +14,14 @@ import type { Graph } from "~/lib/graph/types.js";
 import { useEditorStore, type DeleteTarget } from "~/lib/stores/editor-store.js";
 
 /*
- * The one delete confirmation (D9a decision 8), in the Clear dialog's style,
- * never a browser `confirm()`. It shows whatever the store's
- * `pendingDelete` asks about, from the canvas's Delete key, the toolbar's
- * Delete and the pipeline panel alike: its title is the question; Delete
- * runs the store's `confirmDelete` (one undo entry, and a toast), Cancel and
- * Escape its `cancelDelete`, which deletes nothing.
+ * The one delete confirmation, in the Clear dialog's style, never a browser
+ * `confirm()`. It shows whatever the store's `pendingDelete` asks about,
+ * from the canvas's Delete key, the toolbar's Delete and the pipeline panel
+ * alike: its title is the question; Delete runs the store's `confirmDelete`
+ * (one undo entry, and a toast), Cancel and Escape its `cancelDelete`, which
+ * deletes nothing.
  *
- * Labels and pipeline names are text in the title only, never an attribute
- * (decision 7).
+ * Labels and pipeline names are text in the title only, never an attribute.
  */
 
 /** What the dialog says: its title, and a description for a pipeline. Null when the target is gone. */

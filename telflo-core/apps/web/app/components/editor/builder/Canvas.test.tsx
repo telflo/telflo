@@ -17,8 +17,8 @@ import { installReactFlowMocks } from "~/test/react-flow-jsdom.js";
 
 /*
  * The canvas in jsdom, with React Flow's documented mocks installed for this
- * file only (Preflight ruling 17). Dragging nodes and handles is pointer
- * work jsdom can't do; the browser tests (Task 11) and the hand check do it.
+ * file only. Dragging nodes and handles is pointer work jsdom can't do; the
+ * browser tests and manual checks do it.
  */
 
 const initialState = useEditorStore.getState();
@@ -304,7 +304,7 @@ describe("the overlays", () => {
     await settle();
 
     expect(screen.getByText(MANUAL_EDIT_OVERLAY_MESSAGE)).toBeInTheDocument();
-    // The typed text is due to be checked (D13b decision 15).
+    // The typed text is due to be checked.
     expect(screen.getByText("Validating...")).toBeInTheDocument();
     expect(screen.queryByText(UNREADABLE_OVERLAY_MESSAGE)).toBeNull();
     const locked = nodeElement(batch.id);
@@ -320,7 +320,7 @@ describe("the overlays", () => {
   });
 
 
-  it("its chip says what the validator made of the typed text: hidden while idle, then its four texts (D13b decision 15)", async () => {
+  it("its chip says what the validator made of the typed text: hidden while idle, then its four texts", async () => {
     open(corpusText("starter.yaml"));
     const { container } = await renderCanvas();
     const chips = ["Validating...", "Yaml is Valid", "Validation unavailable — YAML not checked.", "Errors must be corrected."];
@@ -352,7 +352,7 @@ describe("the overlays", () => {
 
     act(() => answerValidation({ status: "invalid", collectorVersion: "0.162.0", errors: [REFUSAL], requirements: [] }));
     expect(shown()).toEqual(["Errors must be corrected."]);
-    // The chip says nothing of the message or the path, in text or in an attribute (ADR 0024).
+    // The chip says nothing of the message or the path, in text or in an attribute.
     expect(container).not.toHaveTextContent("marker-message-9c2e");
     expect(attributeValues(container).filter((value) => /marker-(message|path)/.test(value))).toEqual([]);
 
@@ -377,7 +377,7 @@ describe("the overlays", () => {
   });
 });
 
-describe("a published version: read-only, its own mode (D11b decision 4; Preflight ruling 11)", () => {
+describe("a published version: read-only, its own mode", () => {
   it("has no overlay; nodes can be selected and focused, never dragged or connected", async () => {
     open(corpusText("starter.yaml"), VERSION_ID, true);
     await renderCanvas();
@@ -451,7 +451,7 @@ describe("a published version: read-only, its own mode (D11b decision 4; Preflig
   });
 });
 
-describe("privacy (D9a decision 7)", () => {
+describe("privacy", () => {
   const LABEL = "zqlabelmarkerzq";
   const INSTANCE = "zqinstancemarkerzq";
   const PIPELINE = "zqpipelinemarkerzq";
@@ -485,7 +485,7 @@ describe("privacy (D9a decision 7)", () => {
 
   it("puts no label, instance name, pipeline name or config value in any attribute", async () => {
     open(TEXT);
-    // A label a person could give (D9b's forms, or a future rename).
+    // A label a person could give (the component forms, or a future rename).
     const batch = nodeOf("processors.batch", `traces/${PIPELINE}`);
     useEditorStore.setState({
       graph: {
@@ -546,7 +546,7 @@ describe("the viewport", () => {
     });
   });
 
-  it("inside the playground, neither opens at a remembered viewport nor remembers one (D31-1 decision 18, Ruling 301)", async () => {
+  it("inside the playground, neither opens at a remembered viewport nor remembers one", async () => {
     open(corpusText("starter.yaml"));
     writeViewport(VERSION_ID, { x: 12, y: -40, zoom: 1.25 });
     const before = window.localStorage.getItem(VIEWPORT_STORAGE_KEY);

@@ -9,20 +9,20 @@ import { SelfMonitoringDialog, selectTelemetryConfigured } from "./SelfMonitorin
 import { selectIsEditingLocked, useEditorStore } from "~/lib/stores/editor-store.js";
 
 /*
- * The canvas actions (D9a decision 15): the floating cluster pinned to the
- * canvas's top right corner. Add pipeline, Self-monitoring, Tidy up and Clear
- * canvas act on the canvas, so they live on it. Clear is the one destructive
- * member: last, behind a divider, tinted destructive on hover, and never
- * without its confirmation.
+ * The canvas actions: the floating cluster pinned to the canvas's top right
+ * corner. Add pipeline, Self-monitoring, Tidy up and Clear canvas act on the
+ * canvas, so they live on it. Clear is the one destructive member: last,
+ * behind a divider, tinted destructive on hover, and never without its
+ * confirmation.
  *
- * Self-monitoring (D9b decision 7) opens the dialog over `service.telemetry`.
- * Its `aria-label` and `title` are fixed; `data-configured` and the green dot
- * say whether the text has `service.telemetry` with a value other than null
- * (read through aliases and merges), never what it holds (decision 10).
+ * Self-monitoring opens the dialog over `service.telemetry`. Its `aria-label`
+ * and `title` are fixed; `data-configured` and the green dot say whether the
+ * text has `service.telemetry` with a value other than null (read through
+ * aliases and merges), never what it holds.
  *
- * Changed: every action is disabled while the canvas is locked (manual edit
+ * Every action is disabled while the canvas is locked (manual edit
  * mode, or text it can't show, so Clear can't run mid-edit), and on a
- * published version, which is read-only (D11b decision 4).
+ * published version, which is read-only.
  *
  * The canvas's dialogs live here: Add New Pipeline, Collector Self-Monitoring,
  * Clear Canvas, and the one delete confirmation, which the store's

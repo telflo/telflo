@@ -197,7 +197,7 @@ describe("EditorLayout", () => {
     expect(panel().style.width).toBe("500px");
   });
 
-  describe("a tab kept mounted (Ruling 86)", () => {
+  describe("a tab kept mounted", () => {
     /** A tab's own state: a count its button raises, lost if the tab unmounts. */
     function Counter() {
       const [count, setCount] = useState(0);

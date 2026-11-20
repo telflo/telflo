@@ -8,15 +8,15 @@ import type { PipelineSignalType } from "~/lib/graph/types.js";
 import { selectIsEditingLocked, useEditorStore } from "~/lib/stores/editor-store.js";
 
 /*
- * The pipeline group panel (ADR 0018), on the editor's store (D9a decisions 8
- * and 9): the Configuration tab shows it for a selected pipeline group.
+ * The pipeline group panel, on the editor's store: the Configuration tab
+ * shows it for a selected pipeline group.
  *
- * Changed: a colour change is an undo entry (it changes the layout, never
+ * A colour change is an undo entry (it changes the layout, never
  * the text), and Delete asks through the one delete dialog, which says the
  * pipeline's components go too, and is undoable.
  *
- * The swatches' `title` is the hex colour; the pipeline's
- * name is text only, never an attribute (decision 7).
+ * The swatches' `title` is the hex colour; the pipeline's name is text only,
+ * never an attribute.
  */
 
 /** The signal badges' colours (the Add New Pipeline dialog uses them too). */

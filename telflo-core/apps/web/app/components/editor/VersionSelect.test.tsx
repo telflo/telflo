@@ -21,9 +21,9 @@ import {
 } from "~/test/configurations.js";
 
 /*
- * The version picker (D10 decision 10): the trigger, the rows with
- * their creator and last saved date, choosing a row, its pencil, "Create New
- * Version", and no label or email in any attribute (ADR 0024).
+ * The version picker: the trigger, the rows with their creator and last
+ * saved date, choosing a row, its pencil, "Create New Version", and no label
+ * or email in any attribute.
  */
 
 const LABEL_3 = "Add tail sampling 7c2e";
@@ -112,7 +112,7 @@ beforeEach(() => {
 });
 
 describe("VersionSelect", () => {
-  it('shows "Version:" and the open version as `v{n}: label`, 14 rem wide, named by both; below the widest screens "Version:" is read only and the trigger 10 rem wide (D13a Ruling 42)', async () => {
+  it('shows "Version:" and the open version as `v{n}: label`, 14 rem wide, named by both; below the widest screens "Version:" is read only and the trigger 10 rem wide', async () => {
     renderPicker();
     const select = await trigger();
 
@@ -160,7 +160,7 @@ describe("VersionSelect", () => {
     expect(await screen.findByText("landed on /app")).toBeInTheDocument();
   });
 
-  it("keeps the configuration's id as the address spells it (D10 Preflight ruling 5)", async () => {
+  it("keeps the configuration's id as the address spells it", async () => {
     const upper = MINE.id.toUpperCase();
     const user = renderPicker({ configurationSegment: upper });
     const listbox = await openPicker(user);
@@ -170,7 +170,7 @@ describe("VersionSelect", () => {
     await waitFor(() => expect(address()).toBe(`/editor/${upper}/${VERSION_2.id}`));
   });
 
-  it("choosing the open row goes nowhere: the same history entry (D10 Ruling 31)", async () => {
+  it("choosing the open row goes nowhere: the same history entry", async () => {
     const user = renderPicker({ before: "/app" });
     const listbox = await openPicker(user);
     const before = entry();
@@ -201,7 +201,7 @@ describe("VersionSelect", () => {
     await waitFor(() => expect(within(dialog).getByRole("textbox", { name: "Version name" })).toHaveFocus());
   });
 
-  it("describes each pencil by its row's text, through opaque ids (D10 Ruling 33)", async () => {
+  it("describes each pencil by its row's text, through opaque ids", async () => {
     const user = renderPicker();
     const listbox = await openPicker(user);
     const options = within(listbox).getAllByRole("option");
@@ -260,7 +260,7 @@ describe("VersionSelect", () => {
     expect(within(listbox).getByRole("button", { name: "Create New Version" })).toBeDisabled();
   });
 
-  it('"Create New Version" is disabled while the store says a create is under way, whichever started it (D10 Ruling 45)', async () => {
+  it('"Create New Version" is disabled while the store says a create is under way, whichever started it', async () => {
     const user = renderPicker();
     act(() => useEditorStore.getState().setCreatingVersion(true));
     let listbox = await openPicker(user);
@@ -296,7 +296,7 @@ describe("VersionSelect", () => {
     await act(async () => finish({ version: created }));
   });
 
-  describe("the focus once a dialog closes: back on the trigger (D10's final review)", () => {
+  describe("the focus once a dialog closes: back on the trigger", () => {
     /** Opens the rename dialog from the first row's pencil. */
     async function openRename(user: ReturnType<typeof userEvent.setup>) {
       const listbox = await openPicker(user);
@@ -364,7 +364,7 @@ describe("VersionSelect", () => {
     });
   });
 
-  describe("by keyboard alone (D10 Ruling 28)", () => {
+  describe("by keyboard alone", () => {
     /** The element with focus. */
     const focused = () => document.activeElement as HTMLElement;
     /** The row `option`'s pencil. */
@@ -470,7 +470,7 @@ describe("VersionSelect", () => {
     });
   });
 
-  it("puts no label or email in any attribute: closed, open, renaming and creating (ADR 0024)", async () => {
+  it("puts no label or email in any attribute: closed, open, renaming and creating", async () => {
     const user = renderPicker();
     const privateValues = [LABEL_3, LABEL_1, "Version 2", COLLEAGUE_EMAIL, MEMBER_EMAIL, "Typed name 3f9a"];
 
@@ -511,7 +511,7 @@ describe("VersionSelect", () => {
     assertNoAttributeCarries();
   });
 
-  describe("published rows (D11b decisions 4 and 13)", () => {
+  describe("published rows", () => {
     const LOCK = "Published versions are immutable";
     /** v3 and v1 published, v2 a draft; v3 open. */
     const OPEN = { ...VERSION_3, ...PUBLISHED_FIELDS };

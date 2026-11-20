@@ -19,15 +19,14 @@ interface CreateVersionDialogProps {
   onCreate: (label: string) => Promise<boolean>;
   /** Whether a create is under way. */
   creating: boolean;
-  /** Whether a save is under way: Continue waits for it (D10 Ruling 30). */
+  /** Whether a save is under way: Continue waits for it. */
   saving?: boolean;
   /** Where the focus goes once the dialog has closed (Radix's `onCloseAutoFocus`). */
   onCloseAutoFocus?: (event: Event) => void;
 }
 
 /*
- * The "Copy Version" dialog (ADR 0018; D10 decision 11). Differences,
- * all in the D10 Parity Notes:
+ * The "Copy Version" dialog:
  * - the body says what the create does: a new version from this one, with
  *   its unsaved changes, the source left as last saved (it doesn't say it
  *   saves the changes);
@@ -38,12 +37,12 @@ interface CreateVersionDialogProps {
  *   way, Continue is disabled and Enter creates nothing (the create would
  *   do nothing then);
  * - a failure keeps the dialog open with what was typed (the create says
- *   why), and the focus back in the field (D10 Ruling 44), from Continue,
- *   which was disabled meanwhile.
+ *   why), and the focus back in the field, from Continue, which was disabled
+ *   meanwhile.
  * The name is optional, at most 80 characters, trimmed by the create; the
  * field is focused, and Enter creates. Reopening starts with an empty field.
  * The name is the user's text: it is the field's value, never another
- * attribute (ADR 0024).
+ * attribute.
  */
 export function CreateVersionDialog({
   open,

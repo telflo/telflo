@@ -61,8 +61,8 @@ const pipelineList = (text: string, pipeline: string, list: "receivers" | "proce
     list
   ];
 
-describe("EditorToolbar's builder buttons (D9a decision 12)", () => {
-  it("puts Undo, Redo, Duplicate and Delete before Save, in one group, with fixed titles as their aria-labels; Publish follows Save (D11b decision 13)", async () => {
+describe("EditorToolbar's builder buttons", () => {
+  it("puts Undo, Redo, Duplicate and Delete before Save, in one group, with fixed titles as their aria-labels; Publish follows Save", async () => {
     await renderToolbar();
 
     const actions = document.querySelector('[data-tour-step="toolbar-actions"]')!;
@@ -123,7 +123,7 @@ describe("EditorToolbar's builder buttons (D9a decision 12)", () => {
       expect(button(REDO_TITLE)).toBeDisabled();
     });
 
-    it("follow the store, not the canvas's lock: Redo is enabled over text the canvas can't show (fix wave F3)", async () => {
+    it("follow the store, not the canvas's lock: Redo is enabled over text the canvas can't show", async () => {
       const unreadable = "receivers: [\n";
       const user = await renderToolbar(unreadable);
       expect(builderStore().graphStatus).not.toBe("ready");
@@ -214,7 +214,7 @@ describe("EditorToolbar's builder buttons (D9a decision 12)", () => {
 
       expect(screen.queryByRole("dialog")).toBeNull();
       expect(componentsIn(groupNamed("logs"))).toContain("processors.batch/2");
-      // Declared; the pipeline lists it once it's connected (decision 4).
+      // Declared; the pipeline lists it once it's connected.
       expect(builderStore().text).toContain("  batch/2:\n    timeout: 10s\n    send_batch_size: 1024\n");
       expect(toast.success).toHaveBeenCalledWith('Duplicated "Batch"', { className: "ph-no-capture" });
       const selected = builderStore().selectedNode!;
@@ -289,7 +289,7 @@ describe("EditorToolbar's builder buttons (D9a decision 12)", () => {
     });
   });
 
-  it("puts no label or undo description in any attribute (decision 7)", async () => {
+  it("puts no label or undo description in any attribute", async () => {
     const LABEL = "zq-label-marker";
     const user = await renderToolbar();
     // A label a person could give, so the undo description names it too.

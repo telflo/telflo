@@ -14,8 +14,8 @@ import { selectIsDirty, useEditorStore } from "~/lib/stores/editor-store.js";
 import { GROUP_ID, MINE, versionFixture } from "~/test/configurations.js";
 
 /*
- * The "Copy Version" dialog, with D10 decision 11's text and states,
- * driving the picker's create (`useCreateVersion`) as the picker wires it.
+ * The "Copy Version" dialog, with its text and states, driving the
+ * picker's create (`useCreateVersion`) as the picker wires it.
  */
 
 const SAVED_YAML = "receivers:\n  otlp:\n";
@@ -90,7 +90,7 @@ beforeEach(() => {
 });
 
 describe("CreateVersionDialog", () => {
-  it("says its title, D10's body, and offers an optional name, focused, at most 80 characters", async () => {
+  it("says its title and body, and offers an optional name, focused, at most 80 characters", async () => {
     renderDialog();
     const open = await dialog();
 
@@ -170,7 +170,7 @@ describe("CreateVersionDialog", () => {
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
   });
 
-  it("disables Continue while a save is under way, and Enter creates nothing then (D10 Ruling 30)", async () => {
+  it("disables Continue while a save is under way, and Enter creates nothing then", async () => {
     const createConfigurationVersion = vi
       .spyOn(apiClient, "createConfigurationVersion")
       .mockResolvedValue({ version: CREATED });
@@ -208,7 +208,7 @@ describe("CreateVersionDialog", () => {
     expect(screen.getByRole("dialog", { name: "Copy Version" })).toBeInTheDocument();
     expect(field()).toHaveValue("Add tail sampling");
     expect(within(open).getByRole("button", { name: "Continue" })).toBeEnabled();
-    // Back in the field, from Continue, which was disabled meanwhile (D10 Ruling 44).
+    // Back in the field, from Continue, which was disabled meanwhile.
     await waitFor(() => expect(field()).toHaveFocus());
     expect(useEditorStore.getState().version).toEqual(SOURCE);
     expect(useEditorStore.getState().text).toBe(EDITED_YAML);

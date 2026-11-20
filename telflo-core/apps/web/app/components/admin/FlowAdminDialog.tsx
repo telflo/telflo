@@ -29,26 +29,21 @@ import { resolveFlowVersion } from "~/lib/flows/resolve-flow-version.js";
 import { findDistribution, useCollectorDistributions } from "~/lib/stores/collector-catalogue-store.js";
 
 /*
- * A flow's dialog (ADR 0018): its fields, limits, copy, messages and
- * layout. Per the D12 Parity Notes:
+ * A flow's dialog, with its fields, limits, copy, messages and layout:
  * - the distributions and versions come from the collector catalogue the
- *   rest of the app reads (D13a); the version select offers the
- *   distribution's versions, newest first, and falls back to the
- *   catalogue's default (resolveFlowVersion; Preflight ruling 12). Editing
- *   a flow whose pin the catalogue no longer offers, the select shows that
- *   pin, marked, as its current choice (decision 16);
- * - the signals are derived with D9a's reading of the text (deriveSignals);
+ *   rest of the app reads; the version select offers the distribution's
+ *   versions, newest first, and falls back to the catalogue's default
+ *   (resolveFlowVersion). Editing a flow whose pin the catalogue no longer
+ *   offers, the select shows that pin, marked, as its current choice;
+ * - the signals are derived from the text (deriveSignals);
  * - the fields are checked against the API's contract before saving, so a
  *   refusal is the contract's sentence rather than "The request was not
- *   valid."; the slug field takes at most 80 characters (Preflight ruling
- *   19);
- * - "Run security check" is the API's flow_lint (decision 6), whose refusal
- *   (429 past 20 a minute) shows the API's message; Save is never gated on
- *   it;
+ *   valid."; the slug field takes at most 80 characters;
+ * - "Run security check" is the API's flow_lint, whose refusal (429 past 20
+ *   a minute) shows the API's message; Save is never gated on it;
  * - the YAML textarea and the findings sit inside `ph-no-capture`: an admin
- *   may paste a secret, which is what the check is for (ADR 0024; the plan's
- *   Global constraints). The YAML field stays a plain textarea
- *   (decision 7).
+ *   may paste a secret, which is what the check is for. The YAML field
+ *   stays a plain textarea.
  * A 403 `product_admin_required` from the check or the save goes to `/app`
  * (`onProductAdminLost`).
  */
@@ -62,11 +57,11 @@ interface FlowAdminDialogProps {
   onSave: (fields: FlowFields) => Promise<void>;
   /** The caller is no longer a product admin (403 `product_admin_required`). */
   onProductAdminLost: () => void;
-  /** Where the focus goes once the dialog has closed (Radix's `onCloseAutoFocus`): the page gives it back to the opener (D14b Ruling 46). */
+  /** Where the focus goes once the dialog has closed (Radix's `onCloseAutoFocus`): the page gives it back to the opener. */
   onCloseAutoFocus?: (event: Event) => void;
 }
 
-/** What the version select shows beside a pin the catalogue no longer offers (D12 decision 16). */
+/** What the version select shows beside a pin the catalogue no longer offers. */
 export const NO_LONGER_OFFERED = "no longer offered";
 
 /** The distribution a new flow starts with: the catalogue's default, or Contrib before it is read. */
@@ -111,9 +106,9 @@ export function FlowAdminDialog({ open, flow, onClose, onSave, onProductAdminLos
     offers,
   );
   // The flow's own pin when the options don't hold it, shown as the current
-  // choice: kept although the catalogue no longer offers it (D12 Preflight
-  // ruling 19), and marked so; unmarked while the catalogue is unread (or
-  // its read failed), when nothing is known about it.
+  // choice: kept although the catalogue no longer offers it, and marked so;
+  // unmarked while the catalogue is unread (or its read failed), when
+  // nothing is known about it.
   const unlistedPin =
     effectiveVersion !== "" && !offers.some((offer) => offer.version === effectiveVersion) ? effectiveVersion : null;
 
@@ -385,7 +380,7 @@ export function FlowAdminDialog({ open, flow, onClose, onSave, onProductAdminLos
               </div>
             </div>
             {/* `ph-no-capture`: replay blocks the configuration's text, which
-                may hold a pasted secret (ADR 0024). */}
+                may hold a pasted secret. */}
             <div className="ph-no-capture">
               <Textarea
                 id="flow-yaml"
@@ -413,7 +408,7 @@ export function FlowAdminDialog({ open, flow, onClose, onSave, onProductAdminLos
 
           {findings !== null && findings.length > 0 && (
             // The findings quote the configuration's keys and values: replay
-            // blocks them as it blocks the text (ADR 0024).
+            // blocks them as it blocks the text.
             <div className="ph-no-capture space-y-1.5 rounded-lg border border-border bg-card p-3">
               {[...blockers, ...warnings].map((finding, index) => (
                 <div key={index} className="flex items-start gap-2 text-[12px]">

@@ -4,11 +4,10 @@ import { useState } from "react";
 import { ComponentPalette } from "./ComponentPalette.js";
 
 /*
- * The collapsible toolbox (D9a decision 10): 240 px, collapsing to a 44 px
- * rail whose two buttons both expand it. The collapse isn't remembered.
- * There is no distribution allowlist override here, and the palette reads the
- * open version's distribution itself (D13a decision 6), so it sits here
- * directly.
+ * The collapsible toolbox: 240 px, collapsing to a 44 px rail whose two
+ * buttons both expand it. The collapse isn't remembered. There is no
+ * distribution allowlist override here, and the palette reads the open
+ * version's distribution itself, so it sits here directly.
  */
 export function CollapsibleToolbox() {
   const [collapsed, setCollapsed] = useState(false);

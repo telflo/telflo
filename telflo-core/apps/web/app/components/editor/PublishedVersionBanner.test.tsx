@@ -14,9 +14,9 @@ import { selectIsDirty, selectIsVersionPublished, summaryOf, useEditorStore } fr
 import { GROUP_ID, MINE, PUBLISHED_FIELDS, versionFixture, versionSummaryOf } from "~/test/configurations.js";
 
 /*
- * The banner over a published version (D11b decision 4) and its one button,
- * D10's create from the open version (unnamed, no dialog), which opens the
- * new version; a stale tab's unsaved text goes with it (Preflight ruling 12).
+ * The banner over a published version and its one button, the version
+ * picker's create from the open version (unnamed, no dialog), which opens
+ * the new version; a stale tab's unsaved text goes with it.
  */
 
 const YAML = "receivers:\n  otlp:\n    protocols:\n      grpc: {}\n";
@@ -81,7 +81,7 @@ describe("PublishedVersionBanner", () => {
     expect(screen.getByText(MESSAGE)).toBeInTheDocument();
   });
 
-  it("names neither the configuration nor the label, in text or attribute (ADR 0024)", async () => {
+  it("names neither the configuration nor the label, in text or attribute", async () => {
     renderBanner();
     const banner = (await screen.findByText(MESSAGE)).parentElement!;
     expect(banner).not.toHaveTextContent(LABEL);
@@ -109,7 +109,7 @@ describe("PublishedVersionBanner", () => {
       sourceVersionId: PUBLISHED.id,
       yamlContent: YAML,
       ...graph,
-      // No collectorVersion: nothing was picked, so the new version takes the published one's (D13a Ruling 37).
+      // No collectorVersion: nothing was picked, so the new version takes the published one's.
     });
     expect(screen.queryByRole("dialog")).toBeNull();
     expect(store().version).toEqual(CREATED);
@@ -133,7 +133,7 @@ describe("PublishedVersionBanner", () => {
     await waitFor(() => expect(address()).toBe(`/editor/${MINE.id}/${CREATED.id}`));
   });
 
-  it("carries a stale tab's unsaved text into the new version (Preflight ruling 12)", async () => {
+  it("carries a stale tab's unsaved text into the new version", async () => {
     const typed = `${YAML}# typed before the teammate published\n`;
     const create = vi
       .spyOn(apiClient, "createConfigurationVersion")
@@ -154,7 +154,7 @@ describe("PublishedVersionBanner", () => {
     expect(selectIsDirty(store())).toBe(false);
   });
 
-  it("a failed create says D10's message and stays on the published version", async () => {
+  it("a failed create says the create's message and stays on the published version", async () => {
     vi.spyOn(apiClient, "createConfigurationVersion").mockRejectedValue(new ApiError("internal_error", "Something went wrong"));
     const user = renderBanner();
 
@@ -190,7 +190,7 @@ describe("PublishedVersionBanner", () => {
   });
 });
 
-describe("the collector version the banner's create carries (D13a decision 9; Preflight ruling 16; Rulings 30 and 37)", () => {
+describe("the collector version the banner's create carries", () => {
   /** The draft this tab loaded at 0.162.0, before a teammate published it. */
   const DRAFT = versionFixture({ ...PUBLISHED, publishedAt: null, publishedBy: null, collectorVersion: "0.162.0" });
   const TEAMMATE_PUBLISHED = { ...PUBLISHED, collectorVersion: "0.160.0", updatedAt: "2026-10-04T11:30:00.000Z" };
@@ -231,7 +231,7 @@ describe("the collector version the banner's create carries (D13a decision 9; Pr
     expect(store().collectorVersion).toBe("0.160.0");
   });
 
-  it("a stale tab that only picked: after the re-read it shows the teammate's published text with its pick, and the create carries both (Rulings 30 and 41)", async () => {
+  it("a stale tab that only picked: after the re-read it shows the teammate's published text with its pick, and the create carries both", async () => {
     const teammateText = `${YAML}# Ben's published change\n`;
     const create = vi
       .spyOn(apiClient, "createConfigurationVersion")

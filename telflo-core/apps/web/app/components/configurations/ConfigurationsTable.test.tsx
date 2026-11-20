@@ -33,7 +33,7 @@ function row(name: string): HTMLElement {
 }
 
 describe("ConfigurationsTable", () => {
-  it("has the configurations columns, Status (D11b decision 6) and Distribution (D13a decision 10) among them, and headers that don't sort", () => {
+  it("has the configurations columns, Status and Distribution among them, and headers that don't sort", () => {
     renderTable();
 
     expect(screen.getAllByRole("columnheader").map((header) => header.textContent)).toEqual([
@@ -62,7 +62,7 @@ describe("ConfigurationsTable", () => {
     expect(cells[5]).toHaveTextContent(new Date(MINE.updatedAt).toLocaleDateString());
   });
 
-  it("shows Draft (outline) or Published (info) in the Status column, the word alone (D11b decision 6)", () => {
+  it("shows Draft (outline) or Published (info) in the Status column, the word alone", () => {
     renderTable();
 
     for (const [name, word, variantClass] of [
@@ -117,7 +117,7 @@ describe("ConfigurationsTable", () => {
     expect(onOpen).not.toHaveBeenCalled();
   });
 
-  it("has Delete only on the rows it's allowed on, and asks about each configuration (D11b decision 2)", () => {
+  it("has Delete only on the rows it's allowed on, and asks about each configuration", () => {
     const canDelete = vi.fn((configuration: Configuration) => configuration.id === MINE.id);
     renderTable(canDelete);
 
@@ -128,7 +128,7 @@ describe("ConfigurationsTable", () => {
     expect(canDelete).toHaveBeenCalledWith(THEIRS);
   });
 
-  describe("the Distribution column (D13a decision 10)", () => {
+  describe("the Distribution column", () => {
     it("renders each row's distribution as a compact tag: the mark and the short name", () => {
       renderTable(() => true, [MINE, { ...THEIRS, collectorDistribution: ACME.id }], [...CATALOGUE, ACME]);
 
@@ -140,8 +140,8 @@ describe("ConfigurationsTable", () => {
       expect(within(row("Staging Logs")).getAllByRole("cell")[3]).toHaveTextContent(/^Acme Collector$/);
     });
 
-    // Every configuration has a distribution here (D13a decision 9), so the
-    // case left is one the catalogue doesn't list.
+    // Every configuration has a distribution here, so the case left is one
+    // the catalogue doesn't list.
     it("renders a distribution the catalogue doesn't list as its id, with the generic glyph", () => {
       renderTable(() => true, [{ ...MINE, collectorDistribution: "grafana-alloy" }]);
 
@@ -151,7 +151,7 @@ describe("ConfigurationsTable", () => {
       expect(cell.querySelector("svg")).not.toBeNull();
     });
 
-    it("gives the tag fixed text for its tooltip, the catalogue's label in it, and puts no name or email in any attribute (ADR 0024)", () => {
+    it("gives the tag fixed text for its tooltip, the catalogue's label in it, and puts no name or email in any attribute", () => {
       renderTable();
 
       for (const name of ["Production Monitoring", "Staging Logs", "Left Behind"]) {

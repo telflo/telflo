@@ -9,37 +9,34 @@ import type { ValueChange } from "~/lib/graph/text-edits.js";
 import type { ValueView } from "~/lib/graph/value-view.js";
 
 /*
- * The cumulative-to-delta processor's form (ADR 0018), over the form's
- * fields (D9d decision 2, D9b's contract): each field
- * writes its own key. Collector claims are contrib v0.162.0's
+ * The cumulative-to-delta processor's form, over the form's fields: each
+ * field writes its own key. Collector claims are contrib v0.162.0's
  * `processor/cumulativetodeltaprocessor`. The collector's own name,
  * `cumulative_to_delta`, opens this form (`RENAMED_TYPES`).
  *
- * - Fixed (decision 3): the Max Streams control is gone: `max_streams`
- *   isn't a key of the processor (`config.go:28-53`), which refuses it. A
- *   key already in the text is left alone (D13).
- * - Fixed (decision 3; D9c's hostmetrics filters): each side's Metric
- *   Names are held rows (Add never writes `""`); a side's first
- *   item is written with `match_type: strict`, or the match chosen before
- *   it, whenever the side has none (the collector refuses metrics without
- *   a match type, `config.go:60-63`); a match chosen on a side with no
- *   metrics is held by the form until its first item (`config.go:64-67`
- *   refuses a match type alone). Removing a side's last metric removes
- *   `metrics` and `match_type` together, and the side's block when nothing
- *   else is in it (a pruning scope): `metric_types` and the regexp cache
- *   settings, which no field shows, keep it.
- * - Changed (D9b decision 3): Initial Value Handling unset is blank with
- *   "Default auto" (`config.go:32-37`); Max Staleness says "Default 1h"
- *   (`factory.go:33-37`; not 0, never expire). A side's Match
- *   Type beside metrics and no `match_type` is blank (the collector has no
- *   default there); with no metrics it shows the match its first item will
- *   be written with.
- * - Changed (decision 4): the alert names Max Staleness, the collector's
- *   own bound, rather than the `max_streams` key the collector doesn't
- *   have.
+ * - There is no Max Streams control: `max_streams` isn't a key of the
+ *   processor (`config.go:28-53`), which refuses it. A key already in the text
+ *   is left alone.
+ * - Each side's Metric Names are held rows, as the hostmetrics form's
+ *   filters are (Add never writes `""`); a side's first item is written
+ *   with `match_type: strict`, or the match chosen before it, whenever the
+ *   side has none (the collector refuses metrics without a match type,
+ *   `config.go:60-63`); a match chosen on a side with no metrics is held
+ *   by the form until its first item (`config.go:64-67` refuses a match
+ *   type alone). Removing a side's last metric removes `metrics` and
+ *   `match_type` together, and the side's block when nothing else is in it
+ *   (a pruning scope): `metric_types` and the regexp cache settings, which
+ *   no field shows, keep it.
+ * - Initial Value Handling unset is blank with "Default auto"
+ *   (`config.go:32-37`); Max Staleness says "Default 1h"
+ *   (`factory.go:33-37`; not 0, never expire). A side's Match Type beside
+ *   metrics and no `match_type` is blank (the collector has no default
+ *   there); with no metrics it shows the match its first item will be
+ *   written with.
+ * - The alert names Max Staleness, the collector's own bound.
  *
  * Ids are fixed (`initial-value`, `include-match-type`, …); no value
- * reaches an attribute (decision 13).
+ * reaches an attribute.
  */
 
 export const MEMORY_ALERT =

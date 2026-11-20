@@ -1,9 +1,8 @@
 /**
- * The collector validator's status bar under the YAML editor (D13b
- * decisions 3, 4, 7 and 14): three basic tests first, then every state's
- * text, the rows that jump and
- * the plain ones, the requirements row, and that no attribute holds a
- * message, a path or the configuration's text (ADR 0024).
+ * The collector validator's status bar under the YAML editor: three basic
+ * tests first, then every state's text, the rows that jump and the plain
+ * ones, the requirements row, and that no attribute holds a message, a path
+ * or the configuration's text.
  */
 
 import { act, render, screen } from "@testing-library/react";
@@ -86,7 +85,7 @@ describe("ValidationStatus (basics)", () => {
   });
 });
 
-describe("ValidationStatus's states (D13b decision 14)", () => {
+describe("ValidationStatus's states", () => {
   it("nothing for empty text, whatever was answered before", () => {
     answerValidation({ status: "valid", collectorVersion: "0.162.0", requirements: [] });
     act(() => useEditorStore.getState().setText(""));
@@ -139,7 +138,7 @@ describe("ValidationStatus's states (D13b decision 14)", () => {
     expect(row.compareDocumentPosition(reason) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
-  it("amber not checked · v0.155.0 is retired — pick an offered version to check this config (decision 4)", () => {
+  it("amber not checked · v0.155.0 is retired — pick an offered version to check this config", () => {
     answerValidation({ status: "retired", collectorVersion: "0.155.0" });
     renderBar();
     const row = screen.getByText("not checked · v0.155.0 is retired — pick an offered version to check this config");
@@ -162,7 +161,7 @@ describe("ValidationStatus's states (D13b decision 14)", () => {
   });
 });
 
-describe("the error rows (decision 3)", () => {
+describe("the error rows", () => {
   async function expanded(errors: { message: string; componentPath: string | null }[]) {
     answerValidation({ status: "invalid", collectorVersion: "0.162.0", errors, requirements: [] });
     const view = renderBar();
@@ -202,7 +201,7 @@ describe("the error rows (decision 3)", () => {
   });
 });
 
-describe("the requirements row (decision 7)", () => {
+describe("the requirements row", () => {
   it("1 deployment requirement, collapsible, each with its title, description and component path", async () => {
     answerValidation({
       status: "valid",
@@ -240,7 +239,7 @@ describe("the requirements row (decision 7)", () => {
   });
 });
 
-describe("no attribute holds a message, a path or the text (ADR 0024)", () => {
+describe("no attribute holds a message, a path or the text", () => {
   it("in any state, everything expanded", async () => {
     const marker = /marker-(message|path|text|title|description)/;
     const outcomes = [

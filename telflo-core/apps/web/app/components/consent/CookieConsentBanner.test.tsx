@@ -22,7 +22,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-/** The site's cookie-policy URL the SaaS sets (D36-1 decision 33). */
+/** The site's cookie-policy URL the SaaS sets. */
 const POLICY_URL = "/home/cookie-policy";
 
 /** jsdom can't open another tab; the tests only need the click. */
@@ -49,7 +49,7 @@ function banner() {
 }
 
 describe("the consent banner", () => {
-  it("shows until a choice is stored, with Cookie preferences, Allow all and the site's Cookie Policy, linked in a new tab (D36-1 decision 33)", async () => {
+  it("shows until a choice is stored, with Cookie preferences, Allow all and the site's Cookie Policy, linked in a new tab", async () => {
     await renderWithAnalytics();
 
     const dialog = await screen.findByRole("dialog", { name: "Telflo uses cookies" });
@@ -65,7 +65,7 @@ describe("the consent banner", () => {
     expect(posthog.client.opt_in_capturing).not.toHaveBeenCalled();
   });
 
-  it("names no policy page without the site's cookie-policy URL: the sentence ends after \"experience.\" (D36-1 decision 33)", async () => {
+  it("names no policy page without the site's cookie-policy URL: the sentence ends after \"experience.\"", async () => {
     await renderWithAnalytics("");
 
     const dialog = await screen.findByRole("dialog", { name: "Telflo uses cookies" });
@@ -183,7 +183,7 @@ describe("the preferences modal", () => {
     expect(getConsentStatus()).toBeNull();
   });
 
-  it("reads more in the site's Cookie Policy, a link in a new tab, and names none without the URL (D36-1 decision 33)", async () => {
+  it("reads more in the site's Cookie Policy, a link in a new tab, and names none without the URL", async () => {
     const { modal, unmount } = await openPreferences();
     expect(modal).toHaveTextContent("Read more in our Cookie Policy.");
     const policy = within(modal).getByRole("link", { name: "Cookie Policy" });

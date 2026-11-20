@@ -21,46 +21,43 @@ import type { ValueView } from "~/lib/graph/value-view.js";
 import { findPattern } from "~/lib/regex-library.js";
 
 /*
- * The attributes processor's form (ADR 0018), over the form (D9b
- * decisions 2 to 4). Each field writes its own key under
- * `actions.<index>`, `include` or `exclude`.
+ * The attributes processor's form, over the form. Each field writes its own
+ * key under `actions.<index>`, `include` or `exclude`.
  *
  * - The actions are collapsible cards (the first open), applied in order and
- *   **not reorderable** (Parity Notes). "Add Action" appends
- *   `{key: "", action: "insert", value: ""}` and opens
- *   it; the trash button removes the item's lines.
- * - **Carried forward** (Parity Notes: an action type is a different
- *   action): changing the action type rebuilds the action keeping only its
- *   key, with the seed for the new type (`value: ""`, `pattern:
- *   ""`, `converted_type: string`, nothing for delete and hash). So do the
- *   Value Source and Target Type selects (keeping key and action; seeds
- *   `source_attribute`, `client.address`, the library's "Generic Prefix").
- *   Written by key: `action` in place, every other key removed by its
- *   lines, the seed's keys set; the key's line and comments stay.
+ *   **not reorderable**. "Add Action" appends
+ *   `{key: "", action: "insert", value: ""}` and opens it; the trash button
+ *   removes the item's lines.
+ * - Changing the action type rebuilds the action keeping only its key (an
+ *   action type is a different action), with the seed for the new type
+ *   (`value: ""`, `pattern: ""`, `converted_type: string`, nothing for delete
+ *   and hash). So do the Value Source and Target Type selects (keeping key and
+ *   action; seeds `source_attribute`, `client.address`, the library's "Generic
+ *   Prefix"). Written by key: `action` in place, every other key removed by
+ *   its lines, the seed's keys set; the key's line and comments stay.
  * - Clearing a card's text writes `""` (a pattern
  *   cleared stays a pattern target).
  * - Filtering: Include and Exclude, each with Match Type and the service,
  *   span and metric name lists (`StringListField`; its remove buttons say
- *   "Remove", decision 10: never "Remove <value>").
- * - **Fixed** (decision 4, the owner's ruling): the cache controls moved
- *   from the "Regex Caching" section into Include and Exclude, shown while
- *   that section's match type is `regexp`, and write
+ *   "Remove", never "Remove <value>").
+ * - The cache controls sit in Include and Exclude, shown while that
+ *   section's match type is `regexp`, and write
  *   `include.regexp.cacheenabled` / `cachemaxnumentries` (and exclude's),
  *   where the collector reads them (`filterset.Config`'s `regexp`, squashed
  *   into `MatchProperties`, contrib v0.162.0), never a top-level
  *   `cacheenabled`, which the collector rejects; one already in a text is
- *   neither shown nor touched (a D13 validation finding).
- * - Defaults (decision 3; Preflight ruling 8, contrib v0.162.0): the cache
- *   is off unless `cacheenabled` (`regexp.Config`, a bool); an unset
- *   `cachemaxnumentries` is 0, an unbounded cache ("Because of legacy
- *   behavior, CacheMaxNumEntries == 0 means unbounded cache",
- *   `regexpfilterset.go`), so its hint is "Default 0 (no limit)", not
+ *   neither shown nor touched.
+ * - Defaults (contrib v0.162.0): the cache is off unless `cacheenabled`
+ *   (`regexp.Config`, a bool); an unset `cachemaxnumentries` is 0, an
+ *   unbounded cache ("Because of legacy behavior, CacheMaxNumEntries == 0
+ *   means unbounded cache", `regexpfilterset.go`), so its hint is "Default 0
+ *   (no limit)", not
  *   1000. `match_type` has no default (`filterset.Config`; an
  *   empty one is "unrecognized match_type" once a list is set), so the
  *   select shows unset as blank with no "Default strict" hint.
  *
- * Cards are keyed by index and their field ids are indexed
- * (`action-0-key`), never a key or value (decision 10).
+ * Cards are keyed by index and their field ids are indexed (`action-0-key`),
+ * never a key or value.
  */
 
 type ActionType = "insert" | "update" | "upsert" | "delete" | "hash" | "extract" | "convert";
@@ -106,7 +103,7 @@ function shownText(view: ValueView): string {
  * Rebuilds the action (scoped to the item) as `{key, ...kept, ...seed}`,
  * by key: the item's other keys removed by their lines, the seed's set.
  * `key` is kept, and added as `""` when missing, for Action Type, Target
- * Type and Value Source alike (Parity Notes; Ruling 75).
+ * Type and Value Source alike.
  */
 function rebuildChanges(form: FormSource, kept: Record<string, unknown>, seed: Record<string, unknown>): ValueChange[] {
   const item = form.read([]);

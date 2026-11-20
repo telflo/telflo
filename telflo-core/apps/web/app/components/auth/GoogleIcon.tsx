@@ -1,6 +1,6 @@
 /**
- * Google's multi-colour G, for the sign-in and register buttons (ADR 0018).
- * Decorative: the button's label names the provider.
+ * Google's multicolor G, for the sign-in and register buttons. Decorative:
+ * the button's label names the provider.
  */
 export function GoogleIcon({ className = "mr-2 h-4 w-4" }: { className?: string }) {
   return (

@@ -17,13 +17,12 @@ import { ApiError } from "~/lib/api-client.js";
 import { quietQueries } from "~/test/service-accounts.js";
 
 /*
- * The Users page's delete dialog (D29 decisions 29, 30, 38 and 41;
- * Preflight rulings 15 and 21; Ruling 258): the block's sentence per kind
- * around the visible values; the kind alone in fixed words; the
- * type-to-confirm (uncontrolled, inside ph-no-capture, labelled, no
- * placeholder, enabled only on the exact email); each answer. Emails and
- * organization names are fixtures carrying the marker "zq"; they are
- * compared as booleans only, never printed by a matcher.
+ * The Users page's delete dialog: the block's sentence per kind around the
+ * visible values; the kind alone in fixed words; the type-to-confirm
+ * (uncontrolled, inside ph-no-capture, labelled, no placeholder, enabled only
+ * on the exact email); each answer. Emails and organization names are
+ * fixtures carrying the marker "zq"; they are compared as booleans only,
+ * never printed by a matcher.
  */
 
 const EMAIL = "zq-cara@example.com";
@@ -81,7 +80,7 @@ function attributesHold(text: string): boolean {
 const toastsHold = (text: string) => JSON.stringify([toastError.mock.calls, toastSuccess.mock.calls]).includes(text);
 
 describe("UserDeleteDialog", () => {
-  it("explains each block in decision 38's fixed words around the visible values, with Close and no delete", async () => {
+  it("explains each block in its fixed words around the visible values, with Close and no delete", async () => {
     const cases = [
       {
         block: { kind: "member", organizationName: ORGANIZATION, role: "contributor" } as const,
@@ -117,7 +116,7 @@ describe("UserDeleteDialog", () => {
     }
   });
 
-  it("names a personal workspace under its default name, its owner's email, as <email>'s organization in the owner's sentence, the email and 's in bold; any other name stays itself (D36-1 Q264)", () => {
+  it("names a personal workspace under its default name, its owner's email, as <email>'s organization in the owner's sentence, the email and 's in bold; any other name stays itself", () => {
     const cases = [
       { name: EMAIL, sentence: `${EMAIL} owns ${EMAIL}'s organization. Remove its other members and pending invitations first.`, bold: `${EMAIL}'s` },
       { name: "zq-Cara's Lab", sentence: `${EMAIL} owns organization zq-Cara's Lab. Remove its other members and pending invitations first.`, bold: "zq-Cara's Lab" },

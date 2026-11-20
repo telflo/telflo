@@ -19,8 +19,7 @@ import { usePersonalApiTokenCalls } from "~/lib/personal-api-tokens.js";
 import { API_TOKEN_CREATE_FAILED_MESSAGE } from "~/lib/service-accounts.js";
 
 /*
- * `/cli-auth` (D27 decisions 21 and 22; Preflight rulings 11, 13, 15 and
- * 16): `telflo login`'s browser side. The CLI opens it as
+ * `/cli-auth`: `telflo login`'s browser side. The CLI opens it as
  * `/cli-auth#state=…&port=…&host=…`; Approve mints a personal token, revokes
  * that machine's earlier CLI tokens and hands the new one to the CLI's
  * listener on `127.0.0.1`.
@@ -32,8 +31,8 @@ import { API_TOKEN_CREATE_FAILED_MESSAGE } from "~/lib/service-accounts.js";
  *   or a reload, is the invalid link's words and nothing else. A new
  *   fragment arriving in the same tab (`hashchange`: a second `telflo
  *   login`'s address pasted here) is read the same way and starts a new
- *   session, the earlier one's state and token dropped (Ruling 250); a
- *   token its Approve was still making is revoked (Ruling 254).
+ *   session, the earlier one's state and token dropped; a token its Approve
+ *   was still making is revoked.
  * - Approve (disabled while it runs): the create (`CLI — <host> · <UTC
  *   time>`), the list, a revoke of each unrevoked token whose name starts
  *   exactly with `CLI — <host> · ` (never the new one; a failure is a fixed
@@ -87,10 +86,10 @@ interface FragmentRead {
 }
 
 /**
- * The fragment, read after the first render and taken out of the address
- * bar; read again whenever a new one arrives in this document (Ruling 250:
- * a second `telflo login`'s address opened in a tab already here is a
- * same-document navigation, `hashchange`, not a new page).
+ * The fragment, read after the first render and taken out of the address bar;
+ * read again whenever a new one arrives in this document (a second
+ * `telflo login`'s address opened in a tab already here is a same-document
+ * navigation, `hashchange`, not a new page).
  */
 function useFragmentParameters(): FragmentRead {
   const [read, setRead] = useState<FragmentRead>({ phase: "checking", parameters: null, reading: 0 });
@@ -200,7 +199,7 @@ function CliAuthSession({ parameters }: { parameters: CliAuthParameters }) {
     try {
       const created = await calls.create({ name: cliTokenName(host, new Date()), access, expiresInDays });
       // A session left while it was made (a new link's fragment, the page left) never hands it off:
-      // the token is revoked, best effort, and the reply dropped (Ruling 254).
+      // the token is revoked, best effort, and the reply dropped.
       const abandon = (): void => {
         tokenRef.current = null;
         calls.revoke(created.apiToken.id).catch(() => undefined);

@@ -9,10 +9,9 @@ import { isProductAdminRefusal } from "~/lib/flows/flow-admin.js";
 import { failureMessage } from "~/lib/test-runs/messages.js";
 
 /*
- * The product admins' switch, "Only product admins can create
- * organizations" (D36-1 decision 51; Q252, Ruling 359), a section of
- * `/product-admin/product-admins`. On by default, in every registration
- * mode (Q259); it holds no personal data.
+ * The product admins' switch, "Only product admins can create organizations",
+ * a section of `/product-admin/product-admins`. On by default, in every
+ * registration mode; it holds no personal data.
  *
  * - Read at mount (`GET /api/v1/product-admin/settings`, under the 10 s
  *   hang guard): "Loading…"; a failed read "Failed to load the site's

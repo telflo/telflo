@@ -21,17 +21,16 @@ const UNEXPECTED_ERROR_MESSAGE = "An unexpected error occurred. Please try again
 interface AcceptTermsDialogProps {
   open: boolean;
   /**
-   * The site's Terms (D36-1 decisions 29 and 32): the version Accept records
-   * and the two documents' URLs. Null on a site that asks for none: the
-   * dialog never opens, whatever `open` says.
+   * The site's Terms: the version Accept records and the two documents' URLs.
+   * Null on a site that asks for none: the dialog never opens, whatever
+   * `open` says.
    */
   terms: TermsToAccept | null;
 }
 
 /**
- * The terms dialog (ADR 0018), shown by the signed-in layout while `/me`
- * says the current terms need accepting (D2c decision 6; the D2c Parity
- * Notes):
+ * The terms dialog, shown by the signed-in layout while `/me` says the
+ * current terms need accepting:
  * - it can't be dismissed: no close button, and Escape and outside clicks do
  *   nothing. `open` belongs to the layout's data alone;
  * - Accept records the site's Terms version, then revalidates the layout,
@@ -39,8 +38,7 @@ interface AcceptTermsDialogProps {
  *   store, so the loader stays its one source;
  * - Cancel logs out as the sidebar does (useLogout), and goes to `/login`;
  * - "Terms of Service" and "Privacy Policy" are links that open the site's
- *   TELFLO_TERMS_URL and TELFLO_PRIVACY_URL in a new tab (Ruling 20; D36-1
- *   decision 32);
+ *   TELFLO_TERMS_URL and TELFLO_PRIVACY_URL in a new tab;
  * - a failed Accept or Cancel says so.
  */
 export function AcceptTermsDialog({ open, terms }: AcceptTermsDialogProps) {

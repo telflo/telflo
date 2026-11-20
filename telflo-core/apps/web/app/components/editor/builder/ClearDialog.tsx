@@ -10,7 +10,7 @@ import {
 } from "~/components/ui/alert-dialog.js";
 
 /*
- * The Clear canvas dialog (ADR 0018; D9a decision 15).
+ * The Clear canvas dialog.
  */
 
 interface ClearDialogProps {

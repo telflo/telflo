@@ -29,16 +29,15 @@ import {
 } from "./PlaygroundSaveDialog.js";
 
 /*
- * The playground's handoff (D31-1 decisions 4, 36, 37 and 41; Preflight
- * rulings 4 and 15): on the signed-in configurations page, a staged edit
- * opens "Save your playground configuration?" once the terms are accepted;
- * nothing is sent before Save; Save creates with the four content fields
- * and the pin, removes the staged edit and opens the editor; Discard asks
- * once and removes it; a refusal keeps it and says why (a pin no longer
+ * The playground's handoff: on the signed-in configurations page, a staged
+ * edit opens "Save your playground configuration?" once the terms are
+ * accepted; nothing is sent before Save; Save creates with the four content
+ * fields and the pin, removes the staged edit and opens the editor; Discard
+ * asks once and removes it; a refusal keeps it and says why (a pin no longer
  * offered moves to the default, terms revalidate, anything else the
- * configurations' words); an expired or malformed staged edit is ignored
- * and removed. The staged text is the test's own; it is compared as a
- * boolean, never printed.
+ * configurations' words); an expired or malformed staged edit is ignored and
+ * removed. The staged text is the test's own; it is compared as a boolean,
+ * never printed.
  */
 
 const TEXT = `receivers:
@@ -313,7 +312,7 @@ describe("PlaygroundSaveDialog", () => {
     expect(create).toHaveBeenCalledTimes(2);
   });
 
-  describe("a staged edit becomes at most one configuration, and only the snapshot's is removed (Ruling 296)", () => {
+  describe("a staged edit becomes at most one configuration, and only the snapshot's is removed", () => {
     it("another tab saved or discarded it since the opening: Save closes and sends nothing", async () => {
       stage();
       const { user } = renderDialog();

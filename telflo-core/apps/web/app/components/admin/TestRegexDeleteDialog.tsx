@@ -15,12 +15,12 @@ import { failureMessage } from "~/lib/test-runs/messages.js";
 /*
  * Deleting a test regex: "Delete Test Regex", its question with the entry's
  * name (as text, never an attribute), Cancel and Delete (Deleting…), not
- * closable while it deletes; "Failed to delete regex". Per the D15b Parity
- * Notes, as the templates' confirmation: a refusal shows the API's words
- * (`failureMessage`), else that fixed message, in a toast blocked from replay
- * (`ph-no-capture`); a 403 `product_admin_required` goes to `/app`
- * (`onProductAdminLost`); the confirmation carries its own `ph-no-capture`
- * (ADR 0024): Radix portals it out of the page's block.
+ * closable while it deletes; "Failed to delete regex". As the templates'
+ * confirmation: a refusal shows the API's words (`failureMessage`), else that
+ * fixed message, in a toast blocked from replay (`ph-no-capture`); a 403
+ * `product_admin_required` goes to `/app` (`onProductAdminLost`); the
+ * confirmation carries its own `ph-no-capture`: Radix portals it out of the
+ * page's block.
  */
 
 interface TestRegexDeleteDialogProps {

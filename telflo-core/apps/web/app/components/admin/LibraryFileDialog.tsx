@@ -20,13 +20,13 @@ import { isProductAdminRefusal } from "~/lib/flows/flow-admin.js";
 import { failureMessage } from "~/lib/test-runs/messages.js";
 
 /*
- * A library file's dialog (D23-2 decision 53): a library file's name,
- * description and (when new) file; its placeholders, limits, messages (each
- * shown on Create or Save, all at once) and buttons; not closable while it
- * saves. Per decision 6's fix 1 and the test templates' dialog's (D14b):
+ * A library file's dialog: a library file's name, description and (when
+ * new) file; its placeholders, limits, messages (each shown on Create or
+ * Save, all at once) and buttons; not closable while it saves. As the test
+ * templates' dialog:
  * - the file is checked as it is picked: up to 10 MiB ("File must be 10 MB
  *   or smaller."), and a name the members' curl can write in their working
- *   directory (`libraryFileFileNameProblem`, decision 43), and Create holds
+ *   directory (`libraryFileFileNameProblem`), and Create holds
  *   while it is refused;
  * - a refusal shows the API's words (its 413 included), else
  *   "Failed to create library file" / "Failed to update library file"
@@ -38,18 +38,17 @@ import { failureMessage } from "~/lib/test-runs/messages.js";
  * - the chosen file's name shows as text, not as a read-only input's value
  *   (an attribute), and with the hidden file input it is blocked from replay
  *   (`ph-no-capture`): replay records a file input's value,
- *   "C:\fakepath\<the file's name>", whatever maskAllInputs says (D14b
- *   Preflight ruling 19; D23-2 decision 53). The Name and Description
- *   values sit under maskAllInputs.
+ *   "C:\fakepath\<the file's name>", whatever maskAllInputs says. The Name
+ *   and Description values sit under maskAllInputs.
  */
 
-/** The browser's own refusal of a file over 10 MiB (decision 53), before anything is sent. */
+/** The browser's own refusal of a file over 10 MiB, before anything is sent. */
 export const LIBRARY_FILE_TOO_LARGE_MESSAGE = "File must be 10 MB or smaller.";
 
 /**
  * Why a file's own name can't be a library file's, in fixed words, by the
- * contract's reason (decision 43): the members' pasted curl writes `-o
- * '<name>'` in their working directory.
+ * contract's reason: the members' pasted curl writes `-o '<name>'` in
+ * their working directory.
  */
 const FILE_NAME_REFUSALS: Record<string, string> = {
   length: `File name must be 1 to ${LIBRARY_FILE_FILE_NAME_MAXIMUM_LENGTH} characters.`,
@@ -228,7 +227,7 @@ export function LibraryFileDialog({
             <div className="space-y-2">
               <span className="mb-2 block text-[13px] font-medium leading-none">File</span>
               <div className="flex gap-2">
-                {/* The name as text, never an input's value, and blocked from replay (decision 53). */}
+                {/* The name as text, never an input's value, and blocked from replay. */}
                 <div className="ph-no-capture flex h-8 flex-1 min-w-0 items-center truncate rounded-md border border-input bg-muted px-3 text-[13px] text-muted-foreground cursor-default">
                   {file?.name ?? "No file selected"}
                 </div>
@@ -245,7 +244,7 @@ export function LibraryFileDialog({
               </div>
               {/* Blocked from replay (`ph-no-capture`): rrweb records a file
                   input's value, "C:\fakepath\<the file's name>", as it
-                  changes, whatever maskAllInputs says (D14a's finding). */}
+                  changes, whatever maskAllInputs says. */}
               <input
                 ref={fileInputRef}
                 type="file"

@@ -16,9 +16,9 @@ import { failureMessage } from "~/lib/test-runs/messages.js";
  * Deleting a test template: "Delete Test Template", its question with the
  * template's name (as text, which replay masks; never an attribute), Cancel
  * and Delete (Deleting…), not closable while it deletes; "Failed to delete
- * template". Per the D14b Parity Notes: a refusal shows the API's words
- * (`failureMessage`), else that fixed message; a 403 `product_admin_required`
- * goes to `/app` (`onProductAdminLost`), as the flows page's.
+ * template". A refusal shows the API's words (`failureMessage`), else that
+ * fixed message; a 403 `product_admin_required` goes to `/app`
+ * (`onProductAdminLost`), as the flows page's.
  */
 
 interface TestTemplateDeleteDialogProps {

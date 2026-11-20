@@ -5,27 +5,25 @@ import { Badge } from "~/components/ui/badge.js";
 import { Button } from "~/components/ui/button.js";
 
 /*
- * A configuration's card (ADR 0018), per the D7 Parity Notes:
+ * A configuration's card:
  * - the name has no `title`: replay records attributes unmasked, so private
- *   data goes only in text (ADR 0024);
- * - the Published/Draft badge (D11b decision 6) is in the footer's left
- *   slot, not the header (D11b Preflight ruling 13), so the footer's divider
- *   always draws; the distribution tag follows it there (D13a
- *   decision 10), its tooltip fixed text but for the catalogue's label; the
- *   "public vN" link waits for D31-2;
+ *   data goes only in text;
+ * - the Published/Draft badge is in the footer's left slot, not the header,
+ *   so the footer's divider always draws; the distribution tag follows it
+ *   there, its tooltip fixed text but for the catalogue's label;
  * - Delete shows only where it's allowed: the author's card, or any card for
- *   an admin (D11b decision 2);
+ *   an admin;
  * - Enter and Space open the card only when the card itself has focus, not
  *   when they bubble up from Edit and Delete, so the keyboard can press
  *   Delete.
- * The card stays a `div role="button"`, not a link (D7 Preflight ruling 11).
+ * The card stays a `div role="button"`, not a link.
  */
 
 interface ConfigurationCardProps {
   configuration: Configuration;
   /** Whether the signed-in member created it; others' cards show the creator's email. */
   isOwn: boolean;
-  /** Whether the signed-in member may delete it (D11b decision 2): its author, or an admin. */
+  /** Whether the signed-in member may delete it: its author, or an admin. */
   canDelete: boolean;
   onOpen: (configuration: Configuration) => void;
   /** `from` the Delete pressed (the playground's prompt gives the focus back there). */
@@ -120,9 +118,9 @@ export function ConfigurationCard({
 }
 
 /**
- * The status badge, on cards and in the table's Status column (D11b
- * decision 6): `Published` (info) when at least one version is, else
- * `Draft` (outline). Its text is the visible word alone.
+ * The status badge, on cards and in the table's Status column: `Published`
+ * (info) when at least one version is, else `Draft` (outline). Its text is the
+ * visible word alone.
  */
 export function ConfigurationStatusBadge({ published }: { published: boolean }) {
   return published ? (

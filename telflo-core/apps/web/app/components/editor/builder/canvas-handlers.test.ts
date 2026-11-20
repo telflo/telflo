@@ -255,7 +255,7 @@ describe("a connection drawn on the canvas", () => {
 });
 
 describe("the nodes the canvas is given", () => {
-  it("keeps a component in a pipeline inside its group, and leaves groups and ungrouped nodes free (Ruling 41)", () => {
+  it("keeps a component in a pipeline inside its group, and leaves groups and ungrouped nodes free", () => {
     open(corpusText("starter.yaml"));
     const graph = store().graph;
     const receiver = graph.nodes.find((n) => n.type === "receiver" && n.parentId !== undefined)!;

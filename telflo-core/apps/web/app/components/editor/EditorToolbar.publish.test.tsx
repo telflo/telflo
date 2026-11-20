@@ -19,11 +19,9 @@ import { selectIsDirty, selectIsVersionPublished, summaryOf, useEditorStore } fr
 import { GROUP_ID, MINE, PUBLISHED_FIELDS, answerFor, versionFixture } from "~/test/configurations.js";
 
 /*
- * The toolbar's Publish (D11b decisions 5, 9, 13 and 14; Preflight rulings
- * 8, 9, 11 and 15; Rulings 30 and 31): the button and its tooltips, the
- * dialog's words, the save first, the updatedAt sent, the answers' toasts,
- * the reload a changed version brings, one publish at a time, and the lock
- * the answer brings.
+ * The toolbar's Publish: the button and its tooltips, the dialog's words, the
+ * save first, the updatedAt sent, the answers' toasts, the reload a changed
+ * version brings, one publish at a time, and the lock the answer brings.
  */
 
 const STARTER = corpusText("starter.yaml");
@@ -67,7 +65,7 @@ async function renderToolbar(version: ConfigurationVersion = VERSION) {
   return userEvent.setup();
 }
 
-/** The updatedAt the publish sends for a version as the tab loaded it (Ruling 30). */
+/** The updatedAt the publish sends for a version as the tab loaded it. */
 const EXPECTED = { expectedUpdatedAt: VERSION.updatedAt };
 
 const publishButton = () => screen.getByRole("button", { name: "Publish" });
@@ -104,7 +102,7 @@ function saveAnswers() {
     }));
 }
 
-describe("the Publish button (decision 13)", () => {
+describe("the Publish button", () => {
   it("follows Save, with the rocket and the tooltip, enabled for a saved version", async () => {
     await renderToolbar();
     const save = screen.getByRole("button", { name: "Save" });
@@ -121,7 +119,7 @@ describe("the Publish button (decision 13)", () => {
     expect(publishButton()).toHaveAttribute("title", "Already published");
   });
 
-  it("is disabled only while the editor's text is empty, with its tooltip (Preflight ruling 9, as Ruling 31 corrects it)", async () => {
+  it("is disabled only while the editor's text is empty, with its tooltip", async () => {
     await renderToolbar(versionFixture({ ...VERSION, yamlContent: "" }));
     expect(publishButton()).toBeDisabled();
     expect(publishButton()).toHaveAttribute("title", "An empty version can't be published.");
@@ -152,7 +150,7 @@ describe("the Publish button (decision 13)", () => {
   });
 });
 
-describe("the lock in the toolbar (Preflight ruling 11)", () => {
+describe("the lock in the toolbar", () => {
   it("disables Save, Publish, Undo, Redo, Duplicate and Delete on a version published under it, with history and a selection", async () => {
     await renderToolbar();
     const batch = store().graph.nodes.find((n) => n.data.componentSubType === "batch")!;
@@ -171,12 +169,12 @@ describe("the lock in the toolbar (Preflight ruling 11)", () => {
     for (const name of [UNDO_TITLE, REDO_TITLE, DUPLICATE_TITLE, DELETE_TITLE, "Save", "Publish"]) {
       expect(screen.getByRole("button", { name })).toBeDisabled();
     }
-    // The configuration can still be renamed (decision 2).
+    // The configuration can still be renamed.
     expect(screen.getByRole("button", { name: "Rename configuration" })).toBeEnabled();
   });
 });
 
-describe("the dialog (decision 13)", () => {
+describe("the dialog", () => {
   it("says what it publishes, by number, with Cancel and Publish; Cancel publishes nothing", async () => {
     const publish = publishAnswers();
     const user = await renderToolbar();
@@ -195,14 +193,14 @@ describe("the dialog (decision 13)", () => {
     expect(publish).not.toHaveBeenCalled();
   });
 
-  it("says unsaved changes will be saved first, when there are some (decision 5)", async () => {
+  it("says unsaved changes will be saved first, when there are some", async () => {
     const user = await renderToolbar();
     act(() => store().setText(`${STARTER}# edited\n`));
     const shown = await openDialog(user);
     expect(within(shown).getByText("Your unsaved changes will be saved first.")).toBeInTheDocument();
   });
 
-  it("names neither the configuration nor the version's label, in text or attribute (ADR 0024; decision 14)", async () => {
+  it("names neither the configuration nor the version's label, in text or attribute", async () => {
     const user = await renderToolbar();
     const shown = await openDialog(user);
     expect(shown).not.toHaveTextContent(MINE.name);
@@ -216,7 +214,7 @@ describe("the dialog (decision 13)", () => {
   });
 });
 
-describe("publishing (decisions 5 and 11)", () => {
+describe("publishing", () => {
   it("publishes a saved version without saving, then locks the editor and toasts, keeping its text, history and canvas", async () => {
     const save = saveAnswers();
     const publish = publishAnswers();
@@ -295,7 +293,7 @@ describe("publishing (decisions 5 and 11)", () => {
     expect(store().savedText).toBe("");
   });
 
-  it("a version saved empty with text typed over it saves first, then publishes with the save's updatedAt (Ruling 31)", async () => {
+  it("a version saved empty with text typed over it saves first, then publishes with the save's updatedAt", async () => {
     const save = saveAnswers();
     const publish = publishAnswers();
     const user = await renderToolbar(versionFixture({ ...VERSION, yamlContent: "" }));
@@ -308,7 +306,7 @@ describe("publishing (decisions 5 and 11)", () => {
     expect(publish).toHaveBeenCalledWith(GROUP_ID, MINE.id, VERSION.id, { expectedUpdatedAt: "2026-10-04T11:00:00.000Z" });
   });
 
-  it("after a save first, sends the save's answer's updatedAt, not the one loaded (Ruling 30)", async () => {
+  it("after a save first, sends the save's answer's updatedAt, not the one loaded", async () => {
     saveAnswers();
     const publish = publishAnswers();
     const user = await renderToolbar();
@@ -321,7 +319,7 @@ describe("publishing (decisions 5 and 11)", () => {
     expect(VERSION.updatedAt).not.toBe("2026-10-04T11:00:00.000Z");
   });
 
-  it("keeps saying unsaved changes will be saved first while the publish runs, after the save first has landed (Ruling 31)", async () => {
+  it("keeps saying unsaved changes will be saved first while the publish runs, after the save first has landed", async () => {
     saveAnswers();
     const pending = pendingPublish();
     const user = await renderToolbar();
@@ -364,7 +362,7 @@ describe("publishing (decisions 5 and 11)", () => {
   });
 });
 
-describe("a publish's refusals, each toasted by its code (Preflight rulings 8 and 15; Ruling 31)", () => {
+describe("a publish's refusals, each toasted by its code", () => {
   it.each([
     ["configuration_version_empty", 409, "An empty version can't be published."],
     ["publishing_unavailable", 503, "Publishing is unavailable right now. Try again."],
@@ -389,8 +387,8 @@ describe("a publish's refusals, each toasted by its code (Preflight rulings 8 an
     expect(publishButton()).toBeEnabled();
   });
 
-  // D20 Rulings 55 and 71 (Task 10's review, Nit 2): a text referencing an organization variable name over 128
-  // characters is refused with 400 invalid_request naming `yaml`; the toast says why, in the contracts' fixed words.
+  // A text referencing an organization variable name over 128 characters is refused with 400 invalid_request
+  // naming `yaml`; the toast says why, in the contracts' fixed words.
   it("a reference to a name over 128 characters (400 naming yaml) toasts the contracts' words, and the version stays a draft", async () => {
     const detail = {
       keyword: "custom",
@@ -430,7 +428,7 @@ describe("a publish's refusals, each toasted by its code (Preflight rulings 8 an
     expect(selectIsVersionPublished(store())).toBe(false);
   });
 
-  it("the terms toast nothing: the layout revalidates, and its terms dialog opens, as for a save (Ruling 31)", async () => {
+  it("the terms toast nothing: the layout revalidates, and its terms dialog opens, as for a save", async () => {
     vi.spyOn(apiClient, "publishConfigurationVersion").mockRejectedValue(
       new ApiError("terms_acceptance_required", "Accept the current Terms of Service to continue."),
     );
@@ -446,7 +444,7 @@ describe("a publish's refusals, each toasted by its code (Preflight rulings 8 an
     expect(selectIsVersionPublished(store())).toBe(false);
   });
 
-  it("changed since the tab loaded it (a teammate's newer save): toasts, publishes nothing, and opens the version again with the newer text (Ruling 30)", async () => {
+  it("changed since the tab loaded it (a teammate's newer save): toasts, publishes nothing, and opens the version again with the newer text", async () => {
     const NEWER = { ...VERSION, yamlContent: `${STARTER}# a teammate's save\n`, updatedAt: "2026-10-04T12:30:00.000Z" };
     const publish = vi
       .spyOn(apiClient, "publishConfigurationVersion")
@@ -502,7 +500,7 @@ describe("a publish's refusals, each toasted by its code (Preflight rulings 8 an
     await waitFor(() => expect(store().isPublishing).toBe(false));
   });
 
-  it("already published: 'Version {N} is already published.', and the version read again locks the clean editor on what was published (Ruling 35)", async () => {
+  it("already published: 'Version {N} is already published.', and the version read again locks the clean editor on what was published", async () => {
     vi.spyOn(apiClient, "publishConfigurationVersion").mockRejectedValue(
       new ApiError("configuration_version_published", "Version 4 is already published."),
     );
@@ -530,7 +528,7 @@ describe("a publish's refusals, each toasted by its code (Preflight rulings 8 an
   });
 });
 
-describe("a collector version pick and Publish (D13a decision 8; Rulings 30 and 37)", () => {
+describe("a collector version pick and Publish", () => {
   it("an unsaved pick alone saves first, the pin with it, then publishes with the save's updatedAt", async () => {
     const save = vi
       .spyOn(apiClient, "saveConfigurationVersion")
@@ -557,7 +555,7 @@ describe("a collector version pick and Publish (D13a decision 8; Rulings 30 and 
     expect(selectIsDirty(store())).toBe(false);
   });
 
-  it("a pick alone whose save first is refused because a teammate published other text and 0.160.0: publishes nothing, and the re-read shows the teammate's text with the pick, dirty by the pin alone (Ruling 41)", async () => {
+  it("a pick alone whose save first is refused because a teammate published other text and 0.160.0: publishes nothing, and the re-read shows the teammate's text with the pick, dirty by the pin alone", async () => {
     const teammateText = `${STARTER}# a teammate's publish\n`;
     const save = vi
       .spyOn(apiClient, "saveConfigurationVersion")
@@ -590,7 +588,7 @@ describe("a collector version pick and Publish (D13a decision 8; Rulings 30 and 
     expect(selectIsDirty({ ...store(), collectorVersion: "0.160.0" })).toBe(false);
   });
 
-  it("a pick made while a clean tab's publish is under way, refused as already published: the re-read shows the teammate's text with the pick (Ruling 41)", async () => {
+  it("a pick made while a clean tab's publish is under way, refused as already published: the re-read shows the teammate's text with the pick", async () => {
     const teammateText = `${STARTER}# a teammate's publish\n`;
     const { spy: publish, reject } = pendingPublish();
     vi.spyOn(apiClient, "getConfigurationVersion").mockResolvedValue(

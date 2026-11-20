@@ -160,7 +160,7 @@ describe("PipelineGroupConfigPanel", () => {
   });
 });
 
-describe("privacy (D9a decision 7)", () => {
+describe("privacy", () => {
   const PIPELINE = "zqpipelinemarkerzq";
   const LABEL = "zqlabelmarkerzq";
   const TEXT = [

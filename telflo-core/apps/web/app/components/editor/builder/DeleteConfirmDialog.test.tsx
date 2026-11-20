@@ -11,9 +11,8 @@ import { useEditorStore } from "~/lib/stores/editor-store.js";
 import { builderStore, groupNamed, openText } from "~/test/builder-store.js";
 
 /*
- * The one delete confirmation (D9a decision 8): the questions as titles, in
- * the Clear dialog's style; Delete deletes as one undo entry, Cancel and
- * Escape delete nothing.
+ * The one delete confirmation: the questions as titles, in the Clear dialog's
+ * style; Delete deletes as one undo entry, Cancel and Escape delete nothing.
  */
 
 const STARTER = corpusText("starter.yaml");
