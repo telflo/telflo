@@ -1,3 +1,7 @@
+# For development only: its passwords and keys are committed and every port
+# it publishes is on the host's loopback. To install Telflo, use a release's
+# Compose install (deploy/compose/, docs/compose.md).
+#
 # The whole product, built from source (ADR 0017), but for the opamp-server,
 # which runs its published release, pinned by version and digest
 # (vendor/opamp-server/PIN, D26 decision 37). To run a change to the
@@ -204,10 +208,11 @@ x-telflo-api-environment: &telflo-api-environment
   # API's base URL as a host running a Quick Deploy command reaches it: the
   # gateway's origin, which a container on this machine reaches at
   # host.docker.internal (localhost would be its own loopback). For a VM on
-  # your network, set TELFLO_PUBLIC_API_URL to this machine's LAN address. The
-  # key seals the values typed with a link: a development-only value, public
-  # in the repository, the same as .env.example's; every real deployment sets
-  # its own (openssl rand -base64 32).
+  # your network, set TELFLO_PUBLIC_API_URL to this machine's LAN address (and
+  # publish the gateway's port beyond 127.0.0.1). The key seals the values
+  # typed with a link: a development-only value, public in the repository, the
+  # same as .env.example's; every real deployment sets its own (openssl rand
+  # -base64 32).
   TELFLO_PUBLIC_API_URL: ${TELFLO_PUBLIC_API_URL:-http://host.docker.internal:50080}
   TELFLO_QUICK_DEPLOY_ENCRYPTION_KEY: ZGV2ZWxvcG1lbnQtb25seS1xZC1rZXktbm90LXByb2Q=
   # The library's Copy curl links (D23-2 decision 46): the key that signs
@@ -224,8 +229,9 @@ services:
       POSTGRES_USER: telflo_platform_owner
       POSTGRES_PASSWORD: telflo-local
       POSTGRES_DB: telflo_platform
+    # On the host's loopback only: its password is committed.
     ports:
-      - "55432:5432"
+      - "127.0.0.1:55432:5432"
     volumes:
       # Single mount at /var/lib/postgresql, not .../data: the postgres:18
       # image refuses to start with anything mounted at the old .../data
@@ -249,8 +255,8 @@ services:
     # the drift that finding exists to prevent.
     image: axllent/mailpit:v1.31
     ports:
-      - "51025:1025"
-      - "58025:8025"
+      - "127.0.0.1:51025:1025"
+      - "127.0.0.1:58025:8025"
     environment:
       MP_SMTP_AUTH_ACCEPT_ANY: "1"
       MP_SMTP_AUTH_ALLOW_INSECURE: "1"
@@ -765,7 +771,7 @@ services:
       # here): nginx refuses to start without it.
       - ./docker/gateway/extra-routes.conf:/etc/nginx/telflo/extra-routes.conf:ro
     ports:
-      - "50080:80"
+      - "127.0.0.1:50080:80"
     depends_on:
       api: { condition: service_healthy }
       web: { condition: service_healthy }

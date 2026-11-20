@@ -4,7 +4,8 @@
 #
 #   scripts/release/check-doc-links.sh       (no argument; from anywhere)
 #
-# The files it reads, at the repository's root: README.md, docs/*.md,
+# The files it reads, at the repository's root: README.md, CONTRIBUTING.md,
+# SECURITY.md, docs/*.md,
 # docs/conventions/*.md, charts/telflo/README.md and deploy/compose/README.md
 # (those that exist; none at all is a problem). In each, outside fenced code
 # blocks and inline code: every inline link or image ([text](target),
@@ -55,7 +56,7 @@ const fs = require('fs');
 const path = require('path');
 
 const [root, listing] = process.argv.slice(2);
-const DOCS = ['README.md', 'docs/*.md', 'docs/conventions/*.md', 'charts/telflo/README.md', 'deploy/compose/README.md'];
+const DOCS = ['README.md', 'CONTRIBUTING.md', 'SECURITY.md', 'docs/*.md', 'docs/conventions/*.md', 'charts/telflo/README.md', 'deploy/compose/README.md'];
 
 // What exists: git's list (with every folder it implies), or the disk.
 let known = null;

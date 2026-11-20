@@ -27,9 +27,11 @@
 
 Telflo is a self-hosted web app designed to be used with the open source
 [telflo/opamp-server](https://github.com/telflo/opamp-server/) to enable
-the management of your OpenTelemetry Collectors. This full Telflo
-suite includes a visual editor, a YAML editor, configuration
-validation and testing, fleet management, a CLI, and more.
+the management of your OpenTelemetry Collectors. It includes a visual
+editor, a YAML editor, configuration validation and testing, fleet
+management and a CLI, with no limit on how many collectors you manage.
+The AI assistant and the MCP server offered at telflo.com are not part
+of it.
 
 Telflo runs as a handful of containers around one PostgreSQL, behind one
 gateway, with Docker Compose on one machine or with Helm on Kubernetes.
@@ -420,6 +422,8 @@ with its Compose and Helm names side by side, and the admin commands.
 
 ## What it doesn't do
 
+- **No AI assistant or MCP server.** Those are part of the hosted
+  service at [telflo.com](https://telflo.com), not this repository.
 - **No TLS of its own.** The gateway and the agent endpoint serve plain
   http; put your TLS proxy or load balancer in front
   ([docs/compose.md](docs/compose.md), [docs/kubernetes.md](docs/kubernetes.md)).
@@ -529,7 +533,9 @@ Collectors poll the `--agent-url` you gave `setup.sh` (the opamp-server's
 ## Contributing
 
 Bugs and questions go to the repository's
-[issues](https://github.com/telflo/telflo/issues).
+[issues](https://github.com/telflo/telflo/issues). Report a security
+vulnerability privately instead, as [SECURITY.md](SECURITY.md) describes.
+[CONTRIBUTING.md](CONTRIBUTING.md) says how to propose a change, and
 [docs/development.md](docs/development.md) is the guide to working on it.
 A contribution is made under the project's license, below.
 

@@ -9,7 +9,7 @@
 # development secret, to refuse them in a real install; .env.example's line is
 # the development default; check-gateway-logs.sh passes a made-up user to curl.
 deploy/compose/setup.sh:generic-api-key:71
-docker-compose.yml:generic-api-key:212
+docker-compose.yml:generic-api-key:217
 scripts/check-gateway-logs.sh:curl-auth-user:547
 telflo-core/.env.example:generic-api-key:327
 
