@@ -13,17 +13,17 @@ import { UNCALLED_TESTING } from "../../testing/otelcol-testing.js";
 import { UNCALLED_OTELCOL_VALIDATOR } from "../../testing/otelcol-validator.js";
 
 /*
- * D25 Ruling 176: a public 400's details name each issue's path, and
- * errors.ts shows a path segment as itself only when it looks like a
- * schema's camelCase key. That holds only while no public schema takes
- * KEYS from the caller: a record's (z.record), a map's (z.map) or an
- * object's catchall keys are caller text, which a camelCase-shaped value
- * would pass through. So every public schema a caller's request is checked
- * against is walked, the contracts' request-side Public…Schema exports
- * (requests, queries, params, a version's number, a pipeline's name) and
- * the body, query, params and headers schemas the real server's public
- * routes register, and none may hold one. Replies aren't validated against
- * the caller, so a reply's record (a run's mutation details) is outside.
+ * A public 400's details name each issue's path, and errors.ts shows a path
+ * segment as itself only when it looks like a schema's camelCase key. That
+ * holds only while no public schema takes KEYS from the caller: a record's
+ * (z.record), a map's (z.map) or an object's catchall keys are caller text,
+ * which a camelCase-shaped value would pass through. So every public schema
+ * a caller's request is checked against is walked, the contracts'
+ * request-side Public…Schema exports (requests, queries, params, a
+ * version's number, a pipeline's name) and the body, query, params and
+ * headers schemas the real server's public routes register, and none may
+ * hold one. Replies aren't validated against the caller, so a reply's
+ * record (a run's mutation details) is outside.
  */
 
 const opamp = useFakeOpampServer();
@@ -63,7 +63,7 @@ function callerKeyedPlaces(schema: z.ZodTypeAny, trail = "", seen = new Set<z.Zo
   return [];
 }
 
-describe("no public schema takes keys from the caller (D25 Ruling 176)", () => {
+describe("no public schema takes keys from the caller", () => {
   const routeSchemas: Array<[string, z.ZodTypeAny]> = [];
   let server: FastifyInstance;
   let destroy: () => Promise<void>;

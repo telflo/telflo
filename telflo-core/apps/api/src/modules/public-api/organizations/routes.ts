@@ -9,12 +9,11 @@ import { requireAcceptedApiToken, requireApiTokenAuthentication } from "../authe
 import { invalidApiToken } from "../errors.js";
 
 /*
- * The public surface's own identity routes (D25 decision 17's routes 2 and
- * 3), registered into the `/api/public/v1` plugin (routes.ts): `/whoami`,
- * moved here unchanged in behaviour for a service account (D22 decision
- * 39), and `/orgs` (D25 decision 30). Both answer a personal token too, with
- * or without X-Telflo-Org (`organization: "optional"`): a header that is
- * sent is checked by the plugin first (400 `organization_required`, 403
+ * The public surface's own identity routes, registered into the
+ * `/api/public/v1` plugin (routes.ts): `/whoami` and `/orgs`. Both answer a
+ * personal token too, with or without X-Telflo-Org
+ * (`organization: "optional"`): a header that is sent is checked by the
+ * plugin first (400 `organization_required`, 403
  * `organization_access_denied`). Their OpenAPI fragment is
  * `openapi/organizations.yaml`.
  */
@@ -34,11 +33,10 @@ export const registerOrganizationPublicRoutes: PublicApiArea = (api, { deps }) =
   const { db } = deps;
   const typed = api.withTypeProvider<ZodTypeProvider>();
 
-  // D22 decision 39: who the token is.
-  // The name is read through the policies in the token's own context
-  // (decision 37); a token revoked since the check names none, and gets
-  // the one 401. Read access (D25 decision 14); a personal token may call it
-  // without X-Telflo-Org (decision 24). A person's (D25 decision 30): kind
+  // Who the token is.
+  // The name is read through the policies in the token's own context; a token
+  // revoked since the check names none, and gets the one 401. Read access; a
+  // personal token may call it without X-Telflo-Org. A person's: kind
   // `person`, the organization the header named and the check accepted, or
   // null with no header; its name read in `{ userId, organizationId: null }`
   // (personal_api_tokens' policies read the user alone).
@@ -79,7 +77,7 @@ export const registerOrganizationPublicRoutes: PublicApiArea = (api, { deps }) =
     },
   );
 
-  // D25 decision 30: the organizations the token may act in, each with its
+  // The organizations the token may act in, each with its
   // user's role there, from the organizations repository's `listForUser`
   // (live memberships of live organizations, personal first, then by name),
   // read in the user's own database context. A service account's token acts
@@ -88,8 +86,8 @@ export const registerOrganizationPublicRoutes: PublicApiArea = (api, { deps }) =
   // added, the token still couldn't act there). A token whose organization
   // or membership went since the check answers an empty list. A person's
   // token answers every live membership. Read access; no X-Telflo-Org
-  // needed (decision 24), one sent is checked first, and the list is the
-  // same either way; one page (decision 19); no logo.
+  // needed, one sent is checked first, and the list is the same either way;
+  // one page; no logo.
   typed.get(
     "/orgs",
     {
@@ -113,9 +111,8 @@ export const registerOrganizationPublicRoutes: PublicApiArea = (api, { deps }) =
 };
 
 /**
- * Which of the user's live memberships the token may act in (D25 decision
- * 30): a person's token, every one; a service account's token, its own
- * organization only.
+ * Which of the user's live memberships the token may act in: a person's
+ * token, every one; a service account's token, its own organization only.
  */
 function organizationsOf<Membership extends { id: string }>(
   request: Parameters<typeof requireAcceptedApiToken>[0],

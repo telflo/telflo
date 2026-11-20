@@ -18,22 +18,21 @@ import { apiTokenHash } from "../service-accounts/tokens.js";
 import { createApiTokenStore, createAuthenticateApiToken, requireApiTokenAuthentication } from "./authenticate-api-token.js";
 
 /*
- * The token check end to end (D22 decisions 31, 34 and 37; Ruling 101):
- * `createAuthenticateApiToken` over the real `createApiTokenStore`, on a
- * route this file registers on the real server (never in production code)
- * that answers the token's context and reads nothing else. Unlike
- * /whoami, which reads the token's name afterwards and so would refuse a
- * revoked token even past a stale check, this route shows the check alone:
- * a revoke, or the account's delete, through the API's own routes takes
- * effect on the very next request. And a token is never a session: the
- * /api/v1/ surface refuses it.
+ * The token check end to end: `createAuthenticateApiToken` over the real
+ * `createApiTokenStore`, on a route this file registers on the real server
+ * (never in production code) that answers the token's context and reads
+ * nothing else. Unlike /whoami, which reads the token's name afterwards and
+ * so would refuse a revoked token even past a stale check, this route shows
+ * the check alone: a revoke, or the account's delete, through the API's own
+ * routes takes effect on the very next request. And a token is never a
+ * session: the /api/v1/ surface refuses it.
  *
- * Every token is built at run time by the API's create and never printed
- * (decision 48): the canaries (booleans) run before any comparison of a
- * reply that could hold one (Ruling 99).
+ * Every token is built at run time by the API's create and never printed:
+ * the canaries (booleans) run before any comparison of a reply that could
+ * hold one.
  */
 
-// The opamp-server every server needs (D11b decision 8): this file's own fake.
+// The opamp-server every server needs: this file's own fake.
 const opamp = useFakeOpampServer();
 
 const csrfHeaders = { [CSRF_HEADER_NAME]: CSRF_HEADER_VALUE };
@@ -41,7 +40,7 @@ const PASSWORD = "a-sufficiently-long-password";
 /**
  * This file's own route, registered below on the test's server only: on the
  * root, so outside /api/public/v1, where the root guard refuses any route
- * that isn't the public plugin's (D25 Ruling 163).
+ * that isn't the public plugin's.
  */
 const CONTEXT_ROUTE = "/test-only/token-check-context";
 const REFUSAL = JSON.stringify({ error: { code: "invalid_api_token", message: "Missing or invalid API token" } });
@@ -54,7 +53,7 @@ function cookieValue(response: LightMyRequestResponse, name: string): string {
   return line.slice(name.length + 1, line.indexOf(";"));
 }
 
-describe("the token check end to end, on a test-only route (D22 Ruling 101)", () => {
+describe("the token check end to end, on a test-only route", () => {
   let settings: AppSettings;
   /** The server's connection, as the API's own role. */
   let db: Kysely<Database>;
@@ -127,7 +126,7 @@ describe("the token check end to end, on a test-only route (D22 Ruling 101)", ()
       payload: { organizationId: group.id },
     });
     expect(switched.statusCode).toBe(200);
-    // A no-op when the sign-in already landed there (D36-1 decision 56): no new cookie, the token sent stands.
+    // A no-op when the sign-in already landed there: no new cookie, the token sent stands.
     return { group, access: (switched.headers["set-cookie"] === undefined ? cookieValue(signIn, "telflo_access") : cookieValue(switched, "telflo_access")) };
   };
 

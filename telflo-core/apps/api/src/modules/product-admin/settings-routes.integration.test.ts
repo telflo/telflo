@@ -15,9 +15,8 @@ import { UNCALLED_OTELCOL_VALIDATOR } from "../../testing/otelcol-validator.js";
 import { hashPassword } from "../identity/password.js";
 
 /*
- * The product admins' switch, "Only product admins can create
- * organizations" (D36-1 decision 51; Q252, Ruling 359), through the real
- * server and database:
+ * The product admins' switch, "Only product admins can create organizations",
+ * through the real server and database:
  *   * `GET`/`PATCH /api/v1/product-admin/settings`: a product admin reads
  *     and changes it (each change, and an unchanged value, audited with
  *     from and to); anyone else is answered as every product-admin route
@@ -31,7 +30,7 @@ import { hashPassword } from "../identity/password.js";
  *   * `/me`'s `mayCreateOrganizations`: true while it is off, or for a
  *     product admin; false for anyone else while it is on.
  * The tests start from truncateAll's baseline, off (`everyone`); the
- * migration's default is on (Q259), checked here from the column's default.
+ * migration's default is on, checked here from the column's default.
  * Seeded addresses are made-up @example.com fixtures; nothing here prints one.
  */
 
@@ -269,7 +268,7 @@ describe("the product admins' organization-creation switch", () => {
       expect(await mayCreate(person.access)).toBe(false);
     });
 
-    it("at the migration's default, on (Q259): a person who isn't a product admin is refused 403 organization_creation_restricted and /me says they may not; a product admin reads product-admins", async () => {
+    it("at the migration's default, on: a person who isn't a product admin is refused 403 organization_creation_restricted and /me says they may not; a product admin reads product-admins", async () => {
       await sql`update site_settings set organization_creation = default`.execute(databases.ownerDb);
       const admin = await signedIn(true);
       expect((await getSettings(admin.access)).json()).toEqual({ organizationCreation: "product-admins" });

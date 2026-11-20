@@ -2,10 +2,9 @@ import { describe, expect, it } from "vitest";
 import { assemblePublicApiDocument, PUBLIC_API_FRAGMENTS, publicApiDocument, publicApiDocumentJson } from "./document.js";
 
 /*
- * The OpenAPI document's assembly (D25 decision 49, Preflight ruling 19):
- * the repository's fragments make one OpenAPI 3.1 document with the two
- * security schemes and the shared components; a duplicate anywhere refuses
- * the whole.
+ * The OpenAPI document's assembly: the repository's fragments make one
+ * OpenAPI 3.1 document with the two security schemes and the shared
+ * components; a duplicate anywhere refuses the whole.
  */
 
 const fragments = (texts: Record<string, string>) => (name: string) => {
@@ -35,7 +34,7 @@ describe("the public API's OpenAPI document", () => {
       bearer: expect.objectContaining({ type: "http", scheme: "bearer" }),
       organization: expect.objectContaining({ type: "apiKey", in: "header", name: "X-Telflo-Org" }),
     });
-    // The shared components every area refers to (Ruling 160).
+    // The shared components every area refers to.
     for (const name of ["Error", "ValidationErrorItem", "ListPage"]) expect(document.components.schemas).toHaveProperty(name);
     expect(document.components.schemas!.ValidationErrorItem).toMatchObject({ required: ["message", "componentPath"] });
     expect(document.components.schemas!.ListPage).toMatchObject({ required: ["items", "nextCursor"] });

@@ -17,7 +17,7 @@ One term per concept, used identically in schema, API, code and UI:
 | `organization_member` | user ↔ organization with a role | `org_users` |
 | `configuration` | A collector config someone edits | — |
 | `configuration_version` | An immutable revision | — |
-| `publication` | Immutable, self-describing snapshot of a configuration version, served to collectors (in `telflo_opamp_server`; ADR 0026) | `published_configuration` |
+| `publication` | Immutable, self-describing snapshot of a configuration version, served to collectors (in `telflo_opamp_server`) | `published_configuration` |
 | `fleet` | Labeled group of collectors sharing enrollment and default config | `deployment` (old sense) |
 | `collector_group` | Subdivision within a fleet with its own configuration | — |
 | `collector_instance` | One running collector | `client_instance` |
@@ -30,7 +30,7 @@ collector, and `telflow` in any casing.
 
 `organization_id` is kept in `telflo_opamp_server`, as an opaque tenant key, rather
 than renamed to `tenant_id`. The open-source boundary is enforced by separate
-databases and the opamp-server's API (ADR 0026), not by vocabulary; two names for one value imposes
+databases and the opamp-server's API, not by vocabulary; two names for one value imposes
 a permanent translation tax on engineers, logs and support. One line in
 opamp-server's README — *"`organization_id` is an opaque owner identifier
 supplied by the integrator; opamp-server never interprets it"* — does the same
@@ -55,28 +55,27 @@ product with a different ownership model.
 | Views | suffix `_view` |
 | Functions | verb-first snake_case |
 
-**Index names in `telflo_opamp_server`** (D16a Preflight ruling 3, 2026-10-12).
-Every index on an organization's rows leads with `organization_id`
-(the opamp-server's `CONTRIBUTING.md`, "SQL", in its own repository since
-D26; `docs/conventions/go.md` until then), so an index's name leaves that column out:
+**Index names in `telflo_opamp_server`.** Every index on an organization's
+rows leads with `organization_id` (the opamp-server's `CONTRIBUTING.md`,
+"SQL", in its own repository), so an index's name leaves that column out:
 `idx_<table>_<the columns after organization_id>`
 (`idx_collector_instances_fleet_id_name`), and so does a partial unique
 index's (`uq_collector_groups_fleet_id_where_is_default`). A unique
-constraint's name lists its columns whole, the organization included, as
-the composite keys' targets must (`uq_fleets_organization_id_id`,
+constraint's name lists its columns whole, the organization included, as the
+composite keys' targets must (`uq_fleets_organization_id_id`,
 `uq_fleets_organization_id_label`). Every name stays within Postgres's 63
-bytes: a longer one is silently cut, and its `comment on` then names the
-cut one. D11a's `idx_publications_organization_id_configuration_id`
-predates the rule and keeps its name.
+bytes: a longer one is silently cut, and its `comment on` then names the cut
+one. `idx_publications_organization_id_configuration_id` predates the rule and
+keeps its name.
 
-**Exception: the collector catalogue's columns** (D13a, 2026-10-06). The
-columns of `collector_distributions` and `collector_versions` mirror the
-field names of the catalogue's files (`catalog/distributions/*.json`,
-a format other components share), snake_cased, so the boolean `deprecated` keeps its
-name rather than becoming `is_deprecated` (D13a Ruling 25). The files are
-read by other components too (D13b's validator, D14, D18), so the files'
-names stay as they are and the columns follow them. `is_default` (the
-files' `default`) follows the rule.
+**Exception: the collector catalogue's columns.** The columns of
+`collector_distributions` and `collector_versions` mirror the field names of
+the catalogue's files (`catalog/distributions/*.json`, a format other
+components share), snake_cased, so the boolean `deprecated` keeps its name
+rather than becoming `is_deprecated`. The files are read by other components
+too (the validator, the tester and the collector image's build), so the files'
+names stay as they are and the columns follow them. `is_default` (the files'
+`default`) follows the rule.
 
 ## API
 
@@ -99,18 +98,18 @@ registered claims that are snake_case by specification.
 |---|---|
 | Files | kebab-case — `configuration-repository.ts` |
 | React components | PascalCase file and export |
-| Types and interfaces | PascalCase. An interface implemented by a factory or a class takes an `I` prefix: `IUserRepository`, `IMailer`, or `IBook` for a `class Book implements IBook`. Standalone shapes that nothing implements don't, whether written as `interface`, `type` or Zod inference: `User`, `EmailMessage`, `RegisterRequest` (ADR 0020) |
+| Types and interfaces | PascalCase. An interface implemented by a factory or a class takes an `I` prefix: `IUserRepository`, `IMailer`, or `IBook` for a `class Book implements IBook`. Standalone shapes that nothing implements don't, whether written as `interface`, `type` or Zod inference: `User`, `EmailMessage`, `RegisterRequest` |
 | Zod schema / inferred type | `ConfigurationSchema` → `type Configuration` |
 | Contracts | `CreateConfigurationRequest` / `CreateConfigurationResponse` |
 | Booleans | `isLoading`, `hasChanges`, `shouldRetry` |
 | Exports | no default exports except where a framework requires |
-| Module layout | `modules/<name>/{routes,service,schema}.ts`, plus `modules/<name>/repositories/<noun>-repository.ts`, each exporting an `I<Noun>Repository` interface and a `create<Noun>Repository(…)` factory that returns it (ADR 0020) |
+| Module layout | `modules/<name>/{routes,service,schema}.ts`, plus `modules/<name>/repositories/<noun>-repository.ts`, each exporting an `I<Noun>Repository` interface and a `create<Noun>Repository(…)` factory that returns it |
 
 ## Packages, services, environment
 
 | Rule | Example |
 |---|---|
-| Workspace packages | `@telflo/contracts`, `@telflo/db`, `@telflo/api`, `@telflo/web`, `@telflo/cli` (`telflo-core/apps/cli`, whose bin is `telflo`; the root package is already named `telflo`, so the CLI's is renamed `telflo` only when it is published, D27) |
+| Workspace packages | `@telflo/contracts`, `@telflo/db`, `@telflo/api`, `@telflo/web`, `@telflo/cli` (`telflo-core/apps/cli`, whose bin is `telflo`; the root package is already named `telflo`, so the CLI's is renamed `telflo` only when it is published) |
 | Compose services | `api`, `web`, `db`, `mailpit` |
 | Application env vars | `TELFLO_` prefix — `TELFLO_DATABASE_URL` |
 | Standard env vars | left alone — `OTEL_EXPORTER_OTLP_ENDPOINT` |

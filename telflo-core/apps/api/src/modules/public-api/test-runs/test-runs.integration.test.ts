@@ -51,20 +51,19 @@ import { createTestRunQueueSignal, type TestRunQueueSignal } from "../../test-ru
 import { publicApiDocument } from "../openapi/document.js";
 
 /*
- * The public surface's test runs (D25 decision 17's routes 26-28;
- * decisions 39 to 44 and 53; Q168; Preflight rulings 12 and 17), through
- * the real server as the API's own role, a real FileStore on a temporary
- * directory, the OpenAPI-checked fake tester and fake OTTL evaluator, and
- * the dispatcher claiming runs as its own tests do. Each route: success
- * through a real service account's token, a read token on the POST 403,
- * another organization's ids 404, another member's YAML run 404, a
- * person's run of their own draft invisible to the token, and every JSON
- * reply checked against the OpenAPI document. Then: a YAML run queued,
- * claimed, read back with its output; a version's run with inline rules
- * (the request's snapshot), saved rules (the database's) and none; the
- * sample stored as the caller's test file and counted; the sample's 1 MiB
- * and the body's 8 MiB; the browser's runs list without YAML runs; and no
- * log line or audit row holding the text, the sample or a rule.
+ * The public surface's test runs, through the real server as the API's own
+ * role, a real FileStore on a temporary directory, the OpenAPI-checked fake
+ * tester and fake OTTL evaluator, and the dispatcher claiming runs as its
+ * own tests do. Each route: success through a real service account's token,
+ * a read token on the POST 403, another organization's ids 404, another
+ * member's YAML run 404, a person's run of their own draft invisible to the
+ * token, and every JSON reply checked against the OpenAPI document. Then: a
+ * YAML run queued, claimed, read back with its output; a version's run with
+ * inline rules (the request's snapshot), saved rules (the database's) and
+ * none; the sample stored as the caller's test file and counted; the
+ * sample's 1 MiB and the body's 8 MiB; the browser's runs list without YAML
+ * runs; and no log line or audit row holding the text, the sample or a
+ * rule.
  *
  * Tokens are built at run time by addApiToken and never printed: `call`
  * runs its canary (a boolean) on every reply before any comparison of it.
@@ -86,7 +85,7 @@ type Route = (typeof ROUTE)[keyof typeof ROUTE];
 const csrfHeaders = { [CSRF_HEADER_NAME]: CSRF_HEADER_VALUE };
 const PASSWORD = "a-sufficiently-long-password";
 
-/** Markers no log line or audit row may hold (Q168: configuration text). */
+/** Markers no log line or audit row may hold (configuration text). */
 const YAML_MARKER = "yaml-marker-7f3e";
 const SAMPLE_MARKER = "sample-marker-2b9c";
 const RULE_NAME_MARKER = "rule-name-marker-5d10";
@@ -144,7 +143,7 @@ interface CallOptions {
   organizationId?: string;
 }
 
-describe("the public test runs routes (D25 routes 26-28)", () => {
+describe("the public test runs routes", () => {
   let settings: AppSettings;
   let db: Kysely<Database>;
   let ownerDb: Kysely<Database>;
@@ -218,7 +217,7 @@ describe("the public test runs routes (D25 routes 26-28)", () => {
     tester.fake.releaseHeld();
     expect(tester.fake.takeViolations()).toEqual([]);
     expect(evaluator.fake.takeViolations()).toEqual([]);
-    // Q168: the text, the sample and the rules are configuration text. No
+    // The text, the sample and the rules are configuration text. No
     // log line (the server's, the dispatcher's) and no audit row holds one.
     const logged = logLines.join("\n") + JSON.stringify(dispatcherLog.lines);
     const audited = JSON.stringify(await ownerDb.selectFrom("audit_events").selectAll().execute());
@@ -374,7 +373,7 @@ describe("the public test runs routes (D25 routes 26-28)", () => {
 
   const validateRequests = () => evaluator.fake.takeRequests().filter((request) => request.operation === "validate");
 
-  describe("a YAML run (decisions 39 to 41 and 43)", () => {
+  describe("a YAML run", () => {
     it("queues, is claimed by the dispatcher, reads back with its output; a service account's sample goes once the run holds its copy; its audit row names its source and file", async () => {
       const org = await organization();
       const runId = await queued(org.write, yamlBody());
@@ -400,8 +399,8 @@ describe("the public test runs routes (D25 routes 26-28)", () => {
       expect(stored.validation_rules).toEqual([
         { id: expect.any(String), position: 1, kind: "contains_text", target: "output", pattern: SAMPLE_MARKER, ottl: null, name: `Rule ${RULE_NAME_MARKER}`, description: "" },
       ]);
-      // The sample was the caller's test file (decision 41); a service
-      // account's goes once the run holds its own copy (Ruling 178).
+      // The sample was the caller's test file; a service account's goes
+      // once the run holds its own copy.
       expect(await testFiles()).toEqual([]);
       expect((await runInput(org.id, runId)) === SAMPLE).toBe(true);
       const audit = await ownerDb.selectFrom("audit_events").selectAll().where("action", "=", "test_run.queued").execute();
@@ -483,7 +482,7 @@ describe("the public test runs routes (D25 routes 26-28)", () => {
       expect(await ownerDb.selectFrom("test_runs").select("id").execute()).toHaveLength(1);
     });
 
-    it("a named distribution with no default takes a named version, and is 400 collector_distribution_unknown without one (Ruling 168's reading)", async () => {
+    it("a named distribution with no default takes a named version, and is 400 collector_distribution_unknown without one", async () => {
       const org = await organization();
       const noDefault = "no-default-build";
       const offered = "0.0.3";
@@ -520,7 +519,7 @@ describe("the public test runs routes (D25 routes 26-28)", () => {
       }
     });
 
-    it("a person's sample stays in their My Files (decision 41): a personal token's run", async () => {
+    it("a person's sample stays in their My Files: a personal token's run", async () => {
       const org = await organization();
       const { token } = await addPersonalApiToken(ownerDb, { userId: org.adminId, access: "write" });
       const runId = await queued(token, yamlBody(), undefined, org.id);
@@ -560,7 +559,7 @@ describe("the public test runs routes (D25 routes 26-28)", () => {
       const target = await configurationOf(org.id, org.accountUserId);
       expectRefusal(await call("POST", ROUTE.queue, org.write, { payload: { ...versionBody(target), yaml: YAML } }), 400, "invalid_request");
       expectRefusal(await call("POST", ROUTE.queue, org.write, { payload: yamlBody({ rules: undefined, useSavedRules: true }) }), 400, "invalid_request");
-      // Neither rules nor useSavedRules (Ruling 178).
+      // Neither rules nor useSavedRules.
       expectRefusal(await call("POST", ROUTE.queue, org.write, { payload: yamlBody({ rules: undefined }) }), 400, "invalid_request");
       expectRefusal(await call("POST", ROUTE.queue, org.write, { payload: yamlBody({ rules: [TEXT_RULE], useSavedRules: true }) }), 400, "invalid_request");
       expect(await testFiles()).toEqual([]);
@@ -568,7 +567,7 @@ describe("the public test runs routes (D25 routes 26-28)", () => {
     });
   });
 
-  describe("a version's run (decisions 40 and 42)", () => {
+  describe("a version's run", () => {
     /** The account's own draft, with a saved validation pipeline for logs/app holding one rule. */
     const withSavedRule = async (org: Organization) => {
       const target = await configurationOf(org.id, org.accountUserId);
@@ -645,7 +644,7 @@ describe("the public test runs routes (D25 routes 26-28)", () => {
       await queued(org.write, versionBody(target, { rules: undefined, useSavedRules: true }), limited);
     });
 
-    it("useSavedRules whose rules are deleted between the pre-check and the insert is 422: no run, no sample, no run files (Ruling 182)", async () => {
+    it("useSavedRules whose rules are deleted between the pre-check and the insert is 422: no run, no sample, no run files", async () => {
       const org = await organization();
       const { target, pipelineId } = await withSavedRule(org);
       // The version's text references an organization variable, so the queue
@@ -736,7 +735,7 @@ describe("the public test runs routes (D25 routes 26-28)", () => {
     });
   });
 
-  describe("access, the sample and the limits (decisions 25, 40, 41 and 44)", () => {
+  describe("access, the sample and the limits", () => {
     it("a read token can't queue (403 insufficient_access, nothing stored) and can read", async () => {
       const org = await organization();
       expectRefusal(await call("POST", ROUTE.queue, org.read, { payload: yamlBody() }), 403, "insufficient_access");
@@ -778,7 +777,7 @@ describe("the public test runs routes (D25 routes 26-28)", () => {
       expect(await ownerDb.selectFrom("test_runs").select("id").execute()).toHaveLength(1);
     });
 
-    it("an unknown pin spends no upload: it is refused before the sample is stored (Ruling 178)", async () => {
+    it("an unknown pin spends no upload: it is refused before the sample is stored", async () => {
       const limited = await serverWith({ ...TEST_RATE_LIMITS, testFileUploadsPerUser: { max: 1, windowMs: 60_000 } });
       const org = await organization();
       expectRefusal(await call("POST", ROUTE.queue, org.write, { payload: yamlBody({ collectorVersion: "0.0.1" }), on: limited }), 400, "collector_version_unknown");
@@ -796,12 +795,12 @@ describe("the public test runs routes (D25 routes 26-28)", () => {
     });
 
     /*
-     * Ruling 187 (M1): a refused run spends nothing. The minute is admitted
-     * before a rule check or an upload, and a full queue is the pre-check's,
-     * so a run refused by either leaves both for the next run. Proved by
-     * that next run, whose own check and upload are the last ones left.
+     * A refused run spends nothing. The minute is admitted before a rule
+     * check or an upload, and a full queue is the pre-check's, so a run
+     * refused by either leaves both for the next run. Proved by that next
+     * run, whose own check and upload are the last ones left.
      */
-    it("a run refused by the runs minute spends no rule check and no upload: the minute comes before both (Ruling 187)", async () => {
+    it("a run refused by the runs minute spends no rule check and no upload: the minute comes before both", async () => {
       // The clock only, so the minute's window can end while the checks' and the uploads' (ten minutes) go on.
       vi.useFakeTimers({ toFake: ["Date"], shouldAdvanceTime: true });
       try {
@@ -830,7 +829,7 @@ describe("the public test runs routes (D25 routes 26-28)", () => {
       }
     });
 
-    it("a run refused by a full queue (TEST_RUNS_WAITING_MAXIMUM_PER_USER waiting) spends no minute, rule check or upload: the pre-check refuses it (Ruling 187)", async () => {
+    it("a run refused by a full queue (TEST_RUNS_WAITING_MAXIMUM_PER_USER waiting) spends no minute, rule check or upload: the pre-check refuses it", async () => {
       const limited = await serverWith({
         ...TEST_RATE_LIMITS,
         testRunsPerUser: { max: 1, windowMs: 60_000 },
@@ -853,7 +852,7 @@ describe("the public test runs routes (D25 routes 26-28)", () => {
       expect(validateRequests()).toHaveLength(1);
     });
 
-    it("an inline rule refused after the minute was admitted gives the minute back (Ruling 187)", async () => {
+    it("an inline rule refused after the minute was admitted gives the minute back", async () => {
       const limited = await serverWith({ ...TEST_RATE_LIMITS, testRunsPerUser: { max: 1, windowMs: 60_000 } });
       const org = await organization();
       const tautology = { ...OTTL_RULE, ottl: { context: "log", quantifier: "all", condition: "true" } };
@@ -865,7 +864,7 @@ describe("the public test runs routes (D25 routes 26-28)", () => {
     });
   });
 
-  describe("inline rules' checks (decision 42)", () => {
+  describe("inline rules' checks", () => {
     it("refuses an OTTL context the signal doesn't have and a condition that can't fail before any check; the evaluator's refusal with the rule's index", async () => {
       const org = await organization();
       const span = { ...OTTL_RULE, ottl: { ...OTTL_RULE.ottl, context: "span" } };
@@ -890,7 +889,7 @@ describe("the public test runs routes (D25 routes 26-28)", () => {
       expect(await testFiles()).toEqual([]);
     });
 
-    it("reserves a run's checks all at once in validationRuleChecksPerUser (Ruling 172): 2 needed with 1 left is 429, the evaluator not asked, nothing queued", async () => {
+    it("reserves a run's checks all at once in validationRuleChecksPerUser: 2 needed with 1 left is 429, the evaluator not asked, nothing queued", async () => {
       const limited = await serverWith({ ...TEST_RATE_LIMITS, validationRuleChecksPerUser: { max: 3, windowMs: 60_000 } });
       const org = await organization();
       await queued(org.write, yamlBody({ rules: [OTTL_RULE, TEXT_RULE, OTTL_RULE] }), limited);
@@ -919,7 +918,7 @@ describe("the public test runs routes (D25 routes 26-28)", () => {
       expect(await ownerDb.selectFrom("test_runs").select("id").execute()).toEqual([]);
     });
 
-    it("the tester down spends no rule check and no upload: refused before both (Ruling 178)", async () => {
+    it("the tester down spends no rule check and no upload: refused before both", async () => {
       const limited = await serverWith({
         ...TEST_RATE_LIMITS,
         validationRuleChecksPerUser: { max: 1, windowMs: 60_000 },
@@ -935,7 +934,7 @@ describe("the public test runs routes (D25 routes 26-28)", () => {
     });
   });
 
-  describe("the browser never shows a YAML run (decision 39)", () => {
+  describe("the browser never shows a YAML run", () => {
     it("a person's version list and run read leave out their YAML run; the repository's find and list never answer one, findYamlRun its creator's only", async () => {
       const org = await organization();
       const target = await configurationOf(org.id, org.adminId);
@@ -963,7 +962,7 @@ describe("the public test runs routes (D25 routes 26-28)", () => {
       });
       expect(switched.statusCode).toBe(200);
       const runsPath = `/api/v1/organizations/${org.id}/configurations/${target.configurationId}/versions/${target.versionId}/test-runs`;
-      // A no-op when the sign-in already landed there (D36-1 decision 56): no new cookie, the sign-in's token stands.
+      // A no-op when the sign-in already landed there: no new cookie, the sign-in's token stands.
       const access = switched.headers["set-cookie"] === undefined ? cookie(signedIn) : cookie(switched);
       const browse = (url: string) => server.inject({ method: "GET", url, headers: csrfHeaders, cookies: { telflo_access: access } });
       const listed = await browse(runsPath);
@@ -986,7 +985,7 @@ describe("the public test runs routes (D25 routes 26-28)", () => {
     });
   });
 
-  describe("the OpenAPI document's request is the contract's (Ruling 165)", () => {
+  describe("the OpenAPI document's request is the contract's", () => {
     it("QueueTestRunRequest accepts and refuses each body as PublicQueueTestRunRequestSchema does", () => {
       const ajv = new Ajv2020({ strict: true, allErrors: true, allowUnionTypes: true });
       const schemas = publicApiDocument().components.schemas ?? {};

@@ -2,13 +2,13 @@ import { randomBytes } from "node:crypto";
 import { hashToken } from "../identity/tokens.js";
 
 /*
- * An API token (D22 decision 7; ADR 0023): `tf_` and 32 random bytes in
- * base64url (256 bits, 46 characters in all), a fixed format, so a secret
- * scanner can match it. Shown once, in the create's reply, and
- * stored only as its sha-256 (hex, as every hashed token of the platform's:
- * identity/tokens.ts) and its first 11 characters, the prefix the list
- * shows. The token is a credential like a fleet's bearer (decision 48):
- * never logged, audited, put in an error or returned again.
+ * An API token: `tf_` and 32 random bytes in base64url (256 bits, 46
+ * characters in all), a fixed format, so a secret scanner can match it.
+ * Shown once, in the create's reply, and stored only as its sha-256 (hex,
+ * as every hashed token of the platform's: identity/tokens.ts) and its
+ * first 11 characters, the prefix the list shows. The token is a credential
+ * like a fleet's bearer: never logged, audited, put in an error or returned
+ * again.
  */
 
 const API_TOKEN_BYTES = 32;

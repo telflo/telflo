@@ -2,13 +2,13 @@ import { CANONICAL_UUID } from "../organizations/service.js";
 import { invalidCursor } from "./errors.js";
 
 /*
- * The product-admin lists' opaque cursor (D29 decisions 9, 31 and 33): the
- * base64url of JSON holding the last item's `createdAt`, as ISO 8601 to the
- * millisecond, and its `id`. The next page is the rows strictly after that
- * pair, newest first. The Users list orders a person's created_at truncated
- * to the millisecond (migration 041: users' created_at defaults to now(),
- * in microseconds), so a JavaScript Date carries it whole; feedback's is
- * the API's clock, in milliseconds already.
+ * The product-admin lists' opaque cursor: the base64url of JSON holding the
+ * last item's `createdAt`, as ISO 8601 to the millisecond, and its `id`.
+ * The next page is the rows strictly after that pair, newest first. The
+ * Users list orders a person's created_at truncated to the millisecond
+ * (migration 041: users' created_at defaults to now(), in microseconds), so
+ * a JavaScript Date carries it whole; feedback's is the API's clock, in
+ * milliseconds already.
  *
  * A client can send anything, so decoding accepts only what encoding makes
  * (the configurations' cursor's rule): an ISO timestamp `Date` prints back

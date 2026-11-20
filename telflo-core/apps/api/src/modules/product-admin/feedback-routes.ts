@@ -21,7 +21,7 @@ import {
 } from "./routing.js";
 
 /*
- * User Feedback for product admins (D29 decisions 6, 33, 34 and 37; Task 4):
+ * User Feedback for product admins:
  *
  *   * `GET /api/v1/product-admin/feedback?cursor=`: the pending items,
  *     newest first, 25 a page (USER_FEEDBACK_PAGE_SIZE), with the sender's

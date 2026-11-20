@@ -80,7 +80,7 @@ describe("createSalesInquiryService", () => {
     ]);
   });
 
-  it("still accepts a sent inquiry whose audit row couldn't be written, and logs why (D4 Ruling 16)", async () => {
+  it("still accepts a sent inquiry whose audit row couldn't be written, and logs why", async () => {
     const mailer = createInMemoryMailer();
     const databaseError = new Error("the database is unreachable");
     const { service, log } = buildHarness(mailer, databaseError);

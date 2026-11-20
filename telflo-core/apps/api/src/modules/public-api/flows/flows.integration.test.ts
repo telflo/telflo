@@ -23,8 +23,8 @@ import { validatePublicReply } from "../../../testing/public-api-openapi.js";
 import { apiTokenHash } from "../../service-accounts/tokens.js";
 
 /*
- * The public surface's flows (D25 decision 17's routes 24 and 25;
- * decisions 19, 45 and 53), through the real server as the API's own role.
+ * The public surface's flows, through the real server as the API's own
+ * role.
  * Flows are global: any organization's token reads the same published
  * flows, never a hidden one (a token is never a product admin, whatever its
  * user's flag), and every reply is checked against the OpenAPI document.
@@ -59,7 +59,7 @@ interface FlowBody {
   yaml?: string;
 }
 
-describe("the public flows routes (D25 routes 24-25)", () => {
+describe("the public flows routes", () => {
   let db: Kysely<Database>;
   let ownerDb: Kysely<Database>;
   let server: FastifyInstance;
@@ -91,7 +91,7 @@ describe("the public flows routes (D25 routes 24-25)", () => {
   });
 
   beforeEach(async () => {
-    // Empties the seeded flows too (D12 Ruling 13): each test sees its own.
+    // Empties the seeded flows too: each test sees its own.
     await truncateAll(ownerDb);
   });
 
@@ -150,7 +150,7 @@ describe("the public flows routes (D25 routes 24-25)", () => {
     expect(response.json<{ error: { code: string } }>().error.code).toBe(code);
   };
 
-  describe("GET /flows (route 24)", () => {
+  describe("GET /flows", () => {
     it("lists the published flows in the gallery's order, without description or YAML, to any organization's token; one page", async () => {
       const org = await organization();
       const other = await organization();
@@ -209,7 +209,7 @@ describe("the public flows routes (D25 routes 24-25)", () => {
     });
   });
 
-  describe("GET /flows/{slug} (route 25)", () => {
+  describe("GET /flows/{slug}", () => {
     it("reads a published flow with its description and YAML", async () => {
       const org = await organization();
       const flow = await addFlow({ description: "## Long\n\nMarkdown." });

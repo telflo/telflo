@@ -9,8 +9,8 @@ import {
 import { publicApiDocument } from "../openapi/document.js";
 
 /*
- * The fleets fragment's request schemas are the contracts' (D25 Ruling 165's
- * rule for every area): each body below is accepted or refused alike by the
+ * The fleets fragment's request schemas are the contracts' (the rule for
+ * every area): each body below is accepted or refused alike by the
  * document's schema (ajv 2020, as the reply validator compiles a reply's)
  * and the route's Zod contract. One rule JSON Schema can't say is left out
  * of the bodies and named in the document instead: an install's variable
@@ -146,7 +146,7 @@ const cases: Array<{ name: string; contract: { safeParse: (value: unknown) => { 
   },
 ];
 
-describe("the fleets fragment's requests are the contracts' (D25 Ruling 165)", () => {
+describe("the fleets fragment's requests are the contracts'", () => {
   it.each(cases)("$name accepts and refuses each body as its contract does", ({ name, contract, bodies }) => {
     const validate = compiled(name);
     const disagreements = bodies.flatMap((body, index) => (validate(body) === contract.safeParse(body).success ? [] : [index]));

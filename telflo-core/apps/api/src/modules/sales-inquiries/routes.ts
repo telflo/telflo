@@ -10,10 +10,10 @@ import { createSalesInquiryService } from "./service.js";
 import { auditUserAgent } from "../../http/audit-user-agent.js";
 
 /**
- * The honeypot (D4 decision 4): a filled `website` is answered with 202 and
- * nothing is sent or audited. A `preValidation` hook, so the parsed body is
- * at hand but not yet validated: a bot gets the same 202 even for a body the
- * schema would refuse (D4 Preflight minor).
+ * The honeypot: a filled `website` is answered with 202 and nothing is sent
+ * or audited. A `preValidation` hook, so the parsed body is at hand but not
+ * yet validated: a bot gets the same 202 even for a body the schema would
+ * refuse.
  */
 async function honeypot(request: FastifyRequest, reply: FastifyReply): Promise<FastifyReply | undefined> {
   const website = (request.body as { website?: unknown } | undefined)?.website;
@@ -25,14 +25,13 @@ async function honeypot(request: FastifyRequest, reply: FastifyReply): Promise<F
 }
 
 /**
- * D4 decision 4's contact form endpoint. No session is needed; the CSRF
- * header is, as on every POST under `/api/v1/`.
+ * The contact form endpoint. No session is needed; the CSRF header is, as on
+ * every POST under `/api/v1/`.
  *
- * Switched (D36-1 decision 25, Preflight ruling 17): with
- * TELFLO_SALES_INQUIRY off, the open source's default, it answers as a path
- * nothing serves (404 `not_found`), before the per-address limit counts it.
- * On, TELFLO_SALES_INQUIRY_TO is required (the settings refuse to start
- * without it), and it is where every inquiry goes.
+ * Switched: with TELFLO_SALES_INQUIRY off, the open source's default, it
+ * answers as a path nothing serves (404 `not_found`), before the
+ * per-address limit counts it. On, TELFLO_SALES_INQUIRY_TO is required (the
+ * settings refuse to start without it), and it is where every inquiry goes.
  *
  * The validator/serializer compilers are server-wide and set once in
  * buildServer, not here.
@@ -54,10 +53,9 @@ export function registerSalesInquiryRoutes(
   typed.post(
     "/api/v1/sales-inquiries",
     {
-      // The switch first (Preflight ruling 17): off, nothing counts. Then its
-      // own per-IP bucket (decision 4). An `onRequest` hook, so it counts
-      // every request the CSRF guard lets through: a honeypot or an invalid
-      // body too.
+      // The switch first: off, nothing counts. Then its own per-IP bucket.
+      // An `onRequest` hook, so it counts every request the CSRF guard lets
+      // through: a honeypot or an invalid body too.
       onRequest: [notFoundWhen(!deps.settings.site.salesInquiry), rateLimiters.salesInquiriesPerIp],
       preValidation: honeypot,
       schema: {

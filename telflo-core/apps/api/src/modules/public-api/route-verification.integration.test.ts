@@ -15,10 +15,10 @@ import { apiTokenHash } from "../service-accounts/tokens.js";
 import type * as RouteGuard from "./route-guard.js";
 
 /*
- * The public surface's request-time verification (D25 Ruling 164), on the
- * real server: a request under /api/public/v1 answered by any route but the
- * public plugin's, an allowed open route or the CORS preflight is the one
- * 401, a valid token or not. The registration guard would refuse these
+ * The public surface's request-time verification, on the real server: a
+ * request under /api/public/v1 answered by any route but the public
+ * plugin's, an allowed open route or the CORS preflight is the one 401, a
+ * valid token or not. The registration guard would refuse these
  * routes before they could answer (route-guard.test.ts); here it is left
  * out, so the verification alone is what stands, as it must for any
  * spelling a registration check misses. Tokens are built at run time and
@@ -35,7 +35,7 @@ const opamp = useFakeOpampServer();
 
 const REFUSAL = JSON.stringify({ error: { code: "invalid_api_token", message: "Missing or invalid API token" } });
 
-/** Ruling 164's six root routes, each of which the router matches for GET /api/public/v1/escape. */
+/** Six root routes, each of which the router matches for GET /api/public/v1/escape. */
 const ESCAPING_ROUTES = [
   "/api/:x/v1/escape",
   "/api/public/:v/escape",
@@ -45,7 +45,7 @@ const ESCAPING_ROUTES = [
   "/api/public/*",
 ] as const;
 
-describe("the public surface's verification at request time (D25 Ruling 164)", () => {
+describe("the public surface's verification at request time", () => {
   let settings: AppSettings;
   let db: Kysely<Database>;
   let ownerDb: Kysely<Database>;
@@ -118,7 +118,7 @@ describe("the public surface's verification at request time (D25 Ruling 164)", (
     expect(holdsToken(withToken.body, token)).toBe(false);
     expect(holdsToken(logLines.join("\n"), token)).toBe(false);
     for (const response of [anonymous, withToken]) {
-      // no-store as every public reply (Ruling 187): this one is answered outside the plugin's onSend hook.
+      // no-store as every public reply: this one is answered outside the plugin's onSend hook.
       expect([response.statusCode, response.body === REFUSAL, response.headers["www-authenticate"], response.headers["cache-control"]]).toEqual([
         401,
         true,
@@ -188,7 +188,7 @@ describe("the public surface's verification at request time (D25 Ruling 164)", (
         [method, "a token", 401, true],
       ]),
     );
-    // Outside the prefix (a segment boundary, Ruling 166), the route answers as any route does.
+    // Outside the prefix (a segment boundary), the route answers as any route does.
     for (const url of ["/api/public/v1x", "/api/public/v10/x", "/api/other"]) {
       expect([url, (await server.inject({ method: "GET", url })).statusCode]).toEqual([url, 200]);
     }
@@ -218,7 +218,7 @@ describe("the public surface's verification at request time (D25 Ruling 164)", (
     // Outside the prefix, the root route answers as any route does.
     expect((await server.inject({ method: "GET", url: "/api/other/v1/escape" })).json()).toEqual({ escaped: true });
     expect((await server.inject({ method: "GET", url: "/api/v1/flow-showcase" })).statusCode).toBe(200);
-    // The open flow read (D31-1 decision 34): /api/v1/, no session, outside the public surface's check.
+    // The open flow read: /api/v1/, no session, outside the public surface's check.
     expect((await server.inject({ method: "GET", url: "/api/v1/published-flows" })).statusCode).toBe(200);
     expect((await server.inject({ method: "GET", url: "/api/v1/published-flows/no-such-flow" })).json()).toMatchObject({
       error: { code: "flow_not_found" },

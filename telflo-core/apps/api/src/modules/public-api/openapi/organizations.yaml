@@ -1,6 +1,5 @@
-# Who the token is (D25 decision 17's route 2) and the organizations it may
-# act in (route 3; decision 30). Assembled by document.ts. An organization
-# is answered without its logo.
+# Who the token is and the organizations it may act in. Assembled by
+# document.ts. An organization is answered without its logo.
 paths:
   /whoami:
     get:

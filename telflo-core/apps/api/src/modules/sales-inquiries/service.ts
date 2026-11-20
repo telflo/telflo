@@ -6,9 +6,7 @@ import type { IAuditRepository } from "../identity/repositories/audit-repository
 import { buildSalesInquiryEmail } from "./emails.js";
 
 /**
- * What the submitter is told when the send fails: fixed words naming no
- * address (D36-1 decision 25, Preflight ruling 17), where D4's named
- * Telflo's own inbox.
+ * What the submitter is told when the send fails: fixed words naming no address.
  */
 export const SALES_INQUIRY_FAILED_MESSAGE = "Your message couldn't be sent. Please try again later.";
 
@@ -43,15 +41,15 @@ export function createSalesInquiryService(deps: SalesInquiryServiceDependencies)
   return {
     /**
      * Sends one email to the team's inbox, with Reply-To the submitter, and
-     * audits it either way (D4 decision 4). The audit row has the address
-     * and the outcome, never the message, and no actor or organization: the
-     * submitter has no account as far as this endpoint knows. The mailer's
-     * error is logged on its own; the response carries none of it.
+     * audits it either way. The audit row has the address and the outcome,
+     * never the message, and no actor or organization: the submitter has no
+     * account as far as this endpoint knows. The mailer's error is logged
+     * on its own; the response carries none of it.
      *
-     * The answer follows the send, not the audit row (D4 Ruling 16): a sent
-     * inquiry whose row couldn't be written is still accepted, since the
-     * email has gone and a retry would send it again; a failed send is still
-     * 502. A failed audit write is logged.
+     * The answer follows the send, not the audit row: a sent inquiry whose
+     * row couldn't be written is still accepted, since the email has gone
+     * and a retry would send it again; a failed send is still 502. A failed
+     * audit write is logged.
      */
     async submit(input: SalesInquiryInput): Promise<void> {
       const origin = { ipAddress: input.ipAddress, userAgent: input.userAgent };

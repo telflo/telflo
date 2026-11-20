@@ -4,17 +4,16 @@ import type { Actor } from "../../organizations/service.js";
 import type { CreateRuleInput, IValidationRuleCheck } from "../../validation-pipelines/service.js";
 
 /*
- * A public test run's inline rules (D25 decision 42, the narrow exception to
- * D15a decision 14): checked as the public surface checks a batch of new
- * rules (`checkNewRules`, Rulings 172 and 178: every OTTL context, then
- * every OTTL condition that can't fail or pass, both before anything is
- * spent; then one `validationRuleChecksPerUser` admission per regex or OTTL
- * rule, reserved all at once; then the OTTL evaluator for each in order),
- * then given fresh ids and positions as the run's snapshot, used once,
- * never saved.
+ * A public test run's inline rules: checked as the public surface checks a
+ * batch of new rules (`checkNewRules`: every OTTL context, then every OTTL
+ * condition that can't fail or pass, both before anything is spent; then
+ * one `validationRuleChecksPerUser` admission per regex or OTTL rule,
+ * reserved all at once; then the OTTL evaluator for each in order), then
+ * given fresh ids and positions as the run's snapshot, used once, never
+ * saved.
  *
  * Nothing here logs: the rule check logs ids, a rule's kind and the
- * outcome only. A rule's text reaches the reply's body alone (ADR 0024).
+ * outcome only. A rule's text reaches the reply's body alone.
  */
 
 /**

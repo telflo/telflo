@@ -1,6 +1,5 @@
-# Flows (D25 decision 17's routes 24-25; decisions 19 and 45): the public
-# catalogue of prebuilt collector configurations. Global, not an
-# organization's: a token sees the published flows only. Assembled by
+# Flows: the public catalogue of prebuilt collector configurations. Global,
+# not an organization's: a token sees the published flows only. Assembled by
 # document.ts. Every reply is no-store.
 paths:
   /flows:

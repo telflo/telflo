@@ -5,21 +5,21 @@ import { createOrganizationScope, type OrganizationScopeContext } from "../../..
 import type { SealedValues } from "../sealed-values.js";
 
 /*
- * Quick-deploy links (D17c-2 decision 22; Preflight rulings 1 to 5): the
- * context's organization's rows, reached only through the organization
- * scope, row-level security on quick_deploy_links (migration
- * 1700000000032) behind it, so the transaction must carry a database
- * context naming the same organization. Every query but the download's is
- * a fleet's, its first filter the organization (the scope's).
+ * Quick-deploy links: the context's organization's rows, reached only
+ * through the organization scope, row-level security on
+ * quick_deploy_links (migration 1700000000032) behind it, so the
+ * transaction must carry a database context naming the same organization.
+ * Every query but the download's is a fleet's, its first filter the
+ * organization (the scope's).
  *
- * The secret is never here, and its hash leaves no method: `createWithinCap`
- * writes it once, and `findQuickDeployLinkBySecretHash`, below, the
- * definer's one caller, is the only read keyed by it (ADR 0023). An object
+ * The secret is never here, and its hash leaves no method:
+ * `createWithinCap` writes it once, and `findQuickDeployLinkBySecretHash`,
+ * below, the definer's one caller, is the only read keyed by it. An object
  * that doesn't carry the hash can't log it. The sealed values stay sealed:
  * only the download opens them (sealed-values.ts).
  */
 
-/** The most links a fleet holds neither expired nor revoked (decision 22). */
+/** The most links a fleet holds neither expired nor revoked. */
 export const QUICK_DEPLOY_LINKS_ACTIVE_PER_FLEET = QUICK_DEPLOY_LINKS_ACTIVE_MAXIMUM;
 
 /** A link in any state: active while neither revoked nor past `expiresAt` (the caller's clock). */
@@ -69,21 +69,21 @@ export type CreateWithinCapResult = { kind: "created"; link: QuickDeployLink } |
 
 export type ExtendResult =
   | { kind: "extended"; link: QuickDeployLink }
-  /** Revoked: never extended (decision 5); the link as it is. */
+  /** Revoked: never extended; the link as it is. */
   | { kind: "revoked"; link: QuickDeployLink }
   /** The fleet's other links active now are already `cap`: extending this one would make one more (`quick_deploy_link_limit_reached`). */
   | { kind: "limit_reached" }
   | { kind: "not_found" };
 
 export interface IQuickDeployLinkRepository {
-  /** A new link's id (`select uuidv7()`, Preflight ruling 5), picked before sealing its values. */
+  /** A new link's id (`select uuidv7()`), picked before sealing its values. */
   nextId(): Promise<string>;
   /**
    * Inserts the link unless its fleet already holds `cap` active ones (not
    * revoked, not expired at `now`), counted under a transaction-scoped
-   * advisory lock on the organization's fleet (Preflight ruling 3): two
-   * creates at cap − 1 leave exactly cap, the second counting after the
-   * first's commit. The caller's transaction holds the lock to its end.
+   * advisory lock on the organization's fleet: two creates at cap − 1
+   * leave exactly cap, the second counting after the first's commit. The
+   * caller's transaction holds the lock to its end.
    */
   createWithinCap(link: NewQuickDeployLink, now: Date, cap?: number): Promise<CreateWithinCapResult>;
   /** A fleet's links, newest first ((createdAt, id) descending), after `after` when given. */
@@ -92,11 +92,11 @@ export interface IQuickDeployLinkRepository {
   find(fleetId: string, id: string): Promise<QuickDeployLink | undefined>;
   /**
    * Sets the expiry (null: never) of a link not revoked, which is then
-   * active: counted as a create is, under the same advisory lock, always
-   * (D17c-2 Rulings 36 and 40). Refused (`limit_reached`) when the fleet's
-   * OTHER active links at `now` are already `cap`; a link active in a full
-   * fleet has cap − 1 others, so it is extended, and an expired one is
-   * refused there. The caller's transaction holds the lock to its end.
+   * active: counted as a create is, under the same advisory lock, always.
+   * Refused (`limit_reached`) when the fleet's OTHER active links at `now`
+   * are already `cap`; a link active in a full fleet has cap − 1 others,
+   * so it is extended, and an expired one is refused there. The caller's
+   * transaction holds the lock to its end.
    */
   extend(fleetId: string, id: string, expiresAt: Date | null, now: Date, cap?: number): Promise<ExtendResult>;
   /**
@@ -109,11 +109,11 @@ export interface IQuickDeployLinkRepository {
   /** The download's read, by id, after the lookup by hash (any fleet of the organization). */
   findForDownload(id: string): Promise<QuickDeployLink | undefined>;
   /**
-   * The download's last gate and its count (Preflight ruling 4), in the
-   * transaction that writes its audit row: the row locked `for no key
-   * update` while still neither revoked nor expired at `now`, then one more
-   * download at `now`. Undefined when it isn't active now (revoked or
-   * expired meanwhile: the route's 410).
+   * The download's last gate and its count, in the transaction that writes
+   * its audit row: the row locked `for no key update` while still neither
+   * revoked nor expired at `now`, then one more download at `now`.
+   * Undefined when it isn't active now (revoked or expired meanwhile: the
+   * route's 410).
    */
   recordDownload(id: string, now: Date): Promise<QuickDeployLink | undefined>;
 }
@@ -186,10 +186,10 @@ export function createQuickDeployLinkRepository(
     return row === undefined ? undefined : toLink(row);
   };
   /**
-   * The cap's lock (Preflight ruling 3; test-run-repository.ts' precedent):
-   * one key per organization's fleet, held to the transaction's end, so a
-   * create and an extend that each add an active link count one after the
-   * other, the second after the first's commit.
+   * The cap's lock (test-run-repository.ts' precedent): one key per
+   * organization's fleet, held to the transaction's end, so a create and
+   * an extend that each add an active link count one after the other, the
+   * second after the first's commit.
    */
   const lockTheCap = async (fleetId: string) => {
     const key = `telflo.quick_deploy_links:${scope.organizationId}:${fleetId}`;
@@ -255,7 +255,7 @@ export function createQuickDeployLinkRepository(
       const current = await find(fleetId, id);
       if (current === undefined) return { kind: "not_found" };
       if (current.revokedAt !== null) return { kind: "revoked", link: current };
-      // Decided under the fleet's lock, always (Ruling 40): the link active after it, counted with the fleet's
+      // Decided under the fleet's lock, always: the link active after it, counted with the fleet's
       // OTHER active links at `now`, as a create counts. Whether the link is active itself is never decided
       // before the lock: one active at this `now` but expired at a concurrent create's would be counted by
       // neither. The link is left out of the count, so an active link of a full fleet (99 others) is extended,
@@ -323,7 +323,7 @@ export interface QuickDeployLinkBySecret {
 /**
  * The link whose secret hashes to `secretHash`, in any state, or undefined:
  * quick_deploy_link_by_secret_hash, the SECURITY DEFINER function that reads
- * past row-level security (ADR 0023's rule: 256 random bits, stored as a
+ * past row-level security (its key is 256 random bits, stored as a
  * hash, matched exactly), and its one caller. It answers only the link's
  * id, its organization and whether that is live; everything after sets the
  * database context to the link's organization and reads through the

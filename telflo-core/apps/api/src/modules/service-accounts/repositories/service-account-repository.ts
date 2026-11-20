@@ -4,17 +4,15 @@ import type { Database } from "@telflo/db";
 import { createOrganizationScope, type OrganizationScopeContext } from "../../../tenancy/organization-scope.js";
 
 /*
- * Service accounts (D22 decisions 5 and 26 to 29; migration
- * 1700000000035): the context's organization's accounts, reached only
- * through the organization scope, row-level security on service_accounts
- * behind it, so the transaction must carry a database context naming the
- * same organization. An account is live while its row's deleted_at and its
- * user's are both null; every read here asks for both.
+ * Service accounts (migration 1700000000035): the context's organization's
+ * accounts, reached only through the organization scope, row-level security on
+ * service_accounts behind it, so the transaction must carry a database context
+ * naming the same organization. An account is live while its row's deleted_at
+ * and its user's are both null; every read here asks for both.
  *
- * The resource registry's operations (D22 Task 1) and the routes' service
- * (Task 4) share it. The name and the address are organization content
- * (ADR 0024): an object that holds either is never logged, and the errors
- * thrown here carry neither.
+ * The resource registry's operations and the routes' service share it. The
+ * name and the address are organization content: an object that holds either
+ * is never logged, and the errors thrown here carry neither.
  */
 
 /** Postgres error code for a unique-constraint (or unique-index) violation. */
@@ -28,7 +26,7 @@ const NAME_UNIQUE_INDEX = "uq_service_accounts_organization_id_lower_name";
 
 /**
  * The unique index a violation names, or undefined for any other error. The
- * caller tells the two apart by name (D22 Preflight ruling 4), as identity's
+ * caller tells the two apart by name, as identity's
  * `isDuplicateEmailViolation` does: any other unique index is a bug, and
  * surfaces as one.
  */
@@ -87,13 +85,13 @@ export interface ServiceAccount {
   createdBy: { userId: string; email: string } | null;
   createdAt: Date;
   updatedAt: Date;
-  /** Its tokens not revoked, expired ones included: those its page lists (decision 26). */
+  /** Its tokens not revoked, expired ones included: those its page lists. */
   tokenCount: number;
 }
 
 export interface CreateServiceAccountInput {
   name: string;
-  /** The slug address (decision 5), at the reserved domain. */
+  /** The slug address, at the reserved domain. */
   email: string;
   createdByUserId: string;
   /** The clock's time: the email's verification, the row's creation and update. */
@@ -105,15 +103,15 @@ export interface IServiceAccountRepository {
   list(): Promise<ServiceAccount[]>;
   /** The live account with this id, or undefined: unknown, deleted and another organization's alike. */
   find(id: string): Promise<ServiceAccount | undefined>;
-  /** How many live accounts the organization has (the limit's count, decision 27). */
+  /** How many live accounts the organization has (the limit's count). */
   countLive(): Promise<number>;
   /** Whether a live account other than `exceptId` has the name, case aside. */
   isNameTaken(name: string, exceptId?: string): Promise<boolean>;
   /**
    * Inserts the account's user (kind service, the address, verified at
-   * `at`, no password, no terms) and its row, in the caller's transaction
-   * (decision 27's steps 4 and 5). Its membership is the caller's, next.
-   * Throws ServiceAccountAddressTakenError when the address is taken, and
+   * `at`, no password, no terms) and its row, in the caller's transaction.
+   * Its membership is the caller's, next. Throws
+   * ServiceAccountAddressTakenError when the address is taken, and
    * ServiceAccountNameTakenError when a live account has the name.
    */
   create(input: CreateServiceAccountInput): Promise<ServiceAccount>;
@@ -126,8 +124,8 @@ export interface IServiceAccountRepository {
   /**
    * Marks a live account deleted at `at`: its row's deleted_at and then its
    * user's, the user reached only through the row this organization's scope
-   * found (decision 28's step 5). False when there is none. Its tokens and
-   * its membership are the caller's, before this.
+   * found. False when there is none. Its tokens and its membership are the
+   * caller's, before this.
    */
   markDeleted(id: string, at: Date): Promise<boolean>;
 }
@@ -204,7 +202,7 @@ export function createServiceAccountRepository(
 
   return {
     async list() {
-      // At most the limit (decision 8), the reply's own bound.
+      // At most the limit, the reply's own bound.
       const rows = await accounts()
         .orderBy("service_accounts.created_at", "desc")
         .orderBy("service_accounts.user_id", "desc")
@@ -278,7 +276,7 @@ export function createServiceAccountRepository(
         .returning("service_accounts.user_id")
         .executeTakeFirst();
       if (row === undefined) return false;
-      // Both columns, as D5's delete_accounts_only_in_organization sets them
+      // Both columns, as delete_accounts_only_in_organization sets them
       // (migration 1700000000010). The row was live with a live user under
       // the caller's locks, so exactly one user changes; anything else is a
       // bug, and rolls the deletion back.

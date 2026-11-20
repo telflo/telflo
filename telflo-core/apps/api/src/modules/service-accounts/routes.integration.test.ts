@@ -29,7 +29,7 @@ import type { Actor } from "../organizations/service.js";
 import { ServiceAccountAddressTakenError } from "./repositories/service-account-repository.js";
 import { createDatabaseServiceAccountService } from "./routes.js";
 
-// The opamp-server every server needs (D11b decision 8): this file's own fake.
+// The opamp-server every server needs: this file's own fake.
 const opamp = useFakeOpampServer();
 
 const csrfHeaders = { [CSRF_HEADER_NAME]: CSRF_HEADER_VALUE };
@@ -53,7 +53,7 @@ interface ServiceAccountBody {
   tokenCount: number;
 }
 
-describe("service account routes (D22 decisions 26 to 30)", () => {
+describe("service account routes", () => {
   let settings: AppSettings;
   /** The tables' owner's pool, whose connections hold row locks. */
   let pool: Pool;
@@ -75,7 +75,7 @@ describe("service account routes (D22 decisions 26 to 30)", () => {
     db = createDb(createPool(settings.databaseUrl));
     mailer = createInMemoryMailer();
     // Every line at info and above is kept, so a test can show that none
-    // holds a name or an address (decision 49: logs hold ids only).
+    // holds a name or an address (logs hold ids only).
     const previousLevel = process.env.LOG_LEVEL;
     process.env.LOG_LEVEL = "info";
     try {
@@ -146,7 +146,7 @@ describe("service account routes (D22 decisions 26 to 30)", () => {
       payload: { organizationId },
     });
     expect(response.statusCode).toBe(200);
-    // A no-op when the sign-in already landed there (D36-1 decision 56): no new cookie, the token sent stands.
+    // A no-op when the sign-in already landed there: no new cookie, the token sent stands.
     return response.headers["set-cookie"] === undefined ? access : cookieValue(response, "telflo_access");
   };
 
@@ -228,8 +228,8 @@ describe("service account routes (D22 decisions 26 to 30)", () => {
   /**
    * Every service-account and membership row, every service user, and every
    * token row without its hash and prefix (as api-tokens.integration's
-   * tokenRows: a failed comparison prints neither; Ruling 99), to show a
-   * refusal changed nothing.
+   * tokenRows: a failed comparison prints neither), to show a refusal
+   * changed nothing.
    */
   const snapshot = async () => ({
     accounts: await ownerDb.selectFrom("service_accounts").selectAll().orderBy("user_id").execute(),
@@ -256,9 +256,9 @@ describe("service account routes (D22 decisions 26 to 30)", () => {
   });
 
   /**
-   * Decision 49: no log line, no audit row's metadata or actor address and
-   * no error holds these texts (a name, an address). Counted, and named by
-   * their position only: a failure prints none of them (Ruling 99).
+   * No log line, no audit row's metadata or actor address and no error
+   * holds these texts (a name, an address). Counted, and named by their
+   * position only: a failure prints none of them.
    */
   const expectNowhereLoggedOrAudited = async (...texts: string[]) => {
     const audits = await ownerDb.selectFrom("audit_events").select(["metadata", "actor_email"]).execute();
@@ -293,7 +293,7 @@ describe("service account routes (D22 decisions 26 to 30)", () => {
 
   /**
    * Resolves once a backend other than this test's own waits on a lock
-   * naming `table` (D2a Ruling 6). Throws after five seconds.
+   * naming `table`. Throws after five seconds.
    */
   const waitForLockWait = async (table: string) => {
     const deadline = Date.now() + 5_000;
@@ -313,9 +313,9 @@ describe("service account routes (D22 decisions 26 to 30)", () => {
   };
 
   /**
-   * A service account written by the owner (D22's real shape), made at the
-   * clock's time: the API deletes with the clock, and a deletion before the
-   * creation is refused (ck_service_accounts_deleted_after_created).
+   * A service account written by the tables' owner, in its real shape, made at
+   * the clock's time: the API deletes with the clock, and a deletion before
+   * the creation is refused (ck_service_accounts_deleted_after_created).
    */
   const ownerMadeAccount = (organizationId: string, overrides: Omit<Parameters<typeof addServiceAccount>[1], "organizationId"> = {}) =>
     addServiceAccount(ownerDb, { createdAt: clock, ...overrides, organizationId });
@@ -760,7 +760,7 @@ describe("service account routes (D22 decisions 26 to 30)", () => {
       }
       expect(byId.get(revoked.apiToken.id)).toEqual({ id: revoked.apiToken.id, revoked_at: earlier, revoked_by_user_id: admin.user.id });
       const deletedRow = (await serviceAccountAudits()).at(-1)!;
-      // The canary first (Ruling 99): the audit row, whole, holds no token, hash or prefix of the account's.
+      // The canary first: the audit row, whole, holds no token, hash or prefix of the account's.
       const serializedDelete = JSON.stringify(deletedRow);
       expect(
         [...live, expired, revoked].some(({ token, apiToken }) =>
@@ -789,7 +789,7 @@ describe("service account routes (D22 decisions 26 to 30)", () => {
       // The server's connection is the API's login, a member of
       // telflo_platform_runtime, neither a superuser nor the tables' owner, so
       // row-level security and the grants apply to each of the delete's
-      // writes (Q131).
+      // writes.
       const { rows } = await sql<{ is_application: boolean; is_superuser: boolean; owns_tables: boolean }>`
         select pg_has_role(current_user, 'telflo_platform_runtime', 'member') as is_application,
                (select rolsuper from pg_roles where rolname = current_user) as is_superuser,
@@ -888,7 +888,7 @@ describe("service account routes (D22 decisions 26 to 30)", () => {
     });
   });
 
-  describe("an admin demoted while waiting on the organization lock (decision 26)", () => {
+  describe("an admin demoted while waiting on the organization lock", () => {
     it.each([
       ["a create", (access: string, organizationId: string, _id: string) => createAccount(access, organizationId, "Late")],
       ["a rename", (access: string, organizationId: string, id: string) => renameAccount(access, organizationId, id, "Late")],

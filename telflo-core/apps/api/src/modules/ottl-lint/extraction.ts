@@ -1,10 +1,10 @@
 import { OTTL_CONTEXTS, type OttlContext } from "@telflo/contracts";
 
 /*
- * Every OTTL expression in a collector configuration (D25 decision 33), so
- * the public API's OTTL lint can lint "the OTTL in this configuration". It
- * knows where the OTTL-bearing components keep their
- * expressions and the context each is written against:
+ * Every OTTL expression in a collector configuration, so the public API's
+ * OTTL lint can lint "the OTTL in this configuration". It knows where the
+ * OTTL-bearing components keep their expressions and the context each is
+ * written against:
  *
  * - the `transform` processor: `trace_statements`, `metric_statements` and
  *   `log_statements`, each a flat list of statements (the context the

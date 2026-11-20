@@ -3,22 +3,21 @@ import type { RouteOptions } from "fastify";
 import { insufficientAccess } from "./errors.js";
 
 /*
- * Read and write on the public surface (D25 decisions 13, 14 and 25;
- * Preflight ruling 3). Every route of the `/api/public/v1` plugin declares
- * `config.access`, and the plugin's `onRoute` hook refuses to register one
- * that doesn't, so no route can fail open: `ready()` rejects. After the
- * token check, a `write` route needs a `write` token; a read token answers
- * 403 `insufficient_access`.
+ * Read and write on the public surface. Every route of the `/api/public/v1`
+ * plugin declares `config.access`, and the plugin's `onRoute` hook refuses
+ * to register one that doesn't, so no route can fail open: `ready()`
+ * rejects. After the token check, a `write` route needs a `write` token; a
+ * read token answers 403 `insufficient_access`.
  */
 
 declare module "fastify" {
   interface FastifyContextConfig {
-    /** What a public route needs of the token (D25 decision 13). Only the public plugin's routes set it. */
+    /** What a public route needs of the token. Only the public plugin's routes set it. */
     access?: "read" | "write";
     /**
      * A public route a personal token may call without `X-Telflo-Org`
-     * (D25 decision 24: `/whoami`, `/orgs`); a header that is sent is still
-     * checked. Absent: the organization is required (D25 Task 6).
+     * (`/whoami`, `/orgs`); a header that is sent is still checked. Absent:
+     * the organization is required.
      */
     organization?: "optional";
   }
@@ -49,11 +48,10 @@ export function assertDeclaredAccess(route: Pick<RouteOptions, "method" | "url" 
 }
 
 /**
- * The check after the token's (decision 25): `needed` is the matched
- * route's `config.access`. A `write` route refuses a `read` token with 403
- * `insufficient_access`. A route that reached here without an access
- * (which `assertDeclaredAccess` makes impossible) fails closed, as a
- * server error.
+ * The check after the token's: `needed` is the matched route's
+ * `config.access`. A `write` route refuses a `read` token with 403
+ * `insufficient_access`. A route that reached here without an access (which
+ * `assertDeclaredAccess` makes impossible) fails closed, as a server error.
  */
 export function assertAccess(needed: unknown, granted: ApiTokenAccess): void {
   if (needed === "read") return;

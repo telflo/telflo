@@ -24,7 +24,7 @@ describe("session cookie options", () => {
     });
   });
 
-  it("keeps the access cookie as long as the refresh cookie, not as long as the access token (D2b decision 2)", () => {
+  it("keeps the access cookie as long as the refresh cookie, not as long as the access token", () => {
     // Everything an AppSettings would carry, with a non-default refresh TTL.
     const appSettings = { isCookieSecure: true, accessTokenTtlMinutes: 15, refreshTokenTtlDays: 7 };
 
@@ -89,7 +89,7 @@ describe("OIDC flow cookie options", () => {
   });
 });
 
-describe("the theme cookie's options (D21 decision 23)", () => {
+describe("the theme cookie's options", () => {
   it("covers every path for a year, HttpOnly and SameSite=Lax", () => {
     expect(themeCookieOptions({ isCookieSecure: true })).toEqual({
       httpOnly: true,

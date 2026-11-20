@@ -19,8 +19,7 @@ import { publicApiDocument } from "./openapi/document.js";
 import { publicApiRoutesOf } from "./routes.js";
 
 /*
- * The public surface's plugin on the real server (D25 decisions 13, 16, 26,
- * 47 and 49; Preflight rulings 3, 15, 18 and 19): the open routes, the 401
+ * The public surface's plugin on the real server: the open routes, the 401
  * before the 404, the per-token limit over real tokens, the request log's
  * query rule, and the OpenAPI document's coverage and reply validation.
  * Tokens are built at run time by addApiToken and never printed: the
@@ -33,7 +32,7 @@ const opamp = useFakeOpampServer();
 const WHOAMI = "/api/public/v1/whoami";
 const REFUSAL = JSON.stringify({ error: { code: "invalid_api_token", message: "Missing or invalid API token" } });
 
-describe("the public surface's plugin (D25 decisions 13, 16, 26, 47 and 49)", () => {
+describe("the public surface's plugin", () => {
   let settings: AppSettings;
   let db: Kysely<Database>;
   let ownerDb: Kysely<Database>;
@@ -97,7 +96,7 @@ describe("the public surface's plugin (D25 decisions 13, 16, 26, 47 and 49)", ()
   const holdsToken = (text: string, token: string) =>
     [token.slice(3), apiTokenHash(token), token.slice(0, 11)].some((needle) => text.includes(needle));
 
-  describe("the open routes (decision 16)", () => {
+  describe("the open routes", () => {
     it("GET /health answers without a token, whatever Authorization is sent, as the document says", async () => {
       for (const headers of [{}, { authorization: "Bearer nonsense" }]) {
         const response = await server.inject({ method: "GET", url: "/api/public/v1/health", headers });
@@ -116,7 +115,7 @@ describe("the public surface's plugin (D25 decisions 13, 16, 26, 47 and 49)", ()
     });
   });
 
-  describe("the plugin's 404 answers after the check (decisions 13 and 16)", () => {
+  describe("the plugin's 404 answers after the check", () => {
     it("an unknown public path answers the one 401 without a token, and 404 with one, the query left out of the reply", async () => {
       const { token } = await liveToken();
       const anonymous = await server.inject({ method: "GET", url: "/api/public/v1/nope?q=x" });
@@ -140,8 +139,8 @@ describe("the public surface's plugin (D25 decisions 13, 16, 26, 47 and 49)", ()
     });
   });
 
-  describe("the OpenAPI document covers the routes (decision 49, Preflight ruling 19)", () => {
-    /** Routes outside the document: the document itself, and the reference page (its 301 and its files; Task 7). */
+  describe("the OpenAPI document covers the routes", () => {
+    /** Routes outside the document: the document itself, and the reference page (its 301 and its files). */
     const UNDOCUMENTED = new Set(["GET /openapi.json", "GET /docs", `GET ${documentPathOf("/api/public/v1/docs/*")}`]);
 
     it("every registered public route (HEAD aside) is an operation with its access, and every operation a registered route", () => {
@@ -167,7 +166,7 @@ describe("the public surface's plugin (D25 decisions 13, 16, 26, 47 and 49)", ()
     });
   });
 
-  describe("the request log (decision 47, Preflight ruling 18)", () => {
+  describe("the request log", () => {
     it("drops the query of every /api/public/v1/ path from its log lines: a route's, an unknown path's, an open route's", async () => {
       const { token } = await liveToken();
       logLines = [];
@@ -180,13 +179,13 @@ describe("the public surface's plugin (D25 decisions 13, 16, 26, 47 and 49)", ()
         return req?.url === undefined ? [] : [req.url];
       });
       expect(holdsToken(logLines.join("\n"), token)).toBe(false);
-      // Ruling 173: a route's pattern, or the fixed unmatched URL; never the path as sent.
+      // A route's pattern, or the fixed unmatched URL; never the path as sent.
       expect(urls).toEqual(["/api/public/v1/whoami", "/api/public/v1/[unmatched]", "/api/public/v1/health", "/api/public/v1/[unmatched]"]);
       expect(logLines.join("\n").includes("Acme")).toBe(false);
     });
   });
 
-  describe("the request log over a raw socket: dot segments, which inject resolves and the router doesn't (Ruling 163)", () => {
+  describe("the request log over a raw socket: dot segments, which inject resolves and the router doesn't", () => {
     /** Sends `target` as the request line to `listening` over a raw socket, and resolves with the reply. */
     const sendRaw = (listening: FastifyInstance, target: string, authorization?: string, method = "GET") =>
       new Promise<string>((resolve, reject) => {
@@ -206,7 +205,7 @@ describe("the public surface's plugin (D25 decisions 13, 16, 26, 47 and 49)", ()
       ["a dot segment", "/api/./public/v1/whoami?name=Acme%20prod"],
       ["a parent segment", "/api/x/../public/v1/whoami?name=Acme%20prod"],
       ["a leading dot segment", "/./api/public/v1/nope?name=Acme%20prod"],
-    ])("drops the query of a public path with %s from its log line, and answers it the one 401 (no route matched it, and only the plugin's own 404 may answer under the prefix: Ruling 166)", async (_label, target) => {
+    ])("drops the query of a public path with %s from its log line, and answers it the one 401 (no route matched it, and only the plugin's own 404 may answer under the prefix)", async (_label, target) => {
       const listening = await serverWith(TEST_RATE_LIMITS);
       await listening.listen({ host: "127.0.0.1", port: 0 });
       const { token } = await liveToken();
@@ -220,7 +219,7 @@ describe("the public surface's plugin (D25 decisions 13, 16, 26, 47 and 49)", ()
       expect(logLines.join("\n").includes("Acme")).toBe(false);
     });
 
-    it("an absolute-form target under the prefix is the public surface's: the one 401 from no root 404, nothing of its path or query logged (Ruling 173)", async () => {
+    it("an absolute-form target under the prefix is the public surface's: the one 401 from no root 404, nothing of its path or query logged", async () => {
       const listening = await serverWith(TEST_RATE_LIMITS);
       await listening.listen({ host: "127.0.0.1", port: 0 });
       const { token } = await liveToken();
@@ -239,7 +238,7 @@ describe("the public surface's plugin (D25 decisions 13, 16, 26, 47 and 49)", ()
       expect(logLines.join("\n").includes(MARKER)).toBe(false);
     });
 
-    it("logs and echoes route 14's pipeline name as the redaction (Ruling 167): the real route, a raw and an encoded slash, case, a dot segment", async () => {
+    it("logs and echoes the validation-pipeline PUT's pipeline name as the redaction: the real route, a raw and an encoded slash, case, a dot segment", async () => {
       const listening = await serverWith(TEST_RATE_LIMITS);
       await listening.listen({ host: "127.0.0.1", port: 0 });
       const { token } = await liveToken();
@@ -255,10 +254,10 @@ describe("the public surface's plugin (D25 decisions 13, 16, 26, 47 and 49)", ()
         await listening.inject({ method: "GET", url: `${base.replace("/api/public/v1", "/API/Public/V1")}/Validation-Pipelines/${MARKER}` }),
       ].map((reply) => reply.body);
       replies.push(await sendRaw(listening, `${base.replace("/api/public/v1", "/api/./public/v1")}/${MARKER}`, `Bearer ${token}`));
-      // Ruling 171: not only at a segment boundary, raw over the socket.
+      // Not only at a segment boundary, raw over the socket.
       replies.push(await sendRaw(listening, `${base};x/traces/${MARKER}`, `Bearer ${token}`));
       replies.push(await sendRaw(listening, `${base.replace("/versions/1/", "/versions/1%2F")}/${MARKER}`, `Bearer ${token}`));
-      // Ruling 173: characters that grow in lower case, an absolute-form target (PUT, with a ;-parameter), a double encoding.
+      // Characters that grow in lower case, an absolute-form target (PUT, with a ;-parameter), a double encoding.
       const grown = base.replace("/validation-pipelines", `/${"%C4%B0".repeat(25)}validation%2Dpipelines`);
       replies.push(await sendRaw(listening, `${grown}/${MARKER}`, `Bearer ${token}`, "PUT"));
       replies.push(await sendRaw(listening, `http://x${base};x/${MARKER}`, `Bearer ${token}`, "PUT"));
@@ -272,7 +271,7 @@ describe("the public surface's plugin (D25 decisions 13, 16, 26, 47 and 49)", ()
         const { req } = JSON.parse(line) as { req?: { url?: string } };
         return req?.url === undefined ? [] : [req.url];
       });
-      // Ruling 173: every line is the route's pattern or the fixed unmatched URL.
+      // Every line is the route's pattern or the fixed unmatched URL.
       const pattern = "/api/public/v1/configurations/:configurationId/versions/:versionNumber/validation-pipelines/*";
       expect(urls.length).toBeGreaterThanOrEqual(11);
       expect(urls.every((url) => url === pattern || url === "/api/public/v1/[unmatched]")).toBe(true);
@@ -285,7 +284,7 @@ describe("the public surface's plugin (D25 decisions 13, 16, 26, 47 and 49)", ()
     });
   });
 
-  describe("a 400's details on the public surface (Ruling 175)", () => {
+  describe("a 400's details on the public surface", () => {
     const MARKER = "MarkerValue175";
 
     it("name the field's path and Zod's code only: no value from an enum field, a query enum, a path parameter or an unknown key", async () => {
@@ -351,10 +350,10 @@ describe("the public surface's plugin (D25 decisions 13, 16, 26, 47 and 49)", ()
     });
   });
 
-  describe("the per-token limit (decision 26), with the production number", () => {
+  describe("the per-token limit, with the production number", () => {
     // Its bound is the request count (60, then the 61st), never the time:
     // the generous hang guard only keeps a loaded machine's 63 real
-    // requests from tripping the default 5 s test timeout (Ruling 180).
+    // requests from tripping the default 5 s test timeout.
     it("60 requests a minute per token: the 61st answers 429 rate_limited with Retry-After; another token is unaffected", { timeout: 30_000 }, async () => {
       const limited = await serverWith({ ...TEST_RATE_LIMITS, publicApiPerToken: RATE_LIMITS.publicApiPerToken });
       const first = await liveToken();

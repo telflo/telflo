@@ -2,9 +2,9 @@ import { describe, expect, it } from "vitest";
 import { downgradeCustomFunction, TRANSFORM_CUSTOM_FUNCTIONS } from "./custom-functions.js";
 
 /*
- * The transform processor's own functions turned into notes (D25 decision
- * 33), against the evaluator's words for an unknown function (the
- * evaluator's Go test pins them: `undefined function "convert_sum_to_gauge"`).
+ * The transform processor's own functions turned into notes, against the
+ * evaluator's words for an unknown function (the evaluator's Go test pins
+ * them: `undefined function "convert_sum_to_gauge"`).
  */
 
 const verdict = (valid: boolean, error: string | null) => ({ valid, error, note: null as string | null, input: "kept" });

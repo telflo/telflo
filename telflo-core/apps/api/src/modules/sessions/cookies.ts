@@ -8,15 +8,15 @@ export const REFRESH_COOKIE_NAME = "telflo_refresh";
 /**
  * The access cookie covers every path: server loaders run on page requests
  * such as `/app`, and a browser sends a cookie only where its path covers the
- * request (D2a decision 7).
+ * request.
  *
- * It also outlives the token inside it: it lasts as long as the refresh
- * token, while the JWT expires after `accessTokenTtlMinutes` (D2b decision
- * 2). An idle browser must still present the expired token, so the API can
- * answer `access_token_expired` (which triggers a refresh) rather than
- * `unauthenticated`, and so logout can name the session to revoke. The
- * expired token grants nothing: the API checks `exp` and the session row on
- * every request.
+ * It also outlives the token inside it: it lasts as long as the refresh token,
+ * while the JWT expires after `accessTokenTtlMinutes`. An idle browser must
+ * still present the expired token, so the API can answer
+ * `access_token_expired` (which triggers a refresh) rather than
+ * `unauthenticated`, and so logout can name the session to revoke. The expired
+ * token grants nothing: the API checks `exp` and the session row on every
+ * request.
  */
 export const ACCESS_COOKIE_PATH = "/";
 
@@ -26,9 +26,9 @@ export const REFRESH_COOKIE_PATH = "/api/v1/auth/refresh";
 export type SessionCookieSettings = Pick<AppSettings, "isCookieSecure" | "refreshTokenTtlDays">;
 
 /**
- * The OIDC flow cookie (D2c decision 3): the state, nonce and PKCE verifier
- * of one sign-in with a provider, between the start and the callback. Both
- * live under this path, and nothing else sees the cookie.
+ * The OIDC flow cookie: the state, nonce and PKCE verifier of one sign-in
+ * with a provider, between the start and the callback. Both live under
+ * this path, and nothing else sees the cookie.
  */
 const OIDC_FLOW_COOKIE_BASE_NAME = "telflo_oidc";
 export const OIDC_FLOW_COOKIE_PATH = "/api/v1/auth/oidc";
@@ -96,17 +96,17 @@ export function oidcFlowCookieOptions(settings: OidcFlowCookieSettings): CookieS
   return baseOptions(settings, OIDC_FLOW_COOKIE_PATH, OIDC_FLOW_COOKIE_MAX_AGE_SECONDS);
 }
 
-/** The callback clears the flow cookie whatever happens (D2c decision 3). */
+/** The callback clears the flow cookie whatever happens. */
 export function clearedOidcFlowCookieOptions(settings: OidcFlowCookieSettings): CookieSerializeOptions {
   return baseOptions(settings, OIDC_FLOW_COOKIE_PATH, 0);
 }
 
 /**
- * The `telflo_theme` cookie (D21 decision 23): one word, the person's stored
- * theme, for the auth screens' first paint. HttpOnly, as only root's server
- * loader reads it; `Path=/` so every page request carries it; `SameSite` and
- * `Secure` as the session cookies. A year: it outlives a session, since it is
- * kept after sign-out (`clearSessionCookies` never touches it).
+ * The `telflo_theme` cookie: one word, the person's stored theme, for the
+ * auth screens' first paint. HttpOnly, as only root's server loader reads it;
+ * `Path=/` so every page request carries it; `SameSite` and `Secure` as the
+ * session cookies. A year: it outlives a session, since it is kept after
+ * sign-out (`clearSessionCookies` never touches it).
  */
 export const THEME_COOKIE_PATH = "/";
 const THEME_COOKIE_MAX_AGE_SECONDS = 365 * SECONDS_PER_DAY;

@@ -7,16 +7,14 @@ import type { IQuickDeployLinkRepository, QuickDeployLink } from "./repositories
 import { sealValues, type EnvValue, type QuickDeployKeyRing } from "./sealed-values.js";
 
 /*
- * A link's create, its database part (D17c-2 decisions 7 and 22; Preflight
- * rulings 3, 5 and 13), in the caller's one transaction, which carries the
- * actor's database context: the organization still live and its "Public
- * install links" switch on (D17d-2 decision 20, Preflight ruling 13: one
- * read, locked `for share`, so its delete and an admin's change of the
- * switch wait), the link's id picked, the typed values
- * sealed for that id, the insert within the fleet's cap (under its advisory
- * lock), and the `quick_deploy_link.created` audit row with the member. A
- * refusal writes nothing. The fleet routes' service runs it after the
- * opamp-server's checks (the facts, the default token).
+ * A link's create, its database part, in the caller's one transaction, which
+ * carries the actor's database context: the organization still live and its
+ * "Public install links" switch on (one read, locked `for share`, so its
+ * delete and an admin's change of the switch wait), the link's id picked, the
+ * typed values sealed for that id, the insert within the fleet's cap (under
+ * its advisory lock), and the `quick_deploy_link.created` audit row with the
+ * member. A refusal writes nothing. The fleet routes' service runs it after
+ * the opamp-server's checks (the facts, the default token).
  */
 
 /** The repositories the create's transaction uses. */

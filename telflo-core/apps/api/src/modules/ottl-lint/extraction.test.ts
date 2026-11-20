@@ -3,11 +3,10 @@ import { parseDocument } from "yaml";
 import { extractOttl, type Extraction } from "./extraction.js";
 
 /*
- * The extraction of OTTL from a collector configuration (D25 decision 33),
- * on the configuration parsed as the service parses it (mappings as Maps,
- * in the text's order): each component's cases, a skipped context's entry
- * quoting no value, and a policy list an alias nests in itself ending the
- * walk.
+ * The extraction of OTTL from a collector configuration, on the
+ * configuration parsed as the service parses it (mappings as Maps, in the
+ * text's order): each component's cases, a skipped context's entry quoting
+ * no value, and a policy list an alias nests in itself ending the walk.
  */
 
 const parsed = (text: string): unknown => parseDocument(text, { merge: true, uniqueKeys: true }).toJS({ mapAsMap: true, maxAliasCount: 100 });

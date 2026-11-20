@@ -10,7 +10,7 @@ import { ottlLintUnavailable, tooManyExpressions } from "./errors.js";
 import { extractOttl, type ExtractedExpression } from "./extraction.js";
 
 /*
- * The public API's OTTL lint (D25 decision 33), on the platform's evaluator
+ * The public API's OTTL lint, on the platform's evaluator
  * (`POST /ottl/v1/lint`):
  *
  * - expressions: up to 200 conditions, statements and value expressions
@@ -22,14 +22,14 @@ import { extractOttl, type ExtractedExpression } from "./extraction.js";
  *   verdicts in the YAML's order. An expression the YAML holds over 8,192
  *   characters (which the request's contract can't refuse, as it refuses
  *   one sent as such) is answered here, in the evaluator's own words for
- *   it, and only the rest is sent (Ruling 168).
+ *   it, and only the rest is sent.
  *
  * The single-escaped regex check is the evaluator's (its guards run before
  * each parse), so it isn't here. Each lint that calls the evaluator spends
  * one of the person's `ottlLintsPerUser` in the organization (30 a minute),
  * and holds one of their OTTL_LINTS_IN_FLIGHT_PER_USER places there until
- * it ends (Ruling 168: one person can't hold the evaluator's shared slots),
- * the generic 429 past either; a lint that calls nothing spends nothing. An
+ * it ends (so one person can't hold the evaluator's shared slots), the
+ * generic 429 past either; a lint that calls nothing spends nothing. An
  * evaluator that can't answer (down, busy, refusing the secret, a malformed
  * answer) is 503 `ottl_lint_unavailable`, never a verdict. An item's
  * `input` is the caller's own expression, from the request (the evaluator
@@ -64,10 +64,10 @@ export interface IOttlLintService {
 }
 
 /**
- * How many of a person's lints in one organization may wait on the
- * evaluator at once (Ruling 168), as their validations (Ruling 37's
- * VALIDATIONS_IN_FLIGHT_PER_USER): lints share the evaluator's 8 validation
- * slots. Not a test override: every server has the real number.
+ * How many of a person's lints in one organization may wait on the evaluator
+ * at once, as their validations (VALIDATIONS_IN_FLIGHT_PER_USER): lints share
+ * the evaluator's 8 validation slots. Not a test override: every server has
+ * the real number.
  */
 export const OTTL_LINTS_IN_FLIGHT_PER_USER = 2;
 

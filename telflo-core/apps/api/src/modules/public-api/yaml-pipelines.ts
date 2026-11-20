@@ -2,17 +2,17 @@ import { parseDocument } from "yaml";
 
 /*
  * The pipeline names a collector configuration's text declares: the keys of
- * its `service.pipelines` mapping (D25 Preflight ruling 8). The public API's only reading
- * of a configuration's structure for a pipeline: the validation pipelines'
- * PUT (route 14) checks the name in its path against the version's text,
- * and a test run (route 26, D25 Task 5) its `pipeline` against its text.
- * Whether the components are valid stays the validator's.
+ * its `service.pipelines` mapping. The public API's only reading of a
+ * configuration's structure for a pipeline: the validation pipelines' PUT
+ * checks the name in its path against the version's text, and a test run
+ * its `pipeline` against its text. Whether the components are valid stays
+ * the validator's.
  *
  * Read as the flows' lint and the OTTL lint read a configuration (the core
  * schema, merge keys, unique keys, at most 100 aliases). A text that
  * doesn't parse, or has no `service.pipelines` mapping, declares no
  * pipeline. Nothing here logs or throws the text or the parser's words: a
- * caller answers in fixed words (D25 decision 20).
+ * caller answers in fixed words.
  */
 
 /** As the flows' lint and the OTTL lint read a configuration: the core schema, merge keys, unique keys, no warning passed on. */

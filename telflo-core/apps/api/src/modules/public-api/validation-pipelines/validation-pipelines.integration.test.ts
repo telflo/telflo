@@ -31,19 +31,17 @@ import { hashPassword } from "../../identity/password.js";
 import { apiTokenHash } from "../../service-accounts/tokens.js";
 
 /*
- * The public surface's validation pipelines (D25 decision 17's routes 13
- * and 14; decisions 19, 20, 32 and 53; Preflight ruling 8), through the
- * real server as the API's own role, with the OTTL evaluator's
- * OpenAPI-checked fake checking the rules. Each route: success through a
- * real service account's token, a read token on the PUT 403, another
- * organization's ids 404, another person's draft version 404 (a version's
- * pipelines follow its configuration's visibility), and every reply checked
- * against the OpenAPI document. Then the PUT's own: a person's rules kept
- * and only the API's replaced (twice in a row), a missing pipeline created,
- * the 200 cap, a `/` in the name raw and percent-encoded, a name the text
- * lacks 422, a signal mismatch 400, the checks counted in
- * validationRuleChecksPerUser, a published version allowed, and a version's
- * copy keeping the API's mark.
+ * The public surface's validation pipelines, through the real server as the
+ * API's own role, with the OTTL evaluator's OpenAPI-checked fake checking
+ * the rules. Each route: success through a real service account's token, a
+ * read token on the PUT 403, another organization's ids 404, another
+ * person's draft version 404 (a version's pipelines follow its
+ * configuration's visibility), and every reply checked against the OpenAPI
+ * document. Then the PUT's own: a person's rules kept and only the API's
+ * replaced (twice in a row), a missing pipeline created, the 200 cap, a `/`
+ * in the name raw and percent-encoded, a name the text lacks 422, a signal
+ * mismatch 400, the checks counted in validationRuleChecksPerUser, a
+ * published version allowed, and a version's copy keeping the API's mark.
  *
  * Tokens are built at run time by addApiToken and never printed: `call`
  * runs its canary (a boolean) on every reply before any comparison of it.
@@ -84,7 +82,7 @@ const YAML = [
   "",
 ].join("\n");
 
-/** Markers no log line may hold: a rule's name, description, pattern and condition (ADR 0024). */
+/** Markers no log line may hold: a rule's name, description, pattern and condition. */
 const NAME_MARKER = "public-rule-name-marker-41c2";
 const DESCRIPTION_MARKER = "public-rule-description-marker-9d0e";
 const PATTERN_MARKER = "public-rule-pattern-marker-6b3a";
@@ -134,7 +132,7 @@ interface CallOptions {
   payload?: unknown;
 }
 
-describe("the public validation pipelines routes (D25 routes 13-14)", () => {
+describe("the public validation pipelines routes", () => {
   let settings: AppSettings;
   let db: Kysely<Database>;
   let ownerDb: Kysely<Database>;
@@ -246,7 +244,7 @@ describe("the public validation pipelines routes (D25 routes 13-14)", () => {
       payload: { organizationId: org.id },
     });
     expect(switched.statusCode).toBe(200);
-    // A no-op when the sign-in already landed there (D36-1 decision 56): no new cookie, the token sent stands.
+    // A no-op when the sign-in already landed there: no new cookie, the token sent stands.
     return switched.headers["set-cookie"] === undefined ? cookieValue(signedIn, "telflo_access") : cookieValue(switched, "telflo_access");
   };
 
@@ -361,7 +359,7 @@ describe("the public validation pipelines routes (D25 routes 13-14)", () => {
 
   const validateRequests = () => evaluator.fake.takeRequests().filter((request) => request.operation === "validate");
 
-  describe("GET …/validation-pipelines (route 13)", () => {
+  describe("GET …/validation-pipelines", () => {
     it("lists the version's pipelines with their rules in the platform's shape and isApiOwned; one page", async () => {
       const org = await organization();
       const target = await configurationOf(org.id, org.accountUserId);
@@ -445,7 +443,7 @@ describe("the public validation pipelines routes (D25 routes 13-14)", () => {
     });
   });
 
-  describe("PUT …/validation-pipelines/{pipeline} (route 14)", () => {
+  describe("PUT …/validation-pipelines/{pipeline}", () => {
     it("creates a missing pipeline with the API's rules, checking each regex and OTTL rule; a read token is 403 and writes nothing", async () => {
       const org = await organization();
       const target = await configurationOf(org.id, org.accountUserId);
@@ -481,7 +479,7 @@ describe("the public validation pipelines routes (D25 routes 13-14)", () => {
       expect(replaced.rules[0]).toMatchObject({ name: NAME_MARKER, description: DESCRIPTION_MARKER, target: "stderr" });
       // The text rule needs no check; the regex and the OTTL rule one each.
       expect(validateRequests()).toHaveLength(2);
-      // Rules' text is configuration text: in no log line (ADR 0024).
+      // Rules' text is configuration text: in no log line.
       const logged = logLines.join("\n");
       for (const marker of [NAME_MARKER, DESCRIPTION_MARKER, PATTERN_MARKER, CONDITION_MARKER]) {
         expect(logged.includes(marker)).toBe(false);
@@ -745,7 +743,7 @@ describe("the public validation pipelines routes (D25 routes 13-14)", () => {
       expect(await storedRules(target)).toEqual([]);
     });
 
-    it("refuses a condition that can't fail (true with all) 400 validation_rule_invalid, naming the rule's place, before any check (Ruling 178)", async () => {
+    it("refuses a condition that can't fail (true with all) 400 validation_rule_invalid, naming the rule's place, before any check", async () => {
       const org = await organization();
       const target = await configurationOf(org.id, org.accountUserId);
       const alwaysTrue = { ...LOG_RULE, ottl: { context: "log", quantifier: "all", condition: "true" } };

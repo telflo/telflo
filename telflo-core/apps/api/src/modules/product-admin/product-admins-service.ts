@@ -4,28 +4,28 @@ import { lastProductAdmin, productAdminNotFound, productAdminRequired, productAd
 import type { ISystemRepository, ProductAdminActor } from "./repositories/system-repository.js";
 
 /*
- * Product admins (D29 decisions 5, 27 and 28): the list, a grant by exact
- * email, a removal by id. Everything crosses organizations, so everything
- * goes through the SystemRepository, which audits each call in its own
- * transaction (decision 20) and answers the database gate's refusal 403.
+ * Product admins: the list, a grant by exact email, a removal by id.
+ * Everything crosses organizations, so everything goes through the
+ * SystemRepository, which audits each call in its own transaction and
+ * answers the database gate's refusal 403.
  *
  * The rules themselves live in the functions (migration 1700000000041):
  * the target a live, verified human (never a service account), the caller
  * re-read under the rows' locks (`forbidden`: a removal committed while the
  * write waited wins), the last admin kept. This service turns their answers
  * into the routes' refusals, in fixed words only: no message names a person
- * or an email (decision 41).
+ * or an email.
  *
  * Writes count against `productAdminWritesPerUser` after the body's
  * validation and the gate (the routes' preHandlers) and after the path's id
- * is canonical, so a refused request counts nothing (Preflight ruling 10).
- * A non-canonical id names no one: 404 `product_admin_not_found`, before
- * the database, as every D29 route's id (decision 28).
+ * is canonical, so a refused request counts nothing. A non-canonical id
+ * names no one: 404 `product_admin_not_found`, before the database, as
+ * every product-admin route's id.
  */
 
 export interface ProductAdminsServiceDependencies {
   system: Pick<ISystemRepository, "listProductAdmins" | "grantProductAdmin" | "revokeProductAdmin">;
-  /** The API's clock: the functions' `p_at` (Ruling 259). */
+  /** The API's clock: the functions' `p_at`. */
   now: () => Date;
   /** Counts one write for the caller, or throws the 429. */
   countWrite: (userId: string) => void;

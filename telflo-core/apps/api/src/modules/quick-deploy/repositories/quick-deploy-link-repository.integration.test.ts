@@ -17,11 +17,10 @@ import {
 } from "./quick-deploy-link-repository.js";
 
 /*
- * The quick-deploy link repository (D17c-2 decision 22; Preflight rulings 3
- * to 5 and 13) and the create's transaction (create-link.ts), against the
- * test database as the API's role: the cap counted under its lock, the
- * keyset list, extend, revoke, the counter, a fleet's delete, the lookup by
- * hash, each in the organization's context only.
+ * The quick-deploy link repository and the create's transaction
+ * (create-link.ts), against the test database as the API's role: the cap
+ * counted under its lock, the keyset list, extend, revoke, the counter, a
+ * fleet's delete, the lookup by hash, each in the organization's context only.
  */
 
 const APPLICATION_NAME = "quick-deploy-link-repository-test";
@@ -129,7 +128,7 @@ describe("the quick-deploy link repository", () => {
     }
   };
 
-  describe("the create within the cap (Preflight rulings 3, 5 and 13)", () => {
+  describe("the create within the cap", () => {
     it("counts the cap under the fleet's lock: of two creates racing at 99 active links, the second waits for the first's commit and is refused, leaving exactly 100", async () => {
       const person = await tenant();
       const fleetId = randomUUID();
@@ -365,7 +364,7 @@ describe("the quick-deploy link repository", () => {
       });
     };
 
-    it("refuses an expired link's extend at the cap (Ruling 36), leaving it expired; an active link's extend counts its 99 others, so it is extended", async () => {
+    it("refuses an expired link's extend at the cap, leaving it expired; an active link's extend counts its 99 others, so it is extended", async () => {
       const person = await tenant();
       const fleetId = randomUUID();
       const now = new Date();
@@ -384,7 +383,7 @@ describe("the quick-deploy link repository", () => {
       expect(await activeCount(fleetId, now)).toBe(QUICK_DEPLOY_LINKS_ACTIVE_PER_FLEET);
     });
 
-    /** Runs `first` in a transaction held open until `second` is seen waiting on the cap's lock (Task 1's race), then both to their end. */
+    /** Runs `first` in a transaction held open until `second` is seen waiting on the cap's lock, then both to their end. */
     const raced = async <A, B>(person: Tenant, first: (links: ReturnType<typeof createQuickDeployLinkRepository>) => Promise<A>, second: (links: ReturnType<typeof createQuickDeployLinkRepository>) => Promise<B>) => {
       let firstDone!: () => void;
       const done = new Promise<void>((resolve) => (firstDone = resolve));
@@ -438,7 +437,7 @@ describe("the quick-deploy link repository", () => {
     });
 
     it.each(["the create first", "the extend first"] as const)(
-      "decides an extend under the fleet's lock, always (Ruling 40): a link active at the extend's now but expired at a racing create's, at 99 others, leaves 100 at most (%s)",
+      "decides an extend under the fleet's lock, always: a link active at the extend's now but expired at a racing create's, at 99 others, leaves 100 at most (%s)",
       async (order) => {
         const person = await tenant();
         const fleetId = randomUUID();
@@ -495,7 +494,7 @@ describe("the quick-deploy link repository", () => {
     });
   });
 
-  describe("the download's reads and its counter (Preflight ruling 4)", () => {
+  describe("the download's reads and its counter", () => {
     it("finds a link by its hash with no database context, then reads it in its own organization's context only", async () => {
       const a = await tenant();
       const b = await tenant();

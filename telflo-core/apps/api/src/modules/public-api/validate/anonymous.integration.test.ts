@@ -18,17 +18,16 @@ import { useFakeOtelcolValidator } from "../../../testing/otelcol-validator.js";
 import { validatePublicReply } from "../../../testing/public-api-openapi.js";
 
 /*
- * POST /api/public/v1/validate/anonymous (D27 decisions 23-25 and 34;
- * Preflight ruling 9), on the real server with no token, the OpenAPI-checked
- * fake validator behind an in-process wrapper (every call recorded; a test
- * can hold one at a gate): the catalogue's defaults and a named collector,
- * the validator's errors, no organization variables, the three catalogue
- * 400s and the body's, the 503, the 1 MiB body limit, the limits per
- * address and overall (a minute's count and the slots in flight), a bearer
- * ignored and not counted, `no-store` on every reply, nothing of the text
- * in a log line, and every reply checked against the public OpenAPI
- * document. Addresses are set per request (`remoteAddress`; the test
- * servers trust no hop). Its fixture rows (a distribution with two
+ * POST /api/public/v1/validate/anonymous, on the real server with no token,
+ * the OpenAPI-checked fake validator behind an in-process wrapper (every
+ * call recorded; a test can hold one at a gate): the catalogue's defaults
+ * and a named collector, the validator's errors, no organization variables,
+ * the three catalogue 400s and the body's, the 503, the 1 MiB body limit,
+ * the limits per address and overall (a minute's count and the slots in
+ * flight), a bearer ignored and not counted, `no-store` on every reply,
+ * nothing of the text in a log line, and every reply checked against the
+ * public OpenAPI document. Addresses are set per request (`remoteAddress`;
+ * the test servers trust no hop). Its fixture rows (a distribution with two
  * versions, a deprecated Contrib version) are marked
  * TEST_CATALOGUE_FIXTURE_NOTE, as the public validate's tests' are, and
  * removed afterwards.
@@ -69,7 +68,7 @@ function createGate() {
   };
 }
 
-describe("POST /api/public/v1/validate/anonymous (D27 decisions 23-25)", () => {
+describe("POST /api/public/v1/validate/anonymous", () => {
   let settings: AppSettings;
   let db: Kysely<Database>;
   let ownerDb: Kysely<Database>;
@@ -373,7 +372,7 @@ describe("POST /api/public/v1/validate/anonymous (D27 decisions 23-25)", () => {
     expect(logLines.join("\n").includes(garbage.slice(10))).toBe(false);
   });
 
-  describe("switched off, TELFLO_ANONYMOUS_VALIDATE's default (D36-1 decision 31, Preflight ruling 7)", () => {
+  describe("switched off, TELFLO_ANONYMOUS_VALIDATE's default", () => {
     /** Anonymous validate off (and the playground, which needs it), the address's limit one a minute. */
     const switchedOff = () =>
       serverWith(

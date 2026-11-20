@@ -1,5 +1,4 @@
-# OTTL lint (D25 decision 17's route 16; decision 33; Preflight rulings 13 and
-# 17). Assembled by document.ts. A request of the wrong shape is 400
+# OTTL lint. Assembled by document.ts. A request of the wrong shape is 400
 # invalid_request.
 paths:
   /ottl/lint:

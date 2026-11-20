@@ -116,7 +116,7 @@ describe("password reset token repository", () => {
     expect(await resetTokens.findUserIdByHash("hash-find")).toBe(user.id);
   });
 
-  it("findUserIdByHash does not wait on a token row another transaction holds (D3 Ruling 17)", async () => {
+  it("findUserIdByHash does not wait on a token row another transaction holds", async () => {
     // A completion reads the token's user before it locks anything, so the
     // read must not queue behind a transaction that holds the token's row.
     const { user } = await createUserWithOrganization(ownerDb);
@@ -139,11 +139,11 @@ describe("password reset token repository", () => {
   });
 
   it("of two concurrent consumes of one token, exactly one consumes and the other sees already_consumed", async () => {
-    // Forces the overlap rather than hoping for it (D2a Ruling 6). A
-    // separate connection holds the token's row lock while both consumes
-    // start, and is released only once both are blocked at the database.
-    // An implementation that reads first and updates after, or whose UPDATE
-    // lacks `consumed_at is null`, sees two `consumed`.
+    // Forces the overlap rather than hoping for it. A separate connection
+    // holds the token's row lock while both consumes start, and is released
+    // only once both are blocked at the database. An implementation that reads
+    // first and updates after, or whose UPDATE lacks `consumed_at is null`,
+    // sees two `consumed`.
     const { user } = await createUserWithOrganization(ownerDb);
     await resetTokens.create({ userId: user.id, tokenHash: "hash-race", expiresAt: future() });
 

@@ -26,29 +26,27 @@ import {
 } from "./groups.js";
 
 /*
- * The public surface's fleets, their collector groups and install (D25
- * decision 17's routes 17–23; decisions 15, 19, 35–38; Preflight rulings
- * 10 and 11; Rulings 160 and 161), registered into the `/api/public/v1`
- * plugin (routes.ts), so each runs the token check, the per-token limit and
- * its access check first. Each goes through D16b's fleets service, the one
- * instance the browser's routes share (decision 15), as the token's user in
- * its organization (`apiActorOf`), with its limits: a fleet's create and
- * install spend the person's bearer budget. Ids are plain strings, put
- * through `canonicalIdOf` by the service, so a malformed one is the
- * resource's 404. Its OpenAPI fragment is `openapi/fleets.yaml`.
+ * The public surface's fleets, their collector groups and install,
+ * registered into the `/api/public/v1` plugin (routes.ts), so each runs the
+ * token check, the per-token limit and its access check first. Each goes
+ * through the fleets service, the one instance the browser's routes share,
+ * as the token's user in its organization (`apiActorOf`), with its limits:
+ * a fleet's create and install spend the person's bearer budget. Ids are
+ * plain strings, put through `canonicalIdOf` by the service, so a malformed
+ * one is the resource's 404. Its OpenAPI fragment is `openapi/fleets.yaml`.
  *
  * Fleet types are the platform's (`server`, `kubernetes-supervisor`);
  * a fleet's collectors are in collector groups (`/groups`), and a group's
- * assignment is named by its configuration and version number (2a's
- * `versionIdOf`, which only a configuration the token's user can see
+ * assignment is named by its configuration and version number
+ * (`versionIdOf`, which only a configuration the token's user can see
  * answers).
  *
- * Secrets: a fleet's create answers no bearer (decision 15). Install's
- * reply is a bearer reply (decision 38): its `command` holds the bearer, a
- * quick-deploy link's secret or a Helm values link's, so it is `no-store`,
- * never logged (the request log keeps no public query and no body), never
- * audited (the reveal's row holds ids, `via` and `platform`) and never in
- * an error. A fleet's label and a group's name reach replies only.
+ * Secrets: a fleet's create answers no bearer. Install's reply is a bearer
+ * reply: its `command` holds the bearer, a quick-deploy link's secret or a
+ * Helm values link's, so it is `no-store`, never logged (the request log
+ * keeps no public query and no body), never audited (the reveal's row holds
+ * ids, `via` and `platform`) and never in an error. A fleet's label and a
+ * group's name reach replies only.
  */
 
 const NO_STORE = "no-store";
@@ -76,7 +74,7 @@ export const registerFleetPublicRoutes: PublicApiArea = (api, { deps }) => {
   const configurations = deps.services.configurations.service;
   const typed = api.withTypeProvider<ZodTypeProvider>();
 
-  // Route 18: a page of the organization's fleets, newest first (decision 19, Preflight ruling 11).
+  // A page of the organization's fleets, newest first.
   typed.get(
     "/fleets",
     {
@@ -94,9 +92,9 @@ export const registerFleetPublicRoutes: PublicApiArea = (api, { deps }) => {
     },
   );
 
-  // Route 17: the fleet, its Default group and its two tokens (D16b's
-  // create, spending the bearer budget as the browser's does), answered
-  // with the rotate token's id and expiry and NO bearer (decision 15).
+  // The fleet, its Default group and its two tokens (the service's create,
+  // spending the bearer budget as the browser's does), answered with the
+  // rotate token's id and expiry and NO bearer.
   typed.post(
     "/fleets",
     {
@@ -122,7 +120,7 @@ export const registerFleetPublicRoutes: PublicApiArea = (api, { deps }) => {
     },
   );
 
-  // Route 19: a ready install command (decisions 37 and 38): the service builds it with the shared builders.
+  // A ready install command: the service builds it with the shared builders.
   typed.post(
     "/fleets/:fleetId/install",
     {
@@ -140,7 +138,7 @@ export const registerFleetPublicRoutes: PublicApiArea = (api, { deps }) => {
     },
   );
 
-  // Route 20: every group of the fleet, the Default group first, in one page (decision 19).
+  // Every group of the fleet, the Default group first, in one page.
   typed.get(
     "/fleets/:fleetId/groups",
     {
@@ -157,11 +155,11 @@ export const registerFleetPublicRoutes: PublicApiArea = (api, { deps }) => {
     },
   );
 
-  // Route 21: a group assigned a published version of a configuration the
-  // token's user can see (decision 35): its id by number (versionIdOf),
-  // then D16b's create, which refuses a draft (422
-  // `configuration_version_not_published`) and a taken name (409
-  // `collector_group_name_taken`), and checks a Kubernetes group's name.
+  // A group assigned a published version of a configuration the token's user
+  // can see: its id by number (versionIdOf), then the service's create, which
+  // refuses a draft (422 `configuration_version_not_published`) and a taken
+  // name (409 `collector_group_name_taken`), and checks a Kubernetes group's
+  // name.
   typed.post(
     "/fleets/:fleetId/groups",
     {
@@ -190,7 +188,7 @@ export const registerFleetPublicRoutes: PublicApiArea = (api, { deps }) => {
     },
   );
 
-  // Route 22: one group.
+  // One group.
   typed.get(
     "/fleets/:fleetId/groups/:groupId",
     {
@@ -206,11 +204,11 @@ export const registerFleetPublicRoutes: PublicApiArea = (api, { deps }) => {
     },
   );
 
-  // Route 23: a merge (decision 35, Preflight ruling 11): a configuration
-  // and a number reassign; a number alone moves to another version of the
-  // configuration assigned; `configurationId: null` clears; a Kubernetes
-  // group's namespace and a gateway's replicas merged into its settings.
-  // The contract refuses a configuration without a number (400).
+  // A merge: a configuration and a number reassign; a number alone moves to
+  // another version of the configuration assigned; `configurationId: null`
+  // clears; a Kubernetes group's namespace and a gateway's replicas merged
+  // into its settings. The contract refuses a configuration without a number
+  // (400).
   typed.patch(
     "/fleets/:fleetId/groups/:groupId",
     {

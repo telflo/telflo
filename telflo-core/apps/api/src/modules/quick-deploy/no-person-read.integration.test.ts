@@ -7,7 +7,7 @@ import { withDatabaseContext, withOrganizationContext } from "../../database/con
 import { createPublishedVersionRepository } from "../configurations/repositories/published-version-repository.js";
 import { createCollectorCatalogueRepository } from "../collector-catalogue/repositories/collector-catalogue-repository.js";
 
-/* D17c-2 Preflight ruling 9 (preflight A, item 4): the install's read with no person, as the public download makes it. */
+/* The install's read with no person, as the public download makes it. */
 describe("an install's read with no person (the public download)", () => {
   let databases: TestDatabases;
   let db: Kysely<Database>;

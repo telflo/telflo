@@ -17,13 +17,12 @@ import { validatePublicReply } from "../../../testing/public-api-openapi.js";
 import { apiTokenHash } from "../../service-accounts/tokens.js";
 
 /*
- * POST /api/public/v1/ottl/lint (D25 decision 17's route 16; decisions 33
- * and 53; Preflight rulings 13 and 17), on the real server through real
+ * POST /api/public/v1/ottl/lint, on the real server through real
  * service-account tokens, with the OpenAPI-checked fake evaluator: both
- * modes (each mode's cases), the request's 400s, a YAML's 422, the evaluator's
- * 503, the person's 30 lints a minute per organization, the body's limit,
- * and every reply checked against the public OpenAPI document. Tokens are
- * built at run time and never printed: the canaries are booleans.
+ * modes (each mode's cases), the request's 400s, a YAML's 422, the
+ * evaluator's 503, the person's 30 lints a minute per organization, the
+ * body's limit, and every reply checked against the public OpenAPI document.
+ * Tokens are built at run time and never printed: the canaries are booleans.
  */
 
 const opamp = useFakeOpampServer();
@@ -74,7 +73,7 @@ interface LintBody {
   skipped: string[];
 }
 
-describe("POST /api/public/v1/ottl/lint (D25 decision 33)", () => {
+describe("POST /api/public/v1/ottl/lint", () => {
   let settings: AppSettings;
   let db: Kysely<Database>;
   let ownerDb: Kysely<Database>;
@@ -292,7 +291,7 @@ describe("POST /api/public/v1/ottl/lint (D25 decision 33)", () => {
       expect(evaluator.fake.takeRequests()).toEqual([]);
     });
 
-    it("answers a YAML's expression over 8,192 characters as its item's error and sends the rest, its indexes kept (Ruling 168)", async () => {
+    it("answers a YAML's expression over 8,192 characters as its item's error and sends the rest, its indexes kept", async () => {
       const limited = await serverWith({ ...TEST_RATE_LIMITS, ottlLintsPerUser: { max: 1, windowMs: 60_000 } });
       const { token } = await liveToken();
       const long = `name == "${"x".repeat(9_000)}"`;

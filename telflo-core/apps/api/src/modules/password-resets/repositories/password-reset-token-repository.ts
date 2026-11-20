@@ -43,9 +43,9 @@ export function createPasswordResetTokenRepository(
 
     /**
      * The user a token was issued to, consumed or not; `undefined` for an
-     * unknown hash. A plain read that locks nothing, so a completion can
-     * lock the user's row before it touches the token's (D3 Ruling 17). It
-     * decides nothing about the token: `consume` does.
+     * unknown hash. A plain read that locks nothing, so a completion can lock
+     * the user's row before it touches the token's. It decides nothing about
+     * the token: `consume` does.
      */
     async findUserIdByHash(tokenHash: string): Promise<string | undefined> {
       const row = await db
@@ -59,9 +59,9 @@ export function createPasswordResetTokenRepository(
     /**
      * One atomic statement, as for refresh tokens: `consumed_at is null` is
      * a predicate of the UPDATE itself, never a prior select, so of two
-     * concurrent presentations of one token exactly one sees `consumed`
-     * (D3 decision 4). The other updates nothing, and the lookup that
-     * follows reports it as `already_consumed`.
+     * concurrent presentations of one token exactly one sees `consumed`. The
+     * other updates nothing, and the lookup that follows reports it as
+     * `already_consumed`.
      *
      * The follow-up lookup only classifies a statement that already changed
      * nothing; it cannot un-consume or double-consume anything.

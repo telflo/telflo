@@ -1,11 +1,8 @@
 # The opamp-server, from its own repository
 
-**Source:** D26 (decisions 5, 9, 12, 17, 36, 37 and 39; its plan's Preflight rulings 17, 18
-and 23; Ruling 215). The owner asked for this guide (Q177): "let's say a
-contributor makes a PR and we agree and merge the code. We'd need to pull
-that version into our dev environment and ensure everything works as
-expected before publishing the updated opamp-server and UI to our hosted
-solution."
+This guide takes a change merged in the opamp-server's repository into the
+platform: pulling that version into the development stack, checking that
+everything works with it, and releasing it.
 
 Every command below runs from the platform's root (this repository's top
 folder) unless a step says otherwise, and each block is one command. The
@@ -13,32 +10,28 @@ examples release `0.2.0`; use the version you are releasing.
 
 ## Where the server lives
 
-- **Its repository:** `github.com/telflo/opamp-server` (public since
-  0.2.4, 2026-11-07; Apache-2.0). Its `README.md` says what the server
-  does and how to run and install it, `CONTRIBUTING.md` has the rules for
-  changing it and its gates (`make check`), and its `docs/decisions/0001`
-  and `0002` are its decision records. It moved out of this repository's
-  `services/opamp-server` in D26.
+- **Its repository:** `github.com/telflo/opamp-server` (public,
+  Apache-2.0). Its `README.md` says what the server does and how to run
+  and install it, and `CONTRIBUTING.md` has the rules for changing it and
+  its gates (`make check`).
 - **Its releases:** an annotated tag `v<version>` in that repository, the
   image `ghcr.io/telflo/opamp-server:<version>` (linux/amd64 and
   linux/arm64), the chart `oci://ghcr.io/telflo/charts/opamp-server` at
-  the same version and the binaries with their GitHub Release, all public
-  (0.1.0, D26's, was private and is gone from the public history). Its
-  release workflow publishes them from the tag (its `CONTRIBUTING.md`,
-  "Releasing"); pushing the tag is the owner's. There is no `latest`, and
+  the same version and the binaries with their GitHub Release, all public.
+  Its release workflow publishes them from the tag (its `CONTRIBUTING.md`,
+  "Releasing"); pushing the tag is a maintainer's. There is no `latest`, and
   a published version is never pushed again: a fix is a new version.
-- **What the platform runs:** `docker-compose.yml`'s
-  `opamp-migrate` and `opamp-server` both run
-  `ghcr.io/telflo/opamp-server:<version>@<digest>`, the release
-  `vendor/opamp-server/PIN` names, and build nothing. Docker resolves the
-  reference by its digest, so only the drift check reads the tag.
-  `opamp-bootstrap` (`postgres:18`, as psql) runs
+- **What the platform runs:** `docker-compose.yml`'s `opamp-migrate` and
+  `opamp-server` both run `ghcr.io/telflo/opamp-server:<version>@<digest>`,
+  the release `vendor/opamp-server/PIN` names, and build nothing. Docker
+  resolves the reference by its digest, so only the drift check reads the
+  tag. `opamp-bootstrap` (`postgres:18`, as psql) runs
   `vendor/opamp-server/bootstrap.sql`. The image is public, so pulling it
-  needs no login. The Compose install, `deploy/compose/compose.yaml` (D36-2
-  decisions 88 and 89; `docs/compose.md`), runs the same two services on
-  the same reference, and its `db-bootstrap` runs its own copy of
-  the bootstrap, `deploy/compose/opamp-server/bootstrap.sql`, byte for
-  byte the vendored one.
+  needs no login. The Compose install, `deploy/compose/compose.yaml`
+  (`docs/compose.md`), runs the same two services on the same reference,
+  and its `db-bootstrap` runs its own copy of the bootstrap,
+  `deploy/compose/opamp-server/bootstrap.sql`, byte for byte the vendored
+  one.
 - **`vendor/opamp-server/`** holds the three files of the release the
   platform reads, byte for byte, and the PIN:
 
@@ -50,7 +43,7 @@ examples release `0.2.0`; use the version you are releasing.
   | `PIN` | | the drift check, `scripts/publish-chart.sh --chart telflo` |
 
   `PIN` is exactly four lines, read with `sed` and never sourced. 0.2.4's,
-  for example (D36-1):
+  for example:
 
   ```
   version=0.2.4
@@ -70,7 +63,7 @@ examples release `0.2.0`; use the version you are releasing.
   `.gitattributes` keeps the three copied files out of diffs and
   line-ending conversion; the PIN shows in diffs, so a release's pin
   change is readable in its PR.
-- **The vendored chart** (D33-1 decision 21, Preflight ruling 5). The
+- **The vendored chart.** The
   platform's chart, `charts/telflo`, depends on the opamp-server
   chart, and holds that release's `charts/opamp-server` unpacked under
   `charts/telflo/charts/opamp-server`, byte for byte. Its
@@ -116,7 +109,7 @@ examples release `0.2.0`; use the version you are releasing.
   - and that again through Compose's own file discovery in the root (no
     `-f`, `COMPOSE_FILE` unset): what a plain `docker compose` there reads,
     an override file included;
-  - the Compose install (D36-2): `deploy/compose/compose.yaml`'s
+  - the Compose install: `deploy/compose/compose.yaml`'s
     `opamp-migrate` and `opamp-server` run the pinned image
     and build nothing, as text and as Compose reads the file (with
     `--project-directory deploy/compose` and a placeholder env file made at
@@ -263,13 +256,13 @@ platform on it.
 
    The validator's `tests/test_org_variables.py` reads the corpus too
    (`services/otelcol-validator`, in its virtual environment, or its `test`
-   image, which carries the corpus since D33-1's Ruling 329). Then the
-   stack smoke, with the override in `COMPOSE_FILE`, so the second replica
-   it starts (`docker compose run`) runs the build too, not the pinned
-   image, and with `TELFLO_SMOKE_SITE=saas` and the SaaS's site values
-   exported in the shell that started the stack
+   image, which carries the corpus). Then the stack smoke, with the
+   override in `COMPOSE_FILE`, so the second replica it starts
+   (`docker compose run`) runs the build too, not the pinned image, and
+   with `TELFLO_SMOKE_SITE=saas` and the SaaS's site values exported in the
+   shell that started the stack
    ([`docs/development.md`](../development.md#the-whole-stack-in-containers);
-   the smoke has no default site since D36-2):
+   the smoke has no default site):
 
    ```sh
    COMPOSE_FILE=docker-compose.yml:docker-compose.opamp-server-dev.yml TELFLO_SMOKE_SITE=saas ./scripts/smoke-test-stack.sh
@@ -291,7 +284,7 @@ kept: the release commit (`charts/opamp-server/Chart.yaml`'s `version` and
 and `make smoke` before it; the annotated tag `v<version>`, whose message
 is `opamp-server <version>`, whose push starts the release workflow (every
 gate on the tag's commit, then the image, the chart and the binaries with
-their GitHub Release). Pushing the tag is the owner's.
+their GitHub Release). Pushing the tag is a maintainer's.
 
 **The platform's side**, with the sibling's `main` and tags pulled (step 1
 of the local testing above):
@@ -371,15 +364,14 @@ of the local testing above):
      git add charts/telflo/charts/opamp-server
      ```
 
-   - the other lines that name the release:
-     `charts/telflo/Chart.yaml`'s `opamp-server` dependency
-     `version: 0.2.0`; and `values.yaml`'s `opamp-server.image.digest`,
-     the PIN's digest. The render tests' expected image
-     (`charts/telflo/tests/render-tests.sh`, `opamp_digest`), the
-     kind smoke's `OPAMP_IMAGE` (`scripts/smoke-kind.sh`) and the
-     PIN check's self-test read the version and digest from the PIN since
-     D36-1, so they need no edit. A changed platform chart ships in its
-     next version;
+   - the other lines that name the release: `charts/telflo/Chart.yaml`'s
+     `opamp-server` dependency `version: 0.2.0`; and `values.yaml`'s
+     `opamp-server.image.digest`, the PIN's digest. The render tests'
+     expected image (`charts/telflo/tests/render-tests.sh`,
+     `opamp_digest`), the kind smoke's `OPAMP_IMAGE`
+     (`scripts/smoke-kind.sh`) and the PIN check's self-test read the
+     version and digest from the PIN, so they need no edit. A changed
+     platform chart ships in its next version;
    - the vendored files from the new tag, which `--restore` writes from the
      PIN's commit and then checks:
 
@@ -427,11 +419,8 @@ of the local testing above):
    vendored chart's files (the three contract files are marked `-diff`).
    The local gates run before it, as for every PR (GitHub Actions runs
    only the release and collector workflows, `docs/releasing.md`), and
-   its merge is the owner's. A pin change ships to users in the platform's
+   a maintainer merges it. A pin change ships to users in the platform's
    next release.
-
-How the hosted solution then moves to the release (telflo-deploy's pins
-and its install) is D33-2's.
 
 ## Changing both at once
 
@@ -483,7 +472,6 @@ bump and its own change.
 
 ## No GHCR login
 
-The opamp-server's image is public since 0.2.4, so `docker compose up` (or
-`npm run dev:services`) pulls it with no login. (0.1.0, D26's, was private
-and needed a one-time `docker login ghcr.io`; a login kept from then can be
-removed with `docker logout ghcr.io`.) The agents' runs pull nothing.
+The opamp-server's image is public, so `docker compose up` (or
+`npm run dev:services`) pulls it with no login. The agents' runs pull
+nothing.

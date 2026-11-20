@@ -5,9 +5,9 @@ import type { ModuleServices } from "../services.js";
 
 /*
  * What each area of the public surface (`public-api/<area>/routes.ts`)
- * registers its routes with (D25 decision 16): the plugin's instance, so
- * every route runs the token check, the per-token limit and the access
- * check, and the shared services (decision 15), never a second instance.
+ * registers its routes with: the plugin's instance, so every route runs
+ * the token check, the per-token limit and the access check, and the shared
+ * services, never a second instance.
  */
 
 export interface PublicApiRoutesDependencies extends ServerDependencies {

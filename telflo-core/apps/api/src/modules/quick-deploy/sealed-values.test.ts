@@ -31,7 +31,7 @@ function sealedErrorOf(work: () => unknown): SealedValuesError {
   throw new Error("nothing was thrown");
 }
 
-describe("sealed values (AES-256-GCM, Preflight ruling 6)", () => {
+describe("sealed values (AES-256-GCM)", () => {
   it("round-trips the values in order, under the current key's id, never in the clear", () => {
     const ring = ringOf(keyText());
     const sealed = sealValues(ring, values, forLink);

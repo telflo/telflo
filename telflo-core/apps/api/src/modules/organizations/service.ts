@@ -63,16 +63,16 @@ export interface OrganizationRepositories {
 
 /**
  * The repositories a unit of work writes through, bound to one transaction
- * that carries the request's database context (D5 decision 2): whatever is
- * written through them commits together or not at all.
+ * that carries the request's database context: whatever is written through
+ * them commits together or not at all.
  *
  * `active` is the context's organization. `enterOrganization` points the
  * database context at another organization, keeping the caller as the user,
  * and hands out its repositories: row-level security admits a membership,
  * and shows an invitation, only in the context's organization. Two things
  * call it: creating an organization, for the one it has just made, and
- * accepting an invitation (D6 decision 9), for the one whose invitation the
- * token found. Nothing else changes the context.
+ * accepting an invitation, for the one whose invitation the token found.
+ * Nothing else changes the context.
  */
 export interface OrganizationTransaction {
   organizations: Pick<IOrganizationRepository, "createGroup">;
@@ -99,7 +99,7 @@ export interface OrganizationServiceDependencies {
   publicWebUrl: string;
   /**
    * Counts one invitation email for the user, or throws 429 rate_limited
-   * when they have none left (D6 decision 6).
+   * when they have none left.
    */
   consumeInvitationEmail: (userId: string) => void;
   /**
@@ -107,26 +107,24 @@ export interface OrganizationServiceDependencies {
    * it), and a logo's bytes that couldn't be removed (codes only).
    */
   log: Pick<FastifyBaseLogger, "error" | "warn">;
-  /** Keeps the opamp-server's registry in step after each commit (D11a decision 20). */
+  /** Keeps the opamp-server's registry in step after each commit. */
   opampRegistration: OpampRegistration;
-  /** Where logos' bytes live (D23-2 decisions 15 and 18). */
+  /** Where logos' bytes live. */
   fileStore: IFileStore;
-  /** A new id, picked before anything is written (`select uuidv7()`; D23-2 decision 35, Preflight ruling 4). */
+  /** A new id, picked before anything is written (`select uuidv7()`). */
   nextId: () => Promise<string>;
-  /** The product admins' switch, read on each create (D36-1 decision 51): who may create an organization. */
+  /** The product admins' switch, read on each create: who may create an organization. */
   organizationCreation: () => Promise<OrganizationCreation>;
   /**
    * The site's registration mode (settings' `site.registration`, fixed per
-   * process): a personal organization invites only while it is `open`
-   * (D36-1 decision 57, Q268).
+   * process): a personal organization invites only while it is `open`.
    */
   registration: RegistrationMode;
 }
 
 /**
- * A logo the route has read whole and typed from its bytes (D23-2
- * decisions 32 to 34), under the logo id `prepareCreate` or
- * `prepareChange` picked.
+ * A logo the route has read whole and typed from its bytes, under the logo
+ * id `prepareCreate` or `prepareChange` picked.
  */
 export interface NewLogo {
   logoId: string;
@@ -134,15 +132,15 @@ export interface NewLogo {
   bytes: Buffer;
 }
 
-/** A create with a logo: the organization's id picked first, and the logo (D23-2 decision 35). */
+/** A create with a logo: the organization's id picked first, and the logo. */
 export interface CreateWithLogo {
   organizationId: string;
   logo: NewLogo;
 }
 
 /**
- * Edit's Save (D23-2 decisions 9 and 36): the name, and a new logo or the
- * current one's removal, all or nothing.
+ * Edit's Save: the name, and a new logo or the current one's removal, all
+ * or nothing.
  */
 export interface OrganizationChange {
   name: string;
@@ -159,42 +157,40 @@ export interface Actor {
 }
 
 /**
- * An actor signed in with a session (D25 Preflight ruling 1): for the one
- * path that needs the session itself, accepting an invitation, which
- * switches the session's active organization to the one joined.
+ * An actor signed in with a session: for the one path that needs the session
+ * itself, accepting an invitation, which switches the session's active
+ * organization to the one joined.
  */
 export type SessionActor = Actor & { context: AuthContext };
 
 /**
- * Who creates an organization (D36-1 decision 51): the actor, and whether
- * they are a product admin as this request's session check read the flag
- * (the bootstrap's account, which the bootstrap has just made one, alike).
+ * Who creates an organization: the actor, and whether they are a product
+ * admin as this request's session check read the flag (the bootstrap's
+ * account, which the bootstrap has just made one, alike).
  */
 export type CreatingActor = Actor & { isProductAdmin: boolean };
 
 export interface IOrganizationService {
   /**
-   * The ids a create with a logo needs before its body is read (D23-2
-   * decision 35): the organization's and the logo's.
+   * The ids a create with a logo needs before its body is read: the
+   * organization's and the logo's.
    */
   prepareCreate(actor: CreatingActor): Promise<{ organizationId: string; logoId: string }>;
   /**
    * Creates a group organization with the caller as its admin, with its
-   * logo when given (all or nothing, Q158). It doesn't switch to it.
-   * Refused while only product admins may create one and the caller isn't
-   * one (D36-1 decision 51).
+   * logo when given (all or nothing). It doesn't switch to it. Refused
+   * while only product admins may create one and the caller isn't one.
    */
   create(actor: CreatingActor, name: string, withLogo?: CreateWithLogo): Promise<Organization>;
   /**
    * The checks a change with a logo makes before its body is read (the
-   * active organization, the request's role), and the new logo's id
-   * (D23-2 decision 36).
+   * active organization, the request's role), and the new logo's id.
    */
   prepareChange(actor: Actor, organizationId: string): Promise<{ logoId: string }>;
-  /** Renames it and sets or removes its logo, all or nothing (Q159). */
+  /** Renames it and sets or removes its logo, all or nothing. */
   change(actor: Actor, organizationId: string, change: OrganizationChange): Promise<Organization>;
   delete(actor: Actor, organizationId: string): Promise<void>;
-  /** The organization's settings (D17d-2 decision 20). Any member. */
+  /** The organization's settings. Any member. */
   findSettings(actor: Actor, organizationId: string): Promise<OrganizationSettings>;
   /**
    * Changes the settings (the "Public install links" switch). Admin only;
@@ -203,25 +199,23 @@ export interface IOrganizationService {
   changeSettings(actor: Actor, organizationId: string, settings: OrganizationSettings): Promise<OrganizationSettings>;
   /**
    * Every person with a live account who is a member, active or removed;
-   * never a service account (D22 decision 30: Permissions doesn't show
-   * them). Admin only.
+   * never a service account (Permissions doesn't show them). Admin only.
    */
   listMembers(actor: Actor, organizationId: string): Promise<Member[]>;
   /**
    * Setting the role a member already has changes and audits nothing. This
    * and the removal and the restoration refuse a service account with 409
-   * member_is_service_account (D22 decision 30): it is managed in Settings ›
-   * Service Accounts.
+   * member_is_service_account: it is managed in Settings › Service
+   * Accounts.
    */
   changeMemberRole(actor: Actor, organizationId: string, userId: string, role: OrganizationRole): Promise<void>;
   /**
    * Removes a member softly and reassigns their sessions acting in the
-   * organization (decision 9). An admin's pending invitations are cancelled
-   * with them (D6 Ruling 17).
+   * organization. An admin's pending invitations are cancelled with them.
    */
   removeMember(actor: Actor, organizationId: string, userId: string): Promise<void>;
   restoreMember(actor: Actor, organizationId: string, userId: string): Promise<void>;
-  /** Invites an address (D6 decision 8), and emails it the link once the invitation has committed. */
+  /** Invites an address, and emails it the link once the invitation has committed. */
   invite(actor: Actor, organizationId: string, input: InviteInput): Promise<PendingInvitation>;
   /** Pending invitations, expired ones included, newest first. Admin only. */
   listInvitations(actor: Actor, organizationId: string): Promise<PendingInvitation[]>;
@@ -244,18 +238,17 @@ const INVITATION_TTL_MILLISECONDS = INVITATION_TTL_DAYS * 24 * 60 * 60 * 1000;
 
 /**
  * Whether an invitation has expired at `at`, the injected clock's time,
- * never the database's (a Preflight minor): its last moment is
- * `expires_at` itself.
+ * never the database's: its last moment is `expires_at` itself.
  */
 export function isInvitationExpired(invitation: Pick<Invitation, "expiresAt">, at: Date): boolean {
   return invitation.expiresAt.getTime() <= at.getTime();
 }
 
 /**
- * Management acts on the active organization only (D5 decision 7). Checked
- * before anything else, the role included, so a path naming any other
+ * Management acts on the active organization only. Checked before
+ * anything else, the role included, so a path naming any other
  * organization gets the same 404 whether or not the caller belongs to it.
- * The configuration endpoints check it first too (D7 decision 5).
+ * The configuration endpoints check it first too.
  */
 export function assertActiveOrganization(actor: Actor, organizationId: string): void {
   if (organizationId !== actor.context.organizationId) throw organizationNotFound();
@@ -269,15 +262,15 @@ export interface LockingRepositories {
 
 /**
  * The request's copy of the role: a cheap first refusal. The lock's re-check
- * is the one that counts. Exported for the service accounts' routes (D22
- * decision 26, Preflight ruling 4), admins' only, reads included.
+ * is the one that counts. Exported for the service accounts' routes,
+ * admins' only, reads included.
  */
 export function assertAdminRole(actor: Pick<Actor, "context">): void {
   if (actor.context.role !== "admin") throw organizationAdminRequired();
 }
 
 /**
- * Decision 8's lock: the organization's row `for no key update`, taken
+ * The organization lock: the organization's row `for no key update`, taken
  * first by every change to it or its members, then the re-check that the
  * caller is still an active admin of a live organization. The request's
  * role was read before the lock, so a concurrent demotion that committed
@@ -285,10 +278,10 @@ export function assertAdminRole(actor: Pick<Actor, "context">): void {
  * check (a session reassigned into this organization by another change)
  * must not wait on it (see `lockActive`).
  *
- * Exported for the service accounts' and their tokens' writes (D22
- * decisions 26 to 31, Preflight ruling 4): each takes this lock first, so
- * their counts are exact and a demoted admin is refused under it. It needs
- * only the organization's lock and the members' `find`.
+ * Exported for the service accounts' and their tokens' writes: each takes
+ * this lock first, so their counts are exact and a demoted admin is
+ * refused under it. It needs only the organization's lock and the members'
+ * `find`.
  */
 export async function lockAsAdmin(
   transaction: { active: LockingRepositories },
@@ -317,7 +310,7 @@ export function canonicalIdOf(id: string): string | undefined {
   return CANONICAL_UUID.test(id) ? id.toLowerCase() : undefined;
 }
 
-/** Where an organization's logo's bytes live (D23-2 decision 18): one file per logo id. */
+/** Where an organization's logo's bytes live: one file per logo id. */
 export function organizationLogoKey(organizationId: string, logoId: string): FileKey {
   return { kind: "organization-logo", organizationId, logoId };
 }
@@ -325,11 +318,10 @@ export function organizationLogoKey(organizationId: string, logoId: string): Fil
 /**
  * Removes a logo's bytes, logging (never throwing) a failure: with no row
  * pointing at them they are unreachable (an orphan, until a sweep removes
- * it; none is built yet).
- * The log line holds codes and the organization's id only. Exported for a
- * person's delete (D29 decision 29, Preflight ruling 5), which removes the
- * logos of the organizations it deletes after its commit, as an
- * organization's own delete does.
+ * it; none is built yet). The log line holds codes and the organization's
+ * id only. Exported for a person's delete, which removes the logos of the
+ * organizations it deletes after its commit, as an organization's own
+ * delete does.
  */
 export async function removeLogoQuietly(
   deps: { fileStore: Pick<IFileStore, "remove">; log: Pick<FastifyBaseLogger, "warn"> },
@@ -360,11 +352,11 @@ export function createOrganizationService(deps: OrganizationServiceDependencies)
   } = deps;
 
   /**
-   * The product admins' switch (D36-1 decision 51): while it is on, only a
-   * product admin may create an organization. Read before any id is picked
-   * or any logo byte is written. A switch turned on while a create is past
-   * this check lets that one create through: accepted (Ruling 359), as the
-   * switch guards creations to come, not one already under way.
+   * The product admins' switch: while it is on, only a product admin may
+   * create an organization. Read before any id is picked or any logo byte
+   * is written. A switch turned on while a create is past this check lets
+   * that one create through: accepted, as the switch guards creations to
+   * come, not one already under way.
    */
   async function assertMayCreate(actor: CreatingActor): Promise<void> {
     if (!mayCreateOrganizations(await organizationCreation(), actor.isProductAdmin)) throw organizationCreationRestricted();
@@ -380,7 +372,7 @@ export function createOrganizationService(deps: OrganizationServiceDependencies)
     return removeLogoQuietly({ fileStore, log }, organizationId, logoId);
   }
 
-  /** An organization's logo audit row (D23-2 decision 37): ids only. */
+  /** An organization's logo audit row: ids only. */
   function logoAuditEvent(actor: Actor, organizationId: string, logoId: string | null): AuditEvent {
     return auditEvent(actor, organizationId, {
       action: logoId === null ? "organization.logo_removed" : "organization.logo_changed",
@@ -410,9 +402,9 @@ export function createOrganizationService(deps: OrganizationServiceDependencies)
    * The member a change names, read under the organization lock: every
    * change to a membership takes that lock first, so what is read here
    * holds until the commit. 404 when there is no membership or the account
-   * is deleted. A service account's membership is never changed here (D22
-   * decision 30): each change checks `isServiceAccount` right after this,
-   * before anything is written.
+   * is deleted. A service account's membership is never changed here: each
+   * change checks `isServiceAccount` right after this, before anything is
+   * written.
    */
   async function lockedMember(transaction: OrganizationTransaction, memberId: string | undefined): Promise<Member> {
     const member = memberId === undefined ? undefined : await transaction.active.members.find(memberId);
@@ -463,9 +455,9 @@ export function createOrganizationService(deps: OrganizationServiceDependencies)
 
   /**
    * The invitation a resend or a cancel names, locked `for update` after the
-   * organization (D6 decision 10), so a concurrent accept, resend or cancel
-   * of it waits for this one's commit. 404 unless it is pending; expired is
-   * still pending. The token's hash is dropped here: nothing after needs it.
+   * organization, so a concurrent accept, resend or cancel of it waits for
+   * this one's commit. 404 unless it is pending; expired is still pending.
+   * The token's hash is dropped here: nothing after needs it.
    */
   async function lockedPendingInvitation(
     transaction: OrganizationTransaction,
@@ -479,16 +471,15 @@ export function createOrganizationService(deps: OrganizationServiceDependencies)
   }
 
   /**
-   * D6 Ruling 17: an invitation is authority an admin delegated, and it
-   * doesn't outlive their being an admin. Removing an admin, or demoting
-   * one, cancels every pending invitation they sent, expired ones included,
-   * in the same transaction. Called under the organization lock and before
-   * any other: every other writer of these rows takes that lock first, so
-   * this waits on nothing, and it keeps decision 10's order (organization,
-   * invitation, user, session). Each invitation gets the `revoked` row a
-   * cancel writes (decision 11: every change to an invitation has its own
-   * row), naming the membership change that caused it; the caller puts the
-   * count on that change's own row.
+   * An invitation is authority an admin delegated, and it doesn't outlive
+   * their being an admin. Removing an admin, or demoting one, cancels every
+   * pending invitation they sent, expired ones included, in the same
+   * transaction. Called under the organization lock and before any other:
+   * every other writer of these rows takes that lock first, so this waits on
+   * nothing, and it keeps the lock order (organization, invitation, user,
+   * session). Each invitation gets the `revoked` row a cancel writes (every
+   * change to an invitation has its own row), naming the membership change
+   * that caused it; the caller puts the count on that change's own row.
    */
   async function revokeInvitationsOf(
     transaction: OrganizationTransaction,
@@ -507,10 +498,10 @@ export function createOrganizationService(deps: OrganizationServiceDependencies)
   /**
    * Emails the invitation's link, after its transaction has committed: an
    * email must never carry a token that rolled back. The token goes in the
-   * link's fragment, which the browser never sends to a server (decision
-   * 2). A failed send is logged, audited in a transaction of its own (the
-   * invitation's has committed), and answered with `failure`'s 502, which
-   * says what did commit: the invitation stands, and Resend tries again.
+   * link's fragment, which the browser never sends to a server. A failed send
+   * is logged, audited in a transaction of its own (the invitation's has
+   * committed), and answered with `failure`'s 502, which says what did
+   * commit: the invitation stands, and Resend tries again.
    */
   async function sendInvitation(
     actor: Actor,
@@ -538,26 +529,25 @@ export function createOrganizationService(deps: OrganizationServiceDependencies)
   }
 
   /**
-   * D36-1 decision 57 (Q268): while the site's registration isn't open, a
-   * personal organization sends no invitation (an invite or a resend).
-   * Checked under the organization's lock, as its type is read there, so
-   * after the mail limit has counted the request (refusals buy no extra
-   * tries) and before anything is written: no row, no audit, no email.
+   * While the site's registration isn't open, a personal organization sends
+   * no invitation (an invite or a resend). Checked under the organization's
+   * lock, as its type is read there, so after the mail limit has counted the
+   * request (refusals buy no extra tries) and before anything is written: no
+   * row, no audit, no email.
    */
   function assertMayInviteFrom(organization: Organization): void {
     if (!mayInviteFrom(registration, organization.type)) throw personalOrganizationInvitationsDisabled();
   }
 
   /**
-   * The checks every invitation endpoint makes before anything else, in
-   * this order: the active organization (decision 7's 404 comes first), the
-   * request's role, and then, for the two that send mail, the per-inviter
-   * mail limit (Preflight ruling 11). The limit counts every request that
-   * gets this far, a refused one included, so refusals buy no extra tries.
-   * An invite names its address: one at the service accounts' domain is
-   * refused after the role and before the limit (D22 decision 23,
-   * Preflight ruling 13), so it spends none of the budget, opens no
-   * transaction and no invitation to the domain is ever written.
+   * The checks every invitation endpoint makes before anything else, in this
+   * order: the active organization (its 404 comes first), the request's role,
+   * and then, for the two that send mail, the per-inviter mail limit. The
+   * limit counts every request that gets this far, a refused one included, so
+   * refusals buy no extra tries. An invite names its address: one at the
+   * service accounts' domain is refused after the role and before the limit,
+   * so it spends none of the budget, opens no transaction and no invitation to
+   * the domain is ever written.
    */
   function assertMayManageInvitations(
     actor: Actor,
@@ -578,20 +568,19 @@ export function createOrganizationService(deps: OrganizationServiceDependencies)
     },
 
     /**
-     * One transaction (a Parity Notes fix): the
-     * organization, the context pointed at it, the caller's admin
-     * membership, and both audit rows. Only a product admin may create
-     * one while the product admins' switch is on, as a fresh install has it
-     * (D36-1 decision 51, Q259); anyone signed in once it's off. Checked
-     * first, before any logo byte is written.
+     * One transaction: the organization, the context pointed at it, the
+     * caller's admin membership, and both audit rows. Only a product admin
+     * may create one while the product admins' switch is on, as a fresh
+     * install has it; anyone signed in once it's off. Checked first, before
+     * any logo byte is written.
      *
-     * With a logo (D23-2 decision 35, Q158): its bytes are written first,
-     * under the ids `prepareCreate` picked, then the one transaction (the
-     * organization with its logo's columns, and `organization.logo_changed`
-     * after the two rows above). If anything after the write fails (a name
-     * clash, the transaction), the bytes are removed quietly and nothing is
-     * left. The write itself counts: a store may leave a file behind a
-     * rejected write (D14a Ruling 25).
+     * With a logo: its bytes are written first, under the ids
+     * `prepareCreate` picked, then the one transaction (the organization
+     * with its logo's columns, and `organization.logo_changed` after the
+     * two rows above). If anything after the write fails (a name clash, the
+     * transaction), the bytes are removed quietly and nothing is left. The
+     * write itself counts: a store may leave a file behind a rejected
+     * write.
      */
     async create(actor: CreatingActor, name: string, withLogo?: CreateWithLogo): Promise<Organization> {
       await assertMayCreate(actor);
@@ -637,7 +626,7 @@ export function createOrganizationService(deps: OrganizationServiceDependencies)
         if (withLogo) await removeLogoBytes(withLogo.organizationId, withLogo.logo.logoId);
         throw error;
       }
-      // Committed: the opamp-server registers it after the response (D11a decision 20).
+      // Committed: the opamp-server registers it after the response.
       opampRegistration.created(organization);
       return organization;
     },
@@ -649,16 +638,16 @@ export function createOrganizationService(deps: OrganizationServiceDependencies)
     },
 
     /**
-     * Edit's Save (D23-2 decision 36, Q159), all or nothing. A new logo's
-     * bytes are written under its new id before the transaction; then, under
-     * the lock, the rename (if the name differs), the logo's columns (the
-     * new logo, or none for `removeLogo` when there is one), and their audit
-     * rows (`organization.renamed` as before, then
-     * `organization.logo_changed` or `organization.logo_removed`). The old
-     * logo's id is read from the locked row, never before the lock: of two
-     * Saves at once, the second removes the first's bytes, and the first the
-     * original's. After the commit, the old bytes are removed quietly; any
-     * failure before it removes the new bytes and changes nothing.
+     * Edit's Save, all or nothing. A new logo's bytes are written under its
+     * new id before the transaction; then, under the lock, the rename (if
+     * the name differs), the logo's columns (the new logo, or none for
+     * `removeLogo` when there is one), and their audit rows
+     * (`organization.renamed` as before, then `organization.logo_changed` or
+     * `organization.logo_removed`). The old logo's id is read from the
+     * locked row, never before the lock: of two Saves at once, the second
+     * removes the first's bytes, and the first the original's. After the
+     * commit, the old bytes are removed quietly; any failure before it
+     * removes the new bytes and changes nothing.
      *
      * The current name, exactly, with no new logo and nothing to remove
      * changes and audits nothing, and sends the opamp-server nothing.
@@ -709,22 +698,22 @@ export function createOrganizationService(deps: OrganizationServiceDependencies)
       }
       // Committed: the old logo's bytes are unreachable now, and removed.
       if (changed.replacedLogoId !== null) await removeLogoBytes(organizationId, changed.replacedLogoId);
-      // The opamp-server renames it after the response (D11a decision 20).
+      // The opamp-server renames it after the response.
       // A Save that kept the name has nothing to send.
       if (changed.isRenamed) opampRegistration.renamed(changed.organization);
       return changed.organization;
     },
 
     /**
-     * Decision 9, under the lock: the organization is marked deleted, every
-     * account whose only live membership it held is soft-deleted, and every
-     * session acting in it, the caller's own included, is reassigned to its
-     * user's fallback organization. They stay signed in: each one's next
-     * request refreshes into the organization its session now names.
+     * Under the lock: the organization is marked deleted, every account whose
+     * only live membership it held is soft-deleted, and every session acting
+     * in it, the caller's own included, is reassigned to its user's fallback
+     * organization. They stay signed in: each one's next request refreshes
+     * into the organization its session now names.
      *
-     * Its logo's id is read from the locked row; after the commit, the
-     * logo's bytes are removed quietly (D23-2 decision 38). An organization
-     * with no logo never calls the store.
+     * Its logo's id is read from the locked row; after the commit, the logo's
+     * bytes are removed quietly. An organization with no logo never calls the
+     * store.
      */
     async delete(actor: Actor, organizationId: string): Promise<void> {
       assertActiveOrganization(actor, organizationId);
@@ -750,15 +739,14 @@ export function createOrganizationService(deps: OrganizationServiceDependencies)
         return organization.logoId;
       });
       if (logoId !== null) await removeLogoBytes(organizationId, logoId);
-      // Committed: the opamp-server deletes it, and its publications, after
-      // the response (D11a decision 20).
+      // Committed: the opamp-server deletes it, and its publications, after the response.
       opampRegistration.deleted(organizationId);
     },
 
     /**
-     * Read-only, for any member (D17d-2 decision 20: the install dialogs
-     * read it at their opening). The active organization only, as every
-     * management read: another's is 404.
+     * Read-only, for any member (the install dialogs read it at their
+     * opening). The active organization only, as every management read:
+     * another's is 404.
      */
     async findSettings(actor: Actor, organizationId: string): Promise<OrganizationSettings> {
       assertActiveOrganization(actor, organizationId);
@@ -768,9 +756,9 @@ export function createOrganizationService(deps: OrganizationServiceDependencies)
     },
 
     /**
-     * Decision 20 under decision 8's lock, as a rename: the caller still an
-     * admin, then the switch. Its audit row, organization.settings_changed,
-     * holds the new value only. The value it already has is a no-op.
+     * Under the organization lock, as a rename: the caller still an admin,
+     * then the switch. Its audit row, organization.settings_changed, holds
+     * the new value only. The value it already has is a no-op.
      */
     async changeSettings(actor: Actor, organizationId: string, settings: OrganizationSettings): Promise<OrganizationSettings> {
       assertActiveOrganization(actor, organizationId);
@@ -804,12 +792,11 @@ export function createOrganizationService(deps: OrganizationServiceDependencies)
     },
 
     /**
-     * Decision 8, under the lock, in its order: the caller still an admin,
+     * Under the organization lock, in this order: the caller still an admin,
      * not their own membership, not the personal organization's owner, a
-     * member who is active. Either role (D7 decision 2); the one the member
-     * already has is a no-op. Demoting an admin
-     * cancels the invitations they sent (D6 Ruling 17), before the
-     * membership's update, in decision 10's order.
+     * member who is active. Either role; the one the member already has is
+     * a no-op. Demoting an admin cancels the invitations they sent, before
+     * the membership's update, in the lock order.
      */
     async changeMemberRole(
       actor: Actor,
@@ -830,7 +817,7 @@ export function createOrganizationService(deps: OrganizationServiceDependencies)
         if (member.isServiceAccount) throw memberIsServiceAccount();
         if (member.deletedAt !== null) throw memberNotActiveForRoleChange();
         if (member.role === role) return;
-        // An admin no longer: their invitations go with it (D6 Ruling 17).
+        // An admin no longer: their invitations go with it.
         const revokedInvitations =
           member.role === "admin"
             ? await revokeInvitationsOf(transaction, actor, member, "organization_member.role_changed", now())
@@ -848,18 +835,17 @@ export function createOrganizationService(deps: OrganizationServiceDependencies)
     },
 
     /**
-     * Decision 8's checks as for a role change, then the soft removal and,
-     * in the same transaction, an admin's invitations cancelled (D6 Ruling
-     * 17) and decision 9's reassignment of the member's sessions acting
-     * here. The member stays signed in: their next request refreshes into
-     * the organization their session now names.
+     * The checks of a role change, then the soft removal and, in the same
+     * transaction, an admin's invitations cancelled and the reassignment of
+     * the member's sessions acting here. The member stays signed in: their
+     * next request refreshes into the organization their session now names.
      *
-     * The locks come in Preflight ruling 8's order: the organization, an
-     * admin's pending invitations (D6 Ruling 17), the member's account
-     * (`lockAccounts`: before the sessions, as a password reset takes them),
-     * the membership (the update), then the member's sessions (the
-     * reassignment). A switch to the organization its session is already
-     * in takes no organization lock (Ruling 16), so it can't close a cycle.
+     * The locks come in this order: the organization, an admin's pending
+     * invitations, the member's account (`lockAccounts`: before the
+     * sessions, as a password reset takes them), the membership (the
+     * update), then the member's sessions (the reassignment). A switch to
+     * the organization its session is already in takes no organization lock,
+     * so it can't close a cycle.
      */
     async removeMember(actor: Actor, organizationId: string, userId: string): Promise<void> {
       assertActiveOrganization(actor, organizationId);
@@ -875,7 +861,7 @@ export function createOrganizationService(deps: OrganizationServiceDependencies)
         if (member.isServiceAccount) throw memberIsServiceAccount();
         if (member.deletedAt !== null) throw memberNotActiveForRemoval();
         const at = now();
-        // An admin's invitations go with them (D6 Ruling 17), before the account's lock.
+        // An admin's invitations go with them, before the account's lock.
         const revokedInvitations =
           member.role === "admin"
             ? await revokeInvitationsOf(transaction, actor, member, "organization_member.removed", at)
@@ -902,17 +888,17 @@ export function createOrganizationService(deps: OrganizationServiceDependencies)
      * switches back in when they choose.
      *
      * The member's account is locked `for no key update` after the
-     * organization and must still be live (D29 Ruling 272): a product
-     * admin's delete of the person that committed while this waited would
-     * otherwise restore a live membership of a deleted account (the
-     * commit-time invariant passes a deleted user). The order is
-     * organization -> user, as the delete's (organizations -> person, D29
-     * decision 29) and the acceptance's (organization -> invitation ->
-     * user, invitations-service.ts); the delete never locks this group,
-     * which the person was removed from, so it never waits on this while
-     * holding the person. The mode is the commit-time trigger's own, so it
-     * needs no upgrade at commit. A deleted account is 404
-     * member_not_found, as the find answers once the delete has committed.
+     * organization and must still be live: a product admin's delete of the
+     * person that committed while this waited would otherwise restore a
+     * live membership of a deleted account (the commit-time invariant
+     * passes a deleted user). The order is organization -> user, as the
+     * delete's (organizations -> person) and the acceptance's
+     * (organization -> invitation -> user, invitations-service.ts); the
+     * delete never locks this group, which the person was removed from, so
+     * it never waits on this while holding the person. The mode is the
+     * commit-time trigger's own, so it needs no upgrade at commit. A
+     * deleted account is 404 member_not_found, as the find answers once
+     * the delete has committed.
      */
     async restoreMember(actor: Actor, organizationId: string, userId: string): Promise<void> {
       assertActiveOrganization(actor, organizationId);
@@ -931,13 +917,12 @@ export function createOrganizationService(deps: OrganizationServiceDependencies)
     },
 
     /**
-     * Decision 8, under the organization lock, in its order: the caller
-     * still an admin, the address not a member's (active: already a
-     * member, the caller's own included; removed: restore them instead),
-     * and no pending invitation to it, expired or not. Then the row, with a
-     * fresh token, and its audit row. Only membership of this organization
-     * is checked, which an admin can already see: nothing here says whether
-     * the address has an account.
+     * Under the organization lock, in this order: the caller still an admin,
+     * the address not a member's (active: already a member, the caller's own
+     * included; removed: restore them instead), and no pending invitation to
+     * it, expired or not. Then the row, with a fresh token, and its audit
+     * row. Only membership of this organization is checked, which an admin
+     * can already see: nothing here says whether the address has an account.
      *
      * Two invites of one address wait on the same lock, so the second sees
      * the first's invitation. The partial unique index backs that up: a
@@ -994,8 +979,8 @@ export function createOrganizationService(deps: OrganizationServiceDependencies)
     /**
      * Under the organization lock, then the invitation's: a new token and a
      * new expiry on the same row, so the old link stops working and an
-     * expired invitation is revived (decision 2). Anything but a pending
-     * invitation is 404. The email goes after the commit, as an invite's.
+     * expired invitation is revived. Anything but a pending invitation is
+     * 404. The email goes after the commit, as an invite's.
      */
     async resendInvitation(actor: Actor, organizationId: string, invitationId: string): Promise<PendingInvitation> {
       assertMayManageInvitations(actor, organizationId, true);
@@ -1018,7 +1003,7 @@ export function createOrganizationService(deps: OrganizationServiceDependencies)
       return pendingView(invitation);
     },
 
-    /** Under both locks, as a resend. The row stays, revoked, for the audit trail (decision 2). */
+    /** Under both locks, as a resend. The row stays, revoked, for the audit trail. */
     async cancelInvitation(actor: Actor, organizationId: string, invitationId: string): Promise<void> {
       assertMayManageInvitations(actor, organizationId, false);
       const id = canonicalIdOf(invitationId);

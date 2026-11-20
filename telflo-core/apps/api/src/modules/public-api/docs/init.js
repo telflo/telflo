@@ -1,13 +1,12 @@
 /*
- * The API reference page's start (D25 decision 49, Preflight ruling 20):
- * Swagger UI over the public surface's OpenAPI document, with try-it. The
- * one page where a tf_ token is typed (brief-rules' D25 paragraph), so:
+ * The API reference page's start: Swagger UI over the public surface's
+ * OpenAPI document, with try-it. The one page where a tf_ token is typed, so:
  *
  *   - Authorize keeps it in memory only (persistAuthorization: false): no
  *     browser storage, gone with the page;
  *   - no input on the page is remembered by the browser: autocomplete="off"
  *     on every input and textarea, set as each appears (Firefox's form
- *     history stored the token on disk without it, Preflight B18);
+ *     history stored the token on disk without it);
  *   - the curl block after try-it names the token's variable,
  *     `Authorization: Bearer $TELFLO_TOKEN`, never the token (the DOM held
  *     it otherwise);

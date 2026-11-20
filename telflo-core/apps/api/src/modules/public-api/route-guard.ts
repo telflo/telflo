@@ -4,31 +4,30 @@ import { isPublicPath } from "../../http/public-path.js";
 import { invalidApiToken } from "./errors.js";
 
 /*
- * The public surface's invariant (D25 decision 13; Rulings 163 and 164): no
- * request under `/api/public/v1`, in any spelling, is answered by a route
- * that escapes the public plugin's checks. Two guards, both added first
- * thing in buildServer:
+ * The public surface's invariant: no request under `/api/public/v1`, in any
+ * spelling, is answered by a route that escapes the public plugin's checks.
+ * Two guards, both added first thing in buildServer:
  *
- *   - THE VERIFICATION, at request time (the guarantee, Ruling 164): a root
- *     `onRequest` hook, run before every other hook. A request whose path,
- *     normalized by http/public-path.ts (absolute form stripped, decoded
- *     until stable, slashes collapsed, dot segments resolved; the request
- *     log's normalizer too, Ruling 173), is under the prefix must have matched
- *     a route the public plugin's own `onRoute` hook verified, or one the
- *     open routes' plugin verified on OPEN_PUBLIC_ROUTES, or the root's
- *     CORS preflight (`OPTIONS *`, Ruling 163: exempt by its method and
- *     URL; @fastify/cors is its only registrant, and the router holds one
- *     route per method and URL). The verification is a
- *     private symbol on the route's config holding a private token, which
- *     Fastify copies into the route's context; a token is good only for
- *     the method and URL it was made for. A request no route matched
- *     passes only to the public plugin's OWN not-found handler (Ruling
- *     166), which answers after its token check: its config holds a private
- *     token too (publicNotFoundOptions), and any other not-found handler
- *     (the root's, or one a plugin with a deeper prefix set) is refused.
- *     Anything else answers the one 401 and logs a warn naming the route's
- *     pattern, never the request's URL. So a root route with a parameter or
- *     a wildcard (`/api/:x/v1/…`, `/api/*`) can never answer a public path.
+ *   - THE VERIFICATION, at request time (the guarantee): a root `onRequest`
+ *     hook, run before every other hook. A request whose path, normalized by
+ *     http/public-path.ts (absolute form stripped, decoded until stable,
+ *     slashes collapsed, dot segments resolved; the request log's normalizer
+ *     too), is under the prefix must have matched a route the public
+ *     plugin's own `onRoute` hook verified, or one the open routes' plugin
+ *     verified on OPEN_PUBLIC_ROUTES, or the root's CORS preflight
+ *     (`OPTIONS *`: exempt by its method and URL; @fastify/cors is its only
+ *     registrant, and the router holds one route per method and URL). The
+ *     verification is a private symbol on the route's config holding a
+ *     private token, which Fastify copies into the route's context; a token
+ *     is good only for the method and URL it was made for. A request no
+ *     route matched passes only to the public plugin's OWN not-found
+ *     handler, which answers after its token check: its config holds a
+ *     private token too (publicNotFoundOptions), and any other not-found
+ *     handler (the root's, or one a plugin with a deeper prefix set) is
+ *     refused. Anything else answers the one 401 and logs a warn naming the
+ *     route's pattern, never the request's URL. So a root route with a
+ *     parameter or a wildcard (`/api/:x/v1/…`, `/api/*`) can never answer a
+ *     public path.
  *   - THE REGISTRATION GUARD (an early failure, not the guarantee): a root
  *     `onRoute` hook refusing, with a throw so `ready()` rejects, a route
  *     whose URL could match a public path (isUnderPublicPrefix, segment by
@@ -45,7 +44,7 @@ import { invalidApiToken } from "./errors.js";
  * pins both).
  */
 
-/** The public surface's prefix (D22 decision 33). */
+/** The public surface's prefix. */
 export const PUBLIC_API_PREFIX = "/api/public/v1";
 
 /** The prefix's segments, lower case. */
@@ -67,19 +66,18 @@ const VERIFIED = Symbol("telflo.publicApiVerifiedRoute");
 /** Each token the two plugins' `onRoute` made, with the `METHOD url`s it is good for. */
 const verifiedTokens = new WeakMap<object, ReadonlySet<string>>();
 
-/** Where the public plugin's not-found handler's config holds its token (Ruling 166). */
+/** Where the public plugin's not-found handler's config holds its token. */
 const PUBLIC_NOT_FOUND = Symbol("telflo.publicApiNotFound");
 
 /** The public plugin's not-found handlers' tokens. */
 const publicNotFoundTokens = new WeakSet<object>();
 
 /**
- * The open routes, `METHOD path` exactly (Ruling 163): /health, the
- * document, and the reference page's routes D25 Task 7 adds (`/docs`, its
- * redirect, and `/docs/*`, the page and its assets), each GET and HEAD;
- * and D27's anonymous validate (decision 23), POST only. Anything else the
- * open plugin registers is refused (a GET of the anonymous validate's path
- * included).
+ * The open routes, `METHOD path` exactly: /health, the document, and the
+ * reference page's routes (`/docs`, its redirect, and `/docs/*`, the page
+ * and its assets), each GET and HEAD; and the anonymous validate, POST
+ * only. Anything else the open plugin registers is refused (a GET of the
+ * anonymous validate's path included).
  */
 export const OPEN_PUBLIC_ROUTES: ReadonlySet<string> = new Set([
   ...["/health", "/openapi.json", "/docs", "/docs/*"].flatMap((path) =>
@@ -88,7 +86,7 @@ export const OPEN_PUBLIC_ROUTES: ReadonlySet<string> = new Set([
   `POST ${PUBLIC_API_PREFIX}/validate/anonymous`,
 ]);
 
-/** The root's CORS preflight (@fastify/cors' `OPTIONS *`, Ruling 163): the router holds one route per method and URL, so it is exactly that. */
+/** The root's CORS preflight (@fastify/cors' `OPTIONS *`): the router holds one route per method and URL, so it is exactly that. */
 const CORS_PREFLIGHT = "OPTIONS *";
 
 function surfaceOf(instance: FastifyInstance): PublicSurface | undefined {
@@ -121,11 +119,11 @@ export function claimPublicSurface(instance: FastifyInstance, surface: PublicSur
 }
 
 /**
- * The options the public plugin passes to its own `setNotFoundHandler`
- * (Ruling 166): a config holding a private token, which Fastify keeps as
- * the not-found context's config, so the verification can tell this
- * handler from any other. Throws for an instance that isn't the public
- * plugin's (claimPublicSurface). Called only by plugin.ts
+ * The options the public plugin passes to its own `setNotFoundHandler`: a
+ * config holding a private token, which Fastify keeps as the not-found
+ * context's config, so the verification can tell this handler from any
+ * other. Throws for an instance that isn't the public plugin's
+ * (claimPublicSurface). Called only by plugin.ts
  * (context-source.test.ts).
  */
 export function publicNotFoundOptions(instance: FastifyInstance): { preValidation?: never; config: object } {
@@ -160,12 +158,12 @@ export function normalizedRouteUrl(url: string): string {
 }
 
 /**
- * Whether a route's URL could match a path under the prefix (Ruling 164),
- * normalized, segment by segment against `api`, `public`, `v1`: a segment
- * holding a parameter (`:`) matches any; one holding a wildcard (`*`)
- * matches when its part before the `*` begins the rest of the prefix, and
- * then matches everything; otherwise the segment must be the prefix's. A
- * URL whose segments run out before the three matched is not under it.
+ * Whether a route's URL could match a path under the prefix, normalized,
+ * segment by segment against `api`, `public`, `v1`: a segment holding a
+ * parameter (`:`) matches any; one holding a wildcard (`*`) matches when
+ * its part before the `*` begins the rest of the prefix, and then matches
+ * everything; otherwise the segment must be the prefix's. A URL whose
+ * segments run out before the three matched is not under it.
  */
 export function isUnderPublicPrefix(url: string): boolean {
   const segments = normalizedRouteUrl(url).split("/").slice(1);
@@ -182,8 +180,8 @@ export function isUnderPublicPrefix(url: string): boolean {
 
 /**
  * Whether a request is under the prefix: http/public-path.ts' one
- * normalizer, the request log's too (Ruling 173), so an absolute-form,
- * doubly encoded or case-changed spelling is the same request to both.
+ * normalizer, the request log's too, so an absolute-form, doubly encoded
+ * or case-changed spelling is the same request to both.
  */
 export function isPublicRequestPath(url: string): boolean {
   return isPublicPath(url);
@@ -211,8 +209,8 @@ export function registerPublicRouteGuard(server: FastifyInstance): void {
 
 /**
  * The verification's refusal: the one 401 (invalidApiToken), `no-store`
- * as every public reply is (D25 Rulings 185 and 187): it is answered
- * outside the public plugin, whose `onSend` hook sets it on its own.
+ * as every public reply is: it is answered outside the public plugin,
+ * whose `onSend` hook sets it on its own.
  */
 function verificationRefused(): AppError {
   const refusal = invalidApiToken();

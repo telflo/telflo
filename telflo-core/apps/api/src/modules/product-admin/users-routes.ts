@@ -17,11 +17,11 @@ import {
 import { createUsersService } from "./users-service.js";
 
 /*
- * Users (D29 decisions 3, 9, 29 to 31; Task 2):
+ * Users:
  *
  *   * `GET /api/v1/product-admin/users?q=&cursor=`: every live person,
  *     newest first, 50 a page (ADMIN_USERS_PAGE_SIZE), searched by email or
- *     organization name, each with the block of decision 30; through
+ *     organization name, each with what blocks their delete; through
  *     SystemRepository.listUsers (audited `product_admin.users_listed`).
  *   * `DELETE /api/v1/product-admin/users/:userId`: 204; 404
  *     `user_not_found`; 409 `user_delete_blocked` (`details: { kind }`),
@@ -29,11 +29,11 @@ import { createUsersService } from "./users-service.js";
  *     when the caller lost the flag meanwhile; 10 a minute per product
  *     admin (`productAdminDeletesPerUser`).
  *
- * Both through users-service.ts. The delete's limit is counted after the
- * gate, the path's schema and canonicalIdOf (a non-canonical id is 404 and
- * counts nothing; Ruling 266), before the database is asked, so an unknown
- * person's 404 counts. The search's term reaches the database only: the request log drops
- * the query of every product-admin route (decision 41).
+ * Both through users-service.ts. The delete's limit is counted after the gate,
+ * the path's schema and canonicalIdOf (a non-canonical id is 404 and counts
+ * nothing), before the database is asked, so an unknown person's 404 counts.
+ * The search's term reaches the database only: the request log drops the query
+ * of every product-admin route.
  */
 export function registerProductAdminUsersRoutes(
   server: FastifyInstance,

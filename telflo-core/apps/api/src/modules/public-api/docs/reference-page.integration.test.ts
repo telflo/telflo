@@ -15,27 +15,26 @@ import { UNCALLED_OTELCOL_VALIDATOR } from "../../../testing/otelcol-validator.j
 import { REFERENCE_PAGE_CSP } from "./reference-page.js";
 
 /*
- * The API reference page on the real server (D25 decision 49, Preflight
- * ruling 20, Ruling 160): served by the open routes without a token, the
- * page and its three assets from the files beside this test, B18's CSP
- * exactly with no-referrer and nosniff on every reply, the caches, the 301
- * from /docs, the 404 for anything else, HEAD, and the request log's line
- * (the route's pattern, never the path or query as sent). No token is
- * made here: the page's routes read none.
+ * The API reference page on the real server: served by the open routes
+ * without a token, the page and its three assets from the files beside this
+ * test, the page's CSP exactly with no-referrer and nosniff on every reply,
+ * the caches, the 301 from /docs, the 404 for anything else, HEAD, and the
+ * request log's line (the route's pattern, never the path or query as
+ * sent). No token is made here: the page's routes read none.
  */
 
 const opamp = useFakeOpampServer();
 
 const PAGE = "/api/public/v1/docs/";
 
-/** B18's policy, written out here as well, so a change to the constant fails this test. */
+/** The page's policy, written out here as well, so a change to the constant fails this test. */
 const B18_CSP =
   "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; font-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'";
 
 const sha256 = (bytes: Buffer | string) => createHash("sha256").update(bytes).digest("hex");
 const fileBeside = (relative: string) => readFileSync(new URL(relative, import.meta.url));
 
-describe("the API reference page (D25 decision 49)", () => {
+describe("the API reference page", () => {
   let db: Kysely<Database>;
   let server: FastifyInstance;
   let logLines: string[] = [];
@@ -81,7 +80,7 @@ describe("the API reference page (D25 decision 49)", () => {
     }).toEqual({ csp: B18_CSP, referrer: "no-referrer", nosniff: "nosniff" });
   };
 
-  it("keeps B18's CSP exactly", () => {
+  it("keeps the page's CSP exactly", () => {
     expect(REFERENCE_PAGE_CSP).toBe(B18_CSP);
   });
 
@@ -124,7 +123,7 @@ describe("the API reference page (D25 decision 49)", () => {
     });
   });
 
-  it("GET /docs answers 301 to /docs/ with its slash (Ruling 160), with the page's headers", async () => {
+  it("GET /docs answers 301 to /docs/ with its slash, with the page's headers", async () => {
     const response = await server.inject({ method: "GET", url: "/api/public/v1/docs" });
     expect(response.statusCode).toBe(301);
     expect(response.headers.location).toBe(PAGE);
@@ -177,7 +176,7 @@ describe("the API reference page (D25 decision 49)", () => {
     expect(response.json()).toMatchObject({ error: { code: "invalid_api_token" } });
   });
 
-  it("logs the route's pattern only, never the path or query as sent (Ruling 173)", async () => {
+  it("logs the route's pattern only, never the path or query as sent", async () => {
     const MARKER = "marker-reference-page";
     await server.inject({ method: "GET", url: `${PAGE}?q=${MARKER}` });
     await server.inject({ method: "GET", url: `${PAGE}${MARKER}.js?q=${MARKER}` });

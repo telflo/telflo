@@ -1,7 +1,6 @@
 # The telflo CLI, for its developers
 
-**Source:** D27 (decisions 2, 3, 13, 32, 33, 36 and 37; its plan's Preflight rulings 1–5, 18–20 and 22; the owner's
-Q186–Q188). The user's guide is the CLI's own README
+The user's guide is the CLI's own README
 (`telflo-core/apps/cli/README.md`); the security rules are
 `docs/conventions/security.md`, "The telflo CLI".
 
@@ -144,9 +143,9 @@ fails at once when the CLI is missing or its `-V` fails.
 
 ## Installing a build by hand (the walkthrough)
 
-Nothing is on npm yet (Q188): a person installs the tarball into a prefix
-of its own, because the older Telflo CLI, `telflo` 0.1.2 on npm, installs
-a `telflo` bin too (Ruling 234):
+Nothing is on npm yet: a person installs the tarball into a prefix of its
+own, because the older Telflo CLI, `telflo` 0.1.2 on npm, installs a
+`telflo` bin too:
 
 ```bash
 mkdir -p /tmp/telflo-cli-pack
@@ -164,18 +163,17 @@ npm install -g --prefix /tmp/telflo-cli-install /tmp/telflo-cli-pack/telflo-cli-
 /tmp/telflo-cli-install/bin/telflo -V
 ```
 
-## Releasing (nothing is published without the owner's yes)
+## Releasing
 
-D27 publishes nothing (Q188): npm's `telflo` is still the older Telflo
-CLI (0.1.2), which its users' `npm install -g telflo` gets, and that
-package is maintained by one account (`anasmilhem`) only. Publishing
-waits for the cutover, and **each publish happens only on the owner's
-explicit yes**. No agent runs `npm publish`, `npm login`, `npm adduser`,
-`npm token`, `npm dist-tag` or any registry write, and `"private": true`
-stays until the owner says otherwise. The checklist, for when the owner
-says go:
+Nothing is published yet: npm's `telflo` is still the older Telflo CLI
+(0.1.2), which its users' `npm install -g telflo` gets, and that package
+is maintained by one account (`anasmilhem`) only. **Each publish happens
+only on the maintainers' explicit yes.** No agent runs `npm publish`,
+`npm login`, `npm adduser`, `npm token`, `npm dist-tag` or any registry
+write, and `"private": true` stays until the maintainers say otherwise.
+The checklist, for a publish:
 
-1. **The npm account** is settled with the owner: who publishes `telflo`
+1. **The npm account** is settled: who publishes `telflo`
    (today's one maintainer is `anasmilhem`) and how the project holds it.
 2. **The name:** the package becomes `telflo` (it is `@telflo/cli` only
    because the workspace root is `telflo`), `"private": true` removed, in
@@ -185,8 +183,7 @@ says go:
    `package.json` at run time; `src/version.test.ts` checks the two agree
    and pins the number, so it changes with the bump.
 4. **The default server:** `https://telflo.com` must answer the platform's
-   `/api/public/v1/whoami` (after the cutover), and `/cli-auth` must be
-   live there.
+   `/api/public/v1/whoami`, and `/cli-auth` must be live there.
 5. **The gates:** from a clean checkout of `main`, the cli project's tests
    with its coverage, typecheck, lint, the naming check, the license
    check, and `bash ../scripts/check-cli-package.sh`; the stack smoke with
@@ -194,9 +191,8 @@ says go:
 6. **The contents:** `npm pack --dry-run -w @telflo/cli` lists only
    `package.json`, `README.md`, `dist/**` and `skills/**`; the README and
    the skill describe this version's commands.
-7. **The publish itself**, by the owner or on the owner's yes, from that
-   checkout, after the dry run: one version, never pushed again (a fix is
-   a new version). Then `npm view telflo` shows it.
+7. **The publish itself**, by a maintainer or on a maintainer's yes, from
+   that checkout, after the dry run: one version, never pushed again (a
+   fix is a new version). Then `npm view telflo` shows it.
 
-The library export an MCP server would need is not in this package: it
-comes with the MCP server's port (Q192).
+The library export an MCP server would need is not in this package.

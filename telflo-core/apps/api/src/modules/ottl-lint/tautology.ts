@@ -1,6 +1,5 @@
 /*
- * A heuristic guard against assertion rules that can never fail (D25
- * decision 33).
+ * A heuristic guard against assertion rules that can never fail.
  *
  * Seen live: an agent saved `resource.attributes["k8s.cluster.name"] == nil
  * or resource.attributes["k8s.cluster.name"] != nil` (quantifier `any`)
@@ -12,12 +11,12 @@
  * OTTL lint's: `true` is legitimate in transform and filter statements and
  * in a count rule (the total-count control).
  *
- * A condition over TAUTOLOGY_MAXIMUM_LENGTH
- * characters, as written, isn't checked at all (null). The shape patterns'
- * lazy groups and back-references backtrack, about half a second on 8,192
- * characters of `a == b or …`, and the normalizing strips nested
- * parentheses in quadratic time (Ruling 168: the cap comes before it);
- * either would hold the API's one thread. A tautology is a short condition.
+ * A condition over TAUTOLOGY_MAXIMUM_LENGTH characters, as written, isn't
+ * checked at all (null). The shape patterns' lazy groups and
+ * back-references backtrack, about half a second on 8,192 characters of
+ * `a == b or …`, and the normalizing strips nested parentheses in quadratic
+ * time (the cap comes before both); either would hold the API's one thread.
+ * A tautology is a short condition.
  */
 
 /** The longest condition, as written, the check looks at. */

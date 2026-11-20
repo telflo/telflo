@@ -2,12 +2,12 @@ import { PUBLIC_INSTALL_LINKS_DOWNLOAD_REFUSED_MESSAGE, QUICK_DEPLOY_LINK_ERROR_
 import { AppError } from "../../errors.js";
 
 /*
- * The public download's refusals (D17c-2 decision 26, Preflight ruling 10),
- * answered in plain text by its route's error handler
- * (http/public-download.ts): the status and the platform's own words only,
- * never the secret, the fleet's label, a group's name, a path or a value.
- * Their codes travel no further than this process (a plain-text reply has
- * no envelope); they name the refusal for its tests and its log lines.
+ * The public download's refusals, answered in plain text by its route's
+ * error handler (http/public-download.ts): the status and the platform's
+ * own words only, never the secret, the fleet's label, a group's name, a
+ * path or a value. Their codes travel no further than this process (a
+ * plain-text reply has no envelope); they name the refusal for its tests
+ * and its log lines.
  */
 
 /** A secret of the wrong shape, or one no link's hash matches: alike, before and after the lookup. */
@@ -26,7 +26,7 @@ export function downloadLinkExpired(): AppError {
   return new AppError("quick_deploy_link_expired", DOWNLOAD_LINK_EXPIRED_MESSAGE, 410);
 }
 
-/** Revoked or expired between the checks and the count (the counter's last gate, Preflight ruling 4). */
+/** Revoked or expired between the checks and the count (the counter's last gate). */
 export const DOWNLOAD_LINK_ENDED_MESSAGE = "This install link was revoked or has expired: make a new one.";
 
 export function downloadLinkEnded(): AppError {
@@ -46,7 +46,7 @@ export function downloadFleetArchived(): AppError {
   return new AppError("quick_deploy_fleet_archived", DOWNLOAD_FLEET_ARCHIVED_MESSAGE, 410);
 }
 
-/** Decision 26's words: the default token the link's command carries is revoked. */
+/** The default token the link's command carries is revoked. */
 export const DOWNLOAD_TOKEN_REVOKED_MESSAGE = "This link's token was revoked: make a new link.";
 
 export function downloadTokenRevoked(): AppError {
@@ -54,15 +54,14 @@ export function downloadTokenRevoked(): AppError {
 }
 
 /**
- * The organization's "Public install links" switch is off (D17d-2 decision
- * 20, Preflight ruling 10): every link's download is refused, 403, until it
- * is on again.
+ * The organization's "Public install links" switch is off: every link's
+ * download is refused, 403, until it is on again.
  */
 export function downloadLinksDisabled(): AppError {
   return new AppError("public_install_links_disabled", PUBLIC_INSTALL_LINKS_DOWNLOAD_REFUSED_MESSAGE, 403);
 }
 
-/** A stored variable's name the group's published version no longer reads (Preflight ruling 15). */
+/** A stored variable's name the group's published version no longer reads. */
 export function downloadVariablesChanged(): AppError {
   return new AppError(
     "collector_group_variables_changed",
@@ -78,10 +77,10 @@ export function downloadUnavailable(): AppError {
   return new AppError("quick_deploy_unavailable", DOWNLOAD_UNAVAILABLE_MESSAGE, 503);
 }
 
-/** D17c-1's install refusals the download answers 409 with their own words (decision 26). */
+/** The install's refusals the download answers 409 with their own words. */
 const INSTALL_CONFLICTS = new Set([
   "fleet_type_not_installable",
-  // A Helm values link's group whose Kubernetes settings can't be read (D17d-2 Preflight ruling 3).
+  // A Helm values link's group whose Kubernetes settings can't be read.
   "collector_group_settings_unreadable",
   "collector_group_not_found",
   "collector_group_unassigned",
@@ -90,13 +89,13 @@ const INSTALL_CONFLICTS = new Set([
 ]);
 
 /**
- * The fleet routes' refusal of an install, as the public download answers
- * it (Preflight ruling 10): the fleet gone (another organization's too) or
- * archived 410; not the link kind's fleet type, the group gone or
- * unassigned, a Kubernetes group's settings unreadable (D17d-2), a
- * deleted configuration's version, a version or arch not offered 409, with
- * D17c-1's words; the opamp-server unavailable 503 in the download's own
- * words; the templates' 503 as it is. Anything else is passed on as it is.
+ * The fleet routes' refusal of an install, as the public download answers it:
+ * the fleet gone (another organization's too) or archived 410; not the link
+ * kind's fleet type, the group gone or unassigned, a Kubernetes group's
+ * settings unreadable, a deleted configuration's version, a version or arch
+ * not offered 409, with the install's words; the opamp-server unavailable 503
+ * in the download's own words; the templates' 503 as it is. Anything else is
+ * passed on as it is.
  */
 export function downloadRefusalOf(error: unknown): unknown {
   if (!(error instanceof AppError)) return error;

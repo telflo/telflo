@@ -14,16 +14,15 @@ import { UNCALLED_OTELCOL_VALIDATOR } from "../../testing/otelcol-validator.js";
 import { hashPassword } from "../identity/password.js";
 
 /*
- * D29 Task 1: every product-admin route and "Contact us"'s are registered
- * (decision 28; Preflight ruling 8), behind their gates: signed out 401;
- * a member who isn't a product admin 403 `product_admin_required` on every
- * `/api/v1/product-admin/` route, whatever its handler does, and `POST
- * /api/v1/feedback` 403 `terms_acceptance_required` for a member without
- * the current terms; every product-admin answer `cache-control: no-store`.
- * The request log keeps no route's query (decision 41, Preflight ruling 9):
- * a search marker sent as `q` to each route, a product admin's and a
- * member's, reaches no log line (a boolean). The handlers' own answers are
- * Tasks 2 to 4's suites'.
+ * Every product-admin route and "Contact us"'s are registered, behind their
+ * gates: signed out 401; a member who isn't a product admin 403
+ * `product_admin_required` on every `/api/v1/product-admin/` route,
+ * whatever its handler does, and `POST /api/v1/feedback` 403
+ * `terms_acceptance_required` for a member without the current terms; every
+ * product-admin answer `cache-control: no-store`. The request log keeps no
+ * route's query: a search marker sent as `q` to each route, a product
+ * admin's and a member's, reaches no log line (a boolean). The handlers'
+ * own answers are tested in their routes' suites.
  */
 
 const opamp = useFakeOpampServer();

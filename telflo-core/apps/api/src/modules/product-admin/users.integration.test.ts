@@ -39,8 +39,7 @@ import { organizationLogoKey } from "../organizations/service.js";
 import { TEST_TERMS_VERSION } from "../../testing/site.js";
 
 /*
- * D29 Task 2, through the routes, on the real database (decisions 9, 10,
- * 11, 29 to 31 and 44; Preflight rulings 4 and 5; Rulings 258 and 260):
+ * The Users routes, on the real database:
  *
  *   * the Users list: the search by email and by the name of any live
  *     organization, case aside, with LIKE's `%`, `_` and `\` taken
@@ -60,7 +59,7 @@ import { TEST_TERMS_VERSION } from "../../testing/site.js";
  *     audit rows; every refusal (404, self, each block, a block that
  *     appeared after the list) and its audit row;
  *   * the races, each with two connections: the caller removed while the
- *     delete waited (403, Ruling 258), an organization's delete and a grant
+ *     delete waited (403), an organization's delete and a grant
  *     interleaved with the delete's locks (no deadlock), the membership set
  *     changing under the locks (one restart, then the delete; three, then
  *     409 user_delete_busy).
@@ -97,9 +96,9 @@ describe("the Users routes", () => {
       otelcolValidator: UNCALLED_OTELCOL_VALIDATOR,
       fileStore: store,
       testing: UNCALLED_TESTING,
-      // The sales inquiries switched on, with their address (D36-1 decision 25:
-      // off by default and no default address), as the sales-inquiry route's own
-      // tests do: the delete's allowlist test sends one from the person's address.
+      // The sales inquiries switched on, with their address (off by default
+      // and no default address), as the sales-inquiry route's own tests do:
+      // the delete's allowlist test sends one from the person's address.
       settings: loadSettings({ ...process.env, TELFLO_SALES_INQUIRY: "true", TELFLO_SALES_INQUIRY_TO: "inquiries@telflo.test" }),
       db,
       mailer,
@@ -244,7 +243,7 @@ describe("the Users routes", () => {
       expect(await metadataHolds(marker.toUpperCase())).toBe(false);
     });
 
-    it("takes %, _ and \\ in a search literally: each matches only the names and emails that hold it (Ruling 260)", async () => {
+    it("takes %, _ and \\ in a search literally: each matches only the names and emails that hold it", async () => {
       const ana = await admin();
       const marker = randomBytes(6).toString("hex");
       const named = async (name: string) => {
@@ -275,7 +274,7 @@ describe("the Users routes", () => {
       expect(ids((await page(ana.access, { q: "\\" })).items)).toEqual([backslash]);
     });
 
-    it("shows each block: none when every organization is theirs alone; owner for another live member or an invitation pending at the API's clock (not an expired, accepted or revoked one); member with the role; member over owner, the first by name; product_admin over both (decision 30, Ruling 260)", async () => {
+    it("shows each block: none when every organization is theirs alone; owner for another live member or an invitation pending at the API's clock (not an expired, accepted or revoked one); member with the role; member over owner, the first by name; product_admin over both", async () => {
       const ana = await admin();
       const alone = await person();
       await group(`Alone ${randomUUID()}`, alone.userId);
@@ -330,7 +329,7 @@ describe("the Users routes", () => {
       expect(blockOf((await page(ana.access)).items, invited.userId)).toBeNull();
     });
 
-    it("pages 50 at a time with an opaque cursor exact to the millisecond: two people microseconds apart straddling the boundary are neither skipped nor repeated, and a newer person doesn't move page two (Ruling 260); each page audits the rows it returned (Ruling 264)", async () => {
+    it("pages 50 at a time with an opaque cursor exact to the millisecond: two people microseconds apart straddling the boundary are neither skipped nor repeated, and a newer person doesn't move page two; each page audits the rows it returned", async () => {
       const ana = await admin();
       const people: string[] = [];
       for (let index = 0; index < 51; index += 1) people.push((await person()).userId);
@@ -356,14 +355,14 @@ describe("the Users routes", () => {
       const seen = [...one.items, ...two.items].map((item) => item.id);
       expect(new Set(seen).size).toBe(seen.length);
       expect([...seen].sort()).toEqual([...people, ana.userId].sort());
-      // Each page's audit row counts the rows it returned: the full page 50, never the look-ahead's 51 (Ruling 264).
+      // Each page's audit row counts the rows it returned: the full page 50, never the look-ahead's 51.
       expect((await auditRows()).filter((row) => row.action === "product_admin.users_listed").map((row) => row.metadata)).toEqual([
         { count: 50, searched: false },
         { count: 2, searched: false },
       ]);
     });
 
-    it("refuses a malformed cursor and a term longer than 254 characters with 400, and a member with 403; every answer no-store (Ruling 266)", async () => {
+    it("refuses a malformed cursor and a term longer than 254 characters with 400, and a member with 403; every answer no-store", async () => {
       const ana = await admin();
       for (const cursor of ["not a cursor", "eyJ4IjoxfQ", Buffer.from(JSON.stringify({ createdAt: "2026-01-01", id: randomUUID() })).toString("base64url")]) {
         const response = await list(ana.access, { cursor });
@@ -523,12 +522,12 @@ describe("the Users routes", () => {
       expect((await remove(ana.access, cara.userId)).statusCode).toBe(404);
     });
 
-    /** Where a row may still hold a deleted person's original email (Rulings 266, 267 and 270): a row predicate per table and column. */
+    /** Where a row may still hold a deleted person's original email: a row predicate per table and column. */
     type Allowed = Record<string, ReturnType<typeof sql<boolean>>>;
 
     /**
-     * Every text, varchar, json(b) and text[] column of every table in
-     * public, as the owner: how many rows hold `text` where `allowed` lets
+     * Every text, varchar, json(b) and text[] column of every table in public,
+     * as the tables' owner: how many rows hold `text` where `allowed` lets
      * them, and how many elsewhere. Counts only, never a value.
      */
     const columnsHolding = async (text: string, allowed: Allowed = {}) => {
@@ -556,7 +555,7 @@ describe("the Users routes", () => {
       return { searched: columns.length, inAllowed, elsewhere };
     };
 
-    it("leaves the person's original email only in the exact allowlist: the audit log (append-only, any column of any row), their deletion record, and invitations of organizations not deleted with them; their personal organization renamed and its invitations to them anonymized; their sessions without IP address or user agent (Rulings 266, 267 and 270)", async () => {
+    it("leaves the person's original email only in the exact allowlist: the audit log (append-only, any column of any row), their deletion record, and invitations of organizations not deleted with them; their personal organization renamed and its invitations to them anonymized; their sessions without IP address or user agent", async () => {
       const ana = await admin();
       const cara = await seedCara();
       // A second, older session, already signed out: it keeps its address and browser until the delete.
@@ -574,7 +573,7 @@ describe("the Users routes", () => {
       await addInvitation(ownerDb, { organizationId: left, invited_by_user_id: cara.userId });
       await ownerDb.updateTable("organization_members").set({ deleted_at: new Date() }).where("organization_id", "=", left).execute();
       await addUserFeedback(ownerDb, { userId: cara.userId, organizationId: cara.organizationId });
-      // She renamed her personal organization: the rename's audit row holds its old name, after her email (Ruling 270).
+      // She renamed her personal organization: the rename's audit row holds its old name, after her email.
       const renamed = await server.inject({
         method: "PATCH",
         url: `/api/v1/organizations/${cara.organizationId}`,
@@ -597,7 +596,7 @@ describe("the Users routes", () => {
           payload: { organizationId: groupId },
         });
         expect(switched.statusCode).toBe(200);
-        // A no-op when the sign-in already landed there (D36-1 decision 56): no new cookie, the token sent stands.
+        // A no-op when the sign-in already landed there: no new cookie, the token sent stands.
         return { ...who, groupId, access: (switched.headers["set-cookie"] === undefined ? access : cookieValue(switched, "telflo_access")) };
       };
       const inviteCara = async (inviter: { groupId: string; access: string }) => {
@@ -611,10 +610,10 @@ describe("the Users routes", () => {
         expect(response.statusCode).toBe(201);
         await runner.settle();
       };
-      // Another organization's invitation to her address, pending: decision 10's residue.
+      // Another organization's invitation to her address, pending: in the allowlist.
       const elsewhere = await groupAdmin();
       await inviteCara(elsewhere);
-      // An invitation she accepted, in a group then hers alone (its inviter gone): deleted with her (Ruling 267).
+      // An invitation she accepted, in a group then hers alone (its inviter gone): deleted with her.
       const accepted = await groupAdmin();
       mailer.sent.length = 0;
       await inviteCara(accepted);
@@ -661,7 +660,7 @@ describe("the Users routes", () => {
       ).rows.map((row) => row.column);
       const allowed: Allowed = {
         "user_deletion_records.original_email": sql<boolean>`user_id = ${cara.userId}::uuid`,
-        // The audit log as a whole is the one named residue (append-only; Ruling 270).
+        // The audit log as a whole is the one named residue (append-only).
         ...Object.fromEntries(auditColumns.map((column) => [`audit_events.${column}`, sql<boolean>`true`])),
         "organization_invitations.email": sql<boolean>`organization_id <> all (${deletedWithHer}::uuid[])`,
       };
@@ -706,7 +705,7 @@ describe("the Users routes", () => {
       expect(anonymized.map((row) => row.email === user.email)).toEqual([true]);
     });
 
-    it("counts deletes per product admin after canonicalIdOf: a non-canonical id counts nothing, the 11th in a minute is 429 with Retry-After (Ruling 266)", async () => {
+    it("counts deletes per product admin after canonicalIdOf: a non-canonical id counts nothing, the 11th in a minute is 429 with Retry-After", async () => {
       const limited = buildServer({
         opampServer: opamp.client,
         otelcolValidator: UNCALLED_OTELCOL_VALIDATOR,
@@ -742,7 +741,7 @@ describe("the Users routes", () => {
       }
     });
 
-    it("revokes another person's session acting in an organization deleted with the person (account_deleted), counts it in revokedSessions, and leaves their account and other sessions alone (Ruling 271)", async () => {
+    it("revokes another person's session acting in an organization deleted with the person (account_deleted), counts it in revokedSessions, and leaves their account and other sessions alone", async () => {
       const ana = await admin();
       const cara = await person();
       const caraSession = await signIn(cara.email);
@@ -750,7 +749,7 @@ describe("the Users routes", () => {
       const team = await group(`Team ${randomUUID()}`, cara.userId);
       // A former member of the group whose session still acts in it, and a session of theirs elsewhere.
       const quinn = await person();
-      // Signed in twice before joining: both sessions start in the personal organization (D36-1 decision 56).
+      // Signed in twice before joining: both sessions start in the personal organization.
       expect((await signIn(quinn.email)).status).toBe(200);
       expect((await signIn(quinn.email)).status).toBe(200);
       await addMembership(ownerDb, { userId: quinn.userId, organizationId: team, role: "contributor" });
@@ -910,7 +909,7 @@ describe("the Users routes", () => {
       const userDeletedAt = async (userId: string) =>
         (await ownerDb.selectFrom("users").select("deleted_at").where("id", "=", userId).executeTakeFirstOrThrow()).deleted_at;
 
-      it("a delete by an admin removed while it waited on the caller's lock answers 403 product_admin_required, audited, and deletes nothing (Ruling 258)", async () => {
+      it("a delete by an admin removed while it waited on the caller's lock answers 403 product_admin_required, audited, and deletes nothing", async () => {
         const ana = await admin();
         const ben = await person({ admin: true });
         const cara = await person();
@@ -1018,7 +1017,7 @@ describe("the Users routes", () => {
         expect(deleted.map((row) => row.id).sort()).toEqual([cara.organizationId, groups[0]!].sort());
       });
 
-      it("answers 409 user_delete_busy after three attempts whose set changed each time, audited, and deletes nothing (Ruling 258)", async () => {
+      it("answers 409 user_delete_busy after three attempts whose set changed each time, audited, and deletes nothing", async () => {
         const { cara, response } = await changingSet(3);
         expect({ status: response.statusCode, body: response.json() }).toEqual({
           status: 409,

@@ -14,13 +14,11 @@ import { withDatabaseContext } from "../../../database/context.js";
 import { createApiTokenRepository, type IApiTokenRepository } from "./api-token-repository.js";
 
 /*
- * The API token repository's reads (D22 decisions 9 and 39; Rulings 100 and
- * 101), against the test database as the API's role, through the
- * organization scope and row-level security: no read hands back a token's
- * hash, and /whoami's name read never names a revoked token. Tokens are
- * built at run time by addApiToken and never printed (decision 48): a row
- * that holds a hash or a prefix is compared by booleans and its keys only
- * (Ruling 99).
+ * The API token repository's reads, against the test database as the API's
+ * role, through the organization scope and row-level security: no read hands
+ * back a token's hash, and /whoami's name read never names a revoked token.
+ * Tokens are built at run time by addApiToken and never printed: a row that
+ * holds a hash or a prefix is compared by booleans and its keys only.
  */
 
 const APPLICATION_NAME = "api-token-repository-test";
@@ -71,7 +69,7 @@ describe("the API token repository's reads", () => {
 
     const items = await asUser(adminId, organizationId, (repository) => repository.list(serviceAccountId));
 
-    // The canaries first (Ruling 99): booleans, so a failure prints no hash or token.
+    // The canaries first: booleans, so a failure prints no hash or token.
     expect(items).toHaveLength(added.length);
     const serialized = JSON.stringify(items);
     expect(added.some(({ apiToken }) => serialized.includes(apiToken.token_hash))).toBe(false);
@@ -93,7 +91,7 @@ describe("the API token repository's reads", () => {
     );
   });
 
-  it("findName names a live token, and a revoked one not at all (decision 39: /whoami's read)", async () => {
+  it("findName names a live token, and a revoked one not at all (/whoami's read)", async () => {
     const { adminId, organizationId, serviceAccountId } = await accountInGroup();
     const createdAt = new Date(Date.now() - 60_000);
     const live = await addApiToken(ownerDb, { organizationId, serviceAccountUserId: serviceAccountId, created_at: createdAt });

@@ -50,15 +50,14 @@ const errorResponses = {
 
 /**
  * Any string: a path naming anything but the active organization, a
- * malformed id included, is the same 404 organization_not_found, not a 400
- * (D5 decision 7).
+ * malformed id included, is the same 404 organization_not_found, not a 400.
  */
 const OrganizationParamsSchema = z.object({ organizationId: z.string() });
 
 /**
  * Any string for the account too: one that isn't a canonical uuid names no
  * account, and gets the service's 404 service_account_not_found, as an
- * unknown one does (D22 decision 26).
+ * unknown one does.
  */
 const ServiceAccountParamsSchema = z.object({ organizationId: z.string(), serviceAccountId: z.string() });
 
@@ -66,12 +65,12 @@ const ServiceAccountParamsSchema = z.object({ organizationId: z.string(), servic
 const ApiTokenParamsSchema = z.object({ organizationId: z.string(), serviceAccountId: z.string(), tokenId: z.string() });
 
 /**
- * The create's reply carries the token (decision 9): no cache, the browser's
+ * The create's reply carries the token: no cache, the browser's
  * or a proxy's, may keep it.
  */
 const NO_STORE = "no-store";
 
-/** Eight lowercase hex digits from four random bytes: a new address's random part (decision 5). */
+/** Eight lowercase hex digits from four random bytes: a new address's random part. */
 export function randomAddressHex(): string {
   return randomBytes(4).toString("hex");
 }
@@ -105,7 +104,7 @@ function toApiTokenResponseBody(token: ListedApiToken): ApiTokenResponseBody {
 /**
  * The service over the API's database, each unit of work one transaction
  * carrying the request's `AuthContext` (its active organization). Exported
- * so a test can pass its own random source for the address (decision 27's
+ * so a test can pass its own random source for the address (the create's
  * retry) and still run as the API's role.
  */
 export function createDatabaseServiceAccountService(
@@ -130,10 +129,10 @@ export function createDatabaseServiceAccountService(
 }
 
 /**
- * D22 decision 26's routes, and decision 31's for an account's tokens,
- * under the active organization as every management route: a session (`authenticate` only, never the terms check,
- * as organization management), admins only, reads included. Not rate
- * limited, as the other management routes (D2c decision 7). The CSRF guard
+ * The service-account routes, and those of an account's tokens, under the
+ * active organization as every management route: a session (`authenticate`
+ * only, never the terms check, as organization management), admins only, reads
+ * included. Not rate limited, as the other management routes. The CSRF guard
  * covers the writes, as every state-changing route.
  *
  * The validator/serializer compilers are server-wide and set once in
@@ -229,8 +228,8 @@ export function registerServiceAccountRoutes(server: FastifyInstance, deps: Serv
     },
   );
 
-  // The one reply that carries a token (decision 31): never logged (the
-  // request log has no bodies), never cached.
+  // The one reply that carries a token: never logged (the request log has no
+  // bodies), never cached.
   typed.post(
     "/api/v1/organizations/:organizationId/service-accounts/:serviceAccountId/api-tokens",
     {
@@ -251,7 +250,7 @@ export function registerServiceAccountRoutes(server: FastifyInstance, deps: Serv
     },
   );
 
-  // A revoke (decision 31): the row stays, revoked, and its name is free.
+  // A revoke: the row stays, revoked, and its name is free.
   typed.delete(
     "/api/v1/organizations/:organizationId/service-accounts/:serviceAccountId/api-tokens/:tokenId",
     {

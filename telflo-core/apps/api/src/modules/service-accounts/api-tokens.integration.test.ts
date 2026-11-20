@@ -25,13 +25,13 @@ import { hashPassword } from "../identity/password.js";
 import { apiTokenHash } from "./tokens.js";
 
 /*
- * An account's API tokens (D22 decisions 7 to 10, 31 and 32). A token is a
- * secret like a bearer (decision 48): every token here is built at run time
- * (by the API or by addApiToken), and the assertions compare a token, its
- * hash or its prefix as booleans or counts, so a failure prints none.
+ * An account's API tokens. A token is a secret like a bearer: every token here
+ * is built at run time (by the API or by addApiToken), and the assertions
+ * compare a token, its hash or its prefix as booleans or counts, so a failure
+ * prints none.
  */
 
-// The opamp-server every server needs (D11b decision 8): this file's own fake.
+// The opamp-server every server needs: this file's own fake.
 const opamp = useFakeOpampServer();
 
 const csrfHeaders = { [CSRF_HEADER_NAME]: CSRF_HEADER_VALUE };
@@ -57,7 +57,7 @@ interface ApiTokenBody {
   isExpired: boolean;
 }
 
-describe("API token routes (D22 decision 31)", () => {
+describe("API token routes", () => {
   let settings: AppSettings;
   /** The tables' owner's pool, whose connections hold row locks. */
   let pool: Pool;
@@ -77,7 +77,7 @@ describe("API token routes (D22 decision 31)", () => {
     ownerDb = createDb(pool);
     db = createDb(createPool(settings.databaseUrl));
     // Every line at info and above is kept, so a test can show that none
-    // holds a token, its prefix or its name (decisions 48 and 49).
+    // holds a token, its prefix or its name.
     const previousLevel = process.env.LOG_LEVEL;
     process.env.LOG_LEVEL = "info";
     try {
@@ -139,7 +139,7 @@ describe("API token routes (D22 decision 31)", () => {
       payload: { organizationId },
     });
     expect(response.statusCode).toBe(200);
-    // A no-op when the sign-in already landed there (D36-1 decision 56): no new cookie, the token sent stands.
+    // A no-op when the sign-in already landed there: no new cookie, the token sent stands.
     return response.headers["set-cookie"] === undefined ? access : cookieValue(response, "telflo_access");
   };
 
@@ -157,11 +157,11 @@ describe("API token routes (D22 decision 31)", () => {
     return { user: account.user, group, access };
   };
 
-  /** A service account of `organizationId` in D22's real shape, made at the clock's time. */
+  /** A service account of `organizationId` in its real shape, made at the clock's time. */
   const serviceAccountIn = async (organizationId: string, name?: string) =>
     (await addServiceAccount(ownerDb, { organizationId, createdAt: clock, ...(name === undefined ? {} : { name }) })).user;
 
-  /** A token written by the owner on the account, made a minute before the clock unless told otherwise. */
+  /** A token written by the tables' owner on the account, made a minute before the clock unless told otherwise. */
   const ownerMadeToken = (
     organizationId: string,
     serviceAccountUserId: string,
@@ -323,11 +323,11 @@ describe("API token routes (D22 decision 31)", () => {
       expect(stored.token_hash === apiTokenHash(token)).toBe(true);
       expect(stored.token_prefix === token.slice(0, 11)).toBe(true);
 
-      // The canaries first (Ruling 99), booleans with fixed labels: nothing
-      // compared below with toEqual or toMatchObject, whose diff would print
-      // it, may hold the token, its hash or its prefix. A canary over every
-      // log line and every audit row: the token, its hash, its prefix, its
-      // name and the account's name are in none.
+      // The canaries first, booleans with fixed labels: nothing compared
+      // below with toEqual or toMatchObject, whose diff would print it, may
+      // hold the token, its hash or its prefix. A canary over every log line
+      // and every audit row: the token, its hash, its prefix, its name and
+      // the account's name are in none.
       const accountRow = await ownerDb
         .selectFrom("service_accounts")
         .select("name")
@@ -427,7 +427,7 @@ describe("API token routes (D22 decision 31)", () => {
       expect(await tokenRows()).toEqual(before);
     });
 
-    it("the 21st live token is 409 api_token_limit_reached with the owner's words; expired and revoked tokens don't count; 10 concurrent creates at 15 end with exactly 20", async () => {
+    it("the 21st live token is 409 api_token_limit_reached with the contracts' words; expired and revoked tokens don't count; 10 concurrent creates at 15 end with exactly 20", async () => {
       const admin = await memberActiveInGroup("admin");
       const full = await serviceAccountIn(admin.group.id);
       for (let index = 0; index < 20; index += 1) await ownerMadeToken(admin.group.id, full.id);
@@ -560,8 +560,8 @@ describe("API token routes (D22 decision 31)", () => {
       const response = await listTokens(admin.access, admin.group.id, account.id.toUpperCase());
 
       expect(response.statusCode).toBe(200);
-      // The canaries first (Ruling 99): the body holds no token and no hash,
-      // and no item but in its prefix, before any comparison could print one.
+      // The canaries first: the body holds no token and no hash, and no item but in
+      // its prefix, before any comparison could print one.
       const fixtures = [newest, atClock, expired, older];
       for (const { token, apiToken } of fixtures) {
         expect(response.body.includes(token.slice(3))).toBe(false);
@@ -648,7 +648,7 @@ describe("API token routes (D22 decision 31)", () => {
         .executeTakeFirstOrThrow();
       expect(row).toEqual({ revoked_at: clock, revoked_by_user_id: admin.user.id });
       const revokedRow = (await tokenAudits()).at(-1)!;
-      // The canaries first (Ruling 99): the audit row, whole, holds neither the token nor its prefix.
+      // The canaries first: the audit row, whole, holds neither the token nor its prefix.
       const serializedRevoke = JSON.stringify(revokedRow);
       expect([target.token, target.token.slice(3), target.apiToken.prefix].some((text) => serializedRevoke.includes(text))).toBe(
         false,

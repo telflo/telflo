@@ -3,11 +3,10 @@ import { QUICK_DEPLOY_PATH_PREFIX } from "@telflo/contracts";
 import { hashToken } from "../identity/tokens.js";
 
 /*
- * A quick-deploy link's secret (D17c-2 decision 23; ADR 0023): `tqd_` and 32
- * random bytes in base64url (256 bits), shown once inside the link and
- * stored only as its sha-256, as every hashed token of the platform's
- * (identity/tokens.ts). The secret is a credential: never logged, audited
- * or put in an error.
+ * A quick-deploy link's secret: `tqd_` and 32 random bytes in base64url
+ * (256 bits), shown once inside the link and stored only as its sha-256, as
+ * every hashed token of the platform's (identity/tokens.ts). The secret is
+ * a credential: never logged, audited or put in an error.
  */
 
 const SECRET_BYTES = 32;
@@ -25,7 +24,7 @@ export function generateQuickDeploySecret(): { secret: string; secretHash: strin
 }
 
 /**
- * The link whoever runs the command downloads from (Preflight ruling 8):
+ * The link whoever runs the command downloads from:
  * TELFLO_PUBLIC_API_URL (its trailing `/` already removed by the settings)
  * and `/api/v1/quick-deploy/{secret}`.
  */

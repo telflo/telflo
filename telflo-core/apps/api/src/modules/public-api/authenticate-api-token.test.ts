@@ -18,11 +18,10 @@ import {
 } from "./authenticate-api-token.js";
 
 /*
- * The token check's order and its failure count (D22 decisions 34 and 36,
- * Preflight ruling 11), over a store the test counts and fails, with the
- * production limit (30 failures per 5 minutes per address). Tokens are
- * built at run time and every assertion about one compares booleans or
- * counts, so a failure prints none (decision 48).
+ * The token check's order and its failure count, over a store the test
+ * counts and fails, with the production limit (30 failures per 5 minutes
+ * per address). Tokens are built at run time and every assertion about one
+ * compares booleans or counts, so a failure prints none.
  */
 
 const LIMIT = RATE_LIMITS.apiTokenFailuresPerIp;
@@ -40,7 +39,7 @@ const LIVE: LiveApiToken = {
   role: "contributor",
 };
 
-/** A person's own live token, as migration 1700000000038's lookup answers it: no organization, no role (D25 decision 21). */
+/** A person's own live token, as migration 1700000000038's lookup answers it: no organization, no role. */
 const PERSON: LiveApiToken = {
   kind: "person",
   tokenId: "0192a6b0-0000-7000-8000-00000000a0f1",
@@ -132,7 +131,7 @@ async function harness({ validToken, found = LIVE, failTouch, gate, limiterNow }
     return { tokenId: context.tokenId };
   });
   server.get("/api/public/v1/unguarded", async (request) => requireApiTokenAuthentication(request));
-  // The organization check after the token's (D25 decision 24), as the public plugin runs them: required, and optional.
+  // The organization check after the token's, as the public plugin runs them: required, and optional.
   const organization = createApiTokenOrganizationCheck({ store });
   for (const requirement of ["required", "optional"] as const) {
     server.get(
@@ -167,7 +166,7 @@ const whoami = (server: FastifyInstance, authorization?: string, remoteAddress =
     ...(authorization === undefined ? {} : { headers: { authorization } }),
   });
 
-describe("the token check's failure limit (D22 decision 36, Preflight ruling 11)", () => {
+describe("the token check's failure limit", () => {
   it("a burst of 100 parallel bad tokens from one address makes exactly 30 lookups: each counts before its lookup", async () => {
     const { server, lookups } = await harness();
     const replies = await Promise.all(Array.from({ length: 100 }, () => whoami(server, `Bearer ${newToken()}`)));
@@ -177,7 +176,7 @@ describe("the token check's failure limit (D22 decision 36, Preflight ruling 11)
     expect(statuses.filter((status) => status === 429)).toHaveLength(100 - LIMIT.max);
   });
 
-  it("100 parallel VALID requests from one address: the 429s, caused by lookups in flight only, carry Retry-After 1, and the next request succeeds (Ruling 100)", async () => {
+  it("100 parallel VALID requests from one address: the 429s, caused by lookups in flight only, carry Retry-After 1, and the next request succeeds", async () => {
     const valid = newToken();
     let release!: () => void;
     const gate = new Promise<void>((resolve) => {
@@ -264,7 +263,7 @@ describe("the token check's failure limit (D22 decision 36, Preflight ruling 11)
     expect((await whoami(server, `Bearer ${valid}`)).statusCode).toBe(200);
   });
 
-  it("any header counts one, a scheme other than Bearer and a malformed token included, with no lookup: each settles as a failure, blocking for the window, and a valid token passes once it ends (Ruling 105)", async () => {
+  it("any header counts one, a scheme other than Bearer and a malformed token included, with no lookup: each settles as a failure, blocking for the window, and a valid token passes once it ends", async () => {
     const valid = newToken();
     let clock = Date.parse("2026-10-23T12:00:00Z");
     const { server, lookups } = await harness({ validToken: valid, limiterNow: () => clock });
@@ -309,7 +308,7 @@ describe("the token check's failure limit (D22 decision 36, Preflight ruling 11)
   });
 });
 
-describe("the token check's order and its one refusal (D22 decision 34)", () => {
+describe("the token check's order and its one refusal", () => {
   it("accepts Bearer, the scheme case aside, one space, then exactly a tf_ token", async () => {
     const valid = newToken();
     const { server } = await harness({ validToken: valid });
@@ -364,7 +363,7 @@ describe("the token check's order and its one refusal (D22 decision 34)", () => 
     const valid = newToken();
     const { server, lines } = await harness({ validToken: valid, failTouch: "23514" });
     expect((await whoami(server, `Bearer ${valid}`)).statusCode).toBe(200);
-    // The canaries first (Ruling 99): no comparison below may print a token.
+    // The canaries first: no comparison below may print a token.
     const logged = lines.join("\n");
     expect(logged.includes(valid.slice(3))).toBe(false);
     expect(logged.includes(apiTokenHash(valid))).toBe(false);
@@ -397,7 +396,7 @@ describe("the token check's order and its one refusal (D22 decision 34)", () => 
   });
 });
 
-describe("a personal token (D25 decisions 21 and 24; Ruling 160)", () => {
+describe("a personal token", () => {
   const ORGANIZATION = "0192a6b0-0000-7000-8000-00000000a0f2";
   const OTHER = "0192a6b0-0000-7000-8000-00000000a0f4";
   const ORGANIZATION_REQUIRED = JSON.stringify({
@@ -451,7 +450,7 @@ describe("a personal token (D25 decisions 21 and 24; Ruling 160)", () => {
     const valid = newToken();
     const { server, roleReads, roles } = await harness({ validToken: valid, found: PERSON });
     roles.set(ORGANIZATION, "contributor");
-    // In capitals: canonicalIdOf lowercases it before any comparison (D21 Ruling 85).
+    // In capitals: canonicalIdOf lowercases it before any comparison.
     const first = await call(server, valid, "required", ORGANIZATION.toUpperCase());
     expect(first.statusCode).toBe(200);
     expect(first.json()).toEqual({
@@ -484,7 +483,7 @@ describe("a personal token (D25 decisions 21 and 24; Ruling 160)", () => {
     expect(accepted.json<{ context: { organizationId: string; role: string } }>().context).toMatchObject({ organizationId: ORGANIZATION, role: "admin" });
   });
 
-  it("a refused organization never counts toward the address's failure limit (decision 24)", async () => {
+  it("a refused organization never counts toward the address's failure limit", async () => {
     const valid = newToken();
     const { server } = await harness({ validToken: valid, found: PERSON });
     for (let attempt = 0; attempt < LIMIT.max * 2; attempt += 1) {

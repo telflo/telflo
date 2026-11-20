@@ -20,10 +20,10 @@ import {
 import { createServiceAccountService, type ServiceAccountTransaction } from "./service.js";
 
 const NOW = new Date("2030-01-01T00:00:00.000Z");
-/** A token built at run time (D22 Preflight ruling 32), never printed: compared as a boolean. */
+/** A token built at run time, never printed: compared as a boolean. */
 const MINTED_TOKEN = `tf_${"A".repeat(43)}`;
 
-/** Whether `value`, serialized, holds the minted token's body or its prefix: a boolean canary (Ruling 99). */
+/** Whether `value`, serialized, holds the minted token's body or its prefix: a boolean canary. */
 const holdsMintedToken = (value: unknown) => {
   const serialized = JSON.stringify(value);
   return serialized.includes(MINTED_TOKEN.slice(3)) || serialized.includes(MINTED_TOKEN.slice(0, 11));
@@ -47,10 +47,10 @@ function apiToken(overrides: Partial<ApiToken> = {}): ApiToken {
 const origin = { ipAddress: "203.0.113.7", userAgent: "vitest" };
 
 /**
- * Hand-built fakes typed against the repository interfaces, every call
- * logged in order, so a test sees decision 27's and 28's orders. There is
- * no real transaction: routes.integration.test.ts proves atomicity, the
- * locks and the limit against Postgres.
+ * Hand-built fakes typed against the repository interfaces, every call logged
+ * in order, so a test sees the create's and the delete's orders. There is no
+ * real transaction: routes.integration.test.ts proves atomicity, the locks and
+ * the limit against Postgres.
  */
 function buildHarness() {
   const calls: string[] = [];
@@ -313,7 +313,7 @@ describe("the checks every route makes first", () => {
 });
 
 describe("create", () => {
-  it("in decision 27's order: the lock and the re-check, the count, the name, the user and its row, the contributor membership, the audit row", async () => {
+  it("in its order: the lock and the re-check, the count, the name, the user and its row, the contributor membership, the audit row", async () => {
     const actor = harness.actor();
 
     const account = await harness.service.create(actor, harness.organization.id, "CI Deploy");
@@ -450,7 +450,7 @@ describe("rename", () => {
 });
 
 describe("delete", () => {
-  it("in decision 28's order: the lock, the account, its user's lock, its tokens, its membership, its deletion, the audit row with the count", async () => {
+  it("in its order: the lock, the account, its user's lock, its tokens, its membership, its deletion, the audit row with the count", async () => {
     const actor = harness.actor();
     const live = harness.account();
 
@@ -488,7 +488,7 @@ describe("delete", () => {
   });
 });
 
-describe("tokens (decision 31)", () => {
+describe("tokens", () => {
   const token = { name: "Deploy", access: "write" as const, expiresInDays: 30 };
 
   it("a create, in its order: the lock and the re-check, the account, the live count at the clock, the name, the mint, the row, the audit row with ids, access and expiry only", async () => {
@@ -510,7 +510,7 @@ describe("tokens (decision 31)", () => {
     ]);
     const expiresAt = new Date(NOW.getTime() + 30 * 24 * 60 * 60 * 1000);
     // The row's input: its hash and prefix as booleans, then the rest, once
-    // a canary shows it holds neither the token nor its prefix (Ruling 99).
+    // a canary shows it holds neither the token nor its prefix.
     expect(harness.transaction.apiTokens.create).toHaveBeenCalledTimes(1);
     const { tokenHash, tokenPrefix, ...createInput } = harness.transaction.apiTokens.create.mock.calls[0]![0];
     expect(tokenHash === "f".repeat(64)).toBe(true);
@@ -563,14 +563,14 @@ describe("tokens (decision 31)", () => {
       expiresInDays: null,
     });
     expect(created.apiToken.expiresAt).toBeNull();
-    // The canary, then the keys, then the values (Ruling 99).
+    // The canary, then the keys, then the values.
     expect(holdsMintedToken(harness.auditEvents)).toBe(false);
     expect(harness.auditEvents).toHaveLength(1);
     expect(Object.keys(harness.auditEvents[0]!.metadata ?? {}).sort()).toEqual(["access", "expiresAt", "serviceAccountId"]);
     expect(harness.auditEvents[0]?.metadata).toEqual({ serviceAccountId: live.id, access: "write", expiresAt: null });
   });
 
-  it("refuses at 20 live tokens with the owner's 409 before the name and the mint", async () => {
+  it("refuses at 20 live tokens with the 409 before the name and the mint", async () => {
     const live = harness.account();
     harness.state.liveTokens = 20;
     const error = await refusal(harness.service.createToken(harness.actor(), harness.organization.id, live.id, token));

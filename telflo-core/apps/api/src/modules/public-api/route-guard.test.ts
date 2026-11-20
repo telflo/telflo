@@ -20,11 +20,11 @@ import {
 } from "./route-guard.js";
 
 /*
- * The public surface's registration guard (D25 decision 13, Rulings 163
- * and 164; the request-time verification is route-verification.integration.test.ts): a route under /api/public/v1, in any spelling, that
- * isn't the public plugin's or an allowed open route refuses the server's
- * start (ready() rejects), on a bare Fastify with the guard and on the
- * real server.
+ * The public surface's registration guard (the request-time verification
+ * is route-verification.integration.test.ts): a route under /api/public/v1,
+ * in any spelling, that isn't the public plugin's or an allowed open route
+ * refuses the server's start (ready() rejects), on a bare Fastify with the
+ * guard and on the real server.
  */
 
 const opamp = useFakeOpampServer();
@@ -46,7 +46,7 @@ async function readied(register: (server: FastifyInstance) => void): Promise<voi
 
 const ok = async () => ({ ok: true });
 
-describe("the root guard (D25 Ruling 163)", () => {
+describe("the root guard", () => {
   it("lets the public plugin register anything under the prefix, its child plugins' routes included", async () => {
     await expect(
       readied((server) => {
@@ -64,7 +64,7 @@ describe("the root guard (D25 Ruling 163)", () => {
     ).resolves.toBeUndefined();
   });
 
-  it("lets the open plugin register its allowlist only, Task 7's /docs routes and D27's POST /validate/anonymous included", async () => {
+  it("lets the open plugin register its allowlist only, the reference page's /docs routes and the anonymous POST /validate/anonymous included", async () => {
     expect([...OPEN_PUBLIC_ROUTES].sort()).toEqual(
       [
         ...["/docs", "/docs/*", "/health", "/openapi.json"].flatMap((path) =>
@@ -87,7 +87,7 @@ describe("the root guard (D25 Ruling 163)", () => {
     ).resolves.toBeUndefined();
   });
 
-  it("refuses a data route added to the open plugin, a POST to an allowed path, and any other method of the anonymous validate's (D27 decision 23)", async () => {
+  it("refuses a data route added to the open plugin, a POST to an allowed path, and any other method of the anonymous validate's", async () => {
     for (const add of [
       (open: FastifyInstance) => open.get("/configurations", ok),
       (open: FastifyInstance) => open.post("/health", ok),
@@ -120,7 +120,7 @@ describe("the root guard (D25 Ruling 163)", () => {
     ["a parent segment", "/api/x/../public/v1/x"],
     ["an encoded letter", "/api/%70ublic/v1/x"],
     ["a wildcard", "/api/public/v1*"],
-    // Ruling 164: a parameter or a wildcard that could match the prefix's segments.
+    // A parameter or a wildcard that could match the prefix's segments.
     ["a parameter for public", "/api/:x/v1/escape"],
     ["a parameter for v1", "/api/public/:v/escape"],
     ["a parameter for api", "/:a/public/v1/escape"],
@@ -145,11 +145,11 @@ describe("the root guard (D25 Ruling 163)", () => {
       readied((server) => {
         server.get("/api/v1/auth/me", ok);
         server.get("/api/public/v", ok);
-        // Ruling 164: segments that run out, or can't match, before the prefix's three.
+        // Segments that run out, or can't match, before the prefix's three.
         server.get("/api/:x", ok);
         server.get("/api/v1/*", ok);
         server.get("/api/public/v2/*", ok);
-        // The root's CORS preflight, exactly (Ruling 163).
+        // The root's CORS preflight, exactly.
         server.options("*", ok);
       }),
     ).resolves.toBeUndefined();
@@ -168,7 +168,7 @@ describe("the root guard (D25 Ruling 163)", () => {
     }
   });
 
-  it("takes a request's path under the prefix with a segment boundary, the request log's (Ruling 166)", () => {
+  it("takes a request's path under the prefix with a segment boundary, the request log's", () => {
     for (const url of [
       "/api/public/v1",
       "/api/public/v1/",
@@ -176,7 +176,7 @@ describe("the root guard (D25 Ruling 163)", () => {
       "/API/Public/V1/x",
       "/api//public/./v1/x",
       "/api/public/v1#x",
-      // Ruling 173: an absolute-form target, a double encoding.
+      // An absolute-form target, a double encoding.
       "http://x/API/public/v1/nope?q=1",
       "/api/%2570ublic/v1/x",
     ]) {
@@ -215,7 +215,7 @@ describe("the root guard (D25 Ruling 163)", () => {
     expect(normalizedRouteUrl("/api/%2570ublic/v1")).toBe("/api/%70ublic/v1");
   });
 
-  it("on the real server, with both guards, a not-found handler a plugin sets under the prefix answers nothing: the one 401 (Ruling 166)", async () => {
+  it("on the real server, with both guards, a not-found handler a plugin sets under the prefix answers nothing: the one 401", async () => {
     const settings = loadSettings(process.env);
     const db = createDb(createPool(settings.databaseUrl));
     try {
@@ -242,7 +242,7 @@ describe("the root guard (D25 Ruling 163)", () => {
         ["DELETE", "/api/public/v1/x/y/z"],
       ] as const) {
         const response = await server.inject({ method, url });
-        // no-store as every public reply (Ruling 187).
+        // no-store as every public reply.
         expect([method, url, response.statusCode, response.body === refusal, response.headers["cache-control"]]).toEqual([
           method,
           url,

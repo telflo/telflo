@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 import { hasPipelineKey, pipelineKeysOf } from "./yaml-pipelines.js";
 
 /*
- * The pipeline keys of a collector configuration's `service.pipelines` (D25
- * Preflight ruling 8): what route 14's PUT and route 26's test runs check a
+ * The pipeline keys of a collector configuration's `service.pipelines`:
+ * what the validation pipelines' PUT and the public test runs check a
  * pipeline's name against.
  */
 

@@ -1,8 +1,8 @@
 import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:crypto";
 
 /*
- * The values typed for a link's variables, sealed at rest (D17c-2 decision
- * 7; Preflight ruling 6): AES-256-GCM from node:crypto, no library.
+ * The values typed for a link's variables, sealed at rest: AES-256-GCM from
+ * node:crypto, no library.
  *
  *   sealed = version (1 byte, 0x01) ‖ nonce (12 random bytes) ‖ tag (16 bytes) ‖ ciphertext
  *
@@ -150,7 +150,7 @@ export const QUICK_DEPLOY_PREVIOUS_KEYS_MAXIMUM = 8;
 const KEY_TEXT = /^[A-Za-z0-9+/]{43}=$/;
 
 /**
- * The key ring from the settings (Preflight ruling 6):
+ * The key ring from the settings:
  * TELFLO_QUICK_DEPLOY_ENCRYPTION_KEY (required) and
  * TELFLO_QUICK_DEPLOY_PREVIOUS_ENCRYPTION_KEYS (optional, comma separated,
  * at most 8), each 32 bytes in standard base64, none repeated, the current
