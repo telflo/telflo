@@ -100,7 +100,7 @@ describe("a change the text edits refuse", () => {
     expect(error).toHaveBeenCalledWith(CANT_EDIT_ON_CANVAS_MESSAGE);
   });
 
-  it("layout changes don't reach the edits: a move, a colour and Tidy up still work", () => {
+  it("layout changes don't reach the edits: a move, a color and Tidy up still work", () => {
     refuse.on = true;
     store().setPipelineColor(store().graph.pipelines[0]!.id, "#10b981");
     now += 1000;

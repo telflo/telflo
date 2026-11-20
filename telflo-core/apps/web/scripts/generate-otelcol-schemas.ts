@@ -1216,7 +1216,7 @@ export function readInputs(): { inputs: SchemaInputs; openParts: OpenPart[]; cap
   };
 }
 
-/** The versions a catalogue file offers (not deprecated), as it lists them. */
+/** The versions a catalog file offers (not deprecated), as it lists them. */
 export function offeredVersions(catalogueFile: unknown): string[] {
   const versions = isRecord(catalogueFile) && Array.isArray(catalogueFile.versions) ? catalogueFile.versions : [];
   return versions.filter((entry) => isRecord(entry) && !entry.deprecated).map((entry) => String((entry as Record<string, unknown>).version));

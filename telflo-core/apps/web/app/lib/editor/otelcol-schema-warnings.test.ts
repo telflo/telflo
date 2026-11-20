@@ -25,7 +25,7 @@ import { checkedVersion, seededFlows, type CatalogueOffer } from "~/test/seeded-
 
 const DISTRIBUTION = "otelcol-contrib";
 
-/** The catalogue's offered versions of the distribution, oldest first. */
+/** The catalog's offered versions of the distribution, oldest first. */
 const VERSIONS = offeredVersions(CATALOGUE_VERSIONS[DISTRIBUTION] ?? []).map((offer) => offer.version);
 
 /** What a drop of each palette entry writes on each offered version. */
@@ -69,7 +69,7 @@ interface ExpectedWarnings {
   reason: string;
 }
 
-/** The versions before the collector named the awss3 receiver `aws_s3` (the catalogue's rename). */
+/** The versions before the collector named the awss3 receiver `aws_s3` (the catalog's rename). */
 const beforeAwsS3Receiver = (version: string) => spelledType("receiver", "awss3", DISTRIBUTION, version) !== "aws_s3";
 
 const notAllowed = (key: string) => `Property ${key} is not allowed.`;
@@ -217,7 +217,7 @@ describe("the expected-warnings table", () => {
     expect(SEEDED_FLOWS).toHaveLength(13);
     const catalogued = (CATALOGUE_VERSIONS[DISTRIBUTION] ?? []).map((entry) => entry.version);
     for (const flow of SEEDED_FLOWS) {
-      // A pin is the catalogue's, offered or deprecated (it never deletes one); the checked version is offered.
+      // A pin is the catalog's, offered or deprecated (it never deletes one); the checked version is offered.
       expect(flow.collectorDistribution, flow.slug).toBe(DISTRIBUTION);
       expect(catalogued, flow.slug).toContain(flow.collectorVersion);
       expect(VERSIONS, flow.slug).toContain(checkedVersion(flow));
@@ -243,7 +243,7 @@ describe("a seeded flow's checked version", () => {
   };
   const flow = (collectorVersion: string) => ({ slug: "a-flow", collectorDistribution: DISTRIBUTION, collectorVersion });
 
-  it("is the pin while the catalogue offers it, default or not", () => {
+  it("is the pin while the catalog offers it, default or not", () => {
     expect(checkedVersion(flow("0.2.0"), catalogue)).toBe("0.2.0");
     expect(checkedVersion(flow("0.3.0"), catalogue)).toBe("0.3.0");
   });
@@ -252,7 +252,7 @@ describe("a seeded flow's checked version", () => {
     expect(checkedVersion(flow("0.1.0"), catalogue)).toBe("0.3.0");
   });
 
-  it("refuses a distribution the catalogue doesn't list", () => {
+  it("refuses a distribution the catalog doesn't list", () => {
     expect(() => checkedVersion({ ...flow("0.2.0"), collectorDistribution: "elsewhere" }, catalogue)).toThrow("isn't in the catalogue");
   });
 });

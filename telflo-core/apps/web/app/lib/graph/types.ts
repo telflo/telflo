@@ -39,7 +39,7 @@ export type NodeKind = ComponentType | "pipelineGroup";
 /**
  * A node's data. A component's carries the builder's fields and its own
  * (its key, its pipeline, whether the text declares it, whether it is
- * enabled); a pipeline's group carries its pipeline's id, signal and colour.
+ * enabled); a pipeline's group carries its pipeline's id, signal and color.
  */
 export interface OTelNodeData extends Record<string, unknown> {
   label: string;

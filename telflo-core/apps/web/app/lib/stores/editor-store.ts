@@ -492,7 +492,7 @@ export type EditorState = {
   duplicateSelectedNodes: () => OTelNode[];
   /** Adds the component to another pipeline, as the same component (one entry in the text). */
   linkNodeToGroup: (nodeId: string, groupId: string) => OTelNode | null;
-  /** Adds an empty pipeline, with the first unused colour unless one is given. Null for a name already used. */
+  /** Adds an empty pipeline, with the first unused color unless one is given. Null for a name already used. */
   addPipeline: (name: string, color?: string) => Pipeline | null;
   setPipelineColor: (pipelineId: string, color: string) => boolean;
   /** Deletes a pipeline, its group and its components. */
@@ -679,7 +679,7 @@ function withSelectedFlags(nodes: OTelNode[], ids: ReadonlySet<string>): OTelNod
 /** A change to the graph, for `commit`. */
 interface Change {
   graph: Graph;
-  /** Only the layout changed (a move, a resize, a colour, Tidy up): the text isn't touched. */
+  /** Only the layout changed (a move, a resize, a color, Tidy up): the text isn't touched. */
   layoutOnly?: boolean;
   /** Instance renames, which the text edits write in place (a model's difference can't tell them). */
   renames?: ComponentRename[];
@@ -702,7 +702,7 @@ interface Change {
  * change to the graph, and writes it into the text as a targeted edit, from
  * the text's own model. A change the edits can't write is refused whole: the
  * graph and the text stay as they were, no entry is kept, and a toast says
- * to edit the YAML. Layout changes (moves, resizes, colours, Tidy up) don't
+ * to edit the YAML. Layout changes (moves, resizes, colors, Tidy up) don't
  * touch the text. Nothing else writes the text but typing, Apply, Undo All,
  * undo and redo; opening a version never does.
  *
@@ -842,7 +842,7 @@ export const useEditorStore = create<EditorState>()((set, get) => {
 
   /**
    * Deleting nodes: a group takes its pipeline and its components with it;
-   * a processor in a pipeline's chain closes it, its neighbours joined in
+   * a processor in a pipeline's chain closes it, its neighbors joined in
    * the same change.
    */
   const withoutNodes = (graph: Graph, nodeIds: ReadonlySet<string>): Graph => {

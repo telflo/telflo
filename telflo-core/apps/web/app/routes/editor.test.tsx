@@ -295,7 +295,7 @@ async function acceptTerms(user: ReturnType<typeof userEvent.setup>) {
 describe("the editor page (/editor/{id}/{versionId})", () => {
   /** The selection's write, answered at once unless a test says otherwise. */
   let selectConfigurationVersion: MockInstance<typeof apiClient.selectConfigurationVersion>;
-  /** The collector catalogue's read, answered at once. */
+  /** The collector catalog's read, answered at once. */
   let readCatalogue: MockInstance<typeof apiClient.getCollectorDistributions>;
   /**
    * The collector validator's check, answered valid at once for the pin it
@@ -378,7 +378,7 @@ describe("the editor page (/editor/{id}/{versionId})", () => {
       expect(getConfiguration).toHaveBeenCalledTimes(1);
     });
 
-    it("reads the collector catalogue once for the page, and the toolbar shows the distribution, locked, and the version's pin", async () => {
+    it("reads the collector catalog once for the page, and the toolbar shows the distribution, locked, and the version's pin", async () => {
       serveConfiguration();
       renderPage();
 

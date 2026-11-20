@@ -1236,7 +1236,7 @@ describe("getCollectorDistributions", () => {
     ],
   };
 
-  it("gets the catalogue, not an organization's, with no CSRF header, and parses it in the API's order", async () => {
+  it("gets the catalog, not an organization's, with no CSRF header, and parses it in the API's order", async () => {
     serve({ [route]: () => ({ status: 200, body: CATALOGUE }) });
 
     expect(await client.getCollectorDistributions()).toEqual(CATALOGUE);
@@ -1245,7 +1245,7 @@ describe("getCollectorDistributions", () => {
     expect(request!.withCredentials).toBe(true);
   });
 
-  it("reports an answer that isn't the catalogue as unexpected_response", async () => {
+  it("reports an answer that isn't the catalog as unexpected_response", async () => {
     serve({ [route]: () => ({ status: 200, body: { distributions: [{ id: "otelcol-contrib" }] } }) });
 
     await expect(client.getCollectorDistributions()).rejects.toMatchObject({ code: "unexpected_response" });
@@ -1558,7 +1558,7 @@ const NEWER_VERSION_SUMMARY = {
   updatedAt: "2026-09-23T12:00:00.000Z",
   publishedAt: "2026-09-23T13:00:00.000Z",
   publishedBy: { userId: MEMBER_ID, email: "member@example.com" },
-  // Pinned to a version the catalogue deprecated since.
+  // Pinned to a version the catalog deprecated since.
   collectorVersion: "0.155.0",
   collectorVersionDeprecated: true,
   collectorVersionDeprecatedNote: "Retired: upgrade to 0.162.0.",

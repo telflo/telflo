@@ -39,7 +39,7 @@ import type {
  *   it;
  * - renamed types (`otlp_grpc`) take their palette entry's label, icon and
  *   help, and the node's key keeps the text's spelling (the renames are the
- *   catalogue's, by kind);
+ *   catalog's, by kind);
  * - every id is opaque: `node_<n>`, `group_<n>`, `pipeline_<n>`,
  *   `edge_<n>`, never a name.
  *
@@ -48,7 +48,7 @@ import type {
 
 /**
  * The options every reading of a configuration's text uses: YAML 1.2's core
- * schema, merge keys honoured, duplicate keys refused (the collector refuses
+ * schema, merge keys honored, duplicate keys refused (the collector refuses
  * them too), errors without a code frame (the reason is built from the
  * error's own fields), and the source tokens kept for the text edits.
  */
@@ -78,7 +78,7 @@ const CONNECTOR_SIGNALS: Readonly<Record<string, ConnectorSignalMapping>> = {
 /**
  * The palette's spelling of a type the text spells `type`, for a component
  * of `kind`: the deprecated name when the collector renamed that kind's
- * `type` (`RENAMED_TYPES`, read from the catalogue), else `type` itself.
+ * `type` (`RENAMED_TYPES`, read from the catalog), else `type` itself.
  * Renames are kind-specific, so another kind keeps its spelling (an
  * `otlp_grpc` receiver has no palette entry).
  */

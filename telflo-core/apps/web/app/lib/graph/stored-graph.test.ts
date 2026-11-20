@@ -183,7 +183,7 @@ describe("toStored is best effort: the graph never stops the text from saving", 
 });
 
 describe("fromStored reads back what it can", () => {
-  it("reads toStored's columns back: positions, sizes, colours, keys and pipelines", () => {
+  it("reads toStored's columns back: positions, sizes, colors, keys and pipelines", () => {
     const graph = parsed(corpusText("renamed-types.yaml"));
     graph.pipelines[0]!.color = "#8b5cf6";
     const back = fromStored(toStored(graph));

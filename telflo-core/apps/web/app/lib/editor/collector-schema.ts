@@ -9,8 +9,8 @@ import type { JSONSchema, MonacoYamlOptions } from "monaco-yaml";
  * The pin on screen picks the schema: an offered version of a distribution
  * that has schemas gets `public/schemas/<distribution>/v<version>.json`, the
  * file the generator wrote for it; a null pin, a retired one, a version the
- * catalogue doesn't list, or a distribution without schemas gets syntax
- * only. The versions are read from the catalogue when the web is built, as
+ * catalog doesn't list, or a distribution without schemas gets syntax
+ * only. The versions are read from the catalog when the web is built, as
  * the renames are (`renamed-types.ts`), so the choice is synchronous and
  * never asks the API.
  */
@@ -18,13 +18,13 @@ import type { JSONSchema, MonacoYamlOptions } from "monaco-yaml";
 /** The distributions whose offered versions each have a generated schema (contrib only). */
 export const SCHEMA_DISTRIBUTIONS: ReadonlySet<string> = new Set(["otelcol-contrib"]);
 
-/** The part of a catalogue file's version this reads. */
+/** The part of a catalog file's version this reads. */
 export interface SchemaCatalogueVersion {
   version: string;
   deprecated: boolean;
 }
 
-/** Each catalogue file's `versions`, by the file's path, as Vite bundles them. */
+/** Each catalog file's `versions`, by the file's path, as Vite bundles them. */
 const CATALOGUE_VERSION_FILES = import.meta.glob<unknown>("../../../../../../catalog/distributions/*.json", {
   eager: true,
   import: "versions",
@@ -52,7 +52,7 @@ export function readSchemaCatalogue(files: Readonly<Record<string, unknown>>): R
   return byDistribution;
 }
 
-/** `value` as a catalogue version, or undefined when it isn't one. */
+/** `value` as a catalog version, or undefined when it isn't one. */
 function catalogueVersion(value: unknown): SchemaCatalogueVersion | undefined {
   if (typeof value !== "object" || value === null) return undefined;
   const { version, deprecated } = value as Record<string, unknown>;
@@ -60,14 +60,14 @@ function catalogueVersion(value: unknown): SchemaCatalogueVersion | undefined {
   return { version, deprecated };
 }
 
-/** Every distribution's versions, as the catalogue lists them. */
+/** Every distribution's versions, as the catalog lists them. */
 export const SCHEMA_CATALOGUE = readSchemaCatalogue(CATALOGUE_VERSION_FILES);
 
 /**
  * The app-relative path of the schema for `distribution` pinned to `pin`
  * (`/schemas/otelcol-contrib/v0.162.0.json`), or null for syntax only: a
  * null distribution or pin, a distribution not in `SCHEMA_DISTRIBUTIONS` or
- * not in the catalogue, a version the catalogue doesn't list, or a retired
+ * not in the catalog, a version the catalog doesn't list, or a retired
  * (deprecated) one.
  */
 export function schemaPathFor(

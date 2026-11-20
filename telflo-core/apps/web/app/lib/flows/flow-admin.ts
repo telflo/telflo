@@ -47,7 +47,7 @@ export function deriveSignals(yaml: string): FlowSignal[] {
 }
 
 /**
- * Whether the catalogue offers a flow's pin: false for a pin it has retired
+ * Whether the catalog offers a flow's pin: false for a pin it has retired
  * (deprecated) or never had; null when it can't say (unread, its read failed,
  * or a distribution it doesn't list).
  */
@@ -74,7 +74,7 @@ function sameList(left: readonly string[], right: readonly string[]): boolean {
 /**
  * The PATCH an edit sends: only the fields that differ from the flow as
  * read. So an edit that leaves the pin alone doesn't send it, and the API
- * keeps it even when the catalogue has retired it since: renaming an
+ * keeps it even when the catalog has retired it since: renaming an
  * old-pinned flow doesn't force a re-pin. A changed distribution or version
  * sends both, so the API checks them as a pair. The signals are compared as
  * a set (the dialog derives them in its own order); the tags as a list.

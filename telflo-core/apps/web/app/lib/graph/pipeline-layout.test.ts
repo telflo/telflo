@@ -345,7 +345,7 @@ describe("layoutPipelineGraph - connectors that are not fully wired", () => {
     );
   });
 
-  it("centres a half-wired connector on the node that feeds it", () => {
+  it("centers a half-wired connector on the node that feeds it", () => {
     const { nodes, edges } = halfWired();
 
     const laid = layoutPipelineGraph(nodes, edges);
@@ -487,7 +487,7 @@ describe("layoutPipelineGraph - stability", () => {
     const laid = layoutPipelineGraph(nodes, edges, pipelines);
 
     for (const n of laid) {
-      if (n.parentId) continue; // children are centred on their spine
+      if (n.parentId) continue; // children are centered on their spine
       expect(n.position.x % CANVAS_GRID_SIZE, `${n.id} x`).toBe(0);
       expect(n.position.y % CANVAS_GRID_SIZE, `${n.id} y`).toBe(0);
       if (n.type === "pipelineGroup") {

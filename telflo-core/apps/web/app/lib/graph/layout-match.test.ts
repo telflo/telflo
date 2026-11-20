@@ -37,7 +37,7 @@ describe("matchLayout", () => {
     expect(matchLayout(graph, { nodes: [], edges: [], pipelines: [] })).toBe(graph);
   });
 
-  it("takes positions, group sizes and colours by pipeline name and component key, never by id", () => {
+  it("takes positions, group sizes and colors by pipeline name and component key, never by id", () => {
     const graph = parsed(STARTER);
     let layout = moved(graph, group(graph, "logs").id, { x: 7, y: 9 });
     layout = moved(layout, component(graph, "exporters.otlp", "logs").id, { x: 31, y: 42 });
@@ -56,7 +56,7 @@ describe("matchLayout", () => {
     const matched = matchLayout(graph, stored);
 
     expect(group(matched, "logs")).toMatchObject({ position: { x: 7, y: 9 }, style: { width: 1234, height: 567 } });
-    // The pipeline's colour wins over its group's.
+    // The pipeline's color wins over its group's.
     expect(group(matched, "logs").data.color).toBe("#06b6d4");
     expect(matched.pipelines.find((p) => p.name === "logs")?.color).toBe("#06b6d4");
     expect(component(matched, "exporters.otlp", "logs").position).toEqual({ x: 31, y: 42 });

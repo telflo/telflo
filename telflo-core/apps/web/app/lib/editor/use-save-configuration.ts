@@ -38,7 +38,7 @@ export const OTHER_ORGANIZATION_MESSAGE =
 
 /**
  * A save or a create refused with 400 `collector_version_unknown`: the pick
- * names a collector version the catalogue no longer offers (retired since
+ * names a collector version the catalog no longer offers (retired since
  * the page read it). The pick stays on screen, unsaved, for another to be
  * chosen.
  */
@@ -46,7 +46,7 @@ export const COLLECTOR_VERSION_UNAVAILABLE_MESSAGE = "That collector version isn
 
 const COLLECTOR_VERSION_UNKNOWN: ConfigurationErrorCode = "collector_version_unknown";
 
-/** Whether a save or a create named a collector version the catalogue doesn't offer. */
+/** Whether a save or a create named a collector version the catalog doesn't offer. */
 export function isCollectorVersionUnavailable(error: unknown): boolean {
   return error instanceof ApiError && error.code === COLLECTOR_VERSION_UNKNOWN;
 }
@@ -108,7 +108,7 @@ const BUSY: SaveResult = { saved: false, busy: true };
  *   re-reads the version and puts it in the store, so the editor locks with
  *   the unsaved text still on screen, dirty against the published content (the
  *   banner's create carries it into a new version); a 400
- *   `collector_version_unknown` (a pick the catalogue retired since the page
+ *   `collector_version_unknown` (a pick the catalog retired since the page
  *   read it) says "That collector version isn't available."; anything else
  *   toasts the failure message.
  * - An answer for a load the editor no longer holds (another configuration

@@ -37,7 +37,7 @@ function everyString(): string[] {
   return [...stringsIn(sampleWorkspace(NOW)), ...stringsIn(sampleVisitor())];
 }
 
-/** The offered (non-deprecated) versions of the build-time catalogue for a distribution. */
+/** The offered (non-deprecated) versions of the build-time catalog for a distribution. */
 function offeredVersions(distribution: string): string[] {
   return PLAYGROUND_CATALOGUE.find((entry) => entry.id === distribution)?.versions.map((offer) => offer.version) ?? [];
 }

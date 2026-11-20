@@ -66,7 +66,7 @@ describe("root with a PostHog key", () => {
     expect(within(banner).queryByText(/Cookie Policy/)).not.toBeInTheDocument();
   });
 
-  it("imports and initialises posthog-js, and shows the banner", async () => {
+  it("imports and initializes posthog-js, and shows the banner", async () => {
     await renderRoot({ key: "phc_test", host: null });
 
     expect(await screen.findByRole("dialog", { name: "Telflo uses cookies" })).toBeInTheDocument();
@@ -91,7 +91,7 @@ describe("an emailed link's token and PostHog", () => {
   /**
    * Root with analytics on and the page at `url`, as a browser loads it from
    * the email: the document's URL has the token; the router gets the path
-   * and query. Returns the address PostHog saw when it initialised, which is
+   * and query. Returns the address PostHog saw when it initialized, which is
    * the one it records as the page's and keeps as the person's first.
    */
   async function addressAtInit(url: string): Promise<string> {

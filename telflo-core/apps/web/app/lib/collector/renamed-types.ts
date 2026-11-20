@@ -3,10 +3,10 @@ import { CollectorRenamedTypesSchema, type CollectorRenamedType } from "@telflo/
 import { COMPONENT_TYPES, type ComponentType } from "../graph/types.js";
 
 /*
- * The collector's renames, read from the catalogue when the web is built:
+ * The collector's renames, read from the catalog when the web is built:
  * each `catalog/distributions/<distribution>.json`'s `renamedTypes`,
  * bundled by Vite, never fetched from the API (the parser is synchronous
- * and runs everywhere). The catalogue is the one source: there is no
+ * and runs everywhere). The catalog is the one source: there is no
  * second copy here. The web image copies `catalog/` before it builds.
  *
  * Every rename is kind-specific: from upstream's `since` on, the collector
@@ -20,13 +20,13 @@ import { COMPONENT_TYPES, type ComponentType } from "../graph/types.js";
  * written as the version's pin knows it (`spelledType`).
  */
 
-/** Each catalogue file's `renamedTypes`, by the file's path, as Vite bundles them. */
+/** Each catalog file's `renamedTypes`, by the file's path, as Vite bundles them. */
 const CATALOGUE_FILES = import.meta.glob<unknown>("../../../../../../catalog/distributions/*.json", {
   eager: true,
   import: "renamedTypes",
 });
 
-/** A rename, as the catalogue lists it. */
+/** A rename, as the catalog lists it. */
 export type RenamedType = CollectorRenamedType;
 
 /** Each kind's renames: the collector's current name → the deprecated name the palette spells. */
@@ -34,7 +34,7 @@ export type RenamedTypeTable = Readonly<Record<ComponentType, Readonly<Record<st
 
 /**
  * The renames of every file in `files` (a path → that file's
- * `renamedTypes`), checked against the catalogue's format, by distribution
+ * `renamedTypes`), checked against the catalog's format, by distribution
  * (the file's name), in each file's order. A file without a valid list
  * throws, naming it, and so does no file at all (the glob matched nothing:
  * `catalog/` missing where the web is built). Vite bundles an
@@ -62,7 +62,7 @@ export function readRenamedTypes(files: Readonly<Record<string, unknown>>): Read
 
 /**
  * The union of every distribution's renames, by kind. A kind's current name
- * has one deprecated name across the files (the catalogue's cross-file rule);
+ * has one deprecated name across the files (the catalog's cross-file rule);
  * a file that disagrees throws.
  */
 export function renamedTypeTable(byDistribution: Readonly<Record<string, readonly RenamedType[]>>): RenamedTypeTable {
@@ -84,7 +84,7 @@ export function renamedTypeTable(byDistribution: Readonly<Record<string, readonl
   return table;
 }
 
-/** Every distribution's renames, as its catalogue file lists them. */
+/** Every distribution's renames, as its catalog file lists them. */
 export const CATALOGUE_RENAMED_TYPES = readRenamedTypes(CATALOGUE_FILES);
 
 /** The collector's renames, by kind: current name → the palette's (deprecated) name. */
@@ -92,7 +92,7 @@ export const RENAMED_TYPES: RenamedTypeTable = renamedTypeTable(CATALOGUE_RENAME
 
 /**
  * A collector version's `major.minor.patch` as numbers (each part any
- * length, as the catalogue's format allows), or null when `version` isn't
+ * length, as the catalog's format allows), or null when `version` isn't
  * in that format.
  */
 function versionParts(version: string): readonly bigint[] | null {
@@ -113,11 +113,11 @@ export function isAtOrAfter(version: string, since: string): boolean {
 
 /**
  * The type a component dropped from the palette is written with: the
- * palette's `paletteType` of `kind`, unless `distribution`'s catalogue file
+ * palette's `paletteType` of `kind`, unless `distribution`'s catalog file
  * renames that kind's `paletteType` (its `deprecatedName`) and the pin
  * `collectorVersion` is at or after the rename's `since`, when the current
- * name. A null pin, a distribution the catalogue doesn't have, or a pin not
- * in the catalogue's format keeps the palette's (old) name, which every
+ * name. A null pin, a distribution the catalog doesn't have, or a pin not
+ * in the catalog's format keeps the palette's (old) name, which every
  * offered collector still accepts. Changing the pin never rewrites text
  * already written: this decides only what a new component is called.
  */

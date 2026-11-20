@@ -69,7 +69,7 @@ export function ruleEditor(page: Page, editing = false): Locator {
   return page.getByRole("dialog", { name: editing ? "Edit validation rule" : "Add validation rule" });
 }
 
-/** In a dialog: the select labelled `label` set to the option named `option`. */
+/** In a dialog: the select labeled `label` set to the option named `option`. */
 export async function choose(dialog: Locator, label: string, option: string): Promise<void> {
   const trigger = dialog.getByLabel(label, { exact: true });
   await trigger.click();

@@ -271,7 +271,7 @@ describe("the flow page (/app/flows/:slug)", () => {
     );
   });
 
-  it("names the distribution with the catalogue's label once it is read", async () => {
+  it("names the distribution with the catalog's label once it is read", async () => {
     vi.spyOn(apiClient, "getCollectorDistributions").mockResolvedValue({
       distributions: [{ ...CATALOGUE[0]!, label: "The catalogue's own label" }],
     });

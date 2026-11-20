@@ -58,7 +58,7 @@ export async function waitForCanvas(page: Page): Promise<void> {
   await expect.poll(async () => viewport(page)).not.toEqual({ x: 0, y: 0, zoom: 1 });
 }
 
-/** The centre of an element, in the window. */
+/** The center of an element, in the window. */
 export async function centre(locator: Locator): Promise<{ x: number; y: number }> {
   const box = await locator.boundingBox();
   if (box === null) throw new Error("the element isn't shown");
@@ -144,7 +144,7 @@ export async function typeLineAtTop(page: Page, line: string): Promise<void> {
 
 /**
  * Gives Monaco the keyboard focus through its input area, with no click
- * on its lines: a centre click retried after a scroll (sticky-scroll rows
+ * on its lines: a center click retried after a scroll (sticky-scroll rows
  * on top) could land where nothing takes the focus. The focus and its
  * check retry together until Monaco says it is focused.
  */

@@ -397,7 +397,7 @@ test("revokes: the default token's and the only rotate token's words with their 
   await expect(cell(rotateRow, 4)).toHaveText("2 collectors");
   await expect(cell(rowsOfKind(page, "Default"), 4)).toHaveText("1 collector");
 
-  // The default token's: what refusing it does, its count; cancelled.
+  // The default token's: what refusing it does, its count; canceled.
   await panel(page).getByRole("button", { name: "Revoke the default token", exact: true }).click();
   const dialog = page.getByRole("alertdialog", { name: "Revoke this token?" });
   await expect(dialog).toContainText(DEFAULT_REVOKE);

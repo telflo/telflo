@@ -212,7 +212,7 @@ async function openSeeded(page: Page, yamlContent = STARTER_CONFIGURATION_YAML, 
   return configuration.id;
 }
 
-/** `#rrggbb` as the browser reports a computed colour. */
+/** `#rrggbb` as the browser reports a computed color. */
 function rgb(hex: string): string {
   const value = parseInt(hex.slice(1), 16);
   return `rgb(${(value >> 16) & 255}, ${(value >> 8) & 255}, ${value & 255})`;
@@ -236,7 +236,7 @@ async function selectPipeline(page: Page, badge: string): Promise<void> {
   ).toBeVisible();
 }
 
-/** The group's dashed box, whose border is the pipeline's colour. */
+/** The group's dashed box, whose border is the pipeline's color. */
 function groupBox(page: Page, badge: string): Locator {
   return group(page, badge).locator(".border-dashed");
 }
@@ -538,7 +538,7 @@ test("Backspace on a selected node asks first: Cancel keeps it, Delete removes i
   expect(navigations).toEqual([]);
 });
 
-test("a pipeline added, recoloured and deleted comes back step by step with Undo", async ({ page }) => {
+test("a pipeline added, recolored and deleted comes back step by step with Undo", async ({ page }) => {
   await openSeeded(page);
   await waitForCanvas(page);
   const undo = page.getByRole("button", { name: "Undo (Ctrl+Z)" });

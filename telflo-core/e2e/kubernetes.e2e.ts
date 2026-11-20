@@ -352,7 +352,7 @@ test("adds a gateway with replicas and its address; its Edit warns of a namespac
   await expect(groupCell(page, name, 1)).toHaveText(namespace);
   await expect(groupCell(page, name, 5)).toHaveText("3");
   await expect(panel.getByRole("button", { name: `Delete ${name}`, exact: true })).toBeVisible();
-  // A row now: the gateway's name and its namespace as the row's text only, in no attribute (its controls labelled by ids).
+  // A row now: the gateway's name and its namespace as the row's text only, in no attribute (its controls labeled by ids).
   expect(await attributeHoldersOf(page, [name, namespace])).toEqual([[], []]);
 
   // Its Edit: no name field (it can't change); a new namespace warns that an installed release stays in the old one.

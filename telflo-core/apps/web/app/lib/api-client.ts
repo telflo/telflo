@@ -1068,9 +1068,9 @@ export function revokePersonalApiToken(tokenId: string): Promise<undefined> {
 }
 
 /**
- * The collector catalogue: every distribution, in the catalogue's order,
+ * The collector catalog: every distribution, in the catalog's order,
  * each with the versions it offers, newest first (deprecated ones are never
- * listed). Signed in, but not an organization's: the catalogue is global.
+ * listed). Signed in, but not an organization's: the catalog is global.
  */
 export function getCollectorDistributions(): Promise<CollectorDistributionsResponse> {
   return send("GET", "/api/v1/collector-distributions", undefined, CollectorDistributionsResponseSchema);
@@ -1116,7 +1116,7 @@ export function getPublishedFlow(slug: string): Promise<PublishedFlowResponse> {
 /**
  * Creates a flow, its source always `telflo`; 409 `flow_slug_taken` for a
  * slug another flow has, 400 `collector_distribution_unknown` or
- * `collector_version_unknown` for a pin the catalogue doesn't offer.
+ * `collector_version_unknown` for a pin the catalog doesn't offer.
  */
 export function createFlow(request: CreateFlowRequest): Promise<FlowResponse> {
   return send("POST", "/api/v1/flows", request, FlowResponseSchema);
@@ -1124,7 +1124,7 @@ export function createFlow(request: CreateFlowRequest): Promise<FlowResponse> {
 
 /**
  * Changes the fields `request` names, and only those: a pin it leaves out
- * stays, even one the catalogue no longer offers. The visibility switch
+ * stays, even one the catalog no longer offers. The visibility switch
  * sends `published` alone.
  */
 export function updateFlow(flowId: string, request: UpdateFlowRequest): Promise<FlowResponse> {

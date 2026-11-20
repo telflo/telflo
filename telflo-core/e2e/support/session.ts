@@ -27,7 +27,7 @@ export async function signInThroughForm(page: Page, { email, password }: Credent
   await page.goto("/login");
   await waitForHydration(page);
   await page.getByLabel("Email").fill(email);
-  // The show/hide toggle is also labelled "…password", so match exactly.
+  // The show/hide toggle is also labeled "…password", so match exactly.
   await page.getByLabel("Password", { exact: true }).fill(password);
   await page.getByRole("button", { name: "Sign In" }).click();
   await page.waitForURL("/app");

@@ -29,7 +29,7 @@ import {
  * refers to, an embedded open definition, a hand-copied set of definitions,
  * optional sections, settings named after Go fields, and a release
  * manifest), never on the network; then the committed schemas against the
- * catalogue.
+ * catalog.
  */
 
 const FIXTURES = fileURLToPath(new URL("./otelcol-schemas/fixtures/", import.meta.url));
@@ -596,7 +596,7 @@ describe("generateSchema", () => {
       ]);
     });
 
-    it("keeps a capitalised setting the collector reads by that name", () => {
+    it("keeps a capitalized setting the collector reads by that name", () => {
       expect(properties(policy).Fixed).toMatchObject({ additionalProperties: { type: "string" } });
       expect(policy.additionalProperties).toBe(false);
     });
@@ -735,7 +735,7 @@ describe("the committed schemas", () => {
           expect(schema.$comment).toContain("Apache License, Version 2.0");
         });
 
-        it("accepts each of the catalogue's renames by its old name from its since, with the new name's settings", () => {
+        it("accepts each of the catalog's renames by its old name from its since, with the new name's settings", () => {
           const schema = read();
           const renames = (CATALOGUE_RENAMED_TYPES[distribution] ?? []).filter((rename) => isAtOrAfter(version, rename.since));
           expect(renames.length).toBeGreaterThan(0);

@@ -5,7 +5,7 @@ import type { Graph, OTelNode } from "./types.js";
 /*
  * A saved layout onto a graph parsed from the text: the text gives the
  * components, pipelines and edges; the layout gives only positions, the
- * pipelines' group sizes and their colours.
+ * pipelines' group sizes and their colors.
  *
  * Matching is by what the text names, never by stored ids: a pipeline's group
  * by the pipeline's name, a component by its pipeline's name and its key

@@ -58,7 +58,7 @@ export function deleteDialog(page: Page): Locator {
   return page.getByRole("alertdialog");
 }
 
-/** The type-to-confirm field, labelled by its sentence. */
+/** The type-to-confirm field, labeled by its sentence. */
 export function confirmField(page: Page): Locator {
   return deleteDialog(page).getByRole("textbox", { name: "This cannot be undone. Type the user's email to confirm." });
 }

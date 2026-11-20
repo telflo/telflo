@@ -361,7 +361,7 @@ describe("Routing connector — reading a config the text holds", () => {
     ]);
   });
 
-  it("recognises config-targeted connectors by name and by node", () => {
+  it("recognizes config-targeted connectors by name and by node", () => {
     expect(isConfigTargetedConnectorName("routing/tenants")).toBe(true);
     expect(isConfigTargetedConnectorName("failover")).toBe(true);
     expect(isConfigTargetedConnectorName("forward")).toBe(false);

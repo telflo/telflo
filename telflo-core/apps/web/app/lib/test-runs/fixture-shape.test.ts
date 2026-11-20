@@ -424,7 +424,7 @@ describe("pickStrategyKind with the target pipeline", () => {
     expect(pickStrategyKind("receivers: [filelog]\nservice:\n  pipelines:\n    logs: {receivers: [filelog]}\n", "logs")).toBe("otlp");
   });
 
-  it("honours merge keys, as the editor reads the text", () => {
+  it("honors merge keys, as the editor reads the text", () => {
     const text =
       "receivers:\n  filelog: {include: [/a.log]}\nbase: &base {receivers: [filelog]}\nservice:\n  pipelines:\n    logs:\n      <<: *base\n      exporters: [debug]\n";
     expect(pickStrategyKind(text, "logs", "logs")).toBe("filelog");

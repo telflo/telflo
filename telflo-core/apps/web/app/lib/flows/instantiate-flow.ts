@@ -20,9 +20,9 @@ import { findDistribution } from "~/lib/stores/collector-catalogue-store.js";
  * left half made. There are no overrides (a picked distribution or version):
  * nothing picks one.
  *
- * A pin the catalogue no longer offers: the copy moves to the distribution's
+ * A pin the catalog no longer offers: the copy moves to the distribution's
  * default version, and the dialogs say so (`flowCopyPin`,
- * `pinMovedSentence`); the flow itself is untouched. With the catalogue
+ * `pinMovedSentence`); the flow itself is untouched. With the catalog
  * unread, the flow's pin is sent, and the API refuses one it doesn't offer
  * (400 `collector_version_unknown`), whose message the dialog shows.
  *
@@ -38,13 +38,13 @@ export interface FlowCopyPin {
   distribution: string;
   /** The collector version the copy's version 1 gets. */
   version: string;
-  /** The flow's own pin when the copy moves off it, because the catalogue no longer offers it; else null. */
+  /** The flow's own pin when the copy moves off it, because the catalog no longer offers it; else null. */
   movedFrom: string | null;
 }
 
 /**
- * Where a copy of `flow` is pinned, given the catalogue as read (null while
- * unread, or when its read failed): the flow's pin when the catalogue offers
+ * Where a copy of `flow` is pinned, given the catalog as read (null while
+ * unread, or when its read failed): the flow's pin when the catalog offers
  * it, or can't say (unread, or a distribution it doesn't list); else the
  * distribution's default version.
  */
@@ -138,7 +138,7 @@ export async function createConfigurationFromFlow(args: {
   organizationId: string;
   name: string;
   description: string;
-  /** The collector catalogue as read; null while unread. */
+  /** The collector catalog as read; null while unread. */
   distributions: readonly CollectorDistribution[] | null;
 }): Promise<InstantiatedFlow> {
   const { flow, organizationId, name, description, distributions } = args;

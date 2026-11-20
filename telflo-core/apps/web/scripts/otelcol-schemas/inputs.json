@@ -1,5 +1,5 @@
 {
-  "$comment": "What generate-otelcol-schemas.ts builds each collector schema from: per distribution, the release manifest's path, the components it builds from outside contrib and core, and per offered version the tags of contrib, core and releases, each pinned to its commit. A checkout whose HEAD isn't the pinned commit stops the run. Adding an offered version to the catalogue means adding it here and running the generator (catalog/README.md).",
+  "$comment": "What generate-otelcol-schemas.ts builds each collector schema from: per distribution, the release manifest's path, the components it builds from outside contrib and core, and per offered version the tags of contrib, core and releases, each pinned to its commit. A checkout whose HEAD isn't the pinned commit stops the run. Adding an offered version to the catalog means adding it here and running the generator (catalog/README.md).",
   "distributions": {
     "otelcol-contrib": {
       "manifest": "distributions/otelcol-contrib/manifest.yaml",

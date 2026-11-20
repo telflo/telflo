@@ -12,7 +12,7 @@ import { ACME, CATALOGUE, CONTRIB } from "~/test/collector-distributions.js";
 
 const NETWORK_ERROR = new ApiError("network_error", "Could not reach the server. Check your connection.");
 
-/** Two readers of the catalogue on one page, as the list and its create dialog are. */
+/** Two readers of the catalog on one page, as the list and its create dialog are. */
 function Readers() {
   const first = useCollectorDistributions();
   const second = useCollectorDistributions();
@@ -29,7 +29,7 @@ beforeEach(() => {
   resetCollectorCatalogue();
 });
 
-describe("the collector catalogue store", () => {
+describe("the collector catalog store", () => {
   it("is read once, however many components read it, and stays read for the page", async () => {
     const read = vi.spyOn(apiClient, "getCollectorDistributions").mockResolvedValue({ distributions: CATALOGUE });
 

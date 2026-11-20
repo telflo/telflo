@@ -10,7 +10,7 @@ function setWindowWidth(width: number) {
   Object.defineProperty(window, "innerWidth", { configurable: true, writable: true, value: width });
 }
 
-/** The centre column, whose left edge the hook measures. */
+/** The center column, whose left edge the hook measures. */
 function boundaryAt(left: number) {
   const element = document.createElement("div");
   element.getBoundingClientRect = () => ({ left }) as DOMRect;
@@ -71,8 +71,8 @@ describe("useResizablePanel", () => {
     expect(result.current.width).toBe(800);
   });
 
-  it("dragging leaves the centre at least its minimum width", () => {
-    // The centre starts 240 px in (the sidebar); 1440 - 240 - 320 = 880 is
+  it("dragging leaves the center at least its minimum width", () => {
+    // The center starts 240 px in (the sidebar); 1440 - 240 - 320 = 880 is
     // over 800, so on a narrower window: 1000 - 240 - 320 = 440.
     setWindowWidth(1000);
     const { result } = renderPanel(400, { minCanvasWidth: 320, boundaryLeft: 240 });
@@ -83,7 +83,7 @@ describe("useResizablePanel", () => {
     expect(result.current.panelWidth).toBe(440);
   });
 
-  it("320 px wins over the centre's minimum on a window too narrow for both", () => {
+  it("320 px wins over the center's minimum on a window too narrow for both", () => {
     setWindowWidth(800);
     const { result } = renderPanel(640, { minCanvasWidth: 320, boundaryLeft: 240 });
 

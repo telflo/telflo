@@ -58,7 +58,7 @@ describe("without the setting", () => {
 });
 
 describe("starting", () => {
-  it("initialises posthog-js cookieless on reject, and with no replay", async () => {
+  it("initializes posthog-js cookieless on reject, and with no replay", async () => {
     const { stripTokens } = await start();
 
     expect(posthog.imported).toHaveBeenCalledTimes(1);
@@ -104,7 +104,7 @@ describe("starting", () => {
     );
   });
 
-  it("initialises once, however often it is started", async () => {
+  it("initializes once, however often it is started", async () => {
     const analytics = await start();
     renderHook(() => analytics.useAnalytics(SETTINGS));
     await settle();

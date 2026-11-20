@@ -111,7 +111,7 @@ describe("the configurations page (/app)", () => {
     expect(layout?.children?.find((route) => route.path === "app")?.file).toBe("routes/configurations.tsx");
   });
 
-  it("reads the collector catalogue once, for the tags, and still lists when it can't", async () => {
+  it("reads the collector catalog once, for the tags, and still lists when it can't", async () => {
     serveList(() => page([MINE, THEIRS]));
     const read = vi
       .spyOn(apiClient, "getCollectorDistributions")
@@ -125,7 +125,7 @@ describe("the configurations page (/app)", () => {
     );
     expect(screen.getAllByText("Otel Contrib")).toHaveLength(2);
 
-    // The create dialog's opening asks again, and the tags take the catalogue's label.
+    // The create dialog's opening asks again, and the tags take the catalog's label.
     read.mockResolvedValue({ distributions: CATALOGUE });
     await user.click(screen.getByRole("button", { name: "New configuration" }));
     await user.click(await screen.findByRole("button", { name: /Blank configuration/ }));
@@ -894,7 +894,7 @@ describe("the configurations page (/app)", () => {
       await user.type(await screen.findByLabelText("Configuration Name"), "Production Monitoring{Enter}");
 
       expect(await screen.findByText(`landed on /editor/${MINE.id}`)).toBeInTheDocument();
-      // The catalogue's default distribution, preselected.
+      // The catalog's default distribution, preselected.
       expect(createConfiguration).toHaveBeenCalledWith(PERSONAL_ID, {
         name: "Production Monitoring",
         description: "",

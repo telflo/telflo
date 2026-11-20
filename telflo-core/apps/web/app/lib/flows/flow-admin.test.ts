@@ -52,7 +52,7 @@ describe("deriveSignals", () => {
 });
 
 describe("isPinOffered", () => {
-  it("is true for a pin the catalogue offers", () => {
+  it("is true for a pin the catalog offers", () => {
     expect(isPinOffered(TAIL_SAMPLING, CATALOGUE)).toBe(true);
   });
 
@@ -61,7 +61,7 @@ describe("isPinOffered", () => {
     expect(isPinOffered(makeFlow({ collectorVersion: "9.9.9" }), [CONTRIB, ACME])).toBe(false);
   });
 
-  it("can't say while the catalogue is unread, or for a distribution it doesn't list", () => {
+  it("can't say while the catalog is unread, or for a distribution it doesn't list", () => {
     expect(isPinOffered(makeFlow({ collectorVersion: RETIRED_VERSION }), null)).toBeNull();
     expect(isPinOffered(makeFlow({ collectorDistribution: "gone" }), CATALOGUE)).toBeNull();
   });

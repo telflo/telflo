@@ -43,8 +43,8 @@ import { readsFor } from "~/lib/workspace-reads.js";
  * - the view mode isn't remembered (nothing of the visitor's is stored);
  * - New configuration opens the blank playground editor, a card or Edit
  *   the playground editor on it; Delete opens the sign-up prompt;
- * - the distribution tags name the catalogue the web was built with (no
- *   catalogue request).
+ * - the distribution tags name the catalog the web was built with (no
+ *   catalog request).
  * The `data-tour-step` anchors are the tour's. Once the list has arrived,
  * the page starts the tour's first stage when it is handed one (the
  * banner's "Take the tour" from another page; the restart event on this

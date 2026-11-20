@@ -66,7 +66,7 @@ export interface AnalyticsSettings {
 }
 
 let resolveClient!: (client: PostHog) => void;
-/** The one client, once posthog-js is imported and initialised. */
+/** The one client, once posthog-js is imported and initialized. */
 const clientReady = new Promise<PostHog>((resolve) => {
   resolveClient = resolve;
 });
@@ -843,7 +843,7 @@ export function initOptions(settings: AnalyticsSettings): Partial<PostHogConfig>
 let blocked: boolean | undefined;
 
 /**
- * Imports and initialises posthog-js, once, and keeps capture in step with
+ * Imports and initializes posthog-js, once, and keeps capture in step with
  * the visitor's choice. Returns the cleanup for the effect that calls it.
  *
  * Never in a document whose address or referrer may hold a quick-deploy link's

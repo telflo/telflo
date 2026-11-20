@@ -35,7 +35,7 @@ import { createVariableThroughApi, uniqueVariableName } from "./support/variable
 // component whose type starts with `unknown_`; an env_var requirement per
 // `${env:NAME}`; 503 (validation unavailable) when the text holds
 // `# fake-otelcol-validator: unavailable`. A retired pin never reaches the
-// validator: the API answers it from the catalogue. The catalogue is read,
+// validator: the API answers it from the catalog. The catalog is read,
 // never written: the retired pin is the first deprecated row the query returns
 // and the checked version the distribution's default, never a hard-coded
 // release.
@@ -82,7 +82,7 @@ const test = base.extend({
 
 test.use({ viewport: { width: 1440, height: 1000 } });
 
-// ── The catalogue ──────────────────────────────────────────────────────────
+// ── The catalog ────────────────────────────────────────────────────────────
 
 /** The default distribution's default version, and its first deprecated one, as the sync wrote them. */
 async function readCatalogue(): Promise<{ defaultVersion: string; retiredVersion: string }> {
@@ -257,7 +257,7 @@ async function expectReplayBlocked(page: Page, locator: Locator): Promise<void> 
   await expect(page.locator(".ph-no-capture").filter({ has: locator })).toHaveCount(1);
 }
 
-/** A user signed in with a draft configuration holding `yamlContent`, its version 1 pinned to `collectorVersion` (default: the catalogue's). */
+/** A user signed in with a draft configuration holding `yamlContent`, its version 1 pinned to `collectorVersion` (default: the catalog's). */
 async function seedSignedIn(
   page: Page,
   yamlContent: string,

@@ -507,7 +507,7 @@ html.navy body.tf-app {
   color: var(--color-foreground);
 }
 
-/* Navy's default border colour is set further down, after `html.dark`'s
+/* Navy's default border color is set further down, after `html.dark`'s
    base rule, which it ties on specificity. */
 
 /* Navy canvas (react-flow) overrides live after the dark rules further
@@ -665,7 +665,7 @@ html.dark body.tf-app {
   }
 }
 
-/* Navy's default border colour. It must follow the `html.dark` rule above,
+/* Navy's default border color. It must follow the `html.dark` rule above,
    which it ties on specificity, or Navy's borders would be Dark's slate.
    Dark keeps its own. */
 @layer base {

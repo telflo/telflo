@@ -91,7 +91,7 @@ export const VERSION_ID = "0199c000-0000-7000-8000-000000000001";
 /**
  * A version of MINE, as the API answers one: number 1, unnamed, created by
  * the member, with no graph, a draft, pinned to a collector version the
- * catalogue offers; any field overridden.
+ * catalog offers; any field overridden.
  */
 export function versionFixture(overrides: Partial<ConfigurationVersion> = {}): ConfigurationVersion {
   return {

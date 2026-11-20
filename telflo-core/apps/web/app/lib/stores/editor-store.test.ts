@@ -211,7 +211,7 @@ describe("useEditorStore", () => {
       });
     });
 
-    it("summaryOf copies the collector version and whether the catalogue deprecated it, with its note", () => {
+    it("summaryOf copies the collector version and whether the catalog deprecated it, with its note", () => {
       const deprecated = {
         ...VERSION_2,
         collectorVersion: "0.155.0",

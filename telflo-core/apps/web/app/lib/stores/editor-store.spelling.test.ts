@@ -160,7 +160,7 @@ describe("the palette writes the spelling the pin knows", () => {
     expect(namesIn("exporter")).toEqual(["debug", "otlp"]);
   });
 
-  it("for a distribution the catalogue doesn't list, writes the old name", () => {
+  it("for a distribution the catalog doesn't list, writes the old name", () => {
     openPinned("0.162.0", BASE, { ...MINE, collectorDistribution: "acme" });
     drop("receiver", "filelog");
     expect(namesIn("receiver")).toEqual(["otlp", "filelog"]);

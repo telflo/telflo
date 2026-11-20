@@ -24,11 +24,11 @@ import { signInThroughApi, skipEditorTour } from "./support/session.js";
 // container, a `yaml-language-server` modeline in the text requests nothing,
 // and each pin's file is requested once per tab.
 //
-// The pins are the catalogue's offered 0.162.0 and 0.161.0, written out:
-// `awss3` became `aws_s3` in 0.162.0 (the catalogue's renamedTypes), so the
+// The pins are the catalog's offered 0.162.0 and 0.161.0, written out:
+// `awss3` became `aws_s3` in 0.162.0 (the catalog's renamedTypes), so the
 // two show the schema following the pin. A test fails first, saying so,
-// when the catalogue no longer offers either. The retired pin is the
-// catalogue's first deprecated row (as validation.e2e.ts reads it).
+// when the catalog no longer offers either. The retired pin is the
+// catalog's first deprecated row (as validation.e2e.ts reads it).
 //
 // Monaco here (support/editor-page.ts's notes): completion is asked for
 // with Escape then Ctrl+Space (every browser), never left to the
@@ -67,7 +67,7 @@ const test = base.extend({
 
 test.use({ viewport: { width: 1440, height: 1000 } });
 
-// ── The catalogue ──────────────────────────────────────────────────────────
+// ── The catalog ────────────────────────────────────────────────────────────
 
 /** The default distribution's first deprecated version; fails, saying so, when the pins written out above aren't both offered. */
 async function readCatalogue(): Promise<{ retiredVersion: string }> {

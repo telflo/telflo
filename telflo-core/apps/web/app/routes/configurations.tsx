@@ -34,7 +34,7 @@ import { useCurrentUser } from "~/lib/use-current-user.js";
  *   handoff (`PlaygroundSaveDialog`): with an edit the playground or the
  *   blank public editor staged in this browser, once the terms are
  *   accepted, "Save your playground configuration?";
- * - the collector catalogue is read once, for the distribution tags' labels;
+ * - the collector catalog is read once, for the distribution tags' labels;
  *   a page whose read fails still lists, each tag naming its distribution
  *   by id;
  * - opening a configuration goes to `/editor/{id}`, and so does creating one;

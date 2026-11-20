@@ -54,7 +54,7 @@ const SIGNAL_TO_ENVELOPE_KEY: Record<string, string> = {
 const NDJSON_SAMPLE_LINES = 50;
 
 // The receivers the tester feeds by pull (filelog) or push (syslog), by every
-// name they go by: the catalogue renamed `filelog` to `file_log` from
+// name they go by: the catalog renamed `filelog` to `file_log` from
 // collector 0.149.0 (its `renamedTypes`; the old name still works), and both
 // take the filelog strategy, as in the tester's testable_receivers.py.
 // `syslog` has no rename. A key may carry an `/instance` suffix

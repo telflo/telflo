@@ -441,7 +441,7 @@ test("the toolbox, the canvas and the panel sit side by side, in that order", as
   await expect(page.locator('[data-tour-step="canvas"] .react-flow')).toBeVisible();
 });
 
-test("the panel collapses to its rail, expands from the rail's button and from its YAML icon, and its handle drags it within 320 px and the centre's room", async ({
+test("the panel collapses to its rail, expands from the rail's button and from its YAML icon, and its handle drags it within 320 px and the center's room", async ({
   page,
 }) => {
   const { configurationId } = await seedSignedInWithConfiguration(page);
@@ -484,14 +484,14 @@ test("the panel collapses to its rail, expands from the rail's button and from i
     await page.mouse.up();
   };
 
-  // Within the room the toolbox leaves the centre at 1280 px.
+  // Within the room the toolbox leaves the center at 1280 px.
   await dragHandleTo(viewport.width - 450);
   await expect.poll(() => panelWidth(page)).toBe(450);
 
   await dragHandleTo(viewport.width - 100);
   await expect.poll(() => panelWidth(page)).toBe(320);
 
-  // Dragged all the way left: 800 px at most, and the centre keeps 320 px.
+  // Dragged all the way left: 800 px at most, and the center keeps 320 px.
   await dragHandleTo(0);
   await expect.poll(() => panelWidth(page)).toBe(Math.min(800, viewport.width - centreLeft - 320));
 });

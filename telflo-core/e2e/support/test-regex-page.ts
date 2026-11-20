@@ -70,7 +70,7 @@ export async function openRegexPicker(card: Locator): Promise<Locator> {
   return picker;
 }
 
-/** The picker's checkbox for the entry named `name` (labelled by its name). */
+/** The picker's checkbox for the entry named `name` (labeled by its name). */
 export function pickerCheckbox(picker: Locator, name: string): Locator {
   return picker.getByRole("checkbox", { name, exact: true });
 }

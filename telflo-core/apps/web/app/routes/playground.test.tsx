@@ -176,7 +176,7 @@ describe("the configurations page", () => {
     expect([...cardNames()].sort()).toEqual([...NAMES].sort());
     const header = screen.getByRole("heading", { level: 1, name: "Configurations" }).parentElement!;
     expect(within(header).getByText("10")).toBeInTheDocument();
-    // The distribution tags name the build-time catalogue's label.
+    // The distribution tags name the build-time catalog's label.
     expect(screen.getAllByTitle(/^Built for OpenTelemetry Collector Contrib/).length).toBe(10);
     for (const spy of spies) expect(spy, spy.getMockName()).not.toHaveBeenCalled();
   });

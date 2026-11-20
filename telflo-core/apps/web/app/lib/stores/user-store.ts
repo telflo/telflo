@@ -88,7 +88,7 @@ type PerKey = Partial<Record<PreferenceKey, number>>;
  * - a `/me` answer is applied only when its read is the newest applied so
  *   far (`highestReadApplied`): an older read answered after a newer one
  *   never overwrites it. React Router aborts a stale navigation's loader
- *   today, so this is defence in depth.
+ *   today, so this is defense in depth.
  * A new person (or a first seed) starts every key's `confirmedBySave` at
  * its read's number, so no answer to a save sent before then is ever taken.
  *

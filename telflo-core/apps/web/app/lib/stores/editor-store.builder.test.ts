@@ -643,7 +643,7 @@ describe("every change writes the text through the text edits, and takes one ent
     expect(nodeOf("processors.batch/2", "logs").data.sharedConfigId).toBe("processor-batch/2");
   });
 
-  it("adds a pipeline with the first unused colour, refuses a name in use, and is undoable", () => {
+  it("adds a pipeline with the first unused color, refuses a name in use, and is undoable", () => {
     open(STARTER);
     const before = store();
 
@@ -662,7 +662,7 @@ describe("every change writes the text through the text edits, and takes one ent
     expect(store().graph.pipelines).toHaveLength(3);
   });
 
-  it("recolours a pipeline: layout only, dirty, undoable", () => {
+  it("recolors a pipeline: layout only, dirty, undoable", () => {
     open(STARTER);
     const metrics = store().graph.pipelines.find((p) => p.name === "metrics")!;
     const before = store();

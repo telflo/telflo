@@ -7,7 +7,7 @@ import type { StoredCurrentUser } from "~/lib/stores/user-store.js";
  * gives it to the playground's pages: the shell's, the full-screen editor and
  * the blank public editor. Outside them it is null, and every hook here
  * answers what a signed-in page always had: no visitor, no lock, no static
- * catalogue.
+ * catalog.
  *
  * This module holds no component and imports nothing heavy, so the
  * signed-in hooks that read it (`useCurrentUser`, `useAppTheme`,
@@ -30,8 +30,8 @@ export interface PlaygroundContextValue {
    */
   lock: LockedAction;
   /**
-   * The collector catalogue as the web was built with it: what
-   * `useCollectorDistributions()` answers here, so no catalogue request is
+   * The collector catalog as the web was built with it: what
+   * `useCollectorDistributions()` answers here, so no catalog request is
    * made.
    */
   catalogue: CollectorDistribution[];

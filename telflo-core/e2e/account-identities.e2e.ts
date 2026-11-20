@@ -235,7 +235,7 @@ test("Back from the provider during a link with the password prompt leaves the p
   await noteHowThePageCameBack(page);
 
   const dialog = page.getByRole("dialog", { name: "Link Google", exact: true });
-  // Either the dialog is gone, or it can at least be cancelled.
+  // Either the dialog is gone, or it can at least be canceled.
   if ((await dialog.count()) > 0 && (await dialog.isVisible())) {
     await expect(dialog.getByRole("button", { name: "Cancel" })).toBeEnabled();
     await dialog.getByRole("button", { name: "Cancel" }).click();

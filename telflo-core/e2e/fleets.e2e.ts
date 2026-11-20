@@ -88,7 +88,7 @@ function isCreate(request: Request): boolean {
   return request.method() === "POST" && FLEETS_PATH.test(new URL(request.url()).pathname);
 }
 
-/** The list's row for the fleet labelled `label`. */
+/** The list's row for the fleet labeled `label`. */
 function fleetRow(page: Page, label: string): Locator {
   return page.getByRole("row").filter({ has: page.getByRole("link", { name: label, exact: true }) });
 }

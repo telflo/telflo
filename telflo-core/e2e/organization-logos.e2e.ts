@@ -50,13 +50,13 @@ function pngChunk(type: string, data: Buffer): Buffer {
   return Buffer.concat([length, typeAndData, crc]);
 }
 
-/** A `size`×`size` PNG of one colour (8-bit RGB, no interlace): one any browser decodes. */
+/** A `size`×`size` PNG of one color (8-bit RGB, no interlace): one any browser decodes. */
 function solidPng(size: number, [red, green, blue]: [number, number, number]): Buffer {
   const header = Buffer.alloc(13);
   header.writeUInt32BE(size, 0);
   header.writeUInt32BE(size, 4);
   header[8] = 8; // bit depth
-  header[9] = 2; // colour type: RGB
+  header[9] = 2; // color type: RGB
   const row = Buffer.alloc(1 + size * 3); // filter byte 0, then the pixels
   for (let x = 0; x < size; x += 1) row.set([red, green, blue], 1 + x * 3);
   const pixels = Buffer.concat(Array.from({ length: size }, () => row));

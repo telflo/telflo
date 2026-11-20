@@ -19,7 +19,7 @@ import { checkedVersion, seededFlows } from "~/test/seeded-flows.js";
  * What each offered version's committed schema tells the YAML tab, run
  * through monaco-yaml's own worker.
  *
- * Where upstream agrees, the checks are behaviour rather than key lists: a
+ * Where upstream agrees, the checks are behavior rather than key lists: a
  * component's settings are what completion offers inside it, and a text
  * either warns or doesn't. The journald surface is upstream's at each
  * version, which has `include_log_record_original`, and the `matches` items

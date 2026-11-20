@@ -263,7 +263,7 @@ describe("each kind of change, on a commented text", () => {
     });
   });
 
-  it("keeps the comment on a changed line and on its neighbours", () => {
+  it("keeps the comment on a changed line and on its neighbors", () => {
     const { text, diff } = edit(comments, (model) => {
       value(model, "receivers.otlp").protocols.grpc.endpoint = "0.0.0.0:14317";
     });

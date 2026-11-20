@@ -42,7 +42,7 @@ import { monacoYamlOptions, type CollectorSchemaEntry } from "./collector-schema
  * JSON worker, which isn't registered here (`vite.config.ts` is untouched),
  * and a JSON model with them on throws uncaught page errors in every
  * browser. So initMonaco switches them all off before any model exists, but
- * the tokenizer, which runs on the page: colouring stays, folding falls back
+ * the tokenizer, which runs on the page: coloring stays, folding falls back
  * to indentation, and the side-by-side DiffEditor works. No completion,
  * hover, validation or formatting reaches a JSON model.
  */
@@ -51,7 +51,7 @@ let initPromise: Promise<void> | null = null;
 
 /**
  * JSON's mode configuration: every language feature off, since each needs the
- * JSON worker, which isn't registered; the tokens on, for colouring.
+ * JSON worker, which isn't registered; the tokens on, for coloring.
  */
 export const JSON_MODE_CONFIGURATION = {
   documentFormattingEdits: false,

@@ -29,7 +29,7 @@ export const CUSTOM_PIPELINE_COLORS = [
   "#84cc16", // lime-500
 ] as const;
 
-/** The colour a pipeline of each signal starts with (the parser's and the defaults'). */
+/** The color a pipeline of each signal starts with (the parser's and the defaults'). */
 export const SIGNAL_TYPE_COLORS = {
   traces: "#f97316", // orange-500
   metrics: "#3b82f6", // blue-500

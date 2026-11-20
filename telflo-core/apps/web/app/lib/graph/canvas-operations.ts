@@ -260,7 +260,7 @@ const signatures = new WeakMap<Graph, string>();
 
 /**
  * What the layout is, for "dirty": each node's position (and a group's
- * size), each pipeline's colour, rounded to whole pixels, by what the text
+ * size), each pipeline's color, rounded to whole pixels, by what the text
  * names (a group by its pipeline's name, a component by its pipeline and
  * key), so moving back is clean again and the ids a parse gives don't
  * count. Not selection, measurement or the viewport.

@@ -616,7 +616,7 @@ describe("the collector version in a save: the pin follows whoever last picked i
       }));
   }
 
-  /** Ana's version 1, as her tab loaded it: pinned to a release the catalogue has deprecated since. */
+  /** Ana's version 1, as her tab loaded it: pinned to a release the catalog has deprecated since. */
   const ANAS_VERSION = versionFixture({
     yamlContent: SAVED_YAML,
     ...GRAPH,
@@ -791,7 +791,7 @@ describe("the collector version in a save: the pin follows whoever last picked i
     expect(selectIsDirty({ ...state, collectorVersion: "0.160.0" })).toBe(false);
   });
 
-  it("a 400 collector_version_unknown (a pick retired since the page read the catalogue) says so, and keeps the pick unsaved", async () => {
+  it("a 400 collector_version_unknown (a pick retired since the page read the catalog) says so, and keeps the pick unsaved", async () => {
     vi.spyOn(apiClient, "saveConfigurationVersion").mockRejectedValue(
       new ApiError("collector_version_unknown", "That collector version isn't available."),
     );

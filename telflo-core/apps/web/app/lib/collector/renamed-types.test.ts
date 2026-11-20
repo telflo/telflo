@@ -17,15 +17,15 @@ import { paletteSubType } from "~/lib/graph/parse.js";
 import { COMPONENT_TYPES } from "~/lib/graph/types.js";
 
 /*
- * The web's renames come from the catalogue: what Vite bundled is what the
+ * The web's renames come from the catalog: what Vite bundled is what the
  * files say, read here again from the disk, and every rename is
  * kind-specific.
  */
 
-/** The repository's catalogue folder, read from the disk, not through Vite. */
+/** The repository's catalog folder, read from the disk, not through Vite. */
 const CATALOGUE_DIRECTORY = fileURLToPath(new URL("../../../../../../catalog/distributions/", import.meta.url));
 
-/** Each catalogue file's `renamedTypes`, by distribution, from the disk. */
+/** Each catalog file's `renamedTypes`, by distribution, from the disk. */
 function renamedTypesOnDisk(): Record<string, unknown> {
   return Object.fromEntries(
     readdirSync(CATALOGUE_DIRECTORY)
@@ -40,7 +40,7 @@ function renamedTypesOnDisk(): Record<string, unknown> {
 const FILE_LOG = { kind: "receiver", name: "file_log", deprecatedName: "filelog", since: "0.149.0" } as const;
 
 describe("the renames the web is built with", () => {
-  it("are exactly the catalogue's files' renamedTypes, by distribution, in each file's order", () => {
+  it("are exactly the catalog's files' renamedTypes, by distribution, in each file's order", () => {
     const onDisk = renamedTypesOnDisk();
     expect(Object.keys(onDisk).length).toBeGreaterThan(0);
     expect(CATALOGUE_RENAMED_TYPES).toEqual(onDisk);
@@ -92,7 +92,7 @@ describe("paletteSubType: renames are kind-specific", () => {
   });
 });
 
-describe("reading the catalogue's renames", () => {
+describe("reading the catalog's renames", () => {
   it("names each distribution by its file, in the files' order", () => {
     expect(
       readRenamedTypes({
@@ -143,7 +143,7 @@ describe("reading the catalogue's renames", () => {
   });
 });
 
-/** Each catalogue file's offered (not deprecated) versions, by distribution, from the disk. */
+/** Each catalog file's offered (not deprecated) versions, by distribution, from the disk. */
 function offeredVersionsOnDisk(): Record<string, string[]> {
   return Object.fromEntries(
     readdirSync(CATALOGUE_DIRECTORY)
@@ -222,7 +222,7 @@ describe("spelledType: what the palette writes for the pin", () => {
     expect(spelledType("receiver", "file_log", "acme", "0.1.0", CATALOGUE)).toBe("file_log");
   });
 
-  it("keeps the old name with no pin, no distribution, a distribution the catalogue doesn't list, or a pin not in the format", () => {
+  it("keeps the old name with no pin, no distribution, a distribution the catalog doesn't list, or a pin not in the format", () => {
     expect(spelledType("receiver", "filelog", "acme", null, CATALOGUE)).toBe("filelog");
     expect(spelledType("receiver", "filelog", null, "9.0.0", CATALOGUE)).toBe("filelog");
     expect(spelledType("receiver", "filelog", "zeta", "9.0.0", CATALOGUE)).toBe("filelog");
@@ -230,7 +230,7 @@ describe("spelledType: what the palette writes for the pin", () => {
     expect(spelledType("receiver", "filelog", "acme", "v9.0.0", CATALOGUE)).toBe("filelog");
   });
 
-  it("reads the catalogue the web is built with by default", () => {
+  it("reads the catalog the web is built with by default", () => {
     expect(spelledType("receiver", "filelog", "otelcol-contrib", "0.149.0")).toBe("file_log");
     expect(spelledType("receiver", "filelog", "otelcol-contrib", "0.148.0")).toBe("filelog");
   });

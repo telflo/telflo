@@ -30,16 +30,16 @@ import { createVersionFromPicker, versionPath, versionTrigger } from "./support/
 // the published pin; publishing sending the pin to the opamp-server (the
 // OpenAPI-checked fake, read back through fakeSnapshots); the pin following
 // whoever last picked it across two tabs; and the toolbar fitting beside the
-// expanded sidebar at 1280 px, nothing over its neighbour.
+// expanded sidebar at 1280 px, nothing over its neighbor.
 //
-// The catalogue is the one the sync wrote into telflo_platform_e2e_test from
+// The catalog is the one the sync wrote into telflo_platform_e2e_test from
 // catalog/, read here (support/database.ts), never written: its tables are
 // global, so a fixture row would be every test's, and a row the files don't
 // list would make the next run's sync refuse to start the E2E API. A
 // deprecated pin's picker is covered by the web's component tests
 // (CollectorVersionSelect.test.tsx); validation.e2e.ts opens a version pinned
-// to the catalogue's first deprecated row, found by query. The versions a test
-// picks are the catalogue's, by position (the default, and an older offered
+// to the catalog's first deprecated row, found by query. The versions a test
+// picks are the catalog's, by position (the default, and an older offered
 // one), never a hard-coded release.
 //
 // Configurations are seeded by SQL; each test works in an organization of
@@ -73,7 +73,7 @@ const test = base.extend({
 
 test.use({ viewport: { width: 1440, height: 1000 } });
 
-// ── The catalogue ──────────────────────────────────────────────────────────
+// ── The catalog ────────────────────────────────────────────────────────────
 
 interface Catalogue {
   distribution: string;
@@ -91,7 +91,7 @@ async function readCatalogue(): Promise<Catalogue> {
   const versions = await findCollectorVersions(distribution.id);
   const defaultVersion = versions.find((version) => version.is_default)!.version;
   const older = versions.filter((version) => !version.deprecated && !version.is_default).map((version) => version.version);
-  // A test picks two versions other than the default, so the catalogue must offer at least three.
+  // A test picks two versions other than the default, so the catalog must offer at least three.
   expect(older.length).toBeGreaterThanOrEqual(2);
   return { distribution: distribution.id, label: distribution.label, defaultVersion, older };
 }
@@ -163,7 +163,7 @@ function distributionTag(scope: Locator): Locator {
 
 // ── Seeding ────────────────────────────────────────────────────────────────
 
-/** A user signed in with a draft configuration of their personal organization, version 1 pinned to `collectorVersion` (default: the catalogue's default). */
+/** A user signed in with a draft configuration of their personal organization, version 1 pinned to `collectorVersion` (default: the catalog's default). */
 async function seedSignedInDraft(
   page: Page,
   { collectorVersion, published = false }: { collectorVersion?: string; published?: boolean } = {},
@@ -525,7 +525,7 @@ async function sidesOf(locator: Locator): Promise<{ left: number; right: number 
 }
 
 /**
- * Nothing in the toolbar lies over its neighbour: the collector
+ * Nothing in the toolbar lies over its neighbor: the collector
  * version picker ends before the version picker starts, and the Unsaved
  * badge, while the editor is dirty, before the locked distribution.
  */

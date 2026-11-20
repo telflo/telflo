@@ -22,7 +22,7 @@ import { useStoredPlaygroundTheme } from "./theme.js";
  *   has none of, and Safari and Firefox on macOS never focus a button a
  *   mouse presses, so callers pass their opener;
  * - "Sign in to save", which the Save action opens;
- * - the catalogue the web was built with (`useCollectorDistributions`).
+ * - the catalog the web was built with (`useCollectorDistributions`).
  * While it is mounted the session-ended handler is suspended, as
  * `/accept-invitation` does: no playground page calls a signed-in route, so
  * none can end a session, and a reader missed by the seam would fail its

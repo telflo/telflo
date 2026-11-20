@@ -31,7 +31,7 @@ import {
 //   signed-in layout as any navigation does, and the same `.monaco-editor`
 //   element is still there. Going back to the page would mount a new
 //   Monaco and prove nothing.
-// - Colours are read as computed styles once transitions have settled
+// - Colors are read as computed styles once transitions have settled
 //   (`toHaveCSS` retries until they have).
 
 const PASSWORD = "correct horse battery staple";
@@ -56,7 +56,7 @@ const PIPELINE_YAML = [
 ].join("\n");
 
 /**
- * What each theme paints, as computed colours: the shell's floor
+ * What each theme paints, as computed colors: the shell's floor
  * (`body.tf-app`, the theme's background token, app.css), the canvas's
  * background (React Flow's, app.css), Monaco's code surface
  * (lib/editor/monaco-themes.ts; Light's is Monaco's built-in `vs`) and a

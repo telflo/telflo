@@ -22,7 +22,7 @@ import { waitForHydration } from "./support/session.js";
 //
 // The seeded flows are global setup's (migration 1700000000026's rows),
 // read here from the migration's constant and never written; a flow's YAML
-// is Telflo's published catalogue, fine to compare. The one hidden flow is
+// is Telflo's published catalog, fine to compare. The one hidden flow is
 // this spec's own `e2e-` flow, deleted when its test ends (the flows table
 // is global: other specs' flows may be listed too, so nothing counts cards).
 

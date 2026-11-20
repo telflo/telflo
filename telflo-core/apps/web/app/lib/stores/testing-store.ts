@@ -197,7 +197,7 @@ export interface TestingState {
   selectedTemplate: SelectedTestTemplate | null;
   /** The Play all under way, if any: from its click until its last queue answer (parallel), or until its loop ends or stops (serial). */
   playAll: PlayAllUnderWay | null;
-  /** The version a single run is starting on (Configure and run's Run, ↺, a definition's Run test), from its click until its queue request answers or its question is cancelled; null otherwise. */
+  /** The version a single run is starting on (Configure and run's Run, ↺, a definition's Run test), from its click until its queue request answers or its question is canceled; null otherwise. */
   starting: RunTarget | null;
 
   /** Reads the person's files afresh (each time the run dialog opens); rejects as the API did. */

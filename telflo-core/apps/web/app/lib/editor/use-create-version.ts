@@ -56,7 +56,7 @@ export interface CreateVersion {
  *   the store.
  * - Refusals are the save's: a deleted configuration and another organization
  *   each say their message, and the second revalidates the layout; the terms
- *   revalidate it with no toast; a collector version the catalogue retired
+ *   revalidate it with no toast; a collector version the catalog retired
  *   says the save's message; anything else toasts "Failed to create version.
  *   Please try again.". The editor keeps its text.
  * - An answer for a load the editor no longer holds (another version or

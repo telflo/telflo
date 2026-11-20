@@ -154,7 +154,7 @@ describe("a sample configuration", () => {
     expect(screen.queryByRole("button", { name: "Rename configuration" })).toBeNull();
     expect(screen.getByRole("combobox", { name: `Collector version v${sample.version.collectorVersion}` })).toBeInTheDocument();
     expect(screen.getByText(SAMPLE_PILL_TEXT)).toBeInTheDocument();
-    // Sign in, labelled so, under the open source's invitation-only default.
+    // Sign in, labeled so, under the open source's invitation-only default.
     expect(screen.getByRole("link", { name: "Sign in" })).toHaveAttribute("href", "/login");
     expect(screen.queryByRole("link", { name: "Create a free account" })).toBeNull();
     for (const tab of ["Configuration", "YAML", "Testing"]) expect(screen.getAllByRole("tab", { name: tab }).length).toBeGreaterThan(0);

@@ -3,7 +3,7 @@ import type { Flow } from "@telflo/contracts";
 /*
  * Flows as the signed-in API answers them, for the web's tests: a
  * tail-sampling flow (a real multi-pipeline configuration, so a copy's
- * canvas is populated end to end), on Contrib 0.162.0, the catalogue
+ * canvas is populated end to end), on Contrib 0.162.0, the catalog
  * fixture's default (`~/test/collector-distributions`).
  */
 

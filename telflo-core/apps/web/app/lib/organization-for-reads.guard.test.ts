@@ -587,7 +587,7 @@ describe("one organization source for every read: the user store's uses and expo
     ] as const) {
       expect(refused(file, shape).length > 0, shape).toBe(true);
     }
-    // Today's kinds of glob pass: the posts, the corpus, the catalogue, one folder down nowhere near the stores.
+    // Today's kinds of glob pass: the posts, the corpus, the catalog, one folder down nowhere near the stores.
     for (const [file, fine] of [
       ["lib/posts.ts", 'const modules = import.meta.glob<MDXModule>("/posts/*.mdx", { eager: true });'],
       ["lib/graph/corpus/corpus.ts", 'const files = import.meta.glob<string>("./*.yaml", { query: "?raw", import: "default", eager: true });'],

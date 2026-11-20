@@ -25,7 +25,7 @@ import { createVariableThroughApi, uniqueVariableName } from "./support/variable
 // editor on a copy holding the flow's text byte for byte and its pin; and
 // product admin's flows page (create, edit, hide and show, delete, the
 // security check), with its gate for everyone else. And the edges: a copy of
-// a flow whose pin the catalogue retired moves to the default and says so; a
+// a flow whose pin the catalog retired moves to the default and says so; a
 // hidden flow's page is a 404 for a non-admin; and a product admin whose
 // flag is cleared mid-visit.
 //
@@ -40,7 +40,7 @@ import { createVariableThroughApi, uniqueVariableName } from "./support/variable
 
 const PASSWORD = "correct horse battery staple";
 
-/** The seeded flow on the one pin that isn't the catalogue's default (0.159.0), so a copy on the default would show. */
+/** The seeded flow on the one pin that isn't the catalog's default (0.159.0), so a copy on the default would show. */
 const OFF_DEFAULT_SLUG = "clickhouse-failover-gateway-s3-overflow";
 /** A seeded flow, which every gallery lists (so a gallery has rendered). */
 const TABLE_ONLY_SLUG = "log-volume-cost-control";
@@ -206,7 +206,7 @@ test("Start from a flow, in the create dialog (start, browse, pick, name, Create
   await expectCopyOfFlow(page, user, name, flow);
 });
 
-test("Use this flow on a flow pinned where the catalogue no longer offers opens the editor on a copy on the default, and says so first", async ({
+test("Use this flow on a flow pinned where the catalog no longer offers opens the editor on a copy on the default, and says so first", async ({
   page,
   testFlows,
 }) => {
@@ -359,7 +359,7 @@ async function expectGallery(
 
 /**
  * A flow the signed-in product admin creates through the API, as the dialog
- * does, for tests about something after creating: on the catalogue's default
+ * does, for tests about something after creating: on the catalog's default
  * pin, with the test flow's text, `published` or hidden.
  */
 async function createFlowThroughApi(
@@ -518,7 +518,7 @@ test("a product admin's security check says a clean YAML has no blocking issue, 
   await check.click();
   const finding = dialog.locator(".ph-no-capture > div").filter({ hasText: HARDCODED_CREDENTIAL_MESSAGE });
   await expect(finding).toHaveText(`.exporters.otlp_http.api_key ${HARDCODED_CREDENTIAL_MESSAGE}`);
-  // A block finding: its mark is the failure colour, and it comes first.
+  // A block finding: its mark is the failure color, and it comes first.
   await expect(finding.locator("svg")).toHaveClass(/text-fail/);
   await expect(dialog.locator(".ph-no-capture > div").first()).toHaveText(`.exporters.otlp_http.api_key ${HARDCODED_CREDENTIAL_MESSAGE}`);
   await expect(dialog.getByText("No blocking issues.", { exact: true })).toHaveCount(0);

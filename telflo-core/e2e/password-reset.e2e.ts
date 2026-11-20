@@ -42,7 +42,7 @@ function tokenOf(link: string): string {
 async function submitNewPassword(page: Page, link: string, password: string): Promise<void> {
   await page.goto(link);
   await waitForHydration(page);
-  // The show/hide toggles are also labelled "…password", so match exactly.
+  // The show/hide toggles are also labeled "…password", so match exactly.
   await page.getByLabel("New Password", { exact: true }).fill(password);
   await page.getByLabel("Confirm Password", { exact: true }).fill(password);
   await page.getByRole("button", { name: "Update Password" }).click();

@@ -80,7 +80,7 @@ import { useCurrentUser } from "~/lib/use-current-user.js";
  *   text a stale tab typed before a teammate published it, which is unsaved
  *   work: leaving still asks, and "Save & Continue" says the version is
  *   published and stays.
- * - the collector catalogue is read once, when the page mounts, for the
+ * - the collector catalog is read once, when the page mounts, for the
  *   toolbar's collector picker; until it answers, or if it can't, the picker
  *   shows the pin as text.
  * - the open version's text is checked by the collector validator while the

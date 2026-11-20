@@ -25,7 +25,7 @@ import { findDistribution, useCollectorDistributions } from "~/lib/stores/collec
  *   layout signs a visitor in first;
  * - the collector is the flow's own pin, always, never coerced to another
  *   distribution. "Validated against" names the distribution
- *   with the catalogue's label (a built-in map, read before the catalogue
+ *   with the catalog's label (a built-in map, read before the catalog
  *   is, as the server renders it);
  * - the canonical link, og:url and the JSON-LD's URLs follow
  *   TELFLO_PUBLIC_WEB_URL, left out without it; the publisher logo is
@@ -46,7 +46,7 @@ import { findDistribution, useCollectorDistributions } from "~/lib/stores/collec
  * summary in the description, Open Graph, Twitter and JSON-LD metas (with
  * its author's name), and its address in the canonical link and og:url;
  * replay records the head unmasked, and PostHog's pageview carries the
- * title. Accepted: a flow is Telflo's catalogue content, public once
+ * title. Accepted: a flow is Telflo's catalog content, public once
  * published, and a hidden one is seen only by product admins. Nothing of a
  * customer's own is there (the editor's fixed title keeps configuration
  * names out).

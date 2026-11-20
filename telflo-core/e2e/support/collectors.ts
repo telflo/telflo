@@ -212,7 +212,7 @@ export async function quickDeployLinksThroughApi(page: Page, organizationId: str
 export interface PublishedConfigurationOptions {
   /** Its YAML (default PUBLISHABLE_YAML): an install's `${env:NAME}` references, say. */
   yaml?: string;
-  /** Its collector version (default the catalogue's default version): the install's image tag follows it. */
+  /** Its collector version (default the catalog's default version): the install's image tag follows it. */
   collectorVersion?: string;
 }
 

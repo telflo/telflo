@@ -271,9 +271,9 @@ export async function expireApiToken({ organizationId, tokenId }: { organization
  * 1 can't be changed: a test where a teammate edits seeds a draft version 2
  * with `seedConfigurationVersion`.
  *
- * The configuration is the catalogue's default distribution, and version 1
+ * The configuration is the catalog's default distribution, and version 1
  * is pinned to `collectorVersion`, by default that distribution's
- * default version, read from the catalogue's tables.
+ * default version, read from the catalog's tables.
  */
 export async function seedConfiguration({
   organizationId,
@@ -380,8 +380,8 @@ export async function seedConfigurationVersion({
 }
 
 /**
- * The collector catalogue's default distribution, as the sync wrote it from
- * catalog/: read only. The browser tests never write the catalogue's
+ * The collector catalog's default distribution, as the sync wrote it from
+ * catalog/: read only. The browser tests never write the catalog's
  * tables: they are global, so a row one test added would be every test's,
  * and the next run's sync refuses a row the files don't list.
  */
@@ -389,7 +389,7 @@ export async function findDefaultCollectorDistribution(): Promise<Selectable<Col
   return db().selectFrom("collector_distributions").selectAll().where("is_default", "=", true).executeTakeFirstOrThrow();
 }
 
-/** The distribution's versions in the catalogue, newest first (semver, as the API orders them): read only. */
+/** The distribution's versions in the catalog, newest first (semver, as the API orders them): read only. */
 export async function findCollectorVersions(distribution: string): Promise<Selectable<CollectorVersionsTable>[]> {
   const rows = await db().selectFrom("collector_versions").selectAll().where("distribution", "=", distribution).execute();
   const parts = (version: string) => version.split(".").map(Number);
@@ -466,7 +466,7 @@ export const E2E_FLOW_SLUG_PREFIX = "e2e-";
 
 /**
  * Writes a flow straight into the table, as the tables' owner, for what the
- * API refuses to write (a pin the catalogue no longer offers: flows from
+ * API refuses to write (a pin the catalog no longer offers: flows from
  * before a version was retired). Only `e2e-` slugs; the test deletes it after
  * (deleteTestFlows).
  */
