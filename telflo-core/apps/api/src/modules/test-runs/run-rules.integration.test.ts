@@ -61,8 +61,7 @@ import { failureResults, TEST_RUN_FAILURES } from "./run-results.js";
 import { createTestRunQueueSignal, type TestRunQueueSignal } from "./test-runs-dependencies.js";
 
 /*
- * D15a Task 7: the rules on runs (decisions 2, 3, 14 and 15; Preflight
- * rulings 11, 21, 22 and 25). A run queued through the API takes its
+ * The rules on runs. A run queued through the API takes its
  * pipeline's rules' snapshot in its insert; the dispatcher, once the fake
  * tester answers, has the OpenAPI-checked fake evaluator check them (its
  * markers steer each rule's answer, nextFault queues the whole request's
@@ -81,7 +80,7 @@ const csrfHeaders = { [CSRF_HEADER_NAME]: CSRF_HEADER_VALUE };
 const PASSWORD = "a-sufficiently-long-password";
 const TEN_MIB = 10 * 1024 * 1024;
 
-/** Markers no log line may hold (ADR 0024): a rule's name, description and pattern, and the output's text. */
+/** Markers no log line may hold: a rule's name, description and pattern, and the output's text. */
 const RULE_NAME_MARKER = "rule-name-marker-4b2e";
 const RULE_DESCRIPTION_MARKER = "rule-description-marker-9d1f";
 const PATTERN_MARKER = "rule-pattern-marker-60aa";
@@ -188,7 +187,7 @@ describe("the rules on runs", () => {
     // output as {base64, truncated}, never bytesOnDisk; ids once).
     expect(evaluator.fake.takeViolations()).toEqual([]);
     // Nothing of a rule, the output or a result in any log line: the
-    // dispatcher's or the server's (ADR 0024).
+    // dispatcher's or the server's.
     const logged = JSON.stringify(log.lines) + logLines.join("\n");
     for (const marker of [RULE_NAME_MARKER, RULE_DESCRIPTION_MARKER, PATTERN_MARKER, OUTPUT_MARKER, "fake-ottl-evaluator"]) {
       expect(logged).not.toContain(marker);
@@ -230,7 +229,7 @@ describe("the rules on runs", () => {
       payload: { organizationId: organization.id },
     });
     expect(switched.statusCode).toBe(200);
-    // A no-op when the sign-in already landed there (D36-1 decision 56): no new cookie, the token sent stands.
+    // A no-op when the sign-in already landed there: no new cookie, the token sent stands.
     return { userId: account.user.id, organizationId: organization.id, access: (switched.headers["set-cookie"] === undefined ? cookieValue(signedIn, "telflo_access") : cookieValue(switched, "telflo_access")) };
   };
 
@@ -369,7 +368,7 @@ describe("the rules on runs", () => {
     return { ana, target, pipelineId, passing, failing };
   };
 
-  describe("the snapshot at queue (decision 14, Preflight ruling 21)", () => {
+  describe("the snapshot at queue", () => {
     it("a run with no rules ends succeeded without asking the evaluator: no validation pipeline, or one with no rules, or one of another pipeline or signal", async () => {
       const ana = await member();
       const target = await configurationOf(ana);
@@ -516,7 +515,7 @@ describe("the rules on runs", () => {
       expect((await detailOf(ana, target, run.id)).validationRules).toEqual(kept.validationRules);
     });
 
-    it("a run, its re-run and a definition's Play, queued through the API, each reach the tester with the values filled in as they are at its dispatch (D20 decision 13)", async () => {
+    it("a run, its re-run and a definition's Play, queued through the API, each reach the tester with the values filled in as they are at its dispatch", async () => {
       let value = "first$";
       variablesSource = { read: async () => ({ kind: "values", values: new Map([["REGION", value]]) }) };
       const ana = await member();
@@ -659,7 +658,7 @@ describe("the rules on runs", () => {
       expect(await ownerDb.selectFrom("test_runs").select("id").execute()).toEqual([]);
     });
 
-    it("while the evaluator is known down, refuses a run that would carry rules (503 rules_unavailable, detail 24's words) and queues one without", async () => {
+    it("while the evaluator is known down, refuses a run that would carry rules (503 rules_unavailable, in fixed words) and queues one without", async () => {
       const { ana, target } = await anaWithTwoRules();
       const fileId = await inputFile(ana);
       await sql`update ottl_evaluator_state set down_since = now()`.execute(ownerDb);
@@ -681,7 +680,7 @@ describe("the rules on runs", () => {
       expect((await queued(ana, target, oneOff({ inputFileId: fileId }))).validationRules).toHaveLength(2);
     });
 
-    it("while the evaluator is known down, queues a run whose validation pipeline has no rule (D15a Ruling 41): it carries none", async () => {
+    it("while the evaluator is known down, queues a run whose validation pipeline has no rule: it carries none", async () => {
       const ana = await member();
       const target = await configurationOf(ana);
       const pipelineId = await createdPipeline(ana, target, "logs/app");
@@ -696,7 +695,7 @@ describe("the rules on runs", () => {
       expect((await row(run.id)).validation_pipeline_id).toBe(pipelineId);
     });
 
-    it("while the evaluator is known down, queues a run whose pipeline has rules only on another version (D15a Ruling 41): it carries none", async () => {
+    it("while the evaluator is known down, queues a run whose pipeline has rules only on another version: it carries none", async () => {
       const ana = await member();
       const target = await configurationOf(ana);
       const v2 = await addConfigurationVersion(ownerDb, {
@@ -721,7 +720,7 @@ describe("the rules on runs", () => {
     });
   });
 
-  describe("evaluation in the dispatcher (decisions 2, 3 and 15; Preflight rulings 11 and 22)", () => {
+  describe("evaluation in the dispatcher", () => {
     it("Ana's two rules, one failing: Validation Failed, the detail carrying both results in the snapshot's order by the rules' ids", async () => {
       const { ana, target, passing, failing } = await anaWithTwoRules();
       const run = await queued(ana, target, oneOff({ inputFileId: await inputFile(ana) }));
@@ -776,7 +775,7 @@ describe("the rules on runs", () => {
       const ruleId = await createdRule(ana, target, pipelineId, textRule("contains_text", PATTERN_MARKER));
       const errored = await createdRule(ana, target, pipelineId, textRule("contains_text", fakeOttlEvaluatorMarker("error")));
       evaluator.fake.takeRequests();
-      // A rule's own error fails it (decision 3): Validation Failed, its message shown.
+      // A rule's own error fails it: Validation Failed, its message shown.
       const run = await queued(ana, target, oneOff({ inputFileId: await inputFile(ana) }));
       await runAll();
       expect(await detailOf(ana, target, run.id)).toMatchObject({
@@ -892,7 +891,7 @@ describe("the rules on runs", () => {
       });
     });
 
-    describe("the lease (Preflight ruling 11, Ruling 41): 174 + d s, the evaluator asked only while 45 s of it are left", () => {
+    describe("the lease: 174 + d s, the evaluator asked only while 45 s of it are left", () => {
       /** A tester whose answer comes `elapsedMs` after the claim, on the dispatcher's monotonic clock. */
       function slowTester(clock: { now: number }, elapsedMs: number): OtelcolTestingClient {
         return {
@@ -924,7 +923,7 @@ describe("the rules on runs", () => {
         expect(evaluations()).toEqual([]);
       });
 
-      it("the worst case (Ruling 41): sent at the send window's end, answered at the tester's full timeout, its files taking their full 30 s, the rules are still checked with the evaluator's 40 s; 1 ms past the window it is never sent", async () => {
+      it("the worst case: sent at the send window's end, answered at the tester's full timeout, its files taking their full 30 s, the rules are still checked with the evaluator's 40 s; 1 ms past the window it is never sent", async () => {
         // 25 + (74 + d) + 30 + 40 + 5 = 174 + d; the pre-send check reserves all but the window.
         expect(TEST_RUN_SEND_WINDOW_SECONDS).toBe(25);
         expect(TEST_RUN_FILES_SECONDS).toBe(30);

@@ -17,10 +17,9 @@ import type { CopyPlaces } from "./copy-places.js";
 import type { IOrganizationVariables } from "./organization-variables.js";
 
 /**
- * Tells whoever listens that a run was queued (D14a Preflight ruling 7's
- * in-process wake): the dispatcher (Task 8) subscribes and claims at once
- * rather than on its next tick. Until it does, nothing listens, and a
- * notification is a no-op.
+ * Tells whoever listens that a run was queued (an in-process wake): the
+ * dispatcher subscribes and claims at once rather than on its next tick.
+ * With nothing listening, a notification is a no-op.
  */
 export interface TestRunQueueSignal {
   /** A run was queued and has committed. Never throws, never waits. */
@@ -51,42 +50,40 @@ export function createTestRunQueueSignal(): TestRunQueueSignal {
 }
 
 /**
- * The test runs' collaborators (D14a Preflight ruling 17: one `testing`
- * dependency), built in index.ts and e2e/start-api.ts by
- * createTestRunsDependencies. Test servers not about test runs pass
- * UNCALLED_TESTING (apps/api/src/testing/otelcol-testing.ts), which fails a
- * test that reaches any of them.
+ * The test runs' collaborators (one `testing` dependency), built in index.ts
+ * and e2e/start-api.ts by createTestRunsDependencies. Test servers not about
+ * test runs pass UNCALLED_TESTING (apps/api/src/testing/otelcol-testing.ts),
+ * which fails a test that reaches any of them.
  */
 export interface TestingDependencies {
-  /** The collector tester's client: the dispatcher (Task 8) sends runs with it. */
+  /** The collector tester's client: the dispatcher sends runs with it. */
   tester: OtelcolTestingClient;
-  /** The tester's health monitor (decision 12): Task 8's starter starts it after listen. */
+  /** The tester's health monitor: the test runs' background starter starts it after listen. */
   health: OtelcolTestingHealthMonitor;
-  /** Woken when a run is queued; the dispatcher (Task 8) subscribes. */
+  /** Woken when a run is queued; the dispatcher subscribes. */
   queued: TestRunQueueSignal;
   /**
-   * The OTTL evaluator's client (D15a decisions 2 and 6): a rule's save is
-   * checked with it, and the dispatcher has a run's rules evaluated with it.
+   * The OTTL evaluator's client: a rule's save is checked with it, and the
+   * dispatcher has a run's rules evaluated with it.
    */
   ottlEvaluator: OttlEvaluatorClient;
   /**
-   * The evaluator's health monitor (D15a Preflight ruling 23): the test
-   * runs' background starter starts it beside the tester's. Queuing reads
-   * the shared row it writes (isOttlEvaluatorKnownDown).
+   * The evaluator's health monitor: the test runs' background starter
+   * starts it beside the tester's. Queuing reads the shared row it writes
+   * (isOttlEvaluatorKnownDown).
    */
   ottlEvaluatorHealth: OttlEvaluatorHealthMonitor;
   /**
-   * Where a run's organization variables come from (D20 decision 38;
-   * Preflight ruling 28): the queue reads them to refuse early, the
-   * dispatcher to fill them in before the tester. Required, with no
-   * fallback: an entry point that passes none doesn't type-check
+   * Where a run's organization variables come from: the queue reads them to
+   * refuse early, the dispatcher to fill them in before the tester. Required,
+   * with no fallback: an entry point that passes none doesn't type-check
    * (opampOrganizationVariables in production and the browser tests).
    */
   organizationVariables: IOrganizationVariables;
   /**
-   * The queue's places for requests in flight (D14b Ruling 33). Left out,
-   * the server makes its own (createCopyPlaces); a test passes one to watch
-   * who holds and who waits.
+   * The queue's places for requests in flight. Left out, the server makes
+   * its own (createCopyPlaces); a test passes one to watch who holds and
+   * who waits.
    */
   copyPlaces?: CopyPlaces;
 }
@@ -96,9 +93,9 @@ export interface TestingDependencies {
  * health monitor, and the OTTL evaluator's client and its health monitor,
  * each monitor writing its shared row; and the organization variables'
  * source the caller passes. The file store isn't one of them: it is the
- * server's own (ServerDependencies.fileStore, D23-2 decision 31), built by
- * the caller. Nothing is started: the background starter starts the
- * monitors and the dispatcher after listen.
+ * server's own (ServerDependencies.fileStore), built by the caller.
+ * Nothing is started: the background starter starts the monitors and the
+ * dispatcher after listen.
  */
 export async function createTestRunsDependencies(options: {
   settings: Pick<AppSettings, "otelcolTesting" | "ottlEvaluator">;

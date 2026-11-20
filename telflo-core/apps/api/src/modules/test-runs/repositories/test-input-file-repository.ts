@@ -4,12 +4,12 @@ import type { AuthContext } from "../../../database/context.js";
 import { createOrganizationScope } from "../../../tenancy/organization-scope.js";
 
 /*
- * A person's test files in the context's organization, "My Files" (D14a
- * decision 7), through the organization scope and narrowed to the
- * context's user: every method reads, adds and removes only that person's
- * own files. Row-level security on test_input_files (migration 028) stands
- * behind it with the same rule, so the transaction must carry a database
- * context naming the same organization and user.
+ * A person's test files in the context's organization, "My Files", through the
+ * organization scope and narrowed to the context's user: every method reads,
+ * adds and removes only that person's own files. Row-level security on
+ * test_input_files (migration 028) stands behind it with the same rule, so the
+ * transaction must carry a database context naming the same organization and
+ * user.
  *
  * A file never changes: there is no update. Its bytes are the FileStore's
  * (`test-input` keys); this holds the row the list shows.
@@ -18,7 +18,7 @@ import { createOrganizationScope } from "../../../tenancy/organization-scope.js"
 /** Whom the repository acts for: the organization and the person whose files it holds. An `AuthContext` is one. */
 export type TestInputFileOwnerContext = Pick<AuthContext, "organizationId" | "userId">;
 
-/** A test file, as its owner's list shows it. Its names and description are private text (ADR 0024). */
+/** A test file, as its owner's list shows it. Its names and description are private text. */
 export interface TestInputFile {
   id: string;
   displayName: string;

@@ -45,7 +45,7 @@ import { createCopyPlaces, TEST_RUN_COPIES_WAITING_PER_USER, type CopyPlaces } f
 import { opampOrganizationVariables, type IOrganizationVariables } from "./organization-variables.js";
 import type { TestingDependencies } from "./test-runs-dependencies.js";
 
-// The opamp-server every server needs (D11b decision 8): this file's own fake.
+// The opamp-server every server needs: this file's own fake.
 const opamp = useFakeOpampServer();
 
 const csrfHeaders = { [CSRF_HEADER_NAME]: CSRF_HEADER_VALUE };
@@ -64,7 +64,7 @@ const RETIRED = "0.1.0";
 const NAME_MARKER = "name-marker-5e1c";
 const DESCRIPTION_MARKER = "description-marker-91ab";
 const TEXT_MARKER = "text-marker-3f7d";
-/** An organization variable's value (D20): configuration text, in no log line, URL or audit row. */
+/** An organization variable's value: configuration text, in no log line, URL or audit row. */
 const VALUE_MARKER = "value-marker-c41d";
 
 const RUN_TEXT = `receivers:\n  otlp:\n    protocols:\n      http: {}\n# ${TEXT_MARKER}\nexporters:\n  debug: {}\nservice:\n  pipelines:\n    logs:\n      receivers: [otlp]\n      exporters: [debug]\n`;
@@ -141,7 +141,7 @@ function uploadParts(
   ];
 }
 
-/** A run's results, as the dispatcher stores them (Task 8), for a finished run's fixture. */
+/** A run's results, as the dispatcher stores them, for a finished run's fixture. */
 interface FinishedRunFields {
   output_size_bytes?: number;
   output_truncated?: boolean;
@@ -176,13 +176,12 @@ async function filesUnder(root: string): Promise<string[]> {
 }
 
 /*
- * D14a Task 7: the test files and runs API (decision 28; Preflight rulings
- * 10 to 13 and 15; Ruling 24), against Postgres as the API's own role, with
+ * The test files and runs API, against Postgres as the API's own role, with
  * a real FileStore on a temporary directory. The catalogue needs a
  * deprecated Contrib version, which the committed one hasn't, so the file
  * runs on a throwaway database it prepares (migrated and synced, as
- * telflo_platform_test is) and drops afterwards. The dispatcher is Task 8's: runs
- * stay queued here, and the tester is never called (UNCALLED_TESTING's).
+ * telflo_platform_test is) and drops afterwards. No dispatcher runs here:
+ * runs stay queued, and the tester is never called (UNCALLED_TESTING's).
  */
 describe("the test files and runs API", () => {
   let databases: TestDatabases;
@@ -246,7 +245,7 @@ describe("the test files and runs API", () => {
     options: {
       rateLimits?: RateLimits;
       organizationVariables?: IOrganizationVariables;
-      /** The queue's places (D14b Ruling 33), for a test that watches them; left out, the server's own. */
+      /** The queue's places, for a test that watches them; left out, the server's own. */
       copyPlaces?: CopyPlaces;
       /** Hooks of the test's own, added before the server is ready. */
       beforeReady?: (server: FastifyInstance) => void;
@@ -379,7 +378,7 @@ describe("the test files and runs API", () => {
       payload: { organizationId },
     });
     expect(response.statusCode).toBe(200);
-    // A no-op when the sign-in already landed there (D36-1 decision 56): no new cookie, the token sent stands.
+    // A no-op when the sign-in already landed there: no new cookie, the token sent stands.
     return response.headers["set-cookie"] === undefined ? access : cookieValue(response, "telflo_access");
   };
 
@@ -474,7 +473,7 @@ describe("the test files and runs API", () => {
 
   /**
    * A suite and a definition `person` creates on `target`'s version through
-   * the API (D14b Task 3), its input copied from `source`; answers both.
+   * the API, its input copied from `source`; answers both.
    */
   const definitionOf = async (
     person: Person,
@@ -518,7 +517,7 @@ describe("the test files and runs API", () => {
     return { suite, definition, inputId: input.input_id };
   };
 
-  /** A definition's run's body (D14b Preflight ruling 9): the definition, the text and the pin only. */
+  /** A definition's run's body: the definition, the text and the pin only. */
   const definitionRunBody = (definitionId: string, overrides: Record<string, unknown> = {}) => ({
     definitionId,
     yaml: RUN_TEXT,
@@ -526,7 +525,7 @@ describe("the test files and runs API", () => {
     ...overrides,
   });
 
-  /** A live template with `data` behind it, as D14b Task 5's upload would leave it. */
+  /** A live template with `data` behind it, as a template's upload would leave it. */
   const templateWith = async (data: Buffer, overrides: { file_name?: string } = {}) => {
     const template = await addTestTemplate(ownerDb, {
       file_name: overrides.file_name ?? `otlp-logs-${NAME_MARKER}.json`,
@@ -582,7 +581,7 @@ describe("the test files and runs API", () => {
   const runFilePath = (organizationId: string, runId: string, name: string) =>
     join("organizations", organizationId, "test-runs", runId, name);
 
-  /** Marks the tester down, as a monitor would (decision 12). */
+  /** Marks the tester down, as a monitor would. */
   const markTesterDown = () => sql`update otelcol_testing_state set down_since = now()`.execute(ownerDb);
 
   describe("uploads (POST /test-files)", () => {
@@ -689,7 +688,7 @@ describe("the test files and runs API", () => {
       expect(await filesUnder(root)).toEqual([]);
     });
 
-    it("refuses a field over 8 KiB that trims to a valid one (busboy's fieldSize, not the contract's length): 9,000 spaces and an x is 400; 8,000 spaces and an x saves as x (D14b Ruling 36)", async () => {
+    it("refuses a field over 8 KiB that trims to a valid one (busboy's fieldSize, not the contract's length): 9,000 spaces and an x is 400; 8,000 spaces and an x saves as x", async () => {
       const ana = await member();
 
       const over = await upload(ana, uploadParts(data, { description: `${" ".repeat(9_000)}x` }));
@@ -760,7 +759,7 @@ describe("the test files and runs API", () => {
       }
     });
 
-    it("an upload the client aborts inside the file: 400, nothing kept, one warning without the error's text (Ruling 39)", async () => {
+    it("an upload the client aborts inside the file: 400, nothing kept, one warning without the error's text", async () => {
       const ana = await member();
       // The client is gone, so the answer is read where the server makes it: the error it answers with.
       const answered: Array<{ statusCode: unknown; code: unknown }> = [];
@@ -974,7 +973,7 @@ describe("the test files and runs API", () => {
     });
   });
 
-  describe("a file's head (GET /test-files/:fileId/head, Ruling 43)", () => {
+  describe("a file's head (GET /test-files/:fileId/head)", () => {
     const headPath = (organizationId: string, fileId: string) => `${filesPath(organizationId)}/${fileId}/head`;
 
     it("answers the first 64 KiB of the owner's larger file, as bytes, never sniffed, under no name, never cached", async () => {
@@ -1025,7 +1024,7 @@ describe("the test files and runs API", () => {
       expectRefusal(await read(ana, headPath(ana.organizationId, file.id)), 404, "test_file_not_found", MESSAGES.fileNotFound);
     });
 
-    it("is 404 once the file's row is gone, though its bytes are still on disk (Ruling 45)", async () => {
+    it("is 404 once the file's row is gone, though its bytes are still on disk", async () => {
       const ana = await member();
       const file = await uploaded(ana);
       await ownerDb.deleteFrom("test_input_files").where("id", "=", file.id).execute();
@@ -1097,7 +1096,7 @@ describe("the test files and runs API", () => {
         outputTruncated: null,
         decodedInputSizeBytes: null,
         decodedInputTruncated: null,
-        // No validation pipeline for the run's pipeline: no rules (D15a decision 14).
+        // No validation pipeline for the run's pipeline: no rules.
         validationRules: [],
         validationResults: null,
       });
@@ -1113,14 +1112,14 @@ describe("the test files and runs API", () => {
         subject_id: run.id,
         metadata: { configurationId: target.configurationId, versionId: target.versionId, inputFileId: file.id },
       });
-      // No name and no text: ids only (decision 23).
+      // No name and no text: ids only.
       const audited = JSON.stringify(audits[0]);
       for (const marker of [NAME_MARKER, DESCRIPTION_MARKER, TEXT_MARKER, "logs"]) {
         expect(audited).not.toContain(marker);
       }
     });
 
-    it("refuses an unknown pin with 400 collector_version_unknown, and a retired one with D13b's words", async () => {
+    it("refuses an unknown pin with 400 collector_version_unknown, and a retired one in fixed words", async () => {
       const ana = await member();
       const target = await configurationOf(ana);
       const file = await uploaded(ana);
@@ -1301,7 +1300,7 @@ describe("the test files and runs API", () => {
       ["empty text", { yaml: "" }],
       ["text over 262,144 characters", { yaml: "a".repeat(262_145) }],
       ["an unknown field", { distribution: "otelcol-contrib" }],
-      // D14b Preflight ruling 9: a request mixing the union's branches fails both.
+      // A request mixing the union's branches fails both.
       ["a definition beside the file", { definitionId: randomUUID() }],
       ["a template beside the file", { templateId: randomUUID() }],
     ])("refuses %s with 400", async (_label, overrides) => {
@@ -1332,7 +1331,7 @@ describe("the test files and runs API", () => {
       expect(await filesUnder(root)).toEqual(written);
     });
 
-    it("five queued at once with 49 waiting: exactly one 201 and four test_run_queue_full, one run folder (the person's lock; four copy at once, D14b Ruling 33)", async () => {
+    it("five queued at once with 49 waiting: exactly one 201 and four test_run_queue_full, one run folder (the person's lock; four copy at once)", async () => {
       const ana = await member();
       const target = await configurationOf(ana);
       for (let index = 0; index < 49; index += 1) {
@@ -1346,7 +1345,7 @@ describe("the test files and runs API", () => {
       const file = await uploaded(ana);
       // The four copies that hold a place end together, so their
       // transactions run at once; the fifth waits for a place, then counts
-      // a full queue before any copy (D14b Ruling 33).
+      // a full queue before any copy.
       let open = (): void => undefined;
       const opened = new Promise<void>((resolve) => {
         open = resolve;
@@ -1370,7 +1369,7 @@ describe("the test files and runs API", () => {
       expect((await runRows()).filter((run) => run.status === "queued")).toHaveLength(50);
     });
 
-    it("refusals before the copy don't spend the minute: a full queue, a missing source input (Rulings 39, 42)", async () => {
+    it("refusals before the copy don't spend the minute: a full queue, a missing source input", async () => {
       const limited = await serverWith({ rateLimits: RATE_LIMITS });
       const ana = await member();
       const target = await configurationOf(ana);
@@ -1411,7 +1410,7 @@ describe("the test files and runs API", () => {
       expectRefusal(await queue(ana, target, queueBody({ inputFileId: file.id }), { on: limited }), 429, "test_run_rate_limited", MESSAGES.rateLimited);
     });
 
-    it("a text too long once organization variables are filled in is refused 400 filled_in_too_long before the copy and doesn't spend the minute (Rulings 42, 45; D20 Preflight ruling 28, Ruling 78)", async () => {
+    it("a text too long once organization variables are filled in is refused 400 filled_in_too_long before the copy and doesn't spend the minute", async () => {
       // A source whose value makes the text too long only once filled in.
       const limited = await serverWith({
         rateLimits: RATE_LIMITS,
@@ -1438,7 +1437,7 @@ describe("the test files and runs API", () => {
       expectRefusal(await queue(ana, target, queueBody({ inputFileId: file.id }), { on: limited }), 429, "test_run_rate_limited", MESSAGES.rateLimited);
     });
 
-    it("values that can't be read refuse the queue 503 variables_unavailable before the copy, and don't spend the minute (D20 Preflight ruling 28)", async () => {
+    it("values that can't be read refuse the queue 503 variables_unavailable before the copy, and don't spend the minute", async () => {
       const limited = await serverWith({
         rateLimits: RATE_LIMITS,
         organizationVariables: { read: async () => ({ kind: "unavailable", reason: "network" }) },
@@ -1467,7 +1466,7 @@ describe("the test files and runs API", () => {
       expectRefusal(await queue(ana, target, queueBody({ inputFileId: file.id }), { on: limited }), 429, "test_run_rate_limited", MESSAGES.rateLimited);
     });
 
-    it("a copy that began spends the minute, even when it fails: 20 failed copies, then the 21st is limited (Ruling 42)", async () => {
+    it("a copy that began spends the minute, even when it fails: 20 failed copies, then the 21st is limited", async () => {
       const limited = await serverWith({ rateLimits: RATE_LIMITS });
       const ana = await member();
       const target = await configurationOf(ana);
@@ -1481,7 +1480,7 @@ describe("the test files and runs API", () => {
       expect(copiesBegun).toBe(20);
     });
 
-    it("bursts at a nearly full queue copy at most 20 inputs a minute: 4 rounds of 20 at once with 49 waiting (Ruling 42)", async () => {
+    it("bursts at a nearly full queue copy at most 20 inputs a minute: 4 rounds of 20 at once with 49 waiting", async () => {
       const limited = await serverWith({ rateLimits: RATE_LIMITS });
       const ana = await member();
       const target = await configurationOf(ana);
@@ -1517,7 +1516,7 @@ describe("the test files and runs API", () => {
       expect(statuses.every((status) => status === 201 || status === 429)).toBe(true);
     });
 
-    it("refuses a 51st waiting run, counting the person's waiting runs in this organization only (D14b Preflight ruling 21)", async () => {
+    it("refuses a 51st waiting run, counting the person's waiting runs in this organization only", async () => {
       const ana = await member();
       const target = await configurationOf(ana);
       const personal = await addConfiguration(ownerDb, {
@@ -1580,7 +1579,7 @@ describe("the test files and runs API", () => {
       expect(created.kind).toBe("created");
     };
 
-    it("POST and GET hold ${org:NAME}: a run, a re-run and a definition's Play are saved and returned as written, each queue reading the organization's values (D20 decision 13)", async () => {
+    it("POST and GET hold ${org:NAME}: a run, a re-run and a definition's Play are saved and returned as written, each queue reading the organization's values", async () => {
       const { server: withVariables, reads } = await withOpampVariables();
       const ana = await member();
       await defineVariable(ana, "PROD_OTLP", `https://${VALUE_MARKER}:4318/$1`);
@@ -1678,11 +1677,11 @@ describe("the test files and runs API", () => {
     });
   });
 
-  describe("runs from a definition or a template (D14b decisions 6, 7, 11 and 13; Preflight rulings 10, 20 to 22)", () => {
+  describe("runs from a definition or a template", () => {
     /**
-     * A hang guard only (D14b Ruling 41): the tests that queue 45 to 70
-     * runs one after another take 3–4 s, close to vitest's 5 s default
-     * under a concurrent run; each ends on its last request.
+     * A hang guard only: the tests that queue 45 to 70 runs one after another
+     * take 3–4 s, close to vitest's 5 s default under a concurrent run; each
+     * ends on its last request.
      */
     const MANY_RUNS_TIMEOUT = 60_000;
     const definitionAudits = () =>
@@ -1694,7 +1693,7 @@ describe("the test files and runs API", () => {
       const data = Buffer.from('{"resourceLogs":[{"definition":true}]}\n');
       const file = await uploaded(ana, data);
       const { suite, definition, inputId } = await definitionOf(ana, target, { inputFileId: file.id });
-      // Her My Files file goes: the definition keeps its own copy (decision 1), which the run copies.
+      // Her My Files file goes: the definition keeps its own copy, which the run copies.
       expect((await server.inject({ method: "DELETE", url: `${filesPath(ana.organizationId)}/${file.id}`, headers: csrfHeaders, cookies: { telflo_access: ana.access } })).statusCode).toBe(204);
       const copiesBefore = copiesBegun;
 
@@ -1721,7 +1720,7 @@ describe("the test files and runs API", () => {
       expect(await readFile(join(root, "organizations", ana.organizationId, "test-definition-inputs", inputId))).toEqual(data);
       expect(wakes).toBe(1);
 
-      // The detail and the list carry the breadcrumb (Preflight ruling 20).
+      // The detail and the list carry the breadcrumb.
       const detail = (await read(ana, `${runsPath(target)}/${run.id}`)).json<{ run: Record<string, unknown> }>().run;
       const [listed] = (await read(ana, runsPath(target))).json<{ runs: Array<Record<string, unknown>> }>().runs;
       const breadcrumb = { suiteId: suite.id, suiteName: suite.name, definitionId: definition.id, definitionName: definition.name };
@@ -1732,7 +1731,7 @@ describe("the test files and runs API", () => {
       expect((await server.inject({ method: "PATCH", url: `${suitesPath(target)}/${suite.id}`, headers: csrfHeaders, cookies: { telflo_access: ana.access }, payload: { name: "Renamed" } })).statusCode).toBe(200);
       expect((await read(ana, `${runsPath(target)}/${run.id}`)).json<{ run: Record<string, unknown> }>().run).toMatchObject(breadcrumb);
 
-      // Ids only: exactly the definition and its suite (Preflight ruling 10).
+      // Ids only: exactly the definition and its suite.
       const audits = await definitionAudits();
       expect(audits).toHaveLength(1);
       expect(audits[0]!.metadata).toEqual({
@@ -1779,7 +1778,7 @@ describe("the test files and runs API", () => {
       ]);
       expect(JSON.stringify(audits)).not.toContain(NAME_MARKER);
 
-      // A soft delete of the template, and its bytes gone: the run's own copy stays (decision 13).
+      // A soft delete of the template, and its bytes gone: the run's own copy stays.
       await ownerDb.updateTable("test_templates").set({ deleted_at: new Date() }).where("id", "=", template.id).execute();
       await store.remove({ kind: "test-template", templateId: template.id });
       expect(await readFile(join(root, runFilePath(ana.organizationId, run.id, "input")))).toEqual(data);
@@ -1862,7 +1861,7 @@ describe("the test files and runs API", () => {
       expect(await filesUnder(root)).toEqual(written);
     });
 
-    it("takes a definition's and a template's id in upper case as the same one (canonicalIdOf, Ruling 30)", async () => {
+    it("takes a definition's and a template's id in upper case as the same one (canonicalIdOf)", async () => {
       const ana = await member();
       const target = await configurationOf(ana);
       const file = await uploaded(ana);
@@ -1908,7 +1907,7 @@ describe("the test files and runs API", () => {
       });
     });
 
-    it("a re-run copies its source's breadcrumb only from a run of the path's configuration and version: another version's or another configuration's run gives none (D14b Ruling 34)", async () => {
+    it("a re-run copies its source's breadcrumb only from a run of the path's configuration and version: another version's or another configuration's run gives none", async () => {
       const ana = await member();
       const target = await configurationOf(ana);
       const file = await uploaded(ana);
@@ -1969,7 +1968,7 @@ describe("the test files and runs API", () => {
       expect((await queue(ana, target, definitionRunBody(definition.id), { on: limited })).statusCode).toBe(201);
       expect(await runRows()).toHaveLength(46);
 
-      // …but the 50 waiting do (decision 7): four more make 50, and the 51st is refused, nothing copied.
+      // …but the 50 waiting do: four more make 50, and the 51st is refused, nothing copied.
       for (let index = 0; index < 4; index += 1) {
         await addTestRun(ownerDb, {
           organizationId: ana.organizationId,
@@ -2005,7 +2004,7 @@ describe("the test files and runs API", () => {
       expect((await queue(ana, target, definitionRunBody(definition.id), { on: limited })).statusCode).toBe(201);
     });
 
-    it("a one-off run can't claim the exemption: a body naming a definition beside its source, or any flag, is refused 400, and one-off runs keep the 20 a minute (decision 7)", async () => {
+    it("a one-off run can't claim the exemption: a body naming a definition beside its source, or any flag, is refused 400, and one-off runs keep the 20 a minute", async () => {
       const limited = await serverWith({ rateLimits: RATE_LIMITS });
       const ana = await member();
       const target = await configurationOf(ana);
@@ -2037,7 +2036,7 @@ describe("the test files and runs API", () => {
       expectRefusal(await queue(ana, target, oneOff, { on: limited }), 429, "test_run_rate_limited", MESSAGES.rateLimited);
     });
 
-    it("Ana's waiting runs, her minute's runs and her uploads in Globex don't count in Acme (Preflight rulings 21 and 22, RATE_LIMITS)", async () => {
+    it("Ana's waiting runs, her minute's runs and her uploads in Globex don't count in Acme (RATE_LIMITS)", async () => {
       const limited = await serverWith({ rateLimits: RATE_LIMITS });
       const anaInAcme = await member();
       const anaInGlobex = await alsoIn(anaInAcme);
@@ -2080,7 +2079,7 @@ describe("the test files and runs API", () => {
     }, MANY_RUNS_TIMEOUT);
   });
 
-  describe("queue requests in flight (D14b Ruling 33)", () => {
+  describe("queue requests in flight", () => {
     /** Hang guards only: each wait ends on its condition, and each test on its last request. */
     const CONDITION_TIMEOUT = { timeout: 10_000, interval: 5 };
     const BURST_TIMEOUT = 60_000;
@@ -2202,7 +2201,7 @@ describe("the test files and runs API", () => {
 
       const refused = await queue(ana, target, definitionRunBody(definition.id), { on: watched });
 
-      // Its own words, not the minute's (D14b Ruling 37): a definition's run isn't counted against the minute.
+      // Its own words, not the minute's: a definition's run isn't counted against the minute.
       expectRefusal(refused, 429, "test_run_rate_limited", MESSAGES.queuingBusy);
       expect(Number(refused.headers["retry-after"])).toBeGreaterThan(0);
       expect(copiesBegun - copiesAtStart).toBe(4);
@@ -2226,7 +2225,7 @@ describe("the test files and runs API", () => {
       await store.remove({ kind: "test-definition-input", organizationId: ana.organizationId, inputId: gone.inputId });
       const free = () => {
         expect(places.count(ana.userId, ana.organizationId)).toEqual({ holding: 0, waiting: 0 });
-        // Nothing kept in memory for her once every place is released (D14b Ruling 39).
+        // Nothing kept in memory for her once every place is released.
         expect(places.keyCount()).toBe(0);
       };
       // Five of each in turn, every place freed after each.
@@ -2256,7 +2255,7 @@ describe("the test files and runs API", () => {
       expect(await runRows()).toHaveLength(10);
     }, BURST_TIMEOUT);
 
-    it("a counted run refused at the place gets its minute back: 25 one-off runs refused while a definition's run holds the only place, then 20 queue and the 21st is refused for the minute (D14b Ruling 39)", async () => {
+    it("a counted run refused at the place gets its minute back: 25 one-off runs refused while a definition's run holds the only place, then 20 queue and the 21st is refused for the minute", async () => {
       const places = createCopyPlaces({ inFlight: 1, waiting: 0 });
       const limited = await serverWith({ rateLimits: RATE_LIMITS, copyPlaces: places });
       const ana = await member();
@@ -2264,7 +2263,7 @@ describe("the test files and runs API", () => {
       const file = await uploaded(ana);
       const { definition } = await definitionOf(ana, target, { inputFileId: file.id });
       const open = holdCopies();
-      // A definition's run isn't counted against the minute (decision 7).
+      // A definition's run isn't counted against the minute.
       const holder = queue(ana, target, definitionRunBody(definition.id), { on: limited });
       await vi.waitFor(() => expect(places.count(ana.userId, ana.organizationId)).toEqual({ holding: 1, waiting: 0 }), CONDITION_TIMEOUT);
 
@@ -2285,7 +2284,7 @@ describe("the test files and runs API", () => {
       expect(await runRows()).toHaveLength(21);
     }, BURST_TIMEOUT);
 
-    it("keeps the place until the run's files are removed: a failed copy holds it while its removal runs, then frees it (D14b Ruling 39)", async () => {
+    it("keeps the place until the run's files are removed: a failed copy holds it while its removal runs, then frees it", async () => {
       const places = createCopyPlaces();
       const watched = await serverWith({ copyPlaces: places });
       const ana = await member();
@@ -2361,7 +2360,7 @@ describe("the test files and runs API", () => {
       expect(runs[0]).toMatchObject({ status: "succeeded", ahead: null });
     });
 
-    it("gives each waiting run its place under the queue's turns, for interleaved people (decision 11)", async () => {
+    it("gives each waiting run its place under the queue's turns, for interleaved people", async () => {
       const { ana, ben, cara } = await team();
       const target = await configurationOf(ana, { published: true });
       const caras = await configurationOf(cara);
@@ -2537,7 +2536,7 @@ describe("the test files and runs API", () => {
       });
     });
 
-    it("serves results at the contract's bounds counted in code points: emoji included (Ruling 39)", async () => {
+    it("serves results at the contract's bounds counted in code points: emoji included", async () => {
       const ana = await member();
       const target = await configurationOf(ana);
       const emoji = (count: number) => "😀".repeat(count);
@@ -2714,7 +2713,7 @@ describe("the test files and runs API", () => {
     });
   });
 
-  describe("a run's input head (GET …/test-runs/:runId/files/input/head, Ruling 46)", () => {
+  describe("a run's input head (GET …/test-runs/:runId/files/input/head)", () => {
     const headPath = (target: Target, runId: string, organizationId = target.organizationId) =>
       `${runsPath(target, organizationId)}/${runId}/files/input/head`;
 
@@ -2811,7 +2810,7 @@ describe("the test files and runs API", () => {
     });
   });
 
-  describe("privacy (decision 23)", () => {
+  describe("privacy", () => {
     it("puts no file name, description or text in any log line", async () => {
       const ana = await member();
       const target = await configurationOf(ana);

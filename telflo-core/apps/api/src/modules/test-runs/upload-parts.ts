@@ -4,24 +4,23 @@ import { AppError } from "../../errors.js";
 import { invalidUpload, testFileTooLarge } from "./errors.js";
 
 /*
- * A multipart upload's body: a test file's upload and a pasted sample's
- * (D14a Preflight ruling 10), and a test template's (D14b Preflight ruling
- * 11). It is read only after the route's checks (the parser registered for
- * these routes reads nothing itself): through `request.parts()`, never
- * `file()`, which would silently drop a late field or a second file. The
- * parts come in one fixed order, the route's (its contract's part names:
- * the text fields, then the file, last), and nothing may follow the file.
- * busboy's limits (uploadPartLimits, derived from the names) bound every
- * part: a file past its size is cut, not refused, so `finish` checks
- * `truncated` once the file has been read, and asks for one more part,
- * which must be the end.
+ * A multipart upload's body: a test file's upload and a pasted sample's, and a
+ * test template's. It is read only after the route's checks (the parser
+ * registered for these routes reads nothing itself): through
+ * `request.parts()`, never `file()`, which would silently drop a late field or
+ * a second file. The parts come in one fixed order, the route's (its
+ * contract's part names: the text fields, then the file, last), and nothing
+ * may follow the file. busboy's limits (uploadPartLimits, derived from the
+ * names) bound every part: a file past its size is cut, not refused, so
+ * `finish` checks `truncated` once the file has been read, and asks for one
+ * more part, which must be the end.
  *
  * The fields come back as sent; the route checks them with its contract,
  * and destroys the file part, unread, when they fail.
  *
  * A refusal answers 400 `invalid_request` with no details (they could echo
  * a name), or 413: `test_file_too_large` by default, or the route's own
- * (`tooLarge`, D23-2 decision 33: an organization's logo). A part's text
+ * (`tooLarge`: an organization's logo). A part's text
  * reaches no log line.
  */
 
@@ -29,11 +28,10 @@ import { invalidUpload, testFileTooLarge } from "./errors.js";
 export type UploadPartNames = readonly [...string[], string];
 
 /**
- * busboy's limits for an upload whose parts are `partNames` (D14b Preflight
- * ruling 11): one file, a field for each name before it, one part each, 8
- * KiB per field (a 2,000-character description is at most 8,000 bytes of
- * UTF-8), and 50 header pairs a part. The file's own limit is the route's
- * (`fileSize`).
+ * busboy's limits for an upload whose parts are `partNames`: one file, a field
+ * for each name before it, one part each, 8 KiB per field (a 2,000-character
+ * description is at most 8,000 bytes of UTF-8), and 50 header pairs a part.
+ * The file's own limit is the route's (`fileSize`).
  */
 export function uploadPartLimits(partNames: UploadPartNames) {
   return {
@@ -54,10 +52,9 @@ export function uploadPartLimits(partNames: UploadPartNames) {
  * In a deployment this drain, and the 413 path (busboy reads an oversized
  * file part to its end, dropping what passes `fileSize`, before `finish`
  * sees `truncated`), are bounded by the gateway: its 11m body limit and its
- * timeouts end a body that is too long or too slow (D14a Ruling 39). A
- * native API reached directly has no such bound: Fastify's requestTimeout
- * is 0, so a slow or endless body holds the connection until the client
- * goes.
+ * timeouts end a body that is too long or too slow. A native API reached
+ * directly has no such bound: Fastify's requestTimeout is 0, so a slow or
+ * endless body holds the connection until the client goes.
  */
 export const REFUSED_UPLOAD_DISCARD_BYTES = 11 * 1024 * 1024;
 
@@ -97,7 +94,7 @@ export interface UploadParts {
   finish: () => Promise<void>;
 }
 
-/** How a route reads its upload (D23-2 decision 33). */
+/** How a route reads its upload. */
 export interface ReadUploadPartsOptions {
   /**
    * The route's refusal of a file over its `maxBytes` (a 413). Left out,

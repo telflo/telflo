@@ -2,12 +2,11 @@ import type { Kysely, Selectable, Transaction } from "kysely";
 import type { Database, TestRegexTable } from "@telflo/db";
 
 /*
- * The regex library (D15b decisions 7 and 8; Preflight rulings 1 and 3;
- * migration 1700000000031): named regex patterns the validation-rule picker
- * offers.
+ * The regex library (migration 1700000000031): named regex patterns the
+ * validation-rule picker offers.
  *
- * A global repository (ADR 0008; the resource registry's `kind: "global"`),
- * as test templates': every organization picks from the same entries, so
+ * A global repository (the resource registry's `kind: "global"`), as test
+ * templates': every organization picks from the same entries, so
  * there is no organization scope and no row-level security. Whether a
  * caller may write is the service's question (product admins only,
  * requireProductAdmin on the routes). An entry is deleted for good (nothing
@@ -17,7 +16,7 @@ import type { Database, TestRegexTable } from "@telflo/db";
  * flows' and templates' do.
  */
 
-/** An entry. Its name, category, description and regex are configuration text (ADR 0024). */
+/** An entry. Its name, category, description and regex are configuration text. */
 export interface TestRegex {
   id: string;
   name: string;

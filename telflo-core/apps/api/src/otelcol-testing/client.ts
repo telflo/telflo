@@ -10,37 +10,34 @@ import {
   type TestRunSignal,
 } from "./schemas.js";
 
-// The platform's client for the collector tester (D14a decisions 1 and 12;
-// the contract is services/otelcol-testing/openapi.yaml; Preflight rulings
-// 1, 2 and 7), as the validator's (otelcol-validator/client.ts): an
-// injected fetch, one timer over the request and the reading of its reply,
-// the shared secret as a Bearer token, redirects never followed, the reply
-// read up to a cap.
+// The platform's client for the collector tester (the contract is
+// services/otelcol-testing/openapi.yaml), as the validator's
+// (otelcol-validator/client.ts): an injected fetch, one timer over the request
+// and the reading of its reply, the shared secret as a Bearer token, redirects
+// never followed, the reply read up to a cap.
 //
 // It never throws for anything the tester does or doesn't answer: a run the
 // tester ran is `succeeded` or `failed`, and every other outcome is
-// `unavailable`, with a reason. The reason tells the dispatcher (Task 8)
-// whether the run may go back to the queue (`isReleasable`, Preflight
-// ruling 7): only when the tester refused it before starting anything (503
-// `tester_busy`, `tester_starting`, `tester_unavailable`), or nothing was
-// sent at all: the connection was refused, or the tester's name didn't
-// resolve (ENOTFOUND, EAI_AGAIN; D14a Ruling 36). A timeout, a reset, any
-// other status or a reply it can't read came after the run was sent, and
-// may have run it: such a run is never released, so it is never sent twice.
-// A duration the contract doesn't take (an integer from 1 to 60) is refused
-// before anything is sent (Ruling 38), and isn't released either: it would
+// `unavailable`, with a reason. The reason tells the dispatcher whether the
+// run may go back to the queue (`isReleasable`): only when the tester refused
+// it before starting anything (503 `tester_busy`, `tester_starting`,
+// `tester_unavailable`), or nothing was sent at all: the connection was
+// refused, or the tester's name didn't resolve (ENOTFOUND, EAI_AGAIN). A
+// timeout, a reset, any other status or a reply it can't read came after the
+// run was sent, and may have run it: such a run is never released, so it is
+// never sent twice. A duration the contract doesn't take (an integer from 1 to
+// 60) is refused before anything is sent, and isn't released either: it would
 // never be sent.
 //
-// The secret, the Authorization header, the text, the input and the output
-// are never logged and never put in a result. The only lines it logs (at
-// error level, through the optional `log`) are for what a deployment must
-// fix: a 401 (the tester doesn't take the secret), a status the run's
-// contract doesn't expect (a 400, 409, 413 or 500, a redirect), a reply it
-// can't read, and a duration it refused, with the reason, the status and the
-// tester's error code from its envelope (the contract's fixed list, Ruling
-// 38), never the body. A version the tester's catalogue retires (409
-// `version_retired`) or doesn't list (400 `version_unknown`) is its own
-// reason, each logged at warn (Rulings 50, 51).
+// The secret, the Authorization header, the text, the input and the output are
+// never logged and never put in a result. The only lines it logs (at error
+// level, through the optional `log`) are for what a deployment must fix: a 401
+// (the tester doesn't take the secret), a status the run's contract doesn't
+// expect (a 400, 409, 413 or 500, a redirect), a reply it can't read, and a
+// duration it refused, with the reason, the status and the tester's error code
+// from its envelope (the contract's fixed list), never the body. A version the
+// tester's catalogue retires (409 `version_retired`) or doesn't list (400
+// `version_unknown`) is its own reason, each logged at warn.
 
 /** One run, as the dispatcher sends it (openapi.yaml's RunRequest, the input as bytes). */
 export interface TestRunRequest {
@@ -78,23 +75,23 @@ export type TesterUnavailableReason =
   | "tester_unavailable"
   /** The connection was refused: nothing was sent. Released. */
   | "connection_refused"
-  /** The tester's name didn't resolve (ENOTFOUND, EAI_AGAIN): nothing was sent. Released (Ruling 36). */
+  /** The tester's name didn't resolve (ENOTFOUND, EAI_AGAIN): nothing was sent. Released. */
   | "name_not_resolved"
-  /** The caller's signal had ended the call before it was made (the API stopping): nothing was sent. Released (Ruling 41). */
+  /** The caller's signal had ended the call before it was made (the API stopping): nothing was sent. Released. */
   | "not_sent"
-  /** 503 `version_unavailable`: an offered version this tester doesn't hold. Not a health failure; the run fails (Preflight ruling 13). */
+  /** 503 `version_unavailable`: an offered version this tester doesn't hold. Not a health failure; the run fails. */
   | "version_unavailable"
   /**
    * 409 `version_retired`: the tester's catalogue retires a version the
    * platform's still offers (the tester's image is newer than the
    * platform's catalogue). The run fails with its own message; logged at
-   * warn (D14a Ruling 50).
+   * warn.
    */
   | "version_retired"
   /**
    * 400 `version_unknown`: the tester's catalogue doesn't list the version
    * (its image is older than the platform's catalogue). The run fails with
-   * its own, neutral message; logged at warn (D14a Ruling 51).
+   * its own, neutral message; logged at warn.
    */
   | "version_unknown"
   /** No answer within 74 + d s, the reply's body included. */
@@ -111,10 +108,10 @@ export type TesterUnavailableReason =
   | "oversized_reply"
   /** Any other status: a redirect, 400, 404, 409, 413, 500, a 503 without a known code, … Logged at error. */
   | "http_status"
-  /** The run's duration isn't an integer from 1 to 60 (Ruling 38): nothing was sent, and it never could be. Logged. */
+  /** The run's duration isn't an integer from 1 to 60: nothing was sent, and it never could be. Logged. */
   | "invalid_request";
 
-/** The reasons whose run goes back to the queue, keeping its place (Preflight ruling 7). */
+/** The reasons whose run goes back to the queue, keeping its place. */
 export const RELEASABLE_TESTER_REASONS: ReadonlySet<TesterUnavailableReason> = new Set<TesterUnavailableReason>([
   "busy",
   "starting",
@@ -147,9 +144,9 @@ export type TesterHealthResult =
   /** 200: the tester and kwok are up. */
   | { kind: "up" }
   /**
-   * A 503 `version_unavailable` envelope: the tester answered, and it is
-   * not a health failure (Preflight ruling 13). The health route doesn't
-   * answer it today; a check that gets one counts it as an answer.
+   * A 503 `version_unavailable` envelope: the tester answered, and it is not
+   * a health failure. The health route doesn't answer it today; a check that
+   * gets one counts it as an answer.
    */
   | { kind: "version_unavailable" }
   /** Anything else: kwok starting or failed (503), no answer, a status or a body the contract doesn't give. */
@@ -176,7 +173,7 @@ export interface OtelcolTestingClient {
 
 /** Where the client logs what a deployment must fix. A pino/Fastify logger fits. */
 export interface OtelcolTestingClientLog {
-  /** A version the tester no longer offers (Ruling 50): the catalogues disagree for a while. */
+  /** A version the tester no longer offers: the catalogues disagree for a while. */
   warn(details: Record<string, unknown>, message: string): void;
   error(details: Record<string, unknown>, message: string): void;
 }
@@ -196,11 +193,11 @@ export interface OtelcolTestingClientOptions {
 
 /**
  * The client's single timer over a run's request and reply is 74 + d s, d
- * the run's duration (Preflight ruling 2): the tester's own request budget
- * (64 + d s, a run's deadline 57 + d s) and 10 s for carrying up to 32 MiB
- * both ways. The dispatcher's lease is 100 s longer (174 + d s): a 25 s send
- * window, 30 s for the files, the OTTL evaluator's 40 s and a 5 s margin
- * (D15a Preflight ruling 11 and Ruling 41; dispatcher.ts's header).
+ * the run's duration: the tester's own request budget (64 + d s, a run's
+ * deadline 57 + d s) and 10 s for carrying up to 32 MiB both ways. The
+ * dispatcher's lease is 100 s longer (174 + d s): a 25 s send window, 30 s
+ * for the files, the OTTL evaluator's 40 s and a 5 s margin (dispatcher.ts's
+ * header).
  */
 export const OTELCOL_TESTING_CLIENT_BASE_SECONDS = 74;
 
@@ -219,8 +216,8 @@ export function isOtelcolTestingDuration(durationSeconds: number): boolean {
 
 /**
  * The run's timer, in milliseconds, for `durationSeconds`. Throws a
- * RangeError for a duration the contract doesn't take (Ruling 38): a timer
- * built from NaN or a fraction fires at once or never.
+ * RangeError for a duration the contract doesn't take: a timer built from NaN
+ * or a fraction fires at once or never.
  */
 export function otelcolTestingRunTimeoutMs(durationSeconds: number): number {
   if (!isOtelcolTestingDuration(durationSeconds)) {
@@ -230,13 +227,12 @@ export function otelcolTestingRunTimeoutMs(durationSeconds: number): number {
 }
 
 /**
- * A health check's timer (Ruling 38): 5 s, the tester's own probe taking
- * 3 s. The monitor waits its 5 s after each check ends, so checks never
- * overlap.
+ * A health check's timer: 5 s, the tester's own probe taking 3 s. The monitor
+ * waits its 5 s after each check ends, so checks never overlap.
  */
 export const OTELCOL_TESTING_HEALTH_TIMEOUT_MS = 5_000;
 
-/** The most of a reply the client reads (Preflight ruling 1): 32 MiB, the tester's own cap. */
+/** The most of a reply the client reads: 32 MiB, the tester's own cap. */
 export const MAX_OTELCOL_TESTING_REPLY_BYTES = 32 * 1024 * 1024;
 
 /** A health reply is a few bytes; this bounds a stranger's. */
@@ -258,7 +254,7 @@ const RELEASED_503_CODES: Readonly<Partial<Record<OtelcolTestingErrorCode, Teste
   version_unavailable: "version_unavailable",
 };
 
-/** A version the tester's catalogue doesn't offer, by its status and code (Rulings 50, 51). */
+/** A version the tester's catalogue doesn't offer, by its status and code. */
 const VERSION_REPLIES: ReadonlyArray<readonly [number, OtelcolTestingErrorCode, "version_retired" | "version_unknown"]> = [
   [409, "version_retired", "version_retired"],
   [400, "version_unknown", "version_unknown"],
@@ -274,7 +270,7 @@ function knownReason(status: number, code: OtelcolTestingErrorCode | undefined):
 /** The socket errors after which nothing was sent, and the reason each gives. */
 const NOTHING_SENT_CODES: Readonly<Record<string, "connection_refused" | "name_not_resolved">> = {
   ECONNREFUSED: "connection_refused",
-  // The name didn't resolve, for good or for now (Ruling 36): no connection was made.
+  // The name didn't resolve, for good or for now: no connection was made.
   ENOTFOUND: "name_not_resolved",
   EAI_AGAIN: "name_not_resolved",
 };
@@ -354,10 +350,10 @@ export function createOtelcolTestingClient(options: OtelcolTestingClientOptions)
   }
 
   async function run(request: TestRunRequest, runOptions: { signal?: AbortSignal } = {}): Promise<TestRunResult> {
-    // Before any timer or byte (Ruling 38): the database's check allows only
+    // Before any timer or byte: the database's check allows only
     // 1 to 60, so this is a bug's, never a person's.
     if (!isOtelcolTestingDuration(request.durationSeconds)) return logged(unavailable("invalid_request"));
-    // Stopped before it was made: nothing is sent, so the run may wait again (Ruling 41).
+    // Stopped before it was made: nothing is sent, so the run may wait again.
     if (runOptions.signal?.aborted) return unavailable("not_sent");
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), otelcolTestingRunTimeoutMs(request.durationSeconds));

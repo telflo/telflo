@@ -7,11 +7,11 @@ import { createTestRunDispatcher } from "./dispatcher.js";
 import { createTestRunReaper } from "./reaper.js";
 import { createTestRunQueueSignal } from "./test-runs-dependencies.js";
 
-// The dispatcher's and the reaper's database warnings (D14a Ruling 40):
-// while the database is down every tick and every pass fails, and each would
-// log a line; instead the first is logged, then at most one a minute, then
-// one line when it works again. A stand-in database fails or answers every
-// transaction; fake timers move the clock.
+// The dispatcher's and the reaper's database warnings: while the database is
+// down every tick and every pass fails, and each would log a line; instead
+// the first is logged, then at most one a minute, then one line when it
+// works again. A stand-in database fails or answers every transaction; fake
+// timers move the clock.
 
 /** A database whose every transaction fails (a refused connection) until `isUp`, then answers `answer`. */
 function standInDatabase(answer: unknown) {
@@ -47,7 +47,7 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-describe("the background loops' database warnings (Ruling 40)", () => {
+describe("the background loops' database warnings", () => {
   it("the dispatcher: a claim failing every second logs once, then once a minute, then one recovery line", async () => {
     const { db, state } = standInDatabase([]);
     const log = recordingLog();

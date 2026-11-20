@@ -37,37 +37,34 @@ import {
 import type { TestRunQueueSignal } from "./test-runs-dependencies.js";
 
 /*
- * The test-run dispatcher (D14a decisions 1, 11, 12, 18 and 29; Preflight
- * rulings 2, 7 and 8; Rulings 22 to 24 and 36): the API's first background
- * loop. Every API process runs one, started after the server listens and
- * stopped on close (background.ts), never by buildServer; they share the
- * queue in Postgres.
+ * The test-run dispatcher: the API's first background loop. Every API process
+ * runs one, started after the server listens and stopped on close
+ * (background.ts), never by buildServer; they share the queue in Postgres.
  *
  * A tick, every second and whenever a run is queued or one of this
  * process's runs ends:
  *   1. in one READ COMMITTED transaction in the dispatcher's context, reads
- *      the tester's down row every process shares (Ruling 24) and, unless
- *      it says down, claims with test_runs_claim(N, 174): under an advisory
+ *      the tester's down row every process shares and, unless it says
+ *      down, claims with test_runs_claim(N, 174): under an advisory
  *      lock, as many waiting runs as N leaves free beside every process's
  *      running runs, each slot to the oldest waiting run of the person with
- *      the fewest running (Q17's turns, the SQL's), each marked running
+ *      the fewest running (the SQL's turns), each marked running
  *      with a lease of 174 + d s (the lease, below). The claim commits
  *      before the tester is called.
  *   2. for each run claimed, outside any transaction: its input from the
- *      FileStore (the run's own copy); for a text with a live
- *      `${org:NAME}`, the organization's values read again and filled in
- *      (D20 decision 13; Preflight ruling 28), the run's stored text staying
- *      as written: unreadable, failed `variables_unavailable`; too long once
- *      filled in (counted before it is built), failed `filled_in_too_long`;
- *      then the lease's pre-send check, so the read's time counts against
- *      the lease; the tester's answer, on the filled-in text, then
+ *      FileStore (the run's own copy); for a text with a live `${org:NAME}`,
+ *      the organization's values read again and filled in, the run's stored
+ *      text staying as written: unreadable, failed `variables_unavailable`;
+ *      too long once filled in (counted before it is built), failed
+ *      `filled_in_too_long`; then the lease's pre-send check, so the read's
+ *      time counts against the lease; the tester's answer, on the filled-in
+ *      text, then
  *      - an answer (succeeded, or failed: refused, collector_failed, …): the
  *        output and the decoded input written to the FileStore, then
  *        test_runs_finish with the lease and the results (run-results.ts).
  *        If the run is no longer this lease's (reaped meanwhile), finish
  *        answers false and the two files are removed. A succeeded answer's
- *        run first has its rules checked (D15a decisions 2, 3 and 15;
- *        Preflight rulings 11 and 22): its snapshot read with
+ *        run first has its rules checked: its snapshot read with
  *        test_runs_rules under the lease (null: reaped, as above); none, and
  *        it succeeds as before, the evaluator never asked; else the
  *        evaluator checks the tester's output, the stored log and the
@@ -84,19 +81,16 @@ import type { TestRunQueueSignal } from "./test-runs-dependencies.js";
  *        before it was sent): test_runs_release, back in the queue with its
  *        place. A release wakes nothing, and this process then waits before
  *        it claims again, 2 s doubling to 10 s while refusals go on, once per
- *        claim (Rulings 41 and 42), so a refusing tester isn't sent the same
- *        run in a loop;
+ *        claim, so a refusing tester isn't sent the same run in a loop;
  *      - anything else (a timeout or a broken connection after it was sent,
  *        a version the tester lacks, an answer that can't be used): failed
  *        with a code and a fixed message. Such a run may have run, so it is
  *        never released: no run is ever sent twice.
  *
- * The lease (Preflight ruling 2 and Ruling 42; D15a Preflight ruling 11
- * and D15a Ruling 41), from the claim, d the run's duration, in seconds:
+ * The lease, from the claim, d the run's duration, in seconds:
  *
  *     25        the send window: a run may still be sent this long after
- *               its claim (its input read, a slow claim), as in D14a
- *               (104 + d s less the 74 + d s and 5 s it reserved)
+ *               its claim (its input read, a slow claim)
  *   + 74 + d    the tester: the client's one timer over the run
  *   + 30        the files: the FileStore's writes of the answer's output
  *               and decoded input
@@ -129,42 +123,42 @@ import type { TestRunQueueSignal } from "./test-runs-dependencies.js";
  * code.
  */
 
-/** How often the dispatcher claims, besides being woken (Preflight ruling 7). */
+/** How often the dispatcher claims, besides being woken. */
 export const TEST_RUN_DISPATCH_INTERVAL_MS = 1_000;
 
-/** The send window (D14a's): how long after its claim a run may still be sent (the lease, above). */
+/** The send window: how long after its claim a run may still be sent (the lease, above). */
 export const TEST_RUN_SEND_WINDOW_SECONDS = 25;
 
-/** The FileStore's writes of an answer's two files (Preflight ruling 2). */
+/** The FileStore's writes of an answer's two files. */
 export const TEST_RUN_FILES_SECONDS = 30;
 
-/** The margin left in a lease beyond the calls (Ruling 42): the rules' read and the finish. */
+/** The margin left in a lease beyond the calls: the rules' read and the finish. */
 const LEASE_MARGIN_MS = 5_000;
 
-/** The lease left before the evaluator is asked (D15a Preflight ruling 11): its 40 s and the 5 s margin. */
+/** The lease left before the evaluator is asked: its 40 s and the 5 s margin. */
 export const TEST_RUN_EVALUATION_LEASE_MS = OTTL_EVALUATOR_EVALUATE_TIMEOUT_MS + LEASE_MARGIN_MS;
 
 /**
- * The lease's overhead over the run's duration (the lease, above; D15a
- * Ruling 41): the send window's 25 s, the client's 74 s, the files' 30 s,
- * the evaluator's 40 s and the 5 s margin, so a lease is 174 + d s.
+ * The lease's overhead over the run's duration (the lease, above): the send
+ * window's 25 s, the client's 74 s, the files' 30 s, the evaluator's 40 s and
+ * the 5 s margin, so a lease is 174 + d s.
  */
 export const TEST_RUN_LEASE_OVERHEAD_SECONDS =
   TEST_RUN_SEND_WINDOW_SECONDS + OTELCOL_TESTING_CLIENT_BASE_SECONDS + TEST_RUN_FILES_SECONDS + TEST_RUN_EVALUATION_LEASE_MS / 1000;
 
 /**
- * What a run reserves of its lease before it is sent (D15a Ruling 41): the
- * tester's 74 + d s, the files' 30 s, the evaluator's 40 s and the 5 s
- * margin, 149 + d s. Its lease less this is the send window.
+ * What a run reserves of its lease before it is sent: the tester's 74 + d s,
+ * the files' 30 s, the evaluator's 40 s and the 5 s margin, 149 + d s. Its
+ * lease less this is the send window.
  */
 export function testRunPreSendReserveMs(durationSeconds: number): number {
   return otelcolTestingRunTimeoutMs(durationSeconds) + TEST_RUN_FILES_SECONDS * 1000 + TEST_RUN_EVALUATION_LEASE_MS;
 }
 
-/** The wait before a busy evaluator is asked once more (D15a Preflight ruling 11). */
+/** The wait before a busy evaluator is asked once more. */
 export const TEST_RUN_EVALUATOR_RETRY_MS = 1_000;
 
-/** The first wait after a released run (Ruling 41); it doubles while refusals go on. */
+/** The first wait after a released run; it doubles while refusals go on. */
 export const TEST_RUN_RELEASE_BACKOFF_MS = 2_000;
 
 /** The longest wait after released runs. */
@@ -195,9 +189,9 @@ export interface TestRunDispatcherOptions {
   db: Kysely<Database>;
   fileStore: IFileStore;
   tester: OtelcolTestingClient;
-  /** The OTTL evaluator's client: a run's rules are checked with it once the tester answers (D15a decision 2). */
+  /** The OTTL evaluator's client: a run's rules are checked with it once the tester answers. */
   evaluator: OttlEvaluatorClient;
-  /** Where a run's organization variables come from: filled in before the tester (D20 decision 13). */
+  /** Where a run's organization variables come from: filled in before the tester. */
   organizationVariables: IOrganizationVariables;
   /** Woken when a run is queued in this process. */
   queued: TestRunQueueSignal;
@@ -208,8 +202,8 @@ export interface TestRunDispatcherOptions {
   intervalMs?: number;
   /**
    * performance.now by default: a monotonic clock, in milliseconds, for the
-   * release backoff and the lease check (Ruling 42). The wall clock is
-   * never compared with the database's.
+   * release backoff and the lease check. The wall clock is never compared
+   * with the database's.
    */
   monotonicNow?: () => number;
   /**
@@ -251,9 +245,9 @@ interface ClaimedRow {
 
 /**
  * Claims up to `slots` runs, less every process's running ones, unless the
- * shared row says the tester is down (Ruling 24): then nothing. One READ
- * COMMITTED transaction in the dispatcher's context, committed before any
- * run is sent.
+ * shared row says the tester is down: then nothing. One READ COMMITTED
+ * transaction in the dispatcher's context, committed before any run is
+ * sent.
  */
 export async function claimTestRuns(db: Kysely<Database>, slots: number): Promise<ClaimedTestRun[]> {
   return withDispatcherContext(db, async (transaction) => {
@@ -277,7 +271,7 @@ export async function claimTestRuns(db: Kysely<Database>, slots: number): Promis
   });
 }
 
-/** The statuses test_runs_finish ends a run in (migration 1700000000030, D15a Preflight ruling 17). */
+/** The statuses test_runs_finish ends a run in (migration 1700000000030). */
 export type FinishedTestRunStatus = Extract<TestRunStatus, "succeeded" | "failed" | "validation_failed">;
 
 /** test_runs_finish: true when the run was still this lease's, and is now finished in `status`. */
@@ -288,7 +282,7 @@ export async function finishTestRun(
   results: TestRunResults,
 ): Promise<boolean> {
   return withDispatcherContext(db, async (transaction) => {
-    // JSON as it is: numbers and booleans stay numbers and booleans (Ruling 24).
+    // JSON as it is: numbers and booleans stay numbers and booleans.
     const { rows } = await sql<{ finished: boolean }>`
       select test_runs_finish(${run.id}::uuid, ${run.leaseId}::uuid, ${status}, ${JSON.stringify(results)}::jsonb) as finished
     `.execute(transaction);
@@ -297,9 +291,8 @@ export async function finishTestRun(
 }
 
 /**
- * test_runs_rules: a running run's rules' snapshot while this lease holds it
- * (D15a Preflight rulings 17 and 22), or null when it no longer does
- * (reaped, or finished).
+ * test_runs_rules: a running run's rules' snapshot while this lease holds it,
+ * or null when it no longer does (reaped, or finished).
  */
 export async function readTestRunRules(db: Kysely<Database>, run: Pick<ClaimedTestRun, "id" | "leaseId">): Promise<unknown[] | null> {
   return withDispatcherContext(db, async (transaction) => {
@@ -342,7 +335,7 @@ export async function releaseTestRun(db: Kysely<Database>, run: Pick<ClaimedTest
   });
 }
 
-/** One of a run's files, in its organization's folder (decision 3). */
+/** One of a run's files, in its organization's folder. */
 function runFileKey(run: ClaimedTestRun, name: TestRunFileName): FileKey {
   return { kind: "test-run", organizationId: run.organizationId, runId: run.id, name };
 }
@@ -368,11 +361,11 @@ export function createTestRunDispatcher(options: TestRunDispatcherOptions): Test
   const intervalMs = options.intervalMs ?? TEST_RUN_DISPATCH_INTERVAL_MS;
   const now = options.monotonicNow ?? (() => performance.now());
   const wait = options.wait ?? waitFor;
-  /** The wait after the latest released batch; 0 once a run was answered otherwise (Rulings 41, 42). */
+  /** The wait after the latest released batch; 0 once a run was answered otherwise. */
   let backoffMs = 0;
   /** No claim before this time (monotonic). */
   let claimAfter = Number.NEGATIVE_INFINITY;
-  /** Each claim's number, so a batch's releases double the wait once (Ruling 42). */
+  /** Each claim's number, so a batch's releases double the wait once. */
   let batches = 0;
   /** The batch whose release last doubled the wait. */
   let backedOffBatch = 0;
@@ -386,7 +379,7 @@ export function createTestRunDispatcher(options: TestRunDispatcherOptions): Test
   /** A wake that came while a claim was in flight: claim again once it ends. */
   let isClaimWanted = false;
   // A claim fails every tick while the database is down: logged once, then
-  // at most once a minute, and once when it claims again (Ruling 40).
+  // at most once a minute, and once when it claims again.
   const claimWarning = createThrottledWarning(log, {
     failed: "test runs could not be claimed; the next tick tries again",
     recovered: "test runs can be claimed again",
@@ -457,7 +450,7 @@ export function createTestRunDispatcher(options: TestRunDispatcherOptions): Test
           // Wait before claiming again: the run would be sent straight back.
           // Runs refused together (one batch) double the wait once; one
           // refused after an answer of the same batch reset the wait waits
-          // the first step again rather than not at all (Ruling 45).
+          // the first step again rather than not at all.
           if (batch.number > backedOffBatch || backoffMs === 0) {
             backedOffBatch = batch.number;
             backoffMs = backoffMs === 0 ? TEST_RUN_RELEASE_BACKOFF_MS : Math.min(backoffMs * 2, TEST_RUN_RELEASE_BACKOFF_MAXIMUM_MS);
@@ -547,17 +540,16 @@ export function createTestRunDispatcher(options: TestRunDispatcherOptions): Test
     return written.sizeBytes;
   }
 
-  /** How much of `run`'s lease is left, on the monotonic clock since its claim (Ruling 42). */
+  /** How much of `run`'s lease is left, on the monotonic clock since its claim. */
   function leaseLeftMs(run: ClaimedTestRun, batch: Batch): number {
     return (run.durationSeconds + TEST_RUN_LEASE_OVERHEAD_SECONDS) * 1000 - (now() - batch.claimedAt);
   }
 
   /**
-   * The evaluator's answer for `rules` (D15a Preflight rulings 11 and 22):
-   * asked only while the lease left covers 45 s, its call bounded by
-   * min(40 s, the lease left - 5 s); a busy answer asked once more after
-   * 1 s, if the lease still covers it. `undefined` when it wasn't asked (too
-   * little lease left, or busy again).
+   * The evaluator's answer for `rules`: asked only while the lease left
+   * covers 45 s, its call bounded by min(40 s, the lease left - 5 s); a busy
+   * answer asked once more after 1 s, if the lease still covers it.
+   * `undefined` when it wasn't asked (too little lease left, or busy again).
    */
   async function evaluate(
     run: ClaimedTestRun,
@@ -584,9 +576,9 @@ export function createTestRunDispatcher(options: TestRunDispatcherOptions): Test
   }
 
   /**
-   * A succeeded answer's run, its files written: its rules checked (D15a
-   * decisions 2, 3 and 15). The status and the results to finish it with,
-   * or null when the run is no longer this lease's (reaped meanwhile).
+   * A succeeded answer's run, its files written: its rules checked. The status
+   * and the results to finish it with, or null when the run is no longer this
+   * lease's (reaped meanwhile).
    */
   async function checkRules(
     run: ClaimedTestRun,
@@ -653,7 +645,7 @@ export function createTestRunDispatcher(options: TestRunDispatcherOptions): Test
       }
     } catch (error) {
       log.error({ runId: run.id, err: errorFacts(error) }, "a test run's results could not be written");
-      // Any rejection may leave a file at its key (IFileStore.write, Ruling 25).
+      // Any rejection may leave a file at its key (IFileStore.write).
       await removeAnswerFiles(run);
       await endQuietly(run, TEST_RUN_FAILURES.storageFailed);
       return;
@@ -665,7 +657,7 @@ export function createTestRunDispatcher(options: TestRunDispatcherOptions): Test
     );
     let ending: { status: FinishedTestRunStatus; results: TestRunResults } | null;
     if (result.kind === "failed") {
-      // The tester's own failure: no rules checked (D15a Preflight ruling 22).
+      // The tester's own failure: no rules checked.
       ending = { status: "failed", results: answered };
     } else {
       try {
@@ -714,7 +706,7 @@ export function createTestRunDispatcher(options: TestRunDispatcherOptions): Test
       return "released";
     }
     // The organization's values as they are now, filled in before the tester
-    // (D20 decision 13: its cleanup runs on the filled-in text), read only
+    // (its cleanup runs on the filled-in text), read only
     // for a text that references one. The run's own text stays as written.
     // The read (the client's listVariables) takes no abort signal: stop()
     // waits for it, as it waits for readInput's, at most the client's own
@@ -741,12 +733,12 @@ export function createTestRunDispatcher(options: TestRunDispatcherOptions): Test
     }
     // Too little of the lease left for the answer to be stored and checked:
     // never sent. Measured as time elapsed since the claim, on this
-    // process's monotonic clock, against the lease's own length (Ruling 42):
-    // the database's lease_expires_at is never compared with this process's
+    // process's monotonic clock, against the lease's own length: the
+    // database's lease_expires_at is never compared with this process's
     // wall clock. The tester's, the files' and the evaluator's time and the
     // margin are reserved (the lease, above); the evaluator's always: the
-    // run's rules aren't known before the claim (D15a Preflight ruling 11).
-    // After the variables' read, so its time counts (Preflight ruling 28).
+    // run's rules aren't known before the claim. After the variables' read,
+    // so its time counts.
     if (testRunPreSendReserveMs(run.durationSeconds) > leaseLeftMs(run, batch)) {
       await endQuietly(run, TEST_RUN_FAILURES.interrupted);
       return "ended";
@@ -768,7 +760,7 @@ export function createTestRunDispatcher(options: TestRunDispatcherOptions): Test
       await store(run, batch, signal, result);
       return "answered";
     }
-    // The tester ran nothing (Preflight ruling 7, Rulings 36 and 41): its place kept.
+    // The tester ran nothing: its place kept.
     if (result.isReleasable) {
       await releaseTestRun(db, run);
       return "released";

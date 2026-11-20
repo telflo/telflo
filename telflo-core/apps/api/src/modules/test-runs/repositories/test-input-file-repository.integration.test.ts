@@ -14,12 +14,11 @@ import { withDatabaseContext } from "../../../database/context.js";
 import { createTestInputFileRepository, type ITestInputFileRepository } from "./test-input-file-repository.js";
 
 /*
- * The test files' repository (D14a decision 7): a person's own files in
- * one organization. Each rule is checked twice: as the API's role, where
- * row-level security stands behind the repository, and as the tables'
- * owner, which row-level security doesn't constrain, so the repository's
- * own filter is what answers (a lost filter fails there, whatever the
- * policies do).
+ * The test files' repository: a person's own files in one organization. Each
+ * rule is checked twice: as the API's role, where row-level security stands
+ * behind the repository, and as the tables' owner, which row-level security
+ * doesn't constrain, so the repository's own filter is what answers (a lost
+ * filter fails there, whatever the policies do).
  */
 describe("test input file repository", () => {
   let databases: TestDatabases;

@@ -58,7 +58,7 @@ const writeErrorResponses = {
   503: ErrorResponseSchema,
 };
 
-/** An entry's text goes only into a response body (ADR 0024). */
+/** An entry's text goes only into a response body. */
 function toResponseBody(testRegex: TestRegex): TestRegexResponseBody {
   return {
     id: testRegex.id,
@@ -83,8 +83,7 @@ function writerOf(request: FastifyRequest): TestRegexWriter {
 }
 
 /**
- * The regex library's endpoints (D15b decisions 7 and 8; details 17 and 18;
- * Preflight rulings 3 and 4):
+ * The regex library's endpoints:
  *
  *   * `GET /api/v1/test-regexes`: every entry, by category, then name, then
  *     id, for a member with the current terms, and for a product admin with
@@ -98,9 +97,9 @@ function writerOf(request: FastifyRequest): TestRegexWriter {
  *     saves (RATE_LIMITS' validationRuleChecksPerUser, `admit(userId,
  *     null)`: apart from every organization's).
  *
- * Entries are global (ADR 0008): every read and write goes through the
- * API's role with no database context and no row-level security. Their text
- * and the evaluator's words travel only in the JSON bodies.
+ * Entries are global: every read and write goes through the API's role with
+ * no database context and no row-level security. Their text and the
+ * evaluator's words travel only in the JSON bodies.
  */
 export function registerTestRegexesRoutes(
   server: FastifyInstance,

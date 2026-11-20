@@ -7,13 +7,13 @@ import { parse as parseYaml } from "yaml";
 import { loadSettings } from "../settings.js";
 
 // The collector tester's development secret lives in three places that must
-// agree (D14a decision 30, Preflight ruling 4): the file the tester reads
-// (docker/otelcol-testing/development-secret, through compose's `secrets:`),
+// agree: the file the tester reads (docker/otelcol-testing/development-secret,
+// through compose's `secrets:`),
 // the compose anchor the API's environment takes it from
-// (x-otelcol-testing-secret), and .env.example's line for the native API.
-// A drift would leave the API refused with 401 on every run. Compose's
-// wiring of the API to the tester is checked here too: the URL, the
-// internal network, and `depends_on` started (not healthy).
+// (x-otelcol-testing-secret), and .env.example's line for the native API. A
+// drift would leave the API refused with 401 on every run. Compose's wiring
+// of the API to the tester is checked here too: the URL, the internal
+// network, and `depends_on` started (not healthy).
 
 const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../../../..");
 const read = (path: string) => readFileSync(resolve(repositoryRoot, path), "utf8");
@@ -62,8 +62,7 @@ describe("the collector tester's development secret and compose wiring", () => {
 
   it("the API's compose environment loads, with the tester's settings", () => {
     // Compose interpolates `${…}` from its own environment; unset, each is
-    // empty, or its `:-` or `-` default (the agent endpoint's, D17c-1; the
-    // site's, D36-1).
+    // empty, or its `:-` or `-` default (the agent endpoint's; the site's).
     const environment = Object.fromEntries(
       Object.entries(api.environment ?? {}).map(([name, value]) => [
         name,

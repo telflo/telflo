@@ -5,12 +5,12 @@ import { createThrottledWarning } from "../database/throttled-warning.js";
 import { errorFacts } from "../error-facts.js";
 import type { OtelcolTestingClient, TesterHealthResult } from "./client.js";
 
-// The collector tester's health, as decision 12 and Preflight ruling 7 have
-// it. Each API process runs one monitor: it asks the tester's health every
-// 5 s, counts its own failed checks, and after each check reads the one row
-// every process shares (otelcol_testing_state, migration 028), writing it
-// through otelcol_testing_mark in the dispatcher's context only when the row
-// disagrees with what this process saw. "Up wins" (D14a Ruling 38):
+// The collector tester's health. Each API process runs one monitor: it asks
+// the tester's health every 5 s, counts its own failed checks, and after each
+// check reads the one row every process shares (otelcol_testing_state,
+// migration 028), writing it through otelcol_testing_mark in the
+// dispatcher's context only when the row disagrees with what this process
+// saw. "Up wins":
 //
 // - a check that succeeds clears the row whenever it says down, whoever
 //   marked it: a down left behind by a process that has since died (or
@@ -27,34 +27,34 @@ import type { OtelcolTestingClient, TesterHealthResult } from "./client.js";
 // row follows the latest check, and a success clears it at once.
 //
 // A 503 `version_unavailable` answers for one version, not the tester: it
-// counts as a successful check (Preflight ruling 13). A read or a write that
-// fails is logged (the first, then at most one a minute while they last, and
-// one line when it works again: Ruling 40); the view keeps its old state and
-// the next check tries again. A read that fails falls back on the view: the
-// write happens when the view would change.
+// counts as a successful check. A read or a write that fails is logged (the
+// first, then at most one a minute while they last, and one line when it
+// works again); the view keeps its old state and the next check
+// tries again. A read that fails falls back on the view: the write happens
+// when the view would change.
 //
-// Queuing (Task 7) and the dispatcher (Task 8) read the shared row
-// (readOtelcolTestingDownSince), not only their own process's view
-// (Ruling 24): another process may have seen the tester go down first.
+// Queuing and the dispatcher read the shared row (readOtelcolTestingDownSince),
+// not only their own process's view: another process may have seen the tester
+// go down first.
 //
 // Nothing here logs the secret, a text, an input or an output: it holds
 // none of them.
 //
 // The monitor itself is a service's, not the tester's alone
-// (createServiceHealthMonitor): the OTTL evaluator runs a second one, over
-// its own shared row (ottl-evaluator/health-monitor.ts; D15a Preflight
-// ruling 23), with its own words in the log.
+// (createServiceHealthMonitor): the OTTL evaluator runs a second one, over its
+// own shared row (ottl-evaluator/health-monitor.ts), with its own words in the
+// log.
 
-/** How long a monitor waits between checks (decision 12; D15a Preflight ruling 23 for the evaluator's). */
+/** How long a monitor waits between checks, the tester's and the evaluator's alike. */
 export const SERVICE_HEALTH_INTERVAL_MS = 5_000;
 
-/** How many failed checks in a row count a service down (decision 12; D15a Preflight ruling 23). */
+/** How many failed checks in a row count a service down. */
 export const SERVICE_DOWN_AFTER_FAILURES = 2;
 
-/** How long the monitor waits between checks (decision 12). */
+/** How long the monitor waits between checks. */
 export const OTELCOL_TESTING_HEALTH_INTERVAL_MS = SERVICE_HEALTH_INTERVAL_MS;
 
-/** How many failed checks in a row count the tester down (decision 12). */
+/** How many failed checks in a row count the tester down. */
 export const OTELCOL_TESTING_DOWN_AFTER_FAILURES = SERVICE_DOWN_AFTER_FAILURES;
 
 /** What this process has seen of a service and of its shared row. */
@@ -87,7 +87,7 @@ export interface ServiceHealthMessages {
   readRecovered: string;
 }
 
-/** The tester's words (Ruling 40). */
+/** The tester's words. */
 const OTELCOL_TESTING_HEALTH_MESSAGES: ServiceHealthMessages = {
   down: "the collector tester is down: testing refuses new runs until it answers",
   writeFailed: "the collector tester's health could not be written; the next check tries again",
@@ -225,8 +225,8 @@ export function createServiceHealthMonitor<Result extends { kind: string }>(
     // A check stop() cut short says nothing about the service.
     if (controller.signal.aborted) return;
     consecutiveFailures = isUp ? 0 : consecutiveFailures + 1;
-    // One failure is not enough to say anything (decision 12): the row is
-    // left as it is, and not even read.
+    // One failure is not enough to say anything: the row is left as it is,
+    // and not even read.
     if (!isUp && consecutiveFailures < SERVICE_DOWN_AFTER_FAILURES) return;
     const row = await readRow();
     if (row === undefined) {
@@ -305,7 +305,7 @@ export async function readOtelcolTestingDownSince(db: Kysely<Database>): Promise
   return row?.down_since ?? null;
 }
 
-/** The monitor the API runs (Task 8's starter starts it after listen): the client's health checks, the shared row. */
+/** The monitor the API runs (the test runs' background starter starts it after listen): the client's health checks, the shared row. */
 export function createOtelcolTestingHealth(dependencies: {
   client: OtelcolTestingClient;
   db: Kysely<Database>;

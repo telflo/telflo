@@ -8,11 +8,10 @@ import { createTestRunReaper, type TestRunReaper } from "./reaper.js";
 import type { TestingDependencies } from "./test-runs-dependencies.js";
 
 /*
- * The test runs' background work (D14a decisions 12, 18 and 29; Preflight
- * rulings 7 and 17): the tester's health monitor, the OTTL evaluator's
- * (D15a Preflight ruling 23), the dispatcher and the reaper. The one
- * starter, shared by index.ts and e2e/start-api.ts; never run by
- * buildServer, so a test's server runs no loop.
+ * The test runs' background work: the tester's health monitor, the OTTL
+ * evaluator's, the dispatcher and the reaper. The one starter, shared by
+ * index.ts and e2e/start-api.ts; never run by buildServer, so a test's server
+ * runs no loop.
  *
  *   const background = registerTestRunBackground(server, { db, settings, fileStore, testing });
  *   await server.listen(...);
@@ -38,7 +37,7 @@ export interface TestRunBackgroundDependencies {
   /** The API's own role. */
   db: Kysely<Database>;
   settings: Pick<AppSettings, "testRuns">;
-  /** The server's own file store (ServerDependencies.fileStore, D23-2 decision 31): the dispatcher reads a run's input and writes its output there. */
+  /** The server's own file store (ServerDependencies.fileStore): the dispatcher reads a run's input and writes its output there. */
   fileStore: IFileStore;
   testing: TestingDependencies;
   /** The server's logger by default. */

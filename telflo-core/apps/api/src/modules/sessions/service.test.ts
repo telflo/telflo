@@ -39,7 +39,7 @@ const DAY = 24 * 60 * MINUTE;
 
 interface StoredUser extends User {
   deletedAt: Date | null;
-  /** `users.is_product_admin` (D12 decision 3). */
+  /** `users.is_product_admin`. */
   isProductAdmin: boolean;
 }
 
@@ -635,7 +635,7 @@ describe("session service", () => {
       expect(harness.sessionRows.size).toBe(0);
     });
 
-    it("refuses with invalid_credentials, audits password_changed and creates nothing when the hash changed after it verified (D3 Ruling 15)", async () => {
+    it("refuses with invalid_credentials, audits password_changed and creates nothing when the hash changed after it verified", async () => {
       const { user } = harness.addUser();
       const newHash = await hashPassword("a-different-sufficiently-long-password");
       // A reset commits between the verify and the transaction's recheck: the
@@ -733,7 +733,7 @@ describe("session service", () => {
     });
   });
 
-  describe("startSession (D2c Ruling 10)", () => {
+  describe("startSession", () => {
     it("runs the check first, then creates the session and audits user.signed_in with the metadata", async () => {
       const { user, organization } = harness.addUser({ passwordHash: null });
       const check = vi.fn(async () => true);
@@ -777,7 +777,7 @@ describe("session service", () => {
     });
   });
 
-  describe("where a new sign-in lands (D36-1 decision 56, Q265)", () => {
+  describe("where a new sign-in lands", () => {
     /** A person with their personal organization, then group organizations joined in the order named. */
     function personWithGroups(...names: string[]) {
       const { user, organization: personal } = harness.addUser();
@@ -947,7 +947,7 @@ describe("session service", () => {
       return result.issued;
     };
 
-    /** Past the grace window, so presenting a consumed token again is a reuse (D2b Preflight ruling 2). */
+    /** Past the grace window, so presenting a consumed token again is a reuse. */
     const pastTheGraceWindow = () => harness.advance(REFRESH_GRACE_SECONDS * 1000 + 1);
 
     it("rotates: the old token is consumed and the new one works", async () => {
@@ -1075,7 +1075,7 @@ describe("session service", () => {
       expect(harness.sessionRepository.revoke).not.toHaveBeenCalled();
     });
 
-    describe("the grace window (D2b decision 3)", () => {
+    describe("the grace window", () => {
       const SECOND = 1000;
 
       /** Signs in and rotates once, so the first refresh token is consumed at the clock's current reading. */
@@ -1124,7 +1124,7 @@ describe("session service", () => {
         },
       );
 
-      it("counts a presentation whose clock reading precedes the consumption as within the window (Preflight ruling 1)", async () => {
+      it("counts a presentation whose clock reading precedes the consumption as within the window", async () => {
         // A presentation that waited on the winner's row lock read its clock
         // before the winner wrote consumed_at.
         const { first } = await rotatedOnce();
@@ -1233,7 +1233,7 @@ describe("session service", () => {
       });
     });
 
-    it("answers whether the user's Terms are satisfied as the session check read them: the site's version accepted, not an older one or none (D7 decision 10)", async () => {
+    it("answers whether the user's Terms are satisfied as the session check read them: the site's version accepted, not an older one or none", async () => {
       const { user } = harness.addUser();
       const issued = await signIn(user.email);
       expect(await harness.service.authenticate(issued.accessToken)).toMatchObject({
@@ -1250,7 +1250,7 @@ describe("session service", () => {
       }
     });
 
-    it("follows the site's Terms version, read on each request (TELFLO_TERMS_VERSION, D36-1 decision 29)", async () => {
+    it("follows the site's Terms version, read on each request (TELFLO_TERMS_VERSION)", async () => {
       const { user } = harness.addUser();
       const issued = await signIn(user.email);
       harness.settings.site.terms.version = "2099-01-01";
@@ -1259,7 +1259,7 @@ describe("session service", () => {
       expect(await harness.service.authenticate(issued.accessToken)).toMatchObject({ hasAcceptedCurrentTerms: true });
     });
 
-    it("answers Terms satisfied for every user while the site asks for none (D36-1 Preflight ruling 1)", async () => {
+    it("answers Terms satisfied for every user while the site asks for none", async () => {
       const { user } = harness.addUser();
       const issued = await signIn(user.email);
       harness.settings.site.terms.version = "";
@@ -1269,7 +1269,7 @@ describe("session service", () => {
       }
     });
 
-    it("carries the product-admin flag as the session check read it on each request, not as the token was issued (D12 decision 3)", async () => {
+    it("carries the product-admin flag as the session check read it on each request, not as the token was issued", async () => {
       const { user } = harness.addUser();
       user.isProductAdmin = true;
       const issued = await signIn(user.email);
@@ -1311,7 +1311,7 @@ describe("session service", () => {
       expect(await harness.service.authenticate("")).toEqual({ status: "unauthenticated" });
     });
 
-    it("reports a token whose organization the session has since left as expired, so the client refreshes (D5 decision 10)", async () => {
+    it("reports a token whose organization the session has since left as expired, so the client refreshes", async () => {
       const { user } = harness.addUser();
       const issued = await signIn(user.email);
       const group = harness.addOrganization(randomUUID(), "group", "Group");
@@ -1434,7 +1434,7 @@ describe("session service", () => {
     /** A signed-in user with a group organization they are a `role` of, and their request's context. */
     async function signedInWithGroup(role: OrganizationRole = "contributor") {
       const { user, organization } = harness.addUser();
-      // Signed in before joining the group: the session starts in the personal organization (Q265).
+      // Signed in before joining the group: the session starts in the personal organization.
       const issued = await signIn(user.email);
       const group = harness.addOrganization(randomUUID(), "group", "Acme");
       harness.memberships.push({ organizationId: group.id, userId: user.id, role });
@@ -1479,7 +1479,7 @@ describe("session service", () => {
       });
     });
 
-    it("sets the target organization as the database context before its locking reads (Preflight ruling 1)", async () => {
+    it("sets the target organization as the database context before its locking reads", async () => {
       const signedIn = await signedInWithGroup();
       await switchTo(signedIn, signedIn.group.id);
       expect(harness.contexts.at(-1)).toEqual({ userId: signedIn.user.id, organizationId: signedIn.group.id });
@@ -1498,7 +1498,7 @@ describe("session service", () => {
       expect(harness.auditEvents).toHaveLength(auditCount);
     });
 
-    it("answers the active organization's id in capitals as the no-op (Ruling 85)", async () => {
+    it("answers the active organization's id in capitals as the no-op", async () => {
       const signedIn = await signedInWithGroup();
       const auditCount = harness.auditEvents.length;
 
@@ -1579,7 +1579,7 @@ describe("session service", () => {
     });
 
     it("answers as a no-op when the session moved into the target between its unlocked read and its lock", async () => {
-      // Another switch of the same session committed in between (Ruling 22).
+      // Another switch of the same session committed in between.
       const signedIn = await signedInWithGroup("contributor");
       const stale = { ...harness.sessionRows.get(signedIn.context.sessionId)! };
       harness.sessionRows.get(signedIn.context.sessionId)!.activeOrganizationId = signedIn.group.id;

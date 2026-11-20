@@ -13,19 +13,18 @@ import type { ITestRunRepository } from "./repositories/test-run-repository.js";
 /**
  * The repositories a unit of work of the testing endpoints uses, bound to
  * one transaction that carries the request's database context: the active
- * organization and its members (the lock and the membership's re-read,
- * D7 decision 9's, as the configurations take them), the configurations
- * and versions as the caller sees them (D11b decision 1), the catalogue,
- * the caller's own test files, the runs and the suites' definitions they
- * can see, the live templates (a run's sources, D14b Preflight ruling 10),
- * and the audit trail.
+ * organization and its members (the lock and the membership's re-read, as
+ * the configurations take them), the configurations and versions as the
+ * caller sees them, the catalogue, the caller's own test files, the runs
+ * and the suites' definitions they can see, the live templates (a run's
+ * sources), and the audit trail.
  */
 export interface TestRunsTransaction {
   organization: Pick<IActiveOrganizationRepository, "findActiveForShare">;
   members: Pick<IMemberRepository, "find">;
   configurations: Pick<IConfigurationRepository, "find">;
   versions: Pick<IConfigurationVersionRepository, "findSummary">;
-  /** A YAML run's pin is the catalogue's defaults for what it doesn't name (D25 decision 40). */
+  /** A YAML run's pin is the catalogue's defaults for what it doesn't name. */
   catalogue: Pick<ICollectorCatalogueRepository, "findVersionState" | "findDefaults" | "findDistributionDefault" | "listOffered">;
   files: ITestInputFileRepository;
   runs: ITestRunRepository;

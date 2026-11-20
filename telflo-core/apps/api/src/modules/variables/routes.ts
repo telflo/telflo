@@ -29,14 +29,14 @@ import { createDatabaseSessionService } from "../sessions/routes.js";
 import { createVariableDraftsRepository } from "./drafts-repository.js";
 import { createVariablesService, type WithVariablesTransaction } from "./service.js";
 
-/** What the variables service is built from, once, in buildServer (D25 Preflight ruling 4). */
+/** What the variables service is built from, once, in buildServer. */
 export interface VariableServicesDependencies extends ServerDependencies {
   now: () => Date;
   /** buildServer's: a create that finds its organization deleted runs its delete hook again. */
   opampRegistration: Pick<OpampRegistration, "deleted">;
 }
 
-/** The variables service, one instance (D25 Preflight ruling 4). */
+/** The variables service, one instance. */
 export interface VariableServices {
   service: ReturnType<typeof createVariablesService>;
 }
@@ -47,16 +47,16 @@ export interface VariableRoutesDependencies extends VariableServicesDependencies
 }
 
 /**
- * The organization's variables and variable groups (D20 decision 37). Every
- * path names ids only: a variable's name, value or description never goes
- * in a URL (Q88), and no route takes a query.
+ * The organization's variables and variable groups. Every path names ids
+ * only: a variable's name, value or description never goes in a URL, and
+ * no route takes a query.
  */
 const VARIABLES_ROUTE = "/api/v1/organizations/:organizationId/variables";
 const VARIABLE_GROUPS_ROUTE = "/api/v1/organizations/:organizationId/variable-groups";
 
 /**
- * A reply carrying values, names or descriptions is configuration text
- * (Q88), as a configuration's YAML is: no cache keeps a copy.
+ * A reply carrying values, names or descriptions is configuration text, as
+ * a configuration's YAML is: no cache keeps a copy.
  */
 const NO_STORE = "no-store";
 
@@ -87,9 +87,9 @@ const VariableGroupParamsSchema = z.object({ organizationId: z.string(), variabl
 const OverrideParamsSchema = z.object({ organizationId: z.string(), variableGroupId: z.string(), variableId: z.string() });
 
 /**
- * The variables service (D25 Preflight ruling 4), moved verbatim from the
- * routes: built once in buildServer (the public surface doesn't port the
- * variables, decision 15, but every module's services are built alike).
+ * The variables service, moved verbatim from the routes: built once in
+ * buildServer (the public surface doesn't port the variables, but every
+ * module's services are built alike).
  */
 export function createVariableServices(
   deps: VariableServicesDependencies,
@@ -117,10 +117,10 @@ export function createVariableServices(
 }
 
 /**
- * D20 decision 37's routes. Each needs a session and the current terms (403
+ * The variables routes. Each needs a session and the current terms (403
  * `terms_acceptance_required` first), then the path's organization the
  * session's active one; every member of it may use them (no viewer role
- * exists: Preflight ruling 46). The service does the rest: service.ts.
+ * exists). The service does the rest: service.ts.
  */
 export function registerVariableRoutes(
   server: FastifyInstance,
@@ -146,7 +146,7 @@ export function registerVariableRoutes(
     },
   );
 
-  // Q93: 201 with the variable; a retry with the same id, name, value and description 200.
+  // 201 with the variable; a retry with the same id, name, value and description 200.
   typed.post(
     VARIABLES_ROUTE,
     {
@@ -196,7 +196,7 @@ export function registerVariableRoutes(
     },
   );
 
-  // Default 21's warning (Preflight ruling 27): the variable named by its id, never its name.
+  // The drafts warning: the variable named by its id, never its name.
   typed.get(
     `${VARIABLES_ROUTE}/:variableId/drafts`,
     {

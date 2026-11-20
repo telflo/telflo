@@ -17,7 +17,7 @@ import { UNCALLED_FILE_STORE } from "../../testing/file-store.js";
 import { UNCALLED_TESTING } from "../../testing/otelcol-testing.js";
 import { TEST_TERMS_VERSION } from "../../testing/site.js";
 
-// The opamp-server every server needs (D11b decision 8): this file's own fake.
+// The opamp-server every server needs: this file's own fake.
 const opamp = useFakeOpampServer();
 
 const csrfHeaders = { [CSRF_HEADER_NAME]: CSRF_HEADER_VALUE };
@@ -36,10 +36,10 @@ function accessCookie(response: LightMyRequestResponse): string {
 }
 
 /**
- * D7 decision 10 against Postgres: `requireCurrentTerms` on test routes
- * registered before `ready()`, since no production route runs it until the
- * configurations endpoints do. And the endpoints the terms dialog, and D5's
- * and D6's management, need still answer a user who hasn't accepted them.
+ * Against Postgres: `requireCurrentTerms` on test routes registered before
+ * `ready()`, since no production route runs it until the configurations
+ * endpoints do. And the endpoints the terms dialog, and organization and
+ * member management, need still answer a user who hasn't accepted them.
  */
 describe("requireCurrentTerms", () => {
   let settings: AppSettings;
@@ -64,7 +64,7 @@ describe("requireCurrentTerms", () => {
     const authenticate = createAuthenticate(
       createDatabaseSessionService({ settings, db, mailer, now, opampServer, otelcolValidator, fileStore, testing }).service,
     );
-    // A data endpoint as Task 4's are: `authenticate`, then the terms check.
+    // A data endpoint as the configurations endpoints are: `authenticate`, then the terms check.
     server.get("/test/data", { preHandler: [authenticate, requireCurrentTerms] }, async () => ({ ok: true }));
     // A route that forgot `authenticate`.
     server.get("/test/terms-only", { preHandler: requireCurrentTerms }, async () => ({ ok: true }));
@@ -194,7 +194,7 @@ describe("requireCurrentTerms", () => {
       expect(response.json()).toMatchObject({ organization: { id: group.organization.id } });
     });
 
-    it("D5's member list answers", async () => {
+    it("the member list answers", async () => {
       const account = await signedInWithTerms("2025-01-01");
       const response = await get(`/api/v1/organizations/${account.organization.id}/members`, account.access);
       expect(response.statusCode).toBe(200);
@@ -225,7 +225,7 @@ describe("requireCurrentTerms", () => {
     });
   });
 
-  describe("on a site that asks for no Terms (D36-1 decision 32, Preflight ruling 1)", () => {
+  describe("on a site that asks for no Terms", () => {
     let noTerms: FastifyInstance;
     beforeAll(async () => {
       const site = { ...settings.site, terms: { version: "", termsUrl: "", privacyUrl: "", cookiePolicyUrl: "" } };

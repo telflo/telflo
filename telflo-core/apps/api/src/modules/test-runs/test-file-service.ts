@@ -8,9 +8,8 @@ import type { TestInputFile } from "./repositories/test-input-file-repository.js
 import type { WithTestRunsTransaction } from "./transaction.js";
 
 /*
- * A person's test files, "My Files" (D14a decisions 3, 7 and 16, Preflight
- * rulings 10 and 11): uploads and pasted samples, each the person's own in
- * one organization, listed only for them.
+ * A person's test files, "My Files": uploads and pasted samples, each the
+ * person's own in one organization, listed only for them.
  *
  * Saving one: the session, the terms and the organization are checked, and
  * the membership re-read under the organization's lock, before any byte is
@@ -28,11 +27,11 @@ import type { WithTestRunsTransaction } from "./transaction.js";
  * An upload whose body breaks off inside the file (the client aborts
  * mid-upload: busboy's "Premature close", "Unexpected end of form") is the
  * client's: 400 `invalid_request`, whatever was written removed, and one
- * warning without the error's text (D14a Ruling 39), never a 500.
+ * warning without the error's text, never a 500.
  *
- * Nothing here logs a name, a description or a byte (ADR 0024): the lines
- * it logs, a failed removal and a broken-off upload, carry the store
- * error's code and syscall at most.
+ * Nothing here logs a name, a description or a byte: the lines it logs, a
+ * failed removal and a broken-off upload, carry the store error's code and
+ * syscall at most.
  */
 
 export interface TestFileServiceDependencies {
@@ -83,7 +82,7 @@ export interface ITestFileService {
   remove(actor: Actor, organizationId: string, fileId: string): Promise<void>;
   /**
    * The first TEST_FILE_HEAD_MAXIMUM_BYTES of the caller's own file in this
-   * organization (Ruling 43), open for streaming: 404 `test_file_not_found`
+   * organization, open for streaming: 404 `test_file_not_found`
    * for anyone else's file, an id that isn't one, or bytes that are gone.
    * The caller must consume or destroy the stream.
    */
@@ -92,8 +91,7 @@ export interface ITestFileService {
 
 /**
  * At most `maximum` bytes of `source`, which is destroyed once they are read,
- * or when the reader stops: a test file's head (Ruling 43), and a run's
- * input's (Ruling 46).
+ * or when the reader stops: a test file's head, and a run's input's.
  */
 export function firstBytes(source: Readable, maximum: number): Readable {
   async function* take(): AsyncGenerator<Buffer> {
@@ -192,8 +190,8 @@ export function createTestFileService(deps: TestFileServiceDependencies): ITestF
           });
         });
       } catch (error) {
-        // Any write rejection included (Ruling 25): the store may have
-        // renamed the file into place before a later step failed.
+        // Any write rejection included: the store may have renamed the file
+        // into place before a later step failed.
         if (!file.content.destroyed && !file.content.readableEnded) file.content.destroy();
         await removeQuietly(key);
         throw error;

@@ -16,7 +16,7 @@ export interface Session {
 export interface CreateSessionInput {
   userId: string;
   activeOrganizationId: string;
-  /** Already validated as an IP address by the caller (D2a decision 10). */
+  /** Already validated as an IP address by the caller. */
   ipAddress: string | null;
   userAgent: string | null;
 }
@@ -24,17 +24,16 @@ export interface CreateSessionInput {
 /**
  * The user as the per-request check sees them: what identifies them, the
  * terms version they accepted, which `requireCurrentTerms` checks without a
- * query of its own (D7 decision 10), and whether they are a product admin,
- * which `requireProductAdmin` and `/me` read the same way (D12 decision 3).
- * Deliberately not identity's `User`: the
- * password hash and the other account columns never travel on the
- * per-request path. Distinct from the contracts package's `SessionUser`,
- * which is the wire shape.
+ * query of its own, and whether they are a product admin, which
+ * `requireProductAdmin` and `/me` read the same way. Deliberately not
+ * identity's `User`: the password hash and the other account columns never
+ * travel on the per-request path. Distinct from the contracts package's
+ * `SessionUser`, which is the wire shape.
  */
 export interface AuthenticatedUser {
   id: string;
   email: string;
-  /** Null for a user who has accepted no terms: a federated sign-up, or a takeover (D2c decision 6). */
+  /** Null for a user who has accepted no terms: a federated sign-up, or a takeover. */
   acceptedTermsVersion: string | null;
   /**
    * The row's `is_product_admin` on this request: never cached, so an
@@ -48,7 +47,7 @@ export interface SessionOrganization {
   id: string;
   name: string;
   type: OrganizationType;
-  /** Its logo's id (D23-2 decision 40), null for none. */
+  /** Its logo's id, null for none. */
   logoId: string | null;
   role: OrganizationRole;
 }
@@ -90,17 +89,16 @@ export interface ISessionRepository {
   findLive(sessionId: string): Promise<Session | undefined>;
   /**
    * The session, unless revoked, locked `for update` until the transaction
-   * ends: the switch's lock on it, taken after the target organization's
-   * (Ruling 22).
+   * ends: the switch's lock on it, taken after the target organization's.
    */
   lockLive(sessionId: string): Promise<Session | undefined>;
   /**
    * The user's session, unless revoked, held `for share` until the
-   * transaction ends (D21 decision 38): a link's check that the session that
-   * started it is still the user's and not signed out, taken after the
-   * user's row (D3 Ruling 17). Another user's session is not found. Live
-   * here means not revoked, without listLiveForUser's idle cut-off: a flow
-   * lasts ten minutes, far inside the refresh token's lifetime.
+   * transaction ends: a link's check that the session that started it is
+   * still the user's and not signed out, taken after the user's row.
+   * Another user's session is not found. Live here means not revoked,
+   * without listLiveForUser's idle cut-off: a flow lasts ten minutes, far
+   * inside the refresh token's lifetime.
    */
   findLiveForShare(sessionId: string, userId: string): Promise<Session | undefined>;
   /** Points a session at another organization. The caller has checked the membership under its locks. */
@@ -108,18 +106,18 @@ export interface ISessionRepository {
   revoke(sessionId: string, reason: SessionRevokedReason): Promise<boolean>;
   revokeAllForUser(userId: string, reason: SessionRevokedReason): Promise<number>;
   /**
-   * The user's live sessions (D21 decision 40, Preflight ruling 13): not
-   * revoked, and refreshed after `liveSince` (an idle session past the
-   * refresh token's lifetime can never refresh). `currentSessionId` first,
-   * then the most recently active, at most `limit`, with the exact total.
+   * The user's live sessions: not revoked, and refreshed after `liveSince`
+   * (an idle session past the refresh token's lifetime can never refresh).
+   * `currentSessionId` first, then the most recently active, at most
+   * `limit`, with the exact total.
    */
   listLiveForUser(userId: string, currentSessionId: string, liveSince: Date, limit: number): Promise<LiveSessionsPage>;
   /**
-   * Revokes one of the user's own live sessions (D21 decision 40, Preflight
-   * ruling 14), stamped `at`. False for another user's, an unknown or an
-   * ended session, alike, and for `currentSessionId`, the caller's own: the
-   * route refuses that one first (409), and the database excludes it as
-   * well, compared as uuids whatever the spelling (Ruling 85).
+   * Revokes one of the user's own live sessions, stamped `at`. False for
+   * another user's, an unknown or an ended session, alike, and for
+   * `currentSessionId`, the caller's own: the route refuses that one first
+   * (409), and the database excludes it as well, compared as uuids whatever
+   * the spelling.
    */
   revokeOwn(
     sessionId: string,
@@ -131,11 +129,11 @@ export interface ISessionRepository {
   ): Promise<boolean>;
   touchRefreshed(sessionId: string, at: Date): Promise<void>;
   /**
-   * The active organization of the user's most recently used session, revoked or not (D36-1 decision
-   * 56, Q265): the one refreshed last (`last_refreshed_at`, which a session's creation sets and every
-   * refresh advances, as the sessions list orders by it), then the newest. Undefined when the user has
-   * no session. Unlocked and unchecked: the organization may since be deleted or left; a new sign-in
-   * confirms it under its locks before landing there.
+   * The active organization of the user's most recently used session, revoked or not: the one
+   * refreshed last (`last_refreshed_at`, which a session's creation sets and every refresh advances,
+   * as the sessions list orders by it), then the newest. Undefined when the user has no session.
+   * Unlocked and unchecked: the organization may since be deleted or left; a new sign-in confirms it
+   * under its locks before landing there.
    */
   findMostRecentlyUsedOrganizationId(userId: string): Promise<string | undefined>;
 }
@@ -157,15 +155,15 @@ export function createSessionRepository(db: Kysely<Database> | Transaction<Datab
     },
 
     /**
-     * D2a decision 4's per-request check, in one query. A session counts as
+     * The per-request check, in one query. A session counts as
      * live only while every link from it to an organization the user may act
      * as still holds: the session is not revoked, the user is neither
      * soft-deleted nor unverified, the active organization is not
      * soft-deleted, and the user is still a live member of it.
      *
      * The membership join, with its deleted_at filter, is the backstop that
-     * refuses a removed member's session even if it was never reassigned (D5
-     * decision 9 reassigns it in the removal's transaction). The
+     * refuses a removed member's session even if it was never reassigned (the
+     * removal's transaction reassigns it). The
      * organization's deleted_at filter is needed separately: a live
      * membership can sit in a soft-deleted organization, so long as the user
      * has another in a live one.
@@ -226,8 +224,7 @@ export function createSessionRepository(db: Kysely<Database> | Transaction<Datab
       return row ? toSession(row) : undefined;
     },
 
-    // No join: a locking read over a join would lock the joined rows too
-    // (Preflight ruling 8).
+    // No join: a locking read over a join would lock the joined rows too.
     async lockLive(sessionId: string): Promise<Session | undefined> {
       const row = await db
         .selectFrom("sessions")
@@ -261,8 +258,8 @@ export function createSessionRepository(db: Kysely<Database> | Transaction<Datab
     },
 
     /**
-     * Idempotent: `revoked_at is null` sits in the UPDATE (Ruling 21), so a
-     * second call, or a concurrent one, changes nothing and returns false.
+     * Idempotent: `revoked_at is null` sits in the UPDATE, so a second call,
+     * or a concurrent one, changes nothing and returns false.
      * The first revocation's reason and time are kept.
      */
     async revoke(sessionId: string, reason: SessionRevokedReason): Promise<boolean> {

@@ -31,24 +31,23 @@ import type { ValidationRule, ValidationRuleContent } from "./repositories/valid
 import type { ValidationPipelinesTransaction, WithValidationPipelinesTransaction } from "./transaction.js";
 
 /*
- * The validation pipelines and rules API (D15a decisions 5, 6, 12, 13, 16
- * and 28; details 24 and 25; Preflight rulings 16, 19 and 20).
+ * The validation pipelines and rules API.
  *
  * Validation pipelines and rules belong to a configuration version and
- * follow its configuration's visibility (decision 12): another member's
- * draft's, a deleted configuration's and another organization's are 404,
- * with the configurations' own codes for the configuration and the version,
- * as the suites' are. Anyone who can see the configuration creates, edits
- * and deletes them, on any version, published or not (decision 13).
+ * follow its configuration's visibility: another member's draft's, a
+ * deleted configuration's and another organization's are 404, with the
+ * configurations' own codes for the configuration and the version, as the
+ * suites' are. Anyone who can see the configuration creates, edits and
+ * deletes them, on any version, published or not.
  *
  * A validation pipeline is one YAML pipeline's, one per version and
  * pipeline (409 `validation_pipeline_exists`), its signal its name's first
- * part. No cap on how many a version has (the owner, decision 28); at most
+ * part. No cap on how many a version has; at most
  * VALIDATION_RULES_PER_PIPELINE_MAXIMUM rules each (409
  * `validation_rule_limit_reached`), counted under the configuration's lock.
  *
- * Saving a rule (its POST and PATCH; Preflight ruling 20), as D13b's
- * validation route asks the collector validator:
+ * Saving a rule (its POST and PATCH), as the configurations' validation
+ * route asks the collector validator:
  *   1. a read transaction: the membership (under the organization's share
  *      lock, as every read here; no configuration lock), the configuration
  *      and its version, the pipeline, the stored rule (a PATCH), and the
@@ -62,31 +61,30 @@ import type { ValidationPipelinesTransaction, WithValidationPipelinesTransaction
  *      needs none (every stored rule was checked when it was saved). A
  *      builder's canonical OTTL is an OTTL rule, and is checked as one;
  *   4. the person's checked saves (VALIDATION_RULE_CHECKS_PER_MINUTE_PER_USER
- *      a minute in the organization, D14b decision 23), counted when the
- *      evaluator is to be asked and never given back: 429
- *      `validation_rule_rate_limited`;
+ *      a minute in the organization), counted when the evaluator is to be
+ *      asked and never given back: 429 `validation_rule_rate_limited`;
  *   5. the evaluator's validate, outside any transaction, holding no
  *      connection: a problem is 400 `validation_rule_invalid` with its
- *      words as it words them (Ruling 33), cut to 1,000 code points; an
- *      evaluator unreachable, failing or busy is 503 `rules_unavailable`;
+ *      words as it words them, cut to 1,000 code points; an evaluator
+ *      unreachable, failing or busy is 503 `rules_unavailable`;
  *   6. the write transaction: the organization as a member, the
  *      configuration locked, the version, the pipeline and the rule re-read,
  *      the cap counted again, the insert at the largest position plus one
  *      or the update, and the audit row.
  *
  * What is written is what the contracts' schemas parsed: the table's blank
- * check is ASCII only, the schemas' Unicode (Ruling 36's watch item).
+ * check is ASCII only, the schemas' Unicode.
  *
  * A pipeline's name, a rule's name, description, pattern and OTTL, and the
- * evaluator's words reach no log line and no audit row (ADR 0024): the log
- * names ids and a check's outcome; the audit rows name ids, and a change's
- * fields by name.
+ * evaluator's words reach no log line and no audit row: the log names ids
+ * and a check's outcome; the audit rows name ids, and a change's fields by
+ * name.
  */
 
 export interface ValidationPipelineServiceDependencies {
   withTransaction: WithValidationPipelinesTransaction;
   evaluator: Pick<OttlEvaluatorClient, "validate">;
-  /** The person's checked saves in the organization (decision 16). */
+  /** The person's checked saves in the organization. */
   limiter: PerUserLimiter;
   /** Every pipeline and rule timestamp comes from here, never SQL `now()`. */
   now: () => Date;
@@ -97,7 +95,7 @@ export interface ValidationPipelineServiceDependencies {
   };
 }
 
-/** The path's ids, as the routes take them: any strings (D5 decision 7). */
+/** The path's ids, as the routes take them: any strings. */
 export interface VersionPath {
   organizationId: string;
   configurationId: string;
@@ -161,16 +159,16 @@ export interface IValidationPipelineService {
   /**
    * The version's validation pipelines the caller can see, oldest first,
    * each with its rules in position order, in one read transaction: the
-   * public list (D25 route 13).
+   * public list.
    */
   listPipelinesWithRules(actor: Actor, path: VersionPath): Promise<ValidationPipelineWithRules[]>;
   /**
-   * The public API's PUT (D25 decision 32, Preflight ruling 8): sets the
-   * rules the API owns on the version's validation pipeline for `pipeline`
-   * (a name whose first part is a signal; whether the version's text has it
-   * is the caller's check), creating the pipeline if it is missing. A
-   * person's rules are kept; the API's earlier ones are deleted; the new
-   * ones follow every kept rule, marked `is_api_owned`.
+   * The public API's PUT: sets the rules the API owns on the version's
+   * validation pipeline for `pipeline` (a name whose first part is a
+   * signal; whether the version's text has it is the caller's check),
+   * creating the pipeline if it is missing. A person's rules are kept; the
+   * API's earlier ones are deleted; the new ones follow every kept rule,
+   * marked `is_api_owned`.
    *
    * Every rule is checked first, outside any transaction, as Save checks
    * one (IValidationRuleCheck.checkNewRules: its OTTL context against the
@@ -300,11 +298,10 @@ function sameOttl(a: ValidationRuleOttl | null, b: ValidationRuleOttl | null): b
 }
 
 /**
- * Whether saving `content` needs the evaluator (Preflight ruling 20): a
- * regex rule whose pattern isn't the stored regex rule's, or an OTTL rule
- * whose context, condition or expression isn't the stored OTTL rule's. A
- * new rule (`stored` undefined) of either kind always does; a text rule
- * never does.
+ * Whether saving `content` needs the evaluator: a regex rule whose pattern
+ * isn't the stored regex rule's, or an OTTL rule whose context, condition or
+ * expression isn't the stored OTTL rule's. A new rule (`stored` undefined)
+ * of either kind always does; a text rule never does.
  */
 export function needsCheck(content: ValidationRuleContent, stored: ValidationRuleContent | undefined): boolean {
   if (isRegexKind(content.kind)) {
@@ -331,7 +328,7 @@ function changedContentFields(from: ValidationRuleContent, to: ValidationRuleCon
   return fields;
 }
 
-/** An OTTL rule's context must be one its pipeline's signal has (Preflight ruling 16): 400 `invalid_request`. */
+/** An OTTL rule's context must be one its pipeline's signal has: 400 `invalid_request`. */
 function assertContextOfSignal(content: ValidationRuleContent, signal: TestRunSignal): void {
   if (content.kind === "ottl" && content.ottl !== null && !isOttlContextOfSignal(content.ottl.context, signal)) {
     throw ottlContextNotOfSignal();
@@ -340,7 +337,7 @@ function assertContextOfSignal(content: ValidationRuleContent, signal: TestRunSi
 
 /**
  * The reasons that mean a deployment to fix rather than a moment's trouble:
- * logged at error, as D13b's validation logs the validator's.
+ * logged at error, as the configurations' validation logs the validator's.
  */
 const MISCONFIGURATION_REASONS: ReadonlySet<OttlEvaluatorUnavailableReason> = new Set([
   "unauthorized",
@@ -352,9 +349,9 @@ const MISCONFIGURATION_REASONS: ReadonlySet<OttlEvaluatorUnavailableReason> = ne
 export type ValidationRuleCheckDependencies = Pick<ValidationPipelineServiceDependencies, "evaluator" | "limiter" | "log">;
 
 /**
- * Save's check of a rule (steps 2 to 5 above), shared by the service's
- * saves, the public API's PUT and D25's test runs with inline rules
- * (decision 42), so a rule is checked the one way wherever it comes from.
+ * Save's check of a rule (steps 2 to 5 above), shared by the service's saves,
+ * the public API's PUT and its test runs with inline rules, so a rule is
+ * checked the one way wherever it comes from.
  */
 export interface IValidationRuleCheck {
   /**
@@ -377,16 +374,16 @@ export interface IValidationRuleCheck {
     ids: Record<string, string>,
   ): Promise<ValidationRuleContent>;
   /**
-   * The public surface's batch of new rules (D25: the validation pipelines'
-   * PUT, a test run's inline rules), each checked as Save checks one, with
-   * their checks reserved together (Ruling 172):
+   * The public surface's batch of new rules (the validation pipelines' PUT,
+   * a test run's inline rules), each checked as Save checks one, with their
+   * checks reserved together:
    *   1. every rule's OTTL context against `signal`, before anything is
    *      spent (400 `invalid_request` at `rules[i].ottl.context`), then
    *      every OTTL condition that can't fail or can't pass (findTautology,
-   *      the guard on the API's rules; D25 Ruling 178): 400
-   *      `validation_rule_invalid` with `details.ruleIndex` and the check's
-   *      fixed words in `problems` (field `ottl.condition`), nothing spent.
-   *      The Validation tab's Save (`checkNewRule`) doesn't run it (D15a);
+   *      the guard on the API's rules): 400 `validation_rule_invalid` with
+   *      `details.ruleIndex` and the check's fixed words in `problems`
+   *      (field `ottl.condition`), nothing spent. The Validation tab's Save
+   *      (`checkNewRule`) doesn't run it;
    *   2. one `validationRuleChecksPerUser` admission for each regex or OTTL
    *      rule, all at once: if the person's limit can't take them all, none
    *      is kept (each admitted one is refunded) and the batch answers 429
@@ -394,8 +391,8 @@ export interface IValidationRuleCheck {
    *   3. the evaluator asked for each, in order; at the first refusal the
    *      admissions of the rules not yet asked are refunded, and a rule the
    *      evaluator finds broken answers 400 `validation_rule_invalid` in
-   *      fixed words (decision 20) with `details.ruleIndex` and the
-   *      evaluator's `problems`; a 503 passes through as it is.
+   *      fixed words with `details.ruleIndex` and the evaluator's
+   *      `problems`; a 503 passes through as it is.
    * Answers the rules' contents, as stored, in order.
    */
   checkNewRules(
@@ -422,7 +419,7 @@ export function createValidationRuleCheck(deps: ValidationRuleCheckDependencies)
   ): Promise<void> {
     const admission = limiter.admit(actor.context.userId, actor.context.organizationId);
     if (!admission.isAdmitted) throw validationRuleRateLimited(admission.retryAfterSeconds);
-    // Counted now that the evaluator is asked, and never given back (Preflight ruling 20).
+    // Counted now that the evaluator is asked, and never given back.
     await evaluate(signal, content, ids);
   }
 
@@ -475,8 +472,8 @@ export function createValidationRuleCheck(deps: ValidationRuleCheckDependencies)
           throw ruleContextNotOfSignal(index);
         }
       }
-      // 1b. Every OTTL condition able to fail and to pass (D25 Ruling 178:
-      // the guard on the API's rules), before any check is spent.
+      // 1b. Every OTTL condition able to fail and to pass (the guard on the
+      // API's rules), before any check is spent.
       // The tautology check's words are fixed (no rule text).
       for (const [index, content] of contents.entries()) {
         const { ottl } = content;
@@ -671,7 +668,7 @@ export function createValidationPipelineService(deps: ValidationPipelineServiceD
       // together, with the kind's own fields, or none of them, so a body
       // naming one alone is a 400 before this runs. The content is built
       // only when both are present; otherwise the stored content stays as it
-      // is and nothing is checked (Ruling 39).
+      // is and nothing is checked.
       const content =
         changes.kind !== undefined && changes.target !== undefined
           ? contentOf({ kind: changes.kind, target: changes.target, pattern: changes.pattern, ottl: changes.ottl })
@@ -724,7 +721,7 @@ export function createValidationPipelineService(deps: ValidationPipelineServiceD
         const updated = await transaction.rules.update(current.id, to, now());
         // Visible under the lock just taken: this can't miss.
         if (!updated) throw validationRuleNotFound();
-        // The fields' names, never their values (ADR 0024).
+        // The fields' names, never their values.
         await transaction.audit.record(
           audit(actor, "validation_rule.updated", { type: "validation_rule", id: current.id }, {
             configurationId,
@@ -835,7 +832,7 @@ export function createValidationPipelineService(deps: ValidationPipelineServiceD
           });
           addedRuleIds.push(added.id);
         }
-        // Ids and counts only (ADR 0024): one row for the replacement, naming the rules it deleted and added.
+        // Ids and counts only: one row for the replacement, naming the rules it deleted and added.
         await transaction.audit.record(
           audit(actor, "validation_pipeline.rules_replaced", { type: "validation_pipeline", id: pipeline.id }, {
             configurationId,
@@ -856,8 +853,7 @@ export function createValidationPipelineService(deps: ValidationPipelineServiceD
 
 /**
  * The public PUT's refusal for an OTTL context its pipeline's signal
- * doesn't have (Preflight ruling 16's, with the rule's place in the body):
- * 400 `invalid_request`.
+ * doesn't have, with the rule's place in the body: 400 `invalid_request`.
  */
 function ruleContextNotOfSignal(index: number): AppError {
   return new AppError("invalid_request", "The request was not valid.", 400, [
@@ -866,13 +862,13 @@ function ruleContextNotOfSignal(index: number): AppError {
 }
 
 /**
- * The public PUT's form of a rule's refusal by the evaluator (D25 decision
- * 20: messages are fixed words, never a rule or a downstream service's
- * text): `validation_rule_invalid` keeps its code and status, its message
- * becomes fixed words, and its details name the rule's place in the body
- * with the evaluator's problems (which quote the rule: the reply's body
- * alone carries them, as the Validation tab's). Any other refusal passes
- * through as it is.
+ * The public PUT's form of a rule's refusal by the evaluator (messages are
+ * fixed words, never a rule or a downstream service's text):
+ * `validation_rule_invalid` keeps its code and status, its message becomes
+ * fixed words, and its details name the rule's place in the body with the
+ * evaluator's problems (which quote the rule: the reply's body alone
+ * carries them, as the Validation tab's). Any other refusal passes through
+ * as it is.
  */
 function publicRuleRefusal(error: unknown, index: number): unknown {
   if (!(error instanceof AppError) || error.code !== ("validation_rule_invalid" satisfies ValidationRulesErrorCode)) return error;

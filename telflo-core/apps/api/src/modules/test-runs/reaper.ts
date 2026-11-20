@@ -9,9 +9,9 @@ import type { TestRunDispatcherLog } from "./dispatcher.js";
 import { TEST_RUN_FAILURES } from "./run-results.js";
 
 /*
- * The reaper (D14a decisions 12 and 18; Preflight ruling 7): every API
- * process runs its two rules every 5 s, as often as the tester's health is
- * checked, each in its own transaction in the dispatcher's context.
+ * The reaper: every API process runs its two rules every 5 s, as often as
+ * the tester's health is checked, each in its own transaction in the
+ * dispatcher's context.
  *
  * 1. test_runs_reap: a running run past its lease (174 + d s), on the
  *    database's clock, fails with `interrupted` and "The run was
@@ -24,10 +24,10 @@ import { TEST_RUN_FAILURES } from "./run-results.js";
  *    behind a busy but working tester never fails here.
  *
  * Both functions are safe from several processes at once: each changes a
- * run only in the state it names. A run's files are kept (decision 9).
+ * run only in the state it names. A run's files are kept.
  */
 
-/** How often the reaper's two rules run: with the health check (Preflight ruling 7). */
+/** How often the reaper's two rules run: with the health check. */
 export const TEST_RUN_REAP_INTERVAL_MS = OTELCOL_TESTING_HEALTH_INTERVAL_MS;
 
 export interface TestRunReaperOptions {
@@ -84,9 +84,9 @@ export function createTestRunReaper(options: TestRunReaperOptions): TestRunReape
   let isRunning = false;
   let pass: Promise<TestRunReaping> | undefined;
   // Every pass fails while the database is down: logged once, then at most
-  // once a minute, and once when a pass succeeds again (Rulings 40, 42).
-  // The warning counts passes: a pass whose rules fail is one failure,
-  // naming each rule that failed.
+  // once a minute, and once when a pass succeeds again. The warning counts
+  // passes: a pass whose rules fail is one failure, naming each rule that
+  // failed.
   const warning = createThrottledWarning(log, {
     failed: "the test-run reaper's rules failed; the next pass tries again",
     recovered: "the test-run reaper's rules run again",

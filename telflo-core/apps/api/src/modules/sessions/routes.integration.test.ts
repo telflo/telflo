@@ -29,7 +29,7 @@ import { UNCALLED_FILE_STORE } from "../../testing/file-store.js";
 import { UNCALLED_TESTING } from "../../testing/otelcol-testing.js";
 import { TEST_TERMS_VERSION } from "../../testing/site.js";
 
-// The opamp-server every server needs (D11b decision 8): this file's own fake.
+// The opamp-server every server needs: this file's own fake.
 const opamp = useFakeOpampServer();
 
 const csrfHeaders = { [CSRF_HEADER_NAME]: CSRF_HEADER_VALUE };
@@ -191,8 +191,8 @@ describe("session routes", () => {
 
   /**
    * Resolves once `count` backends other than this test's own are waiting
-   * on a row lock (D2a Ruling 6): the requests have reached the locks a
-   * held transaction blocks. Throws after five seconds.
+   * on a row lock: the requests have reached the locks a held transaction
+   * blocks. Throws after five seconds.
    */
   const waitForLockWaits = async (count: number): Promise<void> => {
     const deadline = Date.now() + 5_000;
@@ -217,7 +217,7 @@ describe("session routes", () => {
 
       expect(response.statusCode).toBe(200);
       const cookies = setCookies(response);
-      // The access cookie lasts as long as the refresh token (D2b decision 2).
+      // The access cookie lasts as long as the refresh token.
       expect(cookies.get("telflo_access")?.attributes).toEqual([
         `Max-Age=${settings.refreshTokenTtlDays * 24 * 60 * 60}`,
         "Path=/",
@@ -292,14 +292,13 @@ describe("session routes", () => {
     });
 
     /**
-     * D22 decision 22: a service account's address is an unknown address to
-     * sign-in. It holds no password, so without the human-only lookup it
-     * would be audited `no_password` with the account as actor; it is
-     * `unknown_email` with no actor, the same answer as an unknown
-     * address's. That an unknown address pays the dummy verify is
-     * sessions/service.test.ts's "still performs one password
-     * verification, against an Argon2id hash with the stored parameters,
-     * for an unknown email".
+     * A service account's address is an unknown address to sign-in. It holds
+     * no password, so without the human-only lookup it would be audited
+     * `no_password` with the account as actor; it is `unknown_email` with no
+     * actor, the same answer as an unknown address's. That an unknown
+     * address pays the dummy verify is sessions/service.test.ts's "still
+     * performs one password verification, against an Argon2id hash with the
+     * stored parameters, for an unknown email".
      */
     it("a service account's address answers invalid_credentials as an unknown address does, audited unknown_email with no actor", async () => {
       const { organization } = await verifiedUser();
@@ -394,7 +393,7 @@ describe("session routes", () => {
       expect(session.ip_address).not.toBeNull();
     });
 
-    it("refuses a sign-in whose password changed after it verified, and creates no session (D3 Ruling 15)", async () => {
+    it("refuses a sign-in whose password changed after it verified, and creates no session", async () => {
       // A separate connection holds the user's row, as a reset in flight
       // does, until the sign-in has verified the password and is blocked on
       // its recheck. The locker then changes the hash and commits: the
@@ -472,7 +471,7 @@ describe("session routes", () => {
       });
     });
 
-    describe("isProductAdmin (D12 decision 3)", () => {
+    describe("isProductAdmin", () => {
       const meFor = async (isProductAdmin: boolean | undefined) => {
         const account = await createUserWithOrganization(ownerDb, {
           user: {
@@ -500,7 +499,7 @@ describe("session routes", () => {
       });
     });
 
-    describe("termsAcceptanceRequired (D2c decision 6)", () => {
+    describe("termsAcceptanceRequired", () => {
       const meFor = async (terms: { accepted_terms_version: string | null; terms_accepted_at: Date | null }) => {
         const account = await createUserWithOrganization(ownerDb, {
           user: { email: `terms-${Math.random().toString(36).slice(2)}@example.com`, password_hash: passwordHash, ...terms },
@@ -582,7 +581,7 @@ describe("session routes", () => {
       ]);
     });
 
-    it("reads the role on every request, so a demotion shows on the member's next request (D5 decision 4)", async () => {
+    it("reads the role on every request, so a demotion shows on the member's next request", async () => {
       const account = await verifiedUser();
       const { access } = await signedIn(account.user.email);
       expect((await me(access)).json<{ organization: { role: string } }>().organization.role).toBe("admin");
@@ -599,11 +598,11 @@ describe("session routes", () => {
     });
   });
 
-  describe("a token naming an organization its session has left (D5 decision 10)", () => {
+  describe("a token naming an organization its session has left", () => {
     /** Signs in, then moves the session to a group organization the user also belongs to, as a switch does. */
     const signedInThenMoved = async () => {
       const account = await verifiedUser();
-      // Signed in before joining: the session starts in the personal organization (Q265).
+      // Signed in before joining: the session starts in the personal organization.
       const cookies = await signedIn(account.user.email);
       const group = await addMembership(ownerDb, { userId: account.user.id, role: "contributor" });
       await ownerDb
@@ -679,8 +678,7 @@ describe("session routes", () => {
       expect(rotated.body).not.toContain(second.refresh);
       expect((await me(second.access)).statusCode).toBe(200);
 
-      // The first refresh token again, after the grace window: a reuse
-      // (D2b Preflight ruling 2).
+      // The first refresh token again, after the grace window: a reuse.
       advanceClockSeconds(REFRESH_GRACE_SECONDS + 1);
       const reused = await refresh(first.refresh);
       expect(reused.statusCode).toBe(401);
@@ -764,7 +762,7 @@ describe("session routes", () => {
       expectCleared(response);
     });
 
-    describe("the grace window (D2b decision 3)", () => {
+    describe("the grace window", () => {
       /** Signs in and rotates once; returns both pairs. */
       const rotatedOnce = async (email: string) => {
         const first = await signedIn(email);
@@ -795,7 +793,7 @@ describe("session routes", () => {
         expect(grace.statusCode).toBe(200);
         expect(grace.json()).toEqual({ user: { id: account.user.id, email: account.user.email } });
         const cookies = setCookies(grace);
-        // The theme cookie too (D21 decision 23), never the refresh cookie.
+        // The theme cookie too, never the refresh cookie.
         expect([...cookies.keys()]).toEqual(["telflo_access", "telflo_theme"]);
         expect(cookies.get("telflo_access")?.attributes).toEqual([
           `Max-Age=${settings.refreshTokenTtlDays * 24 * 60 * 60}`,
@@ -850,7 +848,7 @@ describe("session routes", () => {
         expect(await reuseAudits()).toEqual([]);
       });
 
-      it("refuses an expired refresh token presented again within the window, without revoking or auditing (Ruling 6)", async () => {
+      it("refuses an expired refresh token presented again within the window, without revoking or auditing", async () => {
         const account = await verifiedUser();
         const { refresh: refreshToken } = await signedIn(account.user.email);
         advanceClockMinutes(settings.refreshTokenTtlDays * 24 * 60 + 1);
@@ -905,13 +903,13 @@ describe("session routes", () => {
       };
 
       it("lets two concurrent refreshes with the same cookie both succeed, rotating once and leaving the session live", async () => {
-        // D2a Ruling 6's technique: a separate connection holds the token's
-        // row lock until both refreshes are blocked on it at the database,
-        // so they really race. The first to block reads the clock at T and
-        // the second at T - 1 s. Postgres queues tuple-lock waiters in order,
-        // so the first wins and writes consumed_at = T, and the second's own
-        // reading is a second earlier than that: D2b Preflight ruling 1's
-        // negative difference, which must still be within the window.
+        // A separate connection holds the token's row lock until both
+        // refreshes are blocked on it at the database, so they really race.
+        // The first to block reads the clock at T and the second at T - 1 s.
+        // Postgres queues tuple-lock waiters in order, so the first wins and
+        // writes consumed_at = T, and the second's own reading is a second
+        // earlier than that: a negative difference, which must still be within
+        // the window.
         const account = await verifiedUser();
         const { refresh: refreshToken } = await signedIn(account.user.email);
 
@@ -958,7 +956,7 @@ describe("session routes", () => {
     });
   });
 
-  describe("the theme cookie (D21 decision 23)", () => {
+  describe("the theme cookie", () => {
     const THEME_COOKIE_ATTRIBUTES = ["Max-Age=31536000", "Path=/", "HttpOnly", "Secure", "SameSite=Lax"];
 
     /** A row as the owner writes it: the person saved `theme` earlier. */
@@ -1071,7 +1069,7 @@ describe("session routes", () => {
         latestRefresh = cookieValue(rotated, "telflo_refresh");
 
         // A grace refresh (the consumed token, presented again within the
-        // window) keeps its new access cookie too (Ruling 83).
+        // window) keeps its new access cookie too.
         const grace = await refresh(cookieValue(signedInResponse, "telflo_refresh"));
         expect(grace.statusCode).toBe(200);
         expect([...setCookies(grace).keys()]).toEqual(["telflo_access"]);
@@ -1333,7 +1331,7 @@ describe("session routes", () => {
     });
   });
 
-  describe("where a new sign-in lands (D36-1 decision 56, Q265)", () => {
+  describe("where a new sign-in lands", () => {
     /** Signs in; the cookies and the organization /me names (the session's). */
     const landing = async (email: string) => {
       const cookies = await signedIn(email);
@@ -1497,7 +1495,7 @@ describe("session routes", () => {
     });
   });
 
-  describe("PUT /api/v1/auth/sessions/current/organization (D5 decision 10)", () => {
+  describe("PUT /api/v1/auth/sessions/current/organization", () => {
     const switchTo = (access: string, organizationId: unknown) =>
       server.inject({
         method: "PUT",
@@ -1523,7 +1521,7 @@ describe("session routes", () => {
     /** A signed-in user, in their personal organization, who is also a `role` of a group organization. */
     const signedInWithGroup = async (role: "admin" | "contributor" = "contributor") => {
       const account = await verifiedUser();
-      // Signed in before joining: the session starts in the personal organization (Q265).
+      // Signed in before joining: the session starts in the personal organization.
       const cookies = await signedIn(account.user.email);
       const group = await addMembership(ownerDb, { userId: account.user.id, role });
       return { account, personal: account.organization, group: group.organization, membership: group.membership, cookies };
@@ -1585,7 +1583,7 @@ describe("session routes", () => {
       expect(await switchAudits()).toEqual([]);
     });
 
-    it("answers the active organization's id in capitals as the no-op: no cookie, no change, no audit (Ruling 85)", async () => {
+    it("answers the active organization's id in capitals as the no-op: no cookie, no change, no audit", async () => {
       const { account, personal, cookies } = await signedInWithGroup();
 
       const response = await switchTo(cookies.access, personal.id.toUpperCase());
@@ -1600,7 +1598,7 @@ describe("session routes", () => {
       expect((await me(cookies.access)).statusCode).toBe(200);
     });
 
-    it("switches to a membership named in capitals with the id lowercased in the token and the audit row (Ruling 85)", async () => {
+    it("switches to a membership named in capitals with the id lowercased in the token and the audit row", async () => {
       const { account, group, cookies } = await signedInWithGroup();
 
       const response = await switchTo(cookies.access, group.id.toUpperCase());
@@ -1716,7 +1714,7 @@ describe("session routes", () => {
         switching.catch(() => undefined);
         await waitForLockWaits(1);
 
-        // Task 6's removal, as its service runs it: the organization's lock
+        // A member's removal, as its service runs it: the organization's lock
         // first, then the member's account, the membership, and the sessions.
         const inGroup = { userId: admin.user.id, organizationId: group.id };
         const removal = withDatabaseContext(db, inGroup, async (transaction) => {
@@ -1754,9 +1752,9 @@ describe("session routes", () => {
       // A separate connection holds the organization `for no key update`, as
       // a delete does before it reassigns the sessions active in it. Were
       // the no-op to lock the session and then wait on the organization, the
-      // holder asking for the session would close the cycle (Ruling 16). The
-      // no-op takes no lock at all (Ruling 22), so it finishes while the
-      // holder still holds the organization.
+      // holder asking for the session would close the cycle. The no-op takes
+      // no lock at all, so it finishes while the holder still holds the
+      // organization.
       const { account, group, cookies } = await signedInWithGroup("admin");
       const access = cookieValue(await switchTo(cookies.access, group.id), "telflo_access");
       const session = await sessionRowOf(account.user.id);
@@ -1805,7 +1803,7 @@ describe("session routes", () => {
       }
     });
 
-    it("against a concurrent delete of the target, waits for it and is refused (Preflight ruling 8)", async () => {
+    it("against a concurrent delete of the target, waits for it and is refused", async () => {
       // The delete holds the organization `for no key update` while it waits
       // on a session a separate connection holds. The switch then waits on
       // the organization, and once the delete commits finds it gone.
@@ -1814,7 +1812,7 @@ describe("session routes", () => {
       expect(adminSwitched.statusCode).toBe(200);
       const adminAccess = cookieValue(adminSwitched, "telflo_access");
       const member = await verifiedUser();
-      // Signed in before joining: the member's session starts in their personal organization (Q265).
+      // Signed in before joining: the member's session starts in their personal organization.
       const memberCookies = await signedIn(member.user.email);
       await addMembership(ownerDb, { userId: member.user.id, organizationId: group.id, role: "contributor" });
       const adminSession = await sessionRowOf(admin.user.id);

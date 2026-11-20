@@ -1,15 +1,15 @@
 import { z } from "zod";
 
 // The opamp-server management API's replies, as zod schemas, one for each
-// schema in vendor/opamp-server/openapi.yaml the platform reads
-// (D11a decision 12). The bounds are the file's: lengths count code points,
-// as JSON Schema's maxLength does, not UTF-16 units as zod's .max() would.
+// schema in vendor/opamp-server/openapi.yaml the platform reads. The bounds
+// are the file's: lengths count code points, as JSON Schema's maxLength does,
+// not UTF-16 units as zod's .max() would.
 //
 // Unknown fields are stripped rather than refused, unlike the file's
 // `additionalProperties: false`: a field the server adds later (a nullable
-// addition, spec decision 8's "cheap" change) must not break a platform
-// that hasn't learned it yet. The fake validates the server's side of the
-// contract strictly, against the file itself.
+// addition) must not break a platform that hasn't learned it yet. The fake
+// validates the server's side of the contract strictly, against the file
+// itself.
 
 /** openapi.yaml's Uuid: 8-4-4-4-12 hex digits, either case. */
 const UUID_PATTERN = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
@@ -41,9 +41,9 @@ const versionSchema = z.object({
 const actorSchema = z.object({ id: uuid, email: text(1, 320) }).nullable();
 
 /**
- * openapi.yaml's Collector (D13a decision 7): both fields required, each in
- * the file's format and at most 64 characters; never null. The patterns are
- * the file's, with [0-9] rather than \d, as the server's and the database's.
+ * openapi.yaml's Collector: both fields required, each in the file's format
+ * and at most 64 characters; never null. The patterns are the file's, with
+ * [0-9] rather than \d, as the server's and the database's.
  */
 export const collectorSchema = z.object({
   distribution: z
@@ -90,18 +90,17 @@ export const organizationIdReplySchema = z.object({ organizationId: uuid });
 /** openapi.yaml's Organization: a registered organization, as GET and PATCH answer it. */
 export const organizationSchema = z.object({
   organizationId: uuid,
-  // Display-only, 1 to 400 characters (D11a decision 20).
+  // Display-only, 1 to 400 characters.
   name: text(1, 400),
   createdAt: instant,
   updatedAt: instant,
 });
 
 // ---------------------------------------------------------------------------
-// D16a's fleet model (D16b decision 12, Preflight ruling 3): fleets,
-// collector groups, enrollment tokens, collectors, limits and a
-// configuration's usage. Bounds are exactly the file's schema bounds, no
-// stricter: an array without maxItems has no max here, and a bound the file
-// gives only in prose (an error text's 8 KiB) is left out.
+// The fleet model: fleets, collector groups, enrollment tokens, collectors,
+// limits and a configuration's usage. Bounds are exactly the file's schema
+// bounds, no stricter: an array without maxItems has no max here, and a
+// bound the file gives only in prose (an error text's 8 KiB) is left out.
 
 /** A string of at least `min` and at most `max` code points (no max when undefined). */
 function codePoints(min: number, max?: number) {
@@ -150,8 +149,8 @@ const fleetFields = {
 export const fleetSchema = z.object(fleetFields);
 
 /**
- * openapi.yaml's FleetRotateToken (D17a decision 17): the fleet's rotate
- * tokens at the read, or null when none is valid. Only FleetSummary holds it.
+ * openapi.yaml's FleetRotateToken: the fleet's rotate tokens at the read, or
+ * null when none is valid. Only FleetSummary holds it.
  */
 const fleetRotateTokenSchema = z
   .object({
@@ -205,7 +204,7 @@ export const collectorGroupSchema = z.object({
   // CollectorGroupAnnotations: an object, or null; the file bounds its
   // canonical form's bytes in prose. The client's own data, passed through.
   annotations: z.record(z.unknown()).nullable(),
-  // D20 (Task 6): the variable group its collectors' text is filled in with.
+  // The variable group its collectors' text is filled in with.
   variableGroupId: uuid.nullable(),
   createdAt: instant,
   updatedAt: instant,
@@ -280,7 +279,7 @@ export const enrollmentTokenEventListSchema = z.object({
   nextCursor: z.string().nullable(),
 });
 
-/** openapi.yaml's CollectorInstancePin: a published version (the one kind since D16c), or null. */
+/** openapi.yaml's CollectorInstancePin: a published version (the one kind), or null. */
 export const collectorInstancePinSchema = z.object({ kind: z.enum(["publication"]), id: uuid }).nullable();
 
 /** openapi.yaml's CollectorInstance: a fleet's collector, with what it reported of itself. */
@@ -291,7 +290,7 @@ export const collectorInstanceSchema = z.object({
   fleetId: uuid,
   groupId: uuid,
   pin: collectorInstancePinSchema,
-  // D20 (Task 6): a variable group pinned on it, independent of the pin.
+  // A variable group pinned on it, independent of the pin.
   pinnedVariableGroupId: uuid.nullable(),
   resolution: z
     .object({ from: z.enum(["pinnedPublication", "groupPublication"]), id: uuid, sha256 })
@@ -323,8 +322,8 @@ export const collectorInstanceSchema = z.object({
   lastSeenAt: instant,
   liveness: z.enum(["online", "warning", "unknown", "offline"]),
   // 0.2.4 names it `sync` (0.1.0's `drift`), same values; the platform's own
-  // contract keeps `drift` (D36-1 decision 15: modules/fleets/service.ts's
-  // toCollector maps it).
+  // contract keeps `drift` (modules/fleets/service.ts's toCollector maps
+  // it).
   sync: z.enum(["inSync", "pending", "failed", "drifted", "unassigned"]),
   createdAt: instant,
   updatedAt: instant,
@@ -377,10 +376,10 @@ export const configurationUsageSchema = z.object({
 });
 
 // ---------------------------------------------------------------------------
-// D20's organization variables (decision 31; Task 9): variables, variable
-// groups and their overrides, and the three guards' details. The bounds
-// are the file's, in code points: a value is on one line, U+2028 and U+2029
-// written as escapes here (Preflight ruling 1), never the characters.
+// The organization variables: variables, variable groups and their
+// overrides, and the three guards' details. The bounds are the file's, in
+// code points: a value is on one line, U+2028 and U+2029 written as escapes
+// here, never the characters.
 
 /** openapi.yaml's VariableName: the renderer's grammar, ASCII only, case-sensitive. */
 export const VARIABLE_NAME_PATTERN_SOURCE = "^[A-Za-z_][A-Za-z0-9_]*$";
@@ -406,7 +405,7 @@ const variableDescription = displayName(1000).nullable();
 
 const changedFields = { changedBy: actorSchema, changedAt: instant };
 
-/** openapi.yaml's Variable: one of the organization's variables, its value included (no secrets, Q88). */
+/** openapi.yaml's Variable: one of the organization's variables, its value included (no secrets). */
 export const variableSchema = z.object({
   id: uuid,
   name: variableName,
@@ -415,7 +414,7 @@ export const variableSchema = z.object({
   ...changedFields,
 });
 
-/** openapi.yaml's VariableList: every variable of the organization (at most 150, Q104), unpaged. */
+/** openapi.yaml's VariableList: every variable of the organization (at most 150), unpaged. */
 export const variableListSchema = z.object({ variables: z.array(variableSchema).max(150) });
 
 /** openapi.yaml's VariableGroup: its overrides counted, and what uses it. */
@@ -442,7 +441,7 @@ export const variableGroupDetailSchema = z.object({
 
 const collectorGroupRefSchema = z.object({ fleetId: uuid, groupId: uuid });
 
-/** openapi.yaml's VariableInUseDetails: at most 100 entries, the totals exact (Q102). */
+/** openapi.yaml's VariableInUseDetails: at most 100 entries, the totals exact. */
 export const variableInUseDetailsSchema = z.object({
   usedBy: z
     .array(z.object({ publicationId: uuid, groups: z.array(collectorGroupRefSchema).max(100), pinnedCollectors: count }))
@@ -463,8 +462,8 @@ export const variableGroupInUseDetailsSchema = z.object({
 export const variablesUndefinedDetailsSchema = z.object({ names: z.array(variableName).max(100), totalNames: count });
 
 /**
- * openapi.yaml's error codes, every one of its Error enum (D16a Ruling 58;
- * schemas.test.ts holds the two equal).
+ * openapi.yaml's error codes, every one of its Error enum (schemas.test.ts
+ * holds the two equal).
  */
 export const OPAMP_SERVER_ERROR_CODES = [
   "unauthorized",
@@ -476,8 +475,8 @@ export const OPAMP_SERVER_ERROR_CODES = [
   "payload_too_large",
   "sha256_mismatch",
   "internal_error",
-  // D16a: the fleet model's routes (fleets, groups, enrollment tokens,
-  // collectors), which the platform calls from D16b on.
+  // The fleet model's routes (fleets, groups, enrollment tokens,
+  // collectors).
   "fleet_not_found",
   "fleet_conflict",
   "fleet_label_taken",
@@ -488,20 +487,19 @@ export const OPAMP_SERVER_ERROR_CODES = [
   "enrollment_token_not_found",
   "enrollment_token_revoked",
   "enrollment_token_expired",
-  // D17c-1 decision 29: a new default token asked for while one is valid.
+  // A new default token asked for while one is valid.
   "enrollment_token_default_exists",
   "publication_not_found",
   "collector_not_found",
   "collector_name_taken",
-  // D16a decision 31, Preflight ruling 17: a delete of a published version a
-  // collector group or a collector uses.
+  // A delete of a published version a collector group or a collector uses.
   "publication_in_use",
-  // D16b Ruling 36: a 503's, for an organization's or a fleet's delete the
-  // opamp-server is already running. The client reads no 5xx body: it is
-  // `unavailable` (`server_error`), and the organization's delete retries.
+  // A 503's, for an organization's or a fleet's delete the opamp-server is
+  // already running. The client reads no 5xx body: it is `unavailable`
+  // (`server_error`), and the organization's delete retries.
   "delete_in_progress",
-  // D20 decision 31 (Q101): the organization variables' routes, and the
-  // undefined check on an assignment or a pin; the three guards carry a
+  // The organization variables' routes, and the undefined check on an
+  // assignment or a pin; the three guards carry a
   // `details` object, which the client parses by its code.
   "variable_not_found",
   "variable_group_not_found",
@@ -514,10 +512,10 @@ export const OPAMP_SERVER_ERROR_CODES = [
   "variable_group_limit_reached",
   "variable_conflict",
   "variable_group_conflict",
-  // 0.2.4's API keys (D36-1 decision 16): a route an API key can't open, and
-  // the API key operations' own refusals. The platform authenticates with
-  // the management secret and never calls the API key operations, so it
-  // never gets one; they are listed because the envelope's enum has them.
+  // 0.2.4's API keys: a route an API key can't open, and the API key
+  // operations' own refusals. The platform authenticates with the
+  // management secret and never calls the API key operations, so it never
+  // gets one; they are listed because the envelope's enum has them.
   "forbidden",
   "api_key_not_found",
   "api_key_limit_reached",

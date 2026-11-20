@@ -15,12 +15,11 @@ import { UNCALLED_FILE_STORE } from "../../testing/file-store.js";
 import { UNCALLED_TESTING } from "../../testing/otelcol-testing.js";
 
 /*
- * GET /api/v1/auth/sessions and DELETE /api/v1/auth/sessions/{sessionId}
- * (D21 decision 40, Preflight rulings 13-15 and 17): the caller's live
- * sessions with families, never the raw user agent; signing out one other
- * session; the current one refused; another user's, an unknown, an idle and
- * an ended session refused alike; the audit row; the static `current`
- * route kept apart.
+ * GET /api/v1/auth/sessions and DELETE /api/v1/auth/sessions/{sessionId}:
+ * the caller's live sessions with families, never the raw user agent;
+ * signing out one other session; the current one refused; another user's,
+ * an unknown, an idle and an ended session refused alike; the audit row;
+ * the static `current` route kept apart.
  */
 
 const opamp = useFakeOpampServer();
@@ -226,7 +225,7 @@ describe("the sessions list and signing out one session", () => {
     expect((await list(current.access)).json()).toMatchObject({ items: [{ id: current.id }], total: 1 });
   });
 
-  it("refuses the current session with 409 cannot_revoke_current_session, its id in capitals too (Ruling 85)", async () => {
+  it("refuses the current session with 409 cannot_revoke_current_session, its id in capitals too", async () => {
     const account = await person();
     const current = await signedIn(account.user.email);
 
@@ -244,7 +243,7 @@ describe("the sessions list and signing out one session", () => {
     expect(await revokedAudits()).toEqual([]);
   });
 
-  it("signs out another of the caller's sessions named by its id in capitals: canonicalized, not refused (Ruling 85)", async () => {
+  it("signs out another of the caller's sessions named by its id in capitals: canonicalized, not refused", async () => {
     const account = await person();
     const current = await signedIn(account.user.email);
     const other = await signedIn(account.user.email);

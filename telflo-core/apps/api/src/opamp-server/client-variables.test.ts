@@ -9,11 +9,11 @@ import {
   type OpampServerReplyClass,
 } from "./client.js";
 
-// The opamp-server client's organization variables (D20 Task 9; decision
-// 31): each of the 11 operations' results against the fake, the bindings on
-// a group, a collector and the bulk pin with their 422s' details, each new
-// operation's worst reply under its class's cap (Preflight ruling 24), and
-// what an error may carry (never a value, a name or a description).
+// The opamp-server client's organization variables: each of the 11 operations'
+// results against the fake, the bindings on a group, a collector and the bulk
+// pin with their 422s' details, each new operation's worst reply under its
+// class's cap, and what an error may carry (never a value, a name or a
+// description).
 
 let fake: FakeOpampServer;
 let client: OpampServerClient;
@@ -96,7 +96,7 @@ describe("a variable's results", () => {
     expect(await client.createVariable(randomUUID(), request)).toEqual({ kind: "organization_not_found" });
   });
 
-  it("answers variable_limit_reached at 150 (Q104)", async () => {
+  it("answers variable_limit_reached at 150", async () => {
     const organizationId = await anOrganization();
     for (let n = 0; n < 150; n++) await aVariable(organizationId, `V_${n}`);
 
@@ -239,8 +239,8 @@ describe("a variable group's results", () => {
   });
 });
 
-describe("the bindings and their 422s (decisions 4, 7 and 31)", () => {
-  it("binds a group's and a pin's variable group, and the bulk pin's alone (Q103)", async () => {
+describe("the bindings and their 422s", () => {
+  it("binds a group's and a pin's variable group, and the bulk pin's alone", async () => {
     const organizationId = await anOrganization();
     const { fleetId, defaultGroupId } = await aFleet(organizationId);
     const group = await aVariableGroup(organizationId);
@@ -308,7 +308,7 @@ function goJson(value: unknown): string {
     .replaceAll(String.fromCharCode(0x2029), "\\u2029");
 }
 
-describe("each new operation's worst reply under its class's cap (Preflight ruling 24)", () => {
+describe("each new operation's worst reply under its class's cap", () => {
   const ASTRAL = "\u{1F680}";
   const SEPARATOR = String.fromCharCode(0x2028);
   const AT = "2026-10-20T09:00:00.000Z";
@@ -331,7 +331,7 @@ describe("each new operation's worst reply under its class's cap (Preflight ruli
   const refs = (count: number) => Array.from({ length: count }, () => ({ fleetId: id(), groupId: id() }));
   const errorWith = (code: string, details: unknown) => ({ error: { code, message: "m".repeat(200), details } });
   const inUse = errorWith("variable_in_use", {
-    // Q102's 100 entries, each a publication with one group (an entry is a
+    // The 100 entries allowed, each a publication with one group (an entry is a
     // group row): the largest a real reply's 100 entries make.
     usedBy: Array.from({ length: 100 }, () => ({ publicationId: id(), groups: refs(1), pinnedCollectors: 2 ** 31 })),
     totalPublications: 2 ** 31,
@@ -377,7 +377,7 @@ describe("each new operation's worst reply under its class's cap (Preflight ruli
     expect((await call(answering(status, text))).kind).not.toBe("unavailable");
   });
 
-  it("needs U for the organization's variables (Q104): their worst list is over M's cap, about 1.85 MB", () => {
+  it("needs U for the organization's variables: their worst list is over M's cap, about 1.85 MB", () => {
     const [, , , body] = cases[0] as (typeof cases)[number];
     const bytes = Buffer.byteLength(goJson(body()), "utf8");
 
@@ -386,7 +386,7 @@ describe("each new operation's worst reply under its class's cap (Preflight ruli
   });
 });
 
-describe("what an error carries for the variables (Q88)", () => {
+describe("what an error carries for the variables", () => {
   it("never a value, a name or a description, whatever fails", async () => {
     const value = `value-canary-${randomUUID()}`;
     const description = `description-canary-${randomUUID()}`;

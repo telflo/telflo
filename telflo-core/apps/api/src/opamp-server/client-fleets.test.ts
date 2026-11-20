@@ -3,11 +3,10 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from
 import { startFakeOpampServer, type FakeOpampServer } from "../testing/fake-opamp-server.js";
 import { createOpampServerClient, sha256Hex, type OpampServerClient } from "./client.js";
 
-// The opamp-server client's methods for D16a's fleet model (D16b Task 2,
-// decision 12), each documented result against the fake, which checks every
-// request and reply against vendor/opamp-server/openapi.yaml: every
-// test ends with no unread violation. The fake's clock is `clock`, moved by
-// a test and reset before each.
+// The opamp-server client's methods for the fleet model, each documented
+// result against the fake, which checks every request and reply against
+// vendor/opamp-server/openapi.yaml: every test ends with no unread violation.
+// The fake's clock is `clock`, moved by a test and reset before each.
 
 const BASE = Date.parse("2026-10-13T09:00:00.000Z");
 let clock = BASE;
@@ -468,7 +467,7 @@ describe("collector groups", () => {
         updatedAt: at(0),
       },
     });
-    // D17d-1 decision 2: the opamp-server keeps no Kubernetes field; the settings are the platform's data, passed through.
+    // The opamp-server keeps no Kubernetes field; the settings are the platform's data, passed through.
     const volume = { readOnly: true, mountPath: "/var/log/journal", hostPathType: "Directory", hostPath: "/var/log/journal" };
     const created = await client.createCollectorGroup(organizationId, kubernetes.fleet.id, {
       name: "gateways",
@@ -529,7 +528,6 @@ describe("collector groups", () => {
     expect(await client.getCollectorGroup(organizationId, randomUUID(), groupId)).toEqual({ kind: "fleet_not_found" });
   });
 
-  // D17c-1 decision 30.
   it("sends a group's annotations on a create and an update, an object replacing them and null clearing them, and reads them back", async () => {
     const { organizationId, fleetId, groupId } = await aWorld();
     const annotations = { telflo: { dockerMounts: [{ hostPath: "/var/log", containerPath: "/logs", readOnly: true }] }, other: [1, "x"] };
@@ -587,7 +585,7 @@ describe("collector groups", () => {
     });
   });
 
-  it("deletes a group with its collectors (D17d-1 decision 3); the Default group itself is collector_group_is_default", async () => {
+  it("deletes a group with its collectors; the Default group itself is collector_group_is_default", async () => {
     const { organizationId, created, fleetId, groupId, collectorId } = await aWorld();
 
     expect(await client.deleteCollectorGroup(organizationId, fleetId, created.defaultGroup.id)).toEqual({
@@ -675,7 +673,6 @@ describe("enrollment tokens", () => {
     });
   });
 
-  // D17c-1 decision 29.
   it("issues a new default token once the fleet's default token is revoked: POST …/tokens/default with the actor, its bearer, the issued event", async () => {
     const { organizationId, created, fleetId } = await aWorld();
     const urls: string[] = [];
@@ -738,7 +735,7 @@ describe("enrollment tokens", () => {
     expect(await client.listEnrollmentTokens(organizationId, randomUUID())).toEqual({ kind: "fleet_not_found" });
   });
 
-  it("lists a fleet's token events newest first, paged by its cursor, each with its actor and never a bearer (D17b-2 decision 19)", async () => {
+  it("lists a fleet's token events newest first, paged by its cursor, each with its actor and never a bearer", async () => {
     const { organizationId, created, fleetId } = await aWorld();
     clock += MINUTE;
     await client.revealEnrollmentToken(organizationId, fleetId, created.tokens.default.id, ACTOR);

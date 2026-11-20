@@ -36,15 +36,15 @@ import { UNCALLED_OTELCOL_VALIDATOR } from "../../testing/otelcol-validator.js";
 import { UNCALLED_OTTL_EVALUATOR, useFakeOttlEvaluator } from "../../testing/ottl-evaluator.js";
 import { hashPassword } from "../identity/password.js";
 
-// The opamp-server every server needs (D11b decision 8), and the OTTL
-// evaluator's OpenAPI-checked fake (D15a Task 5): this file's own.
+// The opamp-server every server needs, and the OTTL evaluator's
+// OpenAPI-checked fake: this file's own.
 const opamp = useFakeOpampServer();
 const evaluator = useFakeOttlEvaluator();
 
 const csrfHeaders = { [CSRF_HEADER_NAME]: CSRF_HEADER_VALUE };
 const PASSWORD = "a-sufficiently-long-password";
 
-/** Markers no log line, URL or audit row may hold: a rule's name, description, pattern and OTTL (ADR 0024). */
+/** Markers no log line, URL or audit row may hold: a rule's name, description, pattern and OTTL. */
 const NAME_MARKER = "rule-name-marker-5c1e";
 const DESCRIPTION_MARKER = "rule-description-marker-8a7d";
 const PATTERN_MARKER = "rule-pattern-marker-2f90";
@@ -96,10 +96,9 @@ const SSN_RULE = { kind: "not_contains_regex", target: "output", pattern: "\\b\\
 const BROKEN_CONDITION = `attributes["env"] == "prod" and body == "${fakeOttlEvaluatorMarker("invalid")}"`;
 
 /*
- * D15a Task 6: the validation pipelines and rules API (decisions 5, 6, 12,
- * 13, 16, 17 and 28; details 24 and 25; Preflight rulings 16, 19, 20 and
- * 24), against Postgres as the API's own role, with the OTTL evaluator's
- * fake (its markers steer its answers, nextFault queues failures).
+ * The validation pipelines and rules API, against Postgres as the API's own
+ * role, with the OTTL evaluator's fake (its markers steer its answers,
+ * nextFault queues failures).
  */
 describe("the validation pipelines and rules API", () => {
   let databases: TestDatabases;
@@ -209,7 +208,7 @@ describe("the validation pipelines and rules API", () => {
       payload: { organizationId: organization.id },
     });
     expect(switched.statusCode).toBe(200);
-    // A no-op when the sign-in already landed there (D36-1 decision 56): no new cookie, the token sent stands.
+    // A no-op when the sign-in already landed there: no new cookie, the token sent stands.
     return { userId: account.user.id, organizationId: organization.id, access: (switched.headers["set-cookie"] === undefined ? cookieValue(signedIn, "telflo_access") : cookieValue(switched, "telflo_access")) };
   };
 
@@ -438,7 +437,7 @@ describe("the validation pipelines and rules API", () => {
       expect(validations()).toEqual([]);
     });
 
-    it("refuses a second validation pipeline for one YAML pipeline (409 validation_pipeline_exists, decision 24's words); another version and another pipeline still take one", async () => {
+    it("refuses a second validation pipeline for one YAML pipeline (409 validation_pipeline_exists, in fixed words); another version and another pipeline still take one", async () => {
       const ana = await member();
       const target = await configurationOf(ana);
       const first = await createdPipeline(ana, target, "logs/default");
@@ -475,7 +474,7 @@ describe("the validation pipelines and rules API", () => {
       expect(await databases.ownerDb.selectFrom("validation_pipelines").select("id").execute()).toEqual([]);
     });
 
-    it("has no cap on a version's validation pipelines (the owner, decision 28): a 101st is created", async () => {
+    it("has no cap on a version's validation pipelines: a 101st is created", async () => {
       const ana = await member();
       const target = await configurationOf(ana);
       await sql`
@@ -670,7 +669,7 @@ describe("the validation pipelines and rules API", () => {
       expect(listed.statusCode).toBe(200);
       expect(listed.headers["cache-control"]).toBe("no-store");
       expect(listed.json<{ rules: RuleBody[] }>().rules).toEqual([ssn, attribute, count, distinct]);
-      // Stored as columns (Preflight ruling 16).
+      // Stored as columns.
       const [, , countRow] = await ruleRows();
       expect(countRow).toMatchObject({
         ottl_context: "log",
@@ -716,7 +715,7 @@ describe("the validation pipelines and rules API", () => {
       expect(await ruleRows()).toEqual([]);
     });
 
-    it("refuses every checked save while the evaluator can't check it: down, failing or busy (503 rules_unavailable, decision 6's words); a text rule still saves", async () => {
+    it("refuses every checked save while the evaluator can't check it: down, failing or busy (503 rules_unavailable, in fixed words); a text rule still saves", async () => {
       const ana = await member();
       const target = await configurationOf(ana);
       const pipeline = await createdPipeline(ana, target);
@@ -780,7 +779,7 @@ describe("the validation pipelines and rules API", () => {
       await createdRule(ana, target, logs.id, { kind: "ottl", target: "output", ottl: { context: "scope", quantifier: "any", condition: "true" } });
     });
 
-    it("refuses a pattern, condition or expression of Unicode whitespace only, which the table's ASCII check would take (400 invalid_request, Ruling 36)", async () => {
+    it("refuses a pattern, condition or expression of Unicode whitespace only, which the table's ASCII check would take (400 invalid_request)", async () => {
       const ana = await member();
       const target = await configurationOf(ana);
       const pipeline = await createdPipeline(ana, target);
@@ -818,7 +817,7 @@ describe("the validation pipelines and rules API", () => {
       expect(await ruleRows()).toEqual([]);
     });
 
-    it("refuses a pipeline's 201st rule (409 validation_rule_limit_reached, decision 24's words) before asking the evaluator; another pipeline still takes one", async () => {
+    it("refuses a pipeline's 201st rule (409 validation_rule_limit_reached, in fixed words) before asking the evaluator; another pipeline still takes one", async () => {
       const ana = await member();
       const target = await configurationOf(ana);
       const pipeline = await createdPipeline(ana, target, "logs");
@@ -841,7 +840,7 @@ describe("the validation pipelines and rules API", () => {
     });
 
     it(
-      "counts the cap under the configuration's lock: five creates held at it with 199 rules give exactly one 201 and four 409s, never a 500 (Ruling 39)",
+      "counts the cap under the configuration's lock: five creates held at it with 199 rules give exactly one 201 and four 409s, never a 500",
       async () => {
         const ana = await member();
         const target = await configurationOf(ana);
@@ -886,7 +885,7 @@ describe("the validation pipelines and rules API", () => {
     );
 
     it(
-      "asks the evaluator outside any transaction, holding no connection: on a one-connection pool, a checked POST and PATCH succeed while the evaluator itself queries that pool (Ruling 39)",
+      "asks the evaluator outside any transaction, holding no connection: on a one-connection pool, a checked POST and PATCH succeed while the evaluator itself queries that pool",
       async () => {
         const ana = await member();
         const target = await configurationOf(ana);
@@ -1141,7 +1140,7 @@ describe("the validation pipelines and rules API", () => {
     });
   });
 
-  describe("the public API's mark (D25 decision 32, migration 1700000000039)", () => {
+  describe("the public API's mark (migration 1700000000039)", () => {
     /** Whether the stored rule is marked the public API's, as the owner reads it. */
     const isApiOwnedOf = async (ruleId: string) =>
       (
@@ -1178,7 +1177,7 @@ describe("the validation pipelines and rules API", () => {
     });
   });
 
-  describe("the checks' limit (RATE_LIMITS: 30 a minute per person per organization, decision 16)", () => {
+  describe("the checks' limit (RATE_LIMITS: 30 a minute per person per organization)", () => {
     it("counts every save the evaluator is asked about, refused or not, and never gives one back; a save needing no check isn't counted (429 validation_rule_rate_limited)", async () => {
       const limited = await serverWith({
         rateLimits: { ...TEST_RATE_LIMITS, validationRuleChecksPerUser: { max: 3, windowMs: 60_000 } },
@@ -1214,7 +1213,7 @@ describe("the validation pipelines and rules API", () => {
     });
   });
 
-  describe("visibility (decision 12)", () => {
+  describe("visibility", () => {
     it("hides a draft's validation pipelines and rules from a teammate (404 configuration_not_found on all seven endpoints) until it is published; then he sees them and edits the rules", async () => {
       const { ana, ben } = await team();
       const target = await configurationOf(ana);
@@ -1242,7 +1241,7 @@ describe("the validation pipelines and rules API", () => {
 
       expect((await call(ben, "GET", pipelinesPath(target))).json<{ validationPipelines: PipelineBody[] }>().validationPipelines).toEqual([pipeline]);
       expect((await call(ben, "GET", rulesPath(target, pipeline.id))).json<{ rules: RuleBody[] }>().rules).toEqual([rule]);
-      // A published configuration's rules are every member's to edit (decision 13), on its published version.
+      // A published configuration's rules are every member's to edit, on its published version.
       const edited = await call(ben, "PATCH", rulePath(target, pipeline.id, rule.id), {
         ...ATTRIBUTE_RULE,
         ottl: { ...ATTRIBUTE_RULE.ottl, condition: 'attributes["env"] == "staging"' },
@@ -1324,7 +1323,7 @@ describe("the validation pipelines and rules API", () => {
     });
   });
 
-  describe("a new version's copy of its source's validation pipelines (decision 17, Preflight ruling 24)", () => {
+  describe("a new version's copy of its source's validation pipelines", () => {
     /** POST …/versions: a new version of `target`'s configuration from `sourceVersionId`, as `person`. */
     const newVersion = (person: Person, target: Target, sourceVersionId: string) =>
       call(person, "POST", `/api/v1/organizations/${target.organizationId}/configurations/${target.configurationId}/versions`, {
@@ -1530,7 +1529,7 @@ describe("the validation pipelines and rules API", () => {
     });
   });
 
-  describe("privacy (ADR 0024)", () => {
+  describe("privacy", () => {
     it("puts no rule's name, description, pattern or OTTL in any audit row, and neither those nor the evaluator's words in any log line", async () => {
       const { ana, ben } = await team();
       const target = await configurationOf(ana, { published: true });

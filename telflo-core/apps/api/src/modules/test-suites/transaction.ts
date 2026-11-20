@@ -11,14 +11,13 @@ import type { ITestDefinitionRepository } from "./repositories/test-definition-r
 import type { ITestSuiteRepository } from "./repositories/test-suite-repository.js";
 
 /**
- * The repositories a unit of work of the suites endpoints uses, bound to
- * one transaction that carries the request's database context: the active
- * organization and its members (the lock and the membership's re-read, D7
- * decision 9's), the configurations (read, and locked for a write: one lock
- * order, Preflight ruling 7) and versions as the caller sees them (D11b
- * decision 1), the suites, definitions and inputs they can see, the
- * caller's own test files and the live templates (a definition's sources),
- * and the audit trail.
+ * The repositories a unit of work of the suites endpoints uses, bound to one
+ * transaction that carries the request's database context: the active
+ * organization and its members (the lock and the membership's re-read), the
+ * configurations (read, and locked for a write: one lock order) and versions
+ * as the caller sees them, the suites, definitions and inputs they can see,
+ * the caller's own test files and the live templates (a definition's
+ * sources), and the audit trail.
  */
 export interface TestSuitesTransaction {
   organization: Pick<IActiveOrganizationRepository, "findActiveForShare">;

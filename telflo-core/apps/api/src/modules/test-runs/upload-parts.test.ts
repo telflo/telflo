@@ -7,11 +7,10 @@ import { AppError } from "../../errors.js";
 import { discardUnreadUpload, readUploadParts } from "./upload-parts.js";
 
 /*
- * readUploadParts' too-large refusal (D23-2 decision 33; Preflight ruling
- * 2): a route may pass its own 413; left out, it stays a test file's
- * `test_file_too_large`, so the test files' and templates' routes answer
- * as before. A bare Fastify with the multipart parser and two routes, one
- * of each, reading `name` then `file`.
+ * readUploadParts' too-large refusal: a route may pass its own 413; left out,
+ * it stays a test file's `test_file_too_large`, so the test files' and
+ * templates' routes answer as before. A bare Fastify with the multipart parser
+ * and two routes, one of each, reading `name` then `file`.
  */
 
 const MAX = 32;
@@ -30,7 +29,7 @@ function body(file: Buffer): { payload: Buffer; headers: Record<string, string> 
   return { payload, headers: { "content-type": `multipart/form-data; boundary=${boundary}` } };
 }
 
-describe("readUploadParts' too-large refusal (D23-2 decision 33)", () => {
+describe("readUploadParts' too-large refusal", () => {
   let server: FastifyInstance;
 
   beforeAll(async () => {

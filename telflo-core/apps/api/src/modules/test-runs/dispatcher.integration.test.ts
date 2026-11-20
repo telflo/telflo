@@ -50,14 +50,13 @@ import { failureResults, TEST_RUN_FAILURES } from "./run-results.js";
 import { createTestRunQueueSignal, type TestRunQueueSignal } from "./test-runs-dependencies.js";
 
 /*
- * D14a Task 8: the dispatcher and the reaper (decisions 1, 11, 12, 18 and
- * 29; Preflight rulings 2, 7 and 8; Rulings 22 to 24 and 36), against
- * Postgres as the API's own role, a real FileStore on a temporary
- * directory, and the OpenAPI-checked fake tester. Runs are put in the queue
- * by the owner's fixture (addTestRun) at chosen times, their inputs written
- * to the store as the queue's service writes them. Every wait is on a
- * condition (a tick's claim, the fake's held runs, settled()), never a
- * clock: `slow` runs are held by the fake until the test releases them.
+ * The dispatcher and the reaper, against Postgres as the API's own role, a
+ * real FileStore on a temporary directory, and the OpenAPI-checked fake
+ * tester. Runs are put in the queue by the owner's fixture (addTestRun) at
+ * chosen times, their inputs written to the store as the queue's service
+ * writes them. Every wait is on a condition (a tick's claim, the fake's
+ * held runs, settled()), never a clock: `slow` runs are held by the fake
+ * until the test releases them.
  */
 
 const tester = useFakeOtelcolTesting();
@@ -65,7 +64,7 @@ const tester = useFakeOtelcolTesting();
 const TEN_MIB = 10 * 1024 * 1024;
 /** A marker the run's text holds: it must never reach a stored error or a log line. */
 const TEXT_MARKER = "text-marker-8d2c";
-/** A marker a stored rule holds: it must never reach a log line (ADR 0024). */
+/** A marker a stored rule holds: it must never reach a log line. */
 const STORED_RULE_MARKER = "stored-rule-marker-5e9a";
 /** Before every run's queued time: runs are queued in the past, in order. */
 const BASE_TIME = Date.now() - 3_600_000;
@@ -259,7 +258,7 @@ describe("the test-run dispatcher", () => {
     await sql`update otelcol_testing_state set down_since = now() - make_interval(secs => ${secondsAgo})`.execute(ownerDb);
   }
 
-  it("ticks every second and leases a run for 174 + d s: the send window's 25, the tester's 74, 30 for the files, the evaluator's 40 and 5 (Preflight rulings 2 and 7; D15a Preflight ruling 11 and Ruling 41)", async () => {
+  it("ticks every second and leases a run for 174 + d s: the send window's 25, the tester's 74, 30 for the files, the evaluator's 40 and 5", async () => {
     expect(TEST_RUN_DISPATCH_INTERVAL_MS).toBe(1_000);
     expect(TEST_RUN_LEASE_OVERHEAD_SECONDS).toBe(174);
 
@@ -273,7 +272,7 @@ describe("the test-run dispatcher", () => {
     expect(claimed.lease_expires_at!.getTime() - claimed.started_at!.getTime()).toBe((174 + 7) * 1000);
   });
 
-  describe("Q17's turns and the cap of N (decision 11)", () => {
+  describe("the queue's turns and the cap of N", () => {
     it("takes turns between Ana's ten runs and Ben's one, N = 2: Ben's starts beside Ana's first, not after her tenth", async () => {
       const ana = await person();
       const ben = await person();
@@ -339,7 +338,7 @@ describe("the test-run dispatcher", () => {
       for (const id of ids) expect((await row(id)).status).toBe("succeeded");
     });
 
-    it("claims nothing while the shared row says the tester is down, and claims once it is up (Ruling 24)", async () => {
+    it("claims nothing while the shared row says the tester is down, and claims once it is up", async () => {
       const ana = await person();
       const id = await queue(ana);
       await markDown(1);
@@ -443,7 +442,7 @@ describe("the test-run dispatcher", () => {
       ]);
     });
 
-    it("503 version_unavailable: failed, with a fixed message naming the version (Preflight ruling 13)", async () => {
+    it("503 version_unavailable: failed, with a fixed message naming the version", async () => {
       const ana = await person();
       const id = await queue(ana, { marker: "version-unavailable" });
       const running = dispatcher();
@@ -463,7 +462,7 @@ describe("the test-run dispatcher", () => {
     it.each<[string, FakeOtelcolTestingFault, string, (version: string) => string]>([
       ["409 version_retired", "version_retired", "version_retired", (v) => `Collector v${v} is no longer offered by the tester. Pick a newer collector version.`],
       ["400 version_unknown", "version_unknown", "version_unknown", (v) => `Collector v${v} isn't available in the tester. Pick another collector version.`],
-    ])("%s from the tester: failed with its own code and words, never released (Rulings 50, 51)", async (_label, fault, code, message) => {
+    ])("%s from the tester: failed with its own code and words, never released", async (_label, fault, code, message) => {
       const ana = await person();
       const id = await queue(ana);
       const running = dispatcher();
@@ -500,7 +499,7 @@ describe("the test-run dispatcher", () => {
       await releasing.settled();
       expect(await row(older)).toMatchObject({ status: "queued", queued_at: queuedAt, started_at: null, lease_id: null });
 
-      // Once the release's wait (Ruling 41) has passed.
+      // Once the release's wait has passed.
       clock += TEST_RUN_RELEASE_BACKOFF_MS;
       expect(await releasing.tick()).toBe(1);
       await releasing.settled();
@@ -520,7 +519,7 @@ describe("the test-run dispatcher", () => {
       expect(await row(id)).toMatchObject({ status: "queued", started_at: null });
     });
 
-    it("a refusing tester isn't sent the run in a loop: a release wakes nothing, then claims wait 2 s, doubling to 10 s (Ruling 41)", async () => {
+    it("a refusing tester isn't sent the run in a loop: a release wakes nothing, then claims wait 2 s, doubling to 10 s", async () => {
       expect([TEST_RUN_RELEASE_BACKOFF_MS, TEST_RUN_RELEASE_BACKOFF_MAXIMUM_MS]).toEqual([2_000, 10_000]);
       const ana = await person();
       const id = await queue(ana);
@@ -582,7 +581,7 @@ describe("the test-run dispatcher", () => {
       expect(await row(next)).toMatchObject({ status: "queued", error_code: null });
     });
 
-    it("runs refused together double the wait once: four released in one claim wait 2 s, then 4 s (Ruling 42)", async () => {
+    it("runs refused together double the wait once: four released in one claim wait 2 s, then 4 s", async () => {
       const ana = await person();
       const ids: string[] = [];
       for (let index = 0; index < 4; index += 1) ids.push(await queue(ana));
@@ -605,7 +604,7 @@ describe("the test-run dispatcher", () => {
       await together.settled();
     });
 
-    it("a release after an answer of the same claim reset the wait still waits 2 s (Ruling 45)", async () => {
+    it("a release after an answer of the same claim reset the wait still waits 2 s", async () => {
       const ana = await person();
       const [first, second, third] = [await queue(ana), await queue(ana), await queue(ana)];
       const clock = 0;
@@ -631,7 +630,7 @@ describe("the test-run dispatcher", () => {
       expect(await mixed.tick()).toBe(0);
     });
 
-    it("the lease check uses the time since the claim: a run is sent when the API's wall clock runs 60 s ahead (Ruling 42)", async () => {
+    it("the lease check uses the time since the claim: a run is sent when the API's wall clock runs 60 s ahead", async () => {
       const ana = await person();
       const id = await queue(ana);
       vi.useFakeTimers({ toFake: ["Date"] });
@@ -654,8 +653,7 @@ describe("the test-run dispatcher", () => {
       // Each dispatcher claims one run, and its input's read moves the
       // monotonic clock on: 25 s (the send window) for the first run's, 25 s
       // and 1 ms for the second's. 5 s of duration: a lease of 179 s. The
-      // evaluator's 40 s is reserved for every run, rules or not (D15a
-      // Preflight ruling 11 and Ruling 41).
+      // evaluator's 40 s is reserved for every run, rules or not.
       let clock = 0;
       const slowReads: IFileStore = {
         ...store,
@@ -682,7 +680,7 @@ describe("the test-run dispatcher", () => {
       expect(await row(other)).toMatchObject({ status: "failed", error_code: "interrupted" });
     });
 
-    it("a name that doesn't resolve (nothing sent, Ruling 36): released", async () => {
+    it("a name that doesn't resolve (nothing sent): released", async () => {
       const ana = await person();
       const id = await queue(ana);
       const unresolved: OtelcolTestingClient = {
@@ -818,7 +816,7 @@ describe("the test-run dispatcher", () => {
       };
     }
 
-    it("cuts every string to the contract's bounds in code points, a pair kept whole, and stores no NUL or lone surrogate (Rulings 24, 39)", async () => {
+    it("cuts every string to the contract's bounds in code points, a pair kept whole, and stores no NUL or lone surrogate", async () => {
       const ana = await person();
       const id = await queue(ana);
       const running = dispatcher({ tester: answering(longAnswer) });
@@ -845,7 +843,7 @@ describe("the test-run dispatcher", () => {
       expect(stored).toMatchObject({ output_size_bytes: 12, output_truncated: true, kwok_enabled: true, decoded_input_size_bytes: null });
     });
 
-    it("keeps logs of exactly 262,144 code points of emoji whole (Ruling 39)", async () => {
+    it("keeps logs of exactly 262,144 code points of emoji whole", async () => {
       const ana = await person();
       const id = await queue(ana);
       const logs = "😀".repeat(TEST_RUN_LOGS_MAXIMUM_LENGTH);
@@ -992,11 +990,11 @@ describe("the test-run dispatcher", () => {
     });
   });
 
-  describe("a finish that throws (Ruling 41)", () => {
+  describe("a finish that throws", () => {
     /**
      * The API's database, but one transaction after `arm()` throws: before
      * its work (nothing committed) or after it commits. `passing` go through
-     * first: the rules' read (test_runs_rules, D15a) comes before the finish.
+     * first: the rules' read (test_runs_rules) comes before the finish.
      */
     function throwingOnce(when: "before" | "after", passing = 1) {
       let isArmed = false;
@@ -1086,7 +1084,7 @@ describe("the test-run dispatcher", () => {
     });
   });
 
-  describe("a rules' snapshot that can't be read (D15a Ruling 41)", () => {
+  describe("a rules' snapshot that can't be read", () => {
     it("rules the contracts' snapshot schema refuses: the run fails as internal_error, its answer's files and logs kept, the evaluator never asked, no log line holding the stored rule", async () => {
       const ana = await person();
       const input = Buffer.from('{"resourceLogs":[{"unreadable":true}]}');
@@ -1150,7 +1148,7 @@ describe("the test-run dispatcher", () => {
     });
   });
 
-  describe("organization variables, filled in before the tester (D20 decision 13; Preflight ruling 28)", () => {
+  describe("organization variables, filled in before the tester", () => {
     /** A value marker: it reaches the tester, and never a log line or a stored error. */
     const VALUE_MARKER = "value-marker-6b1e";
 
@@ -1499,7 +1497,7 @@ describe("the test-run reaper", () => {
     return ownerDb.selectFrom("test_runs").selectAll().where("id", "=", id).executeTakeFirstOrThrow();
   }
 
-  it("fails a running run past its lease as interrupted, and nothing else (decision 18)", async () => {
+  it("fails a running run past its lease as interrupted, and nothing else", async () => {
     const past = await addRun(running(-1));
     const current = await addRun(running(60));
     const waiting = await addRun({ queued_at: new Date(Date.now() - 1_000) });
@@ -1515,7 +1513,7 @@ describe("the test-run reaper", () => {
     expect((await row(waiting)).status).toBe("queued");
   });
 
-  it("fails every waiting run once the tester has been down longer than the limit, and never a running one (decision 12)", async () => {
+  it("fails every waiting run once the tester has been down longer than the limit, and never a running one", async () => {
     const waiting = [await addRun(), await addRun()];
     const current = await addRun(running(60));
 

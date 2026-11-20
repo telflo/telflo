@@ -13,18 +13,18 @@ import type { TestRunErrorCode } from "../../otelcol-testing/schemas.js";
 import type { OttlEvaluatorResult } from "../../ottl-evaluator/schemas.js";
 
 /*
- * What the dispatcher stores on a finished run (D14a decision 1; Preflight
- * ruling 7; Rulings 24 and 36): the `p_results` object test_runs_finish
- * takes, whose keys name the run's result columns (migration 028).
+ * What the dispatcher stores on a finished run: the `p_results` object
+ * test_runs_finish takes, whose keys name the run's result columns (migration
+ * 028).
  *
  * - A tester's answer is stored as it came, with every string cut to the
  *   contract's bounds (@telflo/contracts' test-runs.ts: the text it ran
  *   1 MiB, the logs 256 KiB, a finding's message 4,096 and its component
  *   1,024, an error's message 2,000), counted in code points as the
- *   contract, the tester and the table all count them (D14a Ruling 39),
- *   never splitting a pair. A NUL or a lone surrogate, which Postgres can't
- *   store in text or jsonb, becomes U+FFFD.
- *   Numbers and booleans stay JSON numbers and booleans (Ruling 24).
+ *   contract, the tester and the table all count them, never splitting a
+ *   pair. A NUL or a lone surrogate, which Postgres can't store in text or
+ *   jsonb, becomes U+FFFD. Numbers and booleans stay JSON numbers and
+ *   booleans.
  * - Every other ending is a failure with a code and a fixed message, built
  *   here from the outcome alone, never from an error's own text: a Node or
  *   a fetch error can name a path or quote the request, and a stored message
@@ -49,10 +49,9 @@ export interface TestRunResults {
   error_code: string | null;
   error_message: string | null;
   /**
-   * The rules' results (migration 1700000000030, D15a decision 15): one per
-   * rule of the run's snapshot, in its order, each with a string id and a
-   * boolean passed (D15a Ruling 32). Left out (null) when the rules weren't
-   * checked.
+   * The rules' results (migration 1700000000030): one per rule of the
+   * run's snapshot, in its order, each with a string id and a boolean
+   * passed. Left out (null) when the rules weren't checked.
    */
   validation_results?: unknown[] | null;
 }
@@ -65,9 +64,9 @@ export interface TestRunFailure {
 
 /** The fixed failures (each message is the whole message stored). */
 export const TEST_RUN_FAILURES = {
-  /** The API stopped mid-run, or the reaper found the run past its lease (decision 18, Preflight ruling 7). */
+  /** The API stopped mid-run, or the reaper found the run past its lease. */
   interrupted: { code: "interrupted", message: "The run was interrupted. Run it again." },
-  /** No answer within the client's 74 + d s, after the run was sent: never released (Preflight ruling 7). */
+  /** No answer within the client's 74 + d s, after the run was sent: never released. */
   testerTimeout: { code: "tester_timeout", message: "The tester didn't answer in time. Run it again." },
   /** The connection broke off after the run was sent: never released. */
   testerConnectionLost: { code: "tester_connection_lost", message: "The connection to the tester was lost. Run it again." },
@@ -80,26 +79,25 @@ export const TEST_RUN_FAILURES = {
   /** Anything else that went wrong in the dispatcher. */
   internalError: { code: "internal_error", message: "Something went wrong running the test. Run it again." },
   /**
-   * The OTTL evaluator couldn't check the run's rules (D15a decision 3):
-   * unreachable, refused, busy twice, answered wrongly, or too little of the
-   * lease left to ask it. The run ends Error with the tester's answer kept.
+   * The OTTL evaluator couldn't check the run's rules: unreachable, refused,
+   * busy twice, answered wrongly, or too little of the lease left to ask it.
+   * The run ends Error with the tester's answer kept.
    */
   rulesUnavailable: { code: "rules_unavailable", message: RULES_UNAVAILABLE_RUN_MESSAGE },
   /**
    * The organization's variables couldn't be read when the run was about to
-   * be sent (D20 decision 13; Preflight ruling 28): nothing was sent. The
-   * queue's words with "Run it again" (Ruling 78).
+   * be sent: nothing was sent. The queue's words with "Run it again".
    */
   variablesUnavailable: { code: "variables_unavailable", message: VARIABLES_UNAVAILABLE_RUN_MESSAGE },
   /**
    * With the values read at dispatch filled in, the text is longer than a
    * run's may be (the values changed since the queue): nothing was sent.
-   * The queue's code and words (Ruling 78).
+   * The queue's code and words.
    */
   filledInTooLong: { code: "filled_in_too_long", message: TEST_RUN_FILLED_IN_TOO_LONG_MESSAGE },
 } as const satisfies Record<string, TestRunFailure>;
 
-/** 503 `version_unavailable` (Preflight ruling 13): an offered version this tester doesn't hold. */
+/** 503 `version_unavailable`: an offered version this tester doesn't hold. */
 export function versionUnavailableFailure(collectorVersion: string): TestRunFailure {
   return {
     code: "version_unavailable",
@@ -108,8 +106,8 @@ export function versionUnavailableFailure(collectorVersion: string): TestRunFail
 }
 
 /**
- * 409 `version_retired` from the tester (Ruling 50): its catalogue retires a
- * version the platform's still offers.
+ * 409 `version_retired` from the tester: its catalogue retires a version
+ * the platform's still offers.
  */
 export function versionRetiredFailure(collectorVersion: string): TestRunFailure {
   return {
@@ -119,8 +117,8 @@ export function versionRetiredFailure(collectorVersion: string): TestRunFailure 
 }
 
 /**
- * 400 `version_unknown` from the tester (Ruling 51): its catalogue doesn't
- * list the version. Its own code: unlike `version_unavailable` (an offered
+ * 400 `version_unknown` from the tester: its catalogue doesn't list the
+ * version. Its own code: unlike `version_unavailable` (an offered
  * version missing from the image, which may come back), nothing in this
  * tester will run it, and its words don't say the version is retired.
  */
@@ -172,8 +170,8 @@ const REPLACEMENT_CHARACTER = String.fromCharCode(0xfffd);
 /**
  * `text` as Postgres can store it, in text and in jsonb: each NUL and each
  * lone surrogate becomes U+FFFD (one code point for one), then cut to at
- * most `maximum` code points (D14a Ruling 39: the contract's, the tester's
- * and the table's measure), a pair kept or dropped whole.
+ * most `maximum` code points (the contract's, the tester's and the table's
+ * measure), a pair kept or dropped whole.
  */
 export function storableText(text: string, maximum: number): string {
   const clean = text.replaceAll(String.fromCharCode(0), REPLACEMENT_CHARACTER).replace(LONE_SURROGATE, REPLACEMENT_CHARACTER);
@@ -257,11 +255,11 @@ export function answerResults(
 }
 
 /**
- * The rules' results as the run stores them (D15a decision 15): the
- * evaluator's, already one per rule in the snapshot's order with its id (the
- * client matched them by id), each with exactly the contract's fields
- * (`id`, `passed`, `error`, `advisory`, `detail`), and every string
- * storable: a snippet of an output may hold a NUL, which jsonb can't.
+ * The rules' results as the run stores them: the evaluator's, already one
+ * per rule in the snapshot's order with its id (the client matched them by
+ * id), each with exactly the contract's fields (`id`, `passed`, `error`,
+ * `advisory`, `detail`), and every string storable: a snippet of an output
+ * may hold a NUL, which jsonb can't.
  */
 export function validationResults(results: readonly OttlEvaluatorResult[]): unknown[] {
   return results.map((result) => ({

@@ -1,13 +1,12 @@
 import type { OpampServerClient } from "../../opamp-server/client.js";
 
 /*
- * Organization variables in a test run's text (D20 decisions 13 and 38;
- * Q92; Preflight ruling 28, the controller's (e)). The run's `yaml` is
- * saved and returned as written, `${org:NAME}` and all; the organization's
- * values are filled in only on the way to the tester, so its cleanup and
- * checks run on the filled-in text (the owner's invariant: values first,
- * then every cleanup and check). Only the organization's values: a test run
- * belongs to no collector group and no pin, so no variable group applies.
+ * Organization variables in a test run's text. The run's `yaml` is saved
+ * and returned as written, `${org:NAME}` and all; the organization's values
+ * are filled in only on the way to the tester, so its cleanup and checks run
+ * on the filled-in text (values first, then every cleanup and check). Only
+ * the organization's values: a test run belongs to no collector group and no
+ * pin, so no variable group applies.
  *
  * The values are read twice, and only for a text with a live reference
  * (references(text) non-empty):
@@ -18,30 +17,29 @@ import type { OpampServerClient } from "../../opamp-server/client.js";
  *     changed: unreadable, the run fails `variables_unavailable`; too long,
  *     `filled_in_too_long`; else the tester gets the filled-in text.
  *
- * A value is configuration text (Q88, ADR 0024): never logged, never in an
- * error's message, never stored outside the opamp-server.
+ * A value is configuration text: never logged, never in an error's message,
+ * never stored outside the opamp-server.
  */
 
 // ---------------------------------------------------------------------------
-// D20's fill-in (decisions 8, 16, 33 and 36): the TypeScript port of the
-// opamp-server's store/orgvariables (render.go), held to it by the shared
-// corpus (vendor/opamp-server/org-token-corpus.json, the opamp-server's
+// The fill-in: the TypeScript port of the opamp-server's store/orgvariables
+// (render.go), held to it by the shared corpus
+// (vendor/opamp-server/org-token-corpus.json, the opamp-server's
 // handlers/testdata/org-token-corpus.json at the pinned release).
 //
 // A live reference is `${org:NAME}`, NAME the grammar [A-Za-z_][A-Za-z0-9_]*
 // of any length, opened by a `$` that an even run of `$` precedes. The
-// legacy `$orgvar:NAME` form is plain text (decision 16), and so is
-// `${org:NAME:-default}`. A known NAME's value is written with every `$`
-// doubled, so the collector's confmap pass, which collapses `$$` to `$`,
-// yields the value exactly; an unknown NAME is left as written. There is no
-// YAML round trip.
+// legacy `$orgvar:NAME` form is plain text, and so is `${org:NAME:-default}`.
+// A known NAME's value is written with every `$` doubled, so the collector's
+// confmap pass, which collapses `$$` to `$`, yields the value exactly; an
+// unknown NAME is left as written. There is no YAML round trip.
 //
 // One scanner serves references, renderedLength and render, so they can't
-// disagree. The length comes first (Preflight ruling 12): a text of many
-// references to a long value of `$` fills in to far more than it is, so a
-// caller measures it and refuses it before anything is built. Lengths are
-// UTF-16 code units (`string.length`), the unit TEST_RUN_YAML_MAXIMUM_LENGTH
-// counts (docs review (12)), not the Go port's bytes.
+// disagree. The length comes first: a text of many references to a long
+// value of `$` fills in to far more than it is, so a caller measures it and
+// refuses it before anything is built. Lengths are UTF-16 code units
+// (`string.length`), the unit TEST_RUN_YAML_MAXIMUM_LENGTH counts, not the
+// Go port's bytes.
 
 /** An organization's values, by NAME. A Map, so a NAME such as `constructor` is never an object's own property. */
 export type OrganizationVariableValues = ReadonlyMap<string, string>;
@@ -92,7 +90,7 @@ function scan(text: string, visit: (start: number, end: number, name: string) =>
   }
 }
 
-/** A value as it is written into the text: every `$` doubled (decision 8). */
+/** A value as it is written into the text: every `$` doubled. */
 function escapeValue(value: string): string {
   return value.split("$").join("$$");
 }
@@ -174,7 +172,7 @@ export type OrganizationVariablesRead =
   /** They couldn't be read; `reason` is the client's, an id-free word that may be logged. */
   | { kind: "unavailable"; reason: string };
 
-/** Where a run's organization variables come from (ADR 0020's interface): the opamp-server in production. */
+/** Where a run's organization variables come from: the opamp-server in production. */
 export interface IOrganizationVariables {
   /** The organization's own values, as every collector without a variable group would get them. */
   read(organizationId: string): Promise<OrganizationVariablesRead>;
@@ -212,11 +210,10 @@ export type RunTextFillIn =
   | { kind: "unavailable"; reason: string };
 
 /**
- * `text` filled in with the organization's values, read only when it holds
- * a live reference, its length counted before anything is built
- * (Preflight ruling 12) and refused over `maximumLength` code units.
- * `build` false measures only (the queue): `filled` then carries `text` as
- * it is.
+ * `text` filled in with the organization's values, read only when it holds a
+ * live reference, its length counted before anything is built and refused over
+ * `maximumLength` code units. `build` false measures only (the queue):
+ * `filled` then carries `text` as it is.
  */
 export async function fillInRunText(
   source: IOrganizationVariables,

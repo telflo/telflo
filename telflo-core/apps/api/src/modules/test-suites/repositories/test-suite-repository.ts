@@ -5,24 +5,23 @@ import { createOrganizationScope } from "../../../tenancy/organization-scope.js"
 import { visibleTo } from "../../configurations/repositories/configuration-repository.js";
 
 /*
- * A configuration version's test suites (D14b decisions 5 and 8, Preflight
- * rulings 1 and 23), through the organization scope, as the context's user
- * sees them: a suite is visible exactly when its configuration is (their own
- * draft, or a published one), by the configurations' own rule
- * (`visibleTo`), which is migration 029's select policy (028's
- * childVisible). A deleted configuration's suites are hidden, as its runs
- * are. Row-level security stands behind it, so the transaction must carry a
- * database context naming the same organization and user.
+ * A configuration version's test suites, through the organization scope, as
+ * the context's user sees them: a suite is visible exactly when its
+ * configuration is (their own draft, or a published one), by the
+ * configurations' own rule (`visibleTo`), which is migration 029's select
+ * policy (028's childVisible). A deleted configuration's suites are hidden, as
+ * its runs are. Row-level security stands behind it, so the transaction must
+ * carry a database context naming the same organization and user.
  *
  * Every write here is made under the configuration's lock (the service's
- * lockAsMember, then lockedConfiguration; Preflight ruling 7), so a count
- * read here holds until the transaction ends.
+ * lockAsMember, then lockedConfiguration), so a count read here holds until
+ * the transaction ends.
  */
 
 /** Whom the repository reads for: the organization, and the viewer whose drafts' suites it shows. An `AuthContext` is one. */
 export type TestSuiteViewerContext = Pick<AuthContext, "organizationId" | "userId">;
 
-/** A suite. Its name and description are configuration text (ADR 0024). */
+/** A suite. Its name and description are configuration text. */
 export interface TestSuite {
   id: string;
   configurationId: string;
@@ -48,7 +47,7 @@ export interface CreateTestSuiteInput {
   at: Date;
 }
 
-/** What a version copy wrote (D14b Preflight ruling 8): counts only. */
+/** What a version copy wrote: counts only. */
 export interface CopiedTestSuites {
   suites: number;
   definitions: number;
@@ -67,7 +66,7 @@ export interface ITestSuiteRepository {
   find(id: string): Promise<TestSuite | undefined>;
   /** A suite the viewer can see on that configuration's version; undefined otherwise (another version's included). */
   findInVersion(configurationId: string, versionId: string, id: string): Promise<TestSuite | undefined>;
-  /** How many suites the version has: the cap's count (Preflight ruling 23), read under the configuration's lock. */
+  /** How many suites the version has: the cap's count, read under the configuration's lock. */
   countInVersion(configurationId: string, versionId: string): Promise<number>;
   /** A new suite on the version. */
   create(input: CreateTestSuiteInput): Promise<TestSuite>;
@@ -76,17 +75,15 @@ export interface ITestSuiteRepository {
   /** Deletes a visible suite (its definitions go with it, fk_test_definitions_suite). False when there is none. */
   remove(id: string): Promise<boolean>;
   /**
-   * A new version's copy of its source's suites and definitions (D14b
-   * decisions 4 and 12, Preflight ruling 8), in one statement, as the
-   * context's user under row-level security: every suite of
+   * A new version's copy of its source's suites and definitions, in one
+   * statement, as the context's user under row-level security: every suite of
    * `fromVersionId` the viewer can see, in its (created_at, id) order, each
    * under a new uuidv7(), then their definitions in (the suite's place,
    * created_at, id) order, naming the same inputs (no byte is copied). The
-   * copies' creator is the context's user and their times `at`, the
-   * version's; both versions are the configuration's. Run it under the
-   * configuration's lock (createVersion's), which every path that adds or
-   * removes a definition's reference to an input takes (ruling 7). Runs
-   * are never copied.
+   * copies' creator is the context's user and their times `at`, the version's;
+   * both versions are the configuration's. Run it under the configuration's
+   * lock (createVersion's), which every path that adds or removes a
+   * definition's reference to an input takes. Runs are never copied.
    */
   copyToVersion(configurationId: string, fromVersionId: string, toVersionId: string, at: Date): Promise<CopiedTestSuites>;
 }
@@ -213,11 +210,11 @@ export function createTestSuiteRepository(
       // The map is materialized in the source's order, so each new id is
       // taken in that order: Postgres 18's uuidv7() rises within a backend,
       // and the copies' (created_at, id) order is the source's, with every
-      // copy at one created_at (Preflight ruling 8). The definitions are
-      // inserted in (the suite's place, created_at, id) order, so their
-      // ids, the table's default uuidv7(), rise the same way. The select
-      // policies show the viewer only what they may see, and the insert
-      // policies admit the viewer alone as the creator.
+      // copy at one created_at. The definitions are inserted in (the
+      // suite's place, created_at, id) order, so their ids, the table's
+      // default uuidv7(), rise the same way. The select policies show the
+      // viewer only what they may see, and the insert policies admit the
+      // viewer alone as the creator.
       const organizationId = context.organizationId;
       const { rows } = await sql<{ suites: number; definitions: number }>`
         with map as materialized (

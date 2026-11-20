@@ -14,9 +14,8 @@ import {
   StackSmokeError,
 } from "./smoke.js";
 
-// The stack smoke test's sequences (D11a Tasks 7 and 10b), against the fake:
-// the same functions stack-smoke.ts runs inside the compose stack against
-// the real opamp-server (Task 8).
+// The stack smoke test's sequences, against the fake: the same functions
+// stack-smoke.ts runs inside the compose stack against the real opamp-server.
 
 let fake: FakeOpampServer;
 let client: OpampServerClient;
@@ -117,7 +116,7 @@ describe("runStackSmoke", () => {
     expect((await failureOf(runStackSmoke(altering))).message).toBe("get: the YAML read differs from the YAML posted");
   });
 
-  it("fails when the stored collector differs from the collector post: a server leaving it to its defaults (D13a decision 7)", async () => {
+  it("fails when the stored collector differs from the collector post: a server leaving it to its defaults", async () => {
     const defaulting = withOverride("postPublication", (real) => async (...args) => {
       const result = await real(...args);
       return result.kind === "created"
@@ -272,7 +271,7 @@ describe("expectOrganizationRegistered", () => {
     expect(error.message).not.toContain("secret-name-marker");
   });
 
-  it("fails for a personal organization still under the old default, <email>'s workspace (Q263)", async () => {
+  it("fails for a personal organization still under the old default, <email>'s workspace", async () => {
     const id = randomUUID();
     await client.createOrganization({ id, name: "smoke@example.com's workspace" });
 
@@ -395,7 +394,7 @@ describe("expectOrganizationGone", () => {
   });
 });
 
-/** The collector publishedConfiguration's `put` sends: not the server's column defaults (D13a). */
+/** The collector publishedConfiguration's `put` sends: not the server's column defaults. */
 const PUT_COLLECTOR = { distribution: "otelcol-contrib", version: "0.161.0" };
 
 /** A registered organization with a configuration, and a way to put snapshots of its versions. */
@@ -518,7 +517,7 @@ describe("expectPublications", () => {
 /** The SHA-256 of the YAML publishedConfiguration's `put` sends. */
 const PUT_YAML_SHA256 = sha256Hex(`# secret yaml-marker\nreceivers: {}\n`);
 
-describe("expectPublication (D11b Ruling 29)", () => {
+describe("expectPublication", () => {
   it("resolves for the one snapshot of the version, by its id, holding the YAML whose SHA-256 is given", async () => {
     const { organizationId, configurationId, put } = await publishedConfiguration();
     const versionId = randomUUID();
@@ -605,7 +604,7 @@ describe("expectPublication (D11b Ruling 29)", () => {
   it.each([
     ["another collector version", { distribution: "otelcol-contrib", version: "0.162.0" }],
     ["another distribution", { distribution: "otelcol-k8s", version: "0.161.0" }],
-  ])("fails for a snapshot naming %s than the version's pin, naming the collectors only (D13a decision 7)", async (_label, collector) => {
+  ])("fails for a snapshot naming %s than the version's pin, naming the collectors only", async (_label, collector) => {
     const { organizationId, configurationId, put } = await publishedConfiguration();
     const versionId = randomUUID();
     await put(2, versionId);

@@ -16,18 +16,14 @@ import {
   type OpampServerReplyClass,
 } from "./client.js";
 
-// How the opamp-server client reads and refuses replies (D16b Task 2;
-// decision 12, Preflight rulings 1 to 3): every reply of the 34 operations
-// (D16c removed importing's two; D17b-2 added the token events, D17c-1 a
-// new default token) under its class's cap, the transport's timer and
-// redirects, the answers no caller can handle for the fleet model's 25
-// operations, the ids a reply echoes, and
-// what an error may carry (nothing of a query, a bearer, a YAML, an
-// attribute or an error text). Replies a real server wouldn't send come from
-// an injected fetch; the rest from the fake, which reads its violations
-// after each test. D20 (Task 9) adds the organization variables' 11
-// operations (Q104's bounds put the two unpaged reads in U: the class X
-// Task 9 added for Q90's is gone).
+// How the opamp-server client reads and refuses replies: every reply of the 34
+// operations under its class's cap, the transport's timer and redirects, the
+// answers no caller can handle for the fleet model's 25 operations, the ids a
+// reply echoes, and what an error may carry (nothing of a query, a bearer, a
+// YAML, an attribute or an error text). Replies a real server wouldn't send
+// come from an injected fetch; the rest from the fake, which reads its
+// violations after each test. The organization variables' 11 operations are
+// checked too (their two unpaged reads in U).
 
 let fake: FakeOpampServer;
 let client: OpampServerClient;
@@ -97,9 +93,8 @@ function aPublicationRequest(configurationId: string = randomUUID()) {
 type Call = (c: OpampServerClient, i: Ids) => Promise<unknown>;
 
 /**
- * Every operation, its reply class as Preflight ruling 1's table gives it
- * (written here, not read from the client, so a class moved there fails
- * here), and a call of it naming `ids`.
+ * Every operation, its reply class (written here, not read from the client,
+ * so a class moved there fails here), and a call of it naming `ids`.
  */
 const EVERY_OPERATION: [string, OpampServerReplyClass, Call][] = [
   ["createOrganization", "S", (c, i) => c.createOrganization({ id: i.org, name: "Acme" })],
@@ -145,7 +140,7 @@ const EVERY_OPERATION: [string, OpampServerReplyClass, Call][] = [
   ["updateCollectorInstance", "M", (c, i) => c.updateCollectorInstance(i.org, i.fleet, i.collector, { name: "renamed" })],
   ["deleteCollectorInstance", "S", (c, i) => c.deleteCollectorInstance(i.org, i.fleet, i.collector)],
   ["listCollectorInstanceErrors", "L", (c, i) => c.listCollectorInstanceErrors(i.org, i.fleet, i.collector)],
-  // D20's organization variables (Preflight ruling 24).
+  // The organization variables.
   ["listVariables", "U", (c, i) => c.listVariables(i.org)],
   ["createVariable", "S", (c, i) => c.createVariable(i.org, { id: i.variable, name: "REGION", value: "eu", description: null, actor: ACTOR })],
   ["updateVariable", "S", (c, i) => c.updateVariable(i.org, i.variable, { value: "us", actor: ACTOR })],
@@ -159,11 +154,11 @@ const EVERY_OPERATION: [string, OpampServerReplyClass, Call][] = [
   ["resetVariableGroupOverride", "S", (c, i) => c.resetVariableGroupOverride(i.org, i.variableGroup, i.variable, ACTOR)],
 ];
 
-/** D16a's 23, and D20's 11. */
+/** The fleet model's 23, and the organization variables' 11. */
 const FLEET_OPERATIONS = EVERY_OPERATION.slice(9);
 
-describe("each operation's timer (the owner's D16b Ruling 32)", () => {
-  /** The three deletes whose cascade can be long (a group's since D17d-1, Ruling 47): 25 s; every other operation 5 s. */
+describe("each operation's timer", () => {
+  /** The three deletes whose cascade can be long (a group's takes its collectors with it): 25 s; every other operation 5 s. */
   const LONG = new Set(["deleteOrganization", "deleteFleet", "deleteCollectorGroup"]);
 
   /** A client whose fetch never answers, until the client's timer aborts it. */
@@ -240,7 +235,7 @@ function invalidRequestOf(bytes: number): string {
 }
 
 describe("the classes' caps", () => {
-  it("are Preflight ruling 1's: 64 KiB, 1 MiB, 4 MiB, 10 MiB (D20's X gone with Q104)", () => {
+  it("are 64 KiB, 1 MiB, 4 MiB, 10 MiB", () => {
     expect(OPAMP_SERVER_REPLY_CAPS).toEqual(CAPS);
   });
 
@@ -368,7 +363,7 @@ async function aWorld(): Promise<Ids> {
   };
 }
 
-describe("the transport, for D16a's operations", () => {
+describe("the transport, for the fleet model's operations", () => {
   it("times out after 5000 ms over a body that is slow to arrive (one timer over the request and the read)", async () => {
     vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
     const { client: slow } = answering(
@@ -419,7 +414,7 @@ describe("the transport, for D16a's operations", () => {
   });
 });
 
-describe("answers no caller can handle, for D16a's operations", () => {
+describe("answers no caller can handle, for the fleet model's operations", () => {
   it.each(FLEET_OPERATIONS)("%s throws for a 401: the secret is wrong", async (operation, _class, call) => {
     const wrongSecret = `a-wrong-but-long-enough-secret-${randomUUID()}`;
     const wrong = createOpampServerClient({ url: fake.url, secret: wrongSecret });
@@ -514,7 +509,7 @@ const DOCUMENTS_413 = new Set([
   "revokeEnrollmentToken",
   "pinCollectorInstances",
   "updateCollectorInstance",
-  // D20: the variables' writes, a reset's {actor} body among them (Ruling 62).
+  // The variables' writes, a reset's {actor} body among them.
   "createVariable",
   "updateVariable",
   "createVariableGroup",
@@ -525,10 +520,9 @@ const DOCUMENTS_413 = new Set([
 
 /**
  * openapi.yaml's operations the platform never calls, so the client has no
- * method for them (D36-1 decision 16): 0.2.4's API keys, which take the
- * management secret the platform holds and hand out keys it doesn't use.
- * Written here by name; the checks over "every operation" run over the
- * rest.
+ * method for them: 0.2.4's API keys, which take the management secret the
+ * platform holds and hand out keys it doesn't use. Written here by name;
+ * the checks over "every operation" run over the rest.
  */
 const NOT_USED_BY_THE_PLATFORM = new Set(["createApiKey", "listApiKeys", "getApiKey", "updateApiKey", "revokeApiKey"]);
 
@@ -545,11 +539,10 @@ function documentingStatus(status: string): string[] {
     .sort();
 }
 
-// D16b Ruling 21 (Task 2's review): a 400 or a 413 is the request's
-// refusal only with the code the operation documents for it; any other
-// code, or a 413 an operation doesn't document, is thrown like any
-// undocumented answer.
-describe("a refusal's code (Ruling 21)", () => {
+// A 400 or a 413 is the request's refusal only with the code the operation
+// documents for it; any other code, or a 413 an operation doesn't document,
+// is thrown like any undocumented answer.
+describe("a refusal's code", () => {
   it("names exactly openapi.yaml's operations that document a 413, and every operation documents a 400", () => {
     expect([...DOCUMENTS_413].sort()).toEqual(documentingStatus("413"));
     // The two health probes (getHealth, getReady) document no 400 and aren't the client's.
@@ -633,8 +626,8 @@ describe("a refusal's code (Ruling 21)", () => {
   });
 });
 
-// D16b Ruling 21: a create's 200 is a retry's answer, which only a create
-// that sent its id can get; the server made the id of one that sent none.
+// A create's 200 is a retry's answer, which only a create that sent its id
+// can get; the server made the id of one that sent none.
 describe("a fleet's create answered 200", () => {
   const fleetOf = (organizationId: string, id: string) => ({
     id,
@@ -666,7 +659,7 @@ describe("a fleet's create answered 200", () => {
   });
 });
 
-describe("the ids a reply echoes (Preflight ruling 3)", () => {
+describe("the ids a reply echoes", () => {
   const MISMATCH = /named other ids than the ones asked for\.$/;
 
   /** A real reply of each kind the checks read, from the fake, with the ids it names. */
@@ -746,7 +739,7 @@ describe("the ids a reply echoes (Preflight ruling 3)", () => {
       ["updateCollectorInstance: another fleet's", 200, { ...collector.collector, fleetId: other }, (c, i) => c.updateCollectorInstance(i.org, i.fleet, i.collector, { name: "x" })],
       ["updateCollectorInstance: another collector", 200, collector.collector, (c, i) => c.updateCollectorInstance(i.org, i.fleet, other, { name: "x" })],
       ["getConfigurationUsage: another configuration's", 200, usage.usage, (c, i) => c.getConfigurationUsage(i.org, other)],
-      // D20: a variable, a variable group or an override answered must be the one asked for.
+      // A variable, a variable group or an override answered must be the one asked for.
       ["createVariable: another id than sent", 201, variable, (c, i) => c.createVariable(i.org, { id: other, name: variable.name, value: variable.value, description: null, actor: null })],
       ["createVariable (unchanged): another id than sent", 200, variable, (c, i) => c.createVariable(i.org, { id: other, name: variable.name, value: variable.value, description: null, actor: null })],
       ["updateVariable: another variable", 200, variable, (c, i) => c.updateVariable(i.org, other, { value: "x", actor: null })],
@@ -794,8 +787,8 @@ describe("the ids a reply echoes (Preflight ruling 3)", () => {
     ).toMatchObject({ kind: "rotated" });
   });
 
-  // D17c-1 decision 29: a new default token's reply names no fleet and a
-  // new id, but it must be a default token: never expiring.
+  // A new default token's reply names no fleet and a new id, but it must be
+  // a default token: never expiring.
   it("takes a new default token's reply as it is, and throws for one that isn't a default token", async () => {
     const ids = randomIds();
     const token = { id: randomUUID(), kind: "default", bearer: "QUJD", expiresAt: null };
@@ -813,9 +806,9 @@ describe("the ids a reply echoes (Preflight ruling 3)", () => {
   });
 });
 
-// D17a decision 17: a fleet's summary carries its last seen and its rotate
-// token's state, both required. A reply without either isn't the API's:
-// the client throws, and the platform's route answers 503.
+// A fleet's summary carries its last seen and its rotate token's state,
+// both required. A reply without either isn't the API's: the client throws,
+// and the platform's route answers 503.
 describe("a fleet's summary", () => {
   it.each(["lastSeenAt", "rotateToken"])("is refused without %s by getFleet and listFleets", async (field) => {
     const ids = await aWorld();

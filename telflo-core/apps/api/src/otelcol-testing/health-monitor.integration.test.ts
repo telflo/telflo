@@ -10,12 +10,12 @@ import {
   readOtelcolTestingDownSince,
 } from "./health-monitor.js";
 
-// The tester's health monitor against the real row (D14a decision 12,
-// Preflight ruling 7; migration 028's otelcol_testing_state and
-// otelcol_testing_mark): the client of the OpenAPI-checked fake asks its
-// health, and each change goes through withDispatcherContext to the one row
-// every API process reads. Checks run one at a time (checkOnce), so nothing
-// waits on a clock; health-monitor.test.ts has the timer's tests.
+// The tester's health monitor against the real row (migration 028's
+// otelcol_testing_state and otelcol_testing_mark): the client of the
+// OpenAPI-checked fake asks its health, and each change goes through
+// withDispatcherContext to the one row every API process reads. Checks run one
+// at a time (checkOnce), so nothing waits on a clock; health-monitor.test.ts
+// has the timer's tests.
 
 const tester = useFakeOtelcolTesting();
 
@@ -111,7 +111,7 @@ describe("the collector tester's health, in the shared row", () => {
     expect(second.writes).toEqual([true]);
   });
 
-  it("up wins (Ruling 38): a down left by a process that died is cleared by a live process whose view was up already", async () => {
+  it("up wins: a down left by a process that died is cleared by a live process whose view was up already", async () => {
     const live = monitorCountingWrites();
     await live.monitor.checkOnce();
     expect(live.monitor.view().state).toBe("up");

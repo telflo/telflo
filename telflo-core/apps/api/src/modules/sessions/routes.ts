@@ -74,7 +74,7 @@ function requestOrigin(request: FastifyRequest): { ipAddress: string | undefined
 /**
  * The session service on the database: every repository it writes through in
  * a transaction is bound to that transaction. Also used by the OIDC routes,
- * whose sign-in starts its session here (D2c Ruling 10).
+ * whose sign-in starts its session here.
  */
 export function createDatabaseSessionService(deps: SessionRoutesDependencies): {
   service: ISessionService;
@@ -118,8 +118,8 @@ export function createDatabaseSessionService(deps: SessionRoutesDependencies): {
 }
 
 /**
- * D2a decision 1's endpoints. Tokens travel only in HttpOnly cookies, never
- * in a response body, so no script on the page can read them (ADR 0010).
+ * The session endpoints. Tokens travel only in HttpOnly cookies, never
+ * in a response body, so no script on the page can read them.
  *
  * The validator/serializer compilers are server-wide and set once in
  * buildServer, not here.
@@ -153,14 +153,14 @@ export function registerSessionRoutes(
     },
     async (request, reply) => {
       // Only failed sign-ins count toward the per-email limit, and a success
-      // clears it (D2a Ruling 13).
+      // clears it.
       const issued = await service.signIn({ ...request.body, ...requestOrigin(request) }).catch((error: unknown) => {
         rateLimiters.signInPerEmail.failed(request.body.email, error);
         throw error;
       });
       rateLimiters.signInPerEmail.succeeded(request.body.email);
       setSessionCookies(reply, settings, issued);
-      // After the session cookies, and never throwing (D21 Preflight ruling 4).
+      // After the session cookies, and never throwing.
       await setStoredThemeCookie(reply, settings, userSettings, issued.user.id, request.log);
       return reply.send({ user: issued.user });
     },
@@ -179,16 +179,15 @@ export function registerSessionRoutes(
         const result = await service.refresh({ refreshToken, ...requestOrigin(request) });
         // Each answer also refreshes the theme cookie from the stored theme,
         // after the session's cookies and never throwing: a change made in
-        // another browser reaches this one (D21 decision 23, Preflight
-        // ruling 4).
+        // another browser reaches this one.
         if (result.kind === "rotated") {
           setSessionCookies(reply, settings, result.issued);
           await setStoredThemeCookie(reply, settings, userSettings, result.issued.user.id, request.log);
           return reply.send({ user: result.issued.user });
         }
-        // The grace window (D2b decision 3): only a new access token. The
-        // concurrent refresh that won the rotation set the new refresh cookie
-        // in the same jar; setting or clearing it here would overwrite that.
+        // The grace window: only a new access token. The concurrent refresh
+        // that won the rotation set the new refresh cookie in the same jar;
+        // setting or clearing it here would overwrite that.
         void reply.setCookie(ACCESS_COOKIE_NAME, result.accessToken, accessCookieOptions(settings));
         await setStoredThemeCookie(reply, settings, userSettings, result.user.id, request.log);
         return reply.send({ user: result.user });
@@ -204,10 +203,10 @@ export function registerSessionRoutes(
   );
 
   /**
-   * Logout (D2a decision 8). An expired but validly signed access token
-   * still names the session to revoke, so a user idle past the access TTL
-   * can log out. With no usable token at all there is nothing to revoke, and
-   * the cookies are still cleared.
+   * Logout. An expired but validly signed access token still names the
+   * session to revoke, so a user idle past the access TTL can log out. With
+   * no usable token at all there is nothing to revoke, and the cookies are
+   * still cleared.
    */
   typed.delete(
     "/api/v1/auth/sessions/current",
@@ -244,17 +243,17 @@ export function registerSessionRoutes(
   );
 
   /**
-   * Since when a session counts as live (D21 decision 40, Preflight ruling
-   * 13): refreshed within the refresh token's lifetime, by the injected
-   * clock. An idle session past it can never refresh again.
+   * Since when a session counts as live: refreshed within the refresh token's
+   * lifetime, by the injected clock. An idle session past it can never refresh
+   * again.
    */
   const liveSince = () => new Date(now().getTime() - settings.refreshTokenTtlDays * DAY_IN_MILLISECONDS);
 
   /**
-   * The caller's live sessions (D21 decision 40): the current one first,
-   * then by last activity, at most ACCOUNT_SESSIONS_MAXIMUM, with the exact
-   * total. The user agent leaves the API only as its two families; the raw
-   * string is never in the reply and never logged.
+   * The caller's live sessions: the current one first, then by last
+   * activity, at most ACCOUNT_SESSIONS_MAXIMUM, with the exact total. The
+   * user agent leaves the API only as its two families; the raw string is
+   * never in the reply and never logged.
    */
   typed.get(
     "/api/v1/auth/sessions",
@@ -277,11 +276,11 @@ export function registerSessionRoutes(
   );
 
   /**
-   * Signs out one of the caller's other sessions (D21 decision 40): its
-   * row revoked with `signed_out_elsewhere`, so its next request, and its
-   * next refresh, is refused. The caller's own is Log out's (409). Another
-   * user's, an unknown and an ended session are one 404: nothing says which.
-   * The update and its audit row commit together.
+   * Signs out one of the caller's other sessions: its row revoked with
+   * `signed_out_elsewhere`, so its next request, and its next refresh, is
+   * refused. The caller's own is Log out's (409). Another user's, an unknown
+   * and an ended session are one 404: nothing says which. The update and its
+   * audit row commit together.
    */
   typed.delete(
     "/api/v1/auth/sessions/:sessionId",
@@ -295,8 +294,8 @@ export function registerSessionRoutes(
     async (request, reply) => {
       const authentication = requireAuthentication(request);
       const { userId, organizationId, sessionId: currentSessionId } = authentication.context;
-      // Lowercased before the comparison (Ruling 85): Postgres matches an id
-      // in capitals to the same row, so a case-sensitive check would let the
+      // Lowercased before the comparison: Postgres matches an id in capitals
+      // to the same row, so a case-sensitive check would let the
       // caller's own session past it. The params schema has refused every
       // other spelling with 400; undefined can't reach here, and would be
       // nothing's id.
@@ -354,29 +353,27 @@ export function registerSessionRoutes(
           role: context.role,
         },
         organizations: memberships.map(({ id, name, type, logoId, role }) => ({ id, name, type, logoId, role })),
-        // While the site asks for Terms (its version, D36-1 decision 32),
-        // null (a federated sign-up, or a takeover) and any older version
-        // alike need them accepted (D2c decision 6); a site without Terms
-        // asks nobody (Preflight ruling 1).
+        // While the site asks for Terms (its version isn't ""), null (a
+        // federated sign-up, or a takeover) and any older version alike need
+        // them accepted; a site without Terms asks nobody.
         termsAcceptanceRequired:
           settings.site.terms.version !== "" && user.acceptedTermsVersion !== settings.site.terms.version,
-        // The row's flag as this request's session check read it (D12
-        // decision 3), so a revocation shows on the next request.
+        // The row's flag as this request's session check read it, so a
+        // revocation shows on the next request.
         isProductAdmin: authentication.isProductAdmin,
         // Whether "Create Organization" is offered: the product admins'
-        // switch, read now, and the flag above (D36-1 decision 51). The
-        // create checks again.
+        // switch, read now, and the flag above. The create checks again.
         mayCreateOrganizations: mayCreateOrganizations(organizationCreation, authentication.isProductAdmin),
-        // The defaults with no row (D21 decision 20): the signed-in pages render the stored theme from it.
+        // The defaults with no row: the signed-in pages render the stored theme from it.
         preferences,
       });
     },
   );
 
   /**
-   * Switches the session's active organization (D5 decision 10). Only the
-   * access cookie is set: the refresh token belongs to the session, whose
-   * row now names the new organization, so a refresh stays in it.
+   * Switches the session's active organization. Only the access cookie is
+   * set: the refresh token belongs to the session, whose row now names
+   * the new organization, so a refresh stays in it.
    */
   typed.put(
     "/api/v1/auth/sessions/current/organization",
@@ -403,13 +400,13 @@ export function registerSessionRoutes(
   );
 
   /**
-   * Accepts the current terms (D2c decision 6). Only the site's Terms
-   * version (TELFLO_TERMS_VERSION, D36-1 decision 29) is accepted, and none
-   * while the site asks for no Terms: a page showing older terms gets `terms_version_not_current`
-   * rather than recording consent to terms that no longer apply. Accepting
-   * the version already accepted changes nothing and audits nothing (D2c
-   * Preflight minor), so a double click or a retry leaves one audit row. Not
-   * rate limited: it needs a session (decision 7).
+   * Accepts the current terms. Only the site's Terms version
+   * (TELFLO_TERMS_VERSION) is accepted, and none while the site asks for no
+   * Terms: a page showing older terms gets `terms_version_not_current` rather
+   * than recording consent to terms that no longer apply. Accepting the
+   * version already accepted changes nothing and audits nothing, so a double
+   * click or a retry leaves one audit row. Not rate limited: it needs a
+   * session.
    */
   typed.put(
     "/api/v1/auth/me/terms-acceptance",

@@ -62,12 +62,11 @@ import {
   type VariableGroupOverride,
 } from "./schemas.js";
 
-// The platform's client for the opamp-server's management API (D11a
-// decisions 12 and 20; the contract is vendor/opamp-server/openapi.yaml).
-// Each method answers a typed result for every answer the API documents,
-// rather than throwing. The organization methods are called after the
-// platform's own commits (modules/organizations/opamp-registration.ts); the
-// publication methods wait for D11b.
+// The platform's client for the opamp-server's management API (the contract is
+// vendor/opamp-server/openapi.yaml). Each method answers a typed result for
+// every answer the API documents, rather than throwing. The organization
+// methods are called after the platform's own commits
+// (modules/organizations/opamp-registration.ts).
 //
 // Two answers are thrown instead, as an OpampServerMisconfigurationError:
 // a 401 (the platform's secret isn't one the server takes) and a reply that
@@ -79,26 +78,25 @@ import {
 // never put in an error's message: this module logs nothing, and its
 // errors name the operation, the status and the fields at fault only.
 //
-// D16b (decision 12, Preflight rulings 1 to 3 and 8) adds a method for each
-// of D16a's fleet-model operations, 23 since D16c removed importing
-// (fleets, collector groups, enrollment tokens, collectors, limits and a
+// There is a method for each of the fleet model's 23 operations (fleets,
+// collector groups, enrollment tokens, collectors, limits and a
 // configuration's usage), each documented error code its own result kind.
-// Every reply, the D11a operations' included, is read under its operation's
-// size cap (REPLY_CLASSES): a longer one is `unavailable`
-// (`oversized_reply`), the rest never read. The ids a reply echoes are
-// checked against the request, a mismatch thrown like any other
-// undocumented answer. No error carries a URL, a path or a query (a
-// collector list's `q` holds a collector's name or address, D16a Ruling
-// 40), a bearer, a YAML, a reported attribute or a collector's error text.
-// The caller passes every actor: this client never names one itself.
+// Every reply, the organization and publication operations' included, is read
+// under its operation's size cap (REPLY_CLASSES): a longer one is
+// `unavailable` (`oversized_reply`), the rest never read. The ids a reply
+// echoes are checked against the request, a mismatch thrown like any other
+// undocumented answer. No error carries a URL, a path or a query (a collector
+// list's `q` holds a collector's name or address), a bearer, a YAML, a
+// reported attribute or a collector's error text. The caller passes every
+// actor: this client never names one itself.
 //
-// D20 (decision 31, Task 9) adds the organization variables' 11 operations
-// (variables, variable groups and their overrides) and the bindings on a
-// group, a collector's PATCH and the bulk pin. A variable's value, name and
-// description, and a variable group's name and description, are
-// configuration text (Q88): never in an error's message. The three guards'
-// refusals (`variable_in_use`, `variable_group_in_use`,
-// `variables_undefined`) carry their parsed details: ids, counts and names.
+// The organization variables have 11 operations (variables, variable groups
+// and their overrides), and a group, a collector's PATCH and the bulk pin
+// carry their bindings. A variable's value, name and description, and a
+// variable group's name and description, are configuration text: never in
+// an error's message. The three guards' refusals (`variable_in_use`,
+// `variable_group_in_use`, `variables_undefined`) carry their parsed
+// details: ids, counts and names.
 
 /** A publication as the caller sends it (openapi.yaml's PublicationRequest). */
 export interface PublicationRequest {
@@ -108,15 +106,15 @@ export interface PublicationRequest {
   /** The SHA-256 of `yaml`'s UTF-8 bytes, which the caller computes (`sha256Hex`). */
   sha256: string;
   publishedBy: { id: string; email: string } | null;
-  /** RFC 3339; the server keeps it to the millisecond (Ruling 27), dropping anything finer. */
+  /** RFC 3339; the server keeps it to the millisecond, dropping anything finer. */
   publishedAt: string;
-  /** The collector it is published for (D13a decision 7): the configuration's distribution and the version's pin. */
+  /** The collector it is published for: the configuration's distribution and the version's pin. */
   collector: PublicationCollector;
 }
 
 /**
  * openapi.yaml's Collector: a catalogue distribution's id and one of its
- * versions, both required (D13a decision 7). The server refuses null.
+ * versions, both required. The server refuses null.
  */
 export interface PublicationCollector {
   /** Lowercase letters and digits in words joined by single hyphens, at most 64 characters: `otelcol-contrib`. */
@@ -135,7 +133,7 @@ export interface CreateOrganizationRequest {
 
 /**
  * The server couldn't be asked: a 5xx, a network error, no answer in time,
- * or a reply longer than its operation's cap (D16b Preflight ruling 1).
+ * or a reply longer than its operation's cap.
  */
 export type Unavailable =
   | { kind: "unavailable"; reason: "timeout" }
@@ -145,7 +143,7 @@ export type Unavailable =
 
 /**
  * The server refused the request (400, 413 or 422), by its code. The
- * envelope's message isn't kept (Ruling 34): no caller surfaces or logs it,
+ * envelope's message isn't kept: no caller surfaces or logs it,
  * and the code says which refusal it was.
  */
 export interface Invalid {
@@ -197,8 +195,8 @@ export type ListPublicationsResult = { kind: "page"; page: PublicationList } | O
 
 /**
  * The published version, or one of the configuration's, is assigned to a
- * collector group or pinned on a collector (409 `publication_in_use`, D16a
- * decision 31): the opamp-server deleted nothing.
+ * collector group or pinned on a collector (409 `publication_in_use`): the
+ * opamp-server deleted nothing.
  */
 export interface InUse {
   kind: "in_use";
@@ -223,13 +221,13 @@ export interface ListPublicationsQuery {
 }
 
 // ---------------------------------------------------------------------------
-// D16a's fleet model (D16b decision 12): requests and results.
+// The fleet model: requests and results.
 
 type ErrorCode = ErrorEnvelope["error"]["code"];
 
 /**
- * The refusals whose envelope carries a `details` object (D20 decision 31;
- * Q102: at most 100 entries, with exact totals), each with its schema.
+ * The refusals whose envelope carries a `details` object (at most 100
+ * entries, with exact totals), each with its schema.
  */
 const DETAILS = {
   variable_in_use: variableInUseDetailsSchema,
@@ -281,13 +279,13 @@ export interface UpdateFleetRequest {
 /**
  * The assignment and the annotations of a collector group; null unsets. A
  * Kubernetes group's role, namespace, replicas and volumes live in its
- * annotations, under the platform's "telflo" key (D17d-1 decision 2).
+ * annotations, under the platform's "telflo" key.
  */
 interface CollectorGroupFields {
   assignedPublicationId?: string | null;
   /** CollectorGroupAnnotations: an object replaces the group's whole. */
   annotations?: Record<string, unknown> | null;
-  /** D20: the variable group its collectors' text is filled in with; null for none. */
+  /** The variable group its collectors' text is filled in with; null for none. */
   variableGroupId?: string | null;
 }
 
@@ -324,7 +322,7 @@ export interface ListCollectorInstancesQuery {
 
 /**
  * openapi.yaml's CollectorInstanceBulkPinRequest: at least one of `pin` and
- * `pinnedVariableGroupId` (Q103); a field left out leaves each collector's
+ * `pinnedVariableGroupId`; a field left out leaves each collector's
  * as it is.
  */
 export type PinCollectorInstancesRequest = {
@@ -334,7 +332,7 @@ export type PinCollectorInstancesRequest = {
   | {
       /** Null unpins. */
       pin: CollectorInstancePin;
-      /** D20: null returns each to its group's variable group. */
+      /** Null returns each to its group's variable group. */
       pinnedVariableGroupId?: string | null;
     }
   | { pin?: CollectorInstancePin; pinnedVariableGroupId: string | null }
@@ -346,7 +344,7 @@ export interface UpdateCollectorInstanceRequest {
   groupId?: string;
   /** Null unpins. */
   pin?: CollectorInstancePin;
-  /** D20: a variable group pinned on it; null returns it to its group's. */
+  /** A variable group pinned on it; null returns it to its group's. */
   pinnedVariableGroupId?: string | null;
 }
 
@@ -535,7 +533,7 @@ export type ListCollectorInstanceErrorsResult =
   | Unavailable;
 
 // ---------------------------------------------------------------------------
-// D20's organization variables (decision 31): results.
+// The organization variables: results.
 
 type VariableNotFound = Refused<"organization_not_found" | "variable_not_found">;
 type VariableGroupNotFound = Refused<"organization_not_found" | "variable_group_not_found">;
@@ -595,7 +593,7 @@ export type SetVariableGroupOverrideResult =
   /**
    * The override as it now is, whether new (201, a reset one revived
    * included), replaced or the same value again (200): the caller can't
-   * tell those apart, and doesn't need to (preflight item 15).
+   * tell those apart, and doesn't need to.
    */
   | { kind: "set"; override: VariableGroupOverride }
   | OverrideTargetNotFound
@@ -625,7 +623,7 @@ export interface OpampServerClient {
     configurationId: string,
   ): Promise<DeleteConfigurationPublicationsResult>;
 
-  // D16a's fleet model (D16b decision 12).
+  // The fleet model.
   /** Each published version of the configuration and what uses it; `inUse` while any is used. */
   getConfigurationUsage(organizationId: string, configurationId: string): Promise<GetConfigurationUsageResult>;
   getLimits(organizationId: string): Promise<GetLimitsResult>;
@@ -655,8 +653,8 @@ export interface OpampServerClient {
   ): Promise<UpdateCollectorGroupResult>;
   /**
    * Its collectors (and their error history) are deleted with it, in one
-   * transaction (D17d-1 decision 3): a long delete, waited for as a fleet's
-   * (DELETE_OPAMP_SERVER_TIMEOUT_MS, Ruling 47).
+   * transaction: a long delete, waited for as a fleet's
+   * (DELETE_OPAMP_SERVER_TIMEOUT_MS).
    */
   deleteCollectorGroup(organizationId: string, fleetId: string, groupId: string): Promise<DeleteCollectorGroupResult>;
   listEnrollmentTokens(organizationId: string, fleetId: string): Promise<ListEnrollmentTokensResult>;
@@ -669,9 +667,8 @@ export interface OpampServerClient {
     rotation: RotateEnrollmentTokenRequest,
   ): Promise<RotateEnrollmentTokenResult>;
   /**
-   * A new default token once every default token the fleet had is revoked
-   * (D17c-1 decision 29): `issued` carries its bearer; the opamp-server
-   * records `actor` issued it.
+   * A new default token once every default token the fleet had is revoked:
+   * `issued` carries its bearer; the opamp-server records `actor` issued it.
    */
   issueDefaultEnrollmentToken(organizationId: string, fleetId: string, actor: OpampActor): Promise<IssueDefaultEnrollmentTokenResult>;
   /** `revealed` carries a fresh bearer; the opamp-server records `actor` viewed it. */
@@ -716,9 +713,9 @@ export interface OpampServerClient {
     query?: PageQuery,
   ): Promise<ListCollectorInstanceErrorsResult>;
 
-  // D20's organization variables (decision 31). Every write names the
-  // caller's actor, which the opamp-server records as `changedBy` (Q94).
-  /** Every variable of the organization, values included (no secrets, Q88): what test runs and validation fill in. */
+  // The organization variables. Every write names the caller's actor, which
+  // the opamp-server records as `changedBy`.
+  /** Every variable of the organization, values included (no secrets): what test runs and validation fill in. */
   listVariables(organizationId: string): Promise<ListVariablesResult>;
   createVariable(organizationId: string, variable: CreateVariableRequest): Promise<CreateVariableResult>;
   /** A rename is `variable_in_use` while a used published version references the old name; a value change never is. */
@@ -741,7 +738,7 @@ export interface OpampServerClient {
     variableId: string,
     override: SetVariableGroupOverrideRequest,
   ): Promise<SetVariableGroupOverrideResult>;
-  /** The opamp-server records `actor` as the reset's `changedBy` (Ruling 62). */
+  /** The opamp-server records `actor` as the reset's `changedBy`. */
   resetVariableGroupOverride(
     organizationId: string,
     variableGroupId: string,
@@ -758,12 +755,12 @@ export interface OpampServerClientOptions {
   /** Tests only; the global fetch by default. */
   fetch?: typeof fetch;
   /**
-   * How long a call may take, reading the reply included. Default 5000
-   * (decision 12), and DELETE_OPAMP_SERVER_TIMEOUT_MS for an organization's,
-   * a fleet's or a group's delete. Given (tests only), it bounds every call,
-   * the three long deletes too, unless `deleteTimeoutMs` is given as well. Production
-   * passes neither (index.ts and stack-smoke.ts pass the settings' url and
-   * secret only), so its deletes wait the full 25 s.
+   * How long a call may take, reading the reply included. Default 5000, and
+   * DELETE_OPAMP_SERVER_TIMEOUT_MS for an organization's, a fleet's or a
+   * group's delete. Given (tests only), it bounds every call, the three long
+   * deletes too, unless `deleteTimeoutMs` is given as well. Production passes
+   * neither (index.ts and stack-smoke.ts pass the settings' url and secret
+   * only), so its deletes wait the full 25 s.
    */
   timeoutMs?: number;
   /** Tests only: how long an organization's, a fleet's or a group's delete may take. */
@@ -794,9 +791,8 @@ export const DEFAULT_OPAMP_SERVER_TIMEOUT_MS = 5000;
 
 /**
  * How long an organization's, a fleet's or a collector group's delete may
- * take (the owner's D16b Ruling 32; a group's since D17d-1 decision 3 and
- * Ruling 47, its collectors deleted with it): a cascade through tens of
- * thousands of collectors outlasts the 5 s every other call gets. The
+ * take (a group's deletes its collectors with it): a cascade through tens
+ * of thousands of collectors outlasts the 5 s every other call gets. The
  * opamp-server finishes a delete once started even if the platform hangs up
  * (its long delete context, bounded at 5 minutes), and a retry's 404 counts
  * as done, so this is how long the platform waits for the answer, under the
@@ -808,34 +804,29 @@ export const DELETE_OPAMP_SERVER_TIMEOUT_MS = 25_000;
 const LONG_DELETES: ReadonlySet<Operation> = new Set<Operation>(["deleteOrganization", "deleteFleet", "deleteCollectorGroup"]);
 
 /**
- * The reply size classes (D16b Preflight ruling 1), each cap above its
- * operations' worst documented reply as the real server encodes it: S
- * 64 KiB (an organization, limits, one fleet, group or token, a bulk pin's
- * ids, an empty 204), M 1 MiB (a page of fleets, of publications or of a
- * fleet's token events; one collector, its attributes and error text), U
- * 4 MiB (a fleet's groups and tokens and a configuration's usage, unpaged),
- * L 10 MiB (a page of collectors or of a collector's errors; a
- * publication's YAML). A cap under a documented reply would make one collector able to
- * break a route for good.
+ * The reply size classes, each cap above its operations' worst documented
+ * reply as the real server encodes it: S 64 KiB (an organization, limits, one
+ * fleet, group or token, a bulk pin's ids, an empty 204), M 1 MiB (a page of
+ * fleets, of publications or of a fleet's token events; one collector, its
+ * attributes and error text), U 4 MiB (a fleet's groups and tokens and a
+ * configuration's usage, unpaged), L 10 MiB (a page of collectors or of a
+ * collector's errors; a publication's YAML). A cap under a documented reply
+ * would make one collector able to break a route for good.
  *
- * D20's organization variables, unpaged (Preflight ruling 24's method,
- * re-derived on Q104's bounds: at most 150 variables, a value of at most
- * 1,024 characters), are U: listVariables' worst reply is about 1.85 MB
- * (150 variables, each a value of 1,024 four-byte characters, a
- * description of 1,000 characters whose 998 inner ones are U+2028 (it
- * can't start or end with one), which Go writes as a 6-byte escape, and an
- * actor's email of 320 characters escaped alike), over M's cap; and
- * getVariableGroup's is about 0.94 MB (the group and 150 overrides of 1,024
- * four-byte characters with their actors), U like listVariableGroups' 100
- * groups (about 0.94 MB, U+2028 throughout) rather than M with a tenth to
- * spare. Q90's 500 values
- * of 4,096 characters had needed a class X of 16 MiB (about 12.3 MB and
- * 9.3 MB); Q104 removed it. One variable, group or override, and a 409's
- * details bounded by Q102 (at most 100 entries, about 20 KB with a group
- * each), are S; so are a group's or a pin's 422 `variables_undefined`, at
- * most 100 names of at most 128 characters (about 13 KB, Ruling 51). The
- * sizes assume the opamp-server writes its replies through writeJSON, with
- * HTML escaping off.
+ * The organization variables, unpaged (at most 150 variables, a value of at
+ * most 1,024 characters), are U: listVariables' worst reply is about 1.85 MB
+ * (150 variables, each a value of 1,024 four-byte characters, a description
+ * of 1,000 characters whose 998 inner ones are U+2028 (it can't start or
+ * end with one), which Go writes as a 6-byte escape, and an actor's email
+ * of 320 characters escaped alike), over M's cap; and getVariableGroup's is
+ * about 0.94 MB (the group and 150 overrides of 1,024 four-byte characters
+ * with their actors), U like listVariableGroups' 100 groups (about 0.94 MB,
+ * U+2028 throughout) rather than M with a tenth to spare. One variable,
+ * group or override, and a 409's details (at most 100 entries, about 20 KB
+ * with a group each), are S; so are a group's or a pin's 422
+ * `variables_undefined`, at most 100 names of at most 128 characters (about
+ * 13 KB). The sizes assume the opamp-server writes its replies through
+ * writeJSON, with HTML escaping off.
  */
 export type OpampServerReplyClass = "S" | "M" | "U" | "L";
 
@@ -882,7 +873,7 @@ const REPLY_CLASSES = {
   updateCollectorInstance: "M",
   deleteCollectorInstance: "S",
   listCollectorInstanceErrors: "L",
-  // D20 (Preflight ruling 24, re-derived on Q104).
+  // The organization variables.
   listVariables: "U",
   createVariable: "S",
   updateVariable: "S",
@@ -1112,9 +1103,9 @@ export function createOpampServerClient(options: OpampServerClientOptions): Opam
 
     async postPublication(organizationId, publicationId, publication) {
       const operation = "postPublication";
-      // 0.2.4's POST …/publications, with the caller's id in the body (D36-1
-      // decision 14): the platform always sends its own, so a retry is safe
-      // (an identical one answers 200, a different one 409).
+      // 0.2.4's POST …/publications, with the caller's id in the body: the
+      // platform always sends its own, so a retry is safe (an identical one
+      // answers 200, a different one 409).
       const request: PublicationRequest & { id: string } = { ...publication, id: publicationId };
       const reply = await send(operation, "POST", `${organizationPath(organizationId)}/publications`, request);
       if (isUnavailable(reply)) return reply;
@@ -1246,7 +1237,7 @@ export function createOpampServerClient(options: OpampServerClientOptions): Opam
       }
     },
 
-    // D16a's fleet model (D16b decision 12; Preflight rulings 1, 3 and 8).
+    // The fleet model.
 
     getConfigurationUsage(organizationId, configurationId) {
       const operation = "getConfigurationUsage";
@@ -1306,8 +1297,8 @@ export function createOpampServerClient(options: OpampServerClientOptions): Opam
           expectIds(operation, reply, [created.defaultGroup.fleetId, created.fleet.id]);
           return { kind: "created", ...created };
         },
-        // A retry's answer: only a create that sent its id can be one (D16b
-        // Ruling 21). Without an id the server made one, so a 200 is undocumented.
+        // A retry's answer: only a create that sent its id can be one. Without
+        // an id the server made one, so a 200 is undocumented.
         200: (reply) => {
           if (fleet.id === undefined) throw undocumentedStatus(operation, reply);
           const { fleet: answered } = parse(operation, reply, fleetUnchangedSchema);
@@ -1475,7 +1466,7 @@ export function createOpampServerClient(options: OpampServerClientOptions): Opam
       const body = { expiresAt: rotation.expiresAt, graceEndsAt: rotation.graceEndsAt, actor: actorBody(rotation.actor) };
       const url = `${fleetPath(organizationId, fleetId)}/tokens/rotate`;
       return call<RotateEnrollmentTokenResult>(operation, "POST", url, body, {
-        // The reply names no fleet (Preflight ruling 3): nothing to check.
+        // The reply names no fleet: nothing to check.
         201: (reply) => ({ kind: "rotated", token: parse(operation, reply, enrollmentTokenRotatedSchema) }),
         404: (reply) => refused(operation, reply, "organization_not_found", "fleet_not_found"),
         409: (reply) => refused(operation, reply, "fleet_archived"),
@@ -1510,7 +1501,7 @@ export function createOpampServerClient(options: OpampServerClientOptions): Opam
       const operation = "revealEnrollmentToken";
       const url = `${fleetPath(organizationId, fleetId)}/tokens/${encodeURIComponent(tokenId)}/reveal`;
       return call<RevealEnrollmentTokenResult>(operation, "POST", url, { actor: actorBody(actor) }, {
-        // The reply names no fleet (Preflight ruling 3): its token only.
+        // The reply names no fleet: its token only.
         200: (reply) => {
           const token = parse(operation, reply, enrollmentTokenRevealedSchema);
           expectIds(operation, reply, [token.id, tokenId]);
@@ -1649,7 +1640,7 @@ export function createOpampServerClient(options: OpampServerClientOptions): Opam
       });
     },
 
-    // D20's organization variables (decision 31; Task 9).
+    // The organization variables.
 
     listVariables(organizationId) {
       const operation = "listVariables";
@@ -1804,7 +1795,7 @@ export function createOpampServerClient(options: OpampServerClientOptions): Opam
         return { kind: "set", override: stored };
       };
       return call<SetVariableGroupOverrideResult>(operation, "PUT", overridePath(organizationId, variableGroupId, variableId), body, {
-        // New, replaced or the same value again: one result (preflight item 15).
+        // New, replaced or the same value again: one result.
         201: answered,
         200: answered,
         404: (reply) => refused(operation, reply, "organization_not_found", "variable_group_not_found", "variable_not_found"),
@@ -1815,7 +1806,7 @@ export function createOpampServerClient(options: OpampServerClientOptions): Opam
 
     resetVariableGroupOverride(organizationId, variableGroupId, variableId, actor) {
       const operation = "resetVariableGroupOverride";
-      // Ruling 62: who resets it goes in the body, never the URL (an email is configuration text).
+      // Who resets it goes in the body, never the URL (an email is configuration text).
       const body = { actor: actorBody(actor) };
       return call<ResetVariableGroupOverrideResult>(operation, "DELETE", overridePath(organizationId, variableGroupId, variableId), body, {
         204: () => ({ kind: "reset" }),
@@ -1852,8 +1843,8 @@ function parse<Schema extends z.ZodTypeAny>(operation: Operation, reply: Reply, 
 
 /**
  * An issue's path, as field names and indices. A reported attribute's key is
- * the collector's own text (decision 21), so a path into `attributes` stops
- * there, the key replaced by `*`.
+ * the collector's own text, so a path into `attributes` stops there, the key
+ * replaced by `*`.
  */
 function fieldPath(path: (string | number)[]): string {
   const attributes = path.indexOf("attributes");
@@ -1887,10 +1878,10 @@ function idMismatch(operation: Operation, reply: Reply): OpampServerMisconfigura
 }
 
 /**
- * Each pair, an id the reply echoes and the one asked for, must be the same
- * (D16b Preflight ruling 3): a server answering another organization's or
- * another fleet's would be a cross-tenant read, and is refused here too. The
- * error names the operation and the status only, never an id.
+ * Each pair, an id the reply echoes and the one asked for, must be the same: a
+ * server answering another organization's or another fleet's would be a
+ * cross-tenant read, and is refused here too. The error names the operation
+ * and the status only, never an id.
  */
 function expectIds(operation: Operation, reply: Reply, ...pairs: (readonly [string, string])[]): void {
   if (!pairs.every(([answered, asked]) => sameId(answered, asked))) throw idMismatch(operation, reply);
@@ -1934,7 +1925,7 @@ function collectorGroupFieldsBody(group: CollectorGroupFields): CollectorGroupFi
  * A refusal of the request (400, 413, or a publication's 422), whose code
  * must be the one the operation documents for that status
  * (`invalid_request`, `payload_too_large`, `sha256_mismatch`): another is
- * thrown like any undocumented answer (D16b Ruling 21).
+ * thrown like any undocumented answer.
  */
 function invalid(operation: Operation, reply: Reply, status: keyof typeof INVALID_CODES): Invalid {
   const code = expectCode(operation, reply, INVALID_CODES[status]);
@@ -1983,7 +1974,7 @@ function sameId(a: string, b: string): boolean {
 /**
  * The publication the server answered must be the one asked for, in the
  * organization asked for: a server that answered another organization's
- * would be a cross-tenant read (decision 6), and is refused here too.
+ * would be a cross-tenant read, and is refused here too.
  */
 function expectSamePublication(
   operation: Operation,
