@@ -21,26 +21,26 @@ import {
 } from "~/lib/variable-group-display.js";
 
 /*
- * A variable group named in a fleet screen (D20 default 25; Q84; ADR 0018): a
- * button whose text is the variable group's name ("Organization values" for
- * none) opening a dialog that lists every organization variable, the value it
- * takes and where that comes from. Per the D20 Parity Notes:
+ * A variable group named in a fleet screen: a button whose text is the
+ * variable group's name ("Organization values" for none) opening a dialog
+ * that lists every organization variable, the value it takes and where that
+ * comes from. Its details:
  *
  * - A collector's (the grid, its details) resolves through two levels, as the
- *   poll does (Q84): its pinned variable group's override, then its
- *   collector group's variable group's, then the organization's value; a
- *   group's (the Groups tables, a group's details) through its own.
+ *   poll does: its pinned variable group's override, then its collector
+ *   group's variable group's, then the organization's value; a group's (the
+ *   Groups tables, a group's details) through its own.
  * - The dialog reads at its opening (the variables, and each variable group
  *   named, under `useOpeningReads`' 10 s guard, aborted on close), with
  *   "Try again" after a failure.
- * - Its title and description are fixed words (decision 39), never a name;
- *   the trigger has no `title`, its name its text.
+ * - Its title and description are fixed words, never a name; the trigger
+ *   has no `title`, its name its text.
  * - A collector whose group's variable group isn't known (the fleet's groups
  *   unread, or not holding its group) shows its pinned variable group's
  *   overrides, and says the group's variable group couldn't be read: every
  *   other row's value and source "Unknown", never the organization's value
- *   as if it applied (Q84: each row says where its value comes from).
- * - Privacy (Q88): the variable groups' names, and every variable's name,
+ *   as if it applied (each row says where its value comes from).
+ * - Privacy: the variable groups' names, and every variable's name,
  *   description and value, sit inside `ph-no-capture` as text only; no
  *   attribute holds one.
  */
@@ -53,10 +53,10 @@ export const GROUP_VALUES_DESCRIPTION =
 export const VARIABLE_VALUES_FAILED_MESSAGE = "Failed to load variable values";
 export const NO_VARIABLES_WORDS = "The organization has no variables yet.";
 
-/** Where a value comes from, by level (Q84). */
+/** Where a value comes from, by level. */
 export const PINNED_SOURCE = "Pinned variable group";
 export const GROUP_SOURCE = "Group's variable group";
-/** A group's own override: the Variable groups page's word (default 22). */
+/** A group's own override: the Variable groups page's word. */
 export const OVERRIDE_SOURCE = "Override";
 
 /** The dialog's level rows' labels. */
@@ -78,10 +78,10 @@ export interface VariableGroupLinkProps {
 }
 
 /**
- * The sign-up prompt's words for the values in the playground (D31-1
- * decisions 22, 24 and 35): the dialog reads the organization's variables,
- * which the sample workspace doesn't have (its Variables are locked too), so
- * it opens the prompt instead and makes no request.
+ * The sign-up prompt's words for the values in the playground: the dialog
+ * reads the organization's variables, which the sample workspace doesn't
+ * have (its Variables are locked too), so it opens the prompt instead and
+ * makes no request.
  */
 export const VARIABLE_VALUES_LOCKED_WORDS = "see your organization's variable values";
 

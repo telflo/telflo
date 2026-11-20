@@ -3,20 +3,19 @@ import { Stat, type StatEmphasis } from "./Stat.js";
 import { TokenCell } from "./TokenCell.js";
 
 /*
- * A fleet's stats strip, both fleet types' (D17b-1 decision 20, Preflight
- * ruling 8; D17d-1 decision 11: a Kubernetes-supervisor fleet's the same
- * tiles): the server tiles, between the header and the tabs, from the fleet's
- * summary as the server counted it (`useFleet`'s, polled every 15 s), never
- * recomputed from the collectors shown. Per the D17b-1 Parity Notes:
+ * A fleet's stats strip, both fleet types' (a Kubernetes-supervisor fleet's
+ * the same tiles): the server tiles, between the header and the tabs, from
+ * the fleet's summary as the server counted it (`useFleet`'s, polled every
+ * 15 s), never recomputed from the collectors shown. Its details:
  * - Online is the last minute ("Last minute"), in the danger colour when
  *   there are collectors and none is online, the warning colour when some
  *   aren't;
  * - Version drift counts pending, failed and drifted collectors ("Collectors
  *   lagging", failed ones included); with no drift, its hint says how many
- *   have nothing assigned ("{n} with nothing assigned", D16c Ruling 18: since
- *   D16c every collector arrives so) and "All up to date" only when none has;
- * - Token expires is D17a's Token badge and tooltip (`TokenCell`), a link
- *   to the fleet's Tokens tab (D17b-2 decision 22) as in the fleet list.
+ *   have nothing assigned ("{n} with nothing assigned": every collector
+ *   arrives so) and "All up to date" only when none has;
+ * - Token expires is the fleet list's Token badge and tooltip (`TokenCell`),
+ *   a link to the fleet's Tokens tab as in the fleet list.
  */
 
 /** Online's colour: danger with collectors and none online, warning with some offline, else neutral. */

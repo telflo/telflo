@@ -15,9 +15,9 @@ import {
 import { FleetsTable } from "./FleetsTable.js";
 import { ARCHIVED_TOOLTIP } from "./TokenCell.js";
 
-// The fleet list's table (D17a decision 18, Preflight ruling 11): Type after
-// Fleet, Online before the sync column, the online count and legend, the
-// sync column's words, "No collectors" in both, and the Token badge's link.
+// The fleet list's table: Type after Fleet, Online before the sync column,
+// the online count and legend, the sync column's words, "No collectors" in
+// both, and the Token badge's link.
 
 const NOW = Date.parse("2026-10-14T12:00:00.000Z");
 const OTHER_ID = "4e5f6071-8293-44a5-bb6c-7d8e9fa0b1c2";
@@ -63,7 +63,7 @@ describe("FleetsTable's columns", () => {
     expect(within(rowOf("edge-dev")).queryByText("Archived")).toBeNull();
   });
 
-  // No Bridge (D16a decision 1).
+  // No Bridge.
   it.each([
     ["server", "Supervisor"],
     ["kubernetes-supervisor", "K8s Supervisor"],
@@ -151,7 +151,7 @@ describe("FleetsTable's columns", () => {
   });
 });
 
-describe("FleetsTable's row actions (decision 29)", () => {
+describe("FleetsTable's row actions", () => {
   it("names each button for its fleet through aria-labelledby, with a fixed title", () => {
     renderTable([fleetDetail(), fleetDetail({ id: OTHER_ID, label: "edge-dev", status: "archived" })]);
 
@@ -189,7 +189,7 @@ describe("FleetsTable's row actions (decision 29)", () => {
     ]);
   });
 
-  it("holds the fleet's label in no attribute, every cell's tooltip trigger there and each tooltip open in turn (decision 29: replay can't mask one)", async () => {
+  it("holds the fleet's label in no attribute, every cell's tooltip trigger there and each tooltip open in turn (replay can't mask one)", async () => {
     const canary = "canary-label-5d1f";
     const { container } = renderTable([
       fleetDetail({ label: canary, summary: populatedSummary(NOW) }),

@@ -11,15 +11,14 @@ import {
 } from "~/components/ui/dialog.js";
 
 /*
- * "Create a new fleet" (ADR 0018), per the D17a Parity Notes (decision 24):
+ * "Create a new fleet":
  * - two cards, "Linux servers & VMs" (`server`) and "Kubernetes (Helm)"
- *   (`kubernetes-supervisor`); the Operator bridge card is gone (D16a
- *   decision 1); the Helm card has no "Recommended" badge (the owner's
- *   request at D17d-1's walkthrough);
- * - no "Private Preview" flags (decision 4: every member, both types), so no
- *   card is ever disabled, and the disabled card's `aria-label` and `title`
- *   are gone with it;
- * - the footer note is rewritten without the bridge.
+ *   (`kubernetes-supervisor`); there is no Operator bridge card; the Helm
+ *   card has no "Recommended" badge;
+ * - no "Private Preview" flags (every member gets both types), so no card is
+ *   ever disabled, and none carries a disabled card's `aria-label` or
+ *   `title`;
+ * - the footer note leaves out the bridge.
  * Picking a card hands its type to the caller, which closes this dialog and
  * opens that type's create dialog.
  */
@@ -53,7 +52,7 @@ const KUBERNETES_CHOICES: FleetChoice[] = [
   },
 ];
 
-/** The footer's guidance, rewritten without the Operator bridge (D17a Parity Notes). */
+/** The footer's guidance, rewritten without the Operator bridge. */
 export const CHOOSER_FOOTER_NOTE =
   "Not sure? On Kubernetes, start with Helm. You can run several fleets side by side, one per environment or cluster.";
 
@@ -108,7 +107,7 @@ export function FleetTypeChooserDialog({
   onOpenChange: (open: boolean) => void;
   /** Called with the type picked; the caller closes this dialog and opens that type's create dialog. */
   onSelect: (type: FleetType) => void;
-  /** Where the focus goes once the dialog has closed (Radix's `onCloseAutoFocus`): the page gives it back to the opener (D14b Ruling 46). */
+  /** Where the focus goes once the dialog has closed (Radix's `onCloseAutoFocus`): the page gives it back to the opener. */
   onCloseAutoFocus?: ((event: Event) => void) | undefined;
 }) {
   return (

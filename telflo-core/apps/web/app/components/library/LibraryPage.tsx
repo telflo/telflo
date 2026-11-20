@@ -13,34 +13,33 @@ import { useTermsRequired } from "~/lib/fleets.js";
 import { useDocsPage } from "~/lib/use-site.js";
 
 /*
- * The members' library (`/library`, the sidebar's Learning; D23-2 decisions
- * 5 and 54): the header "Library", "Helper files used in the Learning Telflo
- * tutorials." (its link a new tab, `rel=noreferrer`), the search over name
- * and description (client-side, case-insensitive; the page's state only,
- * never the URL), the spinner, "No files in the library yet." / "No files
- * match your search.", and the table (`columns.tsx`). In the D23-2 Parity
- * Notes:
+ * The members' library (`/library`, the sidebar's Learning): the header
+ * "Library", "Helper files used in the Learning Telflo tutorials." (its link
+ * a new tab, `rel=noreferrer`), the search over name and description
+ * (client-side, case-insensitive; the page's state only, never the URL), the
+ * spinner, "No files in the library yet." / "No files match your search.",
+ * and the table (`columns.tsx`). Its details:
  * - the list is read from the API on each visit (never cached), once the
  *   layout says the current terms are accepted; a read that never answers is
  *   aborted after 10 s;
- * - Download reads the file's bytes with the session (`GET
- *   …/:fileId/file`) and saves them under the list's file name on a
- *   detached anchor (`downloadBlob`, decision 58);
- * - Copy curl asks the API for a library link (`POST …/:fileId/link`,
- *   valid 24 hours) and puts `curl -fL '<link>' -o '<file name>'` on the
- *   clipboard, both single-quoted (`libraryFileCurlCommand`, Q160), the
- *   link under the page's own origin (Q162). The request starts inside the
- *   click and its promise goes straight to `copyTextFromPromise`, so Safari
- *   keeps the gesture. The link and the command are secrets (decision 4):
- *   they exist only in that promise and on the clipboard, never in the
- *   DOM, a state, browser storage, a toast or a log;
+ * - Download reads the file's bytes with the session (`GET …/:fileId/file`)
+ *   and saves them under the list's file name on a detached anchor
+ *   (`downloadBlob`);
+ * - Copy curl asks the API for a library link (`POST …/:fileId/link`, valid
+ *   24 hours) and puts `curl -fL '<link>' -o '<file name>'` on the
+ *   clipboard, both single-quoted (`libraryFileCurlCommand`), the link
+ *   under the page's own origin. The request starts inside the click and
+ *   its promise goes straight to `copyTextFromPromise`, so Safari keeps the
+ *   gesture. The link and the command are secrets: they exist only in that
+ *   promise and on the clipboard, never in the DOM, a state, browser
+ *   storage, a toast or a log;
  * - nothing is logged, and a session that has ended toasts nothing (the
  *   session-ended handler has the page).
  * Names and descriptions are Telflo's own content: text in the masked
- * shell, never an attribute or a toast (decision 58). The title is fixed.
+ * shell, never an attribute or a toast. The title is fixed.
  */
 
-/** A list read's hang guard, as the Testing tab's and the test templates' reads (D14b Ruling 50). */
+/** A list read's hang guard, as the Testing tab's and the test templates' reads. */
 export const LIBRARY_REQUEST_TIMEOUT_MS = 10_000;
 
 /** What both library pages say when the files can't be read. */
@@ -150,7 +149,7 @@ export function LibraryPage() {
         <div className="mb-6">
           <p className="text-lg text-muted-foreground">
             Helper files used in the{" "}
-            {/* Its page under the site's docs (D36-1 decision 34); the words alone without docs links. */}
+            {/* Its page under the site's docs; the words alone without docs links. */}
             {learningHref === null ? (
               "Learning Telflo"
             ) : (

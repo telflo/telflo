@@ -79,17 +79,16 @@ import { REVEAL_FAILED_MESSAGE } from "./RevealTokenDialog.js";
 import { PUBLIC_INSTALL_LINKS_OFF_WORDS } from "./install-opening.js";
 
 /*
- * The install dialog (D17c-1 decisions 12 to 15, 40 to 43, 48, 50 and 51;
- * Preflight rulings 23 to 29): the container method by default with a
- * lone Close; the scoped title and description; the env vars opt-in, a
- * typed value quote-escaped into the bundle's request and the command;
- * the masked preview with no reveal on opening; one reveal per click, the
- * command copied with its bearer; the token step after a download, its
- * copy holding the bearer; a failed reveal shown inline; a reveal still
- * shown when the copy fails. The systemd and Quick Deploy cases are D17c-2's
- * (below: the box ticked on a server method, absent for the container,
- * Download disabled until unticked; the masked command; the unmasked copy;
- * the systemd command; the group's id sent).
+ * The install dialog: the container method by default with a lone Close; the
+ * scoped title and description; the env vars opt-in, a typed value
+ * quote-escaped into the bundle's request and the command; the masked
+ * preview with no reveal on opening; one reveal per click, the command
+ * copied with its bearer; the token step after a download, its copy holding
+ * the bearer; a failed reveal shown inline; a reveal still shown when the
+ * copy fails. The systemd and Quick Deploy cases follow (below: the box
+ * ticked on a server method, absent for the container, Download disabled
+ * until unticked; the masked command; the unmasked copy; the systemd
+ * command; the group's id sent).
  */
 
 // Standard base64, as the opamp-server seals a bearer (the Quick Deploy command refuses any other).
@@ -101,7 +100,7 @@ const revealed = { token: { id: DEFAULT_TOKEN_ID, kind: "default" as const, bear
 
 interface Api {
   groups: CollectorGroup[];
-  /** The organization's settings (D17d-2): public install links on unless a test turns them off. */
+  /** The organization's settings: public install links on unless a test turns them off. */
   settings: () => { publicInstallLinks: boolean } | Promise<{ publicInstallLinks: boolean }>;
   facts: () => InstallFacts | Promise<InstallFacts>;
   tokens: EnrollmentTokenListed[];
@@ -282,7 +281,7 @@ afterEach(() => {
   (globalThis as { ClipboardItem?: unknown }).ClipboardItem = originalClipboardItem;
 });
 
-describe("InstallDialog's reads (Preflight ruling 23)", () => {
+describe("InstallDialog's reads", () => {
   it('reads the groups first ("Install collectors" until then), then the facts and the tokens; titles and describes it by the group and its version', async () => {
     const groups = held<{ groups: CollectorGroup[] }>();
     const calls = serve();
@@ -335,7 +334,7 @@ describe("InstallDialog's reads (Preflight ruling 23)", () => {
   });
 });
 
-describe("InstallDialog's refusals (Q28; Preflight ruling 23)", () => {
+describe("InstallDialog's refusals", () => {
   it("shows an unassigned group's words with Assign, which opens the group dialog; its save reads everything again and installs", async () => {
     api.groups = [collectorGroup()];
     let assigned = false;
@@ -370,7 +369,7 @@ describe("InstallDialog's refusals (Q28; Preflight ruling 23)", () => {
     await waitFor(() => expect(document.activeElement).toBe(screen.getByRole("combobox", { name: "Method" })));
   });
 
-  it("returns the focus to Assign when the group dialog closes with nothing saved (decision 51)", async () => {
+  it("returns the focus to Assign when the group dialog closes with nothing saved", async () => {
     api.groups = [collectorGroup()];
     api.facts = () => {
       throw new ApiError("collector_group_unassigned", COLLECTOR_GROUP_UNASSIGNED_MESSAGE, { status: 409 });
@@ -468,7 +467,7 @@ describe("InstallDialog's refusals (Q28; Preflight ruling 23)", () => {
   });
 });
 
-describe("InstallDialog's container method (decisions 40, 41 and 43; Preflight ruling 24)", () => {
+describe("InstallDialog's container method", () => {
   it("previews the command with the token masked, the group's mounts listed, inside ph-no-capture, and no reveal yet", async () => {
     api.facts = () => installFacts({ mounts: [NGINX_MOUNT, DATA_MOUNT] });
     serve();
@@ -659,7 +658,7 @@ describe("InstallDialog's container method (decisions 40, 41 and 43; Preflight r
     expect(screen.getByRole("textbox", { name: "Collector display name (optional)" })).toBeDisabled();
     expect(screen.getByRole("textbox", { name: "NGINX_ENV" })).toBeDisabled();
     expect(screen.getByRole("checkbox", { name: "Include NGINX_ENV" })).toBeDisabled();
-    // The Method too (Ruling 61's nit): the reveal is the container's.
+    // The Method too: the reveal is the container's.
     expect(screen.getByRole("combobox", { name: "Method" })).toBeDisabled();
     await act(async () => answer.resolve(revealed));
     await within(dialog()).findByRole("button", { name: "Copy command" });
@@ -679,7 +678,7 @@ describe("InstallDialog's container method (decisions 40, 41 and 43; Preflight r
     await waitFor(() => expect(document.activeElement).toBe(copy));
   });
 
-  it("gives the bearer up as the dialog closes, while its content is still mounted for the exit animation (the review's P10)", async () => {
+  it("gives the bearer up as the dialog closes, while its content is still mounted for the exit animation", async () => {
     emulateExitAnimation();
     serve();
     const user = await renderDialog();
@@ -743,7 +742,7 @@ describe("InstallDialog's container method (decisions 40, 41 and 43; Preflight r
     });
   });
 
-  it("says the group's mounts can't be read and are left out when the facts say so (Ruling 62)", async () => {
+  it("says the group's mounts can't be read and are left out when the facts say so", async () => {
     api.facts = () => installFacts({ mounts: [], mountsReadable: false });
     serve();
     await renderDialog();
@@ -810,7 +809,7 @@ describe("InstallDialog's container method (decisions 40, 41 and 43; Preflight r
   });
 });
 
-describe("InstallDialog's reveal reads the facts again (Ruling 61)", () => {
+describe("InstallDialog's reveal reads the facts again", () => {
   it("reads the facts with the tokens at the reveal, and builds the command from them: a mount saved meanwhile is in it", async () => {
     const calls = serve();
     const user = await renderDialog();
@@ -955,7 +954,7 @@ describe("InstallDialog's reveal reads the facts again (Ruling 61)", () => {
   });
 });
 
-describe("InstallDialog's revealed bearer after a later tokens read (Ruling 64)", () => {
+describe("InstallDialog's revealed bearer after a later tokens read", () => {
   const OTHER_DEFAULT_ID = "c0ffee00-0000-4000-8000-0000000000d2";
 
   /** Reveals, then a download refused for an assignment cleared meanwhile; its Assign's save reads everything again with `tokens`. */
@@ -1002,7 +1001,7 @@ describe("InstallDialog's revealed bearer after a later tokens read (Ruling 64)"
   });
 });
 
-describe("InstallDialog's Assign after a mounts-changed refusal (Ruling 66; the review's assign probe)", () => {
+describe("InstallDialog's Assign after a mounts-changed refusal", () => {
   it("keeps the group dialog's baseline at its opening while the install dialog reloads: a second save is refused again, nothing sent", async () => {
     api.groups = [collectorGroup(), gatewaysGroup({ annotations: mountsAnnotations([NGINX_MOUNT]) })];
     api.facts = () => {
@@ -1043,7 +1042,7 @@ describe("InstallDialog's Assign after a mounts-changed refusal (Ruling 66; the 
   });
 });
 
-describe("InstallDialog's variables named as Object.prototype's keys (Ruling 52, M1)", () => {
+describe("InstallDialog's variables named as Object.prototype's keys", () => {
   const NAMES = ["constructor", "__proto__", "toString", "hasOwnProperty", "valueOf"];
 
   it("offers each unticked, takes it ticked and typed into the command, and logs no error", async () => {
@@ -1108,7 +1107,7 @@ describe("InstallDialog's variables named as Object.prototype's keys (Ruling 52,
   });
 });
 
-describe("InstallDialog's Linux methods (decisions 39, 41 and 42; Preflight ruling 26)", () => {
+describe("InstallDialog's Linux methods", () => {
   // The OPAMP_TOKEN export step after a zip download, its copy the unmasked
   // export line.
   it("downloads All In One (amd64): the request, the saved file, the toast, then the token screen with its own Reveal", async () => {
@@ -1361,7 +1360,7 @@ describe("InstallDialog's Linux methods (decisions 39, 41 and 42; Preflight ruli
   });
 });
 
-describe("InstallDialog's Quick Deploy (D17c-2 decisions 15, 18, 30 and 32; Preflight rulings 17 to 19)", () => {
+describe("InstallDialog's Quick Deploy (", () => {
   const OTHER_DEFAULT_ID = "c0ffee00-0000-4000-8000-0000000000d3";
   const OTHER_BEARER = "otherBearer9f8e7d+/==";
   const LINUX_LABELS = [
@@ -1415,7 +1414,7 @@ describe("InstallDialog's Quick Deploy (D17c-2 decisions 15, 18, 30 and 32; Pref
     expect(screen.queryByRole("checkbox", { name: SYSTEMD_LABEL })).toBeNull();
   });
 
-  // The systemd service starts with systemd's clean environment: the shell's variables never reach it (Ruling 55); a secret goes in a root-only EnvironmentFile (Ruling 56).
+  // The systemd service starts with systemd's clean environment: the shell's variables never reach it; a secret goes in a root-only EnvironmentFile.
   it("says, while the box is ticked, that the service doesn't see the shell's variables and how to give it one; unticked or on the container, the earlier words", async () => {
     api.facts = () => installFacts({ envVarNames: ["NGINX_ENV", "BACKEND_KEY"] });
     const SERVICE_HELP =
@@ -1470,7 +1469,7 @@ describe("InstallDialog's Quick Deploy (D17c-2 decisions 15, 18, 30 and 32; Pref
     expect(download).toBeDisabled();
   });
 
-  it("names Download's reason by aria-describedby only while the reason is shown: not while the facts load, nor after their refusal (Ruling 38)", async () => {
+  it("names Download's reason by aria-describedby only while the reason is shown: not while the facts load, nor after their refusal", async () => {
     const facts = held<InstallFacts>();
     api.facts = () => facts.promise;
     serve();
@@ -1500,7 +1499,7 @@ describe("InstallDialog's Quick Deploy (D17c-2 decisions 15, 18, 30 and 32; Pref
       new ApiError("quick_deploy_link_limit_reached", QUICK_DEPLOY_LINK_ERROR_MESSAGES.quick_deploy_link_limit_reached, { status: 409 }),
       "Revoke an install link first: a fleet holds at most 100 active links.",
     ],
-  ])("toggling the systemd box clears %s of the link's making, as editing a field does (Ruling 38)", async (_why, failure, words) => {
+  ])("toggling the systemd box clears %s of the link's making, as editing a field does", async (_why, failure, words) => {
     api.create = async () => {
       throw failure;
     };
@@ -1608,7 +1607,7 @@ describe("InstallDialog's Quick Deploy (D17c-2 decisions 15, 18, 30 and 32; Pref
     // The token persists to opamp.env instead of the script running in the
     // foreground.
     expect(command).toContain(`printf "OPAMP_TOKEN='%s'\\n" "$OPAMP_TOKEN" | sudo install -m 600 /dev/stdin '/etc/otelcol/opamp.env' &&`);
-    // The subshell's `)` closes the last command's line (Ruling 51: in csh and tcsh no line then runs).
+    // The subshell's `)` closes the last command's line (in csh and tcsh no line then runs).
     expect(command.split("\n").at(-1)).toBe(
       "sudo systemctl daemon-reload && sudo systemctl enable telflo-supervisor.service && sudo systemctl restart telflo-supervisor.service )",
     );
@@ -1898,7 +1897,7 @@ describe("InstallDialog's Quick Deploy (D17c-2 decisions 15, 18, 30 and 32; Pref
     await user.click(quickDeployButton());
     const link = await within(dialog()).findByRole("link", { name: "Tokens tab" });
     expect(quickDeployButton()).toBeDisabled();
-    // The button pressed is disabled: the focus goes to the words' link, as after the reveal's refusal (Ruling 38).
+    // The button pressed is disabled: the focus goes to the words' link, as after the reveal's refusal.
     await waitFor(() => expect(document.activeElement).toBe(link));
     expect(within(dialog()).queryByText(QUICK_DEPLOY_FAILED_MESSAGE)).toBeNull();
     expect(calls.revealEnrollmentToken).not.toHaveBeenCalled();
@@ -1926,7 +1925,7 @@ describe("InstallDialog's Quick Deploy (D17c-2 decisions 15, 18, 30 and 32; Pref
     await waitFor(() => expect(document.activeElement).toBe(link));
   });
 
-  // The token race (Ruling 47): the link made with A; A revoked and B issued before the reveal.
+  // The token race: the link made with A; A revoked and B issued before the reveal.
   it("says the link's token was revoked (make a new link) when another default token is valid, nothing copied, the focus on Done", async () => {
     const { calls, user } = await onLinux();
     await madeLink(user);
@@ -1969,7 +1968,7 @@ describe("InstallDialog's Quick Deploy (D17c-2 decisions 15, 18, 30 and 32; Pref
     await waitFor(() => expect(document.activeElement).toBe(within(quickScreen()).getByRole("button", { name: "Done" })));
   });
 
-  // The refused reveal's re-read (Ruling 50: final fix wave B's review's probes P1–P3, adopted).
+  // The refused reveal's re-read.
   it("keeps the button disabled while the tokens are read again: a click meanwhile sends nothing more", async () => {
     const { calls, user } = await onLinux();
     await madeLink(user);
@@ -2076,7 +2075,7 @@ describe("InstallDialog's Quick Deploy (D17c-2 decisions 15, 18, 30 and 32; Pref
     expect(document.body.innerHTML).not.toContain(BEARER);
   });
 
-  it("gives the link and the command up as the dialog closes, while its content is still mounted for the exit animation (D17c-1 Ruling 55)", async () => {
+  it("gives the link and the command up as the dialog closes, while its content is still mounted for the exit animation", async () => {
     emulateExitAnimation();
     const { user } = await onLinux();
     await madeLink(user);
@@ -2093,7 +2092,7 @@ describe("InstallDialog's Quick Deploy (D17c-2 decisions 15, 18, 30 and 32; Pref
     });
     expect(document.body.innerHTML).not.toContain(BEARER);
     expect(document.body.innerHTML).not.toContain(QUICK_DEPLOY_SECRET);
-    // The screen's other parts stay through the animation (Ruling 38): its title, words and masked preview, never the form.
+    // The screen's other parts stay through the animation: its title, words and masked preview, never the form.
     expectClosingQuickDeployScreen(closing);
   });
 
@@ -2165,8 +2164,8 @@ describe("InstallDialog's Quick Deploy (D17c-2 decisions 15, 18, 30 and 32; Pref
   });
 });
 
-// ADR 0024, decision 48: the bearer only inside ph-no-capture; names, paths and values in no attribute but an input's own value inside it.
-// D17d-2 decision 20; Preflight ruling 33: the organization's "Public install links" switch.
+// The bearer only inside ph-no-capture; names, paths and values in no attribute but an input's own value inside it.
+// The organization's "Public install links" switch.
 describe("InstallDialog with public install links off", () => {
   it("reads the settings with the facts and the tokens; while off, no Quick Deploy and no systemd box: the words, and Download offered", async () => {
     api.settings = () => ({ publicInstallLinks: false });
@@ -2235,7 +2234,7 @@ describe("InstallDialog's privacy", () => {
     expect(holding, `text nodes holding ${text}`).toBeGreaterThan(0);
   }
 
-  /** Each attribute holding `text`, but an INPUT's `value` inside ph-no-capture (Preflight ruling 33). */
+  /** Each attribute holding `text`, but an INPUT's `value` inside ph-no-capture. */
   function attributesHoldingBeyondInputs(text: string): string[] {
     const holders: string[] = [];
     for (const element of [document.documentElement, ...document.documentElement.querySelectorAll("*")]) {
@@ -2302,7 +2301,7 @@ describe("InstallDialog's privacy", () => {
     textOnlyInsideNoCapture(rootPath, dialog());
     expect(document.title).not.toContain(groupName);
 
-    // Quick Deploy (D17c-2 decisions 15 and 32): reopened, the same fields typed, the link made, then revealed.
+    // Quick Deploy: reopened, the same fields typed, the link made, then revealed.
     api.create = async () =>
       quickDeployLinkCreated({ groupName, choices: { method: "own-binary", arch: "amd64", rootPath, executablePath, systemd: true, envNames: [envName] } });
     await user.click(within(dialog()).getAllByRole("button", { name: "Close" }).at(-1)!);
@@ -2331,7 +2330,7 @@ describe("InstallDialog's privacy", () => {
     check();
     expectTextOnlyInsideNoCapture(BEARER);
     expectTextOnlyInsideNoCapture(QUICK_DEPLOY_SECRET);
-    // Ruling 34: autocapture records a clicked link's href even when masked: neither the link nor the command is ever an href.
+    // Autocapture records a clicked link's href even when masked: neither the link nor the command is ever an href.
     for (const anchor of document.querySelectorAll("a[href]")) {
       expect(anchor.getAttribute("href")).not.toContain(QUICK_DEPLOY_SECRET);
       expect(anchor.getAttribute("href")).not.toContain("/quick-deploy/");

@@ -4,39 +4,36 @@ import { Input } from "~/components/ui/input.js";
 import { Label } from "~/components/ui/label.js";
 
 /*
- * The install dialog's environment variables (D17c-1 decision 43; Preflight
- * ruling 28; ADR 0018): the variables the group's published version reads
- * with `${env:NAME}` (the facts' `envVarNames`, found on the server), each
- * opt-in. Nothing when there are none.
+ * The install dialog's environment variables: the variables the group's
+ * published version reads with `${env:NAME}` (the facts' `envVarNames`,
+ * found on the server), each opt-in. Nothing when there are none.
  *
  * - One row per name: a checkbox "Include {NAME}" (unticked), and once
  *   ticked a value input (placeholder "value"); an unticked row's note "set
  *   on the host" ("set in the service" for the systemd service). The values
  *   live in the dialog, shared by its methods, and leave it only into the
  *   command or the bundle's request: never stored.
- * - D17c-2 (decision 30; Ruling 55): a Linux method with "Install as a
- *   systemd service" ticked (`target` "service") says the service doesn't
- *   see the shell's variables (systemd starts it with its own clean
- *   environment) and how to give it one: `sudo systemctl edit
- *   telflo-supervisor`, an `Environment=` line for a plain value, an
- *   `EnvironmentFile=` naming a root-only file for a secret (Ruling 56:
- *   systemd shows `Environment=` values to every user), which
+ * - A Linux method with "Install as a systemd service" ticked (`target`
+ *   "service") says the service doesn't see the shell's variables
+ *   (systemd starts it with its own clean environment) and how to give it
+ *   one: `sudo systemctl edit telflo-supervisor`, an `Environment=` line
+ *   for a plain value, an `EnvironmentFile=` naming a root-only file for
+ *   a secret (systemd shows `Environment=` values to every user), which
  *   start_supervisor.sh passes on to the collector.
- * - Privacy (decision 48): a name is configuration text, so it is visible
- *   text only, never an attribute: the ids are `useId`'s and the row's index,
- *   the checkbox is named by its `<label>`, the value input by
- *   `aria-labelledby` pointing at the name's text (never an `aria-label`, an
- *   `id` or a `title`). The rows sit inside `ph-no-capture`, so replay
- *   records neither the names nor the values; a value input's `value` (React
- *   writes a controlled input's) is the one attribute holding a typed value,
- *   inside it.
+ * - Privacy: a name is configuration text, so it is visible text only, never
+ *   an attribute: the ids are `useId`'s and the row's index, the checkbox is
+ *   named by its `<label>`, the value input by `aria-labelledby` pointing at
+ *   the name's text (never an `aria-label`, an `id` or a `title`). The rows
+ *   sit inside `ph-no-capture`, so replay records neither the names nor the
+ *   values; a value input's `value` (React writes a controlled input's) is
+ *   the one attribute holding a typed value, inside it.
  * - A row's problem (`problems`, keyed by name: "Type a value or untick
  *   it.", the bundle route's own words for a 400) shows under it.
- * - D17d-2 (Preflight rulings 4 and 23): the Helm install (`target`
- *   "helm") writes the ticked values into values.yaml's `collectorEnv`,
- *   which reaches the pods through a Secret; an unticked row's note "set in
- *   the cluster". D18 (decision 23): every offered name is a row like any
- *   other, a YAML 1.1 word's too (the platform's chart quotes the keys).
+ * - The Helm install (`target` "helm") writes the ticked values into
+ *   values.yaml's `collectorEnv`, which reaches the pods through a Secret;
+ *   an unticked row's note "set in the cluster". Every offered name is a
+ *   row like any other, a YAML 1.1 word's too (the platform's chart quotes
+ *   the keys).
  */
 
 /** A variable's row: whether it is included, and its value as typed. */
@@ -48,7 +45,7 @@ export interface EnvVarChoice {
 /** By name: a Map, never a plain object, so a name such as `constructor` or `__proto__` reads nothing inherited. */
 export type EnvVarChoices = ReadonlyMap<string, EnvVarChoice>;
 
-/** The container's help, the Linux bundle's (Preflight ruling 28), and the systemd service's (Ruling 55). */
+/** The container's help, the Linux bundle's, and the systemd service's. */
 const HELP_START = "This group's published version reads these variables with ";
 const HELP_COMMAND = ". Tick one to set its value here; unticked variables are left out of the command: set them on the host.";
 const HELP_BUNDLE =
@@ -63,7 +60,7 @@ const HELP_SERVICE = (
     into the bundle&apos;s start script (root only): keep the link private if they are secrets.
   </>
 );
-/** The Helm install's (D17d-2 Preflight ruling 23). */
+/** The Helm install's. */
 const HELP_HELM =
   ". Tick one to set its value here; ticked values are written into values.yaml's collectorEnv and reach the pods through a Secret; unticked variables are left out: give them to the pods yourself.";
 const HELP: Record<EnvVarInputsProps["target"], ReactNode> = {
@@ -91,7 +88,7 @@ export interface EnvVarInputsProps {
   /**
    * "command": the container's `-e` lines; "bundle": the Linux start script's exports; "service": those
    * exports too, the bundle installed as the systemd service ("Install as a systemd service" ticked); "helm":
-   * values.yaml's `collectorEnv` (D17d-2).
+   * values.yaml's `collectorEnv`.
    */
   target: "command" | "bundle" | "service" | "helm";
   disabled?: boolean;

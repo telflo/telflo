@@ -38,8 +38,8 @@ describe("AppLayout", () => {
     expect(content.closest("main")).toHaveClass("flex-1", "overflow-auto");
     expect(document.body).toHaveClass("app-layout", "tf-app");
 
-    // The Toaster is the root route's (D2a Ruling 12); a second one here
-    // would vanish with the layout and strand a logout toast.
+    // The Toaster is the root route's; a second one here would vanish
+    // with the layout and strand a logout toast.
     expect(screen.queryByRole("region", { name: /Notifications/ })).not.toBeInTheDocument();
 
     unmount();
@@ -47,7 +47,7 @@ describe("AppLayout", () => {
     expect(document.body).not.toHaveClass("tf-app");
   });
 
-  it("has session replay mask all the app's text: ph-mask on its root and, while mounted, on <body> for portals (D4 Ruling 14)", async () => {
+  it("has session replay mask all the app's text: ph-mask on its root and, while mounted, on <body> for portals", async () => {
     const { container, unmount } = renderLayout();
     await screen.findByText("page content");
 
@@ -58,7 +58,7 @@ describe("AppLayout", () => {
     expect(document.body).not.toHaveClass("ph-mask");
   });
 
-  it("masks autocapture's text and attributes while mounted, which ph-mask doesn't reach (D4 Ruling 16)", async () => {
+  it("masks autocapture's text and attributes while mounted, which ph-mask doesn't reach", async () => {
     const release = vi.fn();
     const masked = vi.spyOn(analytics, "setAnalyticsMasked").mockReturnValue(release);
     const { unmount } = renderLayout();

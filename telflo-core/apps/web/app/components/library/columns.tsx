@@ -4,20 +4,19 @@ import type { LibraryFile } from "@telflo/contracts";
 import { Button } from "~/components/ui/button.js";
 
 /*
- * The members' library table (D23-2 decision 54), plain table markup (the
- * platform has no DataTable or @tanstack/react-table): Name (sortable,
- * "Untitled" for none), Description (sortable, "—" for none) and Actions
- * ("Curl", its title "Copy a curl command that downloads this file", "Copied"
- * with a check once copied; "Download", "Downloading…" while it runs). The
- * sortable headers are the fleet grids' (`CollectorsTable.tsx`): a ghost
- * button with `ArrowUpDown`, `aria-sort` only on the sorted column, ascending
- * first, then toggling, by `localeCompare`; none sorted shows the API's
- * order, newest first.
+ * The members' library table, plain table markup (the platform has no
+ * DataTable or @tanstack/react-table): Name (sortable, "Untitled" for none),
+ * Description (sortable, "—" for none) and Actions ("Curl", its title "Copy a
+ * curl command that downloads this file", "Copied" with a check once copied;
+ * "Download", "Downloading…" while it runs). The sortable headers are the
+ * fleet grids' (`CollectorsTable.tsx`): a ghost button with `ArrowUpDown`,
+ * `aria-sort` only on the sorted column, ascending first, then toggling, by
+ * `localeCompare`; none sorted shows the API's order, newest first.
  *
  * Names and descriptions are Telflo's own content: text in the masked
- * shell, never an attribute (decision 58). Each row's buttons are
- * described by the name's text (`aria-describedby`). The link and the curl
- * command are never here: Curl only asks for them (LibraryPage).
+ * shell, never an attribute. Each row's buttons are described by the
+ * name's text (`aria-describedby`). The link and the curl command are
+ * never here: Curl only asks for them (LibraryPage).
  */
 
 export type LibrarySortColumn = "name" | "description";

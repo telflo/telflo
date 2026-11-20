@@ -15,9 +15,8 @@ import { restoreMember } from "~/lib/api-client.js";
 import { isManagementLost, isRefusal, refusalMessage, useLeaveManagement } from "~/lib/organizations.js";
 
 /*
- * Restoring a removed member (ADR 0018). There is no unban: removing
- * doesn't ban (D5 Parity Notes). As with removing, the dialog stays open
- * until the API answers.
+ * Restoring a removed member. There is no unban: removing doesn't ban.
+ * As with removing, the dialog stays open until the API answers.
  */
 
 interface RestoreMemberDialogProps {

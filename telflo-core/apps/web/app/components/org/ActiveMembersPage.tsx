@@ -5,10 +5,10 @@ import { DeleteMemberDialog } from "./dialogs/DeleteMemberDialog.js";
 import { formatDate } from "./format-date.js";
 
 /*
- * The active members' list (ADR 0018). The list comes from the Permissions
- * layout rather than a store, and a spinner shows until it has loaded. Two
- * rows have no role link and no Delete: the viewer's own, marked "(you)",
- * and the owner of a personal organization (D5 decision 8).
+ * The active members' list. The list comes from the Permissions layout
+ * rather than a store, and a spinner shows until it has loaded. Two rows
+ * have no role link and no Delete: the viewer's own, marked "(you)", and
+ * the owner of a personal organization.
  */
 
 interface ActiveMembersPageProps {

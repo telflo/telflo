@@ -6,19 +6,17 @@ import { useOpeningKey } from "~/lib/hooks/use-opening-key.js";
 import { groupWords, installWords } from "./InstallLinksSection.js";
 
 /*
- * View (D17c-2 decisions 31 and 32; Preflight ruling 24): the link's options
- * as what the link installs: the group, the install (method, arch, " ·
- * systemd"), the root path, the executable path (own otelcol-contrib only),
- * "Systemd service: yes/no" and the variables the link holds values for, each
- * by its name and "set". Never a value, the secret or the command (the
- * platform keeps the values sealed and the secret only as its hash: the
- * command is shown once, at its making). It makes no request: the link is the
- * row's, as the opening found it (a snapshot: a reload behind the dialog
- * changes nothing in it). The body is configuration text: inside
+ * View: the link's options as what the link installs: the group, the install
+ * (method, arch, " · systemd"), the root path, the executable path (own
+ * otelcol-contrib only), "Systemd service: yes/no" and the variables the link
+ * holds values for, each by its name and "set". Never a value, the secret or
+ * the command (the platform keeps the values sealed and the secret only as
+ * its hash: the command is shown once, at its making). It makes no request:
+ * the link is the row's, as the opening found it (a snapshot: a reload behind
+ * the dialog changes nothing in it). The body is configuration text: inside
  * `ph-no-capture`, never in an attribute. A fixed title, "Install link";
- * "Close". A Helm values link's (D17d-2 decision 22; Preflight ruling 30):
- * Group (by its role), Install ("Helm values"), Release and Namespace (as at
- * the link's making), Variables.
+ * "Close". A Helm values link's: Group (by its role), Install ("Helm
+ * values"), Release and Namespace (as at the link's making), Variables.
  */
 
 export const INSTALL_LINK_DESCRIPTION = "What this link installs. The values typed for its variables are kept with it and not shown.";

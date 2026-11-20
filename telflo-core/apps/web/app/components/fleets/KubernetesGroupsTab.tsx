@@ -13,18 +13,15 @@ import { KubernetesGroupDialog, type KubernetesGroupTarget } from "./KubernetesG
 import { KubernetesGroupsTable, type KubernetesRowAction } from "./KubernetesGroupsTable.js";
 
 /*
- * A Kubernetes-supervisor fleet's Groups tab (D17d-1 decisions 3, 6, 10, 24
- * and 25; Preflight rulings 22–24, 30–35), beside D17b-2's server
- * `GroupsTab` (untouched), over the same `useGroupsTab` (the fleet's groups,
- * one read a poll, every 15 s while the tab is visible and no dialog is
- * open). Mounted only while the tab is chosen, keyed by the fleet.
- * Per the D17d-1 Parity Notes:
+ * A Kubernetes-supervisor fleet's Groups tab, beside the server fleets'
+ * `GroupsTab`, over the same `useGroupsTab` (the fleet's groups, one read a
+ * poll, every 15 s while the tab is visible and no dialog is open). Mounted
+ * only while the tab is chosen, keyed by the fleet. Its details:
  *
- * - The intro in the spec's words (decision 24), "Add gateway" and
- *   "Refresh groups"; the states as the server tab's ("Loading groups…",
- *   "Failed to load groups" with "Try again"; never empty: the Agent is the
- *   fleet's Default group and the Cluster's row is drawn before its group
- *   exists).
+ * - The intro, "Add gateway" and "Refresh groups"; the states as the server
+ *   tab's ("Loading groups…", "Failed to load groups" with "Try again";
+ *   never empty: the Agent is the fleet's Default group and the Cluster's
+ *   row is drawn before its group exists).
  * - The table (`KubernetesGroupsTable`): Agent, Cluster, the gateway pools.
  *   A row's More opens its details (`KubernetesGroupDetailsDialog`); a row's
  *   Assign or Edit, or "Add gateway", the group dialog
@@ -33,19 +30,18 @@ import { KubernetesGroupsTable, type KubernetesRowAction } from "./KubernetesGro
  *   (`DeleteGroupDialog`, with the Helm release's words). One dialog at a
  *   time, for the organization it was opened in: another organization closes
  *   it, and its late answer is dropped. Each dialog takes the row as it was
- *   at the opening (D17c-1 Ruling 66).
+ *   at the opening.
  * - After a write (or a 404, an unknown outcome, or a refusal that found
  *   the groups changed) the tab reads its groups again and the route its
  *   fleet (`onFleetChanged`).
- * - A row's Install (D17d-2 decision 23; Preflight ruling 28) opens the
- *   route's Helm install dialog for the row's group (`onInstall`), absent
- *   on an archived fleet; the route moves `groupsChanged` when the groups
- *   changed outside the tab, and the tab reads them again.
+ * - A row's Install opens the route's Helm install dialog for the row's
+ *   group (`onInstall`), absent on an archived fleet; the route moves
+ *   `groupsChanged` when the groups changed outside the tab, and the tab
+ *   reads them again.
  *
  * Every dialog's close gives the focus back to the control that opened it
- * (`useReturnFocus`, D17b-2 Preflight ruling 14); when that control is gone
- * (its row deleted), to the first row's Assign or Edit (the Agent's), else
- * to "Refresh groups".
+ * (`useReturnFocus`); when that control is gone (its row deleted), to the
+ * first row's Assign or Edit (the Agent's), else to "Refresh groups".
  */
 
 export const KUBERNETES_GROUPS_INTRO =
@@ -57,7 +53,7 @@ interface KubernetesGroupsTabProps {
   onFleetGone: () => void;
   /** The route's `useFleet().reload` again: after a group's write, the strip and the Collectors tab follow. */
   onFleetChanged: () => void;
-  /** A row's Install (an active fleet only, D17d-2 decision 23): the route's Helm install dialog for the row's group. */
+  /** A row's Install (an active fleet only): the route's Helm install dialog for the row's group. */
   onInstall?: ((row: KubernetesGroupRow, from: HTMLElement) => void) | undefined;
   /** A count the route moves when the groups changed elsewhere (the Helm dialog found its group gone): the tab reads them again. */
   groupsChanged?: number | undefined;
@@ -103,7 +99,7 @@ export function KubernetesGroupsTab({ fleet, onFleetGone, onFleetChanged, onInst
   const locked = useLockedAction();
   const openAction = (kind: RowAction["kind"], row: KubernetesGroupRow | null, from: HTMLElement) => {
     if (organizationId === null) return;
-    // In the playground (D31-1 decisions 24 and 35) a group's details open (a read); adding, editing and deleting are locked.
+    // In the playground a group's details open (a read); adding, editing and deleting are locked.
     if (locked !== null && kind !== "more") {
       locked(KUBERNETES_GROUP_LOCKED_WORDS[kind], from);
       return;

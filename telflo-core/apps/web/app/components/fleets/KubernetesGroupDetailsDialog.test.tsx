@@ -6,14 +6,12 @@ import type { KubernetesGroupRow } from "~/lib/kubernetes-groups.js";
 import { KubernetesGroupDetailsDialog } from "./KubernetesGroupDetailsDialog.js";
 
 /*
- * A Kubernetes group's details (D17d-1 decision 24; Preflight ruling 34).
- * The rows and their words are pinned through the tab
- * (`KubernetesGroupsTab.test.tsx`'s "opens a row's More"); this file pins
- * the dialog's privacy (D17d-1's paragraph of ADR 0024; Ruling 53): a
- * gateway's name, its namespace and its volumes' paths are configuration
- * text, shown inside `ph-no-capture` (replay records none of it) and in no
- * attribute. The title names the gateway as the masked shell's text, as
- * every dialog's title does.
+ * A Kubernetes group's details. The rows and their words are pinned
+ * through the tab (`KubernetesGroupsTab.test.tsx`'s "opens a row's More");
+ * this file pins the dialog's privacy: a gateway's name, its namespace and
+ * its volumes' paths are configuration text, shown inside `ph-no-capture`
+ * (replay records none of it) and in no attribute. The title names the
+ * gateway as the masked shell's text, as every dialog's title does.
  */
 
 const GATEWAY = "canary-gw-61f2";
@@ -50,7 +48,7 @@ function attributeHolders(text: string): string[] {
   return holders;
 }
 
-describe("KubernetesGroupDetailsDialog's privacy (D17d-1's paragraph of ADR 0024)", () => {
+describe("KubernetesGroupDetailsDialog's privacy", () => {
   it("shows a gateway's name, namespace and volume paths only as text inside ph-no-capture, in no attribute", async () => {
     renderDetails({
       role: "gateway",
@@ -73,7 +71,7 @@ describe("KubernetesGroupDetailsDialog's privacy (D17d-1's paragraph of ADR 0024
     for (const text of [GATEWAY, NAMESPACE, HOST_PATH, MOUNT_PATH]) expect(attributeHolders(text), text).toEqual([]);
   });
 
-  it("shows the Agent's namespace inside ph-no-capture, its Group its badge alone (Ruling 66)", async () => {
+  it("shows the Agent's namespace inside ph-no-capture, its Group its badge alone", async () => {
     renderDetails({ role: "node", group: collectorGroup({ annotations: kubernetesAnnotations({ role: "node", namespace: NAMESPACE, replicas: undefined }) }) });
     const dialog = await screen.findByRole("dialog", { name: "Agent" });
     expect(dialog).toHaveTextContent("GroupAgentNamespace");

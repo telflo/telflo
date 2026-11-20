@@ -61,8 +61,7 @@ import { DEFAULT_TOKEN_EXISTS, NEW_DEFAULT_DESCRIPTION_KUBERNETES, NEW_DEFAULT_R
 import { ARCHIVED_ROTATE, ARCHIVED_ROTATE_AND_DEFAULT, TOKENS_HELP, TokensTab } from "./TokensTab.js";
 
 /*
- * A server fleet's Tokens tab (D17b-2 decisions 9–13, 22, 26–34; Preflight
- * rulings 4, 6, 8, 10 and 12–15) over the real hook (`useTokensTab`), the
+ * A server fleet's Tokens tab over the real hook (`useTokensTab`), the
  * browser client's calls answered by a small fake of the API's tokens and
  * token events. Reveal is in `RevealTokenDialog.test.tsx`, and the dialogs'
  * own cases are in their tests; this file covers the tab's states, polls,
@@ -262,7 +261,7 @@ const ROTATE_NAME = `the rotate token created ${formatDateTime(tokens.current.cr
 const REPLACED_NAME = `the rotate token created ${formatDateTime(tokens.beingReplaced.createdAt)}`;
 /**
  * The rotate-before-expiry banner, by its name: a `region` landmark rendered
- * only when there is a banner, with no live semantics (Ruling 31).
+ * only when there is a banner, with no live semantics.
  */
 const banner = () => screen.getByRole("region", { name: TOKEN_BANNER_LABEL });
 /** No banner shown: no region by its name (looked for behind an open dialog too, which hides the page from the tree). */
@@ -305,7 +304,7 @@ afterEach(() => {
   delete (document as { visibilityState?: DocumentVisibilityState }).visibilityState;
 });
 
-describe("TokensTab's states (decision 26)", () => {
+describe("TokensTab's states", () => {
   it('shows "Loading tokens…" until the first read answers', async () => {
     let release!: () => void;
     api.hold = new Promise((resolve) => (release = resolve));
@@ -361,7 +360,7 @@ describe("TokensTab's states (decision 26)", () => {
     expect(document.body).not.toHaveTextContent(/Fleet Tokens|Active in last 5m|Predecessor|Rotating →|deploy/);
   });
 
-  it("disables only Rotate token on an archived fleet, with its reason beside it (Preflight ruling 8); no banner", async () => {
+  it("disables only Rotate token on an archived fleet, with its reason beside it; no banner", async () => {
     serve();
     renderTab(fleetDetail({ status: "archived", summary: { ...EMPTY_SUMMARY, rotateToken: null } }));
     await screen.findByRole("button", { name: "Reveal the default token" });
@@ -383,7 +382,7 @@ describe("TokensTab's states (decision 26)", () => {
     expect(banner().compareDocumentPosition(screen.getAllByRole("table")[0]!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
-  // Ruling 31: no aria-live anywhere, so Radix's hideOthers hides the banner, and its button, behind a dialog.
+  // No aria-live anywhere, so Radix's hideOthers hides the banner, and its button, behind a dialog.
   it("hides the banner from the accessibility tree while the rotate dialog it opened is open", async () => {
     serve();
     const user = renderTab(expiringFleet());
@@ -395,7 +394,7 @@ describe("TokensTab's states (decision 26)", () => {
   });
 });
 
-describe("TokensTab's poll and refresh (decisions 10 and 32)", () => {
+describe("TokensTab's poll and refresh", () => {
   it("re-reads the tokens and the history's first page every 15 s, and a row follows", async () => {
     const { getEnrollmentTokens, getEnrollmentTokenEvents } = serve();
     renderTab();
@@ -438,7 +437,7 @@ describe("TokensTab's poll and refresh (decisions 10 and 32)", () => {
   });
 });
 
-describe("TokensTab's history (decision 27)", () => {
+describe("TokensTab's history", () => {
   const historyRows = () => within(screen.getAllByRole("table")[1]!).getAllByRole("row").slice(1);
 
   it("lists the history beneath the table, newest first, each token named from the tokens read", async () => {
@@ -482,7 +481,7 @@ describe("TokensTab's history (decision 27)", () => {
   });
 });
 
-describe("TokensTab's writes (decisions 22 and 29–31)", () => {
+describe("TokensTab's writes", () => {
   it("rotates from the header: the result's bearer, then the tokens, the history and the fleet read again", async () => {
     const { rotateEnrollmentToken, getEnrollmentTokens } = serve();
     const user = renderTab();
@@ -563,7 +562,7 @@ describe("TokensTab's writes (decisions 22 and 29–31)", () => {
   });
 });
 
-describe("TokensTab's focus as a dialog closes (decision 33; Preflight ruling 14)", () => {
+describe("TokensTab's focus as a dialog closes", () => {
   const focusIsOn = async (element: () => HTMLElement) => waitFor(() => expect(document.activeElement).toBe(element()));
   /**
    * Holds the route's reload after the write: begun as the tab asks for it
@@ -644,9 +643,9 @@ describe("TokensTab's focus as a dialog closes (decision 33; Preflight ruling 14
     expect(document.activeElement).toHaveAccessibleName(`Reveal the rotate token created ${formatDateTime(api.tokens[0]!.createdAt)}`);
   });
 
-  // Ruling 25 (D17b-1 Ruling 42's invariant): the fleet the tab is given is a read too. After a write,
-  // a fleet read answering after the close that takes the banner away moves the focus on, whichever
-  // of the tokens' reload and the fleet's answers first.
+  // The fleet the tab is given is a read too. After a write, a fleet read answering after the close
+  // that takes the banner away moves the focus on, whichever of the tokens' reload and the fleet's
+  // answers first.
   describe("a rotation from the banner whose fleet reload answers after the close", () => {
     const closeUnknown = async (user: ReturnType<typeof userEvent.setup>) => {
       const dialog = screen.getByRole("dialog", { name: "Rotate token" });
@@ -746,9 +745,9 @@ describe("TokensTab's focus as a dialog closes (decision 33; Preflight ruling 14
     });
   });
 
-  // Ruling 28 (D17b-1 Ruling 42's rule for the fleet's read; the fix-wave review's probes P1–P5): the first
-  // fleet from a read begun after the write spends it, moving the focus only after the close, the button the
-  // focus went back to gone or disabled and the focus lost; a fleet from an older read moves and spends nothing.
+  // The first fleet from a read begun after the write spends it, moving the focus only after the close, the
+  // button the focus went back to gone or disabled and the focus lost; a fleet from an older read moves and
+  // spends nothing.
   describe("the fleet's read after a write", () => {
     const blurToBody = () => act(() => (document.activeElement as HTMLElement | null)?.blur());
     const rotateFrom = async (user: ReturnType<typeof userEvent.setup>, opener: () => HTMLElement) => {
@@ -835,7 +834,7 @@ describe("TokensTab's focus as a dialog closes (decision 33; Preflight ruling 14
       expect(document.activeElement).toBe(headerRotate());
     });
 
-    // The fix-wave review's m1: the :disabled branch.
+    // The :disabled branch.
     it("moves the focus to the first row action when the reload's fleet comes back archived, disabling the header's Rotate token it was on", async () => {
       serve();
       const fleetReload = holdFleetReload(() => fleetDetail({ status: "archived" }));
@@ -898,7 +897,7 @@ describe("TokensTab's focus as a dialog closes (decision 33; Preflight ruling 14
   });
 });
 
-describe("TokensTab's New default token (D17c-1 decision 45; Preflight ruling 31)", () => {
+describe("TokensTab's New default token", () => {
   const newDefault = () => button("New default token");
   const queryNewDefault = () => screen.queryByRole("button", { name: "New default token" });
   /** The fleet's default token revoked: no valid default token. */
@@ -947,12 +946,12 @@ describe("TokensTab's New default token (D17c-1 decision 45; Preflight ruling 31
     expect(screen.getByText(ARCHIVED_ROTATE_AND_DEFAULT)).toBeInTheDocument();
     expect(ARCHIVED_ROTATE_AND_DEFAULT).toBe("An archived fleet's tokens can't be rotated, and it can't be given a new default token: unarchive it first.");
     expect(screen.queryByText(ARCHIVED_ROTATE)).toBeNull();
-    // The sentence describes both disabled buttons (Ruling 61's nit).
+    // The sentence describes both disabled buttons.
     expect(newDefault()).toHaveAccessibleDescription(ARCHIVED_ROTATE_AND_DEFAULT);
     expect(headerRotate()).toHaveAccessibleDescription(ARCHIVED_ROTATE_AND_DEFAULT);
   });
 
-  it("tells the revoke and the new default token a Kubernetes-supervisor fleet's type: the Helm releases' words (Ruling 55)", async () => {
+  it("tells the revoke and the new default token a Kubernetes-supervisor fleet's type: the Helm releases' words", async () => {
     serve();
     const user = renderTab(fleetDetail({ type: "kubernetes-supervisor" }));
     await user.click(await screen.findByRole("button", { name: "Revoke the default token" }));
@@ -1050,7 +1049,7 @@ describe("TokensTab's New default token (D17c-1 decision 45; Preflight ruling 31
     await focusIsOn(() => button(`Reveal ${newDefaultName()}`));
   });
 
-  // Task 1's review: a 500 after the opamp-server made the token leaves a valid default token nobody received.
+  // A 500 after the opamp-server made the token leaves a valid default token nobody received.
   it("after a 500 that made the token anyway: the reload takes the button away, a retry says Reveal shows it, and Reveal does", async () => {
     withRevokedDefault();
     api.issueFailuresAfterMaking = [new ApiError("internal_error", "Something went wrong.", { status: 500 })];
@@ -1102,7 +1101,7 @@ describe("TokensTab's New default token (D17c-1 decision 45; Preflight ruling 31
   });
 });
 
-// ADR 0024, decisions 12 and 34: bearers only inside ph-no-capture; no fleet label or email in an attribute or the title.
+// Bearers only inside ph-no-capture; no fleet label or email in an attribute or the title.
 describe("TokensTab's privacy", () => {
   it("keeps every bearer inside ph-no-capture and no label or email in an attribute or the title, with every dialog open", async () => {
     const label = "canary-fleet-tokens-5d0e";
@@ -1171,15 +1170,14 @@ describe("TokensTab's privacy", () => {
 });
 
 /* ---------------------------------------------------------------------------
- * Install Links (D17c-2 decisions 4, 5, 14, 31 and 32; Preflight rulings
- * 21–24): the links, their View, Extend and Revoke (no masked token, Copy
- * or JSON options).
+ * Install Links: the links, their View, Extend and Revoke (no masked
+ * token, Copy or JSON options).
  */
 
 const HOUR = 3_600_000;
 const OLD_DEFAULT_ID = "c0ffee00-0000-4000-8000-0000000000e3";
 
-/** The fixture link's choices, a Linux link's (D17d-2: a link's choices are a Linux or a Helm values link's). */
+/** The fixture link's choices, a Linux link's (a link's choices are a Linux or a Helm values link's). */
 function linuxChoices(): QuickDeployLinuxChoices {
   const { choices } = quickDeployLink();
   if (choices.kind === "helm") throw new Error("The fixture's link is a Linux link.");
@@ -1197,7 +1195,7 @@ function linkNumbered(n: number, overrides: Partial<QuickDeployLink> = {}): Quic
   });
 }
 
-/** A link's name, by its creation to the second (Ruling 39). */
+/** A link's name, by its creation to the second. */
 const linkName = (link: QuickDeployLink) =>
   `the install link created ${new Date(link.createdAt).toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit", second: "2-digit" })}`;
 const linksSection = () => screen.getByRole("heading", { name: "Install links" }).closest("section") as HTMLElement;
@@ -1209,8 +1207,7 @@ const linkFocusIsOn = async (element: () => HTMLElement) => waitFor(() => expect
 /** The links read so far. */
 const linkReads = (served: ReturnType<typeof serve>) => served.getQuickDeployLinks.mock.calls.length;
 
-describe("TokensTab's install links (D17c-2 decision 31; Preflight rulings 21 and 22)", () => {
-  // D17d-2 decision 22; Preflight ruling 30 (D17d-1 hid them until its Helm link).
+describe("TokensTab's install links", () => {
   it("shows Install links on a Kubernetes-supervisor fleet in its words, read with the tokens and the history, each poll alike", async () => {
     const served = serve();
     renderTab(fleetDetail({ type: "kubernetes-supervisor" }));
@@ -1291,7 +1288,7 @@ describe("TokensTab's install links (D17c-2 decision 31; Preflight rulings 21 an
     expect(document.body).not.toHaveTextContent(/\*\*\*\*|Copy|tqd_/);
   });
 
-  it("shows each status with its actions: Active and Expired every action, Token revoked and Group deleted no Extend, Revoked View only, an expired link whose token is revoked or whose group is deleted no Extend (Rulings 39 and 47)", async () => {
+  it("shows each status with its actions: Active and Expired every action, Token revoked and Group deleted no Extend, Revoked View only, an expired link whose token is revoked or whose group is deleted no Extend", async () => {
     api.tokens = [...api.tokens, listedToken({ id: OLD_DEFAULT_ID, kind: "default", revokedAt: new Date(NOW - DAY).toISOString(), createdAt: new Date(NOW - 99 * DAY).toISOString() })];
     const active = linkNumbered(1);
     const expired = linkNumbered(30);
@@ -1301,7 +1298,7 @@ describe("TokensTab's install links (D17c-2 decision 31; Preflight rulings 21 an
     const expiredTokenRevoked = linkNumbered(31, { defaultTokenId: OLD_DEFAULT_ID });
     // Expired, its token gone from the list altogether.
     const expiredTokenGone = linkNumbered(32, { defaultTokenId: "c0ffee00-0000-4000-8000-0000000000ff" });
-    // Its group deleted: the download refuses it for good (Ruling 47); its token revoked too, Token revoked first.
+    // Its group deleted: the download refuses it for good; its token revoked too, Token revoked first.
     const groupDeleted = linkNumbered(5, { groupName: null });
     const groupDeletedTokenRevoked = linkNumbered(6, { groupName: null, defaultTokenId: OLD_DEFAULT_ID });
     const expiredGroupDeleted = linkNumbered(33, { groupName: null });
@@ -1336,7 +1333,7 @@ describe("TokensTab's install links (D17c-2 decision 31; Preflight rulings 21 an
     for (const verb of ["View", "Extend", "Revoke"]) expect(button(`${verb} ${linkName(expired)}`)).toBeInTheDocument();
   });
 
-  it("names two links made in the same minute apart: their creation to the second, still no name, path or email (Ruling 39)", async () => {
+  it("names two links made in the same minute apart: their creation to the second, still no name, path or email", async () => {
     const minute = Math.floor((NOW - 2 * HOUR) / 60_000) * 60_000;
     const later = linkNumbered(1, { createdAt: new Date(minute + 42_000).toISOString() });
     const earlier = linkNumbered(2, { createdAt: new Date(minute + 7_000).toISOString() });
@@ -1421,7 +1418,7 @@ describe("TokensTab's install links (D17c-2 decision 31; Preflight rulings 21 an
   });
 });
 
-describe("TokensTab's install link View (D17c-2 decisions 31 and 32; Preflight ruling 24)", () => {
+describe("TokensTab's install link View", () => {
   it("shows what the link installs and its variables' names each set, inside ph-no-capture, with no request, no value and no secret", async () => {
     const link = linkNumbered(1, {
       choices: {
@@ -1477,14 +1474,14 @@ describe("TokensTab's install link View (D17c-2 decisions 31 and 32; Preflight r
   });
 });
 
-describe("TokensTab's install link Extend (D17c-2 decisions 5 and 31; Preflight rulings 24 and 25)", () => {
+describe("TokensTab's install link Extend", () => {
   const radios = (dialog: HTMLElement) => within(dialog).getAllByRole("radio");
   const openExtend = async (user: ReturnType<typeof userEvent.setup>, link: QuickDeployLink) => {
     await user.click(await screen.findByRole("button", { name: `Extend ${linkName(link)}` }));
     return screen.findByRole("dialog", { name: "Extend install link" });
   };
 
-  it("offers the six presets as native radios, 1 day chosen, in the spec's words", async () => {
+  it("offers the six presets as native radios, 1 day chosen, in their fixed words", async () => {
     const link = linkNumbered(1);
     api.links = [link];
     serve();
@@ -1666,13 +1663,13 @@ describe("TokensTab's install link Extend (D17c-2 decisions 5 and 31; Preflight 
   });
 });
 
-describe("TokensTab's install link Revoke (D17c-2 decision 31; Preflight ruling 24)", () => {
+describe("TokensTab's install link Revoke", () => {
   const openRevoke = async (user: ReturnType<typeof userEvent.setup>, link: QuickDeployLink) => {
     await user.click(await screen.findByRole("button", { name: `Revoke ${linkName(link)}` }));
     return screen.findByRole("alertdialog", { name: "Revoke this install link?" });
   };
 
-  it("revokes after confirming: the spec's words, toasted, the row Revoked with View alone, the focus on its View, the fleet not read again", async () => {
+  it("revokes after confirming: its fixed words, toasted, the row Revoked with View alone, the focus on its View, the fleet not read again", async () => {
     const link = linkNumbered(1);
     api.links = [link];
     const success = vi.spyOn(toast, "success");
@@ -1749,7 +1746,7 @@ describe("TokensTab's install link Revoke (D17c-2 decision 31; Preflight ruling 
   });
 });
 
-describe("TokensTab's install link dialogs as they close (D17c-2 Preflight ruling 23)", () => {
+describe("TokensTab's install link dialogs as they close", () => {
   it.each([
     ["View", "dialog"],
     ["Extend", "dialog"],
@@ -1778,8 +1775,8 @@ describe("TokensTab's install link dialogs as they close (D17c-2 Preflight rulin
   });
 });
 
-// Ruling 39: a poll begun before a link dialog opened, answering while it is open. The dialog keeps the opening's
-// link (its snapshot), the row behind it follows the read.
+// A poll begun before a link dialog opened, answering while it is open. The dialog keeps the opening's link (its
+// snapshot), the row behind it follows the read.
 describe("TokensTab's install link dialogs while a poll lands", () => {
   it.each([
     ["View", "dialog"],
@@ -1825,7 +1822,7 @@ describe("TokensTab's install link dialogs while a poll lands", () => {
   });
 });
 
-// The rulings' snapshot (D17c-1 Ruling 66): a dialog's link is the opening's, never a prop a parent's reload changes.
+// A dialog's link is the opening's, never a prop a parent's reload changes.
 describe("each install link dialog keeps the link its opening found", () => {
   function renderDialog(Dialog: (props: { link: QuickDeployLink }) => ReactNode, first: QuickDeployLink) {
     let setLink: (link: QuickDeployLink) => void = () => {};
@@ -1874,8 +1871,8 @@ describe("each install link dialog keeps the link its opening found", () => {
   });
 });
 
-// Decision 32 (ADR 0024): no group name, path, variable name or email in an attribute or the title; paths and names only inside ph-no-capture; no secret or value anywhere.
-// D17d-2 decision 22; Preflight ruling 30: a Kubernetes-supervisor fleet's Helm values links.
+// No group name, path, variable name or email in an attribute or the title; paths and names only inside ph-no-capture; no secret or value anywhere.
+// A Kubernetes-supervisor fleet's Helm values links.
 describe("TokensTab's Helm values links", () => {
   const kubernetes = () => fleetDetail({ type: "kubernetes-supervisor" });
   const helmChoices = (role: "node" | "cluster" | "gateway", release: string): QuickDeployHelmChoices => ({

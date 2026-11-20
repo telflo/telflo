@@ -5,14 +5,14 @@ import { formatDateTime, formatRelativeFuture } from "~/lib/format.js";
 import { NO_VALID_DEFAULT_CLAUSE } from "./RevokeTokenDialog.js";
 
 /*
- * The rotate-before-expiry banner (D17b-2 decision 28; D16a Ruling 57;
- * Preflight ruling 4's words), above the Tokens table, from the fleet's
- * summary (`rotateToken`, the route's poll keeps it current), never on an
- * archived fleet (its collectors are refused whatever their token):
+ * The rotate-before-expiry banner, above the Tokens table, from the
+ * fleet's summary (`rotateToken`, the route's poll keeps it current),
+ * never on an archived fleet (its collectors are refused whatever their
+ * token):
  *
  * - suspended (no valid rotate token), destructive; when the Tokens tab's
  *   tokens hold no valid default token, it says so (a restarted collector
- *   has nothing to come back through: D17c-1 Ruling 61);
+ *   has nothing to come back through);
  * - expiring: the current rotate token's expiry under 30 days, warning, and
  *   under 7, destructive; "in 5 days" by `formatRelativeFuture`, the date by
  *   `formatDateTime`. After a revoke of the current token mid-grace the
@@ -21,11 +21,11 @@ import { NO_VALID_DEFAULT_CLAUSE } from "./RevokeTokenDialog.js";
  * Each has a "Rotate token" button opening the rotate dialog; the tab gives
  * the focus back to it as the dialog closes (or, once a rotation has taken
  * the banner away, to its fallback). `ui/alert.tsx` has no warning tone, so
- * the banner styles its own two (Preflight ruling 15).
+ * the banner styles its own two.
  *
  * The banner is rendered only when there is one, as a `region` landmark
- * named "Rotate token notice" (Ruling 31), with no live semantics at all:
- * no `aria-live`, no `role="status"`, no always-mounted wrapper. Radix's
+ * named "Rotate token notice", with no live semantics at all: no
+ * `aria-live`, no `role="status"`, no always-mounted wrapper. Radix's
  * `hideOthers` skips `aria-live` elements and Radix sets no `aria-modal`,
  * so a live wrapper left the banner's button reachable by a screen reader
  * behind the dialogs; a `status` re-announced the countdown each time its
@@ -46,11 +46,11 @@ const SUSPENDED_LEAD =
   "This fleet has no valid rotate token. Collectors that enroll or restart are sent no configuration, and collectors holding a revoked or expired rotate token";
 
 /**
- * The suspended banner's words by whether the fleet has a valid default token (D17c-1 Rulings 61, 64 and 66), as the
- * Tokens tab's tokens say: SUSPENDED_BANNER while it has (a restarted collector comes back through it); with none
- * valid, the clause saying to issue a new default token and re-install them, and only re-installed collectors handed
- * the new rotate token; null (the tokens not read yet), words true either way. Off SUSPENDED_BANNER, "Rotate to issue
- * a new rotate token" (never "a new one", beside a new default token).
+ * The suspended banner's words by whether the fleet has a valid default token, as the Tokens tab's tokens say:
+ * SUSPENDED_BANNER while it has (a restarted collector comes back through it); with none valid, the clause saying to
+ * issue a new default token and re-install them, and only re-installed collectors handed the new rotate token; null
+ * (the tokens not read yet), words true either way. Off SUSPENDED_BANNER, "Rotate to issue a new rotate token" (never
+ * "a new one", beside a new default token).
  */
 export function suspendedBannerWords(defaultTokenValid: boolean | null): string {
   if (defaultTokenValid === true) return SUSPENDED_BANNER;
@@ -91,7 +91,7 @@ interface TokenBannerProps {
   now: number;
   /** "Rotate token": the tab opens the rotate dialog from `from`. */
   onRotate: (from: HTMLElement) => void;
-  /** Whether the tab's tokens hold a valid default token; null before they are read (Ruling 61). */
+  /** Whether the tab's tokens hold a valid default token; null before they are read. */
   defaultTokenValid: boolean | null;
 }
 

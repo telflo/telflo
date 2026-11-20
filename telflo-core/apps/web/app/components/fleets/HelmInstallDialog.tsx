@@ -55,63 +55,59 @@ import { QuickDeployScreen } from "./QuickDeployScreen.js";
 import { SecretCopyBox } from "~/components/secrets/SecretCopyBox.js";
 
 /*
- * The Helm install dialog (D17d-2 decisions 9, 12, 19 and 21; Preflight
- * rulings 23 to 27 and 33): a Kubernetes-supervisor fleet's group installed
- * with Helm (ADR 0018), with D17c-1's `InstallDialog` patterns and
- * its opening's shared parts (`install-opening.ts`). One Dialog, keyed per
- * opening, its title fixed ("Install with Helm": never a name).
+ * The Helm install dialog: a Kubernetes-supervisor fleet's group installed
+ * with Helm, with `InstallDialog`'s patterns and its opening's shared parts
+ * (`install-opening.ts`). One Dialog, keyed per opening, its title fixed
+ * ("Install with Helm": never a name).
  *
  * - **Its reads** (a person's, at the opening, each under the 10 s hang
  *   guard): the fleet's groups, the organization's settings (whether public
  *   install links are on: a failed read counts as on) and the fleet's tokens
- *   (whether a default token is valid) together, then the chosen group's
- *   Helm facts (`getHelmInstallFacts`). The dialog's own reads, never the
- *   tab's polled groups (D17c-1 Ruling 66: a snapshot at the opening).
- * - **The Group select** (Preflight ruling 26): the Agent, the Cluster, then
- *   the gateways (`kubernetesGroupRows`), values their keys (ids, or the
- *   Cluster's role), text their names; a row with no Helm install listed
- *   disabled with its reason (`kubernetesInstallDisabledReason`). Opened on
- *   the row's group, or, from the header, the first installable row; with
- *   none, "Pick a group", the footer disabled and "Assign a published version
- *   to a group first" with a Groups tab link. A group change is a fresh
- *   choice (its facts read again, an earlier answer dropped; the variables,
- *   the problems and the errors reset). A group gone at the opening toasts
- *   "Group not found" and closes.
+ *   (whether a default token is valid) together, then the chosen group's Helm
+ *   facts (`getHelmInstallFacts`). The dialog's own reads, never the tab's
+ *   polled groups (a snapshot at the opening).
+ * - **The Group select**: the Agent, the Cluster, then the gateways
+ *   (`kubernetesGroupRows`), values their keys (ids, or the Cluster's role),
+ *   text their names; a row with no Helm install listed disabled with its
+ *   reason (`kubernetesInstallDisabledReason`). Opened on the row's group,
+ *   or, from the header, the first installable row; with none, "Pick a
+ *   group", the footer disabled and "Assign a published version to a group
+ *   first" with a Groups tab link. A group change is a fresh choice (its
+ *   facts read again, an earlier answer dropped; the variables, the problems
+ *   and the errors reset). A group gone at the opening toasts "Group not
+ *   found" and closes.
  * - **The facts' refusals**: an assignment's (unassigned, a deleted
  *   configuration's version, a retired version) and unreadable settings show
- *   their words and a Groups tab link (no inner Assign dialog: Ruling 66);
+ *   their words and a Groups tab link (no inner Assign dialog);
  *   `fleet_archived` and `fleet_type_not_installable` their words (the
- *   former reads the fleet again); anything else its words with "Try
- *   again"; the fleet gone, the group gone, the organization's, the terms'
- *   and the session's as D17c-1's.
+ *   former reads the fleet again); anything else its words with "Try again";
+ *   the fleet gone, the group gone, the organization's, the terms' and the
+ *   session's as `InstallDialog`'s.
  * - **The group's install**: its release, namespace and (a gateway's)
  *   in-cluster address as text, inside `ph-no-capture`; the variables
  *   (`EnvVarInputs`, target "helm": opt-in, typed; a YAML 1.1 word's name
- *   like any other, since the platform's chart quotes the keys: D18
- *   decision 23).
- * - **Download values.yaml** (Preflight rulings 24 and 25): the fields
- *   checked (their messages, nothing sent), then the tokens and the group's
- *   facts read again together, the valid default token revealed (audited
- *   `viewed`), values.yaml built from those fresh facts (`helmValuesInputOf`,
- *   `helmValuesYaml`) and handed to `downloadBlob` (its anchor detached) as
- *   `<release>-values-<8 hex>.yaml` (`helmValuesFileName` with a fresh
- *   `helmDownloadFragment`, Rulings 36 and 37: a name of its own, which the
- *   command's `-f` names), "Download
- *   started". The bearer and the file are locals of that chain, never in
- *   state. Then the command screen: "<file> is saved. Run this in a shell
- *   with access to your cluster:" (the file's name, the release's, inside
- *   `ph-no-capture` here and in the warning: Ruling 40), the words for a
- *   file the browser renamed, the install
- *   command (`helmInstallCommand`, no secret) in a `SecretCopyBox` ("Copy
- *   install command"), the warning, "Done". A builder's refusal shows
+ *   like any other, since the platform's chart quotes the keys).
+ * - **Download values.yaml**: the fields checked (their messages, nothing
+ *   sent), then the tokens and the group's facts read again together, the
+ *   valid default token revealed (audited `viewed`), values.yaml built from
+ *   those fresh facts (`helmValuesInputOf`, `helmValuesYaml`) and handed to
+ *   `downloadBlob` (its anchor detached) as `<release>-values-<8 hex>.yaml`
+ *   (`helmValuesFileName` with a fresh `helmDownloadFragment`: a name of its
+ *   own, which the command's `-f` names), "Download started". The bearer and
+ *   the file are locals of that chain, never in state. Then the command
+ *   screen: "<file> is saved. Run this in a shell with access to your
+ *   cluster:" (the file's name, the release's, inside `ph-no-capture` here
+ *   and in the warning), the words for a file the browser renamed, the
+ *   install command (`helmInstallCommand`, no secret) in a `SecretCopyBox`
+ *   ("Copy install command"), the warning, "Done". A builder's refusal shows
  *   "Failed to build values.yaml", never its message.
- * - **Quick Deploy** (Preflight ruling 27), only while public install links
- *   are on (else "Public install links are turned off for this
- *   organization.", and a description without it): one click, the link's create (`{kind: "helm", env}`),
- *   then "Quick Deploy command ready" with the link's curl line and the
- *   install (`helmQuickDeployCommand`) in one `SecretCopyBox` ("Copy
- *   command"), shown once (the link's secret is stored only as its hash),
- *   no reveal (the bearer comes with the link's download). A create answered
+ * - **Quick Deploy**, only while public install links are on (else "Public
+ *   install links are turned off for this organization.", and a description
+ *   without it): one click, the link's create (`{kind: "helm", env}`), then
+ *   "Quick Deploy command ready" with the link's curl line and the install
+ *   (`helmQuickDeployCommand`) in one `SecretCopyBox` ("Copy command"),
+ *   shown once (the link's secret is stored only as its hash), no reveal
+ *   (the bearer comes with the link's download). A create answered
  *   `public_install_links_disabled` turns the button off at once;
  *   `enrollment_token_default_missing` shows `NoDefaultToken`; a 400's
  *   details show under their variables.
@@ -125,17 +121,17 @@ import { SecretCopyBox } from "~/components/secrets/SecretCopyBox.js";
  *   the opener.
  * - Closing during a read, a download or a link's making drops its answer;
  *   the Quick Deploy command leaves the state as the dialog closes.
- * - Privacy (decisions 9 and 29): the commands only in a `SecretCopyBox`;
- *   the release, namespace, address, variables' names and values inside
- *   `ph-no-capture`, never in an attribute but an input's own `value`; the
- *   groups' names visible text only (the Select's hidden native option holds
- *   one as text). No toast, URL or log holds any of them.
+ * - Privacy: the commands only in a `SecretCopyBox`; the release, namespace,
+ *   address, variables' names and values inside `ph-no-capture`, never in an
+ *   attribute but an input's own `value`; the groups' names visible text
+ *   only (the Select's hidden native option holds one as text). No toast,
+ *   URL or log holds any of them.
  */
 
 export const HELM_INSTALL_TITLE = "Install with Helm";
 export const HELM_INSTALL_DESCRIPTION =
   "Choose a group, then download its values.yaml and run helm upgrade --install against your cluster, or make a Quick Deploy command.";
-/** The description while public install links are off: no Quick Deploy to make (Ruling 40). */
+/** The description while public install links are off: no Quick Deploy to make. */
 export const HELM_INSTALL_DESCRIPTION_LINKS_OFF =
   "Choose a group, then download its values.yaml and run helm upgrade --install against your cluster.";
 export const HELM_LOAD_FAILED_MESSAGE = "Failed to load the install's details";
@@ -145,9 +141,9 @@ export const HELM_QUICK_DEPLOY_FAILED_MESSAGE = "Failed to make the install link
 export const HELM_DOWNLOAD_STARTED_MESSAGE = "Download started";
 export const HELM_PICK_GROUP = "Pick a group";
 export const HELM_NO_GROUP_WORDS = "Assign a published version to a group first";
-/** The command screen's words after the file this download saved (Rulings 36 and 37). */
+/** The command screen's words after the file this download saved. */
 export const HELM_COMMAND_INTRO_WORDS = "is saved. Run this in a shell with access to your cluster:";
-/** The command screen's words, naming the file this download saved, as text (the screen shows the name inside ph-no-capture: Ruling 40). */
+/** The command screen's words, naming the file this download saved, as text (the screen shows the name inside ph-no-capture). */
 export function helmCommandIntro(valuesFile: string): string {
   return `${valuesFile} ${HELM_COMMAND_INTRO_WORDS}`;
 }
@@ -161,8 +157,8 @@ export function helmValuesWarning(valuesFile: string): string {
 
 /**
  * A sentence starting with the values file's name (the release's: a gateway's
- * name, configuration text): the name inside `ph-no-capture` (Ruling 40),
- * the fixed words after it.
+ * name, configuration text): the name inside `ph-no-capture`, the fixed words
+ * after it.
  */
 function NamedFileWords({ valuesFile, words }: { valuesFile: string; words: string }) {
   return (
@@ -430,7 +426,7 @@ function HelmInstallSession({
     setActionError(isUnknownOutcome(failure) ? FLEETS_UNAVAILABLE_MESSAGE : fleetRefusalMessage(failure, fallback));
   };
 
-  /** "Download values.yaml" (Preflight rulings 24 and 25): the bearer and the file only locals of this chain. */
+  /** "Download values.yaml": the bearer and the file only locals of this chain. */
   const download = async () => {
     setAttempted(true);
     if (facts === null || row === null || row.group === null || busy || downloadingRef.current || creatingRef.current || noDefaultToken || !valid) return;
@@ -453,7 +449,7 @@ function HelmInstallSession({
       let valuesFile: string;
       try {
         yaml = helmValuesYaml(helmValuesInputOf(fresh, revealed.bearer, variables.filter((each) => offered.has(each.name))));
-        // A name of this download's own (Ruling 37): another download, of this group or another fleet's, never shares it.
+        // A name of this download's own: another download, of this group or another fleet's, never shares it.
         valuesFile = helmValuesFileName(fresh.helm.release, helmDownloadFragment(crypto.getRandomValues(new Uint8Array(4))));
       } catch {
         setActionError(HELM_BUILD_FAILED_MESSAGE);
@@ -474,7 +470,7 @@ function HelmInstallSession({
     }
   };
 
-  /** "Quick Deploy" (Preflight ruling 27): the link's create, then its command, shown once. */
+  /** "Quick Deploy": the link's create, then its command, shown once. */
   const makeQuickDeployLink = async () => {
     setAttempted(true);
     if (facts === null || row === null || row.group === null || !linksOn || busy || downloadingRef.current || creatingRef.current || noDefaultToken || !valid) return;

@@ -12,7 +12,7 @@ import { useUserStore } from "~/lib/stores/user-store.js";
 import { GROUP_ID, PERSONAL_ID, signedInMember } from "~/test/configurations.js";
 import { anyStateHolds, DEFAULT_TOKEN_ID, ROTATE_TOKEN_ID, fleet, fleetCreated, listedToken } from "~/test/fleets.js";
 
-/** "New Fleet": the button, the type chooser, then that type's create dialog (D17a decision 24). */
+/** "New Fleet": the button, the type chooser, then that type's create dialog. */
 
 function renderButton() {
   const onMayHaveCreated = vi.fn();
@@ -30,7 +30,7 @@ function renderButton() {
   return { user: userEvent.setup(), onMayHaveCreated, container };
 }
 
-describe("NewFleetButton (D17a decision 24)", () => {
+describe("NewFleetButton", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
     useUserStore.getState().setCurrent(signedInMember(GROUP_ID));

@@ -16,11 +16,10 @@ import { InviteOrgMemberDialog } from "./dialogs/InviteOrgMemberDialog.js";
 import { formatDate } from "./format-date.js";
 
 /*
- * The invited members' list (ADR 0018). The invitations come from the
- * Permissions layout rather than a store, and the Active page's spinner shows
- * until they have loaded. The role is the API's, already lowercase. An
- * invitation past its expiry says "Expired" beside its date (new; D6 decision
- * 13), and Resend revives it.
+ * The invited members' list. The invitations come from the Permissions layout
+ * rather than a store, and the Active page's spinner shows until they have
+ * loaded. The role is the API's, already lowercase. An invitation past its
+ * expiry says "Expired" beside its date, and Resend revives it.
  *
  * A resend reloads the list, so a revived invitation loses its "Expired". A
  * refusal reloads it too: the invitation is usually gone.
@@ -32,7 +31,7 @@ interface InvitedMembersPageProps {
   organizationId: string;
   /** The organization's name, for the invite dialog. */
   organizationName: string;
-  /** Its type, for the invite dialog, and whether it may invite on this site (D36-1 decision 57). */
+  /** Its type, for the invite dialog, and whether it may invite on this site. */
   organizationType: OrganizationType;
   /** Reloads the list after a change. */
   onChanged: () => void;

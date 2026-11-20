@@ -9,15 +9,14 @@ import { PublishedVersionCell } from "./GroupsTable.js";
 import { VariableGroupLink } from "./VariableGroupLink.js";
 
 /*
- * A group's details (D17b-2 decision 23), opened by a row's "More". Its title
- * the group's name, its description "Group details", and the rows Name,
- * Published version ("Nothing assigned" with its meaning as text under it)
- * and Collector Group ID with its copy button, which toasts. D20 (default 25)
- * adds a "Variable group" row: the group's variable group by name, else
- * "Organization values", opening each variable's value (`VariableGroupLink`).
- * In the Parity Notes: no `title` on the id; the name is text in the masked
- * shell only. The dialog shows the row as it was when opened: the polls pause
- * while it is open.
+ * A group's details, opened by a row's "More". Its title the group's name,
+ * its description "Group details", and the rows Name, Published version
+ * ("Nothing assigned" with its meaning as text under it) and Collector Group
+ * ID with its copy button, which toasts, and a "Variable group" row: the
+ * group's variable group by name, else "Organization values", opening each
+ * variable's value (`VariableGroupLink`). No `title` on the id; the name is
+ * text in the masked shell only. The dialog shows the row as it was when
+ * opened: the polls pause while it is open.
  */
 
 export const COPIED_GROUP_ID_MESSAGE = "Copied collector group id";

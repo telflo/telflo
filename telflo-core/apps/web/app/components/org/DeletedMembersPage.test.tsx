@@ -49,7 +49,7 @@ describe("DeletedMembersPage", () => {
     const [email, role, deletedAt, actions] = within(rows[0]!).getAllByRole("cell");
     expect(email).not.toHaveTextContent("(you)");
     expect(role).toHaveTextContent(/^contributor$/);
-    // The membership's deletedAt, not when it joined (Parity Notes).
+    // The membership's deletedAt, not when it joined.
     expect(deletedAt!.textContent).toMatch(enUsDateTime("Apr 20, 2026"));
     expect(within(actions!).getByRole("button", { name: "Restore" })).toHaveClass("text-ok");
     expect(within(rows[1]!).getAllByRole("cell")[1]).toHaveTextContent(/^admin$/);

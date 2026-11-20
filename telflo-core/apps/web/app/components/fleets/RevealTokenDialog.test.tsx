@@ -14,8 +14,8 @@ import { expectTextOnlyInsideNoCapture, FLEET_ID, tokensInEveryState } from "~/t
 import { REVEAL_ARCHIVED, REVEAL_FAILED_MESSAGE, REVEAL_WORDS, RevealTokenDialog } from "./RevealTokenDialog.js";
 
 /*
- * Reveal (D17b-2 decisions 12, 30 and 34): the bearer is shown in
- * `ph-no-capture`, one reveal per opening, on either kind of fleet.
+ * Reveal: the bearer is shown in `ph-no-capture`, one reveal per
+ * opening, on either kind of fleet.
  */
 
 const NOW = Date.now();
@@ -107,7 +107,7 @@ function mountDialog(token: EnrollmentTokenListed = tokens.defaultToken, archive
   return { user, onOpenChange, onChanged, loader };
 }
 
-describe("RevealTokenDialog (decision 30)", () => {
+describe("RevealTokenDialog", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
   });
@@ -151,7 +151,7 @@ describe("RevealTokenDialog (decision 30)", () => {
     expect(within(dialog).getByRole("button", { name: "Copy rotate token" })).toBeInTheDocument();
   });
 
-  it("says an archived fleet's collectors are refused, still revealing (Preflight ruling 8)", async () => {
+  it("says an archived fleet's collectors are refused, still revealing", async () => {
     serveReveals();
     await renderDialog(tokens.defaultToken, true);
     expect(await screen.findByText(maskSecret(DEFAULT_BEARER))).toBeInTheDocument();

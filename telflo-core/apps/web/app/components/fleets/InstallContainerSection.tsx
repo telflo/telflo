@@ -10,8 +10,7 @@ import { EnvVarInputs, type EnvVarInputsProps } from "./EnvVarInputs.js";
 import { SecretCopyBox } from "~/components/secrets/SecretCopyBox.js";
 
 /*
- * The install dialog's container image method (D17c-1 decisions 40 to 43;
- * Preflight rulings 24, 25 and 28; ADR 0018), presentational: the dialog
+ * The install dialog's container image method, presentational: the dialog
  * holds the fields, the bearer and the reveal.
  *
  * - "Collector display name (optional)" (`DisplayNameField`, shared with
@@ -27,12 +26,12 @@ import { SecretCopyBox } from "~/components/secrets/SecretCopyBox.js";
  * - A fleet with no valid default token (all revoked) shows
  *   `NoDefaultToken` in place of the reveal: issue a new one on the Tokens
  *   tab.
- * - Mounts the platform can't read (the facts' `mountsReadable` false,
- *   Ruling 62) are left out of the command, and the section says so.
- * - Privacy (decision 48): the display name, the variables, the mounts'
- *   paths and the preview are configuration text, all inside
- *   `ph-no-capture`; the bearer only in the `SecretCopyBox` (also
- *   `ph-no-capture`), never in an attribute.
+ * - Mounts the platform can't read (the facts' `mountsReadable` false)
+ *   are left out of the command, and the section says so.
+ * - Privacy: the display name, the variables, the mounts' paths and the
+ *   preview are configuration text, all inside `ph-no-capture`; the
+ *   bearer only in the `SecretCopyBox` (also `ph-no-capture`), never in
+ *   an attribute.
  */
 
 export const CONTAINER_INTRO =
@@ -40,11 +39,11 @@ export const CONTAINER_INTRO =
 export const CONTAINER_WARNING =
   "The command contains the fleet's default token. Anyone holding it can enroll collectors in this fleet. Run it in a secure shell; don't paste it into shared logs or chat. If it leaks, revoke the default token and issue a new one on the Tokens tab.";
 export const DISPLAY_NAME_HELP = "Shown in Fleet Management. Leave empty for an automatic name.";
-/** The facts' `mountsReadable` false (Ruling 62): the group's mounts can't be read, so the command has none. */
+/** The facts' `mountsReadable` false: the group's mounts can't be read, so the command has none. */
 export const MOUNTS_UNREADABLE_WORDS =
   "This group's mounts are saved in a form Telflo can't read: they're left out of the command. Edit them on the Groups tab.";
 
-/** The display name (decision 41): the container's and the Linux methods' alike. */
+/** The display name: the container's and the Linux methods' alike. */
 export function DisplayNameField({
   value,
   onChange,
@@ -84,9 +83,9 @@ export function DisplayNameField({
 }
 
 /**
- * The fleet's default tokens all revoked (decision 42): no bearer to put
- * in a command; the Tokens tab issues a new one. `onTokensTab` closes the
- * dialog as the link is followed.
+ * The fleet's default tokens all revoked: no bearer to put in a command;
+ * the Tokens tab issues a new one. `onTokensTab` closes the dialog as the
+ * link is followed.
  */
 export function NoDefaultToken({ onTokensTab }: { onTokensTab: () => void }) {
   return (

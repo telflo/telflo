@@ -73,11 +73,10 @@ import {
 import { QUICK_DEPLOY_TITLE } from "./QuickDeployScreen.js";
 
 /*
- * The Helm install dialog (D17d-2 decisions 9, 12, 19 and 21; Preflight
- * rulings 23 to 27 and 33): the Agent, the Cluster and the gateways
- * offered in one Group select (an unassigned gateway listed disabled), the
- * release named by role and the install command for it; no link at the
- * opening (only Quick Deploy's click makes one), and Download values.yaml.
+ * The Helm install dialog: the Agent, the Cluster and the gateways offered
+ * in one Group select (an unassigned gateway listed disabled), the release
+ * named by role and the install command for it; no link at the opening
+ * (only Quick Deploy's click makes one), and Download values.yaml.
  */
 
 // Standard base64, as the opamp-server seals a bearer (the values file's backstop refuses any other).
@@ -220,7 +219,7 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-describe("HelmInstallDialog's reads and Group select (Preflight rulings 25 and 26)", () => {
+describe("HelmInstallDialog's reads and Group select", () => {
   it("reads the groups, the settings and the tokens together, then the first installable group's Helm facts; its title fixed, the release and namespace shown", async () => {
     const groups = held<{ groups: CollectorGroup[] }>();
     const calls = serve();
@@ -355,7 +354,7 @@ describe("HelmInstallDialog's reads and Group select (Preflight rulings 25 and 2
   });
 });
 
-describe("HelmInstallDialog's refusals (decision 19; Preflight ruling 25)", () => {
+describe("HelmInstallDialog's refusals", () => {
   it.each([
     ["collector_group_unassigned", COLLECTOR_GROUP_UNASSIGNED_MESSAGE],
     ["collector_group_assignment_deleted", COLLECTOR_GROUP_ASSIGNMENT_DELETED_MESSAGE],
@@ -410,7 +409,7 @@ describe("HelmInstallDialog's refusals (decision 19; Preflight ruling 25)", () =
   });
 });
 
-describe("HelmInstallDialog's Download values.yaml (decision 19; Preflight rulings 24 and 25)", () => {
+describe("HelmInstallDialog's Download values.yaml", () => {
   it("reveals the default token with the facts read again, saves values.yaml as the contracts render it from those fresh facts, then the quoted install command; the bearer nowhere in the document", async () => {
     const calls = serve();
     const user = await renderDialog({ groupId: GATEWAYS_GROUP_ID });
@@ -430,7 +429,7 @@ describe("HelmInstallDialog's Download values.yaml (decision 19; Preflight rulin
     expect(calls.downloadBlob).toHaveBeenCalledTimes(1);
     expect(calls.downloadTextFile).not.toHaveBeenCalled();
     const [blob, fileName] = calls.downloadBlob.mock.calls[0]!;
-    // Named per release and per download (Rulings 36 and 37): another group's file, or an older one, is never read for this one.
+    // Named per release and per download: another group's file, or an older one, is never read for this one.
     expect(fileName).toMatch(/^gateways-values-[0-9a-f]{8}\.yaml$/);
     expect(blob.type).toBe("text/yaml");
     expect(await blobText(blob)).toBe(helmValuesYaml(helmValuesInputOf(fresh, BEARER, [{ name: "NGINX_ENV", value: "it's $(echo EXPANDED) \"q\"" }])));
@@ -464,7 +463,7 @@ describe("HelmInstallDialog's Download values.yaml (decision 19; Preflight rulin
     expect(document.body.innerHTML).not.toContain(BEARER);
   });
 
-  it("names each download's file its own (Ruling 37), each command naming its own file: two downloads of one group never share one", async () => {
+  it("names each download's file its own, each command naming its own file: two downloads of one group never share one", async () => {
     const random = vi.spyOn(crypto, "getRandomValues");
     for (const bytes of [
       [0x0a, 0x1b, 0x2c, 0x3d],
@@ -510,7 +509,7 @@ describe("HelmInstallDialog's Download values.yaml (decision 19; Preflight rulin
     expect(calls.downloadBlob).not.toHaveBeenCalled();
   });
 
-  // D18 decision 23: the platform's chart quotes collectorEnv's keys, so a YAML 1.1 word is a variable like any other.
+  // The platform's chart quotes collectorEnv's keys, so a YAML 1.1 word is a variable like any other.
   it("offers a YAML word's variable like any other: ticked and typed, its value in the file under its quoted name", async () => {
     const facts = { ...agentHelmFacts(), envVarNames: ["NGINX_ENV", "on"] };
     api.facts = () => facts;
@@ -584,7 +583,7 @@ describe("HelmInstallDialog's Download values.yaml (decision 19; Preflight rulin
   });
 });
 
-describe("HelmInstallDialog's Quick Deploy (decision 21; Preflight rulings 27 and 33)", () => {
+describe("HelmInstallDialog's Quick Deploy", () => {
   it("makes a Helm values link in one click: the create's body, then the curl line and the install in one box, shown once, no reveal; the command leaves on close", async () => {
     const calls = serve();
     const user = await renderDialog({ groupId: GATEWAYS_GROUP_ID });
@@ -622,7 +621,7 @@ describe("HelmInstallDialog's Quick Deploy (decision 21; Preflight rulings 27 an
     await user.click(within(dialog()).getByRole("button", { name: "Done" }));
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
     expect(document.body.innerHTML).not.toContain(QUICK_DEPLOY_SECRET);
-    // The closed session (still mounted, its dialog rendering nothing) holds the command no more (Ruling 40).
+    // The closed session (still mounted, its dialog rendering nothing) holds the command no more.
     expect(anyStateHolds(QUICK_DEPLOY_SECRET)).toBe(false);
     // Opened again: the form, no link made.
     await user.click(screen.getByRole("button", { name: "open install" }));
@@ -659,7 +658,7 @@ describe("HelmInstallDialog's Quick Deploy (decision 21; Preflight rulings 27 an
     await loaded();
     expect(quickDeployButton()).toBeNull();
     expect(dialog()).toHaveTextContent(PUBLIC_INSTALL_LINKS_OFF_WORDS);
-    // Its description offers no Quick Deploy either (Ruling 40).
+    // Its description offers no Quick Deploy either.
     expect(dialog()).toHaveAccessibleDescription(HELM_INSTALL_DESCRIPTION_LINKS_OFF);
     expect(HELM_INSTALL_DESCRIPTION_LINKS_OFF).toBe("Choose a group, then download its values.yaml and run helm upgrade --install against your cluster.");
     await user.click(downloadButton());
@@ -720,7 +719,7 @@ describe("HelmInstallDialog's Quick Deploy (decision 21; Preflight rulings 27 an
   });
 });
 
-describe("HelmInstallDialog's privacy (decisions 9 and 29; Preflight ruling 19)", () => {
+describe("HelmInstallDialog's privacy", () => {
   it("holds no gateway name, namespace, variable name or value, bearer or link secret in an attribute, through the select, the download and Quick Deploy; each shown inside ph-no-capture", async () => {
     const gateway = "canary-gateway-5e1f";
     const namespace = "canary-namespace-7a2b";
@@ -751,7 +750,7 @@ describe("HelmInstallDialog's privacy (decisions 9 and 29; Preflight ruling 19)"
     for (const text of [gateway, namespace, variable, value, BEARER]) expectNoAttributeHolds(text);
     expect(expectTextOnlyInsideNoCapture(namespace)).toBe(1);
     // The gateway's name (the release, and the file named after it): the command, and the file's name in the intro and the
-    // warning, each inside ph-no-capture (Ruling 40).
+    // warning, each inside ph-no-capture.
     expect(expectTextOnlyInsideNoCapture(gateway)).toBe(3);
     expect(document.body.innerHTML).not.toContain(BEARER);
     expect(document.body.innerHTML).not.toContain(value);
@@ -769,8 +768,8 @@ describe("HelmInstallDialog's privacy (decisions 9 and 29; Preflight ruling 19)"
     expect(calls.revealEnrollmentToken).toHaveBeenCalledTimes(1);
   });
 
-  // D18 decision 37, Preflight rulings 16 and 23: a YAML-word variable is configuration text like any other. Its name (a
-  // short word, "ON", is inside "JSON" and can't be a canary) is shown inside ph-no-capture; the canary is its typed value.
+  // A YAML-word variable is configuration text like any other. Its name (a short word, "ON", is inside "JSON" and can't be
+  // a canary) is shown inside ph-no-capture; the canary is its typed value.
   it("with a YAML-word variable (ON) ticked and a canary value typed: the value only in its input inside ph-no-capture, in no other attribute, through the download and Quick Deploy", async () => {
     const value = "canary-yaml-word-value-6b3e";
     const facts = { ...agentHelmFacts(), envVarNames: ["NGINX_ENV", "ON"] };

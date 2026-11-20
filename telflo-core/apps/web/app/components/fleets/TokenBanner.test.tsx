@@ -7,9 +7,8 @@ import { EMPTY_SUMMARY, fleetDetail } from "~/test/fleets.js";
 import { bannerOf, expiringBannerWords, SUSPENDED_BANNER, suspendedBannerWords, TOKEN_BANNER_LABEL, TokenBanner } from "./TokenBanner.js";
 
 /*
- * The rotate-before-expiry banner (D17b-2 decision 28; D16a Ruling 57;
- * Preflight ruling 4's words). Its button opening the rotate dialog, and the
- * focus coming back to it, are in `TokensTab.test.tsx`.
+ * The rotate-before-expiry banner. Its button opening the rotate dialog, and
+ * the focus coming back to it, are in `TokensTab.test.tsx`.
  */
 
 const NOW = Date.parse("2026-10-14T12:00:00.000Z");
@@ -22,7 +21,7 @@ function fleetWith(rotateToken: FleetRotateToken | null, status: FleetStatus = "
 
 const expiringIn = (ms: number): FleetRotateToken => ({ expiresAt: new Date(NOW + ms).toISOString(), graceEndsAt: null, validCount: 1 });
 
-/** The banner by its name: a `region` landmark, rendered only when there is one (Ruling 31). It carries its tone. */
+/** The banner by its name: a `region` landmark, rendered only when there is one. It carries its tone. */
 const banner = () => screen.getByRole("region", { name: TOKEN_BANNER_LABEL });
 /** No banner: no region by its name at all, hidden or not. */
 const expectNoBanner = () => expect(screen.queryByRole("region", { name: TOKEN_BANNER_LABEL, hidden: true })).toBeNull();
@@ -33,8 +32,8 @@ function renderBanner(rotateToken: FleetRotateToken | null, status: FleetStatus 
   return { onRotate, container };
 }
 
-describe("TokenBanner (decision 28)", () => {
-  it("says a suspended fleet has no valid rotate token, destructive, in Preflight ruling 4's words", () => {
+describe("TokenBanner", () => {
+  it("says a suspended fleet has no valid rotate token, destructive, in its fixed words", () => {
     renderBanner(null);
     expect(screen.queryByRole("alert")).toBeNull();
     expect(screen.queryByRole("status", { hidden: true })).toBeNull();
@@ -46,7 +45,7 @@ describe("TokenBanner (decision 28)", () => {
     expect(banner()).toHaveClass("text-fail");
   });
 
-  it("says a suspended fleet's restarted collectors can't come back while it has no valid default token (Ruling 61)", () => {
+  it("says a suspended fleet's restarted collectors can't come back while it has no valid default token", () => {
     render(<TokenBanner fleet={fleetWith(null)} now={NOW} onRotate={vi.fn()} defaultTokenValid={false} />);
     expect(banner()).toHaveTextContent(suspendedBannerWords(false));
     expect(suspendedBannerWords(false)).toBe(
@@ -101,8 +100,8 @@ describe("TokenBanner (decision 28)", () => {
     expect(container).toBeEmptyDOMElement();
   });
 
-  // Ruling 31: no live semantics (Radix's hideOthers skips aria-live elements, a status re-announced the
-  // countdown, an empty status was exposed), so the banner comes and goes as a whole.
+  // No live semantics (Radix's hideOthers skips aria-live elements, a status re-announced the countdown,
+  // an empty status was exposed), so the banner comes and goes as a whole.
   it("is a region named Rotate token notice with no live semantics, there only while there is a banner", () => {
     const onRotate = vi.fn();
     const { container, rerender } = render(<TokenBanner fleet={fleetWith(expiringIn(365 * DAY))} now={NOW} onRotate={onRotate} defaultTokenValid />);

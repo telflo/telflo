@@ -54,15 +54,14 @@ import { VARIABLES_UNDEFINED_ASSIGNED_HINT, VARIABLES_UNDEFINED_HINT, VARIABLES_
 import { MOUNTS_HINT, MOUNTS_UNREADABLE } from "./MountsEditor.js";
 
 /*
- * The group dialog (D17b-2 decisions 15 and 24; Preflight ruling 11):
- * create with a configuration picked (its newest version), a name its rules
- * refuse blocked with the message shown, Create disabled until a name and a
- * version (a new group requires one: Ruling 34), and edit's prefill with
- * the update's request. The mounts (the disclosure closed for a group with
- * no mounts and open for one with mounts, a mount saved onto the group, the
- * editor seeded from the group's mounts) are in "GroupDialog's mounts"
- * below (D17c-1 decision 32; Preflight ruling 30), with the editor's own
- * cases in `MountsEditor.test.tsx`.
+ * The group dialog: create with a configuration picked (its newest
+ * version), a name its rules refuse blocked with the message shown, Create
+ * disabled until a name and a version (a new group requires one), and
+ * edit's prefill with the update's request. The mounts (the disclosure
+ * closed for a group with no mounts and open for one with mounts, a mount
+ * saved onto the group, the editor seeded from the group's mounts) are in
+ * "GroupDialog's mounts" below, with the editor's own cases in
+ * `MountsEditor.test.tsx`.
  */
 
 const refusal = (code: string, message: string, status: number, options: { details?: unknown } = {}) =>
@@ -97,7 +96,7 @@ interface Api {
   creates: CreateCollectorGroupRequest[];
   updates: Array<{ groupId: string; request: UpdateCollectorGroupRequest }>;
   signals: Array<AbortSignal | undefined>;
-  /** The fleet's groups a mounts save reads again (Ruling 61); null: the group as the dialog opened with it. */
+  /** The fleet's groups a mounts save reads again; null: the group as the dialog opened with it. */
   freshGroups: CollectorGroup[] | Error | null;
 }
 
@@ -125,7 +124,7 @@ function serve() {
     .spyOn(apiClient, "getConfigurations")
     .mockImplementation(async (organizationId, query: ConfigurationsQuery = {}): Promise<ConfigurationsPage> => {
       expect(organizationId).toBe(GROUP_ID);
-      // No search (Ruling 35): a read never sends q.
+      // No search: a read never sends q.
       expect(query).toEqual({ filter: "published", limit: 100 });
       return { items: api.configurations, nextCursor: null };
     });
@@ -287,7 +286,7 @@ describe("GroupDialog: create and edit", () => {
     expect(api.creates).toEqual([{ name: "prod-gateway_1.eu ünïcode: x", assignedVersionId: V5_ID }]);
   });
 
-  // Ruling 34 (the owner's): a new group requires a published version.
+  // A new group requires a published version.
   it("create: keeps Create disabled until a name and a complete version", async () => {
     let release!: () => void;
     api.versionsHolds.set(PAYMENTS_ID, new Promise((resolve) => (release = resolve)));
@@ -332,7 +331,7 @@ describe("GroupDialog: create and edit", () => {
   });
 });
 
-describe("GroupDialog's titles and words (decision 24)", () => {
+describe("GroupDialog's titles and words", () => {
   it.each([
     ["create", null, "New group", CREATE_DESCRIPTION, "Create"],
     ["an assigned group's edit", gatewaysGroup(), "Edit gateways", EDIT_DESCRIPTION, "Save"],
@@ -375,7 +374,7 @@ describe("GroupDialog's titles and words (decision 24)", () => {
   });
 });
 
-describe("GroupDialog's Name (decisions 15 and 24)", () => {
+describe("GroupDialog's Name", () => {
   it('sends the Name trimmed, toasts "Group updated", closes and reloads', async () => {
     const toastSuccess = vi.spyOn(toast, "success");
     const { user, onOpenChange, onChanged } = await renderDialog(gatewaysGroup());
@@ -452,7 +451,7 @@ describe("GroupDialog's Name (decisions 15 and 24)", () => {
   });
 });
 
-describe("GroupDialog's published version (decision 24; Preflight ruling 11)", () => {
+describe("GroupDialog's published version", () => {
   it("renames and assigns in one PATCH", async () => {
     const { user, onChanged } = await renderDialog(gatewaysGroup());
     await rename(user, "databases");
@@ -523,7 +522,7 @@ describe("GroupDialog's published version (decision 24; Preflight ruling 11)", (
     expect(api.updates).toEqual([{ groupId: EDGE_ID, request: { name: "edge-2", assignedVersionId: P2_ID } }]);
   });
 
-  // Ruling 34 (the owner's): a new group requires a published version.
+  // A new group requires a published version.
   it("create: offers no Nothing assigned, nor any choice: the picker alone, a group named Published version", async () => {
     const { user } = await renderDialog();
     expect(screen.queryByRole("combobox", { name: "Published version" })).toBeNull();
@@ -536,8 +535,8 @@ describe("GroupDialog's published version (decision 24; Preflight ruling 11)", (
     expect((await screen.findAllByRole("option")).map((option) => option.textContent)).toEqual(["checkout-otel", "payments-otel"]);
   });
 
-  // D17c-1 Ruling 72 (the owner's): Nothing assigned only releases an assigned group; an unassigned group's Assign
-  // shows the picker alone, as New group does (Rulings 34 and 36).
+  // Nothing assigned only releases an assigned group; an unassigned group's Assign shows the picker alone, as New
+  // group does.
   it.each([
     ["an unassigned group's", edgeGroup(), EDGE_ID],
     ["the unassigned Default group's", collectorGroup(), DEFAULT_GROUP_ID],
@@ -561,8 +560,8 @@ describe("GroupDialog's published version (decision 24; Preflight ruling 11)", (
     expect(api.updates).toEqual([{ groupId, request: { assignedVersionId: V5_ID } }]);
   });
 
-  // D17b-2 Ruling 36 (on the owner's point): New group shows no "Published version" heading, its picker's group keeps
-  // the name by a fixed aria-label; Edit keeps its visible label.
+  // New group shows no "Published version" heading, its picker's group keeps the name by a fixed aria-label; Edit
+  // keeps its visible label.
   it("create: shows no Published version heading, the picker's group named by fixed words", async () => {
     await renderDialog();
     expect(screen.queryByText("Published version")).toBeNull();
@@ -577,7 +576,7 @@ describe("GroupDialog's published version (decision 24; Preflight ruling 11)", (
     expect(combobox("Published version")).toBeInTheDocument();
   });
 
-  // D17b-2 Ruling 35 (the owner's): no search box in the picker, New group or Edit group.
+  // No search box in the picker, New group or Edit group.
   it.each([
     ["New group", null],
     ["Edit group", gatewaysGroup()],
@@ -611,7 +610,7 @@ describe("GroupDialog's published version (decision 24; Preflight ruling 11)", (
   });
 });
 
-describe("GroupDialog's hint (decision 24)", () => {
+describe("GroupDialog's hint", () => {
   it("says a version picked is sent to the unpinned collectors; none without a version", async () => {
     expect(HINT_VERSION).toBe("The group's collectors that aren't pinned are sent this version on their next poll; pinned ones keep their pin.");
     const { user } = await renderDialog(edgeGroup());
@@ -620,7 +619,7 @@ describe("GroupDialog's hint (decision 24)", () => {
     expect(screen.getByText(HINT_VERSION)).toBeInTheDocument();
   });
 
-  // D17c-1 Ruling 72 (the owner's words): Nothing assigned, offered only to an assigned group, releases its version.
+  // Nothing assigned, offered only to an assigned group, releases its version.
   it("says Nothing assigned releases the published version, in an assigned group's Edit", async () => {
     expect(HINT_NOTHING).toBe(
       "Releases the published version (e.g. to delete its configuration). Collectors keep running what they have; new installs need a published version.",
@@ -635,7 +634,7 @@ describe("GroupDialog's hint (decision 24)", () => {
     expect(screen.queryByText(HINT_VERSION)).toBeNull();
   });
 
-  // Ruling 22 (N1, N3): no hint for the assignment a group opens with; the hint describes the Published version select.
+  // No hint for the assignment a group opens with; the hint describes the Published version select.
   it("says nothing for the version an assigned group opens with, until another is picked; the select is described by the hint", async () => {
     const { user } = await renderDialog(gatewaysGroup());
     await waitFor(() => expect(combobox("Version")).toHaveTextContent("@v4"));
@@ -669,7 +668,7 @@ describe("GroupDialog's hint (decision 24)", () => {
   });
 });
 
-describe("GroupDialog's refusals (decision 24)", () => {
+describe("GroupDialog's refusals", () => {
   it.each([
     ["configuration_version_not_published", "This version isn't published: publish it before assigning or pinning it.", 422],
     ["configuration_version_not_found", "Version not found", 404],
@@ -747,7 +746,7 @@ describe("GroupDialog's refusals (decision 24)", () => {
   });
 });
 
-describe("GroupDialog's unknown outcome (decision 24)", () => {
+describe("GroupDialog's unknown outcome", () => {
   it.each([
     ["a 503 fleets_unavailable", UNAVAILABLE],
     ["a 500", () => refusal("internal_error", "Something went wrong.", 500)],
@@ -905,7 +904,7 @@ describe("GroupDialog while saving", () => {
   });
 });
 
-/** Each attribute holding `text`, but the `value` of the elements allowed (the Name: the picker has no search box, Ruling 35). */
+/** Each attribute holding `text`, but the `value` of the elements allowed (the Name: the picker has no search box). */
 function attributesHoldingBut(text: string, allowed: Element[]): string[] {
   const holders: string[] = [];
   for (const element of [document.documentElement, ...document.documentElement.querySelectorAll("*")]) {
@@ -918,7 +917,7 @@ function attributesHoldingBut(text: string, allowed: Element[]): string[] {
   return holders;
 }
 
-describe("GroupDialog's privacy (decision 34; Preflight ruling 15)", () => {
+describe("GroupDialog's privacy", () => {
   it("holds no group or configuration name or version label in an attribute, every Select open, but the Name's value", async () => {
     const groupName = "canary-group-5d7e";
     const configurationName = "canary-configuration-3b8f";
@@ -951,7 +950,7 @@ describe("GroupDialog's privacy (decision 34; Preflight ruling 15)", () => {
     const values = [...document.querySelectorAll("option")].map((option) => option.value).filter((value) => value !== "");
     for (const value of values) expect(value).toMatch(/^(version|nothing|orphan|none|[0-9a-f-]{36})$/);
 
-    // Another configuration chosen from the list (no search box to hold its name: Ruling 35).
+    // Another configuration chosen from the list (no search box to hold its name).
     expect(screen.queryByRole("searchbox", { hidden: true })).toBeNull();
     await user.click(combobox("Configuration"));
     await user.click(await screen.findByRole("option", { name: otherName }));
@@ -965,7 +964,7 @@ describe("GroupDialog's privacy (decision 34; Preflight ruling 15)", () => {
   });
 });
 
-describe("GroupDialog's mounts (D17c-1 decision 32; Preflight ruling 30)", () => {
+describe("GroupDialog's mounts", () => {
   const disclosure = () => screen.getByRole("button", { name: MOUNTS_DISCLOSURE });
   const panelOf = () => document.getElementById(disclosure().getAttribute("aria-controls")!)!;
   const hostPaths = () => screen.queryAllByRole("textbox", { name: "Host path" });
@@ -1074,7 +1073,7 @@ describe("GroupDialog's mounts (D17c-1 decision 32; Preflight ruling 30)", () =>
     expect(api.updates).toEqual([{ groupId: GATEWAYS_GROUP_ID, request: { name: "databases" } }]);
   });
 
-  describe("read again before the write (Ruling 61)", () => {
+  describe("read again before the write", () => {
     it("refuses the save when another member saved a mount since the opening: the words, nothing written, the dialog open", async () => {
       const opened = gatewaysGroup({ annotations: mountsAnnotations([NGINX_MOUNT]) });
       api.freshGroups = [collectorGroup(), { ...opened, annotations: mountsAnnotations([NGINX_MOUNT, DATA_MOUNT]) }];
@@ -1085,7 +1084,7 @@ describe("GroupDialog's mounts (D17c-1 decision 32; Preflight ruling 30)", () =>
       expect(MOUNTS_CHANGED_MESSAGE).toBe("This group's mounts changed since you opened it: close and reopen to see them.");
       expect(spies.getCollectorGroups).toHaveBeenCalledTimes(1);
       expect(api.updates).toEqual([]);
-      // The tab reads its groups again at once (Ruling 64): a reopening shows the mounts saved meanwhile.
+      // The tab reads its groups again at once: a reopening shows the mounts saved meanwhile.
       expect(onChanged).toHaveBeenCalledTimes(1);
       expect(onOpenChange).not.toHaveBeenCalled();
       expect(submit()).toHaveTextContent("Save");
@@ -1310,7 +1309,7 @@ describe("GroupDialog's mounts (D17c-1 decision 32; Preflight ruling 30)", () =>
     expect(hostPaths()).toEqual([]);
   });
 
-  // Decision 48: mount paths are configuration text.
+  // Mount paths are configuration text.
   it("holds no mount path in an attribute but its inputs' value, inside ph-no-capture, the messages shown too", async () => {
     const hostPath = "/srv/canary-host-9e2a";
     const containerPath = "/canary-container-41c7";
@@ -1333,8 +1332,8 @@ describe("GroupDialog's mounts (D17c-1 decision 32; Preflight ruling 30)", () =>
   });
 });
 
-// D20 (default 23; Q83, Q86; Preflight rulings 32 and 33; D17c-1 Ruling 66): the Variable group and "Variables used".
-describe("GroupDialog's Variable group and Variables used (default 23)", () => {
+// The Variable group and "Variables used".
+describe("GroupDialog's Variable group and Variables used", () => {
   const EU_ID = "7b000000-0000-4000-8000-0000000000e1";
   const US_ID = "7b000000-0000-4000-8000-0000000000e2";
 
@@ -1440,7 +1439,7 @@ describe("GroupDialog's Variable group and Variables used (default 23)", () => {
     expect(await screen.findByText(allDefinedWords(1))).toBeInTheDocument();
   });
 
-  // Task 13's review: the shared names may be a minute old; the opening reads them again, so a variable just defined elsewhere isn't listed.
+  // The shared names may be a minute old; the opening reads them again, so a variable just defined elsewhere isn't listed.
   it("reads the organization's names again at the opening once they are a minute old", async () => {
     vi.useFakeTimers({ toFake: ["Date"] });
     serveTexts({ [publishedVersion().versionId]: "a: ${org:REGION}" }, ["REGION"]);
@@ -1495,7 +1494,7 @@ describe("GroupDialog's Variable group and Variables used (default 23)", () => {
     expect(await screen.findByRole("combobox", { name: "Variable group" })).toHaveTextContent("A variable group no longer listed");
   });
 
-  // D17c-1 Ruling 66's probe: a parent reloading its groups while the dialog is open moves nothing of its baseline.
+  // A parent reloading its groups while the dialog is open moves nothing of its baseline.
   it("keeps the group it opened with, its variable group included, when the parent reloads", async () => {
     const opened = gatewaysGroup({ variableGroupId: EU_ID });
     openedGroup = opened;
@@ -1523,7 +1522,7 @@ describe("GroupDialog's Variable group and Variables used (default 23)", () => {
     expect(api.updates).toEqual([{ groupId: GATEWAYS_GROUP_ID, request: { variableGroupId: null } }]);
   });
 
-  it("holds no variable group's name in an attribute; the Select's trigger and list sit inside ph-no-capture (Q88)", async () => {
+  it("holds no variable group's name in an attribute; the Select's trigger and list sit inside ph-no-capture", async () => {
     const name = "canary-bound-vg-3c9";
     vi.mocked(apiClient.getVariableGroups).mockResolvedValue([variableGroup({ id: EU_ID, name })]);
     const { user } = await renderDialog(gatewaysGroup({ variableGroupId: EU_ID }));

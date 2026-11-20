@@ -11,15 +11,14 @@ import { tokenValidAt } from "~/lib/tokens.js";
 import { GROUP_NOT_FOUND_MESSAGE } from "./GroupDialog.js";
 
 /*
- * What the install dialogs share (D17c-1's `InstallDialog`, lifted for
- * D17d-2's `HelmInstallDialog`; D17d-2 Preflight ruling 23): an opening's
- * reads and its liveness, the refusals every request of the opening handles
- * alike, and the reveal of the fleet's valid default token (with the
- * install's facts read again beside the tokens). Nothing here holds a
- * bearer: the caller's state, or the caller's click chain, does.
+ * What the install dialogs share (`InstallDialog` and `HelmInstallDialog`):
+ * an opening's reads and its liveness, the refusals every request of the
+ * opening handles alike, and the reveal of the fleet's valid default token
+ * (with the install's facts read again beside the tokens). Nothing here
+ * holds a bearer: the caller's state, or the caller's click chain, does.
  */
 
-/** The refusals an assignment fixes (D17c-1 Preflight ruling 23): their words, and "Assign" (the Helm dialog's: the Groups tab). */
+/** The refusals an assignment fixes: their words, and "Assign" (the Helm dialog's: the Groups tab). */
 export const ASSIGN_REFUSALS: ReadonlySet<string> = new Set([
   "collector_group_unassigned",
   "collector_group_assignment_deleted",
@@ -30,7 +29,7 @@ export const FINAL_REFUSALS: ReadonlySet<string> = new Set(["fleet_archived", "f
 /** A reveal refused for its token (revoked meanwhile, or gone): no default token to reveal. */
 export const TOKEN_REFUSALS: ReadonlySet<string> = new Set(["enrollment_token_revoked", "enrollment_token_expired", "enrollment_token_not_found"]);
 
-/** The install dialogs' words while the organization's switch is off (D17d-2 decision 2; Preflight rulings 27 and 33). */
+/** The install dialogs' words while the organization's switch is off. */
 export const PUBLIC_INSTALL_LINKS_OFF_WORDS = "Public install links are turned off for this organization.";
 
 /** The reveal's chain ends here: the opening is over (closed, unmounted, another organization). */
@@ -38,7 +37,7 @@ export const CLOSED = Symbol("the opening is over");
 /** No valid default token to reveal. */
 export const NO_DEFAULT_TOKEN = Symbol("no valid default token");
 
-/** A reveal's facts read refused (D17c-1 Ruling 61): told as the facts' refusal, not the reveal's. */
+/** A reveal's facts read refused: told as the facts' refusal, not the reveal's. */
 export class FactsRefused {
   constructor(readonly error: unknown) {}
 }
@@ -116,10 +115,9 @@ export function useInstallOpening({ open, organizationId, onOpenChange, onFleetC
 }
 
 /**
- * The opening's bearer: the tokens read, the valid default token, its reveal. Throws CLOSED once the opening is
- * over, NO_DEFAULT_TOKEN with none valid. With `readFacts` (a group's install facts, D17c-1 Ruling 61), the facts are
- * read again with the tokens: a refusal throws FactsRefused, and the facts read are the ones the text (or the file) is
- * built from.
+ * The opening's bearer: the tokens read, the valid default token, its reveal. Throws CLOSED once the opening is over,
+ * NO_DEFAULT_TOKEN with none valid. With `readFacts` (a group's install facts), the facts are read again with the
+ * tokens: a refusal throws FactsRefused, and the facts read are the ones the text (or the file) is built from.
  */
 export async function revealDefaultBearer<Facts>(
   opening: Pick<InstallOpening, "read" | "live">,

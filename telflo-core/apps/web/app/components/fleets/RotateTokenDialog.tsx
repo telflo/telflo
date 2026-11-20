@@ -19,16 +19,15 @@ import { NO_VALID_DEFAULT_CLAUSE_ONE, noValidDefaultToken } from "./RevokeTokenD
 import { SecretCopyBox } from "~/components/secrets/SecretCopyBox.js";
 
 /*
- * Rotate (D17b-2 decisions 13 and 29; Preflight rulings 4, 6 and 13; ADR
- * 0018): a Dialog with its presets as native radios (no radio group in
+ * Rotate: a Dialog with its presets as native radios (no radio group in
  * `components/ui`, no new dependency), 1 year the default, its grace's end as
  * a date input, its three messages, "Cancel" / "Rotate token" ("Rotating…"),
- * "Token rotated" and "Done". Per the D17b-2 Parity Notes:
+ * "Token rotated" and "Done". Its details:
  *
  * - The title "Rotate token" (no fleet label); the description, the field's
- *   label and help, and the info box in Preflight ruling 4's words: the
- *   current token expires at the grace's end (it isn't revoked), and a
- *   supervisor's restart, not a redeploy, brings a stranded collector back.
+ *   label and help, and the info box say the current token expires at the
+ *   grace's end (it isn't revoked), and a supervisor's restart, not a
+ *   redeploy, brings a stranded collector back.
  * - **The grace in the person's time zone** (not UTC days): the default today
  *   + 30 days, set at each opening, never after the new expiry; `min` today,
  *   `max` the new expiry's local date; the grace ends at the end of the
@@ -41,14 +40,14 @@ import { SecretCopyBox } from "~/components/secrets/SecretCopyBox.js";
  *   never its own; with the field hidden (no valid rotate token) in the
  *   dialog's alert. Today and `min` are reckoned at each render and again at
  *   submit: a date that was today when the form drew, submitted after
- *   midnight, shows "…in the future." (Ruling 23).
- * - **A rotation never lengthens the current token's life** (D16a Ruling
- *   33): when it expires before the end of the chosen day, the dialog says
- *   so beside the field.
+ *   midnight, shows "…in the future."
+ * - **A rotation never lengthens the current token's life**: when it
+ *   expires before the end of the chosen day, the dialog says so beside
+ *   the field.
  * - **No valid rotate token** (`summary.rotateToken` null): no field; the
  *   new token is current at once, and the request still carries the
- *   default grace (Preflight ruling 6: should another member rotate
- *   meanwhile, that token gets it).
+ *   default grace (should another member rotate meanwhile, that token
+ *   gets it).
  * - `expiresAt` and `graceEndsAt` come from one `now` at submit; the `POST`
  *   runs under the write hang guard. Refusals inline (`fleet_archived`, the
  *   fields' details, a 429 with its words), else "Failed to rotate token" (a
@@ -80,9 +79,9 @@ export const ROTATE_INFO =
   "Running collectors are handed the new token on one of their next polls. A collector still holding the current token when it stops working (offline then, or one that doesn't accept connection settings) is refused until its supervisor restarts; it then comes back through the default token.";
 
 /**
- * The info box's words by the tab's tokens (D17c-1 Ruling 61): ROTATE_INFO while the fleet has a valid default token;
- * with none valid, NO_VALID_DEFAULT_CLAUSE_ONE (one collector: "re-install it", Ruling 64) after "the default token";
- * before the tokens are read, words true either way.
+ * The info box's words by the tab's tokens: ROTATE_INFO while the fleet has a valid default token; with none valid,
+ * NO_VALID_DEFAULT_CLAUSE_ONE (one collector: "re-install it") after "the default token"; before the tokens are read,
+ * words true either way.
  */
 export function rotateInfoWords(tokens: readonly EnrollmentTokenListed[] | null, now: number): string {
   if (tokens === null) return `${ROTATE_INFO.slice(0, -1)}, while the fleet has a valid one.`;
@@ -103,7 +102,7 @@ export const GRACE_AFTER_EXPIRY = "Grace period end must be on or before the new
 /** The API's detail for a grace after the new expiry (`modules/fleets`' rotation check). */
 const GRACE_AFTER_EXPIRY_DETAIL = "Must not be after expiresAt.";
 
-/** "The current token expires {date} on its own: …" (D16a Ruling 33). */
+/** "The current token expires {date} on its own: …". */
 export function soonerExpiryWords(expiresAt: string): string {
   return `The current token expires ${formatDateTime(expiresAt)} on its own: a later date doesn't keep it working past then.`;
 }
@@ -114,8 +113,8 @@ export function replacedStopsWords(at: string): string {
 }
 
 /* ---------------------------------------------------------------------------
- * The grace's date math (Preflight ruling 13): local calendar dates as a date
- * input's value ("YYYY-MM-DD"), in the browser's own time zone.
+ * The grace's date math: local calendar dates as a date input's value
+ * ("YYYY-MM-DD"), in the browser's own time zone.
  */
 
 const pad = (n: number) => String(n).padStart(2, "0");
@@ -151,7 +150,7 @@ export function endOfLocalDay(date: string): number | null {
   return new Date(parts[0], parts[1] - 1, parts[2] + 1, 0, 0, 0, 0).getTime() - 1;
 }
 
-/** The grace's default (decision 29): today + 30 days, never after the new token's expiry's date. */
+/** The grace's default: today + 30 days, never after the new token's expiry's date. */
 export function defaultGraceDate(expiresAt: number | null, now: number): string {
   const date = addLocalDays(localDateOf(now), 30);
   if (expiresAt === null) return date;
@@ -300,7 +299,7 @@ function RotateSession({ open, onOpenChange, rotateToken, tokens, organizationId
         ...(fields.expiresAt === undefined ? {} : { expiresAt: fields.expiresAt }),
         ...(graceWords === null || !hasPredecessor ? {} : { graceEndsAt: graceWords }),
       });
-      // With no valid rotate token the field is hidden: its refusal shows in the dialog's alert (Ruling 23).
+      // With no valid rotate token the field is hidden: its refusal shows in the dialog's alert.
       if (graceWords !== null && !hasPredecessor) setError(graceWords);
       return;
     }
@@ -314,11 +313,10 @@ function RotateSession({ open, onOpenChange, rotateToken, tokens, organizationId
     const sentAt = Date.now();
     const expiresAt = rotateExpiresAtFor(preset, sentAt);
     const expiresAtMs = expiresAt === null ? null : Date.parse(expiresAt);
-    // With no valid rotate token, the default grace the field would have held (Preflight ruling 6).
+    // With no valid rotate token, the default grace the field would have held.
     const grace = graceOf(hasPredecessor ? graceDate : defaultGraceDate(expiresAtMs, sentAt), expiresAtMs, sentAt);
-    // A date that was today when the form last drew, past midnight now (Ruling 23): its problem shows beside
-    // any other still shown (an expiry's refusal, Ruling 28), and the render it causes reckons today and the
-    // field's min afresh.
+    // A date that was today when the form last drew, past midnight now: its problem shows beside any other
+    // still shown (an expiry's refusal), and the render it causes reckons today and the field's min afresh.
     if ("problem" in grace) {
       setProblems((previous) => ({ ...previous, graceEndsAt: grace.problem }));
       return;

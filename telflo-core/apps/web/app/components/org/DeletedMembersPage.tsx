@@ -4,9 +4,9 @@ import { RestoreMemberDialog } from "./dialogs/RestoreMemberDialog.js";
 import { formatDate } from "./format-date.js";
 
 /*
- * The deleted members' list (ADR 0018). Deleted At is the membership's
- * `deletedAt` (D5 Parity Notes). The list comes from the Permissions
- * layout, and the Active page's spinner shows until it has loaded.
+ * The deleted members' list. Deleted At is the membership's
+ * `deletedAt`. The list comes from the Permissions layout, and the
+ * Active page's spinner shows until it has loaded.
  */
 
 interface DeletedMembersPageProps {

@@ -111,7 +111,7 @@ describe("Sidebar", () => {
     expect(screen.getByRole("link", { name: "Permissions" })).toHaveAttribute("href", "/org-admin");
   });
 
-  it("shows Product Admin to a product admin, in its place, linking to /product-admin (D12 decision 3)", async () => {
+  it("shows Product Admin to a product admin, in its place, linking to /product-admin", async () => {
     useUserStore.getState().setCurrent({ ...currentUser("admin", "group"), isProductAdmin: true });
     renderSidebar();
     await screen.findByText("Workspace");
@@ -162,8 +162,8 @@ describe("Sidebar", () => {
     expect(navLabels()).toEqual(["Configurations", "Flows", "Variables", "Fleet", "Settings", "Learning"]);
   });
 
-  // D36-1 decision 57 (Q269): a personal workspace invites no one unless
-  // registration is open, so its admin sees no Permissions then.
+  // A personal workspace invites no one unless registration is open, so
+  // its admin sees no Permissions then.
   it.each(["invite-only", "closed"] as const)("hides Permissions from a personal workspace's admin under %s registration", async (registration) => {
     const Stub = createRoutesStub(underSite({ ...OPEN_SOURCE_SITE, registration }, [{ path: "/app", Component: Sidebar }]));
     render(<Stub initialEntries={["/app"]} />);
@@ -195,7 +195,7 @@ describe("Sidebar", () => {
     expect(screen.getByRole("link", { name: "Flows" })).not.toHaveAttribute("aria-current");
   });
 
-  // D17a Preflight ruling 9: the list and a fleet's page both mark Fleet.
+  // The list and a fleet's page both mark Fleet.
   it.each(["/fleet-management", "/fleet-management/0a1b2c3d-4e5f-4061-8728-394a5b6c7d8e"])("marks Fleet as the current page on %s", async (path) => {
     useUserStore.getState().setCurrent(currentUser("admin", "group"));
     renderSidebar(path);
@@ -205,7 +205,7 @@ describe("Sidebar", () => {
     }
   });
 
-  // D20 default 19: "Variables", at /variables, with an icon that isn't a lock.
+  // "Variables", at /variables, with an icon that isn't a lock.
   it.each(["/variables", "/variables/groups", "/variables/groups/7b000000-0000-4000-8000-000000000001"])(
     "names Variables, linking to /variables, and marks it as the current page on %s",
     async (path) => {
@@ -224,7 +224,7 @@ describe("Sidebar", () => {
     expect(screen.getByRole("link", { name: "Configurations" })).not.toHaveAttribute("aria-current");
   });
 
-  it("keeps the Docs link and puts Contact us after it (D29 decision 40), a title only when the rail is collapsed, as Docs'", async () => {
+  it("keeps the Docs link and puts Contact us after it, a title only when the rail is collapsed, as Docs'", async () => {
     renderSidebar();
     const docs = await screen.findByRole("link", { name: "Docs" });
     expect(docs).toHaveAttribute("href", "https://docs.telflo.com/docs");
@@ -238,7 +238,7 @@ describe("Sidebar", () => {
     expect(screen.getByRole("link", { name: "Docs" })).toHaveAttribute("title", "Docs");
   });
 
-  it("follows the site's docs link, and has none with TELFLO_DOCS_URL empty (D36-1 decision 34)", async () => {
+  it("follows the site's docs link, and has none with TELFLO_DOCS_URL empty", async () => {
     const Elsewhere = createRoutesStub(underSite({ ...SAAS_SITE, docsUrl: "https://docs.example.org/telflo/" }, [{ path: "/app", Component: Sidebar }]));
     const first = render(<Elsewhere initialEntries={["/app"]} />);
     expect(await screen.findByRole("link", { name: "Docs" })).toHaveAttribute("href", "https://docs.example.org/telflo/docs");
@@ -262,7 +262,7 @@ describe("Sidebar", () => {
     await user.click(within(dialog).getByRole("button", { name: "Send" }));
 
     await waitFor(() => expect(screen.queryByRole("dialog", { name: "Contact Us" }) === null).toBe(true));
-    // The person's words: a boolean, never the value printed (Ruling 271).
+    // The person's words: a boolean, never the value printed.
     expect({ calls: createFeedback.mock.calls.length, trimmed: createFeedback.mock.calls[0]?.[0].text === "Need a Kafka receiver." }).toEqual({
       calls: 1,
       trimmed: true,
@@ -270,7 +270,7 @@ describe("Sidebar", () => {
     expect(success).toHaveBeenCalledWith("Thanks for your feedback!");
   });
 
-  it("gives the focus back to the rail's Contact us as the dialog closes, by Escape or Cancel (Ruling 271)", async () => {
+  it("gives the focus back to the rail's Contact us as the dialog closes, by Escape or Cancel", async () => {
     renderSidebar();
     const user = userEvent.setup();
     const contactUs = await screen.findByRole("button", { name: "Contact us" });
@@ -297,7 +297,7 @@ describe("Sidebar", () => {
     expect(screen.queryByText("Workspace")).not.toBeInTheDocument();
     expect(screen.queryByText("Configurations")).not.toBeInTheDocument();
     // The switcher's tooltip names what it does, not the organization; the
-    // name stays its accessible text (D4 Ruling 16).
+    // name stays its accessible text.
     expect(screen.getByRole("button", { name: /personal/ })).toHaveAttribute("title", "Switch organization");
     expect(screen.queryByTitle("personal")).not.toBeInTheDocument();
 
@@ -307,11 +307,11 @@ describe("Sidebar", () => {
     expect(screen.getByText("Configurations")).toBeInTheDocument();
   });
 
-  it("puts no organization name or email in any attribute, collapsed, expanded or with the popover open, since replay records attributes (D4 Ruling 16)", async () => {
+  it("puts no organization name or email in any attribute, collapsed, expanded or with the popover open, since replay records attributes", async () => {
     const secretName = "Acme Private Holdings";
     const secretEmail = "private.person@acme.example";
     const user = currentUser();
-    // Both with a logo (D23-2 decision 57): the <img> names neither.
+    // Both with a logo: the <img> names neither.
     const organization = { ...user.organization, name: secretName, logoId: "0193a1b2-c3d4-7e5f-8a6b-7c8d9e0f1a2b" };
     useUserStore.getState().setCurrent({
       ...user,
@@ -352,7 +352,7 @@ describe("Sidebar", () => {
     expect(within(footer).getByText("personal")).toBeInTheDocument();
   });
 
-  it("shows the active organization's logo in the footer, by ids, inside ph-no-capture with alt \"\", in place of the initial (D23-2 decision 51)", async () => {
+  it("shows the active organization's logo in the footer, by ids, inside ph-no-capture with alt \"\", in place of the initial", async () => {
     const logoId = "0193a1b2-c3d4-7e5f-8a6b-7c8d9e0f1a2b";
     const user = currentUser();
     const organization = { ...user.organization, logoId };
@@ -459,7 +459,7 @@ describe("Sidebar", () => {
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
-  describe("switching organizations (D5 decision 11)", () => {
+  describe("switching organizations", () => {
     beforeEach(() => {
       useUserStore.getState().setCurrent(withGroup());
     });
@@ -596,7 +596,7 @@ describe("Sidebar", () => {
     expect(screen.getByText("Workspace")).toBeInTheDocument();
   });
 
-  describe("while the editor holds unsaved text (D8 decision 15)", () => {
+  describe("while the editor holds unsaved text", () => {
     const GROUP = { id: GROUP_ID, name: "Group", type: "group", logoId: null, role: "contributor" } as const;
 
     /** A configuration open in the editor, with its text as last saved, or edited since. */

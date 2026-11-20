@@ -12,25 +12,23 @@ import { PublishedVersionCell } from "./GroupsTable.js";
 import { VariableGroupLink } from "./VariableGroupLink.js";
 
 /*
- * A Kubernetes group's details (D17d-1 decision 24; Preflight ruling 34),
- * opened by a row's "More". Its title the row's name (Agent, Cluster, or the
- * gateway's name), its description "Group details" (D17b-2's), and the rows
- * Group (one row, as the Groups tab's one column, Ruling 66: the role's
- * badge, then a gateway's name; the Agent and the Cluster their badge alone),
- * Namespace, Published version ("Nothing assigned" with its meaning as text
- * under it), Volumes (each host path, its mount path, its type and whether
- * read-only), Replicas (a gateway's, "—" otherwise) and Collector Group ID
- * with D17b-2's copy button ("—" for the Cluster before its group exists).
- * Settings Telflo can't read, or none saved, show "—". D20 (default 25) adds
- * a "Variable group" row after Published version: the group's variable group
- * by name, else "Organization values" (the Cluster before its group exists
- * too), opening each variable's value (`VariableGroupLink`).
+ * A Kubernetes group's details, opened by a row's "More". Its title the row's
+ * name (Agent, Cluster, or the gateway's name), its description "Group
+ * details", and the rows Group (one row, as the Groups tab's one column: the
+ * role's badge, then a gateway's name; the Agent and the Cluster their badge
+ * alone), Namespace, Published version ("Nothing assigned" with its meaning
+ * as text under it), Volumes (each host path, its mount path, its type and
+ * whether read-only), Replicas (a gateway's, "—" otherwise) and Collector
+ * Group ID with `GroupDetailsDialog`'s copy button ("—" for the Cluster
+ * before its group exists). Settings Telflo can't read, or none saved, show
+ * "—". A "Variable group" row comes after Published version: the group's
+ * variable group by name, else "Organization values" (the Cluster before its
+ * group exists too), opening each variable's value (`VariableGroupLink`).
  *
- * Privacy (D17d-1's paragraph of ADR 0024): the gateway's name, the
- * namespace and the volumes' paths are configuration text, shown inside
- * `ph-no-capture`; no attribute holds any. The dialog shows the row as it
- * was when opened (a snapshot at the opening: D17c-1 Ruling 66), and the
- * polls pause while it is open.
+ * Privacy: the gateway's name, the namespace and the volumes' paths are
+ * configuration text, shown inside `ph-no-capture`; no attribute holds
+ * any. The dialog shows the row as it was when opened (a snapshot at the
+ * opening), and the polls pause while it is open.
  */
 
 /** One label/value row, two cells of the parent's grid. */

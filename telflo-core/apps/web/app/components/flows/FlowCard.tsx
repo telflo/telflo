@@ -3,13 +3,13 @@ import type { Flow } from "@telflo/contracts";
 import { SignalBadges, SourceBadge } from "./FlowBadges.js";
 
 /*
- * A flow's card (ADR 0018; D12): a flow in the gallery, or (compact) in the
- * create dialog's picker. The whole card is a button, as the configurations'
- * cards are. Its name and summary are text, never an attribute (ADR 0024).
+ * A flow's card: a flow in the gallery, or (compact) in the create dialog's
+ * picker. The whole card is a button, as the configurations' cards are. Its
+ * name and summary are text, never an attribute.
  *
  * It reads only a card's fields, so a signed-in read's flow and the open
- * read's `PublishedFlow` (the playground's gallery, D31-1 decision 33) both
- * fit; `onSelect` hands back the flow it was given, as it was given.
+ * read's `PublishedFlow` (the playground's gallery) both fit; `onSelect`
+ * hands back the flow it was given, as it was given.
  */
 
 /** The fields the card shows. */

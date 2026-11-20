@@ -10,11 +10,10 @@ import { useLockedAction } from "~/lib/playground/context.js";
 import { useCurrentUser } from "~/lib/use-current-user.js";
 
 /*
- * "New Fleet" (ADR 0018). The button opens the type chooser; a type picked
- * closes it and opens that type's create dialog, in the active organization
- * (D17a decision 24). A create that finishes opens the fleet's page (the
- * dialog's Done); one that closes after an unknown outcome calls
- * `onMayHaveCreated`, so the list reloads.
+ * "New Fleet". The button opens the type chooser; a type picked closes it
+ * and opens that type's create dialog, in the active organization. A create
+ * that finishes opens the fleet's page (the dialog's Done); one that closes
+ * after an unknown outcome calls `onMayHaveCreated`, so the list reloads.
  *
  * The page holds the dialogs once (`NewFleetDialogs`, from
  * `useNewFleetDialogs`), outside whatever its content shows, and each "New
@@ -24,13 +23,12 @@ import { useCurrentUser } from "~/lib/use-current-user.js";
  * Another organization (a switch, or a removal elsewhere) closes them, a
  * create under way too: they were for the one before.
  *
- * Closing gives the focus back to the "New Fleet" pressed (D14b Ruling 46's
- * pattern, D17b-1's final fix wave), the chooser handing it on to the create
- * dialog; when that button is gone (the empty state's, swapped out by a
- * read), to the header's (`headerButton`).
+ * Closing gives the focus back to the "New Fleet" pressed, the chooser
+ * handing it on to the create dialog; when that button is gone (the empty
+ * state's, swapped out by a read), to the header's (`headerButton`).
  *
- * In the playground (D31-1 decisions 24 and 35) "New Fleet" opens the
- * sign-up prompt instead, locked at this opener.
+ * In the playground "New Fleet" opens the sign-up prompt instead,
+ * locked at this opener.
  */
 
 /** The sign-up prompt's words for "New Fleet" in the playground. */

@@ -34,14 +34,13 @@ import { GROUPS_INTRO, GroupsTab } from "./GroupsTab.js";
 import { INSTALL_NEEDS_LIVE_VERSION, INSTALL_NEEDS_VERSION, NOTHING_ASSIGNED_MEANING } from "./GroupsTable.js";
 
 /*
- * A server fleet's Groups tab (D17b-2 decisions 9, 10, 14, 22–25, 32–34;
- * Preflight rulings 8, 10, 11, 14 and 15) over the real hook
- * (`useGroupsTab`), the browser client's calls answered by a small fake of
- * the API's groups: a row per group with its version linked to the
- * editor, "New group", Assign on an unassigned group and Edit otherwise
- * (the same dialog), the delete after confirming then the reload, the More
- * dialog's id, Edit's prefill, and its Install (enabled with a published
- * version, disabled with its reason otherwise: D17c-1 decision 44).
+ * A server fleet's Groups tab over the real hook (`useGroupsTab`), the
+ * browser client's calls answered by a small fake of the API's groups: a
+ * row per group with its version linked to the editor, "New group", Assign
+ * on an unassigned group and Edit otherwise (the same dialog), the delete
+ * after confirming then the reload, the More dialog's id, Edit's prefill,
+ * and its Install (enabled with a published version, disabled with its
+ * reason otherwise).
  */
 
 const GONE = () => new ApiError("fleet_not_found", "Fleet not found.", { status: 404 });
@@ -152,7 +151,7 @@ afterEach(() => {
   delete (document as { visibilityState?: DocumentVisibilityState }).visibilityState;
 });
 
-describe("GroupsTab's states (decision 23)", () => {
+describe("GroupsTab's states", () => {
   it('shows "Loading groups…" until the first read answers', async () => {
     let release!: () => void;
     api.hold = new Promise((resolve) => (release = resolve));
@@ -203,7 +202,7 @@ describe("GroupsTab's states (decision 23)", () => {
   });
 });
 
-describe("GroupsTab's rows (decisions 14 and 23)", () => {
+describe("GroupsTab's rows", () => {
   it("renders one row per group in the API's order, with Name, Published version linked to the editor, Variable group, More, and its actions", async () => {
     api.groups = [gatewaysGroup(), edgeGroup(), collectorGroup()];
     serve();
@@ -215,7 +214,7 @@ describe("GroupsTab's rows (decisions 14 and 23)", () => {
     const gateways = rowOf("gateways");
     expect(within(gateways).getByRole("link", { name: "checkout-otel @v4" })).toHaveAttribute("href", `/editor/${CONFIGURATION_ID}/${VERSION_ID}`);
     expect(within(gateways).getByRole("link")).not.toHaveAttribute("title");
-    // D17c-1 decision 46: the name truncated at 16rem, the full text in a tooltip (PublishedVersionLink's).
+    // The name truncated at 16rem, the full text in a tooltip (PublishedVersionLink's).
     expect(within(within(gateways).getByRole("link")).getByText("checkout-otel")).toHaveClass("truncate", "max-w-64");
     act(() => within(gateways).getByRole("link").focus());
     expect(await screen.findByRole("tooltip")).toHaveTextContent(/^checkout-otel @v4$/);
@@ -280,8 +279,8 @@ describe("GroupsTab's rows (decisions 14 and 23)", () => {
     serve();
     const user = renderTab();
     await screen.findByText("gateways");
-    // One element named "Install into Default": the focusable wrapper, role="button" and aria-disabled (Ruling 52);
-    // the disabled button inside it hidden from assistive technology.
+    // One element named "Install into Default": the focusable wrapper, role="button" and aria-disabled; the
+    // disabled button inside it hidden from assistive technology.
     const wrapper = within(rowOf("Default")).getByRole("button", { name: "Install into Default" });
     expect(wrapper.tagName).toBe("SPAN");
     expect(wrapper).toHaveAttribute("aria-disabled", "true");
@@ -299,7 +298,7 @@ describe("GroupsTab's rows (decisions 14 and 23)", () => {
     expect(onInstall).not.toHaveBeenCalled();
   });
 
-  // Decision 44 (no published version) and Ruling 61: the install's facts would refuse it anyway.
+  // No published version: the install's facts would refuse it anyway.
   it("disables Install on a deleted configuration's version, with the facts' words as its reason", async () => {
     api.groups = [collectorGroup(), gatewaysGroup({ assignedVersion: null })];
     serve();
@@ -334,7 +333,7 @@ describe("GroupsTab's rows (decisions 14 and 23)", () => {
   });
 });
 
-describe("GroupsTab's poll and refresh (decisions 10 and 32)", () => {
+describe("GroupsTab's poll and refresh", () => {
   it("re-reads the groups every 15 s, and a row follows", async () => {
     const { getCollectorGroups } = serve();
     renderTab();
@@ -396,7 +395,7 @@ describe("GroupsTab's poll and refresh (decisions 10 and 32)", () => {
   });
 });
 
-describe("GroupsTab's dialogs (decisions 22–25)", () => {
+describe("GroupsTab's dialogs", () => {
   it("opens a row's More: its details with the collector group id", async () => {
     serve();
     const user = renderTab();
@@ -448,7 +447,7 @@ describe("GroupsTab's dialogs (decisions 22–25)", () => {
     await user.click(button("New group"));
     const dialog = await screen.findByRole("dialog", { name: "New group" });
     await user.type(within(dialog).getByRole("textbox", { name: "Name" }), "db-hosts");
-    // A new group requires a published version (Ruling 34): a configuration picked selects its newest.
+    // A new group requires a published version: a configuration picked selects its newest.
     await user.click(within(dialog).getByRole("combobox", { name: "Configuration" }));
     await user.click(await screen.findByRole("option", { name: "checkout-otel" }));
     await waitFor(() => expect(within(dialog).getByRole("combobox", { name: "Version" })).toHaveTextContent("@v5"));
@@ -460,7 +459,7 @@ describe("GroupsTab's dialogs (decisions 22–25)", () => {
     expect(onFleetChanged).toHaveBeenCalledTimes(1);
   });
 
-  // Confirmed by the typed name (D17d-1 decision 3).
+  // Confirmed by the typed name.
   it("deletes a group after its name is typed, then reloads the groups and the fleet", async () => {
     const { getCollectorGroups, deleteCollectorGroup } = serve();
     const user = renderTab();
@@ -477,7 +476,7 @@ describe("GroupsTab's dialogs (decisions 22–25)", () => {
     await waitFor(() => expect(screen.queryByText("gateways")).toBeNull());
   });
 
-  it("keeps an archived fleet's groups editable (Preflight ruling 8)", async () => {
+  it("keeps an archived fleet's groups editable", async () => {
     serve();
     renderTab(fleetDetail({ status: "archived" }));
     await screen.findByText("gateways");
@@ -501,7 +500,7 @@ describe("GroupsTab's dialogs (decisions 22–25)", () => {
   });
 });
 
-describe("GroupsTab's focus as a dialog closes (decision 33; Preflight ruling 14)", () => {
+describe("GroupsTab's focus as a dialog closes", () => {
   async function loaded() {
     api.groups = [collectorGroup(), edgeGroup(), gatewaysGroup()];
     serve();
@@ -565,7 +564,7 @@ describe("GroupsTab's focus as a dialog closes (decision 33; Preflight ruling 14
     await focusIsOn(() => button("Assign Default"));
   });
 
-  it("moves on from the row's Delete once a reload answered after the close removes the row (D14b Ruling 52)", async () => {
+  it("moves on from the row's Delete once a reload answered after the close removes the row", async () => {
     const user = await loaded();
     await user.click(button("Delete edge"));
     const dialog = await screen.findByRole("alertdialog", { name: "Delete edge" });
@@ -628,7 +627,7 @@ describe("GroupsTab's focus as a dialog closes (decision 33; Preflight ruling 14
   });
 });
 
-// ADR 0024, decisions 12 and 34: no group, configuration or fleet name and no version label in any attribute.
+// No group, configuration or fleet name and no version label in any attribute.
 describe("GroupsTab's privacy", () => {
   it("holds no group, configuration or fleet name or version label in an attribute: rows, tooltips, each dialog open (the Name's value excepted)", async () => {
     const groupName = "canary-group-5e21";
@@ -651,11 +650,10 @@ describe("GroupsTab's privacy", () => {
     expect(screen.getByRole("table")).toHaveTextContent(configurationName);
     const canaries = [groupName, emptyName, orphanName, configurationName, label, fleetLabel];
     for (const text of canaries) expectNoAttributeHolds(text);
-    // Each Nothing assigned (Default's and the empty group's) and gateways' published version (its full text: D17c-1 decision 46).
+    // Each Nothing assigned (Default's and the empty group's) and gateways' published version (its full text).
     for (const text of canaries) expect(await expectNoAttributeHoldsInOpenTooltips(text, screen.getByRole("table"))).toBe(3);
-    // The disabled Install's reason (Default's, the empty group's and the deleted configuration's: D17c-1 decision 44,
-    // Ruling 61), its wrapper a role="button" (Ruling 52), which TOOLTIP_TRIGGERS leaves out: opened here, the fifth to
-    // the seventh tooltips.
+    // The disabled Install's reason (Default's, the empty group's and the deleted configuration's), its wrapper a
+    // role="button", which TOOLTIP_TRIGGERS leaves out: opened here, the fifth to the seventh tooltips.
     const disabledInstalls = [...screen.getByRole("table").querySelectorAll<HTMLElement>('[role="button"][aria-disabled="true"]')];
     expect(disabledInstalls).toHaveLength(3);
     for (const wrapper of disabledInstalls) {
@@ -701,7 +699,7 @@ describe("GroupsTab's privacy", () => {
   });
 });
 
-describe("GroupsTab after a mounts save refused for mounts changed elsewhere (D17c-1 Rulings 61 and 64)", () => {
+describe("GroupsTab after a mounts save refused for mounts changed elsewhere", () => {
   it("reads the groups again at the refusal, so closing and reopening shows the mounts saved meanwhile, and that save goes through", async () => {
     api.groups = [collectorGroup(), gatewaysGroup({ annotations: mountsAnnotations([NGINX_MOUNT]) })];
     const calls = serve();

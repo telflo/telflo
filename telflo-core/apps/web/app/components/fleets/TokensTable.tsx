@@ -8,29 +8,26 @@ import { tokenStatus, tokenValidAt } from "~/lib/tokens.js";
 import { expiryBucket, type TokenBucket } from "./TokenCell.js";
 
 /*
- * A server fleet's tokens (D17b-2 decisions 11, 13, 26 and 34; Preflight
- * rulings 12 and 15): plain table markup with the fleet screens' classes
- * (`GroupsTable`; no table component, decision 5). Per the D17b-2 Parity
- * Notes:
+ * A server fleet's tokens: plain table markup with the fleet screens'
+ * classes (`GroupsTable`; no table component). Its details:
  *
  * - Both kinds: the default token too, in the API's order (newest first); a
  *   Kind column.
  * - Created: `formatDateTime` and the relative time.
- * - Expires: D17a's badge for the token's own expiry (`expiryBucket`), or
- *   "Expired" (outline) at or past it, a revoked token's included; the date
- *   below it as text (never a `title`), none under "Never" (Ruling 25).
+ * - Expires: the Token badge for the token's own expiry (`expiryBucket`),
+ *   or "Expired" (outline) at or past it, a revoked token's included; the
+ *   date below it as text (never a `title`), none under "Never".
  * - Status by the opamp-server's rules (`tokenStatus`): "Revoked",
  *   "Expired", "Valid" (the default token), "Current", "Being replaced"
  *   with "until {date}".
  * - "Active in the last 5 minutes": the API's `activeCollectors` ("1
  *   collector", "{n} collectors"), for either kind.
  * - Reveal and Revoke on a valid token only (never on an expired one), each
- *   named for its row through `aria-labelledby` pointing at
- *   hidden text: "Reveal the default token", "Revoke the rotate token
- *   created {date}" (a kind and a date, never a name or a bearer). A fleet
- *   holding more than one default token (a revoked one followed by a new
- *   one: D17c-1 decision 45) names each by its date too: "the default token
- *   created {date}".
+ *   named for its row through `aria-labelledby` pointing at hidden text:
+ *   "Reveal the default token", "Revoke the rotate token created {date}" (a
+ *   kind and a date, never a name or a bearer). A fleet holding more than
+ *   one default token (a revoked one followed by a new one) names each by
+ *   its date too: "the default token created {date}".
  */
 
 const HEAD_CLASS =

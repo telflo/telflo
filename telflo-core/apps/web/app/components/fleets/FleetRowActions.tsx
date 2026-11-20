@@ -3,20 +3,19 @@ import type { FleetDetail } from "@telflo/contracts";
 import { Button } from "~/components/ui/button.js";
 
 /*
- * A fleet row's actions (D17a decisions 3, 18 and 29): icon buttons
- * "Rename" (Pencil), "Archive" or "Unarchive" (Archive, ArchiveRestore) and
- * "Delete" (Trash2), each with a fixed `title`, as D7's cards; no dropdown
- * menu (none is installed, and decision 5 adds none). No `aria-label`
- * carries the fleet's label into an attribute, which replay can't mask (a
- * D17a Parity Note): each button is named by `aria-labelledby` pointing at
- * screen-reader text ("Rename {label}" and so on), as D15a's rule rows:
- * the label is text inside the masked shell, and the ids hold the table's
- * `useId` and the fleet's id, never its label. The spans are `hidden`: an
- * `aria-labelledby` target names its button all the same, and a screen
- * reader's browse mode doesn't read each name a second time beside it.
+ * A fleet row's actions: icon buttons "Rename" (Pencil), "Archive" or
+ * "Unarchive" (Archive, ArchiveRestore) and "Delete" (Trash2), each with a
+ * fixed `title`; no dropdown menu (none is installed). No `aria-label`
+ * carries the fleet's label into an attribute, which replay can't mask:
+ * each button is named by `aria-labelledby` pointing at screen-reader text
+ * ("Rename {label}" and so on): the label is text inside the masked shell,
+ * and the ids hold the table's `useId` and the fleet's id, never its label.
+ * The spans are `hidden`: an `aria-labelledby` target names its button all
+ * the same, and a screen reader's browse mode doesn't read each name a
+ * second time beside it.
  */
 
-/** What a row's button asks for: the page opens the dialog (D17a Task 6). */
+/** What a row's button asks for: the page opens the dialog. */
 export type FleetRowAction = "rename" | "archive" | "unarchive" | "delete";
 
 interface FleetRowActionsProps {

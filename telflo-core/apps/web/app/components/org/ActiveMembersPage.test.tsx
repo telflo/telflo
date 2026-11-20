@@ -80,7 +80,7 @@ describe("ActiveMembersPage", () => {
     expect(screen.getAllByText("(you)")).toHaveLength(1);
   });
 
-  it("gives the owner of a personal organization no role link and no Delete (decision 8)", async () => {
+  it("gives the owner of a personal organization no role link and no Delete", async () => {
     renderPage([VIEWER, OWNER, CONTRIBUTOR]);
     await screen.findByText("Active Members");
 

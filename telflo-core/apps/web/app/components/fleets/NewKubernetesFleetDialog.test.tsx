@@ -14,9 +14,9 @@ import { GROUP_ID } from "~/test/configurations.js";
 import { fleetCreated } from "~/test/fleets.js";
 
 /*
- * The Kubernetes fleet's create dialog (D17a decision 24): what it shows, and
- * what differs from the server dialog. The create they share is tested
- * through `NewServerFleetDialog.test.tsx`.
+ * The Kubernetes fleet's create dialog: what it shows, and what differs from
+ * the server dialog. The create they share is tested through
+ * `NewServerFleetDialog.test.tsx`.
  */
 
 function Landed() {
@@ -48,7 +48,7 @@ function serveCreates(...failures: ApiError[]) {
   return requests;
 }
 
-describe("NewKubernetesFleetDialog (D17a decision 24)", () => {
+describe("NewKubernetesFleetDialog", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
     vi.spyOn(toast, "success");

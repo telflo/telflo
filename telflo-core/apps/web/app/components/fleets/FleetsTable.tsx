@@ -10,25 +10,23 @@ import { OnlineBar } from "./OnlineBar.js";
 import { TokenCell } from "./TokenCell.js";
 
 /*
- * The fleet list's table (D17a decision 18, Preflight ruling 11): plain
- * table markup with the classes of the configurations list's
- * (`ConfigurationsTable.tsx`; no @tanstack/react-table, decision 5).
- * In the D17a Parity Notes:
+ * The fleet list's table: plain table markup with the classes of the
+ * configurations list's (`ConfigurationsTable.tsx`; no
+ * @tanstack/react-table). Its details:
  * - the headers are plain and don't sort: the rows are in the API's order,
  *   newest first;
  * - Fleet links to the fleet's page (`/fleet-management/{id}`, one route for
- *   every type, decision 7), with an "Archived" badge after an archived
- *   fleet's label;
- * - Type has no "Bridge" (D16a decision 1);
+ *   every type), with an "Archived" badge after an archived fleet's label;
+ * - Type has no "Bridge";
  * - Online, Configuration Sync and Token are their own components, from the
- *   summary the server counted (decision 9);
+ *   summary the server counted;
  * - Last Seen is `formatRelativeTime` ("5 seconds ago"), at the list's
  *   render, so each poll re-reckons it, with the full local time as tooltip
  *   text, never a `title`; a dash for a fleet never seen;
  * - the row's actions: Rename, Archive or Unarchive, and Delete
  *   (`FleetRowActions`).
- * No attribute carries a fleet's label (decision 29): it is text in the
- * masked shell; the links hold ids only.
+ * No attribute carries a fleet's label: it is text in the masked shell;
+ * the links hold ids only.
  */
 
 const HEAD_CLASS =
@@ -36,7 +34,7 @@ const HEAD_CLASS =
 const CELL_CLASS = "px-3 py-2.5 align-middle";
 const ROW_CLASS = "border-b transition-colors hover:bg-muted/40";
 
-/** The Type column's words; no "Bridge" (D16a decision 1). */
+/** The Type column's words; no "Bridge". */
 export const FLEET_TYPE_LABELS: Record<FleetType, string> = {
   server: "Supervisor",
   "kubernetes-supervisor": "K8s Supervisor",

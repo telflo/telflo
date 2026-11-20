@@ -8,17 +8,15 @@ import type { FleetRowAction } from "./FleetRowActions.js";
 import { RenameFleetDialog } from "./RenameFleetDialog.js";
 
 /*
- * The rename, archive, unarchive and delete dialogs of D17a decisions 25 to 27,
- * opened from the list's rows and from the fleet's page alike: one is open at
- * a time, for one fleet. Another organization (a switch, or a removal
- * elsewhere) closes them, as the configurations page does: they were for the
- * one before, and its fleet. Each close gives the focus back to the button
- * that opened it (D14b Ruling 46's pattern, D17b-1's final fix wave), else,
- * its row gone, to the page's fallback (the list's New Fleet).
+ * The rename, archive, unarchive and delete dialogs, opened from the list's
+ * rows and from the fleet's page alike: one is open at a time, for one fleet.
+ * Another organization (a switch, or a removal elsewhere) closes them, as the
+ * configurations page does: they were for the one before, and its fleet. Each
+ * close gives the focus back to the button that opened it, else, its row gone,
+ * to the page's fallback (the list's New Fleet).
  *
- * In the playground (D31-1 decisions 24 and 35) every one of them is locked
- * at this opener: the sign-up prompt opens with the action's words, and no
- * dialog does.
+ * In the playground every one of them is locked at this opener: the sign-up
+ * prompt opens with the action's words, and no dialog does.
  */
 
 /** The sign-up prompt's words for each fleet action in the playground. */

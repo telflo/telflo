@@ -19,47 +19,43 @@ import { isRiskyHostPath, pathAsRead, volumeRecipesFor, type KubernetesVolumeRec
 import type { MountProblems } from "./MountsEditor.js";
 
 /*
- * A Kubernetes group's hostPath volumes (D17d-1 decision 24; Preflight
- * rulings 11 and 33; ADR 0018) on D17c-1's `MountsEditor` patterns, for the
- * Kubernetes group dialog, each volume a hostPath mount of the group's Helm
- * release (D17d-2). Per the D17d-1 Parity Notes:
+ * A Kubernetes group's hostPath volumes on `MountsEditor`'s patterns, for
+ * the Kubernetes group dialog, each volume a hostPath mount of the group's
+ * Helm release. Its details:
  *
  * - Rows of plain fields, not collapsible sections, each a fieldset "Volume
  *   {n}": Host path, Mount path, Type (Directory, DirectoryOrCreate, File or
- *   Socket; Directory for a new volume), Read-only (ticked for a new volume),
- *   and "Remove volume {n}", named by the row's number (never by the
- *   volume's paths, and no `title`). No host path mirrored into the
- *   mount path (as D17c-1's mounts).
+ *   Socket; Directory for a new volume), Read-only (ticked for a new
+ *   volume), and "Remove volume {n}", named by the row's number (never by
+ *   the volume's paths, and no `title`). No host path mirrored into the
+ *   mount path (as `MountsEditor`'s).
  * - The recipes (`volumeRecipesFor`) as one-click buttons under the rows,
- *   inside a disclosure "Common Volume Paths" (Ruling 67, the owner's
- *   request: GroupDialog's Mounts pattern, a plain button with
- *   `aria-expanded` and `aria-controls`, the panel `hidden` while closed;
- *   closed at each opening of the dialog, which mounts the editor afresh),
- *   each adding a row (the path at the same path, its type, read-only), not a
- *   datalist on the Host path: without its harness example
- *   (`/var/log/starfeuds`), and without `/var/log/pods` on the Agent, which
- *   the platform's chart (D18: its volumes named by the path's slug) mounts
- *   there itself (Preflight ruling 11). A recipe already mounted (a row's
- *   mount path as read, `pathAsRead`: `/var/log/` is `/var/log`), or a full
- *   list, disables it.
- * - On the Agent only, a muted line under the label, always shown (Ruling
- *   65, the owner's Q48): its chart mounts the node's `/var/log/pods`
- *   itself, which no row lists, so the refusal of a volume there has its
- *   reason in view. Fixed words, outside `ph-no-capture`.
+ *   inside a disclosure "Common Volume Paths" (GroupDialog's Mounts pattern,
+ *   a plain button with `aria-expanded` and `aria-controls`, the panel
+ *   `hidden` while closed; closed at each opening of the dialog, which mounts
+ *   the editor afresh), each adding a row (the path at the same path, its
+ *   type, read-only), not a datalist on the Host path: without its harness
+ *   example (`/var/log/starfeuds`), and without `/var/log/pods` on the Agent,
+ *   which the platform's chart (its volumes named by the path's slug) mounts
+ *   there itself. A recipe already mounted (a row's mount path as read,
+ *   `pathAsRead`: `/var/log/` is `/var/log`), or a full list, disables it.
+ * - On the Agent only, a muted line under the label, always shown: its chart
+ *   mounts the node's `/var/log/pods` itself, which no row lists, so the
+ *   refusal of a volume there has its reason in view. Fixed words, outside
+ *   `ph-no-capture`.
  * - Two warnings, never blocks: a sensitive host path (`isRiskyHostPath`) and
- *   a read-write mount, under the row, in the spec's words.
+ *   a read-write mount, under the row.
  * - The rules and their words are the contracts' (`KubernetesVolumesSchema`
  *   within `KubernetesAnnotationsSchema`, and the whole annotations'),
  *   checked when the dialog submits, each field's message under it
  *   (`problems`, keyed "{index}.{field}"), the list's own (at most 32, the
  *   annotations' bytes) under the rows; a 400's details map to them.
- * - Privacy (D17d-1's paragraph of ADR 0024): a volume's paths are
- *   configuration text. The rows, and the risky-path warning that repeats a
- *   host path, sit inside `ph-no-capture`; a path is never in an attribute
- *   but an input's `value` (React writes a controlled input's), inside it:
- *   the ids are `useId`'s and the row's index, the Remove button is named by
- *   its index, the placeholder is fixed, and the Type select's values are
- *   the four fixed types.
+ * - Privacy: a volume's paths are configuration text. The rows, and the
+ *   risky-path warning that repeats a host path, sit inside `ph-no-capture`;
+ *   a path is never in an attribute but an input's `value` (React writes a
+ *   controlled input's), inside it: the ids are `useId`'s and the row's
+ *   index, the Remove button is named by its index, the placeholder is
+ *   fixed, and the Type select's values are the four fixed types.
  */
 
 /** A volume as the editor holds it: its paths as typed. */
@@ -78,10 +74,10 @@ export const VOLUMES_LABEL = "Volumes";
 export const RISKY_PATH_AFTER = " is a sensitive host path: mounting it can give the collector broad access to the node. Only proceed if you mean to.";
 export const READ_WRITE_WARNING = "Read-write host mount: the collector can change files on the node. Prefer read-only for log collection.";
 
-/** The Agent's hint (Ruling 65): the node's pod logs its chart always mounts itself (fixed words). */
+/** The Agent's hint: the node's pod logs its chart always mounts itself (fixed words). */
 export const AGENT_LOG_MOUNT_HINT = `The Agent always mounts the node's ${KUBERNETES_AGENT_LOG_PATH} read-only at ${KUBERNETES_AGENT_LOG_PATH}, for pod logs: no volume needed for them.`;
 
-/** The recipes' disclosure, and their group's name (fixed words; Ruling 67). */
+/** The recipes' disclosure, and their group's name (fixed words). */
 export const VOLUME_RECIPES_LABEL = "Common Volume Paths";
 
 export const VOLUME_HOST_PATH_PLACEHOLDER = "/var/log/app";

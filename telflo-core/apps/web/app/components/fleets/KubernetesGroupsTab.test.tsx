@@ -34,13 +34,12 @@ import { KUBERNETES_GROUPS_INTRO, KubernetesGroupsTab } from "./KubernetesGroups
 import { KUBERNETES_ROLE_HELP, KUBERNETES_ROLE_HELP_LABELS } from "./KubernetesGroupsTable.js";
 
 /*
- * A Kubernetes-supervisor fleet's Groups tab (D17d-1 decisions 3, 6, 10, 24
- * and 25; Preflight rulings 22–24, 30–35) over the real hook
+ * A Kubernetes-supervisor fleet's Groups tab over the real hook
  * (`useGroupsTab`), the browser client's calls answered by a small fake of
  * the API's groups: the Agent and Cluster rows drawn from the start (the
  * Cluster before its group exists), neither with Delete; a gateway's row
  * with Delete; Assign on the Cluster creating it; Add gateway; Edit's
- * prefill; the role help; the details; the typed-name delete (decision 3).
+ * prefill; the role help; the details; the typed-name delete.
  */
 
 const GONE = () => new ApiError("fleet_not_found", "Fleet not found.", { status: 404 });
@@ -164,7 +163,7 @@ afterEach(() => {
   delete (document as { visibilityState?: DocumentVisibilityState }).visibilityState;
 });
 
-describe("KubernetesGroupsTab's states (decision 24)", () => {
+describe("KubernetesGroupsTab's states", () => {
   it('shows "Loading groups…" until the first read answers, then the rows', async () => {
     let release!: () => void;
     api.hold = new Promise((resolve) => (release = resolve));
@@ -195,7 +194,7 @@ describe("KubernetesGroupsTab's states (decision 24)", () => {
     expect(error).not.toHaveBeenCalled();
   });
 
-  it('shows the intro, "Add gateway" and "Refresh groups", in the spec\'s words', async () => {
+  it('shows the intro, "Add gateway" and "Refresh groups", in their exact words', async () => {
     serve();
     renderTab();
     await screen.findByText("gateways");
@@ -209,7 +208,7 @@ describe("KubernetesGroupsTab's states (decision 24)", () => {
   });
 });
 
-describe("KubernetesGroupsTab's rows (decisions 6 and 24; Preflight rulings 24 and 34)", () => {
+describe("KubernetesGroupsTab's rows", () => {
   it("draws the Agent, the Cluster before its group exists, then the gateways in the API's order, with each column", async () => {
     api.groups = [collectorGroup(), gateways(), gatewaysGroup({ id: SECOND_GATEWAY_GROUP_ID, name: "alpha", annotations: null })];
     serve();
@@ -302,7 +301,7 @@ describe("KubernetesGroupsTab's rows (decisions 6 and 24; Preflight rulings 24 a
   });
 });
 
-describe("KubernetesGroupsTab's dialogs (decisions 3, 6 and 24)", () => {
+describe("KubernetesGroupsTab's dialogs", () => {
   it("opens a row's More: the details, the Cluster's id a dash before its group exists", async () => {
     serve();
     const user = renderTab();
@@ -341,7 +340,7 @@ describe("KubernetesGroupsTab's dialogs (decisions 3, 6 and 24)", () => {
     expect(await screen.findByRole("button", { name: "Edit Cluster" })).toBeInTheDocument();
     expect(rowTexts()[1]).toEqual(["Cluster", "telflo-collectors", "checkout-otel @v5", "Organization values", "0", "—"]);
     expect(onFleetChanged).toHaveBeenCalledTimes(1);
-    // The row keeps its key across its first Assign (Ruling 55): the focus goes back to the button that opened it, now its Edit.
+    // The row keeps its key across its first Assign: the focus goes back to the button that opened it, now its Edit.
     await waitFor(() => expect(document.activeElement).toBe(button("Edit Cluster")));
   });
 
@@ -445,7 +444,7 @@ describe("KubernetesGroupsTab's dialogs (decisions 3, 6 and 24)", () => {
     expect(getCollectorGroups).toHaveBeenCalledTimes(reads);
   });
 
-  it("keeps an open dialog's snapshot while the tab reads its groups again under it (Preflight ruling 32; D17c-1 Rulings 64 and 66)", async () => {
+  it("keeps an open dialog's snapshot while the tab reads its groups again under it", async () => {
     const calls = serve();
     const user = renderTab();
     await screen.findByText("gateways");
@@ -469,8 +468,8 @@ describe("KubernetesGroupsTab's dialogs (decisions 3, 6 and 24)", () => {
   });
 });
 
-// ADR 0024 and D17d-1's paragraph: no gateway name, namespace, path, fleet label or typed text in any attribute.
-describe("KubernetesGroupsTab's privacy (Preflight rulings 15 and 37)", () => {
+// No gateway name, namespace, path, fleet label or typed text in any attribute.
+describe("KubernetesGroupsTab's privacy", () => {
   it("holds no gateway name, namespace, path, configuration name or typed text in an attribute: rows, tooltips, help, each dialog open", async () => {
     const gatewayName = "canary-gw-5e21";
     const namespace = "canary-ns-a0c3";
@@ -547,14 +546,14 @@ describe("KubernetesGroupsTab's privacy (Preflight rulings 15 and 37)", () => {
   });
 });
 
-// D17d-2 decision 23; Preflight rulings 26 and 28: a row's Install opens the route's Helm install dialog.
+// A row's Install opens the route's Helm install dialog.
 describe("KubernetesGroupsTab's row Install", () => {
   it("offers each row's Install before Assign or Edit, named by Agent, Cluster or the gateway's name, asking the route with the row", async () => {
     api.groups = [
       collectorGroup({ assignedPublishedVersionId: PUBLISHED_VERSION_ID, assignedVersion: publishedVersion() }),
       gateways({ id: SECOND_GATEWAY_GROUP_ID, name: "alpha", assignedVersion: null }),
       gateways({ id: "9a0b1c2d-3e4f-4a5b-8c6d-7e8f9a0b1c2d", name: "broken", annotations: { telflo: { kubernetes: 7 } } }),
-      // A name that isn't a gateway's (written around the platform): the facts would refuse it (Ruling 44).
+      // A name that isn't a gateway's (written around the platform): the facts would refuse it.
       gateways({ id: "8b9c0d1e-2f3a-4b4c-9d5e-6f7a8b9c0d1e", name: "Not_A_Gateway" }),
       gateways(),
     ];
@@ -582,7 +581,7 @@ describe("KubernetesGroupsTab's row Install", () => {
     expect(onInstall).toHaveBeenCalledTimes(1);
   });
 
-  it("holds no gateway name in an attribute with each row's Install shown, enabled and disabled, its reason's tooltip open (Ruling 44)", async () => {
+  it("holds no gateway name in an attribute with each row's Install shown, enabled and disabled, its reason's tooltip open", async () => {
     const enabled = "canary-install-on-1a2b";
     const unassigned = "canary-install-off-3c4d";
     const unreadable = "canary-install-bad-5e6f";

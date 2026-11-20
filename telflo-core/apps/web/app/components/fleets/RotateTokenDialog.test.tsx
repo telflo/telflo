@@ -41,9 +41,8 @@ import {
 } from "./RotateTokenDialog.js";
 
 /*
- * Rotate (D17b-2 decisions 13 and 29; Preflight rulings 4, 6 and 13). Its
- * date math runs in the person's time zone: every test pins `process.env.TZ`
- * and restores it after.
+ * Rotate. Its date math runs in the person's time zone: every test pins
+ * `process.env.TZ` and restores it after.
  */
 
 const ORIGINAL_TZ = process.env.TZ;
@@ -57,7 +56,7 @@ afterEach(() => {
 
 const DAY = 86_400_000;
 
-describe("the grace's date math (Preflight ruling 13)", () => {
+describe("the grace's date math", () => {
   // Days around each zone's daylight-saving changes in 2026 and 2027, and a few fixed ones.
   const DAYS = ["2026-03-08", "2026-03-29", "2026-04-04", "2026-04-05", "2026-09-05", "2026-09-06", "2026-09-27", "2026-10-04", "2026-10-25", "2026-11-01", "2026-12-31", "2027-02-28", "2028-02-29"];
   const ZONES = ["America/Santiago", "America/New_York", "Europe/London", "Asia/Kolkata", "Pacific/Auckland", "UTC"];
@@ -231,7 +230,7 @@ const chooseDate = (value: string) => fireEvent.change(graceInput(), { target: {
 /** The footer's "Close" after an unknown outcome, not the X (whose screen-reader name is "Close" too). */
 const closeButton = () => screen.getAllByRole("button", { name: "Close" }).find((button) => button.textContent === "Close")!;
 
-describe("RotateTokenDialog (decision 29)", () => {
+describe("RotateTokenDialog", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
     inTimeZone("America/New_York");
@@ -244,7 +243,7 @@ describe("RotateTokenDialog (decision 29)", () => {
   });
 
   describe("its form", () => {
-    it("has the title, description and info box in Preflight ruling 4's words, no fleet label", async () => {
+    it("has the title, description and info box in their fixed words, no fleet label", async () => {
       await renderDialog();
       const dialog = screen.getByRole("dialog", { name: "Rotate token" });
       expect(dialog).toHaveTextContent(ROTATE_DESCRIPTION);
@@ -260,7 +259,7 @@ describe("RotateTokenDialog (decision 29)", () => {
       expect(rotateButton()).toBeEnabled();
     });
 
-    it("says a collector can't come back through the default token while the fleet has none valid (Ruling 61)", async () => {
+    it("says a collector can't come back through the default token while the fleet has none valid", async () => {
       await renderDialog({ tokens: [listedToken(), listedToken({ id: DEFAULT_TOKEN_ID, kind: "default", revokedAt: new Date(NOW - DAY).toISOString() })] });
       const dialog = screen.getByRole("dialog", { name: "Rotate token" });
       expect(dialog).toHaveTextContent(
@@ -381,7 +380,7 @@ describe("RotateTokenDialog (decision 29)", () => {
       expect(rotations.spy).toHaveBeenCalledWith(GROUP_ID, FLEET_ID, { expiresAt: ONE_YEAR, graceEndsAt: "2026-10-16T03:59:59.999Z" }, expect.anything());
     });
 
-    // Ruling 23: the form drew before midnight; today and the field's min are reckoned again at submit.
+    // The form drew before midnight; today and the field's min are reckoned again at submit.
     it("says a date that was today is in the past when submitted after midnight, nothing sent, the min now the new today", async () => {
       const rotations = serveRotations();
       // 23:59:30 in New York.
@@ -404,7 +403,7 @@ describe("RotateTokenDialog (decision 29)", () => {
       expect(rotations.spy).toHaveBeenCalledWith(GROUP_ID, FLEET_ID, expect.objectContaining({ graceEndsAt: "2026-10-17T03:59:59.999Z" }), expect.anything());
     });
 
-    // Ruling 28 (the fix-wave review's n3): the midnight problem joins an expiry's refusal still shown.
+    // The midnight problem joins an expiry's refusal still shown.
     it("keeps an expiry's refusal under the presets when a date that was today is submitted after midnight", async () => {
       const rotations = serveRotations(
         refusal("invalid_request", "expiresAt is invalid.", 400, [{ path: ["expiresAt"], message: "Must be a time in the future." }]),
@@ -437,7 +436,7 @@ describe("RotateTokenDialog (decision 29)", () => {
       expect(rotations.spy).toHaveBeenCalledWith(GROUP_ID, FLEET_ID, { expiresAt: null, graceEndsAt: "2030-01-02T04:59:59.999Z" }, expect.anything());
     });
 
-    it("says beside the field when the current token expires before the end of the chosen day (D16a Ruling 33)", async () => {
+    it("says beside the field when the current token expires before the end of the chosen day", async () => {
       const expiresAt = new Date(NOW + 5 * DAY).toISOString();
       await renderDialog({ rotateToken: { expiresAt, graceEndsAt: null, validCount: 1 } });
       const words = soonerExpiryWords(expiresAt);
@@ -456,7 +455,7 @@ describe("RotateTokenDialog (decision 29)", () => {
       expect(screen.queryByText(/on its own/)).toBeNull();
     });
 
-    it("hides the field with no valid rotate token, sending the default grace (Preflight ruling 6)", async () => {
+    it("hides the field with no valid rotate token, sending the default grace", async () => {
       const rotations = serveRotations(rotatedReply(null));
       const { user } = await renderDialog({ rotateToken: null });
       expect(screen.queryByLabelText(GRACE_LABEL)).toBeNull();
@@ -496,7 +495,7 @@ describe("RotateTokenDialog (decision 29)", () => {
       expect(dialog).toHaveTextContent(`The token it replaces stops working on ${formatDateTime(DEFAULT_GRACE_END)}.`);
     });
 
-    it("says the replaced token stops working at its own expiry, when that is sooner than the grace sent (D16a Ruling 33)", async () => {
+    it("says the replaced token stops working at its own expiry, when that is sooner than the grace sent", async () => {
       const sooner = new Date(NOW + 5 * DAY).toISOString();
       serveRotations();
       await renderDialog({
@@ -572,7 +571,7 @@ describe("RotateTokenDialog (decision 29)", () => {
       expect(screen.queryByRole("alert")).toBeNull();
     });
 
-    // Ruling 23 (Minor 1): with no valid rotate token there is no field to show it under.
+    // With no valid rotate token there is no field to show it under.
     it.each([
       ["Must not be after expiresAt.", GRACE_AFTER_EXPIRY],
       ["Must be a time in the future.", GRACE_PAST],

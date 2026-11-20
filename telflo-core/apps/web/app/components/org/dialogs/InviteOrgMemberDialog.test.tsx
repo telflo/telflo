@@ -68,7 +68,7 @@ describe("InviteOrgMemberDialog", () => {
     vi.restoreAllMocks();
   });
 
-  it("has its title and fields, its description naming the organization in bold (Q261), with Contributor selected and its help text, and Send Invitations disabled while empty", async () => {
+  it("has its title and fields, its description naming the organization in bold, with Contributor selected and its help text, and Send Invitations disabled while empty", async () => {
     renderDialog();
     const dialog = await screen.findByRole("dialog", { name: "Invite Members" });
 
@@ -84,7 +84,7 @@ describe("InviteOrgMemberDialog", () => {
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
-  it("names a personal workspace under its default name, its email (Q263), as the <email>'s organization, the email and 's in bold (Q262)", async () => {
+  it("names a personal workspace under its default name, its email, as the <email>'s organization, the email and 's in bold", async () => {
     renderDialog({ organizationName: "someone@example.com", organizationType: "personal" });
     const dialog = await screen.findByRole("dialog", { name: "Invite Members" });
 
@@ -93,7 +93,7 @@ describe("InviteOrgMemberDialog", () => {
     expect(screen.getByText("someone@example.com's", { selector: "strong" })).toBeInTheDocument();
   });
 
-  it("names a renamed personal workspace, and a group named by an email address, by their whole names (Q262, Q263)", async () => {
+  it("names a renamed personal workspace, and a group named by an email address, by their whole names", async () => {
     renderDialog({ organizationName: "Sam's Lab", organizationType: "personal" });
     expect(await screen.findByRole("dialog", { name: "Invite Members" })).toHaveTextContent(
       "Send invitations to join the Sam's Lab organization.",
@@ -107,7 +107,7 @@ describe("InviteOrgMemberDialog", () => {
     expect(screen.getByText("ops@example.com", { selector: "strong" })).toBeInTheDocument();
   });
 
-  it("puts the organization's name in no attribute, only the description's text, since replay records attributes (D4 Ruling 16, Q261)", async () => {
+  it("puts the organization's name in no attribute, only the description's text, since replay records attributes", async () => {
     renderDialog();
     const dialog = await screen.findByRole("dialog", { name: "Invite Members" });
     expect(dialog).toHaveTextContent(ORGANIZATION_NAME);
@@ -119,7 +119,7 @@ describe("InviteOrgMemberDialog", () => {
     expect(attributeValues.some((value) => value.includes(ORGANIZATION_NAME))).toBe(false);
   });
 
-  it("puts a personal workspace's email in no attribute either (Q262)", async () => {
+  it("puts a personal workspace's email in no attribute either", async () => {
     const email = "someone@example.com";
     renderDialog({ organizationName: email, organizationType: "personal" });
     const dialog = await screen.findByRole("dialog", { name: "Invite Members" });
@@ -131,7 +131,7 @@ describe("InviteOrgMemberDialog", () => {
     expect(attributeValues.some((value) => value.includes(email))).toBe(false);
   });
 
-  it("names a personal workspace renamed to something only like an email, or still under the old <email>'s workspace, by its whole name, with no 's added (Q263)", async () => {
+  it("names a personal workspace renamed to something only like an email, or still under the old <email>'s workspace, by its whole name, with no 's added", async () => {
     for (const name of ["sam@example", "sam @example.com", "someone@example.com's workspace"]) {
       renderDialog({ organizationName: name, organizationType: "personal" });
       expect(await screen.findByRole("dialog", { name: "Invite Members" })).toHaveTextContent(
@@ -301,7 +301,7 @@ describe("InviteOrgMemberDialog", () => {
     await waitFor(() => expect(errorAlert()).toBe("Too many attempts. Please wait and try again."));
   });
 
-  it("shows the API's words for an address at the reserved domain, 422 email_reserved, not Failed to invite (D22 Preflight ruling 23)", async () => {
+  it("shows the API's words for an address at the reserved domain, 422 email_reserved, not Failed to invite", async () => {
     answerInvites({
       "ci-1a2b3c4d@service-accounts.telflo.invalid": new ApiError("email_reserved", "This address can't be used"),
     });

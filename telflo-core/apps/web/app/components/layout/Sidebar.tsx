@@ -40,17 +40,15 @@ import { LOGOUT_FAILED_MESSAGE, useLogout } from "~/lib/use-logout.js";
 import { useDocsPage, useSite } from "~/lib/use-site.js";
 
 /*
- * The signed-in sidebar (ADR 0018; the D2a Parity Notes' Appearance table):
- * telflo's logo files, an aria-label on the collapse button, and nav items
- * as links with aria-current. "Contact us" (D29 decision 40) opens
+ * The signed-in sidebar: telflo's logo files, an aria-label on the collapse
+ * button, and nav items as links with aria-current. "Contact us" opens
  * ContactUsDialog; its `title` only when the rail is collapsed, a fixed
- * word, as Docs'. The organization's logo (D23-2 decision 51) is an
- * `<img alt="">` inside `ph-no-capture`, never named by the organization,
- * and falls back to the initial if it fails to load. Variables is at
- * `/variables` (D20 default 19). Switching (D5) completes before going to
- * `/app`, rather than after; see useSwitchOrganization. While the editor
- * holds unsaved text, switching is refused, and so is Logout (D8 decision
- * 15).
+ * word, as Docs'. The organization's logo is an `<img alt="">` inside
+ * `ph-no-capture`, never named by the organization, and falls back to the
+ * initial if it fails to load. Variables is at `/variables`. Switching
+ * completes before going to `/app`, rather than after; see
+ * useSwitchOrganization. While the editor holds unsaved text, switching is
+ * refused, and so is Logout.
  */
 
 /* The rail follows the app theme: card surface in light, carbon/navy
@@ -104,14 +102,13 @@ function editorIsDirty(): boolean {
 }
 
 /**
- * The nav items, in order, with their visibility rules evaluated
- * from the active organization's role: Fleet for any member, Permissions for
- * an admin; and Product Admin for a product admin (D12 decision 3), from
- * `/me`'s flag, which the layout re-seeds when an operator sets or clears it.
- * Permissions also needs an organization that may invite on this site: a
- * personal workspace shows it only while registration is open (D36-1
- * decision 57, Q269); `/org-admin` itself stays reachable by its address,
- * for invitations or members left from when the site was open.
+ * The nav items, in order, with their visibility rules evaluated from the
+ * active organization's role: Fleet for any member, Permissions for an admin;
+ * and Product Admin for a product admin, from `/me`'s flag, which the layout
+ * re-seeds when an operator sets or clears it. Permissions also needs an
+ * organization that may invite on this site: a personal workspace shows it
+ * only while registration is open; `/org-admin` itself stays reachable by its
+ * address, for invitations or members left from when the site was open.
  */
 function navItemsFor(
   organization: CurrentUserResponse["organization"],
@@ -121,7 +118,7 @@ function navItemsFor(
   const navItems: NavItem[] = [
     { icon: Home, label: "Configurations", path: "/app" },
     { icon: Sparkles, label: "Flows", path: "/app/flows" },
-    // D20 default 19: "Variables", since nothing in it is secret (Q88).
+    // "Variables", since nothing in it is secret.
     { icon: Variable, label: "Variables", path: "/variables" },
     // Every role is a membership of the active organization.
     { icon: Rocket, label: "Fleet", path: "/fleet-management" },
@@ -156,10 +153,10 @@ export function Sidebar() {
   const organizations = current?.organizations ?? [];
   const userEmail = current?.user.email ?? null;
 
-  // A failed logout leaves the session and the store intact and says so
-  // (D2a Parity Notes); see useLogout. With unsaved text in the editor it
-  // never starts: signing out first would meet the editor's navigation
-  // guard, whose Save could only fail (D8 decision 15).
+  // A failed logout leaves the session and the store intact and says so;
+  // see useLogout. With unsaved text in the editor it never starts:
+  // signing out first would meet the editor's navigation guard, whose
+  // Save could only fail.
   const handleLogout = async () => {
     setOrgMenuOpen(false);
     if (editorIsDirty()) {
@@ -170,7 +167,7 @@ export function Sidebar() {
   };
 
   // With unsaved text in the editor the switch is never sent: the person
-  // saves first (D8 decision 15).
+  // saves first.
   const handleOrgSwitch = (organizationId: string) => {
     if (editorIsDirty()) {
       setSwitchRefusedOpen(true);
@@ -265,7 +262,7 @@ export function Sidebar() {
 
       {/* Secondary: docs + contact */}
       <div className={cn("py-2 space-y-px border-t border-border dark:border-gray-800", collapsed ? "px-1.5" : "px-2")}>
-        {/* The site's docs (D36-1 decision 34): none when TELFLO_DOCS_URL is empty. */}
+        {/* The site's docs: none when TELFLO_DOCS_URL is empty. */}
         {docsHref !== null && (
           <a
             href={docsHref}
@@ -293,7 +290,7 @@ export function Sidebar() {
       <ContactUsDialog open={contactUsOpen} onOpenChange={setContactUsOpen} returnFocusTo={contactUsButton} />
 
       {/* Footer: org switcher (logout lives inside its popover). Every
-        * signed-in user has an organization (D1b), so it always renders. */}
+        * signed-in user has an organization, so it always renders. */}
       {organization && (
         <div className={cn("border-t border-border dark:border-gray-800 py-2", collapsed ? "px-1.5" : "px-2")}>
           <Popover open={orgMenuOpen} onOpenChange={setOrgMenuOpen}>
@@ -308,8 +305,7 @@ export function Sidebar() {
                 )}
                 // Session replay records attributes as they are, so no
                 // attribute here carries it: the tooltip says what the button
-                // does, and the name is text, which replay masks (D4 Ruling
-                // 16).
+                // does, and the name is text, which replay masks.
                 title="Switch organization"
               >
                 <OrganizationLogo

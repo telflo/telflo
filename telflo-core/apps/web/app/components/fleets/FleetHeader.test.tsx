@@ -7,11 +7,10 @@ import { formatDateTime } from "~/lib/format.js";
 import { expectNoAttributeHolds, fleetDetail } from "~/test/fleets.js";
 import { FleetHeader, FleetNotFound } from "./FleetHeader.js";
 
-// A fleet's page's header (D17a decision 19): the label and the actions
-// render; an archived fleet shows Unarchive and Delete (decision 3); no
-// configuration line (D17a has none). The header actions (D17c-1 decisions
-// 13 and 44; Preflight rulings 19, 21 and 22): "Install collector" and the
-// "Setup guide" toggle, passed by the route for an active server fleet only.
+// A fleet's page's header: the label and the actions render; an archived
+// fleet shows Unarchive and Delete; no configuration line. The header
+// actions: "Install collector" and the "Setup guide" toggle, passed by the
+// route for an active server fleet only.
 
 function renderHeader(fleet: FleetDetail, extra: Partial<Parameters<typeof FleetHeader>[0]> = {}) {
   const onAction = vi.fn();
@@ -85,7 +84,6 @@ describe("FleetHeader", () => {
     expect(onInstall).toHaveBeenCalledWith(install);
   });
 
-  // D17d-2 decision 23; Preflight ruling 28.
   it("offers a Kubernetes-supervisor fleet's Install with Helm before Rename, asking the route with the button pressed", async () => {
     const onInstall = vi.fn();
     const { user } = renderHeader(fleetDetail({ type: "kubernetes-supervisor" }), { onInstall });
@@ -111,7 +109,7 @@ describe("FleetHeader", () => {
     expect(screen.getByRole("button", { name: "Setup guide" })).toHaveAttribute("aria-pressed", "true");
   });
 
-  it("holds the label in no attribute (decision 29)", () => {
+  it("holds the label in no attribute", () => {
     const canary = "canary-label-7e2a";
     renderHeader(fleetDetail({ label: canary }), { onInstall: vi.fn(), setupGuide: { open: true, onToggle: vi.fn() } });
     expect(document.body.textContent).toContain(canary);

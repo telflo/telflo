@@ -13,14 +13,13 @@ export interface PhoneBackLink {
 }
 
 export const BACK_TO_PLAYGROUND: PhoneBackLink = { to: "/playground", label: "Back to playground" };
-/** The public editor's (D36-1 decision 23): the app has no home page of its own, so sign-in, labelled so. */
+/** The public editor's: the app has no home page of its own, so sign-in, labelled so. */
 export const BACK_TO_SIGN_IN: PhoneBackLink = { to: "/login", label: "Go to sign in" };
 
 /*
- * The "best viewed on larger screens" page (D31-1 decision 16,
- * Ruling 276), in place of the full-screen editor and the blank public
- * editor below `md` (767 px and narrower): the logo, a monitor, its
- * sentence and one link back.
+ * The "best viewed on larger screens" page, in place of the
+ * full-screen editor and the blank public editor below `md` (767 px
+ * and narrower): the logo, a monitor, its sentence and one link back.
  */
 export function PlaygroundPhonePage({ back }: { back: PhoneBackLink }) {
   return (
@@ -41,12 +40,12 @@ export function PlaygroundPhonePage({ back }: { back: PhoneBackLink }) {
 }
 
 /*
- * The editors' frame (decisions 13 and 16, Preflight rulings 13 and 18),
- * for the full-screen playground editor (Task 2) and the blank public
- * editor (Task 5): a playground surface (masked as the signed-in shell),
- * which renders a neutral frame on the server and until the browser has
- * measured, then the phone page below `md` and `children` otherwise. So
- * Monaco never mounts on a phone, and nothing is validated there.
+ * The editors' frame, for the full-screen playground editor and the
+ * blank public editor: a playground surface (masked as the signed-in
+ * shell), which renders a neutral frame on the server and until the
+ * browser has measured, then the phone page below `md` and `children`
+ * otherwise. So Monaco never mounts on a phone, and nothing is validated
+ * there.
  */
 export function PlaygroundEditorSurface({ back, children }: { back: PhoneBackLink; children: ReactNode }) {
   usePlaygroundSurface();

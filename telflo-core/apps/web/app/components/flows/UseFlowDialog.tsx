@@ -36,25 +36,25 @@ import { useCollectorDistributions } from "~/lib/stores/collector-catalogue-stor
 import { useCurrentUser } from "~/lib/use-current-user.js";
 
 /*
- * `UseFlowDialog` (ADR 0018; D12 decision 5): "Use this flow" on a flow's
- * page, the name-and-create step, prefilled with the flow's name and summary
- * so the common case is one click. Per the D12 Parity Notes:
+ * `UseFlowDialog`: "Use this flow" on a flow's page, the name-and-create
+ * step, prefilled with the flow's name and summary so the common case is one
+ * click. Its details:
  * - the pin is the flow's, or the distribution's default when the catalogue
  *   no longer offers it, which a sentence under "pinned to collector v…"
- *   says (D12 decision 16); no ClickStack coercion;
- * - it behaves as the create dialog does (D7): Create is enabled once the
+ *   says; no ClickStack coercion;
+ * - it behaves as the create dialog does: Create is enabled once the
  *   trimmed name isn't empty; the name and description are trimmed; Cancel,
  *   Escape, an outside click and the close button do nothing while the
  *   create is under way, and a second create can't start beside it; a
- *   refusal says the API's message, an unreadable flow "This flow could
- *   not be loaded: …", anything else "Failed to use this flow"; a 404
+ *   refusal says the API's message, an unreadable flow "This flow could not
+ *   be loaded: …", anything else "Failed to use this flow"; a 404
  *   `organization_not_found` or a 403 `terms_acceptance_required` closes it
  *   and revalidates the layout, with no toast; an answer after the dialog
  *   unmounted, or after the organization changed, does nothing;
  * - no "Select an organization first": there is always an active one.
  * `config_created` is captured as the create dialog does, with no properties:
- * no flow's name or text reaches an event (ADR 0024). The dialog stays open
- * through the move to the editor, so the gallery doesn't flash underneath.
+ * no flow's name or text reaches an event. The dialog stays open through the
+ * move to the editor, so the gallery doesn't flash underneath.
  */
 
 export const USE_FLOW_FAILED_MESSAGE = "Failed to use this flow";
