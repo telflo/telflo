@@ -71,7 +71,7 @@
  *     migration 034 did).
  *
  * down drops the function and restores migration 034's comment on
- * sessions.revoked_reason: migration 041's catalogue exactly.
+ * sessions.revoked_reason: migration 041's catalog exactly.
  */
 
 const signature = "product_admin_delete_account(uuid, timestamptz)";

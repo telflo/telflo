@@ -11,7 +11,7 @@ import type { TestDatabases } from "./testing.js";
  * withFailingInsert's own guarantees: it refuses to nest, its clean-up cancels
  * only an insert its trigger left waiting (never a session that merely reads
  * the table) and gives up within vitest's 5 s test timeout naming what holds
- * the table, after one attempt when it cancelled nothing, keeping a failed
+ * the table, after one attempt when it canceled nothing, keeping a failed
  * body's error as the cause; and a killed run's leftovers are dropped by the
  * global setup's dropFailingInsertLeftovers, which refuses a database not made
  * for tests.
@@ -180,7 +180,7 @@ describe("withFailingInsert", () => {
           // The body ends with the insert still waiting in the trigger.
         },
       );
-      // 57014 query_canceled: the clean-up cancelled it; its transaction rolled back.
+      // 57014 query_canceled: the clean-up canceled it; its transaction rolled back.
       expect(await inserting).toBe("57014");
       expect(await leftovers()).toEqual([]);
     } finally {
@@ -202,7 +202,7 @@ describe("withFailingInsert", () => {
           await waitUntil("wait_event_type = 'Lock' and wait_event = 'advisory'");
         }),
       ).rejects.toThrow(/test DDL gave up after lock_timeout 1s.*Holders: .*"relation":"organizations","mode":"AccessShareLock"/);
-      // One attempt, nothing having been cancelled: the diagnostic comes within vitest's 5 s test timeout, this test's own.
+      // One attempt, nothing having been canceled: the diagnostic comes within vitest's 5 s test timeout, this test's own.
       expect(counting.drops()).toBe(1);
     } finally {
       await lock.release();

@@ -36,7 +36,7 @@
  *     and the revoke.
  *
  * down drops the function and restores migration 007's and migration
- * 041's comments: migration 042's catalogue exactly.
+ * 041's comments: migration 042's catalog exactly.
  */
 
 const signature = "bootstrap_first_product_admin(uuid, timestamptz)";

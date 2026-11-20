@@ -5,10 +5,10 @@ import { readCollectorCatalogueFiles } from "./collector-catalogue/catalogue.js"
 import { runMigrationStep } from "./migrations.js";
 
 // `npm run db:migrate` (and compose's migrate): reads the collector
-// catalogue's files and validates them before it touches the database, so an
-// invalid catalogue exits non-zero having migrated nothing; then applies
-// pending migrations as the tables' owner, syncs the catalogue into its tables
-// (a catalogue that drops a row the database holds exits non-zero with both
+// catalog's files and validates them before it touches the database, so an
+// invalid catalog exits non-zero having migrated nothing; then applies
+// pending migrations as the tables' owner, syncs the catalog into its tables
+// (a catalog that drops a row the database holds exits non-zero with both
 // tables unchanged), and creates or resets the API's login role. See
 // runMigrationStep. In development tsx runs this file; the API image runs its
 // compiled dist/migrate.js.

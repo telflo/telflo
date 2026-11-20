@@ -33,7 +33,7 @@
  *     The switch applies to creations only: organizations that already
  *     exist keep their admins, who keep inviting.
  *
- * down drops the function and the table: migration 043's catalogue exactly.
+ * down drops the function and the table: migration 043's catalog exactly.
  */
 
 const signature = "product_admin_set_organization_creation(text)";

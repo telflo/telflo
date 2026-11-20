@@ -18,8 +18,8 @@ import {
 } from "./catalogue.js";
 
 /*
- * The catalogue's validator: its eleven rules, and checks (a) to (h), each
- * refused on its own; and the committed catalogue passes.
+ * The catalog's validator: its eleven rules, and checks (a) to (h), each
+ * refused on its own; and the committed catalog passes.
  */
 
 /** Both binaries for every platform, at upstream's URLs for `version`. */
@@ -130,15 +130,15 @@ function expectRefused(files: CatalogueFile[], needle: string | RegExp): void {
   ).toBe(true);
 }
 
-describe("the collector catalogue's validator", () => {
-  it("passes a valid single-distribution catalogue", () => {
+describe("the collector catalog's validator", () => {
+  it("passes a valid single-distribution catalog", () => {
     expect(
       validateCollectorCatalogue(filesOf(distribution([entry({ version: "0.147.0", default: true })]))),
     ).toHaveLength(1);
   });
 
   describe("the eleven rules", () => {
-    it("1: refuses an empty catalogue", () => {
+    it("1: refuses an empty catalog", () => {
       expectRefused([], "no distribution file");
     });
 
@@ -492,7 +492,7 @@ describe("the collector catalogue's validator", () => {
       expect(() => validateCollectorCatalogue(withRenames([{ ...FILE_LOG, name: "a".repeat(64) }]))).not.toThrow();
     });
 
-    it("refuses a since that isn't the catalogue's version format", () => {
+    it("refuses a since that isn't the catalog's version format", () => {
       for (const since of ["0.149", "v0.149.0", "0.149.0-rc.1", `0.0.${"1".repeat(61)}`, ""]) {
         expectRefused(withRenames([{ ...FILE_LOG, since }]), `since ${JSON.stringify(since)} must be major.minor.patch`);
       }
@@ -580,7 +580,7 @@ describe("the collector catalogue's validator", () => {
       await expect(readCollectorCatalogueFiles(directory)).rejects.toMatchObject({
         problems: [expect.stringMatching(/^broken\.json: not JSON/)],
       });
-      // Never an empty catalogue: a folder that isn't there is an error.
+      // Never an empty catalog: a folder that isn't there is an error.
       await expect(readCollectorCatalogueFiles(pathToFileURL(`${folder}/missing/`))).rejects.toMatchObject({
         code: "ENOENT",
       });
@@ -590,7 +590,7 @@ describe("the collector catalogue's validator", () => {
   });
 });
 
-describe("the committed catalogue", () => {
+describe("the committed catalog", () => {
   it("lives where COLLECTOR_CATALOGUE_DIRECTORY points, the repository's catalog/distributions, and holds otelcol-contrib.json", () => {
     const directory = fileURLToPath(COLLECTOR_CATALOGUE_DIRECTORY);
     const repository = fileURLToPath(new URL("../../../../../", import.meta.url));
@@ -657,7 +657,7 @@ describe("the committed catalogue", () => {
   });
 });
 
-describe("the API never reads the catalogue's files", () => {
+describe("the API never reads the catalog's files", () => {
   /** Every TypeScript source under `directory`, recursively. */
   const sources = (directory: string): string[] =>
     readdirSync(directory).flatMap((name) => {
@@ -666,7 +666,7 @@ describe("the API never reads the catalogue's files", () => {
       return /\.(ts|tsx|mts)$/.test(name) ? [path] : [];
     });
 
-  it("no apps/api source names catalog/ or the catalogue's directory", () => {
+  it("no apps/api source names catalog/ or the catalog's directory", () => {
     const api = fileURLToPath(new URL("../../../../apps/api/src/", import.meta.url));
     const files = sources(api);
     expect(files.length).toBeGreaterThan(50);

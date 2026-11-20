@@ -32,7 +32,7 @@ import { createDb, createPool } from "./pool.js";
 import { APPLICATION_ROLE } from "./application-role.js";
 import { testDatabaseUrl, testMigrationDatabaseUrl } from "./test-database.js";
 
-/** The mark of a test's own catalogue fixture row: test-database.ts' TEST_CATALOGUE_FIXTURE_NOTE. */
+/** The mark of a test's own catalog fixture row: test-database.ts' TEST_CATALOGUE_FIXTURE_NOTE. */
 export { TEST_CATALOGUE_FIXTURE_NOTE } from "./test-database.js";
 
 /**
@@ -123,10 +123,10 @@ export const applicationTables = [
 ] as const;
 
 /**
- * The collector catalogue's tables (migration 1700000000023): global, written
+ * The collector catalog's tables (migration 1700000000023): global, written
  * only by the migration step's sync, which globalSetup runs once per run.
- * `truncateAll` leaves them, so every test sees the committed catalogue; a
- * test that needs another catalogue uses a throwaway database or a rolled-back
+ * `truncateAll` leaves them, so every test sees the committed catalog; a
+ * test that needs another catalog uses a throwaway database or a rolled-back
  * transaction, never `telflo_platform_test` itself. Every table is in this
  * list or in `applicationTables`, which schema.integration.test.ts checks
  * against the database.
@@ -147,13 +147,13 @@ export const singletonTables = ["otelcol_testing_state", "ottl_evaluator_state",
 /**
  * Empties every application table, with `cascade`. A migration that adds a
  * table must add it to `applicationTables` above (or, if it is the
- * catalogue's, to `catalogueTables`, which this leaves). `truncate` rather
+ * catalog's, to `catalogueTables`, which this leaves). `truncate` rather
  * than `delete`: it is the only way to empty append-only `audit_events`,
  * whose trigger blocks row deletes, and row-level triggers do not fire on
  * it. `cascade` reaches only the tables that reference a truncated one,
- * and the catalogue's tables reference no application table (the
+ * and the catalog's tables reference no application table (the
  * references run the other way: configurations, configuration_versions and
- * flows reference the catalogue's), so the cascade never reaches them.
+ * flows reference the catalog's), so the cascade never reaches them.
  *
  * It empties `flows` too, the seeded flows (migration 1700000000026)
  * included: a test that needs them calls `insertSeededFlows` afterwards. So
@@ -466,7 +466,7 @@ export interface AddInvitationInput
 /**
  * Inserts an invitation into an existing organization, as the owner, past
  * row-level security. Any column may be given, `accepted_at` and
- * `revoked_at` included, to start from an accepted or cancelled one.
+ * `revoked_at` included, to start from an accepted or canceled one.
  *
  * Defaults: a pending contributor invitation to a unique address, a random
  * 64-character hex `token_hash` (the shape of a sha-256), no inviter, and an
@@ -733,12 +733,12 @@ export interface AddConfigurationInput extends Partial<Omit<Insertable<Configura
   /**
    * `false` leaves `collector_distribution` out, for a schema before
    * migration 1700000000023 (the migration tests' throwaway databases),
-   * where neither it nor the catalogue exists.
+   * where neither it nor the catalog exists.
    */
   collector?: false;
 }
 
-/** The catalogue's default distribution, as `db` holds it. */
+/** The catalog's default distribution, as `db` holds it. */
 async function defaultCollectorDistribution(db: Kysely<Database>): Promise<string> {
   const row = await db
     .selectFrom("collector_distributions")
@@ -748,7 +748,7 @@ async function defaultCollectorDistribution(db: Kysely<Database>): Promise<strin
   return row.id;
 }
 
-/** `distribution`'s default version in the catalogue, as `db` holds it. */
+/** `distribution`'s default version in the catalog, as `db` holds it. */
 async function defaultCollectorVersion(db: Kysely<Database>, distribution: string): Promise<string> {
   const row = await db
     .selectFrom("collector_versions")
@@ -762,10 +762,10 @@ async function defaultCollectorVersion(db: Kysely<Database>, distribution: strin
 }
 
 /**
- * The catalogue's default distribution and its default version, as `db` holds
+ * The catalog's default distribution and its default version, as `db` holds
  * them: what a test writing a configuration or a version by hand names, so
  * that no test holds a second default (a constant `0.162.0`) beside the
- * catalogue's.
+ * catalog's.
  */
 export async function catalogueDefaults(db: Kysely<Database>): Promise<{ distribution: string; version: string }> {
   const distribution = await defaultCollectorDistribution(db);
@@ -778,8 +778,8 @@ export async function catalogueDefaults(db: Kysely<Database>): Promise<{ distrib
  * start from a deleted one.
  *
  * Defaults: a unique name, no description, no creator, `created_at` and
- * `updated_at` both the current time, and the catalogue's default
- * distribution, read from the catalogue's table (never a constant). The table
+ * `updated_at` both the current time, and the catalog's default
+ * distribution, read from the catalog's table (never a constant). The table
  * has no default for any of them (the API writes them), so the fixture writes
  * them.
  *
@@ -850,7 +850,7 @@ export interface AddConfigurationVersionInput
 }
 
 /**
- * A version's default pin, from the catalogue's tables: the
+ * A version's default pin, from the catalog's tables: the
  * configuration's distribution (the default distribution when there is no
  * such configuration, so a test of the configuration's foreign key still
  * reaches it) and that distribution's default version.
@@ -886,7 +886,7 @@ async function defaultCollectorPin(
  * Defaults: version 1, empty YAML, no label (pass `label` to name it), no
  * creator, a draft, `created_at` and `updated_at` both the current time, and
  * the configuration's distribution pinned to its default version, read from
- * the catalogue's tables (never a constant). The table has no default for the
+ * the catalog's tables (never a constant). The table has no default for the
  * YAML, either timestamp or the pin (the API always writes them), so the
  * fixture writes them. `nodes`, `edges` and `pipelines` take the table's
  * `'[]'`; a test that gives one passes `JSON.stringify(array)`, as the
@@ -1060,8 +1060,8 @@ export interface AddTestRunInput
  *
  * Defaults: a `logs` run of 5 seconds over `receivers: {}`, an input
  * `input.json` of 0 bytes, queued now, pinned to the configuration's
- * distribution (a YAML run's: the catalogue's default) and its default
- * version from the catalogue's tables (never a constant).
+ * distribution (a YAML run's: the catalog's default) and its default
+ * version from the catalog's tables (never a constant).
  */
 export async function addTestRun(
   db: Kysely<Database>,
@@ -1349,8 +1349,8 @@ export async function addValidationRule(
  *
  * The trigger and its function are dropped afterwards whatever happens, so
  * no later test inherits them: an insert the trigger left waiting would
- * hold the drop, so such inserts are cancelled first (their transactions
- * roll back), and the drop is tried again only if something was cancelled.
+ * hold the drop, so such inserts are canceled first (their transactions
+ * roll back), and the drop is tried again only if something was canceled.
  * The clean-up stays well under vitest's 5 s test timeout, so a drop that
  * can't finish fails the test with the sessions holding the table.
  *
@@ -1419,7 +1419,7 @@ function failingInsertName(table: string): string {
   return `test_fail_${table}_insert`;
 }
 
-/** How many times withFailingInsert's clean-up tries its drop, each after cancelling what waits. */
+/** How many times withFailingInsert's clean-up tries its drop, each after canceling what waits. */
 const FAILING_INSERT_DROP_ATTEMPTS = 3;
 
 /**
@@ -1431,13 +1431,13 @@ const FAILING_INSERT_DROP_LOCK_TIMEOUT = "1s";
 
 /**
  * withFailingInsert's clean-up: the trigger and its function dropped in one
- * transaction (both or neither), after cancelling every other session of
+ * transaction (both or neither), after canceling every other session of
  * this database that waits on a lock while holding `RowExclusiveLock` on
  * `table`: an insert the trigger left waiting (on an advisory lock it takes,
  * or any other). A session that only reads the table (`AccessShareLock`) is
- * never cancelled: it holds the drop, which then fails naming it. The drop
- * is tried again on a lock timeout only when its attempt cancelled
- * something (a cancelled insert's rollback racing the drop).
+ * never canceled: it holds the drop, which then fails naming it. The drop
+ * is tried again on a lock timeout only when its attempt canceled
+ * something (a canceled insert's rollback racing the drop).
  */
 async function dropFailingInsert(
   db: Kysely<Database>,

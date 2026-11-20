@@ -404,7 +404,7 @@ describe("test runs and test files (migration 1700000000028)", () => {
 
     it("refuses a run pinned to a distribution other than its configuration's (23503, fk_test_runs_configuration_distribution)", async () => {
       const w = await world();
-      // Another distribution exists only in this rolled-back transaction: the catalogue is never changed in telflo_platform_test.
+      // Another distribution exists only in this rolled-back transaction: the catalog is never changed in telflo_platform_test.
       const rollback = new Error("rollback");
       await expect(
         ownerDb.transaction().execute(async (transaction) => {

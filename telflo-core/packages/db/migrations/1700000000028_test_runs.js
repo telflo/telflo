@@ -17,7 +17,7 @@
  *     queued (release). Nothing else.
  *       - Composite foreign keys tie it to its configuration and version in
  *         its own organization, as configuration_versions' do, and to the
- *         configuration's distribution and a version of the catalogue.
+ *         configuration's distribution and a version of the catalog.
  *         queued_by_user_id becomes null when the account is hard-deleted.
  *       - Row-level security follows migration 021's child-visible pattern: a
  *         run is visible to whoever can see its configuration, so a draft's
@@ -486,7 +486,7 @@ export const up = (pgm) => {
     comment on constraint fk_test_runs_configuration_distribution on test_runs is
       'a run is pinned to its configuration''s distribution.';
     comment on constraint fk_test_runs_collector_version on test_runs is
-      'a run names a version of the catalogue.';
+      'a run names a version of the catalog.';
     comment on constraint ck_test_runs_status on test_runs is
       'queued, running, succeeded or failed.';
     comment on constraint ck_test_runs_signal on test_runs is

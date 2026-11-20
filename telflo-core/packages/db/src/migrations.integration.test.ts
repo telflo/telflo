@@ -10,8 +10,8 @@ import { openTestDatabases, type TestDatabases } from "./testing.js";
 
 /*
  * The migration step (`npm run db:migrate`, migrate, prepareTestDatabase)
- * validates the collector catalogue before it touches the database, on a
- * throwaway database that is never migrated: a fixture catalogue, never the
+ * validates the collector catalog before it touches the database, on a
+ * throwaway database that is never migrated: a fixture catalog, never the
  * committed one, is refused.
  */
 
@@ -39,7 +39,7 @@ describe("the migration step", () => {
     await databases.destroy();
   }, THROWAWAY_DATABASE_DROP_TIMEOUT);
 
-  it("refuses an invalid catalogue before it migrates: the database is left as it was, with no table at all", async () => {
+  it("refuses an invalid catalog before it migrates: the database is left as it was, with no table at all", async () => {
     const [committed] = await readCollectorCatalogueFiles();
     const content = structuredClone(committed!.content) as { versions: Array<{ releasedAt: string }> };
     content.versions[0]!.releasedAt = "2026-02-30";

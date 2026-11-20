@@ -120,7 +120,7 @@ export const up = (pgm) => {
       using (organization_id = ${contextOrganization})
       with check (organization_id = ${contextOrganization});
 
-    -- Nothing deletes an invitation (cancelling sets revoked_at), but a
+    -- Nothing deletes an invitation (canceling sets revoked_at), but a
     -- policy keeps a future delete inside the organization.
     create policy organization_invitations_delete on organization_invitations
       for delete to telflo_platform_runtime

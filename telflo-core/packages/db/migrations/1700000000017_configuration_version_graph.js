@@ -4,7 +4,7 @@
  * configuration laid out as its author left it.
  *
  *   * The text wins. yaml_content stays the configuration's content; these
- *     columns supply only the layout (positions, group sizes, colours, ids),
+ *     columns supply only the layout (positions, group sizes, colors, ids),
  *     which the editor matches onto the graph it parses from the text. The
  *     configs inside `nodes` are a copy, written from the text at every save
  *     and never read back. The graph never stops the text from saving: the
@@ -50,7 +50,7 @@ export const up = (pgm) => {
        Layout only: yaml_content says what connects to what.';
     comment on column configuration_versions.pipelines is
       'the builder''s pipelines: id, name, signal type and
-       colour. Layout only: yaml_content''s service.pipelines wins.';
+       color. Layout only: yaml_content''s service.pipelines wins.';
 
     comment on constraint ck_configuration_versions_nodes_array on configuration_versions is
       'a JSON array (23514 otherwise): the editor reads the column as a list.';

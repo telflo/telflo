@@ -64,7 +64,7 @@
  * it drops, in order, the lookup, api_tokens and api_token_access,
  * service_accounts and its trigger's function, the triggers on sessions,
  * user_identities and users and their functions, the two checks,
- * users.kind and user_kind: migration 034's catalogue exactly.
+ * users.kind and user_kind: migration 034's catalog exactly.
  */
 
 const contextOrganization = `nullif(current_setting('telflo.organization_id', true), '')::uuid`;

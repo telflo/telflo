@@ -17,7 +17,7 @@ import type { TestDatabases } from "./testing.js";
  * personal_api_tokens and the lookup's person branch (migration
  * 1700000000038): the lookup as the API's real login, with no context;
  * row-level security on the context's user, as the API's role.
- * schema.integration.test.ts has the migration's catalogue (up, down, up);
+ * schema.integration.test.ts has the migration's catalog (up, down, up);
  * service-accounts.integration.test.ts the service-account branch. No test
  * prints a token: a failing assertion compares hashes, ids, counts or
  * booleans.

@@ -1,22 +1,22 @@
 /**
- * The collector catalogue, a configuration's distribution and each
+ * The collector catalog, a configuration's distribution and each
  * version's collector version.
  *
- *   * Two global tables hold the catalogue: collector_distributions (one
+ *   * Two global tables hold the catalog: collector_distributions (one
  *     row per distribution, exactly one the default) and collector_versions
  *     (one row per distribution and version, exactly one default per
  *     distribution, never a deprecated default). The migration step fills
  *     them from catalog/distributions/*.json after the migrations
  *     (packages/db/src/collector-catalogue/sync.ts); nothing else writes
  *     them. No organization column and no row-level security:
- *     every organization reads the same catalogue. Migration 009's default
+ *     every organization reads the same catalog. Migration 009's default
  *     privileges gave telflo_platform_runtime select, insert, update and delete;
  *     insert, update and delete are revoked, so the API's role may only read
  *     them, and the tables' owner (the migration step) writes them. A
  *     version is never deleted, only deprecated, so an existing pin still
  *     resolves.
  *   * Then the Contrib distribution and its 0.162.0 row, with the
- *     catalogue's values at this migration (on conflict do nothing): the
+ *     catalog's values at this migration (on conflict do nothing): the
  *     foreign keys below need them before the backfill, on a database that
  *     already holds configurations. The sync then finds nothing to change
  *     in either row.
@@ -25,14 +25,14 @@
  *     changed. Every existing configuration becomes Contrib. The default is
  *     only for that backfill and is dropped, so a write that forgets the
  *     column fails (23502) instead of quietly taking a second default (one
- *     default, the catalogue's). unique (id, collector_distribution) is the
+ *     default, the catalog's). unique (id, collector_distribution) is the
  *     composite target the versions reference (migrations 015 and 016's
  *     pattern).
  *   * configuration_versions.collector_distribution and collector_version: the
  *     version's pin. The distribution is the configuration's own, kept equal
  *     by a composite foreign key to configurations (id,
  *     collector_distribution), which cascades as the configuration's other one
- *     does; the pair is a version of the catalogue, by a composite foreign key
+ *     does; the pair is a version of the catalog, by a composite foreign key
  *     to collector_versions, so a version can't name another distribution's
  *     version or an unknown one. Every existing version, published or not,
  *     becomes 0.162.0. Adding a column with a default fires no row trigger, so
@@ -53,15 +53,15 @@
  *     the trigger says so for every configuration.
  *   * Row-level security, migration 021's policies and migration 022's
  *     author trigger are unchanged; truncating configurations leaves the
- *     catalogue.
+ *     catalog.
  *
  * down puts back migration 020's function and its comment exactly, then
  * drops the trigger and its function, the four columns and their
- * constraints, and the two tables. The catalogue's rows go with them; the
+ * constraints, and the two tables. The catalog's rows go with them; the
  * next migration step's up and sync write them again.
  */
 
-/** The platforms a binary ships for, in the catalogue's order. */
+/** The platforms a binary ships for, in the catalog's order. */
 const platforms = ["linux_amd64", "linux_arm64", "darwin_amd64", "darwin_arm64", "windows_amd64"];
 
 const releases = "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/";
@@ -84,7 +84,7 @@ const sha256 = {
   },
 };
 
-/** A binary map as the catalogue's file holds it, and so as the sync stores it: platform → { downloadUrl, sha256 }. */
+/** A binary map as the catalog's file holds it, and so as the sync stores it: platform → { downloadUrl, sha256 }. */
 const binaries = (binary, urlOf) =>
   JSON.stringify(
     Object.fromEntries(
@@ -168,16 +168,16 @@ export const up = (pgm) => {
     comment on column collector_distributions.icon is
       'which icon the web shows for it (otel), or null for none.';
     comment on column collector_distributions.sort_order is
-      'the catalogue''s order, ascending, the id breaking ties.';
+      'the catalog''s order, ascending, the id breaking ties.';
     comment on column collector_distributions.is_default is
       'the distribution a new configuration gets when it names none
-       (one default, read from the catalogue). Exactly one
+       (one default, read from the catalog). Exactly one
        (uq_collector_distributions_one_default).';
     comment on constraint collector_distributions_pkey on collector_distributions is
       'one row per distribution, by its id; what configurations and the
-       catalogue''s versions reference.';
+       catalog''s versions reference.';
     comment on constraint ck_collector_distributions_id_format on collector_distributions is
-      'the catalogue validator''s and the opamp-server''s format for a
+      'the catalog validator''s and the opamp-server''s format for a
        distribution id, as a backstop behind the validator.';
     comment on constraint ck_collector_distributions_label_present on collector_distributions is
       'a distribution has a name to show.';
@@ -250,9 +250,9 @@ export const up = (pgm) => {
        processors, exporters, connectors, extensions), which the palette
        filters by; null for the full palette (Contrib).';
     comment on column collector_versions.otelcol_contrib is
-      'the collector binary''s downloads, as the catalogue''s file holds
+      'the collector binary''s downloads, as the catalog''s file holds
        them: { "<platform>": { "downloadUrl", "sha256" } }; {} for a
-       container-only distribution. Only the catalogue''s upstream release
+       container-only distribution. Only the catalog''s upstream release
        URLs (the validator''s rule).';
     comment on column collector_versions.opamp_supervisor is
       'the OpAMP supervisor''s downloads, in otelcol_contrib''s shape.';
@@ -268,7 +268,7 @@ export const up = (pgm) => {
     comment on constraint ck_collector_versions_deprecated_note on collector_versions is
       'a deprecated version says why: the deprecated pin shows the note.';
     comment on constraint collector_versions_distribution_fkey on collector_versions is
-      'a version belongs to a distribution of the catalogue. Distributions
+      'a version belongs to a distribution of the catalog. Distributions
        are never deleted, so nothing cascades.';
 
     create unique index uq_collector_versions_one_default
@@ -305,13 +305,13 @@ export const up = (pgm) => {
 
     comment on column configurations.collector_distribution is
       'the distribution the configuration is built for:
-       chosen when it is created, the catalogue''s default when none is
+       chosen when it is created, the catalog''s default when none is
        named, and never changed (configurations_collector_distribution_unchanged).
        No default: the API always writes it, so there is no second default
-       beside the catalogue''s. Configurations that existed before this
+       beside the catalog''s. Configurations that existed before this
        column are Contrib.';
     comment on constraint fk_configurations_collector_distribution on configurations is
-      'a configuration is built for a distribution of the catalogue (23503
+      'a configuration is built for a distribution of the catalog (23503
        otherwise).';
     comment on constraint uq_configurations_id_collector_distribution on configurations is
       'the composite foreign-key target the configuration''s versions
@@ -335,12 +335,12 @@ export const up = (pgm) => {
     comment on column configuration_versions.collector_distribution is
       'the configuration''s distribution, copied onto the version so that
        (collector_distribution, collector_version) can reference the
-       catalogue; fk_configuration_versions_configuration_distribution keeps
+       catalog; fk_configuration_versions_configuration_distribution keeps
        it equal to the configuration''s. No default: the API always writes
        it.';
     comment on column configuration_versions.collector_version is
       'the collector version the version is pinned to: a
-       version of the configuration''s distribution in the catalogue. A
+       version of the configuration''s distribution in the catalog. A
        configuration''s first version gets the distribution''s default, a
        new version its source''s. A pin to a version deprecated since
        stays. Immutable once published (the trigger
@@ -354,9 +354,9 @@ export const up = (pgm) => {
        configuration takes its versions.';
     comment on constraint fk_configuration_versions_collector_version on configuration_versions is
       'a version is pinned to a version of its own distribution in the
-       catalogue: another distribution''s version, or an unknown one, is
+       catalog: another distribution''s version, or an unknown one, is
        refused (23503), even for the owner. A deprecated one is accepted
-       here; the API decides whether a save may pick it. Catalogue versions
+       here; the API decides whether a save may pick it. Catalog versions
        are never deleted, so nothing cascades.';
 
     ${publishedGuard(`

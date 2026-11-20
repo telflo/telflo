@@ -42,12 +42,12 @@ export async function migrateToLatest(url: string, log: (message: string) => voi
  * The migration step, as `npm run db:migrate` (migrate.ts), compose's
  * migrate and prepareTestDatabase run it:
  *
- *   1. validates `catalogue`, the collector catalogue's files as read,
- *      before it touches the database, so an invalid catalogue fails having
+ *   1. validates `catalogue`, the collector catalog's files as read,
+ *      before it touches the database, so an invalid catalog fails having
  *      migrated nothing;
  *   2. applies every pending migration, as the tables' owner;
- *   3. syncs the catalogue into its tables, which validates it again and
- *      refuses, changing neither table, a catalogue that drops a row the
+ *   3. syncs the catalog into its tables, which validates it again and
+ *      refuses, changing neither table, a catalog that drops a row the
  *      database holds (the migrations stay applied);
  *   4. creates or resets the API's login role.
  *

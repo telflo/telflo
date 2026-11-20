@@ -54,7 +54,7 @@
  *
  * down drops the functions, the gate and both tables with their rows, and
  * restores migration 026's comment on users.is_product_admin: migration
- * 040's catalogue exactly.
+ * 040's catalog exactly.
  */
 
 /** Every function the API's role may run, with its arguments: what the grants name. */

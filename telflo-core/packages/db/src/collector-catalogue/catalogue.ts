@@ -2,7 +2,7 @@ import { readdir, readFile } from "node:fs/promises";
 import { z } from "zod";
 
 /*
- * The collector catalogue: one hand-edited file per distribution,
+ * The collector catalog: one hand-edited file per distribution,
  * `catalog/distributions/<distribution>.json` at the repository's root, in a
  * fixed format. The migration step reads it, refuses a malformed one, and
  * upserts it into the two global tables (./sync.ts). Other components read the
@@ -14,7 +14,7 @@ import { z } from "zod";
  */
 
 /**
- * The folder holding the catalogue's files: the repository's
+ * The folder holding the catalog's files: the repository's
  * `catalog/distributions/` in a checkout, and
  * `/catalog/distributions/` in the API image, which the Dockerfile copies
  * there. Only the migration step reads it: the API
@@ -161,14 +161,14 @@ export type CatalogueDistribution = z.infer<typeof CatalogueDistributionSchema>;
 export type PlatformBinaries = z.infer<typeof PlatformBinariesSchema>;
 export type SupportedComponents = z.infer<typeof SupportedComponentsSchema>;
 
-/** One catalogue file as read: its name in the folder, and its parsed JSON, not yet validated. */
+/** One catalog file as read: its name in the folder, and its parsed JSON, not yet validated. */
 export interface CatalogueFile {
   name: string;
   content: unknown;
 }
 
 /**
- * A catalogue that failed its validator, or couldn't be read. `problems`
+ * A catalog that failed its validator, or couldn't be read. `problems`
  * lists every rule it breaks; the message lists them too.
  */
 export class CollectorCatalogueError extends Error {
@@ -242,7 +242,7 @@ function versionProblems(
   const at = `${where} version ${JSON.stringify(entry.version)}`;
 
   // Rule 4: major.minor.patch; and at most 64 characters, as
-  // everything downstream of the catalogue caps it.
+  // everything downstream of the catalog caps it.
   if (!VERSION.test(entry.version) || entry.version.length > VERSION_MAXIMUM_LENGTH) {
     problems.push(`${at}: the version must be major.minor.patch, at most ${VERSION_MAXIMUM_LENGTH} characters`);
   }
@@ -380,14 +380,14 @@ function renamedTypeProblems(where: string, renamedTypes: readonly CatalogueRena
 }
 
 /**
- * Validates the catalogue's files and returns their distributions, sorted
- * as the catalogue orders them (`sortOrder`, then id). Throws a
+ * Validates the catalog's files and returns their distributions, sorted
+ * as the catalog orders them (`sortOrder`, then id). Throws a
  * `CollectorCatalogueError` listing every problem: the sync writes nothing
- * from a catalogue that has one.
+ * from a catalog that has one.
  */
 export function validateCollectorCatalogue(files: readonly CatalogueFile[]): CatalogueDistribution[] {
   const problems: string[] = [];
-  // Rule 1: there is a catalogue.
+  // Rule 1: there is a catalog.
   if (files.length === 0) throw new CollectorCatalogueError(["the catalogue has no distribution file"]);
 
   const distributions: CatalogueDistribution[] = [];

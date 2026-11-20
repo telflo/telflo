@@ -39,7 +39,7 @@
  * down drops the lookup and the table with its rows (a person's tokens
  * stop working, as none existed before this migration), then creates
  * migration 035's lookup again, its definition, comment and grants byte
- * for byte: migration 037's catalogue exactly.
+ * for byte: migration 037's catalog exactly.
  */
 
 const contextUser = `nullif(current_setting('telflo.user_id', true), '')::uuid`;

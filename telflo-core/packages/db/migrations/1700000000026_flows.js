@@ -13,15 +13,15 @@
  *     /flows/<slug>), and at most 80 characters (the admin dialog's slugify's
  *     limit); source is telflo or community; source_url is null or http(s)://
  *     (it is rendered into an href on a public page); the collector version is
- *     not blank. collector_distribution references the catalogue, so no flow
+ *     not blank. collector_distribution references the catalog, so no flow
  *     can name a distribution the platform doesn't offer (ClickStack). The
- *     version has no foreign key: the API checks it against the catalogue on
+ *     version has no foreign key: the API checks it against the catalog on
  *     every write, and a pin deprecated since still reads.
  *   * created_at and updated_at have no default, as configurations' have none
  *     (migration 015): the API writes both from its injected clock, so they
  *     hold whole milliseconds as a JavaScript Date does. Nor does
  *     collector_distribution: there is one default distribution, the
- *     catalogue's, not a second one here.
+ *     catalog's, not a second one here.
  *   * users.is_product_admin, false by default, set and cleared only by an
  *     operator's SQL, as the tables' owner. A trigger,
  *     users_product_admin_owner_only, refuses an insert with the flag true and
@@ -425,7 +425,7 @@ export const up = (pgm) => {
        anyone reads a published flow''s.';
     comment on column flows.collector_distribution is
       'the distribution a configuration created from it is built for, a
-       distribution of the catalogue (fk_flows_collector_distribution).
+       distribution of the catalog (fk_flows_collector_distribution).
        No default: the API always writes it.';
     comment on column flows.collector_version is
       'the collector version the flow was checked against, and the pin a
@@ -469,7 +469,7 @@ export const up = (pgm) => {
       'a blank pin would create a configuration pinned to no collector
        version at all (the check also refuses only whitespace).';
     comment on constraint fk_flows_collector_distribution on flows is
-      'a flow is built for a distribution of the catalogue (23503 otherwise),
+      'a flow is built for a distribution of the catalog (23503 otherwise),
        so none names one the platform doesn''t offer. Distributions are never
        deleted, so nothing cascades.';
 

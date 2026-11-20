@@ -22,7 +22,7 @@ describe("configurations", () => {
   let databases: TestDatabases;
   let db: Kysely<Database>;
   let ownerDb: Kysely<Database>;
-  /** The catalogue's default distribution and version, which a row written by hand names. */
+  /** The catalog's default distribution and version, which a row written by hand names. */
   let pin: { distribution: string; version: string };
 
   beforeAll(async () => {
@@ -76,7 +76,7 @@ describe("configurations", () => {
         created_at: at,
         updated_at: at,
         deleted_at: null,
-        // The fixture's: the catalogue's default distribution.
+        // The fixture's: the catalog's default distribution.
         collector_distribution: pin.distribution,
         // Created blank, from no flow.
         source_flow_slug: null,
@@ -630,8 +630,8 @@ describe("configurations", () => {
 
         /**
          * Runs `work` as the owner in a transaction that adds a second
-         * distribution to the catalogue, `fixture-distribution` with one
-         * version, and is always rolled back, so telflo_platform_test's catalogue
+         * distribution to the catalog, `fixture-distribution` with one
+         * version, and is always rolled back, so telflo_platform_test's catalog
          * stays the committed one.
          */
         const withFixtureDistribution = async (work: (transaction: Kysely<Database>) => Promise<void>) => {
@@ -674,7 +674,7 @@ describe("configurations", () => {
             [authorId, draft],
             [teammateId, published],
           ] as const) {
-            // A distribution the catalogue doesn't have: only the trigger, a
+            // A distribution the catalog doesn't have: only the trigger, a
             // before trigger, can answer P0001; the foreign keys would say 23503.
             await expect(
               inContext(organizationId, viewer, (transaction) =>
@@ -687,7 +687,7 @@ describe("configurations", () => {
           }
         });
 
-        it("refuses the tables' owner too, to a distribution the catalogue has, a configuration with no version included", async () => {
+        it("refuses the tables' owner too, to a distribution the catalog has, a configuration with no version included", async () => {
           const { organizationId, published } = await oneOrganization();
           await withFixtureDistribution(async (transaction) => {
             const versionless = await addConfiguration(transaction, { organizationId });

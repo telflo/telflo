@@ -1294,7 +1294,7 @@ describe("schema", () => {
       expect(first.user.email).not.toBe(second.user.email);
     });
 
-    it("truncateAll empties every table in the platform schema but the collector catalogue's, which it leaves as the sync wrote it, and the tester's and the evaluator's states, whose one rows it marks up", async () => {
+    it("truncateAll empties every table in the platform schema but the collector catalog's, which it leaves as the sync wrote it, and the tester's and the evaluator's states, whose one rows it marks up", async () => {
       const tables = await sql<{ table_name: string }>`
         select table_name
           from information_schema.tables
@@ -3244,7 +3244,7 @@ describe("schema", () => {
       });
     }, THROWAWAY_DATABASE_DROP_TIMEOUT);
 
-    it("the collector catalogue migration makes every existing configuration Contrib and every version 0.162.0, published ones otherwise untouched; adds the two global tables (SELECT only for the API's role, no row-level security) holding Contrib and 0.162.0, no column default, the composite keys, the distribution's lock and the guarded pin; its down puts back migration 020's function and comment exactly and drops the rest; and it applies again", async () => {
+    it("the collector catalog migration makes every existing configuration Contrib and every version 0.162.0, published ones otherwise untouched; adds the two global tables (SELECT only for the API's role, no row-level security) holding Contrib and 0.162.0, no column default, the composite keys, the distribution's lock and the guarded pin; its down puts back migration 020's function and comment exactly and drops the rest; and it applies again", async () => {
       await withThrowawayDatabase(async ({ throwaway, migrate, migrateDown }) => {
         /** Migration 020's guard function as the catalog holds it: its body, comment and settings. */
         const guard = async () =>
@@ -3411,7 +3411,7 @@ describe("schema", () => {
             isDefiner: false,
           },
         ]);
-        // A version the catalogue here lacks: the before trigger's P0001 comes before the foreign key's 23503.
+        // A version the catalog here lacks: the before trigger's P0001 comes before the foreign key's 23503.
         await expect(
           sql`update configuration_versions set collector_version = '0.161.0' where id = ${published.id}`.execute(
             throwaway,
@@ -3535,7 +3535,7 @@ describe("schema", () => {
               type: "jsonb",
               notNull: true,
               default: "'[]'::jsonb",
-              comment: expect.stringContaining("the collector's renames: the catalogue file's"),
+              comment: expect.stringContaining("the collector's renames: the catalog file's"),
             },
           ],
           check: [
@@ -3742,7 +3742,7 @@ describe("schema", () => {
             {
               name: "fk_flows_collector_distribution",
               definition: "FOREIGN KEY (collector_distribution) REFERENCES collector_distributions(id)",
-              comment: commented("a distribution of the catalogue (23503 otherwise)"),
+              comment: commented("a distribution of the catalog (23503 otherwise)"),
             },
             { name: "flows_pkey", definition: "PRIMARY KEY (id)", comment: commented("one row per flow") },
             {
@@ -4590,7 +4590,7 @@ describe("schema", () => {
       });
     }, THROWAWAY_DATABASE_DROP_TIMEOUT);
 
-    it("the validation rules migration adds validation_pipelines and validation_rules (row-level security, their policies, checks, foreign keys and indexes) with the rules' identity trigger and its function, the evaluator's one-row state (SELECT only for the API's role) and its mark, the runs' validation_failed status, rules' snapshot and results with their checks, test_runs_rules, and test_runs_finish taking the final status; replaces refuse_test_run_change (the snapshot's two columns, running → validation_failed), each with its comment; changes no other object or row; its down refuses while a run is validation_failed, then restores migration 029's catalogue exactly, the guard and the boolean finish byte for byte, and drops the rest; and it applies again", async () => {
+    it("the validation rules migration adds validation_pipelines and validation_rules (row-level security, their policies, checks, foreign keys and indexes) with the rules' identity trigger and its function, the evaluator's one-row state (SELECT only for the API's role) and its mark, the runs' validation_failed status, rules' snapshot and results with their checks, test_runs_rules, and test_runs_finish taking the final status; replaces refuse_test_run_change (the snapshot's two columns, running → validation_failed), each with its comment; changes no other object or row; its down refuses while a run is validation_failed, then restores migration 029's catalog exactly, the guard and the boolean finish byte for byte, and drops the rest; and it applies again", async () => {
       await withThrowawayDatabase(async ({ throwaway, migrate, migrateDown }) => {
         /** Rows of a catalog query, each as one comparable JSON text, sorted. */
         const listed = async (query: ReturnType<typeof sql<Record<string, unknown>>>) =>
@@ -4973,7 +4973,7 @@ describe("schema", () => {
       });
     }, THROWAWAY_DATABASE_DROP_TIMEOUT);
 
-    it("the test regex migration adds test_regex (no row-level security, the API's role's four privileges, its unique name and checks, each commented) holding the 35 seeded entries, and changes no other object or row; its down restores migration 030's catalogue exactly; and it applies again, seeded again", async () => {
+    it("the test regex migration adds test_regex (no row-level security, the API's role's four privileges, its unique name and checks, each commented) holding the 35 seeded entries, and changes no other object or row; its down restores migration 030's catalog exactly; and it applies again, seeded again", async () => {
       await withThrowawayDatabase(async ({ throwaway, migrate, migrateDown }) => {
         /** Rows of a catalog query, each as one comparable JSON text, sorted. */
         const listed = async (query: ReturnType<typeof sql<Record<string, unknown>>>) =>
@@ -5160,7 +5160,7 @@ describe("schema", () => {
             `CHECK (((octet_length(regex) <= 8192) AND (btrim(regex, ${printedBlank}) <> ''::text)))`,
         });
 
-        // down drops the table with its rows, restoring migration 030's catalogue exactly; up again seeds again.
+        // down drops the table with its rows, restoring migration 030's catalog exactly; up again seeds again.
         await migrateDown(1);
         expect(await catalog()).toEqual(before);
         expect(await rows()).toEqual(rowsBefore);
@@ -5172,7 +5172,7 @@ describe("schema", () => {
       });
     }, THROWAWAY_DATABASE_DROP_TIMEOUT);
 
-    it("the quick-deploy links migration adds quick_deploy_links (row-level security, not forced, the API's role's four privileges, four policies, its checks and indexes, each commented) and the definer quick_deploy_link_by_secret_hash (EXECUTE for telflo_platform_runtime only), and changes no other object or row; its down restores migration 031's catalogue exactly; and it applies again", async () => {
+    it("the quick-deploy links migration adds quick_deploy_links (row-level security, not forced, the API's role's four privileges, four policies, its checks and indexes, each commented) and the definer quick_deploy_link_by_secret_hash (EXECUTE for telflo_platform_runtime only), and changes no other object or row; its down restores migration 031's catalog exactly; and it applies again", async () => {
       await withThrowawayDatabase(async ({ throwaway, migrate, migrateDown }) => {
         /** Rows of a catalog query, each as one comparable JSON text, sorted. */
         const listed = async (query: ReturnType<typeof sql<Record<string, unknown>>>) =>
@@ -5373,7 +5373,7 @@ describe("schema", () => {
             "CHECK (((download_count >= 0) AND ((download_count = 0) = (last_downloaded_at IS NULL))))",
         });
 
-        // down drops the table and the function, restoring migration 031's catalogue exactly; up again.
+        // down drops the table and the function, restoring migration 031's catalog exactly; up again.
         await addQuickDeployLink(throwaway, { organizationId: ana.organization.id, created_by_user_id: ana.user.id });
         await migrateDown(1);
         expect(await catalog()).toEqual(before);
@@ -5386,7 +5386,7 @@ describe("schema", () => {
       });
     }, THROWAWAY_DATABASE_DROP_TIMEOUT);
 
-    it("the public install links migration adds organizations.public_install_links_enabled (boolean, not null, default true, commented; existing rows true) and re-comments quick_deploy_links.choices, and changes no other object or row; its down restores migration 032's catalogue exactly; and it applies again", async () => {
+    it("the public install links migration adds organizations.public_install_links_enabled (boolean, not null, default true, commented; existing rows true) and re-comments quick_deploy_links.choices, and changes no other object or row; its down restores migration 032's catalog exactly; and it applies again", async () => {
       await withThrowawayDatabase(async ({ throwaway, migrate, migrateDown }) => {
         /** Rows of a catalog query, each as one comparable JSON text, sorted. */
         const listed = async (query: ReturnType<typeof sql<Record<string, unknown>>>) =>
@@ -5471,7 +5471,7 @@ describe("schema", () => {
 
         await migrate(1);
         const after = await catalog();
-        /** quick_deploy_links.choices' column, as a catalogue lists it. */
+        /** quick_deploy_links.choices' column, as a catalog lists it. */
         const choicesColumn = (catalogue: Catalog) =>
           catalogue.columns
             .map((item) => JSON.parse(item) as Record<string, unknown>)
@@ -5527,7 +5527,7 @@ describe("schema", () => {
         expect(later.public_install_links_enabled).toBe(true);
         await throwaway.updateTable("organizations").set({ public_install_links_enabled: false }).where("id", "=", later.id).execute();
 
-        // down drops the column and restores migration 032's comment: its catalogue exactly; up again, every row on.
+        // down drops the column and restores migration 032's comment: its catalog exactly; up again, every row on.
         await migrateDown(1);
         expect(await catalog()).toEqual(before);
         expect(await rows()).toEqual(rowsBefore);
@@ -5543,7 +5543,7 @@ describe("schema", () => {
       });
     }, THROWAWAY_DATABASE_DROP_TIMEOUT);
 
-    it("the user settings migration adds user_settings (no row-level security, the API's role's four privileges by default, its two checks, its cascade from users, each commented) and signed_out_elsewhere to sessions.revoked_reason's comment, and changes no other object or row; its down restores migration 033's catalogue exactly; and it applies again", async () => {
+    it("the user settings migration adds user_settings (no row-level security, the API's role's four privileges by default, its two checks, its cascade from users, each commented) and signed_out_elsewhere to sessions.revoked_reason's comment, and changes no other object or row; its down restores migration 033's catalog exactly; and it applies again", async () => {
       await withThrowawayDatabase(async ({ throwaway, migrate, migrateDown }) => {
         /** Rows of a catalog query, each as one comparable JSON text, sorted. */
         const listed = async (query: ReturnType<typeof sql<Record<string, unknown>>>) =>
@@ -5633,7 +5633,7 @@ describe("schema", () => {
 
         await migrate(1);
         const after = await catalog();
-        /** sessions.revoked_reason's column, as a catalogue lists it. */
+        /** sessions.revoked_reason's column, as a catalog lists it. */
         const revokedReasonColumn = (catalogue: Catalog) =>
           catalogue.columns
             .map((item) => JSON.parse(item) as Record<string, unknown>)
@@ -5727,7 +5727,7 @@ describe("schema", () => {
             "CHECK (((jsonb_typeof(preferences) = 'object'::text) AND (octet_length((preferences)::text) <= 4096)))",
         });
 
-        // down drops the table with its rows and restores migration 010's comment: migration 033's catalogue exactly; up again.
+        // down drops the table with its rows and restores migration 010's comment: migration 033's catalog exactly; up again.
         const at = new Date();
         await throwaway
           .insertInto("user_settings")
@@ -5744,7 +5744,7 @@ describe("schema", () => {
       });
     }, THROWAWAY_DATABASE_DROP_TIMEOUT);
 
-    it("the service accounts migration adds users.kind with its two checks and four triggers, service_accounts and api_tokens with row-level security, the API's role's four privileges by default, and find_live_api_token_by_hash executable only by telflo_platform_runtime, each commented, and changes no other object or row; its down restores migration 034's catalogue exactly; and it applies again", async () => {
+    it("the service accounts migration adds users.kind with its two checks and four triggers, service_accounts and api_tokens with row-level security, the API's role's four privileges by default, and find_live_api_token_by_hash executable only by telflo_platform_runtime, each commented, and changes no other object or row; its down restores migration 034's catalog exactly; and it applies again", async () => {
       await withThrowawayDatabase(async ({ throwaway, migrate, migrateDown }) => {
         /** Rows of a catalog query, each as one comparable JSON text, sorted. */
         const listed = async (query: ReturnType<typeof sql<Record<string, unknown>>>) =>
@@ -6106,7 +6106,7 @@ describe("schema", () => {
         expect(await throwaway.selectFrom("service_accounts").selectAll().execute()).toEqual([]);
         expect(await throwaway.selectFrom("api_tokens").selectAll().execute()).toEqual([]);
 
-        // down then drops exactly what up added: migration 034's catalogue and rows exactly.
+        // down then drops exactly what up added: migration 034's catalog and rows exactly.
         await migrateDown(1);
         expect(await catalog()).toEqual(before);
         expect(await rows()).toEqual(rowsBefore);
@@ -6128,7 +6128,7 @@ describe("schema", () => {
       });
     }, THROWAWAY_DATABASE_DROP_TIMEOUT);
 
-    it("the organization logos migration adds organizations.logo_id and logo_content_type (nullable, commented; existing rows without a logo) and ck_organizations_logo (commented), and changes no other object or row; its down restores migration 035's catalogue exactly; and it applies again", async () => {
+    it("the organization logos migration adds organizations.logo_id and logo_content_type (nullable, commented; existing rows without a logo) and ck_organizations_logo (commented), and changes no other object or row; its down restores migration 035's catalog exactly; and it applies again", async () => {
       await withThrowawayDatabase(async ({ throwaway, migrate, migrateDown }) => {
         /** Rows of a catalog query, each as one comparable JSON text, sorted. */
         const listed = async (query: ReturnType<typeof sql<Record<string, unknown>>>) =>
@@ -6262,7 +6262,7 @@ describe("schema", () => {
           throwaway.updateTable("organizations").set({ logo_content_type: "image/svg+xml" as never }).where("id", "=", later.id).execute(),
         ).rejects.toThrow(/ck_organizations_logo/);
 
-        // down drops both columns and the check: migration 035's catalogue exactly; up again, no logo anywhere.
+        // down drops both columns and the check: migration 035's catalog exactly; up again, no logo anywhere.
         await migrateDown(1);
         expect(await catalog()).toEqual(before);
         expect(await rows()).toEqual(rowsBefore);
@@ -6278,7 +6278,7 @@ describe("schema", () => {
       });
     }, THROWAWAY_DATABASE_DROP_TIMEOUT);
 
-    it("the library files migration adds library_files (no row-level security, the default grants, its five named checks, its foreign key and two indexes, each commented) and its guard trigger with its function, and changes no other object or row; its down restores migration 036's catalogue exactly; and it applies again", async () => {
+    it("the library files migration adds library_files (no row-level security, the default grants, its five named checks, its foreign key and two indexes, each commented) and its guard trigger with its function, and changes no other object or row; its down restores migration 036's catalog exactly; and it applies again", async () => {
       await withThrowawayDatabase(async ({ throwaway, migrate, migrateDown }) => {
         /** Rows of a catalog query, each as one comparable JSON text, sorted. */
         const listed = async (query: ReturnType<typeof sql<Record<string, unknown>>>) =>
@@ -6476,7 +6476,7 @@ describe("schema", () => {
         ).rejects.toMatchObject({ code: "P0001" });
         await throwaway.deleteFrom("library_files").execute();
 
-        // down drops the table, its trigger and its function: migration 036's catalogue exactly; up again.
+        // down drops the table, its trigger and its function: migration 036's catalog exactly; up again.
         await migrateDown(1);
         expect(await catalog()).toEqual(before);
         expect(await rows()).toEqual(rowsBefore);
@@ -6486,7 +6486,7 @@ describe("schema", () => {
       });
     }, THROWAWAY_DATABASE_DROP_TIMEOUT);
 
-    it("the public API tokens migration adds personal_api_tokens (row-level security on the context's user, the default grants, its six named checks, its foreign key and three indexes, each commented) and re-creates find_live_api_token_by_hash with both kinds, its comment and its grants, and changes no other object or row; its down restores migration 037's catalogue exactly, the lookup's definition, comment and grants included; and it applies again", async () => {
+    it("the public API tokens migration adds personal_api_tokens (row-level security on the context's user, the default grants, its six named checks, its foreign key and three indexes, each commented) and re-creates find_live_api_token_by_hash with both kinds, its comment and its grants, and changes no other object or row; its down restores migration 037's catalog exactly, the lookup's definition, comment and grants included; and it applies again", async () => {
       await withThrowawayDatabase(async ({ throwaway, migrate, migrateDown }) => {
         /** Rows of a catalog query, each as one comparable JSON text, sorted. */
         const listed = async (query: ReturnType<typeof sql<Record<string, unknown>>>) =>
@@ -6738,7 +6738,7 @@ describe("schema", () => {
         ].filter((item) => item.comment === null);
         expect(uncommented).toEqual([]);
 
-        // down drops the table with its rows and creates migration 035's lookup again: migration 037's catalogue
+        // down drops the table with its rows and creates migration 035's lookup again: migration 037's catalog
         // exactly (its definition's md5, its result, comment and grants among it); up again.
         const person = await addPersonalApiToken(throwaway, { userId: admin.user.id });
         expect(person.token.startsWith("tf_")).toBe(true);
@@ -6753,7 +6753,7 @@ describe("schema", () => {
       });
     }, THROWAWAY_DATABASE_DROP_TIMEOUT);
 
-    it("the product administration migration adds user_feedback (INSERT only for the API's role) and user_deletion_records (nothing for the API's role), both without row-level security, with their named checks, foreign keys and indexes, assert_product_admin (EXECUTE for no one) and the seven product-admin definer functions (EXECUTE for telflo_platform_runtime only, a fixed search_path), each commented, and re-comments users.is_product_admin; changes no other object or row; its down restores migration 040's catalogue exactly; and it applies again", async () => {
+    it("the product administration migration adds user_feedback (INSERT only for the API's role) and user_deletion_records (nothing for the API's role), both without row-level security, with their named checks, foreign keys and indexes, assert_product_admin (EXECUTE for no one) and the seven product-admin definer functions (EXECUTE for telflo_platform_runtime only, a fixed search_path), each commented, and re-comments users.is_product_admin; changes no other object or row; its down restores migration 040's catalog exactly; and it applies again", async () => {
       await withThrowawayDatabase(async ({ throwaway, migrate, migrateDown }) => {
         /** Rows of a catalog query, each as one comparable JSON text, sorted. */
         const listed = async (query: ReturnType<typeof sql<Record<string, unknown>>>) =>
@@ -6997,7 +6997,7 @@ describe("schema", () => {
         expect(gate.split("hint = 'telflo_product_admin_gate'").length - 1).toBe(2);
         expect(flat(added.functions.find((item) => item.signature === "assert_product_admin()")!.comment)).toContain("telflo_product_admin_gate");
 
-        // down: migration 040's catalogue exactly, and the rows as they were; up again.
+        // down: migration 040's catalog exactly, and the rows as they were; up again.
         await migrateDown(1);
         expect(await catalog()).toEqual(before);
         expect(await rows()).toEqual(rowsBefore);
@@ -7008,7 +7008,7 @@ describe("schema", () => {
       });
     }, THROWAWAY_DATABASE_DROP_TIMEOUT);
 
-    it("the product-admin delete migration adds product_admin_delete_account (a definer with a fixed search_path, EXECUTE for telflo_platform_runtime only, commented) and account_deleted to sessions.revoked_reason's comment, and changes no other object or row; its down restores migration 041's catalogue exactly; and it applies again", async () => {
+    it("the product-admin delete migration adds product_admin_delete_account (a definer with a fixed search_path, EXECUTE for telflo_platform_runtime only, commented) and account_deleted to sessions.revoked_reason's comment, and changes no other object or row; its down restores migration 041's catalog exactly; and it applies again", async () => {
       await withThrowawayDatabase(async ({ throwaway, migrate, migrateDown }) => {
         /** Rows of a catalog query, each as one comparable JSON text, sorted. */
         const listed = async (query: ReturnType<typeof sql<Record<string, unknown>>>) =>
@@ -7151,7 +7151,7 @@ describe("schema", () => {
         // The deleted organizations' invitations to the original email take the anonymous address.
         expect(/update platform\.organization_invitations\s+set email = anonymous, updated_at = p_at\s+where organization_id = any \(locked\) and lower\(email\) = lower\(original\)/.test(source)).toBe(true);
 
-        // down: migration 041's catalogue exactly, and the rows as they were; up again.
+        // down: migration 041's catalog exactly, and the rows as they were; up again.
         await migrateDown(1);
         expect(await catalog()).toEqual(before);
         expect(await rows()).toEqual(rowsBefore);
@@ -7162,7 +7162,7 @@ describe("schema", () => {
       });
     }, THROWAWAY_DATABASE_DROP_TIMEOUT);
 
-    it("the first product admin migration adds bootstrap_first_product_admin (a definer with a fixed search_path, EXECUTE for telflo_platform_runtime only, commented) and rewrites users.accepted_terms_version's and users.is_product_admin's comments, and changes no other object or row; its down restores migration 042's catalogue exactly; and it applies again", async () => {
+    it("the first product admin migration adds bootstrap_first_product_admin (a definer with a fixed search_path, EXECUTE for telflo_platform_runtime only, commented) and rewrites users.accepted_terms_version's and users.is_product_admin's comments, and changes no other object or row; its down restores migration 042's catalog exactly; and it applies again", async () => {
       await withThrowawayDatabase(async ({ throwaway, migrate, migrateDown }) => {
         /** Rows of a catalog query, each as one comparable JSON text, sorted. */
         const listed = async (query: ReturnType<typeof sql<Record<string, unknown>>>) =>
@@ -7303,7 +7303,7 @@ describe("schema", () => {
         expect(source.match(/advisory/g)?.length).toBe(1);
         expect(/\b(?:from|update|insert\s+into)\s+(?!platform\.)\w/.test(source)).toBe(false);
 
-        // down: migration 042's catalogue exactly, and the rows as they were; up again.
+        // down: migration 042's catalog exactly, and the rows as they were; up again.
         await migrateDown(1);
         expect(await catalog()).toEqual(before);
         expect(await rows()).toEqual(rowsBefore);
@@ -7314,7 +7314,7 @@ describe("schema", () => {
       });
     }, THROWAWAY_DATABASE_DROP_TIMEOUT);
 
-    it("the site settings migration adds site_settings (one row, product_admins by default, SELECT only for the API's role, no row-level security) and product_admin_set_organization_creation (a definer with a fixed search_path, EXECUTE for telflo_platform_runtime only, gated by assert_product_admin), each commented, and changes no other object or row; its down restores migration 043's catalogue exactly; and it applies again", async () => {
+    it("the site settings migration adds site_settings (one row, product_admins by default, SELECT only for the API's role, no row-level security) and product_admin_set_organization_creation (a definer with a fixed search_path, EXECUTE for telflo_platform_runtime only, gated by assert_product_admin), each commented, and changes no other object or row; its down restores migration 043's catalog exactly; and it applies again", async () => {
       await withThrowawayDatabase(async ({ throwaway, migrate, migrateDown }) => {
         /** Rows of a catalog query, each as one comparable JSON text, sorted. */
         const listed = async (query: ReturnType<typeof sql<Record<string, unknown>>>) =>
@@ -7478,7 +7478,7 @@ describe("schema", () => {
         expect(source.indexOf("where u.id = me for share")).toBeLessThan(source.indexOf("update platform.site_settings"));
         expect(/\b(?:from|update|insert\s+into)\s+(?!platform\.)\w/.test(source)).toBe(false);
 
-        // down: migration 043's catalogue exactly, and the rows as they were; up again.
+        // down: migration 043's catalog exactly, and the rows as they were; up again.
         await migrateDown(1);
         expect(await catalog()).toEqual(before);
         expect(await rows()).toEqual(rowsBefore);

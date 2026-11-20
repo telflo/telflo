@@ -656,7 +656,7 @@ describe("the flows migration", () => {
           );
         }
         await expect(addFlow({ collector_version: null })).rejects.toMatchObject(refusal("23502"));
-        // No foreign key on the version: a pin the catalogue doesn't hold is the API's to refuse.
+        // No foreign key on the version: a pin the catalog doesn't hold is the API's to refuse.
         await expect(addFlow({ collector_version: "0.147.0" })).resolves.toMatchObject({
           collector_version: "0.147.0",
         });
@@ -701,7 +701,7 @@ describe("the flows migration", () => {
         expect(rows).toEqual([{ validated: true }]);
       });
 
-      it("refuses a distribution the catalogue doesn't hold (23503, fk_flows_collector_distribution), and none (23502)", async () => {
+      it("refuses a distribution the catalog doesn't hold (23503, fk_flows_collector_distribution), and none (23502)", async () => {
         await expect(addFlow({ collector_distribution: "clickstack" })).rejects.toMatchObject(
           refusal("23503", "fk_flows_collector_distribution"),
         );

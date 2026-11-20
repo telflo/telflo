@@ -10,7 +10,7 @@ import { catalogueTables, openTestDatabases, type TestDatabases } from "./testin
  * write the API's role tries is refused, and the sync's own tests run on a
  * throwaway database (collector-catalogue/sync.integration.test.ts).
  */
-describe("the collector catalogue's tables", () => {
+describe("the collector catalog's tables", () => {
   let databases: TestDatabases;
   let db: Kysely<Database>;
   let ownerDb: Kysely<Database>;
@@ -72,7 +72,7 @@ describe("the collector catalogue's tables", () => {
               sql`truncate collector_versions`,
             ];
       // Each in a transaction rolled back whatever happens, so even a write
-      // the grants wrongly let through leaves telflo_platform_test's catalogue as
+      // the grants wrongly let through leaves telflo_platform_test's catalog as
       // the sync wrote it.
       const rollback = new Error("rollback");
       for (const write of writes) {
@@ -109,7 +109,7 @@ describe("the collector catalogue's tables", () => {
     }
   });
 
-  it("comments every table, column, constraint and index of the catalogue (migration 025's renamed_types and its check included), and the three columns, the trigger and the function migration 023 adds elsewhere", async () => {
+  it("comments every table, column, constraint and index of the catalog (migration 025's renamed_types and its check included), and the three columns, the trigger and the function migration 023 adds elsewhere", async () => {
     const { rows } = await sql<{ object: string; comment: string | null }>`
       select 'table ' || c.relname as object, obj_description(c.oid, 'pg_class') as comment
         from pg_class c where c.relname in (${sql.join([...catalogueTables])})

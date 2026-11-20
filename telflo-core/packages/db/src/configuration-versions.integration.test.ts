@@ -28,9 +28,9 @@ describe("configuration_versions", () => {
   let databases: TestDatabases;
   let db: Kysely<Database>;
   let ownerDb: Kysely<Database>;
-  /** The catalogue's default distribution and version, which a row written by hand names. */
+  /** The catalog's default distribution and version, which a row written by hand names. */
   let pin: { distribution: string; version: string };
-  /** Another version of the default distribution in the catalogue, not deprecated: a pin a draft may move to. */
+  /** Another version of the default distribution in the catalog, not deprecated: a pin a draft may move to. */
   let otherVersion: string;
 
   beforeAll(async () => {
@@ -119,7 +119,7 @@ describe("configuration_versions", () => {
         published_at: null,
         published_by_user_id: null,
         publication_id: null,
-        // The fixture's pin: the configuration's distribution at its default version, from the catalogue.
+        // The fixture's pin: the configuration's distribution at its default version, from the catalog.
         collector_distribution: pin.distribution,
         collector_version: pin.version,
       });
@@ -847,7 +847,7 @@ describe("configuration_versions", () => {
   });
 
   describe("the composite foreign key", () => {
-    describe("to the catalogue (migration 1700000000023)", () => {
+    describe("to the catalog (migration 1700000000023)", () => {
       /** `insert` in a savepoint, rolled back to on failure, so the transaction goes on; its error, if any. */
       const attempt = async (transaction: Kysely<Database>, insert: () => Promise<unknown>) => {
         await sql`savepoint attempt`.execute(transaction);
@@ -888,7 +888,7 @@ describe("configuration_versions", () => {
       it("refuses a version naming another distribution's version, or another distribution than its configuration's (23503), even as the owner", async () => {
         const { organizationId, configuration } = await createConfiguration();
         // A second distribution, only inside this transaction, which is
-        // always rolled back: telflo_platform_test's catalogue stays the committed one.
+        // always rolled back: telflo_platform_test's catalog stays the committed one.
         const rollback = new Error("rollback");
         await expect(
           ownerDb.transaction().execute(async (transaction) => {
@@ -910,7 +910,7 @@ describe("configuration_versions", () => {
             expect(
               await attempt(transaction, insert({ collector_distribution: pin.distribution, collector_version: "1.0.0" })),
             ).toMatchObject({ code: "23503", constraint: "fk_configuration_versions_collector_version" });
-            // A real pair of the catalogue, but not its configuration's distribution.
+            // A real pair of the catalog, but not its configuration's distribution.
             expect(
               await attempt(
                 transaction,

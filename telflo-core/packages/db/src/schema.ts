@@ -232,7 +232,7 @@ export interface ConfigurationsTable {
   updated_at: Date;
   deleted_at: Date | null;
   /**
-   * The distribution it is built for: written on create (the catalogue's
+   * The distribution it is built for: written on create (the catalog's
    * default when none is named), never changed. The update type is `never`,
    * and a trigger refuses a change for every role.
    */
@@ -305,7 +305,7 @@ export interface ConfigurationVersionsTable {
   collector_distribution: ColumnType<string, string, never>;
   /**
    * The collector version it is pinned to, a version of
-   * `collector_distribution` in the catalogue. A first version gets the
+   * `collector_distribution` in the catalog. A first version gets the
    * distribution's default, a new one its source's. The published-version
    * trigger refuses changing it once published.
    */
@@ -334,12 +334,12 @@ export interface ConfigurationVersionSelectionsTable {
 }
 
 /**
- * A collector distribution of the catalogue, global. Written only by the
+ * A collector distribution of the catalog, global. Written only by the
  * migration step's sync, as the tables' owner; the API's role may only read
  * it.
  */
 export interface CollectorDistributionsTable {
-  /** `otelcol-contrib`: the catalogue file's name. */
+  /** `otelcol-contrib`: the catalog file's name. */
   id: string;
   label: string;
   description: string | null;
@@ -348,7 +348,7 @@ export interface CollectorDistributionsTable {
   /** Exactly one distribution is the default (uq_collector_distributions_one_default). */
   is_default: boolean;
   /**
-   * The collector's renames, the catalogue file's `renamedTypes` in its order
+   * The collector's renames, the catalog file's `renamedTypes` in its order
    * (migration 1700000000025). Defaults to `[]`, so an insert may leave it
    * out.
    */
@@ -366,7 +366,7 @@ export interface CollectorRenamedType {
   since: string;
 }
 
-/** One platform's download of a binary, as the catalogue's file holds it. */
+/** One platform's download of a binary, as the catalog's file holds it. */
 export interface CollectorBinaryDownload {
   downloadUrl: string;
   sha256: string;
@@ -420,7 +420,7 @@ export type FlowSource = "telflo" | "community";
  * clock, never `now()`, as configurations' (the seeded flows' are the
  * migration's time to the millisecond). The insert type requires them, so a
  * write that forgets the clock is a compile error before it is a 23502. So
- * does `collector_distribution`: the catalogue's is the only default.
+ * does `collector_distribution`: the catalog's is the only default.
  */
 export interface FlowsTable {
   id: Generated<string>;
@@ -441,9 +441,9 @@ export interface FlowsTable {
   tags: ColumnType<string[], string[] | undefined, string[]>;
   /** Public content: copied byte for byte into a configuration created from the flow. */
   yaml_content: string;
-  /** A distribution of the catalogue (fk_flows_collector_distribution). */
+  /** A distribution of the catalog (fk_flows_collector_distribution). */
   collector_distribution: string;
-  /** Not blank; no foreign key: the API checks it against the catalogue. */
+  /** Not blank; no foreign key: the API checks it against the catalog. */
   collector_version: string;
   /** Null, or an http(s) URL (ck_flows_source_url_scheme). */
   source_url: string | null;
@@ -695,7 +695,7 @@ export interface TestRunsTable {
   signal: Snapshot<TestRunSignal>;
   /** 1 to 60. */
   duration_seconds: Snapshot<number>;
-  /** The configuration's distribution (fk_test_runs_configuration_distribution); a YAML run's, from the catalogue. */
+  /** The configuration's distribution (fk_test_runs_configuration_distribution); a YAML run's, from the catalog. */
   collector_distribution: Snapshot<string>;
   collector_version: Snapshot<string>;
   /** The input's name when it was queued. Private text. */

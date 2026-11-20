@@ -42,11 +42,11 @@ const TEST_DATABASE_SUFFIX = "_test";
 export const THROWAWAY_DATABASE_DROP_TIMEOUT = 120_000;
 
 /**
- * The mark of a catalogue row a test adds for itself: a
+ * The mark of a catalog row a test adds for itself: a
  * fixture distribution or version carries it as its `description`, and is
  * removed by its test. TEST ONLY: never a description of the committed
- * catalogue's. A run cut short (killed mid-file) leaves its fixtures behind,
- * and the catalogue's sync refuses a row the files don't list
+ * catalog's. A run cut short (killed mid-file) leaves its fixtures behind,
+ * and the catalog's sync refuses a row the files don't list
  * (CollectorCatalogueRemovalError), so prepareTestDatabase, which the
  * global setup runs, removes every marked row first: only on a `_test`
  * database, and never an unmarked row, which the sync still refuses.
@@ -55,10 +55,10 @@ export const THROWAWAY_DATABASE_DROP_TIMEOUT = 120_000;
 export const TEST_CATALOGUE_FIXTURE_NOTE = "A test's own catalogue fixture: removed before every test run's catalogue sync.";
 
 /**
- * Removes the catalogue rows a test marked as its own fixtures
+ * Removes the catalog rows a test marked as its own fixtures
  * (TEST_CATALOGUE_FIXTURE_NOTE), versions before distributions (a version
  * names its distribution), and every version of a marked distribution. A
- * database whose catalogue tables don't exist yet (a new one) has none.
+ * database whose catalog tables don't exist yet (a new one) has none.
  */
 async function removeTestCatalogueFixtures(ownerUrl: string): Promise<void> {
   const client = new pg.Client({ connectionString: ownerUrl, options: PLATFORM_CONNECTION_OPTIONS });
@@ -154,18 +154,18 @@ function redact(url: URL): string {
 }
 
 /**
- * Validates the collector catalogue, then creates the test database named
+ * Validates the collector catalog, then creates the test database named
  * by `ownerUrl` if it does not exist and runs the migration step on it
  * (runMigrationStep): migrates it to the latest migration as the owner,
- * removes the catalogue rows tests marked as their own fixtures
+ * removes the catalog rows tests marked as their own fixtures
  * (TEST_CATALOGUE_FIXTURE_NOTE: a killed run's leftovers), syncs the
- * catalogue into it, then provisions the login role `applicationUrl` names.
- * Both must name the same database. An invalid catalogue fails before any
+ * catalog into it, then provisions the login role `applicationUrl` names.
+ * Both must name the same database. An invalid catalog fails before any
  * database is created or migrated. Safe to call when it already exists
  * and is current; safe against another run creating it, syncing or
  * provisioning at the same moment.
  *
- * `catalogue` is the committed catalogue's files unless a test passes its
+ * `catalogue` is the committed catalog's files unless a test passes its
  * own.
  */
 export async function prepareTestDatabase(

@@ -8,7 +8,7 @@ import type { TestDatabases } from "./testing.js";
 /**
  * user_settings (migration 1700000000034): its constraints and cascade, as the
  * owner; its privileges, as the API's role (`db`), which no row-level security
- * limits. schema.integration.test.ts has the migration's catalogue (up, down,
+ * limits. schema.integration.test.ts has the migration's catalog (up, down,
  * up).
  */
 describe("user_settings", () => {

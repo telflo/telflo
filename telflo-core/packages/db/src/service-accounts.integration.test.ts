@@ -17,7 +17,7 @@ import type { TestDatabases } from "./testing.js";
  * users.kind, service_accounts, api_tokens and the token lookup (migration
  * 1700000000035): the backstops and the tables' constraints, as the owner and
  * as the API's role (`db`); row-level security and the lookup, as the API's
- * role. schema.integration.test.ts has the migration's catalogue (up, down,
+ * role. schema.integration.test.ts has the migration's catalog (up, down,
  * up). No test prints a token: a failing assertion compares hashes, ids or
  * booleans.
  */

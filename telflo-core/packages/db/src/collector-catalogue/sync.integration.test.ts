@@ -18,14 +18,14 @@ import { CollectorCatalogueRemovalError, syncCollectorCatalogue } from "./sync.j
 
 /*
  * The sync, on a throwaway database migrated to the latest migration: each
- * test starts from an empty catalogue and commits what it syncs, so no fixture
- * catalogue ever reaches telflo_platform_test.
+ * test starts from an empty catalog and commits what it syncs, so no fixture
+ * catalog ever reaches telflo_platform_test.
  */
 
 /** Creating and dropping a database waits for a checkpoint. */
 const THROWAWAY_DATABASE_TIMEOUT = 30_000;
 
-describe("the collector catalogue's sync", () => {
+describe("the collector catalog's sync", () => {
   let databases: TestDatabases;
   let throwawayName: string;
   let throwawayUrl: string;
@@ -69,7 +69,7 @@ describe("the collector catalogue's sync", () => {
     }
   };
 
-  /** A deep copy of the committed catalogue's files, to change. */
+  /** A deep copy of the committed catalog's files, to change. */
   const copyOfCommitted = (): Array<{ name: string; content: CatalogueDistribution }> =>
     structuredClone(committed) as Array<{ name: string; content: CatalogueDistribution }>;
 
@@ -77,7 +77,7 @@ describe("the collector catalogue's sync", () => {
   const versionIn = (files: Array<{ content: CatalogueDistribution }>, version: string) =>
     files[0]!.content.versions.find((entry) => entry.version === version)!;
 
-  /** Every catalogue row, ordered, as the owner reads it. */
+  /** Every catalog row, ordered, as the owner reads it. */
   const rows = async () => ({
     distributions: await throwaway.selectFrom("collector_distributions").selectAll().orderBy("id").execute(),
     versions: await throwaway
@@ -88,7 +88,7 @@ describe("the collector catalogue's sync", () => {
       .execute(),
   });
 
-  /** Every catalogue row's identity and row version (xmin, ctid): an update of any row changes both. */
+  /** Every catalog row's identity and row version (xmin, ctid): an update of any row changes both. */
   const rowVersions = async () =>
     (
       await sql<{ row: string }>`
@@ -100,7 +100,7 @@ describe("the collector catalogue's sync", () => {
       `.execute(throwaway)
     ).rows.map((row) => row.row);
 
-  /** The rows a catalogue's files make, as the tables hold them. */
+  /** The rows a catalog's files make, as the tables hold them. */
   const expectedRows = (files: readonly CatalogueFile[]) => {
     const distributions = validateCollectorCatalogue(files);
     return {
@@ -136,7 +136,7 @@ describe("the collector catalogue's sync", () => {
     };
   };
 
-  it("from empty, writes every distribution and version of the committed catalogue, as its files hold them", async () => {
+  it("from empty, writes every distribution and version of the committed catalog, as its files hold them", async () => {
     const versionCount = (committed[0]!.content as CatalogueDistribution).versions.length;
     expect(await sync(committed)).toEqual({ distributionsWritten: 1, versionsWritten: versionCount });
     expect(await rows()).toEqual(expectedRows(committed));
@@ -288,7 +288,7 @@ describe("the collector catalogue's sync", () => {
     await expect(sync(committed)).rejects.toMatchObject({ missing: ["distribution retired-distribution"] });
   });
 
-  it("refuses an invalid catalogue before it sends a single query, so it writes nothing", async () => {
+  it("refuses an invalid catalog before it sends a single query, so it writes nothing", async () => {
     await sync(committed);
     const before = await rowVersions();
     const files = copyOfCommitted();
