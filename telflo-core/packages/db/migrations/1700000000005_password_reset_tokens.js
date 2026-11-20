@@ -1,11 +1,10 @@
 /**
- * Password reset tokens (D3).
+ * Password reset tokens.
  *
  * Shaped like email_verification_tokens, but a table of their own rather
  * than a purpose column on that one, so a verification token can never be
- * accepted as a reset token by a missed predicate (D3 decision 4). A
- * completed reset revokes every session of the user, with the new reason
- * password_reset (D3 decision 5).
+ * accepted as a reset token by a missed predicate. A completed reset
+ * revokes every session of the user, with the new reason password_reset.
  */
 export const up = (pgm) => {
   pgm.sql(`
@@ -21,8 +20,8 @@ export const up = (pgm) => {
     comment on table password_reset_tokens is
       'single-use links that set a new password. Separate from
        email_verification_tokens so a verification token can never pass as a
-       reset token (D3 decision 4). Issuing one consumes the user''s earlier
-       unconsumed ones, so only the newest link works.';
+       reset token. Issuing one consumes the user''s earlier unconsumed ones,
+       so only the newest link works.';
     comment on column password_reset_tokens.token_hash is
       'sha-256 of the token, the same as verification tokens. The plaintext is
        emailed and never stored, so a database leak yields no usable reset

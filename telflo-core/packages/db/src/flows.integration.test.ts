@@ -20,27 +20,25 @@ import {
 } from "./testing.js";
 
 /*
- * Migration 1700000000026 (D12 decisions 2 to 4 and 9; Preflight rulings 1,
- * 4, 9 and 19): the flows table and its checks, the 13 seeded flows, the
- * product-admin flag and its owner-only trigger, and
+ * Migration 1700000000026: the flows table and its checks, the 13 seeded
+ * flows, the product-admin flag and its owner-only trigger, and
  * configurations.source_flow_slug. Its up, down and up again are
  * schema.integration.test.ts's ("the flows migration …"), as are those of
- * migration 1700000000027, the signals' check (Ruling 37), whose refusals
- * are here.
+ * migration 1700000000027, the signals' check, whose refusals are here.
  *
- * The seeded flows are checked on a throwaway database migrated to the
- * latest migration: truncateAll empties them from telflo_platform_test before every
- * test (D12 Preflight ruling 13).
+ * The seeded flows are checked on a throwaway database migrated to the latest
+ * migration: truncateAll empties them from telflo_platform_test before every
+ * test.
  */
 
-/** Creating and dropping a database waits for a checkpoint (D7 Ruling 15). */
+/** Creating and dropping a database waits for a checkpoint. */
 const THROWAWAY_DATABASE_TIMEOUT = 30_000;
 
 /**
- * The 13 seeded flows as Postgres stores them (D12 Preflight ruling 1), by
- * slug: each text's SHA-256 (of its UTF-8) and its length in characters,
- * derived in a throwaway Postgres 18, and the pin (decision 4). Every flow
- * is otelcol-contrib, telflo, published, with no author URL.
+ * The 13 seeded flows as Postgres stores them, by slug: each text's SHA-256
+ * (of its UTF-8) and its length in characters, derived in a throwaway Postgres
+ * 18, and the pin. Every flow is otelcol-contrib, telflo, published, with no
+ * author URL.
  */
 const expectedSeededFlows = [
   {
@@ -456,7 +454,7 @@ describe("the flows migration", () => {
    * telflo_platform_test pass for that reason alone. Here the users table belongs to a
    * NOSUPERUSER login role, as a self-hoster's migration role may, so the
    * trigger's rule is shown on its own terms: membership of the table's
-   * owner, not superuser (D12 Ruling 21, the Task 1 review's probe).
+   * owner, not superuser.
    */
   describe("the product-admin flag with an owner who is not a superuser", () => {
     let throwawayName: string;

@@ -1,5 +1,5 @@
 /**
- * The API's own database role (D5 decision 1, ADR 0014).
+ * The API's own database role.
  *
  * Until now the API connected as the tables' owner, a superuser, and row-level
  * security never applies to either. telflo_platform_runtime is a NOLOGIN role

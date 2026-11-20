@@ -1,6 +1,6 @@
 /**
- * Only the API's role may connect to the platform's database (ADR 0026:
- * the opamp-server is reached only through its API; D11a spec decision 4).
+ * Only the API's role may connect to the platform's database: the
+ * opamp-server is reached only through its API.
  *
  * The platform and the opamp-server share one Postgres server but no
  * database object, in either direction: each reaches the other only through

@@ -1,62 +1,56 @@
 /**
  * Validation pipelines, their rules, and the runs' new status "Validation
- * Failed" (D15a decisions 3, 12 to 15, details 23; Preflight rulings 10, 16,
- * 17, 18 and 23).
+ * Failed".
  *
  *   * validation_pipelines: a configuration version's validation pipelines,
- *     one per version and YAML pipeline (pipeline_name, such as
- *     logs/default), its signal the name's first part, with no name of its
- *     own. Created and deleted,
- *     never changed (Preflight ruling 16): no rename, no updated_at, and the
- *     API's role updates none, so no identity trigger. A composite foreign
- *     key ties it to its version in its own configuration and organization,
- *     on delete cascade, as test_suites. Row-level security is migration
- *     021's child-visible rule for select and delete (a draft's are its
- *     author's, a published configuration's every member's); an insert also
- *     names the context's user as its creator.
+ *     one per version and YAML pipeline (pipeline_name, such as logs/default),
+ *     its signal the name's first part, with no name of its own. Created and
+ *     deleted, never changed: no rename, no updated_at, and the API's role
+ *     updates none, so no identity trigger. A composite foreign key ties it to
+ *     its version in its own configuration and organization, on delete
+ *     cascade, as test_suites. Row-level security is migration 021's
+ *     child-visible rule for select and delete (a draft's are its author's, a
+ *     published configuration's every member's); an insert also names the
+ *     context's user as its creator.
  *   * validation_rules: a validation pipeline's rules, in their position: the
  *     five kinds (contains_text, not_contains_text, contains_regex,
- *     not_contains_regex, ottl), searched in the output or the collector's
- *     log (an OTTL rule the output only). Text and regex kinds carry a
- *     pattern; an OTTL rule its context, condition, quantifier, count and
- *     expression as columns (Preflight ruling 16, not a JSON text). Patterns,
- *     conditions and expressions are at most 8,192 bytes, as the evaluator
- *     counts them (Preflight ruling 10). The contexts each signal allows are
- *     the API's and the evaluator's check, not the database's: the seven
- *     names only. A composite foreign key ties a rule to a pipeline of its
- *     own version, configuration and organization, on delete cascade, so it
- *     can't name another's (no member inserts a rule into a pipeline only by
- *     knowing its id). position is unique per pipeline, the next one max + 1
- *     under the configuration's row lock (Preflight ruling 16). Row-level
- *     security: the child-visible rule for select, update and delete, and for
- *     an insert naming the context's user as its creator. A trigger,
+ *     not_contains_regex, ottl), searched in the output or the collector's log
+ *     (an OTTL rule the output only). Text and regex kinds carry a pattern; an
+ *     OTTL rule its context, condition, quantifier, count and expression as
+ *     columns (not a JSON text). Patterns, conditions and expressions are at
+ *     most 8,192 bytes, as the evaluator counts them. The contexts each signal
+ *     allows are the API's and the evaluator's check, not the database's: the
+ *     seven names only. A composite foreign key ties a rule to a pipeline of
+ *     its own version, configuration and organization, on delete cascade, so
+ *     it can't name another's (no member inserts a rule into a pipeline only
+ *     by knowing its id). position is unique per pipeline, the next one
+ *     max + 1 under the configuration's row lock. Row-level security: the
+ *     child-visible rule for select, update and delete, and for an insert
+ *     naming the context's user as its creator. A trigger,
  *     validation_rules_identity_unchanged, keeps a rule's id, organization,
  *     configuration, version, pipeline, position and created_at, and lets its
  *     creator change only to null; its kind, target, pattern, OTTL, name and
  *     description may change (the editor switches modes).
- *   * test_runs gains the status validation_failed (decision 3: the
- *     collector ran and at least one rule failed), the move running →
- *     validation_failed, the rules' snapshot (validation_pipeline_id, no
- *     foreign key, as source_run_id; validation_rules, '[]' for none, at
- *     most 200, each an object with a string id, frozen by the guard) and the
- *     result column validation_results (null until finished, then one result
- *     per rule, each an object with a string id and a boolean passed: D15a
- *     Ruling 32).
- *     ck_test_runs_validation_outcome ties the status to the results (a
- *     validation_failed run has no error code and a failed rule; a
- *     succeeded run has no rules, or no failed result). The guard,
- *     refuse_test_run_change(), is replaced from migration 029's text with
- *     the two snapshot columns and the new move. test_runs_finish takes the
- *     run's final status (succeeded, failed or validation_failed) in place
- *     of whether it succeeded, and fills validation_results; the boolean
- *     one is dropped, so no call is ambiguous (Preflight ruling 17).
+ *   * test_runs gains the status validation_failed (the collector ran and at
+ *     least one rule failed), the move running → validation_failed, the rules'
+ *     snapshot (validation_pipeline_id, no foreign key, as source_run_id;
+ *     validation_rules, '[]' for none, at most 200, each an object with a
+ *     string id, frozen by the guard) and the result column validation_results
+ *     (null until finished, then one result per rule, each an object with a
+ *     string id and a boolean passed). ck_test_runs_validation_outcome ties
+ *     the status to the results (a validation_failed run has no error code and
+ *     a failed rule; a succeeded run has no rules, or no failed result). The
+ *     guard, refuse_test_run_change(), is replaced from migration 029's text
+ *     with the two snapshot columns and the new move. test_runs_finish takes
+ *     the run's final status (succeeded, failed or validation_failed) in place
+ *     of whether it succeeded, and fills validation_results; the boolean one
+ *     is dropped, so no call is ambiguous.
  *   * test_runs_rules(run, lease): the dispatcher's read of a running run's
- *     snapshot while that lease holds it (Preflight ruling 17). The claim is
- *     unchanged.
- *   * ottl_evaluator_state and ottl_evaluator_mark(up): the evaluator's
- *     health as every API process sees it (Preflight ruling 23), copied from
- *     migration 028's otelcol_testing_state and otelcol_testing_mark. Global;
- *     the API's role reads it and writes it only through the function.
+ *     snapshot while that lease holds it. The claim is unchanged.
+ *   * ottl_evaluator_state and ottl_evaluator_mark(up): the evaluator's health
+ *     as every API process sees it, copied from migration 028's
+ *     otelcol_testing_state and otelcol_testing_mark. Global; the API's role
+ *     reads it and writes it only through the function.
  *
  * Migration 009's default privileges give telflo_platform_runtime select,
  * insert, update and delete on the three tables; ottl_evaluator_state's
@@ -104,7 +98,7 @@ const snapshotColumns028 = [
 /** Migration 029's breadcrumb, in the snapshot too. */
 const breadcrumbColumns = ["test_suite_id", "test_suite_name", "test_definition_id", "test_definition_name"];
 
-/** This migration's: the rules' snapshot, taken when the run is queued (decision 14). */
+/** This migration's: the rules' snapshot, taken when the run is queued. */
 const validationSnapshotColumns = ["validation_pipeline_id", "validation_rules"];
 
 /** Migration 028's result columns, which test_runs_finish fills; null until the run finishes. */
@@ -131,7 +125,7 @@ const resultColumns030 = [...resultColumns028, "validation_results"];
 const finishedStatuses028 = ["succeeded", "failed"];
 const finishedStatuses030 = ["succeeded", "failed", "validation_failed"];
 
-/** The seven OTTL contexts' names (Preflight ruling 16); which a signal allows is the API's and the evaluator's check. */
+/** The seven OTTL contexts' names; which a signal allows is the API's and the evaluator's check. */
 const ottlContexts = ["log", "span", "spanevent", "metric", "datapoint", "resource", "scope"];
 
 const quoted = (values) => values.map((value) => `'${value}'`).join(", ");
@@ -199,7 +193,7 @@ const finish028 = `
         raise exception 'a finish''s results name only the result columns'
           using errcode = 'invalid_parameter_value';
       end if;
-      -- The run's row first, then the time (D14a Ruling 22): its claim has
+      -- The run's row first, then the time: its claim has
       -- committed, so the clock is past its start.
       perform 1
          from platform.test_runs t
@@ -262,7 +256,7 @@ const finish030 = `
         raise exception 'a finish''s results name only the result columns'
           using errcode = 'invalid_parameter_value';
       end if;
-      -- The run's row first, then the time (D14a Ruling 22): its claim has
+      -- The run's row first, then the time: its claim has
       -- committed, so the clock is past its start.
       perform 1
          from platform.test_runs t
@@ -322,7 +316,7 @@ const resultsCheck = (finished, columns) => `check (
 /**
  * The characters a blank pattern, condition or expression holds nothing but:
  * ASCII's whitespace (space, tab, newline, vertical tab, form feed, return).
- * Unicode's (Preflight ruling 6) is the API's and the evaluator's check.
+ * Unicode's is the API's and the evaluator's check.
  */
 const blank = `E' \\t\\n\\x0B\\f\\r'`;
 
@@ -358,14 +352,13 @@ export const up = (pgm) => {
     );
 
     comment on table validation_pipelines is
-      'a configuration version''s validation pipelines (D15a decision 12):
-       one per YAML pipeline (logs/default), holding its rules, which a run
-       of that pipeline copies when it is queued (decision 14). Visible to
-       whoever can see its configuration: a draft''s are its author''s, a
-       published configuration''s every member''s, who may create and delete
-       them on any version (decision 13). Created and deleted, never changed
-       (Preflight ruling 16). A new version copies its source''s (decision
-       17). No cap per version (spec decision 28).';
+      'a configuration version''s validation pipelines: one per YAML pipeline
+       (logs/default), holding its rules, which a run of that pipeline copies
+       when it is queued. Visible to whoever can see its configuration: a
+       draft''s are its author''s, a published configuration''s every
+       member''s, who may create and delete them on any version. Created and
+       deleted, never changed. A new version copies its source''s. No cap per
+       version.';
     comment on column validation_pipelines.id is
       'the validation pipeline''s id (uuidv7). A version copy takes a new one
        per pipeline, in the source''s order, so (created_at, id) keeps that
@@ -375,8 +368,7 @@ export const up = (pgm) => {
        (fk_validation_pipelines_configuration_version). A hard-deleted
        organization takes its validation pipelines.';
     comment on column validation_pipelines.configuration_id is
-      'the configuration whose visibility the validation pipeline follows
-       (D15a decision 12).';
+      'the configuration whose visibility the validation pipeline follows.';
     comment on column validation_pipelines.configuration_version_id is
       'the version the validation pipeline belongs to
        (fk_validation_pipelines_configuration_version).';
@@ -385,14 +377,14 @@ export const up = (pgm) => {
        logs/default), 1 to 200 characters; one validation pipeline per
        version and name (uq_validation_pipelines_version_pipeline_name). Its
        name may have left the text since (the editor warns). Configuration
-       text (ADR 0024).';
+       text.';
     comment on column validation_pipelines.signal is
       'the pipeline''s signal: traces, metrics or logs, the name''s first part
        (ck_validation_pipelines_pipeline_signal). Its rules'' OTTL contexts
        follow it.';
     comment on column validation_pipelines.created_by_user_id is
       'the member who created it, or who created the version whose copy it
-       is (decision 17): the insert policy admits only the context''s user.
+       is: the insert policy admits only the context''s user.
        Null once their account is hard-deleted.';
     comment on column validation_pipelines.created_at is
       'written by the API from its clock, never now(), as test_suites''; a
@@ -460,13 +452,13 @@ export const up = (pgm) => {
     comment on policy validation_pipelines_select on validation_pipelines is
       'the API''s role sees the validation pipelines of the configurations
        the context''s user can see (configurations_select applies inside the
-       exists, D15a decision 12): a draft''s are its author''s, a published
+       exists): a draft''s are its author''s, a published
        configuration''s every member''s.';
     comment on policy validation_pipelines_insert on validation_pipelines is
       'the API''s role adds a validation pipeline only to a configuration the
        context''s user can see, as that user (42501 otherwise).';
     comment on policy validation_pipelines_update on validation_pipelines is
-      'a validation pipeline never changes (Preflight ruling 16): the API''s
+      'a validation pipeline never changes: the API''s
        role updates none, and so locks none with FOR UPDATE.';
     comment on policy validation_pipelines_delete on validation_pipelines is
       'the API''s role deletes only the validation pipelines it can see; their
@@ -542,14 +534,13 @@ export const up = (pgm) => {
     );
 
     comment on table validation_rules is
-      'a validation pipeline''s rules (D15a decision 12), in their position:
-       text and regex rules over the output or the collector''s log, and OTTL
-       rules over the output''s records. A run copies them when it is queued
-       (decision 14); the API checks each OTTL and regex rule with the
-       evaluator before it is stored (decision 6). Visible to whoever can see
-       its configuration, who may add, change and delete them on any version
-       (decision 13). At most 200 per validation pipeline, which the API
-       counts under the configuration''s lock.';
+      'a validation pipeline''s rules, in their position: text and regex
+       rules over the output or the collector''s log, and OTTL rules over the
+       output''s records. A run copies them when it is queued; the API checks
+       each OTTL and regex rule with the evaluator before it is stored.
+       Visible to whoever can see its configuration, who may add, change and
+       delete them on any version. At most 200 per validation pipeline, which
+       the API counts under the configuration''s lock.';
     comment on column validation_rules.id is
       'the rule''s id (uuidv7); a run''s results name it.';
     comment on column validation_rules.organization_id is
@@ -565,7 +556,7 @@ export const up = (pgm) => {
     comment on column validation_rules.position is
       'its place in its validation pipeline, from 1, unique there
        (uq_validation_rules_pipeline_position): a new rule takes the largest
-       plus one under the configuration''s row lock (Preflight ruling 16), so
+       plus one under the configuration''s row lock, so
        gaps after deletes stay. Never changed (no reorder).';
     comment on column validation_rules.kind is
       'contains_text, not_contains_text, contains_regex, not_contains_regex
@@ -576,9 +567,9 @@ export const up = (pgm) => {
        only.';
     comment on column validation_rules.pattern is
       'a text or regex rule''s text or pattern, not blank, at most 8,192 bytes
-       (the evaluator''s cap, Preflight ruling 10); null for an OTTL rule. A
+       (the evaluator''s cap); null for an OTTL rule. A
        regex parses as Go''s RE2, which the API checks before storing it.
-       Configuration text (ADR 0024).';
+       Configuration text.';
     comment on column validation_rules.ottl_context is
       'an OTTL rule''s context: one of the seven names; which the pipeline''s
        signal allows (logs: log, resource, scope; traces: span, spanevent,
@@ -647,13 +638,13 @@ export const up = (pgm) => {
       'a text or regex rule has a pattern, an OTTL rule none.';
     comment on constraint ck_validation_rules_pattern_length on validation_rules is
       'a pattern is at most 8,192 bytes (octet_length, as the evaluator
-       counts, Preflight ruling 10), and not blank.';
+       counts), and not blank.';
     comment on constraint ck_validation_rules_ottl_only_ottl on validation_rules is
       'an OTTL rule has its context and quantifier; any other kind has no OTTL
        column at all.';
     comment on constraint ck_validation_rules_ottl_context on validation_rules is
       'one of the seven OTTL contexts'' names; the signal''s are the API''s
-       check (Preflight ruling 16).';
+       check.';
     comment on constraint ck_validation_rules_ottl_quantifier on validation_rules is
       'all, any, none, count or distinct.';
     comment on constraint ck_validation_rules_ottl_shape on validation_rules is
@@ -705,7 +696,7 @@ export const up = (pgm) => {
 
     comment on policy validation_rules_select on validation_rules is
       'the API''s role sees the rules of the configurations the context''s
-       user can see (D15a decision 12): a draft''s are its author''s, a
+       user can see: a draft''s are its author''s, a
        published configuration''s every member''s.';
     comment on policy validation_rules_insert on validation_rules is
       'the API''s role adds a rule only to a configuration the context''s user
@@ -713,8 +704,8 @@ export const up = (pgm) => {
        and fk_validation_rules_validation_pipeline keeps it in a pipeline of
        its own version.';
     comment on policy validation_rules_update on validation_rules is
-      'the API''s role changes only the rules it can see, on any version (D15a
-       decision 13), and keeps them visible; the identity trigger keeps them
+      'the API''s role changes only the rules it can see, on any version, and
+       keeps them visible; the identity trigger keeps them
        in their pipeline and place.';
     comment on policy validation_rules_delete on validation_rules is
       'the API''s role deletes only the rules it can see.';
@@ -746,7 +737,7 @@ export const up = (pgm) => {
       for each row execute function refuse_validation_rule_identity_change();
 
     comment on function refuse_validation_rule_identity_change() is
-      'a rule keeps its identity (Preflight ruling 16), kept by the database
+      'a rule keeps its identity, kept by the database
        for every role: its id, organization, configuration, version,
        validation pipeline, position and created_at never change, so a rule
        can''t move to another pipeline, version or organization, and its
@@ -794,29 +785,27 @@ export const up = (pgm) => {
        running (claimed) → succeeded, failed or validation_failed (finished,
        reaped), queued → failed (the tester down, the configuration deleted),
        and running → queued (released when the tester refused before
-       starting). Nothing else: the guard trigger. validation_failed (D15a
-       decision 3, "Validation Failed"): the collector ran and at least one
+       starting). Nothing else: the guard trigger. validation_failed
+       ("Validation Failed"): the collector ran and at least one
        of the run''s rules failed.';
     comment on column test_runs.validation_pipeline_id is
-      'the validation pipeline whose rules the run copied when it was queued
-       (D15a decision 14), the one of its version named by its pipeline;
-       null when there was none. No foreign key, as source_run_id: the
+      'the validation pipeline whose rules the run copied when it was queued,
+       the one of its version named by its pipeline; null when there was
+       none. No foreign key, as source_run_id: the
        pipeline may be deleted, and the run keeps its snapshot.';
     comment on column test_runs.validation_rules is
       'the rules the run checks, copied in position order when it was queued
-       (D15a decision 14) and frozen there (the guard trigger): a rule
-       edited later doesn''t change it, a re-run copies the current ones. A
-       JSON array of at most 200; [] when there are none. Configuration text
-       (ADR 0024).';
+       and frozen there (the guard trigger): a rule edited later doesn''t
+       change it, a re-run copies the current ones. A
+       JSON array of at most 200; [] when there are none. Configuration text.';
     comment on column test_runs.validation_results is
       'the rules'' results, one per rule of validation_rules in its order,
-       each with passed, its error and its details (D15a decision 15),
+       each with passed, its error and its details,
        written by test_runs_finish; null until the run finishes, and on a run
        whose rules weren''t checked. Snippets and samples are configuration
        text.';
     comment on constraint ck_test_runs_status on test_runs is
-      'queued, running, succeeded, failed (D14a decision 18) or
-       validation_failed (D15a decision 3).';
+      'queued, running, succeeded, failed or validation_failed.';
     comment on constraint ck_test_runs_state on test_runs is
       'the times and the lease follow the status: a queued run has neither
        started nor finished nor a lease; a running run has started and holds
@@ -825,25 +814,24 @@ export const up = (pgm) => {
     comment on constraint ck_test_runs_results_only_when_finished on test_runs is
       'results (the tester''s answer, the rules'' results, an error) only on a
        succeeded, failed or validation_failed run: a queued or running one has
-       none, so a member''s insert carries none (D14a Preflight ruling 9).';
+       none, so a member''s insert carries none.';
     comment on constraint ck_test_runs_validation_rules on test_runs is
       'the rules'' snapshot is a JSON array of at most 200, a validation
-       pipeline''s cap, each rule an object with a string id (Ruling 32).';
+       pipeline''s cap, each rule an object with a string id.';
     comment on constraint ck_test_runs_validation_results on test_runs is
       'the rules'' results are null, or a JSON array with one result per rule,
-       each an object with a string id and a boolean passed (Ruling 32), so
+       each an object with a string id and a boolean passed, so
        ck_test_runs_validation_outcome reads a real passed: a string
        "false" is refused, not taken for a pass.';
     comment on constraint ck_test_runs_validation_outcome on test_runs is
-      'the status follows the rules'' results (Preflight ruling 17): a
+      'the status follows the rules'' results: a
        validation_failed run has no error code and its results, at least one
        with passed false; a succeeded run has no rules and no results, or
        results none of which failed. A failed run may have either.';
 ${runGuard([...snapshotColumns028, ...breadcrumbColumns, ...validationSnapshotColumns], [...finishedStatuses030, "queued"])}
     comment on function refuse_test_run_change() is
-      'the run''s rules, kept by the database for every role (D14a
-       Preflight ruling 8, D14b Preflight ruling 5, D15a Preflight ruling
-       17): its snapshot and identity, the breadcrumb (test_suite_id,
+      'the run''s rules, kept by the database for every role: its snapshot
+       and identity, the breadcrumb (test_suite_id,
        test_suite_name, test_definition_id, test_definition_name) and the
        rules'' snapshot (validation_pipeline_id, validation_rules) included,
        never change, and queued_by_user_id only to null (the users foreign
@@ -856,8 +844,8 @@ ${runGuard([...snapshotColumns028, ...breadcrumbColumns, ...validationSnapshotCo
     drop function test_runs_finish(uuid, uuid, boolean, jsonb);
 ${finish030}
     comment on function test_runs_finish(uuid, uuid, text, jsonb) is
-      'finishes a running run whose lease is p_lease_id (D14a Preflight
-       ruling 7, D15a Preflight ruling 17): p_status is its final status,
+      'finishes a running run whose lease is p_lease_id: p_status is its
+       final status,
        succeeded, failed or validation_failed (22023 for any other), with the
        results, a JSON object whose keys name result columns, the rules''
        validation_results among them (22023 for any other). True when it did;
@@ -885,8 +873,8 @@ ${finish030}
     $$;
 
     comment on function test_runs_rules(uuid, uuid) is
-      'the rules'' snapshot of a running run whose lease is p_lease_id (D15a
-       Preflight rulings 17 and 22), which the dispatcher has checked once the
+      'the rules'' snapshot of a running run whose lease is p_lease_id, which
+       the dispatcher has checked once the
        tester answers: a JSON array, [] for none; null when the run is no
        longer the caller''s (reaped, or finished). The claim doesn''t carry
        it. The dispatcher only (42501).';
@@ -902,11 +890,10 @@ ${finish030}
     revoke insert, update, delete on ottl_evaluator_state from telflo_platform_runtime;
 
     comment on table ottl_evaluator_state is
-      'the OTTL evaluator''s health as every API process sees it (D15a
-       decision 15, Preflight ruling 23): one row, as otelcol_testing_state.
-       Global (ADR 0008): the evaluator serves every organization. The API''s
-       role reads it (queuing refuses a run with rules while it is down) and
-       changes it only through ottl_evaluator_mark.';
+      'the OTTL evaluator''s health as every API process sees it: one row, as
+       otelcol_testing_state. Global: the evaluator serves every organization.
+       The API''s role reads it (queuing refuses a run with rules while it is
+       down) and changes it only through ottl_evaluator_mark.';
     comment on column ottl_evaluator_state.id is
       'always true: the table holds one row (ck_ottl_evaluator_state_singleton).';
     comment on column ottl_evaluator_state.down_since is
@@ -932,7 +919,7 @@ ${finish030}
       if p_up is null then
         raise exception 'the evaluator is marked up or down' using errcode = 'invalid_parameter_value';
       end if;
-      -- The row first, then the time (D14a Ruling 22).
+      -- The row first, then the time.
       perform 1 from platform.ottl_evaluator_state s for update;
       moment := clock_timestamp();
       update platform.ottl_evaluator_state s
@@ -943,11 +930,10 @@ ${finish030}
     $$;
 
     comment on function ottl_evaluator_mark(boolean) is
-      'a health monitor''s change (D15a Preflight ruling 23, as
-       otelcol_testing_mark): up clears down_since; down sets it to the
-       clock, read after the row''s lock (D14a Ruling 22), unless it is set
-       already, so it keeps the first process''s time. Returns down_since as
-       it is now. The dispatcher only (42501).';
+      'a health monitor''s change (as otelcol_testing_mark): up clears
+       down_since; down sets it to the clock, read after the row''s lock,
+       unless it is set already, so it keeps the first process''s time. Returns
+       down_since as it is now. The dispatcher only (42501).';
 
     revoke execute on function ${grantedFunctions.join(", ")} from public;
     grant execute on function ${grantedFunctions.join(", ")} to telflo_platform_runtime;
@@ -979,8 +965,8 @@ export const down = (pgm) => {
     drop function test_runs_finish(uuid, uuid, text, jsonb);
 ${finish028}
     comment on function test_runs_finish(uuid, uuid, boolean, jsonb) is
-      'finishes a running run whose lease is p_lease_id (D14a Preflight
-       ruling 7): succeeded or failed, with the results, a JSON object whose
+      'finishes a running run whose lease is p_lease_id: succeeded or failed,
+       with the results, a JSON object whose
        keys name result columns (22023 for any other). True when it did;
        false when the run is no longer the caller''s (reaped, or finished
        already), and then nothing changes. The dispatcher only (42501).';
@@ -988,9 +974,8 @@ ${finish028}
     grant execute on function test_runs_finish(uuid, uuid, boolean, jsonb) to telflo_platform_runtime;
 ${runGuard([...snapshotColumns028, ...breadcrumbColumns], [...finishedStatuses028, "queued"])}
     comment on function refuse_test_run_change() is
-      'the run''s rules, kept by the database for every role (D14a
-       Preflight ruling 8, D14b Preflight ruling 5): its snapshot and
-       identity, the breadcrumb (test_suite_id, test_suite_name,
+      'the run''s rules, kept by the database for every role: its snapshot
+       and identity, the breadcrumb (test_suite_id, test_suite_name,
        test_definition_id, test_definition_name) included, never change, and
        queued_by_user_id only to null (the users foreign key''s on delete set
        null); its status goes only queued → running or failed, and running →
@@ -1019,8 +1004,7 @@ ${runGuard([...snapshotColumns028, ...breadcrumbColumns], [...finishedStatuses02
        down, the configuration deleted), and running → queued (released when
        the tester refused before starting). Nothing else: the guard trigger.';
     comment on constraint ck_test_runs_status on test_runs is
-      'queued, running, succeeded or failed (D14a decision 18). D15 adds its
-       own.';
+      'queued, running, succeeded or failed.';
     comment on constraint ck_test_runs_state on test_runs is
       'the times and the lease follow the status: a queued run has neither
        started nor finished nor a lease; a running run has started and holds
@@ -1028,7 +1012,7 @@ ${runGuard([...snapshotColumns028, ...breadcrumbColumns], [...finishedStatuses02
     comment on constraint ck_test_runs_results_only_when_finished on test_runs is
       'results (the tester''s answer, an error) only on a succeeded or failed
        run: a queued or running one has none, so a member''s insert carries
-       none (D14a Preflight ruling 9).';
+       none.';
 
     drop table validation_rules;
     drop function refuse_validation_rule_identity_change();

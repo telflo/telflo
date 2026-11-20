@@ -6,10 +6,10 @@ import { createUserWithOrganization, openTestDatabases, restoreRevokedGrantLefto
 import type { TestDatabases } from "./testing.js";
 
 /**
- * user_settings (D21 decision 18, migration 1700000000034; Preflight ruling
- * 2): its constraints and cascade, as the owner; its privileges, as the
- * API's role (`db`), which no row-level security limits.
- * schema.integration.test.ts has the migration's catalogue (up, down, up).
+ * user_settings (migration 1700000000034): its constraints and cascade, as the
+ * owner; its privileges, as the API's role (`db`), which no row-level security
+ * limits. schema.integration.test.ts has the migration's catalogue (up, down,
+ * up).
  */
 describe("user_settings", () => {
   let databases: TestDatabases;
@@ -88,7 +88,7 @@ describe("user_settings", () => {
   });
 
   it("refuses preferences over 4,096 bytes and stores 4,096", async () => {
-    // Measured on jsonb's normalized text: {"a": "…"} is 9 bytes around the value (Preflight ruling 2).
+    // Measured on jsonb's normalized text: {"a": "…"} is 9 bytes around the value.
     const object = (length: number) => sql<string>`jsonb_build_object('a', repeat('x', ${length}::int))`;
     const atBound = await createUser();
     await insertSettings(atBound, { preferences: object(4087) });
@@ -170,7 +170,7 @@ describe("user_settings", () => {
     expect(deleted.numDeletedRows).toBe(1n);
     expect(await settingsRow(userId)).toBeUndefined();
   });
-  it("gets back the API role's privileges a killed run revoked, from the global setup's leftovers step (Ruling 83)", async () => {
+  it("gets back the API role's privileges a killed run revoked, from the global setup's leftovers step", async () => {
     const privileges = async () =>
       (
         await sql<{ select: boolean; insert: boolean; update: boolean; delete: boolean }>`

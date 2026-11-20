@@ -9,13 +9,13 @@ import { THROWAWAY_DATABASE_DROP_TIMEOUT } from "./test-database.js";
 import { openTestDatabases, type TestDatabases } from "./testing.js";
 
 /*
- * The migration step (`npm run db:migrate`, migrate,
- * prepareTestDatabase) validates the collector catalogue before it touches
- * the database (D13a Ruling 38), on a throwaway database that is never
- * migrated: a fixture catalogue, never the committed one, is refused.
+ * The migration step (`npm run db:migrate`, migrate, prepareTestDatabase)
+ * validates the collector catalogue before it touches the database, on a
+ * throwaway database that is never migrated: a fixture catalogue, never the
+ * committed one, is refused.
  */
 
-/** Creating and dropping a database waits for a checkpoint (D7 Ruling 15). */
+/** Creating and dropping a database waits for a checkpoint. */
 const THROWAWAY_DATABASE_TIMEOUT = 30_000;
 
 describe("the migration step", () => {

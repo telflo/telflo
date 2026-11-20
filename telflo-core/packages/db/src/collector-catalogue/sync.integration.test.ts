@@ -17,13 +17,12 @@ import {
 import { CollectorCatalogueRemovalError, syncCollectorCatalogue } from "./sync.js";
 
 /*
- * The sync (D13a decision 2, Preflight ruling 9), on a throwaway database
- * migrated to the latest migration: each test starts from an empty
- * catalogue and commits what it syncs, so no fixture catalogue ever reaches
- * telflo_platform_test.
+ * The sync, on a throwaway database migrated to the latest migration: each
+ * test starts from an empty catalogue and commits what it syncs, so no fixture
+ * catalogue ever reaches telflo_platform_test.
  */
 
-/** Creating and dropping a database waits for a checkpoint (D7 Ruling 15). */
+/** Creating and dropping a database waits for a checkpoint. */
 const THROWAWAY_DATABASE_TIMEOUT = 30_000;
 
 describe("the collector catalogue's sync", () => {
@@ -149,7 +148,7 @@ describe("the collector catalogue's sync", () => {
     });
   });
 
-  it("writes each distribution's renames as its file lists them, in its order (D13b decision 6)", async () => {
+  it("writes each distribution's renames as its file lists them, in its order", async () => {
     await sync(committed);
     const [contrib] = (await rows()).distributions;
     const file = committed[0]!.content as CatalogueDistribution;
@@ -266,7 +265,7 @@ describe("the collector catalogue's sync", () => {
     versionIn(withoutVersion, "0.161.0").description = "Changed in the refused run.";
     await expect(sync(withoutVersion)).rejects.toThrow(CollectorCatalogueRemovalError);
     await expect(sync(withoutVersion)).rejects.toMatchObject({ missing: ["version otelcol-contrib 0.147.0"] });
-    // The message says how to recover (Ruling 38), with no tolerance in the sync.
+    // The message says how to recover, with no tolerance in the sync.
     const refusal = sync(withoutVersion);
     await expect(refusal).rejects.toThrow(
       /no longer lists version otelcol-contrib 0\.147\.0, which the database holds\. Nothing was changed/,

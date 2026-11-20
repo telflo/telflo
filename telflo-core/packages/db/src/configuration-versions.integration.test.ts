@@ -15,21 +15,20 @@ import {
 import type { TestDatabases } from "./testing.js";
 
 /**
- * configuration_versions (D8 decisions 3 and 13, migration 1700000000016;
- * its graph, D9a decision 6, migration 1700000000017; its label, D10
- * decision 3, migration 1700000000018; its publish columns and the
- * immutability of a published version, D11b decisions 4 and 10, migration
- * 1700000000020): its constraints and its composite foreign key, as the
- * owner; its row-level security, as the API's role (`db`), which the
- * policies constrain; the immutability trigger, as both. The migrations' effect on
- * existing rows is tested in schema.integration.test.ts, which has the
- * throwaway database it needs.
+ * configuration_versions (migration 1700000000016; its graph, migration
+ * 1700000000017; its label, migration 1700000000018; its publish columns and
+ * the immutability of a published version, migration 1700000000020): its
+ * constraints and its composite foreign key, as the owner; its row-level
+ * security, as the API's role (`db`), which the policies constrain; the
+ * immutability trigger, as both. The migrations' effect on existing rows is
+ * tested in schema.integration.test.ts, which has the throwaway database it
+ * needs.
  */
 describe("configuration_versions", () => {
   let databases: TestDatabases;
   let db: Kysely<Database>;
   let ownerDb: Kysely<Database>;
-  /** The catalogue's default distribution and version (D13a), which a row written by hand names. */
+  /** The catalogue's default distribution and version, which a row written by hand names. */
   let pin: { distribution: string; version: string };
   /** Another version of the default distribution in the catalogue, not deprecated: a pin a draft may move to. */
   let otherVersion: string;
@@ -75,8 +74,7 @@ describe("configuration_versions", () => {
    * Runs `work` as the API's role in a transaction whose context is
    * `organizationId` and, when given, `userId`, as context.ts sets them
    * (null: no organization). A published configuration's versions are
-   * visible with the organization alone; a draft's only to its creator
-   * (D11b decision 1).
+   * visible with the organization alone; a draft's only to its creator.
    */
   const inContext = <T>(
     organizationId: string | null,
@@ -121,7 +119,7 @@ describe("configuration_versions", () => {
         published_at: null,
         published_by_user_id: null,
         publication_id: null,
-        // The fixture's pin: the configuration's distribution at its default version, from the catalogue (D13a).
+        // The fixture's pin: the configuration's distribution at its default version, from the catalogue.
         collector_distribution: pin.distribution,
         collector_version: pin.version,
       });
@@ -198,8 +196,7 @@ describe("configuration_versions", () => {
 
     it("keeps the version, with no creator, when the creator's account is hard-deleted", async () => {
       // In a group organization: a personal one cascades with its owner and
-      // would take the configuration, and its versions, with it (D7
-      // Preflight ruling 6).
+      // would take the configuration, and its versions, with it.
       const { organizationId, configuration } = await createConfiguration();
       const creator = await createUserWithOrganization(ownerDb);
       await addMembership(ownerDb, { userId: creator.user.id, organizationId, role: "contributor" });
@@ -215,7 +212,7 @@ describe("configuration_versions", () => {
     });
   });
 
-  describe("the label (D10 decision 3)", () => {
+  describe("the label", () => {
     it("accepts a label of 80 characters, and of 1", async () => {
       const { organizationId, configuration } = await createConfiguration();
       const long = await addConfigurationVersion(ownerDb, {
@@ -286,7 +283,7 @@ describe("configuration_versions", () => {
     });
   });
 
-  describe("the graph columns (D9a decision 6)", () => {
+  describe("the graph columns", () => {
     const graphColumns = ["nodes", "edges", "pipelines"] as const;
 
     /** Sets one graph column of a new version to `value`, as SQL: `json` is JSON text, `null` is SQL NULL. */
@@ -356,7 +353,7 @@ describe("configuration_versions", () => {
     });
   });
 
-  describe("publishing (D11b decisions 4 and 10)", () => {
+  describe("publishing", () => {
     const publishedAt = new Date("2030-01-02T00:00:00.456Z");
 
     /**
@@ -446,7 +443,7 @@ describe("configuration_versions", () => {
       ["organization_id", ({ elsewhere }) => ({ organization_id: elsewhere.organizationId })],
       ["created_at", () => ({ created_at: new Date("2029-01-01T00:00:00.000Z") })],
       ["id", () => ({ id: randomUUID() })],
-      // D13a decision 8 (migration 1700000000023): the pin is the version's content too.
+      // Migration 1700000000023: the pin is the version's content too.
       ["collector_version, to another version of the catalogue", () => ({ collector_version: otherVersion })],
       ["collector_distribution", () => ({ collector_distribution: "fixture-distribution" })],
     ];
@@ -533,7 +530,7 @@ describe("configuration_versions", () => {
         expect(rows[0]!.drafts).toBe(3);
       });
 
-      it("refuses inserting a draft with a publisher (23514; D11b Ruling 17), and accepts a published version with none", async () => {
+      it("refuses inserting a draft with a publisher (23514), and accepts a published version with none", async () => {
         const { adminId, organizationId, configuration } = await createConfiguration();
         await expect(
           addConfigurationVersion(ownerDb, {
@@ -663,10 +660,10 @@ describe("configuration_versions", () => {
         expect(await versionRow(version.id)).toEqual(version);
       });
 
-      it("lets a draft's collector version change, as the application role and as the owner: only a published pin is fixed (D13a decision 8)", async () => {
+      it("lets a draft's collector version change, as the application role and as the owner: only a published pin is fixed", async () => {
         const { version: draft, organizationId, creatorId } = await createVersion(false);
         expect(draft.collector_version).toBe(pin.version);
-        // A draft is its creator's alone (D11b decision 1).
+        // A draft is its creator's alone.
         const moved = await inContext(
           organizationId,
           (transaction) => updateVersion(transaction, draft.id, { collector_version: otherVersion }),
@@ -803,7 +800,7 @@ describe("configuration_versions", () => {
       it.each(draftChanges)("allows changing %s on a draft, as the application role", async (_, change) => {
         const fixture = await createDraft();
         const set = change(fixture);
-        // As its creator: a draft is visible to no one else (D11b decision 1).
+        // As its creator: a draft is visible to no one else.
         const result = await inContext(
           fixture.organizationId,
           (transaction) => updateVersion(transaction, fixture.version.id, set),
@@ -832,7 +829,7 @@ describe("configuration_versions", () => {
         expect(await versionRow(id)).toEqual(expectedAfter(fixture.version, set));
       });
 
-      it("refuses a publisher on a draft (23514, ck_configuration_versions_publisher_only_when_published; D11b Ruling 17), as the application role and as the owner, and keeps the row", async () => {
+      it("refuses a publisher on a draft (23514, ck_configuration_versions_publisher_only_when_published), as the application role and as the owner, and keeps the row", async () => {
         const fixture = await createDraft();
         const set = { published_by_user_id: fixture.otherUserId };
         const violation = { code: "23514", constraint: "ck_configuration_versions_publisher_only_when_published" };
@@ -850,7 +847,7 @@ describe("configuration_versions", () => {
   });
 
   describe("the composite foreign key", () => {
-    describe("to the catalogue (D13a decisions 5 and 8, migration 1700000000023)", () => {
+    describe("to the catalogue (migration 1700000000023)", () => {
       /** `insert` in a savepoint, rolled back to on failure, so the transaction goes on; its error, if any. */
       const attempt = async (transaction: Kysely<Database>, insert: () => Promise<unknown>) => {
         await sql`savepoint attempt`.execute(transaction);
@@ -1130,7 +1127,7 @@ describe("configuration_versions", () => {
       });
     });
 
-    it("refuses inserting a version already published, or with any publish column set (42501; D11b Ruling 17): only the update that records a publish publishes", async () => {
+    it("refuses inserting a version already published, or with any publish column set (42501): only the update that records a publish publishes", async () => {
       const { a, aAdmin, configurationInA } = await twoOrganizations();
       const publishColumns: Array<Record<string, unknown>> = [
         { published_at: new Date(), publication_id: randomUUID() },
@@ -1199,7 +1196,7 @@ describe("configuration_versions", () => {
 
     // Migration 021 let it delete a draft of a configuration the context's
     // user can see; nothing in the platform does, and migration 022 refuses
-    // every delete (D11b Ruling 29).
+    // every delete.
     it("deletes no draft either, even of the context's user's own configuration: 0 rows (migration 1700000000022)", async () => {
       const { a, aAdmin, inA } = await twoOrganizations();
       const result = await inContext(
@@ -1211,7 +1208,7 @@ describe("configuration_versions", () => {
       expect(await versionRow(inA.id)).toEqual(inA);
     });
 
-    describe("a published version can't be deleted (D11b Ruling 17)", () => {
+    describe("a published version can't be deleted", () => {
       it("deletes no published version, even its configuration's author's: 0 rows, and the row as it was", async () => {
         const { a, aAdmin, configurationInA } = await twoOrganizations();
         const published = await addConfigurationVersion(ownerDb, {
@@ -1269,7 +1266,7 @@ describe("configuration_versions", () => {
       });
     });
 
-    describe("drafts are private (D11b decision 1, migration 1700000000021)", () => {
+    describe("drafts are private (migration 1700000000021)", () => {
       /**
        * One organization: an author's draft (v1) and their published
        * configuration (v1 published, v2 a draft), and a teammate.

@@ -1,5 +1,5 @@
 /**
- * An index for a version's distribution key (D13a Ruling 24).
+ * An index for a version's distribution key.
  *
  *   * Migration 023's fk_configuration_versions_configuration_distribution
  *     references configurations (id, collector_distribution) and cascades.

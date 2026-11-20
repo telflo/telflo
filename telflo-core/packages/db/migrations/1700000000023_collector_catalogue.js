@@ -1,7 +1,6 @@
 /**
  * The collector catalogue, a configuration's distribution and each
- * version's collector version (D13a decisions 2 to 5, 8, 9 and 12;
- * Preflight ruling 10).
+ * version's collector version.
  *
  *   * Two global tables hold the catalogue: collector_distributions (one
  *     row per distribution, exactly one the default) and collector_versions
@@ -9,7 +8,7 @@
  *     distribution, never a deprecated default). The migration step fills
  *     them from catalog/distributions/*.json after the migrations
  *     (packages/db/src/collector-catalogue/sync.ts); nothing else writes
- *     them. No organization column and no row-level security (ADR 0008):
+ *     them. No organization column and no row-level security:
  *     every organization reads the same catalogue. Migration 009's default
  *     privileges gave telflo_platform_runtime select, insert, update and delete;
  *     insert, update and delete are revoked, so the API's role may only read
@@ -22,33 +21,32 @@
  *     already holds configurations. The sync then finds nothing to change
  *     in either row.
  *   * configurations.collector_distribution: the distribution a
- *     configuration is built for (decision 5), chosen when it is created
- *     and never changed. Every existing configuration becomes Contrib
- *     (decision 4). The default is only for that backfill and is dropped,
- *     so a write that forgets the column fails (23502) instead of quietly
- *     taking a second default (decision 3: one default, the catalogue's).
- *     unique (id, collector_distribution) is the composite target the
- *     versions reference (migrations 015 and 016's pattern).
- *   * configuration_versions.collector_distribution and collector_version:
- *     the version's pin (decision 8). The distribution is the
- *     configuration's own, kept equal by a composite foreign key to
- *     configurations (id, collector_distribution), which cascades as the
- *     configuration's other one does; the pair is a version of the
- *     catalogue, by a composite foreign key to collector_versions, so a
- *     version can't name another distribution's version or an unknown one.
- *     Every existing version, published or not, becomes 0.162.0 (decision
- *     4). Adding a column with a default fires no row trigger, so migration
- *     020's guard leaves published versions to the backfill; every other
- *     column of theirs is untouched. Both defaults are dropped afterwards.
- *     The database accepts a deprecated version: whether a save may pick one
- *     is the API's decision (Preflight ruling 13).
+ *     configuration is built for, chosen when it is created and never
+ *     changed. Every existing configuration becomes Contrib. The default is
+ *     only for that backfill and is dropped, so a write that forgets the
+ *     column fails (23502) instead of quietly taking a second default (one
+ *     default, the catalogue's). unique (id, collector_distribution) is the
+ *     composite target the versions reference (migrations 015 and 016's
+ *     pattern).
+ *   * configuration_versions.collector_distribution and collector_version: the
+ *     version's pin. The distribution is the configuration's own, kept equal
+ *     by a composite foreign key to configurations (id,
+ *     collector_distribution), which cascades as the configuration's other one
+ *     does; the pair is a version of the catalogue, by a composite foreign key
+ *     to collector_versions, so a version can't name another distribution's
+ *     version or an unknown one. Every existing version, published or not,
+ *     becomes 0.162.0. Adding a column with a default fires no row trigger, so
+ *     migration 020's guard leaves published versions to the backfill; every
+ *     other column of theirs is untouched. Both defaults are dropped
+ *     afterwards. The database accepts a deprecated version: whether a save
+ *     may pick one is the API's decision.
  *   * Migration 020's refuse_published_configuration_version_change() is
  *     replaced, guarding both new columns too: a published version's
- *     collector version is as immutable as its content (decision 8). It is
- *     replaced before anything could update a pin.
+ *     collector version is as immutable as its content. It is replaced
+ *     before anything could update a pin.
  *   * A before-update trigger, configurations_collector_distribution_unchanged,
- *     refuses any change to a configuration's distribution (decision 5), in
- *     migration 022's style: every role on a plain UPDATE, the tables' owner
+ *     refuses any change to a configuration's distribution, in migration
+ *     022's style: every role on a plain UPDATE, the tables' owner
  *     included, P0001, a message naming only the configuration's id, and a
  *     same-value write passes. The versions' composite foreign key would
  *     refuse the change anyway while the configuration has a version, but
@@ -154,9 +152,9 @@ export const up = (pgm) => {
     );
 
     comment on table collector_distributions is
-      'the collector distributions a configuration can be built for (D13a
-       decision 1): catalog/distributions/<id>.json''s header, written by the
-       migration step''s sync and by nothing else. Global (ADR 0008): no
+      'the collector distributions a configuration can be built for:
+       catalog/distributions/<id>.json''s header, written by the
+       migration step''s sync and by nothing else. Global: no
        organization column, no row-level security; the API''s role may only
        read it. A distribution is never deleted.';
     comment on column collector_distributions.id is
@@ -173,7 +171,7 @@ export const up = (pgm) => {
       'the catalogue''s order, ascending, the id breaking ties.';
     comment on column collector_distributions.is_default is
       'the distribution a new configuration gets when it names none
-       (decision 3: one default, read from the catalogue). Exactly one
+       (one default, read from the catalogue). Exactly one
        (uq_collector_distributions_one_default).';
     comment on constraint collector_distributions_pkey on collector_distributions is
       'one row per distribution, by its id; what configurations and the
@@ -182,7 +180,7 @@ export const up = (pgm) => {
       'the catalogue validator''s and the opamp-server''s format for a
        distribution id, as a backstop behind the validator.';
     comment on constraint ck_collector_distributions_label_present on collector_distributions is
-      'a distribution has a name to show (Preflight ruling 8 (f)).';
+      'a distribution has a name to show.';
 
     create unique index uq_collector_distributions_one_default
       on collector_distributions ((true)) where is_default;
@@ -214,12 +212,12 @@ export const up = (pgm) => {
     );
 
     comment on table collector_versions is
-      'each distribution''s versions (D13a decisions 2 and 3), from
+      'each distribution''s versions, from
        catalog/distributions/<distribution>.json''s versions, written by the
-       migration step''s sync and by nothing else. Global (ADR 0008): no
+       migration step''s sync and by nothing else. Global: no
        organization column, no row-level security; the API''s role may only
        read it. A version is never deleted, only deprecated, so a pin to it
-       still resolves (decision 4).';
+       still resolves.';
     comment on column collector_versions.distribution is
       'the distribution it is a version of.';
     comment on column collector_versions.version is
@@ -233,25 +231,24 @@ export const up = (pgm) => {
       'the upstream release''s date (UTC); pickers show newest first by
        version.';
     comment on column collector_versions.is_default is
-      'the version a distribution''s new configuration starts at (decision
-       9). Exactly one per distribution (uq_collector_versions_one_default),
-       never a deprecated one.';
+      'the version a distribution''s new configuration starts at. Exactly one
+       per distribution (uq_collector_versions_one_default), never a
+       deprecated one.';
     comment on column collector_versions.deprecated is
       'retired: hidden from pickers, refused by a save that changes a pin to
-       it, but a pin already on it stays and is shown as deprecated
-       (decision 4).';
+       it, but a pin already on it stays and is shown as deprecated.';
     comment on column collector_versions.deprecated_note is
-      'why it was retired, the deprecated pin''s tooltip (decision 4):
-       required when deprecated.';
+      'why it was retired, the deprecated pin''s tooltip: required when
+       deprecated.';
     comment on column collector_versions.container_image is
       'the image this version runs as (otel/opentelemetry-collector-contrib:0.162.0).';
     comment on column collector_versions.otelcol_contrib_version is
       'the Contrib release a non-Contrib build is based on, or null for
-       Contrib itself (D13b, D14 and D18 read it).';
+       Contrib itself.';
     comment on column collector_versions.supported_components is
       'the components the distribution supports, by section (receivers,
        processors, exporters, connectors, extensions), which the palette
-       filters by (decision 6); null for the full palette (Contrib).';
+       filters by; null for the full palette (Contrib).';
     comment on column collector_versions.otelcol_contrib is
       'the collector binary''s downloads, as the catalogue''s file holds
        them: { "<platform>": { "downloadUrl", "sha256" } }; {} for a
@@ -267,10 +264,9 @@ export const up = (pgm) => {
        behind the validator.';
     comment on constraint ck_collector_versions_default_not_deprecated on collector_versions is
       'the default is offered to new configurations, so it can''t be
-       deprecated (Preflight ruling 8 (c)).';
+       deprecated.';
     comment on constraint ck_collector_versions_deprecated_note on collector_versions is
-      'a deprecated version says why: decision 4 shows the note (Preflight
-       ruling 8 (b)).';
+      'a deprecated version says why: the deprecated pin shows the note.';
     comment on constraint collector_versions_distribution_fkey on collector_versions is
       'a version belongs to a distribution of the catalogue. Distributions
        are never deleted, so nothing cascades.';
@@ -308,12 +304,12 @@ export const up = (pgm) => {
     alter table configurations alter column collector_distribution drop default;
 
     comment on column configurations.collector_distribution is
-      'the distribution the configuration is built for (D13a decision 5):
+      'the distribution the configuration is built for:
        chosen when it is created, the catalogue''s default when none is
        named, and never changed (configurations_collector_distribution_unchanged).
        No default: the API always writes it, so there is no second default
-       beside the catalogue''s (decision 3). Configurations that existed
-       before D13a are Contrib (decision 4).';
+       beside the catalogue''s. Configurations that existed before this
+       column are Contrib.';
     comment on constraint fk_configurations_collector_distribution on configurations is
       'a configuration is built for a distribution of the catalogue (23503
        otherwise).';
@@ -343,14 +339,14 @@ export const up = (pgm) => {
        it equal to the configuration''s. No default: the API always writes
        it.';
     comment on column configuration_versions.collector_version is
-      'the collector version the version is pinned to (D13a decision 8): a
+      'the collector version the version is pinned to: a
        version of the configuration''s distribution in the catalogue. A
        configuration''s first version gets the distribution''s default, a
-       new version its source''s (decision 9). A pin to a version deprecated
-       since stays (decision 4). Immutable once published (the trigger
+       new version its source''s. A pin to a version deprecated since
+       stays. Immutable once published (the trigger
        configuration_versions_published_immutable). No default: the API
-       always writes it. Versions that existed before D13a are 0.162.0,
-       published ones included (decision 4).';
+       always writes it. Versions that existed before this column are
+       0.162.0, published ones included.';
     comment on constraint fk_configuration_versions_configuration_distribution on configuration_versions is
       'a version''s distribution is its configuration''s (migrations 015
        and 016''s composite target). Cascades as
@@ -368,10 +364,10 @@ export const up = (pgm) => {
          or new.collector_version is distinct from old.collector_version`)}
 
     comment on function refuse_published_configuration_version_change() is
-      'the immutability of published versions (D11b decision 4), kept by the
-       database and not just the API. On a published version (old.published_at
-       set), refuses any change to its content (its collector pin included,
-       D13a decision 8), its publish record or its identity, raising P0001
+      'the immutability of published versions, kept by the database and not
+       just the API. On a published version (old.published_at set), refuses
+       any change to its content (its collector pin included), its publish
+       record or its identity, raising P0001
        with a message naming only the version''s id. created_by_user_id and
        updated_at stay free, and published_by_user_id may become null (the
        users foreign key''s on delete set null), but never another user. A
@@ -400,8 +396,8 @@ export const up = (pgm) => {
       for each row execute function refuse_configuration_distribution_change();
 
     comment on function refuse_configuration_distribution_change() is
-      'a configuration keeps the distribution it was created for (D13a
-       decision 5), kept by the database and not just the API. Refuses any
+      'a configuration keeps the distribution it was created for, kept by
+       the database and not just the API. Refuses any
        change of collector_distribution, raising P0001 with a message naming
        only the configuration''s id. A same-value write passes. Not SECURITY
        DEFINER: it reads only the row it is given.';
@@ -418,9 +414,9 @@ export const down = (pgm) => {
     ${publishedGuard("")}
 
     comment on function refuse_published_configuration_version_change() is
-      'the immutability of published versions (D11b decision 4), kept by the
-       database and not just the API. On a published version (old.published_at
-       set), refuses any change to its content, its publish record or its
+      'the immutability of published versions, kept by the database and not
+       just the API. On a published version (old.published_at set), refuses
+       any change to its content, its publish record or its
        identity, raising P0001 with a message naming only the version''s id.
        created_by_user_id and updated_at stay free, and published_by_user_id
        may become null (the users foreign key''s on delete set null), but

@@ -1,69 +1,63 @@
 /**
- * Flows, the product-admin flag and the seeded flows (D12 decisions 2 to 4
- * and 9; Preflight rulings 1, 4, 9 and 19).
+ * Flows, the product-admin flag and the seeded flows.
  *
- *   * flows: prebuilt collector configurations, each solving one problem:
- *     one row per flow, no history (an edit overwrites the
- *     row; a delete removes it for good), a published switch. Global (ADR
- *     0008): no organization column and no row-level security, since every
- *     organization reads the same flows. Migration 009's default privileges
- *     give telflo_platform_runtime select, insert, update and delete, which the
- *     API needs: anyone reads the published flows through it, and only a
- *     product admin writes them, which the API decides (D12 decisions 3 and
- *     11).
+ *   * flows: prebuilt collector configurations, each solving one problem: one
+ *     row per flow, no history (an edit overwrites the row; a delete removes
+ *     it for good), a published switch. Global: no organization column and no
+ *     row-level security, since every organization reads the same flows.
+ *     Migration 009's default privileges give telflo_platform_runtime select,
+ *     insert, update and delete, which the API needs: anyone reads the
+ *     published flows through it, and only a product admin writes them, which
+ *     the API decides.
  *   * The checks: the slug is kebab-case and unique (the public URL
- *     /flows/<slug>), and at most 80 characters (Ruling 19, the admin
- *     dialog's slugify's limit); source is telflo or community; source_url is null or
- *     http(s):// (it is rendered into an href on a public page); the
- *     collector version is not blank. collector_distribution references the
- *     catalogue, so no flow can name a distribution the platform doesn't
- *     offer (ClickStack). The version has no foreign key:
- *     the API checks it against the catalogue on every write, and a pin
- *     deprecated since still reads (D12 decision 16).
- *   * created_at and updated_at have no default, as configurations' have
- *     none (migration 015): the API writes both from its injected clock, so
- *     they hold whole milliseconds as a JavaScript Date does. Nor does
+ *     /flows/<slug>), and at most 80 characters (the admin dialog's slugify's
+ *     limit); source is telflo or community; source_url is null or http(s)://
+ *     (it is rendered into an href on a public page); the collector version is
+ *     not blank. collector_distribution references the catalogue, so no flow
+ *     can name a distribution the platform doesn't offer (ClickStack). The
+ *     version has no foreign key: the API checks it against the catalogue on
+ *     every write, and a pin deprecated since still reads.
+ *   * created_at and updated_at have no default, as configurations' have none
+ *     (migration 015): the API writes both from its injected clock, so they
+ *     hold whole milliseconds as a JavaScript Date does. Nor does
  *     collector_distribution: there is one default distribution, the
- *     catalogue's (D13a decision 3), not a second one here.
- *   * users.is_product_admin, false by default (D12 decision 3), set and
- *     cleared only by an operator's SQL, as the tables' owner. A trigger,
- *     users_product_admin_owner_only (Ruling 4), refuses an insert with the
- *     flag true and an update that changes it unless current_user is a
- *     member of the users table's owner, with SQLSTATE 42501 and a message
- *     naming only the user's id. The API's role is not, so it can neither
- *     grant nor revoke the flag, while every write it makes to users today
- *     (which never names the flag) still works. Not SECURITY DEFINER: it
- *     must see the role that runs the write. Its limits are operator-level
- *     (ALTER TABLE … DISABLE TRIGGER, session_replication_role = replica,
- *     dropping or replacing it), which the API's role can do none of (ADR
- *     0022). An insert that sets the flag to NULL is refused by the column's
- *     NOT NULL constraint (23502), not by the trigger. A later BEFORE trigger
- *     on users must not change the flag, since this one runs before it only
- *     by alphabetical order of the triggers' names.
+ *     catalogue's, not a second one here.
+ *   * users.is_product_admin, false by default, set and cleared only by an
+ *     operator's SQL, as the tables' owner. A trigger,
+ *     users_product_admin_owner_only, refuses an insert with the flag true and
+ *     an update that changes it unless current_user is a member of the users
+ *     table's owner, with SQLSTATE 42501 and a message naming only the user's
+ *     id. The API's role is not, so it can neither grant nor revoke the flag,
+ *     while every write it makes to users today (which never names the flag)
+ *     still works. Not SECURITY DEFINER: it must see the role that runs the
+ *     write. Its limits are operator-level (ALTER TABLE … DISABLE TRIGGER,
+ *     session_replication_role = replica, dropping or replacing it), which the
+ *     API's role can do none of. An insert that sets the flag to NULL is
+ *     refused by the column's NOT NULL constraint (23502), not by the trigger.
+ *     A later BEFORE trigger on users must not change the flag, since this one
+ *     runs before it only by alphabetical order of the triggers' names.
  *   * configurations.source_flow_slug: the flow a configuration was created
- *     from, or null (D12 decision 9). No foreign key and no check: a flow
- *     may be deleted, and the configuration keeps its copy; the API checks
- *     the slug's format on create (decision 12) and returns it nowhere
- *     (Ruling 9).
- *   * The 13 seeded flows (Ruling 1), pinned (decision 4): every flow on
- *     otelcol-contrib, at 0.159.0 for clickhouse-failover-gateway-s3-overflow
- *     and 0.162.0 for the rest, each YAML kept byte for byte. They are
- *     held below as `seededFlows`, each text a JSON-escaped string, and
- *     written with dollar quoting (seededFlowsInsert), so no text is ever
- *     escaped for SQL. This migration reads no file. The insert is on
- *     conflict (slug) do nothing: it runs once on
- *     every database, the owner's included; later changes go through the
- *     admin screen or a new migration. Their timestamps are the migration's
- *     time to the millisecond, as the API's clock would write them.
- *     `seededFlows` and `seededFlowsInsert` are exported for the tests and
- *     their fixtures (@telflo/db/testing's insertSeededFlows), which reach
+ *     from, or null. No foreign key and no check: a flow may be deleted, and
+ *     the configuration keeps its copy; the API checks the slug's format on
+ *     create and returns it nowhere.
+ *   * The 13 seeded flows, pinned: every flow on otelcol-contrib, at 0.159.0
+ *     for clickhouse-failover-gateway-s3-overflow and 0.162.0 for the rest,
+ *     each YAML kept byte for byte. They are held below as `seededFlows`, each
+ *     text a JSON-escaped string, and written with dollar quoting
+ *     (seededFlowsInsert), so no text is ever escaped for SQL. This migration
+ *     reads no file. The insert is on conflict (slug) do nothing: it runs once
+ *     on every database, a developer's own included; later changes go through
+ *     the admin screen or a new migration. Their timestamps are the
+ *     migration's time to the millisecond, as the API's clock would write
+ *     them. `seededFlows` and `seededFlowsInsert` are exported for the tests
+ *     and their fixtures (@telflo/db/testing's insertSeededFlows), which reach
  *     them by a dynamic import of this module.
  *
  * down drops exactly what up added: the column on configurations, the
  * trigger and its function, the flag, and the flows table with its rows.
  */
 
-/** The 13 seeded flows (Preflight ruling 1), in their sort order. */
+/** The 13 seeded flows, in their sort order. */
 export const seededFlows = Object.freeze([
   Object.freeze({
     slug: "log-volume-cost-control",
@@ -394,10 +388,9 @@ export const up = (pgm) => {
     );
 
     comment on table flows is
-      'prebuilt collector configurations, each solving one problem (D12
-       decision 2): one row per flow, no
-       history, an edit overwrites it and a delete removes it for good.
-       Global (ADR 0008): no organization column, no row-level security.
+      'prebuilt collector configurations, each solving one problem: one row
+       per flow, no history, an edit overwrites it and a delete removes it
+       for good. Global: no organization column, no row-level security.
        Anyone reads the published ones through the API; only a product admin
        (users.is_product_admin) writes them, which the API decides. Seeded
        with 13 flows by migration 1700000000026.';
@@ -413,7 +406,7 @@ export const up = (pgm) => {
     comment on column flows.summary is
       'the one-line card copy the gallery and the showcase show.';
     comment on column flows.description is
-      'the flow page''s long text, shown as plain paragraphs (D12 decision 13).';
+      'the flow page''s long text, shown as plain paragraphs.';
     comment on column flows.source is
       'telflo, authored by product admins and badged Built by Telflo, or
        community, reserved for user-submitted flows, which are not built.';
@@ -428,18 +421,18 @@ export const up = (pgm) => {
       'its categories, shown on its card and filtered by.';
     comment on column flows.yaml_content is
       'the collector configuration a configuration created from the flow
-       starts with, copied byte for byte (D12 decision 5). Public content:
+       starts with, copied byte for byte. Public content:
        anyone reads a published flow''s.';
     comment on column flows.collector_distribution is
-      'the distribution a configuration created from it is built for (D13a
-       decision 5), a distribution of the catalogue (fk_flows_collector_distribution).
+      'the distribution a configuration created from it is built for, a
+       distribution of the catalogue (fk_flows_collector_distribution).
        No default: the API always writes it.';
     comment on column flows.collector_version is
       'the collector version the flow was checked against, and the pin a
-       configuration created from it starts on (D12 decision 4). No foreign
+       configuration created from it starts on. No foreign
        key: the API refuses a version the distribution
        doesn''t offer on every write, and a pin deprecated since stays and is
-       read (decision 16).';
+       read.';
     comment on column flows.source_url is
       'an http(s) link to where the configuration lives elsewhere, shown as
        View source on its page, or null for none.';
@@ -466,7 +459,7 @@ export const up = (pgm) => {
       'lowercase letters and digits in words joined by single
        hyphens, so the slug is a URL segment as it is.';
     comment on constraint ck_flows_slug_length on flows is
-      'at most 80 characters (D12 Preflight ruling 19), the API''s limit.';
+      'at most 80 characters, the API''s limit.';
     comment on constraint ck_flows_source on flows is
       'the two sources: telflo or community.';
     comment on constraint ck_flows_source_url_scheme on flows is
@@ -488,7 +481,7 @@ export const up = (pgm) => {
     alter table users add column is_product_admin boolean not null default false;
 
     comment on column users.is_product_admin is
-      'a product admin (D12 decision 3): writes the flows and reaches
+      'a product admin: writes the flows and reaches
        /product-admin. False by default; set and cleared only by an
        operator''s SQL as the tables'' owner (users_product_admin_owner_only),
        and read on every request, so a revocation takes effect at once.';
@@ -519,8 +512,8 @@ export const up = (pgm) => {
       for each row execute function refuse_product_admin_change();
 
     comment on function refuse_product_admin_change() is
-      'only the tables'' owner grants or revokes product admin (D12 decision
-       3, Preflight ruling 4), kept by the database and not just the API.
+      'only the tables'' owner grants or revokes product admin, kept by the
+       database and not just the API.
        Refuses an insert with is_product_admin true, and an update that
        changes it, unless current_user is a member of the users table''s
        owner, raising 42501 with a message naming only the user''s id. A
@@ -536,11 +529,11 @@ export const up = (pgm) => {
     alter table configurations add column source_flow_slug text;
 
     comment on column configurations.source_flow_slug is
-      'the slug of the flow the configuration was created from (D12 decision
-       9), or null for one created blank. No foreign key and no check: a flow
+      'the slug of the flow the configuration was created from, or null for
+       one created blank. No foreign key and no check: a flow
        may be deleted, and the configuration keeps its copy; a slug no flow
        has is a retired flow, not a broken reference. The API checks its
-       format on create and returns it nowhere (Preflight ruling 9).';
+       format on create and returns it nowhere.';
   `);
   pgm.sql(seededFlowsInsert());
 };

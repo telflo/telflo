@@ -1,30 +1,28 @@
 /**
- * Personal API tokens and the token lookup for both kinds (D25 decisions 11,
- * 12, 21 and 27; Preflight ruling 2). The personal rows stay unused until
- * D25 Task 6: the API refuses a person's token with the one 401 until then.
+ * Personal API tokens and the token lookup for both kinds.
  *
- *   * personal_api_tokens: a person's own `tf_` tokens (decision 27), as
- *     D22's api_tokens (migration 035) but belonging to the user, not to an
- *     organization: the organization is named per request (X-Telflo-Org,
- *     decision 24). Stored only as the token's SHA-256 and its first 11
- *     characters; revoked, never deleted by the API; D22's checks, named
+ *   * personal_api_tokens: a person's own `tf_` tokens, as service accounts'
+ *     api_tokens (migration 035) but belonging to the user, not to an
+ *     organization: the organization is named per request (X-Telflo-Org).
+ *     Stored only as the token's SHA-256 and its first 11 characters; revoked,
+ *     never deleted by the API; api_tokens' checks, named
  *     ck_personal_api_tokens_*. A name is unique, case aside, among the
- *     person's tokens not revoked (an expired one's included, as D22's: an
- *     index predicate can't read the clock). The 20-token cap is the API's,
- *     under a lock on the user's row. A user's hard delete takes their
- *     tokens with it; a soft-deleted user's are refused by the lookup.
+ *     person's tokens not revoked (an expired one's included, as for
+ *     api_tokens: an index predicate can't read the clock). The 20-token cap
+ *     is the API's, under a lock on the user's row. A user's hard delete takes
+ *     their tokens with it; a soft-deleted user's are refused by the lookup.
  *   * Row-level security on the context's user (telflo.user_id, migration
  *     011's form): for telflo_platform_runtime, every operation sees and changes
  *     the context's user's own rows only, whatever organization the context
  *     names, and no context sees none. No `force`, so the owner and the
  *     lookup stay exempt.
- *   * find_live_api_token_by_hash answers both kinds (decision 21). Its
- *     return shape changes, which `create or replace` refuses, so it is
- *     dropped and created again, and its comment and grants, lost with it,
- *     are restated. One row for a live token:
- *     (kind, token_id, user_id, email, access, organization_id, role).
+ *   * find_live_api_token_by_hash answers both kinds. Its return shape
+ *     changes, which `create or replace` refuses, so it is dropped and created
+ *     again, and its comment and grants, lost with it, are restated. One row
+ *     for a live token: (kind, token_id, user_id, email, access,
+ *     organization_id, role).
  *       - kind 'service_account': migration 035's joins and conditions
- *         exactly, with the account's address (users.email, decision 12);
+ *         exactly, with the account's address (users.email);
  *         its organization and the membership's role.
  *       - kind 'person': a personal token neither revoked nor expired at
  *         p_at whose user is a live person (kind human, not deleted);
@@ -80,16 +78,16 @@ const migration035Lookup = `
     $$;
 
     comment on function find_live_api_token_by_hash(text, timestamptz) is
-      'the token a hash names, past row-level security, while it is live (D22
-       decision 11): neither revoked nor expired at p_at (the API''s clock,
-       never the database''s), its account, its user (of kind service), its
+      'the token a hash names, past row-level security, while it is live:
+       neither revoked nor expired at p_at (the API''s clock, never the
+       database''s), its account, its user (of kind service), its
        membership and its organization live. It answers the token''s id, its
        organization, its account, its access and the membership''s role,
        nothing else: the name is read afterwards through the policies, in the
        token''s context. Every refusal (an unknown hash, a revoked or expired
        token, a deleted account, user, membership or organization) is no row
        alike. Keyed by a secret of 256 random bits rather than by the database
-       context (ADR 0023). Only telflo_platform_runtime may run it, and the API
+       context. Only telflo_platform_runtime may run it, and the API
        calls it from one place, findLiveApiTokenByHash.';
 
     revoke execute on function find_live_api_token_by_hash(text, timestamptz) from public;
@@ -118,7 +116,7 @@ export const up = (pgm) => {
     );
 
     comment on table personal_api_tokens is
-      'a person''s own API tokens (D25 decision 27): tf_ and the base64url of
+      'a person''s own API tokens: tf_ and the base64url of
        32 random bytes, shown once and stored only as its SHA-256 and its
        first 11 characters, as a service account''s (api_tokens). Belongs to
        the user, not to an organization: the organization is named on each
@@ -144,7 +142,7 @@ export const up = (pgm) => {
       'the token''s first 11 characters (tf_ and 8), listed as tf_AbC12xYz…
        in the masked list only. Never in a log line, an error or an audit row.';
     comment on column personal_api_tokens.access is
-      'read or write (D22 decision 8), fixed at creation.';
+      'read or write, fixed at creation.';
     comment on column personal_api_tokens.expires_at is
       'when the token stops working, by the API''s clock (a whole number of
        days from 1 to 3650 after creation); null never expires.';
@@ -187,7 +185,7 @@ export const up = (pgm) => {
       'a name is unique, case aside, among the person''s tokens not revoked.
        Not "not expired": an index predicate can''t read the clock, so an
        expired token''s name stays taken until it is revoked, as it stays
-       listed until then (D22 decision 18).';
+       listed until then.';
     comment on index idx_personal_api_tokens_user_id_created_at is
       'a person''s tokens newest first (Settings › Account); the create counts
        their live tokens.';
@@ -226,11 +224,11 @@ export const up = (pgm) => {
       'the API''s role deletes only the context''s user''s own tokens (it
        deletes none: a token is revoked).';
 
-    -- The return shape changes (decision 21), which create or replace
+    -- The return shape changes, which create or replace
     -- refuses: dropped and created again, its comment and grants restated.
     drop function find_live_api_token_by_hash(text, timestamptz);
 
-    -- The token check's only way past the policies (ADR 0023's rule, as
+    -- The token check's only way past the policies (as
     -- migrations 032's and 035's lookups): only what the check needs to
     -- build the token's context, for a token live at the API's clock.
     -- stable: it only reads ("Last used" is written by the API through the
@@ -281,7 +279,7 @@ export const up = (pgm) => {
 
     comment on function find_live_api_token_by_hash(text, timestamptz) is
       'the token a hash names, of either kind, past row-level security, while
-       it is live (D22 decision 11, D25 decision 21): neither revoked nor
+       it is live: neither revoked nor
        expired at p_at (the API''s clock, never the database''s). A service
        account''s (kind service_account) needs its account, its user (of kind
        service), its membership and its organization live, and answers the
@@ -295,7 +293,7 @@ export const up = (pgm) => {
        revoked or expired token, a deleted account, user, membership or
        organization, a person''s token on a user who isn''t a live person) is
        no row alike. Keyed by a secret of 256 random bits rather than by the
-       database context (ADR 0023). Only telflo_platform_runtime may run it, and
+       database context. Only telflo_platform_runtime may run it, and
        the API calls it from one place, findLiveApiTokenByHash.';
 
     revoke execute on function find_live_api_token_by_hash(text, timestamptz) from public;

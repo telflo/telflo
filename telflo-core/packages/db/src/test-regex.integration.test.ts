@@ -16,20 +16,19 @@ import {
 } from "./testing.js";
 
 /*
- * Migration 1700000000031 (D15b decisions 7 and 16; Preflight rulings 1 and
- * 2): the regex library's table, its checks and its 35 seeded entries. Its
- * up, down and up again are schema.integration.test.ts's ("the test regex
- * migration …"); the seed's equality with regex-library.ts is the web's
- * regex-library.test.ts's, over the fixture seeded-test-regexes-fixture.test.ts
- * keeps fresh, and each pattern's RE2 compile the evaluator's
- * seeded_test_regexes_test.go's.
+ * Migration 1700000000031: the regex library's table, its checks and its 35
+ * seeded entries. Its up, down and up again are schema.integration.test.ts's
+ * ("the test regex migration …"); the seed's equality with regex-library.ts is
+ * the web's regex-library.test.ts's, over the fixture
+ * seeded-test-regexes-fixture.test.ts keeps fresh, and each pattern's RE2
+ * compile the evaluator's seeded_test_regexes_test.go's.
  *
  * The seeded entries are checked on a throwaway database migrated to the
  * latest migration: truncateAll empties them from telflo_platform_test before every
  * test.
  */
 
-/** Creating and dropping a database waits for a checkpoint (D7 Ruling 15). */
+/** Creating and dropping a database waits for a checkpoint. */
 const THROWAWAY_DATABASE_TIMEOUT = 30_000;
 
 /**
@@ -308,7 +307,7 @@ describe("the test regex migration", () => {
       await expect(addEntry({ name: null })).rejects.toMatchObject(refusal("23502"));
       expect((await addEntry({ name: "é".repeat(200) })).name).toBe("é".repeat(200));
       expect((await addEntry({ name: "x".repeat(200) })).name).toBe("x".repeat(200));
-      // Unicode's whitespace is the API's check (D15a Preflight ruling 6), not the database's.
+      // Unicode's whitespace is the API's check, not the database's.
       expect((await addEntry({ name: " a" })).name).toBe(" a");
     });
 

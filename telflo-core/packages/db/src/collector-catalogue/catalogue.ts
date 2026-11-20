@@ -2,23 +2,22 @@ import { readdir, readFile } from "node:fs/promises";
 import { z } from "zod";
 
 /*
- * The collector catalogue (D13a decision 2): one hand-edited file per
- * distribution, `catalog/distributions/<distribution>.json` at the
- * repository's root, in a fixed format (Preflight ruling 8).
- * The migration step reads it, refuses a malformed one, and upserts it into
- * the two global tables (./sync.ts). Other components read the same files
- * (D13b's validator image, D14's testing image, D18's install scripts), so
+ * The collector catalogue: one hand-edited file per distribution,
+ * `catalog/distributions/<distribution>.json` at the repository's root, in a
+ * fixed format. The migration step reads it, refuses a malformed one, and
+ * upserts it into the two global tables (./sync.ts). Other components read the
+ * same files (the validator image, the testing image, the install scripts), so
  * the folder sits outside telflo-core.
  *
- * The validator's eleven rules are each marked below as "rule N", and it
- * adds Preflight ruling 8's (a) to (h).
+ * The validator's eleven rules are each marked below as "rule N", and its
+ * further checks as "check (a)" to "check (h)".
  */
 
 /**
- * The folder holding the catalogue's files (Preflight ruling 7): the
- * repository's `catalog/distributions/` in a checkout, and
+ * The folder holding the catalogue's files: the repository's
+ * `catalog/distributions/` in a checkout, and
  * `/catalog/distributions/` in the API image, which the Dockerfile copies
- * there (Preflight ruling 6). Only the migration step reads it: the API
+ * there. Only the migration step reads it: the API
  * process reads the tables, never the files. No setting.
  */
 export const COLLECTOR_CATALOGUE_DIRECTORY = new URL("../../../../../catalog/distributions/", import.meta.url);
@@ -34,7 +33,7 @@ export const COLLECTOR_PLATFORMS = [
 
 export type CollectorPlatform = (typeof COLLECTOR_PLATFORMS)[number];
 
-/** The sections of a configuration a distribution may support components of (D13a decision 6). */
+/** The sections of a configuration a distribution may support components of. */
 export const SUPPORTED_COMPONENT_SECTIONS = [
   "receivers",
   "processors",
@@ -44,7 +43,7 @@ export const SUPPORTED_COMPONENT_SECTIONS = [
 ] as const;
 
 /**
- * The kinds a renamed type names (D13b Preflight ruling 16): a section's
+ * The kinds a renamed type names: a section's
  * singular, as the web's `ComponentType` and the contract's
  * `COLLECTOR_COMPONENT_KINDS` spell them.
  */
@@ -53,14 +52,14 @@ export const RENAMED_TYPE_KINDS = ["receiver", "processor", "exporter", "connect
 /** The distribution whose versions are the base other distributions are built on (rule 6). */
 export const CONTRIB_DISTRIBUTION = "otelcol-contrib";
 
-/** Where every download comes from: upstream's releases (Preflight ruling 8 (a)). */
+/** Where every download comes from: upstream's releases (check (a)). */
 export const UPSTREAM_RELEASES_DOWNLOAD_URL =
   "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/";
 
 /*
  * The allowlists. VERSION and DISTRIBUTION_ID
  * are the opamp-server's formats too (`[0-9]`, not `\d`, so Go, ajv and
- * Postgres agree; Preflight ruling 5).
+ * Postgres agree).
  */
 const VERSION = /^[0-9]+\.[0-9]+\.[0-9]+$/;
 const SHA256 = /^[a-f0-9]{64}$/;
@@ -71,7 +70,7 @@ const DISTRIBUTION_ID_MAXIMUM_LENGTH = 64;
 /** A version's cap, as the contracts, the opamp-server's API and its migration 00003 cap it. */
 const VERSION_MAXIMUM_LENGTH = 64;
 const DATE = /^([0-9]{4})-([0-9]{2})-([0-9]{2})$/;
-/** A component type's name as the collector spells it (`file_log`, `filelog`): D13b Preflight ruling 16. */
+/** A component type's name as the collector spells it (`file_log`, `filelog`). */
 const COMPONENT_TYPE_NAME = /^[a-z][a-z0-9_]*$/;
 const COMPONENT_TYPE_NAME_MAXIMUM_LENGTH = 64;
 
@@ -81,7 +80,7 @@ const PlatformBinarySchema = z.object({ downloadUrl: z.string(), sha256: z.strin
 /**
  * A binary's downloads by platform. Each platform may be absent (a
  * deprecated version upstream skipped a build of, rule 10);
- * any other key is refused (ruling 8 (g)).
+ * any other key is refused (check (g)).
  */
 const PlatformBinariesSchema = z
   .object(
@@ -92,7 +91,7 @@ const PlatformBinariesSchema = z
   )
   .strict();
 
-/** Exactly the five sections, each a list of component names (ruling 8 (h)). */
+/** Exactly the five sections, each a list of component names (check (h)). */
 const SupportedComponentsSchema = z
   .object(
     Object.fromEntries(SUPPORTED_COMPONENT_SECTIONS.map((section) => [section, z.array(z.string().min(1))])) as Record<
@@ -125,8 +124,8 @@ const CatalogueVersionSchema = z
   .strict();
 
 /**
- * One of the collector's renames (D13b decision 6, Preflight rulings 5, 15
- * and 16): from upstream's `since` on, the `kind` of component
+ * One of the collector's renames: from upstream's `since` on, the `kind` of
+ * component
  * `deprecatedName` is called `name`, the old name kept as a deprecated
  * alias. Every rename is kind-specific.
  */
@@ -140,9 +139,8 @@ const CatalogueRenamedTypeSchema = z
   .strict();
 
 /**
- * One file: a distribution and its versions, and the collector's renames
- * (D13b decision 6): required, `[]` when there are none (Preflight ruling
- * 16).
+ * One file: a distribution and its versions, and the collector's renames:
+ * required, `[]` when there are none.
  */
 const CatalogueDistributionSchema = z
   .object({
@@ -207,7 +205,7 @@ export async function readCollectorCatalogueFiles(
   return files;
 }
 
-/** Whether `text` is a `YYYY-MM-DD` date that exists (ruling 8 (e)). */
+/** Whether `text` is a `YYYY-MM-DD` date that exists (check (e)). */
 function isRealDate(text: string): boolean {
   const match = DATE.exec(text);
   if (!match) return false;
@@ -218,7 +216,7 @@ function isRealDate(text: string): boolean {
 
 /**
  * The URL upstream publishes `binary` of `version` for `platform` at
- * (ruling 8 (a)): upstream's patterns, the supervisor's tag
+ * (check (a)): upstream's patterns, the supervisor's tag
  * `cmd/opampsupervisor/v<version>` URL-encoded, and `.exe` on Windows.
  */
 export function upstreamDownloadUrl(
@@ -244,25 +242,25 @@ function versionProblems(
   const at = `${where} version ${JSON.stringify(entry.version)}`;
 
   // Rule 4: major.minor.patch; and at most 64 characters, as
-  // everything downstream of the catalogue caps it (D13a Ruling 38).
+  // everything downstream of the catalogue caps it.
   if (!VERSION.test(entry.version) || entry.version.length > VERSION_MAXIMUM_LENGTH) {
     problems.push(`${at}: the version must be major.minor.patch, at most ${VERSION_MAXIMUM_LENGTH} characters`);
   }
-  // Ruling 8 (f): a label to show.
+  // Check (f): a label to show.
   if (entry.label.trim() === "") problems.push(`${at}: the label is empty`);
-  // Ruling 8 (e): a real date.
+  // Check (e): a real date.
   if (!isRealDate(entry.releasedAt)) {
     problems.push(`${at}: releasedAt ${JSON.stringify(entry.releasedAt)} is not a real YYYY-MM-DD date`);
   }
-  // Ruling 8 (d): the version is its file's distribution's.
+  // Check (d): the version is its file's distribution's.
   if (entry.distribution !== distribution) {
     problems.push(`${at}: its distribution ${JSON.stringify(entry.distribution)} is not its file's (${distribution})`);
   }
-  // Ruling 8 (b): a deprecated version says why (decision 4 shows the note).
+  // Check (b): a deprecated version says why (the deprecated pin shows the note).
   if (entry.deprecated && (entry.deprecatedNote === null || entry.deprecatedNote.trim() === "")) {
     problems.push(`${at}: a deprecated version needs its deprecatedNote`);
   }
-  // Ruling 8 (c): the default is offered, so it can't be deprecated.
+  // Check (c): the default is offered, so it can't be deprecated.
   if (entry.default && entry.deprecated) problems.push(`${at}: the default version can't be deprecated`);
 
   // Rule 6: a non-Contrib build names a live Contrib base.
@@ -317,7 +315,7 @@ function versionProblems(
       if (!GITHUB_URL.test(download.downloadUrl)) {
         problems.push(`${at}: ${binary}.${platform} has an unsafe downloadUrl ${JSON.stringify(download.downloadUrl)}`);
       } else if (download.downloadUrl !== upstreamDownloadUrl(binary, entry.version, platform)) {
-        // Ruling 8 (a): upstream's release of this very version and platform.
+        // Check (a): upstream's release of this very version and platform.
         problems.push(
           `${at}: ${binary}.${platform} downloadUrl must be upstream's release of this version and platform, ` +
             upstreamDownloadUrl(binary, entry.version, platform),
@@ -332,9 +330,9 @@ function versionProblems(
 }
 
 /**
- * The problems of one distribution's renames (D13b Preflight ruling 16):
+ * The problems of one distribution's renames:
  * well-formed names and `since`, a name that is a rename, each kind's
- * current and deprecated names listed once, and no chain (Ruling 52): a
+ * current and deprecated names listed once, and no chain: a
  * kind's deprecatedName is never another of its renames' current name, in
  * either order in the file, since the palette writes one rename's current
  * name for its deprecated one and a chain would leave a name both.
@@ -394,7 +392,7 @@ export function validateCollectorCatalogue(files: readonly CatalogueFile[]): Cat
 
   const distributions: CatalogueDistribution[] = [];
   for (const file of files) {
-    // Ruling 8 (g) and (h), and every field's type: the shape first.
+    // Checks (g) and (h), and every field's type: the shape first.
     const parsed = CatalogueDistributionSchema.safeParse(file.content);
     if (!parsed.success) {
       for (const issue of parsed.error.issues) {
@@ -404,7 +402,7 @@ export function validateCollectorCatalogue(files: readonly CatalogueFile[]): Cat
       continue;
     }
     const distribution = parsed.data;
-    // Ruling 8 (d): a well-formed id, and the file named after it.
+    // Check (d): a well-formed id, and the file named after it.
     if (
       !DISTRIBUTION_ID.test(distribution.distribution) ||
       distribution.distribution.length > DISTRIBUTION_ID_MAXIMUM_LENGTH
@@ -417,7 +415,7 @@ export function validateCollectorCatalogue(files: readonly CatalogueFile[]): Cat
     if (file.name !== `${distribution.distribution}.json`) {
       problems.push(`${file.name}: a distribution's file is named after it, ${distribution.distribution}.json`);
     }
-    // Ruling 8 (f).
+    // Check (f).
     if (distribution.label.trim() === "") problems.push(`${file.name}: the distribution's label is empty`);
     distributions.push(distribution);
   }
@@ -465,10 +463,10 @@ export function validateCollectorCatalogue(files: readonly CatalogueFile[]): Cat
     }
   }
 
-  // D13b Preflight ruling 15: the web's table of renames is the union of
-  // every file's, so a kind's current name has one deprecated name across
-  // the files. A file isn't compared with itself: a name renamed twice in
-  // one file is reported once, as that (Ruling 53).
+  // The web's table of renames is the union of every file's, so a kind's
+  // current name has one deprecated name across the files. A file isn't
+  // compared with itself: a name renamed twice in one file is reported once,
+  // as that.
   const deprecatedNameOf = new Map<string, { deprecatedName: string; file: string }>();
   for (const distribution of distributions) {
     const file = `${distribution.distribution}.json`;

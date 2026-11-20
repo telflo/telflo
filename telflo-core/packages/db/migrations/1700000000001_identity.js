@@ -1,7 +1,7 @@
 /**
  * Identity: users, email verification tokens, and the append-only audit log.
  *
- * The audit log starts in D1 rather than being retrofitted (spec §3.7).
+ * The audit log starts in the first migrations rather than being retrofitted.
  */
 export const up = (pgm) => {
   pgm.sql(`
@@ -17,12 +17,12 @@ export const up = (pgm) => {
     );
 
     comment on column users.password_hash is
-      'null for users who authenticate only through a federated provider (D2).';
+      'null for users who authenticate only through a federated provider.';
     comment on column users.email_verified_at is
       'null until the verification link is consumed. An unverified account cannot sign in.';
 
     -- Uniqueness on the lowercased email rather than citext: the extension list
-    -- in spec §3.3 is deliberately short, and the application lowercases at the
+    -- is deliberately short, and the application lowercases at the
     -- boundary, so this index is a backstop rather than the only defense.
     create unique index uq_users_lower_email on users (lower(email));
 
@@ -45,7 +45,7 @@ export const up = (pgm) => {
       on email_verification_tokens (user_id);
 
     -- "audit_events", not "audit_log": tables are plural snake_case
-    -- throughout this schema, and the rows are events -- Task 7's repository
+    -- throughout this schema, and the rows are events -- the repository
     -- speaks of AuditEvent / record(event). "the audit log" stays accurate
     -- as the conceptual name for what these events compose.
     create table audit_events (
@@ -74,8 +74,8 @@ export const up = (pgm) => {
     comment on column audit_events.actor_email is
       'snapshot taken at write time so the trail survives deletion of the user.';
     comment on column audit_events.organization_id is
-      'nullable with no foreign key: organizations arrive in D5, and rows written
-       before then must not require a backfill.';
+      'nullable with no foreign key: organizations arrive in a later migration,
+       and rows written before then must not require a backfill.';
 
     create index idx_audit_events_occurred_at on audit_events (occurred_at desc);
     create index idx_audit_events_actor_user_id on audit_events (actor_user_id);

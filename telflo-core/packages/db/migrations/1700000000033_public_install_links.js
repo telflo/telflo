@@ -1,10 +1,9 @@
 /**
- * The organization's "Public install links" switch (D17d-2 decision 20;
- * Preflight rulings 10, 13 and 14).
+ * The organization's "Public install links" switch.
  *
  *   * organizations.public_install_links_enabled: whether the organization's
- *     public install links work, D17c-2's Linux Quick Deploy links and
- *     D17d-2's Helm values links alike. True by default, so every existing
+ *     public install links work, Linux Quick Deploy links and Helm values
+ *     links alike. True by default, so every existing
  *     organization keeps them. Only an admin changes it (the API's check).
  *     While it is false, no link is made and every existing link's public
  *     download is refused; the links stay and work again once it is true.
@@ -26,13 +25,13 @@ export const up = (pgm) => {
       add column public_install_links_enabled boolean not null default true;
 
     comment on column organizations.public_install_links_enabled is
-      'whether the organization''s public install links work (D17d-2): Linux
+      'whether the organization''s public install links work: Linux
        Quick Deploy links and Helm values links. True by default; only an
        admin changes it. While false, no link is made and every link''s
        download is refused; the links stay and work again once it is true.';
 
     comment on column quick_deploy_links.choices is
-      'what the link installs, by kind (D17d-2): a Linux link''s (no kind, or
+      'what the link installs, by kind: a Linux link''s (no kind, or
        kind linux) bundle request''s validated fields: method, arch,
        rootPath, executablePath (null for all-in-one), systemd and envNames;
        a Helm values link''s (kind helm): kind, role, release, namespace and

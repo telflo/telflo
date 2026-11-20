@@ -1,5 +1,5 @@
 /**
- * One live reset link per user (D3 Ruling 16).
+ * One live reset link per user.
  *
  * Issuing a reset token consumes the user's earlier unconsumed ones in the
  * same transaction, and that transaction locks the user's row first, so two
@@ -7,7 +7,7 @@
  * hold whatever code path writes the table: a second unconsumed token for a
  * user is refused.
  *
- * Before D3's fix wave, two concurrent requests could both commit, leaving two
+ * Before this index, two concurrent requests could both commit, leaving two
  * unconsumed tokens. Those are settled first, as the application would have:
  * only the newest link works, so the older ones are consumed.
  */
@@ -28,9 +28,9 @@ export const up = (pgm) => {
       where consumed_at is null;
 
     comment on index uq_password_reset_tokens_one_live_per_user is
-      'at most one unconsumed reset token per user: only the newest link works
-       (D3 decision 4, Ruling 16). Issuing a token consumes the earlier ones
-       under a lock on the user''s row.';
+      'at most one unconsumed reset token per user: only the newest link works.
+       Issuing a token consumes the earlier ones under a lock on the user''s
+       row.';
   `);
 };
 

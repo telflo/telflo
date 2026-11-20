@@ -1,23 +1,23 @@
 /**
  * Soft removal, group organizations without an owner, and the tightened
- * membership invariant (D5 decisions 6 and 9).
+ * membership invariant.
  *
  *   * organization_members.deleted_at: removing a member keeps the row and its
  *     role, so an admin can restore it.
  *   * owner_user_id is for personal organizations only. A group organization
  *     has no owner (its admins are equals), so a hard-deleted user can no
- *     longer take a group organization down with them (D1b decision 7).
+ *     longer take a group organization down with them.
  *   * Group names are unique, ignoring case, among live group organizations.
  *     Personal ones are left out, so no one can block another person's signup
- *     by taking their `<email>'s workspace` (D1b decision 5).
- *   * D1b's invariant tightens to what it meant: every live user has a live
- *     membership in a live organization. It now also runs when a membership's
- *     or an organization's deleted_at changes, and as SECURITY DEFINER, so
- *     row-level security (Task 3) can't hide memberships from it.
+ *     by taking their `<email>'s workspace`.
+ *   * The membership invariant tightens to what it meant: every live user
+ *     has a live membership in a live organization. It now also runs when a
+ *     membership's or an organization's deleted_at changes, and as SECURITY
+ *     DEFINER, so row-level security can't hide memberships from it.
  *   * reassign_sessions_leaving_organization and
  *     delete_accounts_only_in_organization do, in the caller's transaction,
  *     what removing a member and deleting an organization must do to sessions
- *     and accounts (decision 9). They are SECURITY DEFINER because they read
+ *     and accounts. They are SECURITY DEFINER because they read
  *     and write other users' rows, which row-level security will hide from the
  *     API's role; only telflo_platform_runtime may run them, and only for the
  *     organization the database context names.
@@ -66,9 +66,9 @@ export const up = (pgm) => {
     comment on table organization_members is
       'a user''s membership of an organization, with a role. Removal is soft
        (deleted_at), so a removed member can be restored with their role.
-       Invitations are D6''s.';
+       Invitations are a later migration''s.';
     comment on column organization_members.deleted_at is
-      'set when an admin removes the member (D5 decision 6). A removed
+      'set when an admin removes the member. A removed
        membership grants nothing: every read of memberships filters on it. The
        unique (organization_id, user_id) still holds, so restoring clears this
        column rather than inserting a row.';
@@ -95,16 +95,14 @@ export const up = (pgm) => {
        are unique, ignoring case, among live group organizations
        (uq_organizations_lower_name_group). Personal names are not: a unique
        personal name would let anyone block a future signup by taking its
-       derived name, and would reveal whether an email has an account (D1b
-       decision 5, D5 decision 6).';
+       derived name, and would reveal whether an email has an account.';
 
     comment on column sessions.revoked_reason is
       'one of logout, sign_out_everywhere, refresh_token_reused,
        password_reset, account_taken_over (a federated sign-in took over an
-       unverified account, ADR 0021) or organization_access_lost (the
-       session''s organization went away and the user had no other, D5
-       decision 9). Text rather than an enum until a third consumer needs to
-       branch on it.';
+       unverified account) or organization_access_lost (the session''s
+       organization went away and the user had no other). Text rather than
+       an enum until a third consumer needs to branch on it.';
 
     -- The invariant, redefined in place: the triggers keep calling it. It
     -- checks, at commit, every user a changed row may have stranded:
@@ -115,7 +113,7 @@ export const up = (pgm) => {
     -- A user fails when they exist, aren't soft-deleted, and have no live
     -- membership in a live organization. SECURITY DEFINER with a fixed
     -- search_path: it must see every membership of the users it checks, and
-    -- row-level security on organization_members (Task 3) would otherwise
+    -- row-level security on organization_members would otherwise
     -- hide some from the API's role and refuse valid commits.
     create or replace function ensure_user_has_membership() returns trigger
     language plpgsql
@@ -189,7 +187,7 @@ export const up = (pgm) => {
       when (old.deleted_at is distinct from new.deleted_at)
       execute function ensure_user_has_membership();
 
-    -- D5 decision 9, the current organization picked once on the server:
+    -- The current organization, picked once on the server:
     -- every live session acting as p_organization_id (of p_user_id only, when
     -- given) moves to the user's own personal organization if they still have
     -- a live membership there, else to their first live membership in a live
@@ -249,11 +247,11 @@ export const up = (pgm) => {
     end
     $$;
 
-    -- D5 decision 9, D1b's handoff: deleting a group organization also
+    -- Deleting a group organization also
     -- soft-deletes every live account with a live membership in it and none
     -- in any other live organization, which would otherwise fail the
     -- invariant at commit. A human always keeps their personal organization,
-    -- so today that is nobody; D22's service accounts are who it is for.
+    -- so today that is nobody; service accounts are who it is for.
     -- Returns how many accounts it soft-deleted.
     create function delete_accounts_only_in_organization(p_organization_id uuid) returns integer
     language plpgsql
@@ -294,7 +292,7 @@ export const up = (pgm) => {
     -- Both functions bypass row-level security, so each ties its argument to
     -- the database context itself: it refuses (42501) unless
     -- p_organization_id is the organization telflo.organization_id names.
-    -- D5 only calls them for the active organization, whose context the
+    -- They are called only for the active organization, whose context the
     -- API has set; a bug passing another organization's id fails instead of
     -- reaching into it.
     --
@@ -389,8 +387,8 @@ export const down = (pgm) => {
     comment on column sessions.revoked_reason is
       'one of logout, sign_out_everywhere, refresh_token_reused,
        password_reset or account_taken_over (a federated sign-in took over an
-       unverified account, ADR 0021). Text rather than an enum until a third
-       consumer needs to branch on it.';
+       unverified account). Text rather than an enum until a third consumer
+       needs to branch on it.';
 
     drop index if exists uq_organizations_lower_name_group;
 
@@ -412,13 +410,13 @@ export const down = (pgm) => {
       'the tenant boundary. Every account belongs to at least one. Name
        uniqueness is deliberately absent: a global unique name would let anyone
        block a future signup by taking its derived personal name, and would
-       reveal whether an email has an account. D5 decides group-name uniqueness
-       (D1b decision 5).';
+       reveal whether an email has an account. A later migration decides
+       group-name uniqueness.';
     comment on column organizations.owner_user_id is
       'cascades on user deletion: a hard-deleted user takes their personal
        organization with them. Users are normally soft-deleted, so this matters
-       mainly for tests and operator cleanup. D5 revisits it for group
-       organizations, whose owner leaving must not delete them (D1b decision 7).';
+       mainly for tests and operator cleanup. A later migration revisits it
+       for group organizations, whose owner leaving must not delete them.';
 
     -- Without deleted_at a removed membership would read as live, so it goes.
     -- The delete queues the deferred invariant check, and a table with
@@ -428,6 +426,6 @@ export const down = (pgm) => {
     alter table organization_members drop column deleted_at;
     comment on table organization_members is
       'a user''s membership of an organization, with a role. Member status
-       (invited, active, removed) is deferred to D5 and D6.';
+       (invited, active, removed) is deferred to later migrations.';
   `);
 };

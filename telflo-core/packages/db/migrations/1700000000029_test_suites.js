@@ -1,60 +1,54 @@
 /**
- * Test suites, their definitions, the definitions' inputs and test templates
- * (D14b decisions 1 to 5 and 8 to 13, details 17 and 18; Preflight rulings
- * 1 to 7 and 21).
+ * Test suites, their definitions, the definitions' inputs and test templates.
  *
  *   * test_suites: a configuration version's named groups of test
- *     configurations.
- *     A composite foreign key ties a suite to its version in its own
- *     configuration and organization, on delete cascade. Row-level security
- *     is migration 021's child-visible rule for select, update and delete
- *     (decision 8: a draft's suites are its author's, a published
- *     configuration's every member's, who may create, rename and delete
- *     them); an insert also names the context's user as its creator. A
- *     trigger, test_suites_identity_unchanged, keeps a suite's id,
- *     organization, configuration, version and created_at, and lets its
- *     creator change only to null (the users foreign key's on delete set
- *     null), as migration 022's configurations_author_unchanged.
+ *     configurations. A composite foreign key ties a suite to its version in
+ *     its own configuration and organization, on delete cascade. Row-level
+ *     security is migration 021's child-visible rule for select, update and
+ *     delete (a draft's suites are its author's, a published configuration's
+ *     every member's, who may create, rename and delete them); an insert also
+ *     names the context's user as its creator. A trigger,
+ *     test_suites_identity_unchanged, keeps a suite's id, organization,
+ *     configuration, version and created_at, and lets its creator change only
+ *     to null (the users foreign key's on delete set null), as migration 022's
+ *     configurations_author_unchanged.
  *   * test_definition_inputs: the inputs definitions run, each a copy made
- *     when a definition is created (decisions 1 and 4), its bytes in the
- *     FileStore at organizations/<org>/test-definition-inputs/<id>. An input
- *     carries its configuration (Preflight ruling 2): a version copy shares
- *     its inputs, and never leaves its configuration, so the child-visible
- *     rule applies to select, insert and delete, and a draft's file names
- *     stay its author's. No update.
- *   * test_definitions: a suite's test configurations: a name, a description, an
- *     input, a pipeline and its signal, a duration of 1 to 60 seconds.
- *     Created and deleted, never changed (decision 2). Composite foreign
- *     keys tie a definition to a suite of its own version (on delete
- *     cascade) and to an input of its own configuration: NO ACTION,
- *     DEFERRABLE INITIALLY DEFERRED (Preflight ruling 3), so a configuration's
- *     hard delete, whose cascades reach the inputs before the definitions,
- *     still works, and removing an input a definition still uses is refused
- *     at commit. Row-level security: the child-visible rule for select and
- *     delete, and for an insert naming the context's user as creator (so
- *     no member can forge it); no update.
- *   * The reference count (decision 4, Preflight ruling 7): an input is in
- *     use while a definition names it. Every path that adds or removes a
- *     reference holds the configuration's row lock (FOR UPDATE), so "no
- *     definition names it" can't change under a delete; the deferred key is
- *     the backstop when a path forgets the lock. No column, no function.
- *   * test_templates: product-wide sample inputs (decision 3): global (ADR 0008), with no
- *     organization and no row-level security, as flows. Members read the
- *     live ones and product admins write them, which the API decides.
- *     Deletes are soft: DELETE is revoked from telflo_platform_runtime. A
- *     trigger, test_templates_guard, keeps a template's id, created_at and
- *     file columns, its creator but to null, and lets deleted_at go only
- *     from null to a time.
- *   * test_runs gains the "Suite › Configuration" breadcrumb (decision 11,
- *     Preflight ruling 5): test_suite_id, test_suite_name,
- *     test_definition_id and test_definition_name, all four set or none.
- *     The ids have no foreign key, as source_run_id. A run from a template
- *     records nothing here: its input_name is the template's file name, and
- *     the audit row names the template. refuse_test_run_change() is
+ *     when a definition is created, its bytes in the FileStore at
+ *     organizations/<org>/test-definition-inputs/<id>. An input carries its
+ *     configuration: a version copy shares its inputs, and never leaves its
+ *     configuration, so the child-visible rule applies to select, insert and
+ *     delete, and a draft's file names stay its author's. No update.
+ *   * test_definitions: a suite's test configurations: a name, a description,
+ *     an input, a pipeline and its signal, a duration of 1 to 60 seconds.
+ *     Created and deleted, never changed. Composite foreign keys tie a
+ *     definition to a suite of its own version (on delete cascade) and to an
+ *     input of its own configuration: NO ACTION, DEFERRABLE INITIALLY
+ *     DEFERRED, so a configuration's hard delete, whose cascades reach the
+ *     inputs before the definitions, still works, and removing an input a
+ *     definition still uses is refused at commit. Row-level security: the
+ *     child-visible rule for select and delete, and for an insert naming the
+ *     context's user as creator (so no member can forge it); no update.
+ *   * The reference count: an input is in use while a definition names it.
+ *     Every path that adds or removes a reference holds the configuration's
+ *     row lock (FOR UPDATE), so "no definition names it" can't change under a
+ *     delete; the deferred key is the backstop when a path forgets the lock.
+ *     No column, no function.
+ *   * test_templates: product-wide sample inputs: global, with no organization
+ *     and no row-level security, as flows. Members read the live ones and
+ *     product admins write them, which the API decides. Deletes are soft:
+ *     DELETE is revoked from telflo_platform_runtime. A trigger,
+ *     test_templates_guard, keeps a template's id, created_at and file
+ *     columns, its creator but to null, and lets deleted_at go only from null
+ *     to a time.
+ *   * test_runs gains the "Suite › Configuration" breadcrumb: test_suite_id,
+ *     test_suite_name, test_definition_id and test_definition_name, all four
+ *     set or none. The ids have no foreign key, as source_run_id. A run from a
+ *     template records nothing here: its input_name is the template's file
+ *     name, and the audit row names the template. refuse_test_run_change() is
  *     replaced to keep the four in the snapshot.
  *   * test_runs_waiting_for_context_user() is replaced to count the
- *     context's organization only (Preflight ruling 21: the cap of 50 is
- *     per person, per organization).
+ *     context's organization only (the cap of 50 is per person, per
+ *     organization).
  *
  * Migration 009's default privileges give telflo_platform_runtime select,
  * insert, update and delete on the four tables; test_templates' delete is
@@ -94,7 +88,7 @@ const snapshotColumns028 = [
   "queued_at",
 ];
 
-/** The breadcrumb's columns (decision 11, Preflight ruling 5), in the snapshot too. */
+/** The breadcrumb's columns, in the snapshot too. */
 const breadcrumbColumns = ["test_suite_id", "test_suite_name", "test_definition_id", "test_definition_name"];
 
 /**
@@ -175,12 +169,12 @@ export const up = (pgm) => {
     );
 
     comment on table test_suites is
-      'a configuration version''s test suites (D14b decision 8), each a named
+      'a configuration version''s test suites, each a named
        group of test configurations (test_definitions). Visible to whoever can
        see its configuration: a draft''s are its author''s, a published
        configuration''s every member''s, who may create, rename, describe and
-       delete them on any version, published or not (decision 5). A new
-       version copies its source''s suites (decision 12).';
+       delete them on any version, published or not. A new version copies
+       its source''s suites.';
     comment on column test_suites.id is
       'the suite''s id (uuidv7). A version copy takes a new one per suite, in
        the source''s order, so (created_at, id) keeps that order.';
@@ -188,19 +182,19 @@ export const up = (pgm) => {
       'the configuration''s organization (fk_test_suites_configuration_version).
        A hard-deleted organization takes its suites.';
     comment on column test_suites.configuration_id is
-      'the configuration whose visibility the suite follows (D14b decision 8).';
+      'the configuration whose visibility the suite follows.';
     comment on column test_suites.configuration_version_id is
       'the version the suite belongs to (fk_test_suites_configuration_version).
        Never changed (test_suites_identity_unchanged).';
     comment on column test_suites.name is
-      'trimmed, 1 to 200 characters; not unique. Configuration text (ADR
-       0024): never in a log line, an attribute, an audit row or a URL.';
+      'trimmed, 1 to 200 characters; not unique. Configuration text:
+       never in a log line, an attribute, an audit row or a URL.';
     comment on column test_suites.description is
       'at most 2,000 characters; the empty string when there is none.
        Configuration text, as the name.';
     comment on column test_suites.created_by_user_id is
       'the member who created it, or who created the version whose copy it
-       is (decision 12): the insert policy admits only the context''s user.
+       is: the insert policy admits only the context''s user.
        Null once their account is hard-deleted; never changed otherwise.';
     comment on column test_suites.created_at is
       'written by the API from its clock, never now(), as configurations''
@@ -269,15 +263,15 @@ export const up = (pgm) => {
 
     comment on policy test_suites_select on test_suites is
       'the API''s role sees the suites of the configurations the context''s
-       user can see (configurations_select applies inside the exists, D14b
-       decision 8): a draft''s are its author''s, a published
-       configuration''s every member''s.';
+       user can see (configurations_select applies inside the exists): a
+       draft''s are its author''s, a published configuration''s every
+       member''s.';
     comment on policy test_suites_insert on test_suites is
       'the API''s role adds a suite only to a configuration the context''s
        user can see, as that user (42501 otherwise).';
     comment on policy test_suites_update on test_suites is
       'the API''s role renames and describes only the suites it can see,
-       on any version (D14b decision 5), and keeps them visible.';
+       on any version, and keeps them visible.';
     comment on policy test_suites_delete on test_suites is
       'the API''s role deletes only the suites it can see; their definitions
        go with them (fk_test_definitions_suite).';
@@ -307,7 +301,7 @@ export const up = (pgm) => {
       for each row execute function refuse_test_suite_identity_change();
 
     comment on function refuse_test_suite_identity_change() is
-      'a suite keeps its identity (D14b Preflight ruling 1), kept by the
+      'a suite keeps its identity, kept by the
        database for every role: its id, organization, configuration, version
        and created_at never change, and its creator only to null (the users
        foreign key''s on delete set null), as migration 022''s
@@ -341,12 +335,12 @@ export const up = (pgm) => {
     );
 
     comment on table test_definition_inputs is
-      'the inputs test definitions run (D14b decisions 1 and 4): each a copy
+      'the inputs test definitions run: each a copy
        of a test file or a template, made when a definition is created, its
        bytes in the FileStore at organizations/<org>/test-definition-inputs/<id>.
        A version copy''s definitions share their source''s inputs; an input
        is removed, row then bytes, once no definition names it, under the
-       configuration''s row lock (Preflight ruling 7). Visible to whoever can
+       configuration''s row lock. Visible to whoever can
        see its configuration. Never changed.';
     comment on column test_definition_inputs.id is
       'the input''s id, which names its bytes in the FileStore.';
@@ -354,16 +348,16 @@ export const up = (pgm) => {
       'the configuration''s organization. A hard-deleted organization takes
        its inputs'' rows (their bytes stay on disk until they are pruned).';
     comment on column test_definition_inputs.configuration_id is
-      'the configuration whose definitions use it (Preflight ruling 2): an
+      'the configuration whose definitions use it: an
        input is shared only within its configuration, so its visibility
        follows it, and the configuration''s lock serializes its reference
        count.';
     comment on column test_definition_inputs.file_name is
       'the original file''s name with its extension, 1 to 255 characters; a
-       run''s input_name copies it. Configuration text (ADR 0024): never in a
+       run''s input_name copies it. Configuration text: never in a
        log line, an attribute, an audit row or a URL.';
     comment on column test_definition_inputs.content_type is
-      'from the name''s last extension (D14a Preflight ruling 10), never the
+      'from the name''s last extension, never the
        browser''s MIME type or a sniff.';
     comment on column test_definition_inputs.size_bytes is
       'the copy''s size, at most 10,485,760 bytes.';
@@ -389,7 +383,7 @@ export const up = (pgm) => {
     comment on constraint ck_test_definition_inputs_content_type_present on test_definition_inputs is
       'a content type is named, at most 255 characters.';
     comment on constraint ck_test_definition_inputs_size_bytes on test_definition_inputs is
-      'an input is at most 10 MiB, as an upload (D14a decision 16).';
+      'an input is at most 10 MiB, as an upload.';
     comment on constraint ck_test_definition_inputs_sha256_length on test_definition_inputs is
       'a SHA-256 is 32 bytes.';
 
@@ -417,7 +411,7 @@ export const up = (pgm) => {
 
     comment on policy test_definition_inputs_select on test_definition_inputs is
       'the API''s role sees the inputs of the configurations the context''s
-       user can see (Preflight ruling 2): a draft''s file names stay its
+       user can see: a draft''s file names stay its
        author''s.';
     comment on policy test_definition_inputs_insert on test_definition_inputs is
       'the API''s role adds an input only to a configuration the context''s
@@ -425,7 +419,7 @@ export const up = (pgm) => {
     comment on policy test_definition_inputs_update on test_definition_inputs is
       'an input never changes: the API''s role updates none, and so locks
        none with FOR UPDATE (the reference count holds the configuration''s
-       lock instead, Preflight ruling 7).';
+       lock instead).';
     comment on policy test_definition_inputs_delete on test_definition_inputs is
       'the API''s role deletes only the inputs it can see; one a definition
        still names is refused at commit (fk_test_definitions_input).';
@@ -462,11 +456,11 @@ export const up = (pgm) => {
     );
 
     comment on table test_definitions is
-      'a suite''s test configurations (D14b decision 9): an input, a
-       pipeline, its signal and a duration, run from the Suites subtab.
-       Created and deleted, never changed (decision 2). Visible to whoever
-       can see its configuration; a run queued from one takes its input,
-       pipeline, signal and duration on the server (decision 7).';
+      'a suite''s test configurations: an input, a pipeline, its signal and a
+       duration, run from the Suites subtab. Created and deleted, never
+       changed. Visible to whoever can see its configuration; a run queued
+       from one takes its input, pipeline, signal and duration on the
+       server.';
     comment on column test_definitions.id is
       'the definition''s id (uuidv7). A version copy takes a new one.';
     comment on column test_definitions.organization_id is
@@ -481,11 +475,10 @@ export const up = (pgm) => {
        it goes with the suite.';
     comment on column test_definitions.input_id is
       'the input it runs, in the same configuration
-       (fk_test_definitions_input), shared with its version copies (D14b
-       decision 4).';
+       (fk_test_definitions_input), shared with its version copies.';
     comment on column test_definitions.name is
       'trimmed, 1 to 200 characters; the breadcrumb''s second part.
-       Configuration text (ADR 0024).';
+       Configuration text.';
     comment on column test_definitions.description is
       'at most 2,000 characters; the empty string when there is none.
        Configuration text.';
@@ -500,7 +493,7 @@ export const up = (pgm) => {
        writes it.';
     comment on column test_definitions.created_by_user_id is
       'the member who created it, or who created the version whose copy it
-       is (D14b decision 12): the insert policy admits only the context''s
+       is: the insert policy admits only the context''s
        user. Null once their account is hard-deleted.';
     comment on column test_definitions.created_at is
       'written by the API from its clock; a version copy writes the
@@ -518,8 +511,8 @@ export const up = (pgm) => {
        suite. On delete cascade: a suite''s definitions go with it.';
     comment on constraint fk_test_definitions_input on test_definitions is
       'a definition names an input of its own configuration and organization
-       (23503 otherwise). No action, deferrable initially deferred
-       (Preflight ruling 3): checked at commit, so removing an input a
+       (23503 otherwise). No action, deferrable initially deferred:
+       checked at commit, so removing an input a
        definition still names is refused then, while a configuration''s hard
        delete, whose cascade reaches the inputs before the definitions,
        still commits.';
@@ -535,8 +528,7 @@ export const up = (pgm) => {
       'traces, metrics or logs.';
     comment on constraint ck_test_definitions_pipeline_signal on test_definitions is
       'the pipeline''s name begins with its signal (logs, logs/app): a run
-       takes both from the definition with no contract check in between
-       (Preflight ruling 3).';
+       takes both from the definition with no contract check in between.';
     comment on constraint ck_test_definitions_duration_seconds on test_definitions is
       'a run lasts 1 to 60 seconds, as ck_test_runs_duration_seconds.';
 
@@ -580,14 +572,13 @@ export const up = (pgm) => {
 
     comment on policy test_definitions_select on test_definitions is
       'the API''s role sees the definitions of the configurations the
-       context''s user can see (D14b decision 8).';
+       context''s user can see.';
     comment on policy test_definitions_insert on test_definitions is
       'the API''s role adds a definition only to a configuration the
        context''s user can see, as that user (42501 otherwise): its creator
        can''t be forged.';
     comment on policy test_definitions_update on test_definitions is
-      'a definition never changes (D14b decision 2): the API''s role updates
-       none.';
+      'a definition never changes: the API''s role updates none.';
     comment on policy test_definitions_delete on test_definitions is
       'the API''s role deletes only the definitions it can see.';
 
@@ -620,7 +611,7 @@ export const up = (pgm) => {
     revoke delete on test_templates from telflo_platform_runtime;
 
     comment on table test_templates is
-      'product-wide sample test inputs (D14b decision 3). Global (ADR 0008): no organization column, no
+      'product-wide sample test inputs. Global: no organization column, no
        row-level security. Members read the live ones through the API; only
        a product admin (users.is_product_admin) writes them, which the API
        decides. Deletes are soft (deleted_at), so the API''s role has no
@@ -629,22 +620,20 @@ export const up = (pgm) => {
     comment on column test_templates.id is
       'the template''s id, which names its bytes in the FileStore.';
     comment on column test_templates.name is
-      'trimmed, 1 to 200 characters. Configuration text (ADR 0024): never in
+      'trimmed, 1 to 200 characters. Configuration text: never in
        a log line, an attribute, an audit row or a URL.';
     comment on column test_templates.description is
       'at most 2,000 characters; the empty string when there is none.';
     comment on column test_templates.receiver_type is
       'the receiver the sample suits, a palette receiver''s value (otlp,
-       filelog): lower-case words, which the API checks against its list
-       (D14b Preflight ruling 12).';
+       filelog): lower-case words, which the API checks against its list.';
     comment on column test_templates.signal is
       'the sample''s signal: traces, metrics or logs.';
     comment on column test_templates.file_name is
       'the uploaded file''s own name with its extension, 1 to 255
        characters; a run''s input_name copies it. Never changed.';
     comment on column test_templates.content_type is
-      'from the name''s last extension (D14a Preflight ruling 10). Never
-       changed.';
+      'from the name''s last extension. Never changed.';
     comment on column test_templates.size_bytes is
       'the bytes'' size, at most 10,485,760. Never changed.';
     comment on column test_templates.sha256 is
@@ -683,7 +672,7 @@ export const up = (pgm) => {
     comment on constraint ck_test_templates_content_type_present on test_templates is
       'a content type is named, at most 255 characters.';
     comment on constraint ck_test_templates_size_bytes on test_templates is
-      'a template is at most 10 MiB, as an upload (D14b decision 13).';
+      'a template is at most 10 MiB, as an upload.';
     comment on constraint ck_test_templates_sha256_length on test_templates is
       'a SHA-256 is 32 bytes.';
 
@@ -725,7 +714,7 @@ export const up = (pgm) => {
       for each row execute function refuse_test_template_change();
 
     comment on function refuse_test_template_change() is
-      'a template''s file never changes (D14b Preflight ruling 4): its id,
+      'a template''s file never changes: its id,
        file name, content type, size, SHA-256 and created_at are fixed, its
        creator changes only to null (the users foreign key''s on delete set
        null), and deleted_at goes only from null to a time, never back or to
@@ -751,13 +740,13 @@ export const up = (pgm) => {
 
     comment on column test_runs.test_suite_id is
       'for a run queued from a definition, or a re-run of one, the suite it
-       came from (D14b decision 11); null otherwise. No foreign key, as
+       came from; null otherwise. No foreign key, as
        source_run_id: the suite may be deleted, and the run keeps its
        snapshot.';
     comment on column test_runs.test_suite_name is
       'the suite''s name when the run was queued, the breadcrumb''s first
        part, 1 to 200 characters; null exactly when test_suite_id is.
-       Configuration text (ADR 0024).';
+       Configuration text.';
     comment on column test_runs.test_definition_id is
       'for a run queued from a definition, or a re-run of one, the definition
        it came from; null otherwise. No foreign key, as source_run_id.';
@@ -771,7 +760,7 @@ export const up = (pgm) => {
       'a definition''s name is 1 to 200 characters, as test_definitions.name.';
     comment on constraint ck_test_runs_breadcrumb_together on test_runs is
       'the breadcrumb''s four columns are all set (a run from a definition)
-       or all null (D14b Preflight ruling 5).';
+       or all null.';
 
     create index idx_test_runs_test_definition_id
       on test_runs (test_definition_id) where test_definition_id is not null;
@@ -780,9 +769,8 @@ export const up = (pgm) => {
       'a definition''s runs, for the runs queued from definitions only.';
 ${runGuard([...snapshotColumns028, ...breadcrumbColumns])}
     comment on function refuse_test_run_change() is
-      'the run''s rules, kept by the database for every role (D14a
-       Preflight ruling 8, D14b Preflight ruling 5): its snapshot and
-       identity, the breadcrumb (test_suite_id, test_suite_name,
+      'the run''s rules, kept by the database for every role: its snapshot
+       and identity, the breadcrumb (test_suite_id, test_suite_name,
        test_definition_id, test_definition_name) included, never change, and
        queued_by_user_id only to null (the users foreign key''s on delete set
        null); its status goes only queued → running or failed, and running →
@@ -794,10 +782,10 @@ ${waitingForContextUser(`
          and r.organization_id = ${contextOrganization}`)}
     comment on function test_runs_waiting_for_context_user() is
       'how many runs the context''s user has waiting in the context''s
-       organization (the cap of 50, per person, per organization: D14b
-       Preflight ruling 21). A count only; 0 without a user or an
-       organization in the context. SECURITY DEFINER, as migration 028 made
-       it: it counts runs the context may not see.';
+       organization (the cap of 50, per person, per organization). A count
+       only; 0 without a user or an organization in the context. SECURITY
+       DEFINER, as migration 028 made it: it counts runs the context may not
+       see.';
   `);
 };
 
@@ -805,13 +793,13 @@ export const down = (pgm) => {
   pgm.sql(`${waitingForContextUser("")}
     comment on function test_runs_waiting_for_context_user() is
       'how many runs the context''s user has waiting, in every organization
-       (D14a decision 19''s cap of 50). A count only; 0 without a user in the
+       (a cap of 50). A count only; 0 without a user in the
        context. SECURITY DEFINER, since their other organizations'' runs are
        invisible here.';
 ${runGuard(snapshotColumns028)}
     comment on function refuse_test_run_change() is
-      'the run''s rules, kept by the database for every role (D14a
-       Preflight ruling 8): its snapshot and identity never change, and
+      'the run''s rules, kept by the database for every role: its snapshot
+       and identity never change, and
        queued_by_user_id only to null (the users foreign key''s on delete
        set null); its status goes only queued → running or failed, and
        running → succeeded, failed or queued (release); and a run that keeps

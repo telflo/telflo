@@ -21,13 +21,12 @@ import { THROWAWAY_DATABASE_DROP_TIMEOUT } from "./test-database.js";
 import { PLATFORM_CONNECTION_OPTIONS, PLATFORM_MIGRATION_OPTIONS } from "./database-schema.js";
 
 /*
- * Migration 1700000000039 (D25 decision 32, Preflight ruling 8):
- * validation_rules.is_api_owned, the mark of a rule the public API's PUT
- * wrote, which its next PUT replaces. Its own file (Preflight ruling 26):
- * up, down and up again on a throwaway database over existing rows; the
- * column as the latest schema has it; and the identity trigger leaving it
- * out, so a person's edit of a rule (the API's role, in the person's
- * context, as the Validation tab's PATCH writes) keeps the mark as it is.
+ * Migration 1700000000039: validation_rules.is_api_owned, the mark of a rule
+ * the public API's PUT wrote, which its next PUT replaces. Its own file: up,
+ * down and up again on a throwaway database over existing rows; the column as
+ * the latest schema has it; and the identity trigger leaving it out, so a
+ * person's edit of a rule (the API's role, in the person's context, as the
+ * Validation tab's PATCH writes) keeps the mark as it is.
  */
 
 /** Migrations 1700000000000 to 1700000000038: the runner counts from _000. */

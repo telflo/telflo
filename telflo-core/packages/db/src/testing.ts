@@ -32,7 +32,7 @@ import { createDb, createPool } from "./pool.js";
 import { APPLICATION_ROLE } from "./application-role.js";
 import { testDatabaseUrl, testMigrationDatabaseUrl } from "./test-database.js";
 
-/** The mark of a test's own catalogue fixture row (D25 Ruling 179): test-database.ts' TEST_CATALOGUE_FIXTURE_NOTE. */
+/** The mark of a test's own catalogue fixture row: test-database.ts' TEST_CATALOGUE_FIXTURE_NOTE. */
 export { TEST_CATALOGUE_FIXTURE_NOTE } from "./test-database.js";
 
 /**
@@ -46,7 +46,7 @@ export interface TestDatabases {
   /**
    * The tables' owner (TELFLO_MIGRATION_DATABASE_URL): for fixtures,
    * `truncateAll`, `withFailingInsert` and reading rows back. Never given to
-   * a server under test (D5 decision 1).
+   * a server under test.
    */
   ownerDb: Kysely<Database>;
   /** Ends both pools. */
@@ -123,13 +123,13 @@ export const applicationTables = [
 ] as const;
 
 /**
- * The collector catalogue's tables (D13a, migration 1700000000023): global,
- * written only by the migration step's sync, which globalSetup runs once
- * per run. `truncateAll` leaves them, so every test sees the committed
- * catalogue; a test that needs another catalogue uses a throwaway database
- * or a rolled-back transaction, never `telflo_platform_test` itself (D13a Preflight
- * ruling 11). Every table is in this list or in `applicationTables`, which
- * schema.integration.test.ts checks against the database.
+ * The collector catalogue's tables (migration 1700000000023): global, written
+ * only by the migration step's sync, which globalSetup runs once per run.
+ * `truncateAll` leaves them, so every test sees the committed catalogue; a
+ * test that needs another catalogue uses a throwaway database or a rolled-back
+ * transaction, never `telflo_platform_test` itself. Every table is in this
+ * list or in `applicationTables`, which schema.integration.test.ts checks
+ * against the database.
  */
 export const catalogueTables = ["collector_versions", "collector_distributions"] as const;
 
@@ -156,17 +156,17 @@ export const singletonTables = ["otelcol_testing_state", "ottl_evaluator_state",
  * flows reference the catalogue's), so the cascade never reaches them.
  *
  * It empties `flows` too, the seeded flows (migration 1700000000026)
- * included: a test that needs them calls `insertSeededFlows` afterwards.
- * So too `test_regex` and its 35 seeded entries (migration 1700000000031):
- * `insertSeededTestRegexes` puts them back.
- * And it marks the tester and the evaluator up and lets everyone create an
- * organization again (`singletonTables`), so a test that changed one leaves
- * nothing behind. That last is the TESTS' baseline, not the migration's
- * default: a freshly migrated database lets only product admins create
- * organizations (migration 1700000000044, Q259), but most tests, and the
- * browser tests (e2e/global-setup.ts), create them as ordinary accounts; a
- * test of the switch turns it on itself, and schema.integration.test.ts
- * pins the migration's default.
+ * included: a test that needs them calls `insertSeededFlows` afterwards. So
+ * too `test_regex` and its 35 seeded entries (migration 1700000000031):
+ * `insertSeededTestRegexes` puts them back. And it marks the tester and the
+ * evaluator up and lets everyone create an organization again
+ * (`singletonTables`), so a test that changed one leaves nothing behind.
+ * That last is the TESTS' baseline, not the migration's default: a freshly
+ * migrated database lets only product admins create organizations
+ * (migration 1700000000044), but most tests, and the browser tests
+ * (e2e/global-setup.ts), create them as ordinary accounts; a test of the
+ * switch turns it on itself, and schema.integration.test.ts pins the
+ * migration's default.
  */
 export async function truncateAll(db: Kysely<Database>): Promise<void> {
   await withTestLockTimeout(db, async (transaction) => {
@@ -176,8 +176,8 @@ export async function truncateAll(db: Kysely<Database>): Promise<void> {
     // The tester and the evaluator up again, as a fresh database has them (singletonTables).
     await sql`update otelcol_testing_state set down_since = null`.execute(transaction);
     await sql`update ottl_evaluator_state set down_since = null`.execute(transaction);
-    // Anyone may create an organization again: the tests' baseline, not the migration's default
-    // (product_admins, Q259; D36-1 decision 51).
+    // Anyone may create an organization again: the tests' baseline, not the
+    // migration's default (product_admins).
     await sql`update site_settings set organization_creation = 'everyone'`.execute(transaction);
   });
 }
@@ -223,8 +223,8 @@ async function withTestLockTimeout<T>(
 }
 
 /**
- * A seeded flow as migration 1700000000026 holds it (D12 Preflight ruling 1):
- * its row, pinned, in the flows table's column names.
+ * A seeded flow as migration 1700000000026 holds it: its row, pinned, in the
+ * flows table's column names.
  */
 export interface SeededFlow {
   readonly slug: string;
@@ -258,8 +258,7 @@ export interface FlowsMigration {
  * Migration 1700000000026's module, by a dynamic import of a computed URL:
  * a static import would bring a file outside `src` (and with no types) into
  * the typecheck. The seeded flows' one copy is the migration's, which reads
- * no file (D12 Preflight ruling 1); this hands it to tests and their
- * fixtures.
+ * no file; this hands it to tests and their fixtures.
  */
 export async function loadFlowsMigration(): Promise<FlowsMigration> {
   const url = new URL("../migrations/1700000000026_flows.js", import.meta.url).href;
@@ -278,9 +277,9 @@ export async function insertSeededFlows(db: Kysely<Database>): Promise<void> {
 }
 
 /**
- * A seeded regex library entry as migration 1700000000031 holds it (D15b
- * Preflight ruling 1): its row, in the test_regex table's column
- * names, which is regex-library.ts's entry (its `pattern` is `regex`).
+ * A seeded regex library entry as migration 1700000000031 holds it: its row,
+ * in the test_regex table's column names, which is regex-library.ts's entry
+ * (its `pattern` is `regex`).
  */
 export interface SeededTestRegex {
   readonly name: string;
@@ -302,8 +301,7 @@ export interface TestRegexMigration {
 /**
  * Migration 1700000000031's module, by a dynamic import of a computed URL,
  * as `loadFlowsMigration`: the seeded entries' one copy is the migration's,
- * which reads no file (D15b Preflight ruling 1); this hands it to tests and
- * their fixtures.
+ * which reads no file; this hands it to tests and their fixtures.
  */
 export async function loadTestRegexMigration(): Promise<TestRegexMigration> {
   const url = new URL("../migrations/1700000000031_test_regex.js", import.meta.url).href;
@@ -347,7 +345,7 @@ export interface UserWithOrganization {
  *
  * Defaults: a unique email, a verified user with accepted terms, and a
  * personal organization named by the lowercased email (as the API names a
- * new one, D36-1 Q263) with an `admin` membership.
+ * new one) with an `admin` membership.
  */
 export async function createUserWithOrganization(
   db: Kysely<Database>,
@@ -558,13 +556,13 @@ export interface AddedServiceAccount {
 }
 
 /**
- * Inserts a service account in the shape D22's create writes (decision 27),
- * as the owner, in one transaction: a user of kind `service` at the
- * reserved domain (`<slug of the name>-<8 hex>@service-accounts.telflo.invalid`),
- * verified, with no password and no terms; its `service_accounts` row; and
- * one `contributor` membership in `organizationId`. No personal
- * organization, no settings, no identity, no session (the database refuses
- * the last two). Only on a database at migration 1700000000035 or later.
+ * Inserts a service account in the shape the API's create writes, as the
+ * owner, in one transaction: a user of kind `service` at the reserved domain
+ * (`<slug of the name>-<8 hex>@service-accounts.telflo.invalid`), verified,
+ * with no password and no terms; its `service_accounts` row; and one
+ * `contributor` membership in `organizationId`. No personal organization, no
+ * settings, no identity, no session (the database refuses the last two). Only
+ * on a database at migration 1700000000035 or later.
  */
 export async function addServiceAccount(
   db: Kysely<Database>,
@@ -618,8 +616,8 @@ export interface AddApiTokenInput extends Partial<Omit<Insertable<ApiTokensTable
 export interface AddedApiToken {
   apiToken: Selectable<ApiTokensTable>;
   /**
-   * The token itself, built at run time (D22 decision 48): a secret like a
-   * bearer. A test compares it or its hash, never prints it.
+   * The token itself, built at run time: a secret like a bearer. A test
+   * compares it or its hash, never prints it.
    */
   token: string;
 }
@@ -628,7 +626,7 @@ export interface AddedApiToken {
  * Inserts an API token on an existing service account, as the owner, past
  * row-level security, and hands back the token with the row: `tf_` and the
  * base64url of 32 random bytes, stored as its SHA-256 (hex) and its first
- * 11 characters, as D22's create mints it (decision 7). Any column may be
+ * 11 characters, as the API's create mints it. Any column may be
  * given, to start from a revoked, expired or used one; a given `token_hash`
  * or `token_prefix` replaces the minted token's (for a constraint's test),
  * and the token handed back then no longer matches the row.
@@ -665,15 +663,15 @@ export interface AddPersonalApiTokenInput extends Partial<Omit<Insertable<Person
 
 export interface AddedPersonalApiToken {
   personalApiToken: Selectable<PersonalApiTokensTable>;
-  /** The token itself, built at run time (D25, as D22 decision 48): a test compares it or its hash, never prints it. */
+  /** The token itself, built at run time: a test compares it or its hash, never prints it. */
   token: string;
 }
 
 /**
- * Inserts a person's own API token (D25 decision 27), as the owner, past
- * row-level security, and hands back the token with the row, minted as
- * `addApiToken`'s. Any column may be given (a revoked or expired one; a
- * given `token_hash` or `token_prefix` replaces the minted token's).
+ * Inserts a person's own API token, as the owner, past row-level security,
+ * and hands back the token with the row, minted as `addApiToken`'s. Any
+ * column may be given (a revoked or expired one; a given `token_hash` or
+ * `token_prefix` replaces the minted token's).
  *
  * Defaults: a unique name, read access, no expiry, made now.
  */
@@ -707,10 +705,10 @@ export interface AddUserFeedbackInput extends Partial<Omit<Insertable<UserFeedba
 }
 
 /**
- * A feedback item (D29 decision 22), pending unless `handled_at` and
- * `outcome` are given. Its text defaults to a fixed sentence holding no
- * one's data; created now. As the owner (the API's role may only insert,
- * without RETURNING): pass `ownerDb`.
+ * A feedback item, pending unless `handled_at` and `outcome` are given. Its
+ * text defaults to a fixed sentence holding no one's data; created now. As
+ * the owner (the API's role may only insert, without RETURNING): pass
+ * `ownerDb`.
  */
 export async function addUserFeedback(
   db: Kysely<Database>,
@@ -740,7 +738,7 @@ export interface AddConfigurationInput extends Partial<Omit<Insertable<Configura
   collector?: false;
 }
 
-/** The catalogue's default distribution (D13a decision 3), as `db` holds it. */
+/** The catalogue's default distribution, as `db` holds it. */
 async function defaultCollectorDistribution(db: Kysely<Database>): Promise<string> {
   const row = await db
     .selectFrom("collector_distributions")
@@ -764,10 +762,10 @@ async function defaultCollectorVersion(db: Kysely<Database>, distribution: strin
 }
 
 /**
- * The catalogue's default distribution and its default version (D13a
- * decisions 3 and 9), as `db` holds them: what a test writing a
- * configuration or a version by hand names, so that no test holds a second
- * default (a constant `0.162.0`) beside the catalogue's.
+ * The catalogue's default distribution and its default version, as `db` holds
+ * them: what a test writing a configuration or a version by hand names, so
+ * that no test holds a second default (a constant `0.162.0`) beside the
+ * catalogue's.
  */
 export async function catalogueDefaults(db: Kysely<Database>): Promise<{ distribution: string; version: string }> {
   const distribution = await defaultCollectorDistribution(db);
@@ -781,14 +779,14 @@ export async function catalogueDefaults(db: Kysely<Database>): Promise<{ distrib
  *
  * Defaults: a unique name, no description, no creator, `created_at` and
  * `updated_at` both the current time, and the catalogue's default
- * distribution, read from the catalogue's table (never a constant, D13a
- * decision 3). The table has no default for any of them (the API writes
- * them), so the fixture writes them.
+ * distribution, read from the catalogue's table (never a constant). The table
+ * has no default for any of them (the API writes them), so the fixture writes
+ * them.
  *
  * With no creator and no published version, the configuration is visible to
- * no one through the API's role (D11b decision 1, migration 021): a test
- * that reads it as a member names that member as `created_by_user_id`, or
- * publishes a version (`addConfigurationVersion`'s `publishedAt`).
+ * no one through the API's role (migration 021): a test that reads it as a
+ * member names that member as `created_by_user_id`, or publishes a version
+ * (`addConfigurationVersion`'s `publishedAt`).
  */
 export async function addConfiguration(
   db: Kysely<Database>,
@@ -827,8 +825,8 @@ export interface AddConfigurationVersionInput
    */
   organizationId: string;
   /**
-   * Publishes the version (D11b decision 10): sets `published_at`. Left out,
-   * the version is a draft.
+   * Publishes the version: sets `published_at`. Left out, the version is a
+   * draft.
    */
   publishedAt?: Date | null;
   /**
@@ -852,10 +850,10 @@ export interface AddConfigurationVersionInput
 }
 
 /**
- * A version's default pin (D13a decisions 3 and 9), from the catalogue's
- * tables: the configuration's distribution (the default distribution when
- * there is no such configuration, so a test of the configuration's foreign
- * key still reaches it) and that distribution's default version.
+ * A version's default pin, from the catalogue's tables: the
+ * configuration's distribution (the default distribution when there is no
+ * such configuration, so a test of the configuration's foreign key still
+ * reaches it) and that distribution's default version.
  */
 async function defaultCollectorPin(
   db: Kysely<Database>,
@@ -883,15 +881,16 @@ async function defaultCollectorPin(
  * row-level security. Any column may be given; the publish columns through
  * `publishedAt`, `publishedByUserId` and `publicationId`. Pass the owner's
  * connection: the API's role can't insert a published version at all
- * (migration 021, D11b Ruling 17), only publish a draft by an update.
+ * (migration 021), only publish a draft by an update.
  *
  * Defaults: version 1, empty YAML, no label (pass `label` to name it), no
- * creator, a draft, `created_at` and `updated_at` both the current time,
- * and the configuration's distribution pinned to its default version, read
- * from the catalogue's tables (never a constant, D13a decision 3). The
- * table has no default for the YAML, either timestamp or the pin (the API
- * always writes them), so the fixture writes them. `nodes`, `edges` and `pipelines` take the table's `'[]'`; a test
- * that gives one passes `JSON.stringify(array)`, as the repository does.
+ * creator, a draft, `created_at` and `updated_at` both the current time, and
+ * the configuration's distribution pinned to its default version, read from
+ * the catalogue's tables (never a constant). The table has no default for the
+ * YAML, either timestamp or the pin (the API always writes them), so the
+ * fixture writes them. `nodes`, `edges` and `pipelines` take the table's
+ * `'[]'`; a test that gives one passes `JSON.stringify(array)`, as the
+ * repository does.
  */
 export async function addConfigurationVersion(
   db: Kysely<Database>,
@@ -981,7 +980,7 @@ export async function addConfigurationVersionSelection(
 export interface AddTestInputFileInput
   extends Partial<Omit<Insertable<TestInputFilesTable>, "organization_id" | "owner_user_id">> {
   organizationId: string;
-  /** The person whose file it is: the only one who sees it (D14a decision 7). */
+  /** The person whose file it is: the only one who sees it. */
   ownerUserId: string;
 }
 
@@ -1015,9 +1014,8 @@ export async function addTestInputFile(
 
 /**
  * What only the tables' owner may write on a run's insert: the API's role
- * inserts a queued run at `now()` and nothing else (D14a Preflight ruling
- * 9), but a test of the queue needs runs queued at chosen times, running or
- * finished.
+ * inserts a queued run at `now()` and nothing else, but a test of the queue
+ * needs runs queued at chosen times, running or finished.
  */
 export interface TestRunState {
   status: TestRunStatus;
@@ -1063,7 +1061,7 @@ export interface AddTestRunInput
  * Defaults: a `logs` run of 5 seconds over `receivers: {}`, an input
  * `input.json` of 0 bytes, queued now, pinned to the configuration's
  * distribution (a YAML run's: the catalogue's default) and its default
- * version from the catalogue's tables (never a constant, D13a decision 3).
+ * version from the catalogue's tables (never a constant).
  */
 export async function addTestRun(
   db: Kysely<Database>,
@@ -1237,7 +1235,7 @@ export async function addTestTemplate(
     .executeTakeFirstOrThrow();
 }
 
-/** A library file's row (D23-2 decision 28), as the API writes one: no bytes in the file store. */
+/** A library file's row, as the API writes one: no bytes in the file store. */
 export async function addLibraryFile(
   db: Kysely<Database>,
   overrides: Partial<Insertable<LibraryFilesTable>> = {},
@@ -1509,24 +1507,23 @@ export async function dropFailingInsertLeftovers(ownerUrl: string): Promise<void
 }
 
 /**
- * Restores the grants a test takes away for a moment, which a killed run
- * would leave taken in the test database `ownerUrl` names: the
- * application role's on user_settings (migration 009's default privileges,
- * D21 Ruling 83), which sessions/routes.integration.test.ts revokes to make
- * the theme's read fail (left revoked, every later run's /me would answer
- * 500), and its INSERT on audit_events (migration 009's), which the
- * SystemRepository's test of a 42501 that isn't the gate's revokes (D29
- * Ruling 260). Idempotent: granting what is held changes nothing. Run once per test
- * run by the global setup, beside dropFailingInsertLeftovers, before any
- * test. It refuses a URL whose database doesn't end in `_test`
- * (testMigrationDatabaseUrl's guard), whoever calls it.
+ * Restores the grants a test takes away for a moment, which a killed run would
+ * leave taken in the test database `ownerUrl` names: the application role's on
+ * user_settings (migration 009's default privileges), which
+ * sessions/routes.integration.test.ts revokes to make the theme's read fail
+ * (left revoked, every later run's /me would answer 500), and its INSERT on
+ * audit_events (migration 009's), which the SystemRepository's test of a 42501
+ * that isn't the gate's revokes. Idempotent: granting what is held changes
+ * nothing. Run once per test run by the global setup, beside
+ * dropFailingInsertLeftovers, before any test. It refuses a URL whose database
+ * doesn't end in `_test` (testMigrationDatabaseUrl's guard), whoever calls it.
  */
 export async function restoreRevokedGrantLeftovers(ownerUrl: string): Promise<void> {
   const guarded = testMigrationDatabaseUrl({ TELFLO_TEST_MIGRATION_DATABASE_URL: ownerUrl });
   const db = createDb(createPool(guarded));
   try {
     await sql`grant select, insert, update, delete on user_settings to ${sql.id(APPLICATION_ROLE)}`.execute(db);
-    // D29 Ruling 260: the SystemRepository's test of a 42501 that isn't the gate's takes this INSERT for a moment.
+    // The SystemRepository's test of a 42501 that isn't the gate's takes this INSERT for a moment.
     await sql`grant insert on audit_events to ${sql.id(APPLICATION_ROLE)}`.execute(db);
   } finally {
     await db.destroy();

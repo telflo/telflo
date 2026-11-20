@@ -14,13 +14,13 @@ import {
 import type { TestDatabases } from "./testing.js";
 
 /**
- * personal_api_tokens and the lookup's person branch (D25 decisions 21 and
- * 27, migration 1700000000038; Preflight ruling 2): the lookup as the API's
- * real login, with no context; row-level security on the context's user, as
- * the API's role. schema.integration.test.ts has the migration's catalogue
- * (up, down, up); service-accounts.integration.test.ts the service-account
- * branch. No test prints a token: a failing assertion compares hashes, ids,
- * counts or booleans.
+ * personal_api_tokens and the lookup's person branch (migration
+ * 1700000000038): the lookup as the API's real login, with no context;
+ * row-level security on the context's user, as the API's role.
+ * schema.integration.test.ts has the migration's catalogue (up, down, up);
+ * service-accounts.integration.test.ts the service-account branch. No test
+ * prints a token: a failing assertion compares hashes, ids, counts or
+ * booleans.
  */
 describe("personal API tokens", () => {
   let databases: TestDatabases;
@@ -128,7 +128,7 @@ describe("personal API tokens", () => {
       expect(await ownerDb.selectFrom("personal_api_tokens").select("id").execute()).toEqual([]);
     });
 
-    it("an operator's hard delete takes every token of that person (revoked ones too) and no one else's (D25 Preflight ruling 14)", async () => {
+    it("an operator's hard delete takes every token of that person (revoked ones too) and no one else's", async () => {
       const ana = await createUserWithOrganization(ownerDb);
       const ben = await createUserWithOrganization(ownerDb);
       await addPersonalApiToken(ownerDb, { userId: ana.user.id, access: "write" });
@@ -229,7 +229,7 @@ describe("personal API tokens", () => {
             .execute(),
         ),
       ).rejects.toMatchObject({ code: "42501" });
-      // The same with NO WHERE (Ruling 162): an update that reads no column isn't checked against the select policy, so only
+      // The same with NO WHERE: an update that reads no column isn't checked against the select policy, so only
       // the update policy's WITH CHECK refuses moving Ana's tokens onto Ben.
       await expect(
         asUser(ana.user.id, (transaction) => sql`update personal_api_tokens set user_id = ${ben.user.id}`.execute(transaction)),

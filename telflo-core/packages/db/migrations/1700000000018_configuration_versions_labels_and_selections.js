@@ -1,10 +1,10 @@
 /**
- * Version labels, and each person's selected version (D10 decision 3).
+ * Version labels, and each person's selected version.
  *
  *   * configuration_versions.label: a version's name, null or 1 to 80
  *     characters. Null shows as "Version N". The API's contract and a check
  *     enforce the 80. No row is backfilled: every existing
- *     version stays unnamed (decision 14).
+ *     version stays unnamed.
  *   * configuration_versions gains unique (id, configuration_id,
  *     organization_id), which the selection's composite foreign key needs as
  *     its target. id alone is already unique; the wider key lets a selection
@@ -12,7 +12,7 @@
  *   * configuration_version_selections: one row per person and
  *     configuration, naming the version they last opened, so /editor/{id}
  *     opens it in any browser (not localStorage).
- *     organization_id is a real column (spec §3.8). Two composite foreign
+ *     organization_id is a real column. Two composite foreign
  *     keys hold it together: (configuration_id, organization_id) to the
  *     configuration, and (version_id, configuration_id, organization_id) to
  *     the version, so a selection can only name a version of its own
@@ -24,7 +24,7 @@
  *     a write that forgets it fails (23502).
  *   * Row-level security has migration 016's shape: every operation, for
  *     telflo_platform_runtime, is limited to the organization the database context
- *     names (ADR 0022). No `force`, so the owner (migrations, fixtures) stays
+ *     names. No `force`, so the owner (migrations, fixtures) stays
  *     exempt. The policies limit a selection to its organization, not to its
  *     person: the repository filters by user_id, and no endpoint reads
  *     another person's.
@@ -49,19 +49,19 @@ export const up = (pgm) => {
         unique (id, configuration_id, organization_id);
 
     comment on column configuration_versions.label is
-      'the version''s name (D10 decision 3): null, shown as "Version N", or 1
-       to 80 characters, trimmed by the API''s contract. The starter
+      'the version''s name: null, shown as "Version N", or 1 to 80
+       characters, trimmed by the API''s contract. The starter
        configuration''s version 1 is "Initial version"; every other version 1,
-       and every version before D10, is unnamed. Renaming sets only this
-       column: it moves no updated_at (decision 6).';
+       and every version from before this column, is unnamed. Renaming sets
+       only this column: it moves no updated_at.';
     comment on constraint ck_configuration_versions_label_length on configuration_versions is
-      'null or 1 to 80 characters (decision 3), the backstop behind the API''s
+      'null or 1 to 80 characters, the backstop behind the API''s
        contract: the empty string is refused, since an unnamed version stores
        null. char_length counts code points, and the contract UTF-16 units,
        which are never fewer: the contract is the stricter.';
     comment on constraint uq_configuration_versions_id_configuration_organization on configuration_versions is
       'the target of configuration_version_selections'' composite foreign key
-       to a version (decision 3). id is unique on its own; this wider key is
+       to a version. id is unique on its own; this wider key is
        what lets a selection name a version together with its configuration
        and organization, so it can''t name another configuration''s version.';
 
@@ -83,14 +83,14 @@ export const up = (pgm) => {
     );
 
     comment on table configuration_version_selections is
-      'the version each person last opened of each configuration (D10 decision
-       3), so /editor/{id} opens it again, in any browser. One row per person
+      'the version each person last opened of each configuration, so
+       /editor/{id} opens it again, in any browser. One row per person
        and configuration, replaced on every open. Never shown to anyone but
        its person. No delete of its own: it goes with its configuration, its
        version or its person.';
     comment on column configuration_version_selections.organization_id is
       'the owning organization, the configuration''s own: a real column, as
-       every organization-owned table has (spec §3.8), so the organization
+       every organization-owned table has, so the organization
        scope and the policies compare one column with no join. Both composite
        foreign keys keep it equal to the configuration''s and the version''s.';
     comment on column configuration_version_selections.configuration_id is
@@ -110,7 +110,7 @@ export const up = (pgm) => {
        fails.';
 
     comment on constraint fk_configuration_version_selections_configuration on configuration_version_selections is
-      'the composite foreign key (spec §3.8): a selection names a
+      'the composite foreign key: a selection names a
        configuration and that configuration''s own organization, or the row is
        refused (23503), even for the owner. Cascades, so a hard-deleted
        configuration (or organization, through it) takes its selections.';
@@ -118,11 +118,11 @@ export const up = (pgm) => {
       'a selection names a version of its own configuration in its own
        organization, or the row is refused (23503), even for the owner: the
        triple must exist in configuration_versions. Cascades with the
-       version, which goes only with its configuration (decision 2).';
+       version, which goes only with its configuration.';
     comment on constraint uq_configuration_version_selections_organization_user_config on configuration_version_selections is
       'one selection per person and configuration: recording one again
-       replaces it (on conflict … do update). Led by the organization, as
-       §3.8''s indexes are; the repository''s find reads by it.';
+       replaces it (on conflict … do update). Led by the organization; the
+       repository''s find reads by it.';
 
     create index idx_configuration_version_selections_version
       on configuration_version_selections (version_id, configuration_id, organization_id);
@@ -167,7 +167,7 @@ export const up = (pgm) => {
       'the API''s role replaces only the context''s organization''s
        selections, and can''t move one into another organization.';
     comment on policy configuration_version_selections_delete on configuration_version_selections is
-      'nothing deletes a selection on its own in D10 (it goes with its
+      'nothing deletes a selection on its own (it goes with its
        configuration, version or person), but a policy keeps a future delete
        inside the organization.';
   `);

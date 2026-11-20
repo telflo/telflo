@@ -1,5 +1,5 @@
 /**
- * Organization invitations (D6 decisions 1, 2 and 9).
+ * Organization invitations.
  *
  *   * An invitation is its own row, addressed to an email, rather than an
  *     `invited` membership: no account exists until the invitee
@@ -15,8 +15,8 @@
  *   * An invitee acts before they belong to the organization, so the token
  *     has to find its invitation first. organization_invitation_by_token_hash
  *     is SECURITY DEFINER and keyed by the token's hash, a secret, rather than
- *     by the database context (ADR 0023 amends ADR 0022 for it). Everything
- *     after the lookup sets the context and goes through the policies.
+ *     by the database context. Everything after the lookup sets the context
+ *     and goes through the policies.
  *
  * Migration 009's default privileges already give telflo_platform_runtime select,
  * insert, update and delete on the new table, so nothing is granted here.
@@ -52,7 +52,7 @@ export const up = (pgm) => {
 
     comment on table organization_invitations is
       'an admin''s invitation of an email address into an organization, with
-       the role the invitee will have (D6 decision 1). Pending while
+       the role the invitee will have. Pending while
        accepted_at and revoked_at are both null; a pending invitation past
        expires_at is expired, stays listed, and Resend revives it. Rows are
        never deleted by the API: accepted and revoked ones are the audit
@@ -64,8 +64,7 @@ export const up = (pgm) => {
     comment on column organization_invitations.email is
       'the invited address, lowercased (ck_organization_invitations_email_lowercase),
        so the one-pending index and the accepting account''s email compare
-       without case. Only an account with this address may accept (D6
-       decision 3).';
+       without case. Only an account with this address may accept.';
     comment on column organization_invitations.token_hash is
       'sha-256 of the link''s token, as for verification and reset tokens.
        The plaintext is emailed, in the link''s fragment, and never stored.
@@ -98,9 +97,9 @@ export const up = (pgm) => {
       'a token finds at most one invitation. 256 random bits never collide in
        practice; this makes a collision an error rather than an ambiguity.';
     comment on index uq_organization_invitations_one_pending is
-      'one pending invitation per address per organization (D6 decision 1),
-       expired ones included. Accepted and revoked invitations fall out of it,
-       so the address can be invited again.';
+      'one pending invitation per address per organization, expired ones
+       included. Accepted and revoked invitations fall out of it, so the
+       address can be invited again.';
     comment on index idx_organization_invitations_organization_id is
       'the Invited tab lists an organization''s invitations, and a hard delete
        of an organization cascades to them. The one-pending index covers
@@ -127,7 +126,7 @@ export const up = (pgm) => {
       for delete to telflo_platform_runtime
       using (organization_id = ${contextOrganization});
 
-    -- The invitee's only way past the policies (D6 decision 9): the
+    -- The invitee's only way past the policies: the
     -- invitation whose hash matches, in any state, with its organization's
     -- name and whether that organization is live. It reads nothing else.
     -- The caller decides what each state means and, once the token has found
@@ -159,11 +158,10 @@ export const up = (pgm) => {
 
     comment on function organization_invitation_by_token_hash(text) is
       'the invitation a token''s hash names, past row-level security: an
-       invitee holds the token before they belong to the organization (D6
-       decision 9). Keyed by a secret of 256 random bits rather than by the
-       database context, the one definer function that is (ADR 0023). Only
-       telflo_platform_runtime may run it, and the API calls it from one place,
-       findInvitationByTokenHash.';
+       invitee holds the token before they belong to the organization. Keyed
+       by a secret of 256 random bits rather than by the database context,
+       the one definer function that is. Only telflo_platform_runtime may run
+       it, and the API calls it from one place, findInvitationByTokenHash.';
 
     -- Functions are executable by public by default; this one reads past the
     -- policies, so only the API's role may run it.

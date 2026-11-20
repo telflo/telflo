@@ -22,15 +22,14 @@ import { THROWAWAY_DATABASE_DROP_TIMEOUT } from "./test-database.js";
 import { PLATFORM_CONNECTION_OPTIONS, PLATFORM_MIGRATION_OPTIONS } from "./database-schema.js";
 
 /*
- * Migration 1700000000040 (D25 decision 39, Q168; Preflight ruling 12): test
- * runs of a YAML with no configuration. Its own file (Preflight ruling 26):
- * on the latest schema, the together check, the select and insert policies
- * (a YAML run is its creator's alone, in its organization; the insert keeps
- * migration 028's other conditions) and the replaced claim (a waiting YAML
- * run of a deleted organization fails `organization_deleted` and is never
- * claimed; a live one is claimed); then up, down and up again on a
- * throwaway database: down restores migration 028's columns, check-less
- * table, policies, claim and comments exactly, deleting the YAML runs.
+ * Migration 1700000000040: test runs of a YAML with no configuration. Its own
+ * file: on the latest schema, the together check, the select and insert
+ * policies (a YAML run is its creator's alone, in its organization; the insert
+ * keeps migration 028's other conditions) and the replaced claim (a waiting
+ * YAML run of a deleted organization fails `organization_deleted` and is never
+ * claimed; a live one is claimed); then up, down and up again on a throwaway
+ * database: down restores migration 028's columns, check-less table, policies,
+ * claim and comments exactly, deleting the YAML runs.
  *
  * The database context is set with set_config, as context.ts sets it, and
  * as test-runs.integration.test.ts does: these tests are the database's own.
@@ -42,8 +41,8 @@ const THROUGH_039 = 40;
 /** The claim's failure of a deleted organization's waiting YAML runs, as migration 040 inserts it in 028's source. */
 const YAML_RUNS_FAILURE = `
       -- A waiting YAML run (no configuration: the join above never sees it)
-      -- of a deleted organization fails here too, rather than runs (D25
-      -- Preflight ruling 12). Its files stay.
+      -- of a deleted organization fails here too, rather than runs. Its files
+      -- stay.
       update platform.test_runs t
          set status = 'failed',
              finished_at = moment,
@@ -400,7 +399,7 @@ describe("YAML test runs (migration 1700000000040)", () => {
             const original = policy(before.policies, name)!;
             expect(widened.roles).toBe(original.roles);
             expect(widened.command).toBe(original.command);
-            expect(widened.comment).toContain("D25 decision 39");
+            expect(widened.comment).toContain("YAML run");
             expect(`${widened.using ?? ""}${widened.check ?? ""}`).toContain("configuration_id IS NULL");
           }
           expect(policy(after.policies, "test_runs_insert")!.check).toContain("queued_at = now()");

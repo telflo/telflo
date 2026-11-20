@@ -1,15 +1,15 @@
 /**
- * Organizations and their memberships (D1b), plus a backfill that gives every
+ * Organizations and their memberships, plus a backfill that gives every
  * existing account a personal organization.
  *
- * Built to D5's rules from the start (spec §3.8, §3.12). The rule that no
- * account exists without a membership is enforced by the next migration,
- * once registration and the tests create organizations together with users.
+ * The rule that no account exists without a membership is enforced by the
+ * next migration, once registration and the tests create organizations
+ * together with users.
  */
 export const up = (pgm) => {
   pgm.sql(`
-    -- Postgres enum types with singular names (spec §3.12). The roles carry
-    -- no "org_" prefix (a banned one).
+    -- Postgres enum types with singular names. The roles carry no "org_"
+    -- prefix (a banned one).
     create type organization_type as enum ('personal', 'group');
     create type organization_role as enum ('admin', 'contributor', 'viewer');
 
@@ -24,30 +24,30 @@ export const up = (pgm) => {
       constraint ck_organizations_name_length check (char_length(name) between 1 and 300)
     );
 
-    -- Neither this table nor organization_members carries spec §3.8's
-    -- unique (id, organization_id) composite foreign-key target:
+    -- Neither this table nor organization_members carries a unique
+    -- (id, organization_id) composite foreign-key target:
     -- organizations.id is itself the organization id, and nothing references
     -- a membership yet. Add the pattern when a child table needs it.
     comment on table organizations is
       'the tenant boundary. Every account belongs to at least one. Name
        uniqueness is deliberately absent: a global unique name would let anyone
        block a future signup by taking its derived personal name, and would
-       reveal whether an email has an account. D5 decides group-name uniqueness
-       (D1b decision 5).';
+       reveal whether an email has an account. A later migration decides
+       group-name uniqueness.';
     comment on column organizations.name is
       'a personal organization is named <lowercased email>''s workspace. The
        300-character limit guards against unbounded input (at most 254
-       characters of email plus the 12-character suffix); D5 may revise it.';
+       characters of email plus the 12-character suffix).';
     comment on column organizations.type is
       'personal: created with the account at registration, one per user. group:
-       created and shared deliberately (D5).';
+       created and shared deliberately.';
     comment on column organizations.owner_user_id is
       'cascades on user deletion: a hard-deleted user takes their personal
        organization with them. Users are normally soft-deleted, so this matters
-       mainly for tests and operator cleanup. D5 revisits it for group
-       organizations, whose owner leaving must not delete them (D1b decision 7).';
+       mainly for tests and operator cleanup. A later migration revisits it
+       for group organizations, whose owner leaving must not delete them.';
 
-    -- One personal organization per user (D1b decision 3).
+    -- One personal organization per user.
     create unique index uq_organizations_owner_user_id_personal
       on organizations (owner_user_id) where type = 'personal';
 
@@ -62,18 +62,18 @@ export const up = (pgm) => {
 
     comment on table organization_members is
       'a user''s membership of an organization, with a role. Member status
-       (invited, active, removed) is deferred to D5 and D6.';
+       (invited, active, removed) is deferred to later migrations.';
 
     create unique index uq_organization_members_organization_id_user_id
       on organization_members (organization_id, user_id);
     create index idx_organization_members_user_id on organization_members (user_id);
 
-    -- Backfill: every account that predates D1b gets a personal organization
-    -- and an admin membership, exactly as registration now creates them, and
-    -- the audit events registration writes for them: organization.created
-    -- and organization_member.added, each attributed to the owner and marked
-    -- source backfill. Set-based: the inserts chain through data-modifying
-    -- CTEs. audit_events is append-only, but its
+    -- Backfill: every account that predates this migration gets a personal
+    -- organization and an admin membership, exactly as registration now
+    -- creates them, and the audit events registration writes for them:
+    -- organization.created and organization_member.added, each attributed to
+    -- the owner and marked source backfill. Set-based: the inserts chain
+    -- through data-modifying CTEs. audit_events is append-only, but its
     -- trigger blocks only update and delete; inserts are allowed.
     --
     -- Soft-deleted users are skipped: a departed account should not gain an

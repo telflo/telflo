@@ -1,5 +1,5 @@
 /**
- * The rules the public API owns (D25 decision 32; Preflight ruling 8).
+ * The rules the public API owns.
  *
  *   * validation_rules.is_api_owned: true for a rule written by the public
  *     API's PUT of a version's validation pipeline
@@ -28,8 +28,8 @@ export const up = (pgm) => {
       add column is_api_owned boolean not null default false;
 
     comment on column validation_rules.is_api_owned is
-      'true for a rule the public API''s PUT of its validation pipeline wrote
-       (D25 decision 32), which the next PUT on that pipeline replaces; false
+      'true for a rule the public API''s PUT of its validation pipeline wrote,
+       which the next PUT on that pipeline replaces; false
        for a person''s (the Validation tab''s), which the PUT keeps. A version
        copy keeps it. A person''s edit of the rule doesn''t change it.';
   `);

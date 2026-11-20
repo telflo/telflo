@@ -8,13 +8,13 @@ import { dropFailingInsertLeftovers, openTestDatabases, truncateAll, withFailing
 import type { TestDatabases } from "./testing.js";
 
 /**
- * withFailingInsert's own guarantees (D16b Rulings 24 and 27): it refuses
- * to nest, its clean-up cancels only an insert its trigger left waiting
- * (never a session that merely reads the table) and gives up within
- * vitest's 5 s test timeout naming what holds the table, after one attempt
- * when it cancelled nothing, keeping a failed body's error as the cause; and
- * a killed run's leftovers are dropped by the global setup's
- * dropFailingInsertLeftovers, which refuses a database not made for tests.
+ * withFailingInsert's own guarantees: it refuses to nest, its clean-up cancels
+ * only an insert its trigger left waiting (never a session that merely reads
+ * the table) and gives up within vitest's 5 s test timeout naming what holds
+ * the table, after one attempt when it cancelled nothing, keeping a failed
+ * body's error as the cause; and a killed run's leftovers are dropped by the
+ * global setup's dropFailingInsertLeftovers, which refuses a database not made
+ * for tests.
  */
 describe("withFailingInsert", () => {
   let databases: TestDatabases;

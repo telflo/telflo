@@ -4,12 +4,11 @@ import type { Database } from "./schema.js";
 import { catalogueTables, openTestDatabases, type TestDatabases } from "./testing.js";
 
 /**
- * collector_distributions and collector_versions (D13a decision 12,
- * migration 1700000000023): global tables the migration step's sync writes
- * as the owner, which the API's role may only read. Nothing here writes
- * them in telflo_platform_test: every write the API's role tries is refused, and
- * the sync's own tests run on a throwaway database
- * (collector-catalogue/sync.integration.test.ts).
+ * collector_distributions and collector_versions (migration 1700000000023):
+ * global tables the migration step's sync writes as the owner, which the API's
+ * role may only read. Nothing here writes them in telflo_platform_test: every
+ * write the API's role tries is refused, and the sync's own tests run on a
+ * throwaway database (collector-catalogue/sync.integration.test.ts).
  */
 describe("the collector catalogue's tables", () => {
   let databases: TestDatabases;

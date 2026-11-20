@@ -1,7 +1,6 @@
 /**
- * Test runs of a YAML with no configuration (D25 decision 39, Q168;
- * Preflight ruling 12): the public API's `POST /api/public/v1/test-runs`
- * with `{ yaml }`, a raw-YAML run.
+ * Test runs of a YAML with no configuration: the public API's
+ * `POST /api/public/v1/test-runs` with `{ yaml }`, a raw-YAML run.
  *
  *   * test_runs.configuration_id and configuration_version_id become
  *     nullable, both null or both set (ck_test_runs_configuration_together);
@@ -17,14 +16,14 @@
  *     organization. The insert keeps 028's other conditions (queued, as the
  *     context's user, at now()). The update and delete policies, and the
  *     dispatcher's functions' rights, are unchanged.
- *   * test_runs_claim is replaced (Preflight ruling 12, the bug Preflight A
- *     proved): 028's claim fails a waiting run whose configuration or
- *     organization is deleted only through the configurations join, so a
- *     YAML run of a deleted organization would be claimed and run. It now
- *     also fails such a run (organization_deleted) before it picks, so one
- *     is never claimed. Everything else is 028's, byte for byte.
+ *   * test_runs_claim is replaced: 028's claim fails a waiting run whose
+ *     configuration or organization is deleted only through the
+ *     configurations join, so a YAML run of a deleted organization would be
+ *     claimed and run. It now also fails such a run (organization_deleted)
+ *     before it picks, so one is never claimed. Everything else is 028's,
+ *     byte for byte.
  *
- * Accepted (decision 39): test_runs_ahead joins configurations, so it has no
+ * Accepted: test_runs_ahead joins configurations, so it has no
  * row for a YAML run (the public reply has no queue position);
  * test_runs_waiting_for_context_user (migration 029's) counts YAML runs, as
  * the cap of 50 means to.
@@ -110,13 +109,13 @@ const claim = (afterDeletedConfigurations) => `
       -- each statement below takes its snapshot after the lock is held, so
       -- it sees every earlier claim's running runs.
       perform pg_advisory_xact_lock(hashtext('telflo.test_runs_claim'));
-      -- The claim's one time (D14a Ruling 22), read once the lock is held:
+      -- The claim's one time, read once the lock is held:
       -- every run queued before it is older. A run queued later, which a
       -- statement below could still see, waits for the next claim, so no
       -- run starts or fails before it was queued.
       moment := clock_timestamp();
       -- A waiting run whose configuration or organization is deleted fails
-      -- here, rather than runs (D14a Preflight ruling 7). Its files stay.
+      -- here, rather than runs. Its files stay.
       update platform.test_runs t
          set status = 'failed',
              finished_at = moment,
@@ -158,11 +157,11 @@ const claim = (afterDeletedConfigurations) => `
     $$;
 `;
 
-/** The YAML runs' own failure (Preflight ruling 12): no configuration, so only the organization decides. */
+/** The YAML runs' own failure: no configuration, so only the organization decides. */
 const failDeletedOrganizationsYamlRuns = `
       -- A waiting YAML run (no configuration: the join above never sees it)
-      -- of a deleted organization fails here too, rather than runs (D25
-      -- Preflight ruling 12). Its files stay.
+      -- of a deleted organization fails here too, rather than runs. Its files
+      -- stay.
       update platform.test_runs t
          set status = 'failed',
              finished_at = moment,
@@ -184,21 +183,20 @@ export const up = (pgm) => {
         check ((configuration_id is null) = (configuration_version_id is null));
 
     comment on column test_runs.configuration_id is
-      'the configuration run, or null for a YAML run (D25 decision 39: the
-       public API''s run of a text with no configuration, its creator''s
-       alone). A run is visible to whoever can see its configuration (D14a
-       decision 8), and hidden once it is deleted (decision 24): the
-       repository hides it, and the claim fails it if it was waiting.';
+      'the configuration run, or null for a YAML run (the public API''s run
+       of a text with no configuration, its creator''s alone). A run is
+       visible to whoever can see its configuration, and hidden once it is
+       deleted: the repository hides it, and the claim fails it if it was
+       waiting.';
     comment on column test_runs.configuration_version_id is
       'the version whose run list shows the run (fk_test_runs_configuration_version);
        null for a YAML run, which no run list shows.';
     comment on column test_runs.organization_id is
       'the run''s organization: its configuration''s (fk_test_runs_configuration),
-       or, for a YAML run (D25 decision 39), the one its creator queued it in.
+       or, for a YAML run, the one its creator queued it in.
        A hard-deleted organization takes its runs.';
     comment on constraint ck_test_runs_configuration_together on test_runs is
-      'a run names its configuration and its version, or neither (a YAML run,
-       D25 decision 39).';
+      'a run names its configuration and its version, or neither (a YAML run).';
 
     drop policy test_runs_select on test_runs;
     create policy test_runs_select on test_runs
@@ -216,27 +214,25 @@ export const up = (pgm) => {
 
     comment on policy test_runs_select on test_runs is
       'the API''s role sees the runs of the configurations the context''s
-       user can see (configurations_select applies inside the exists, D14a
-       decision 8): a draft''s runs are its author''s, a published
+       user can see (configurations_select applies inside the exists): a
+       draft''s runs are its author''s, a published
        configuration''s every member''s, past and future. A deleted
-       configuration''s included: the repository hides those (decision 24).
+       configuration''s included: the repository hides those.
        And the context''s user''s own YAML runs in the context''s
-       organization (D25 decision 39): no one else''s, an admin''s included.';
+       organization: no one else''s, an admin''s included.';
     comment on policy test_runs_insert on test_runs is
       'the API''s role queues a run only on a configuration the context''s
-       user can see, or with none (a YAML run, D25 decision 39) in the
-       context''s organization, as that user, queued, at now() (D14a
-       Preflight ruling 9: a backdated run can''t jump the queue); results
+       user can see, or with none (a YAML run) in the
+       context''s organization, as that user, queued, at now() (a
+       backdated run can''t jump the queue); results
        are refused by ck_test_runs_results_only_when_finished. 42501
        otherwise.';
 ${claim(failDeletedOrganizationsYamlRuns)}
     comment on function test_runs_claim(integer, integer) is
-      'the dispatcher''s claim (D14a decisions 1 and 11, Preflight ruling 7):
-       under an advisory lock, fails each waiting run whose configuration or
-       organization is deleted (configuration_deleted), and each waiting
-       YAML run whose organization is deleted (organization_deleted; D25
-       Preflight ruling 12), then marks running,
-       with a new lease expiring after the run''s duration plus
+      'the dispatcher''s claim: under an advisory lock, fails each waiting run
+       whose configuration or organization is deleted (configuration_deleted),
+       and each waiting YAML run whose organization is deleted
+       (organization_deleted), then marks running, with a new lease expiring after the run''s duration plus
        p_lease_overhead_seconds, as many waiting runs as p_slots leaves free
        beside the runs already running, in every organization. Each slot goes
        to the oldest waiting run of the person with the fewest runs running,
@@ -244,7 +240,7 @@ ${claim(failDeletedOrganizationsYamlRuns)}
        is its person''s running runs plus its place among their waiting ones.
        Runs with no person (their account hard-deleted) share one turn
        sequence, as one person''s. Its time is the clock once the lock is
-       held (D14a Ruling 22): a run queued after that waits for the next
+       held: a run queued after that waits for the next
        claim. Returns each claimed run''s snapshot, organization and lease.
        Only under READ COMMITTED (25000 otherwise): its cap needs each
        statement''s own snapshot. Commit at once: the lock is held until
@@ -255,18 +251,17 @@ ${claim(failDeletedOrganizationsYamlRuns)}
 export const down = (pgm) => {
   pgm.sql(`${claim("")}
     comment on function test_runs_claim(integer, integer) is
-      'the dispatcher''s claim (D14a decisions 1 and 11, Preflight ruling 7):
-       under an advisory lock, fails each waiting run whose configuration or
-       organization is deleted (configuration_deleted), then marks running,
-       with a new lease expiring after the run''s duration plus
-       p_lease_overhead_seconds, as many waiting runs as p_slots leaves free
+      'the dispatcher''s claim: under an advisory lock, fails each waiting run
+       whose configuration or organization is deleted (configuration_deleted),
+       then marks running, with a new lease expiring after the run''s duration
+       plus p_lease_overhead_seconds, as many waiting runs as p_slots leaves free
        beside the runs already running, in every organization. Each slot goes
        to the oldest waiting run of the person with the fewest runs running,
        then the oldest: the order (turn, queued_at, id), where a run''s turn
        is its person''s running runs plus its place among their waiting ones.
        Runs with no person (their account hard-deleted) share one turn
        sequence, as one person''s. Its time is the clock once the lock is
-       held (D14a Ruling 22): a run queued after that waits for the next
+       held: a run queued after that waits for the next
        claim. Returns each claimed run''s snapshot, organization and lease.
        Only under READ COMMITTED (25000 otherwise): its cap needs each
        statement''s own snapshot. Commit at once: the lock is held until
@@ -286,14 +281,14 @@ export const down = (pgm) => {
 
     comment on policy test_runs_select on test_runs is
       'the API''s role sees the runs of the configurations the context''s
-       user can see (configurations_select applies inside the exists, D14a
-       decision 8): a draft''s runs are its author''s, a published
+       user can see (configurations_select applies inside the exists): a
+       draft''s runs are its author''s, a published
        configuration''s every member''s, past and future. A deleted
-       configuration''s included: the repository hides those (decision 24).';
+       configuration''s included: the repository hides those.';
     comment on policy test_runs_insert on test_runs is
       'the API''s role queues a run only on a configuration the context''s
-       user can see, as that user, queued, at now() (D14a Preflight ruling 9:
-       a backdated run can''t jump the queue); results are refused by
+       user can see, as that user, queued, at now() (a backdated run can''t
+       jump the queue); results are refused by
        ck_test_runs_results_only_when_finished. 42501 otherwise.';
 
     delete from test_runs where configuration_id is null;
@@ -303,9 +298,9 @@ export const down = (pgm) => {
       alter column configuration_version_id set not null;
 
     comment on column test_runs.configuration_id is
-      'the configuration run. A run is visible to whoever can see it (D14a
-       decision 8), and hidden once it is deleted (decision 24): the
-       repository hides it, and the claim fails it if it was waiting.';
+      'the configuration run. A run is visible to whoever can see it, and
+       hidden once it is deleted: the repository hides it, and the claim
+       fails it if it was waiting.';
     comment on column test_runs.organization_id is
       'the configuration''s organization (fk_test_runs_configuration). A
        hard-deleted organization takes its runs.';

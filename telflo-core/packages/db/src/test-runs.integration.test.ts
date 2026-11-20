@@ -18,11 +18,10 @@ import {
 } from "./testing.js";
 
 /*
- * Migration 1700000000028 (D14a decisions 1, 7 to 9, 11, 12, 20 and 27;
- * Preflight rulings 7 to 9): test files, test runs, the run guard trigger,
- * the tester's state and the dispatcher's functions. Its up, down and up
- * again are schema.integration.test.ts's ("the test runs migration …").
- * The cross-tenant suite covers both tables from the resource registry,
+ * Migration 1700000000028: test files, test runs, the run guard trigger, the
+ * tester's state and the dispatcher's functions. Its up, down and up again are
+ * schema.integration.test.ts's ("the test runs migration …"). The cross-tenant
+ * suite covers both tables from the resource registry,
  * draft-privacy.integration.test.ts the runs' visibility within an
  * organization, and apps/api's test-run-functions.integration.test.ts the
  * dispatcher's functions refused from members' real contexts.
@@ -30,7 +29,7 @@ import {
  * The database context is set here with set_config, as context.ts sets it:
  * these tests are the database's own. The queue's turns and caps are
  * checked by what the functions return, never by time: every queued time
- * is chosen, in the past. The functions' own times (D14a Ruling 22) are
+ * is chosen, in the past. The functions' own times are
  * checked with two sessions: the dispatcher's transaction begins, another
  * session queues or claims and commits, then the dispatcher's function runs.
  */
@@ -56,9 +55,9 @@ interface Context {
   dispatcher?: boolean;
 }
 
-/** The message the reaper writes (D14a decision 29). */
+/** The message the reaper writes. */
 const INTERRUPTED = "The run was interrupted. Run it again.";
-/** The message the down rule writes (D14a decision 12). */
+/** The message the down rule writes. */
 const UNAVAILABLE = "Testing is unavailable right now. Try again later.";
 
 /** A fixed time in the past, which every chosen queued time counts from. */
@@ -746,7 +745,7 @@ describe("test runs and test files (migration 1700000000028)", () => {
       ).rejects.toMatchObject({ code: "42501" });
     });
 
-    it("claims in Q17's turns: Ana's ten runs, Ben's one and Cara's two (organization B), four slots: ana0, ben0, cara0, ana1, and n ahead counts in that order", async () => {
+    it("claims in per-person turns: Ana's ten runs, Ben's one and Cara's two (organization B), four slots: ana0, ben0, cara0, ana1, and n ahead counts in that order", async () => {
       const w = await world();
       const anas: string[] = [];
       for (let index = 0; index < 10; index += 1) {
@@ -1003,7 +1002,7 @@ describe("test runs and test files (migration 1700000000028)", () => {
     });
   });
 
-  describe("the dispatcher's times: the clock after its locks, never the transaction's start (D14a Ruling 22)", () => {
+  describe("the dispatcher's times: the clock after its locks, never the transaction's start", () => {
     /**
      * A dispatcher's transaction on its own connection, begun now and left
      * open while other sessions commit, with its start (now()) as text, so
@@ -1193,7 +1192,7 @@ describe("test runs and test files (migration 1700000000028)", () => {
       expect(await ahead({}, ids)).toEqual({});
     });
 
-    it("counts the context's user's waiting runs in the context's organization only (migration 1700000000029, D14b Preflight ruling 21), and nothing else", async () => {
+    it("counts the context's user's waiting runs in the context's organization only (migration 1700000000029), and nothing else", async () => {
       const w = await world();
       const personal = await ownerDb
         .selectFrom("organizations")

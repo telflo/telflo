@@ -7,10 +7,9 @@ import { addInvitation, addMembership, createUserWithOrganization, openTestDatab
 import type { TestDatabases } from "./testing.js";
 
 /**
- * organization_invitations (D6 decisions 1, 2 and 9, migration
- * 1700000000013): its constraints, as the owner; its row-level security and
- * the token lookup function, as the API's role (`db`), which the policies
- * constrain.
+ * organization_invitations (migration 1700000000013): its constraints, as the
+ * owner; its row-level security and the token lookup function, as the API's
+ * role (`db`), which the policies constrain.
  */
 describe("organization_invitations", () => {
   let databases: TestDatabases;

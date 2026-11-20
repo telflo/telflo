@@ -1,12 +1,11 @@
 /**
  * Configurations and their versions are never hard-deleted by the API's
- * role, and a configuration keeps its author (D11b Ruling 29, after the
- * final review's first finding).
+ * role, and a configuration keeps its author.
  *
  *   * Nothing in the platform hard-deletes a configuration or a version:
- *     deleting a configuration sets deleted_at (D7), and only its author or
- *     an admin may, which the API decides (D11b decision 2); a version goes
- *     only with its configuration. Yet migration 021's delete policies let
+ *     deleting a configuration sets deleted_at, and only its author or an
+ *     admin may, which the API decides; a version goes only with its
+ *     configuration. Yet migration 021's delete policies let
  *     telflo_platform_runtime delete any configuration the context's user can
  *     see, and any draft version of one. A configuration's delete cascades
  *     over its versions, published ones included, past the versions' own
@@ -39,7 +38,7 @@
  *     not SECURITY DEFINER: it reads only the row it is given. Its limits
  *     are operator-level (ALTER TABLE … DISABLE TRIGGER,
  *     session_replication_role = replica), which the API's role can do
- *     neither of (ADR 0022). Transferring a departing member's
+ *     neither of. Transferring a departing member's
  *     configurations, when it is built, will change this rule in a migration
  *     of its own.
  *   * The trigger fires before row-level security's update check, so an
@@ -77,17 +76,17 @@ export const up = (pgm) => {
       using (false);
 
     comment on policy configurations_delete on configurations is
-      'the API''s role deletes no configuration (D11b Ruling 29): deleting
+      'the API''s role deletes no configuration: deleting
        one sets deleted_at, and only its author or an admin may, which the
        API decides. A hard delete would cascade over its versions, published
        ones included, past their own policy and the immutability trigger.
        An organization''s hard delete still takes its configurations, as the
        tables'' owner.';
     comment on policy configuration_versions_delete on configuration_versions is
-      'the API''s role deletes no version (D11b Ruling 29): a version goes
+      'the API''s role deletes no version: a version goes
        only with its configuration, which the API never hard-deletes either.
        Never a published one, whose content a delete and an insert under the
-       same id would otherwise replace (Ruling 17), nor a draft.';
+       same id would otherwise replace, nor a draft.';
 
     -- Not SECURITY DEFINER: it reads only the row it is given, as whatever
     -- role runs the update. A fixed search_path all the same, as migration
@@ -113,10 +112,10 @@ export const up = (pgm) => {
       for each row execute function refuse_configuration_author_change();
 
     comment on function refuse_configuration_author_change() is
-      'a configuration keeps its author (D11b Ruling 29), kept by the
-       database and not just the API: the author/admin delete rule (D11b
-       decision 2) reads created_by_user_id, which a member who can update
-       a published configuration could otherwise set to themselves. Refuses
+      'a configuration keeps its author, kept by the database and not just
+       the API: the author/admin delete rule reads created_by_user_id, which
+       a member who can update a published configuration could otherwise set
+       to themselves. Refuses
        any change of created_by_user_id but to null (the users foreign
        key''s on delete set null), raising P0001 with a message naming only
        the configuration''s id. A same-value write passes. Not SECURITY
@@ -150,8 +149,8 @@ export const down = (pgm) => {
     comment on policy configuration_versions_delete on configuration_versions is
       'nothing deletes a version on its own (it goes with its
        configuration), but a policy keeps a future delete to the drafts of
-       configurations the context''s user can see. Never a published one
-       (D11b Ruling 17): the immutability trigger guards updates only, and a
+       configurations the context''s user can see. Never a published one:
+       the immutability trigger guards updates only, and a
        delete followed by an insert under the same id would otherwise
        replace a published version''s content.';
   `);

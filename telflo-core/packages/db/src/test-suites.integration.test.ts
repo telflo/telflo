@@ -20,15 +20,14 @@ import {
   type TestDatabases,
 } from "./testing.js";
 
-/** The two-session races' own timeout: above waitsOnLock's bound, so a race that never waits fails there first (Ruling 32). */
+/** The two-session races' own timeout: above waitsOnLock's bound, so a race that never waits fails there first. */
 const LOCK_RACE_TIMEOUT = 30_000;
 
-/** waitsOnLock's deadline, a hang guard well below LOCK_RACE_TIMEOUT (Ruling 36's nit): a race that never waits fails there, not at the test's timeout. */
+/** waitsOnLock's deadline, a hang guard well below LOCK_RACE_TIMEOUT: a race that never waits fails there, not at the test's timeout. */
 const LOCK_WAIT_DEADLINE_MS = 10_000;
 
 /*
- * Migration 1700000000029 (D14b decisions 1 to 5 and 8 to 13; Preflight
- * rulings 1 to 7 and 21): test suites, their definitions, the definitions'
+ * Migration 1700000000029: test suites, their definitions, the definitions'
  * inputs, test templates, the runs' breadcrumb and the per-organization
  * waiting count. Its up, down and up again are schema.integration.test.ts's
  * ("the test suites migration …"). The cross-tenant suite covers the three
@@ -37,11 +36,10 @@ const LOCK_WAIT_DEADLINE_MS = 10_000;
  * visibility within an organization through the API's context.
  *
  * The database context is set here with set_config, as context.ts sets it:
- * these tests are the database's own. The reference count (Preflight ruling
- * 7) is checked with two sessions as the API's login role, running the
- * statements the ruling names, since its repositories are Task 3's and 4's;
- * one session waits for the other's lock by a condition (pg_stat_activity),
- * never a time.
+ * these tests are the database's own. The reference count is checked with two
+ * sessions as the API's login role, running the API's repositories'
+ * statements; one session waits for the other's lock by a condition
+ * (pg_stat_activity), never a time.
  */
 
 /** Whom a transaction acts as: a member (a user, an organization), or nobody. */
@@ -419,7 +417,7 @@ describe("test suites, definitions, inputs and templates (migration 170000000002
                 created_at: new Date(),
               })
               .execute();
-            // Accepted until the commit: the key is deferred (Preflight ruling 3).
+            // Accepted until the commit: the key is deferred.
             return "inserted";
           }),
         ).rejects.toMatchObject(refusedBy("fk_test_definitions_input", "23503"));
@@ -458,7 +456,7 @@ describe("test suites, definitions, inputs and templates (migration 170000000002
       ).toEqual([input.id, other.input.id].sort());
     });
 
-    it("lets an operator hard-delete a configuration, its suites, definitions and inputs going with it (the deferred key, Preflight ruling 3), and an organization likewise, leaving others'", async () => {
+    it("lets an operator hard-delete a configuration, its suites, definitions and inputs going with it (the deferred key), and an organization likewise, leaving others'", async () => {
       const w = await world();
       await tree(w.draft, w.ana);
       const kept = await tree(w.published, w.ana);
@@ -886,8 +884,8 @@ describe("test suites, definitions, inputs and templates (migration 170000000002
      * A statement with no WHERE clause and no RETURNING reads no column, so
      * Postgres applies only its command's policy, not the select policy: the
      * probes above, by id, would pass with the update and delete policies cut
-     * to the organization (D14b Ruling 29). These reach Ana's draft through
-     * the update and delete policies alone.
+     * to the organization. These reach Ana's draft through the update and
+     * delete policies alone.
      */
     it("updates and deletes none of another member's draft's rows by a bare statement with no WHERE clause (the update and delete policies alone)", async () => {
       const w = await world();
@@ -920,7 +918,7 @@ describe("test suites, definitions, inputs and templates (migration 170000000002
         input: await sql`update test_definition_inputs set file_name = 'changed.json' where id = ${input.id}`.execute(
           transaction,
         ),
-        // A locking read takes the update policy too: it locks nothing (Preflight ruling 7).
+        // A locking read takes the update policy too: it locks nothing.
         locked: await sql`select id from test_definition_inputs where id = ${input.id} for update`.execute(transaction),
       }));
       expect(results.definition.numAffectedRows).toBe(0n);
@@ -959,17 +957,16 @@ describe("test suites, definitions, inputs and templates (migration 170000000002
   });
 
   /*
-   * The reference count (D14b decision 4, Preflight rulings 2 and 7): an
-   * input is in use while a definition names it. Every path that adds or
-   * removes a reference locks the organization FOR SHARE, then the
-   * configuration FOR UPDATE, so "no definition names it" can't change
-   * under a delete; fk_test_definitions_input, deferred, refuses the
-   * loser's commit when a path forgets the lock. These run the statements
-   * the ruling names, as the API's login role in two sessions: Ana deletes
-   * v1's last definition on input I while Ben creates a version from v1,
-   * whose copy names I.
+   * The reference count: an input is in use while a definition names it. Every
+   * path that adds or removes a reference locks the organization FOR SHARE,
+   * then the configuration FOR UPDATE, so "no definition names it" can't
+   * change under a delete; fk_test_definitions_input, deferred, refuses the
+   * loser's commit when a path forgets the lock. These run the API's
+   * repositories' statements, as the API's login role in two sessions: Ana
+   * deletes v1's last definition on input I while Ben creates a version from
+   * v1, whose copy names I.
    */
-  describe("the reference count, two sessions as the API's role (Preflight ruling 7)", () => {
+  describe("the reference count, two sessions as the API's role", () => {
     /** A session as the API's login role, in its own transaction with `context`. */
     const session = async (context: Required<Context>) => {
       const client = new pg.Client({ connectionString: process.env.TELFLO_DATABASE_URL });
@@ -991,7 +988,7 @@ describe("test suites, definitions, inputs and templates (migration 170000000002
      * them open (which would hold the locks truncateAll then waits on).
      */
     const waitsOnLock = async (pid: number) => {
-      // A time deadline, not a count of attempts: a slow query can't stretch it past LOCK_RACE_TIMEOUT (Rulings 32 and 36).
+      // A time deadline, not a count of attempts: a slow query can't stretch it past LOCK_RACE_TIMEOUT.
       const deadline = Date.now() + LOCK_WAIT_DEADLINE_MS;
       while (Date.now() < deadline) {
         const { rows } = await sql<{ waiting: boolean }>`
@@ -1011,7 +1008,7 @@ describe("test suites, definitions, inputs and templates (migration 170000000002
         (error: { code?: string }) => ({ ok: false as const, code: error.code }),
       );
 
-    /** The two locks every reference-changing path takes (Preflight ruling 7). */
+    /** The two locks every reference-changing path takes. */
     const lockConfiguration = async (s: Session, target: Target) => {
       await s.query("select id from organizations where id = $1 and deleted_at is null for share", [target.organizationId]);
       await s.query("select id from configurations where id = $1 and deleted_at is null for update", [target.configurationId]);
@@ -1034,7 +1031,7 @@ describe("test suites, definitions, inputs and templates (migration 170000000002
       ).rows
         .map((row) => row.id)
         .sort();
-    /** A version create from `sourceVersionId`, then its copy of the suites and definitions, as Task 4's statement. */
+    /** A version create from `sourceVersionId`, then its copy of the suites and definitions, as the API's statement. */
     const createVersionWithCopy = async (s: Session, target: Target, sourceVersionId: string, userId: string) => {
       const version = await s.query<{ id: string }>(
         `insert into configuration_versions (configuration_id, organization_id, version_number, yaml_content,

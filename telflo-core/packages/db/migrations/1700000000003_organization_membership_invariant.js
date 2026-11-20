@@ -1,22 +1,22 @@
 /**
- * The membership invariant (D1b decision 2): no account exists without an
- * organization. A transaction that would leave a user with no
- * organization_members row fails at commit, whichever code path it came from.
+ * The membership invariant: no account exists without an organization. A
+ * transaction that would leave a user with no organization_members row fails
+ * at commit, whichever code path it came from.
  *
  * The rule is **at least one membership**, not "has a personal organization".
  * Registration gives a human account a personal organization, but other kinds
  * of account may never have one: a service account is a users row
  * holding a single contributor membership in its target group organization and
  * no personal organization. That shape satisfies this invariant, provided the
- * account is created together with its membership in one transaction (D22).
+ * account is created together with its membership in one transaction.
  *
  * Documented limits, outside what row triggers can see:
  *   * TRUNCATE of organization_members alone empties it without firing any
  *     row trigger. That is an operator-level act, not an application path;
  *     the test helper truncates users in the same statement.
  *   * A superuser can disable triggers or set session_replication_role =
- *     replica, which skips them. The compose role is a superuser for now
- *     (ADR 0014); D5's non-superuser application role closes this.
+ *     replica, which skips them. The compose role is a superuser; the
+ *     non-superuser application role of a later migration closes this.
  */
 export const up = (pgm) => {
   pgm.sql(`
@@ -53,19 +53,19 @@ export const up = (pgm) => {
     -- is not soft-deleted, and has no membership:
     --   * the user is gone: hard-deleting a user cascades to their
     --     organizations and memberships, and must still work;
-    --   * the user is soft-deleted: their memberships are D5's concern, and
-    --     refusing them would stop account deletion from working.
+    --   * the user is soft-deleted: their memberships are left as they are,
+    --     and refusing them would stop account deletion from working.
     --
     -- Deleting an organization cascades to its memberships, so it fails only
     -- for a member for whom it held the last membership: for a human account,
-    -- normally the personal organization. D5 must delete or soft-delete such
-    -- an account in the same transaction (see the deliverable's Handoffs).
+    -- normally the personal organization. Such an account must be deleted or
+    -- soft-deleted in the same transaction.
     --
     -- SQLSTATE 23514 (check_violation): this is an integrity rule the schema
     -- cannot express as a check constraint, so it reports as one. Callers and
     -- tests match on the message, which names the user.
     --
-    -- When D5 adds row-level security, this function must still see every
+    -- Under row-level security, this function must still see every
     -- membership of the user it checks, or it will refuse valid commits.
     create function ensure_user_has_membership() returns trigger
     language plpgsql as $$

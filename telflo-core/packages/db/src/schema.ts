@@ -6,10 +6,10 @@ type CreatedAt = ColumnType<Date, never, never>;
 type UpdatedAt = ColumnType<Date, never, Date>;
 
 /**
- * A person or a service account (D22 decision 5, migration 1700000000035;
- * ADR 0025). Set at the insert, human when none is named, and never changed
- * but by an operator: a trigger (users_kind_immutable) refuses the API's
- * role any update that changes it (42501).
+ * A person or a service account (migration 1700000000035). Set at the insert,
+ * human when none is named, and never changed but by an operator: a trigger
+ * (users_kind_immutable) refuses the API's role any update that changes it
+ * (42501).
  */
 export type UserKind = "human" | "service";
 
@@ -18,7 +18,7 @@ export interface UsersTable {
   email: string;
   password_hash: string | null;
   email_verified_at: Date | null;
-  /** Null for a user who has accepted no terms yet (D2c decision 6). */
+  /** Null for a user who has accepted no terms yet. */
   accepted_terms_version: string | null;
   /** Null exactly when accepted_terms_version is (chk_users_terms_accepted_together). */
   terms_accepted_at: Date | null;
@@ -26,14 +26,14 @@ export interface UsersTable {
   updated_at: UpdatedAt;
   deleted_at: Date | null;
   /**
-   * A product admin (D12 decision 3, migration 1700000000026): false by
-   * default. Set and cleared only by an operator's SQL as the tables' owner:
-   * a trigger (users_product_admin_owner_only) refuses the API's role any
-   * insert with it true and any update that changes it (42501).
+   * A product admin (migration 1700000000026): false by default. Set and
+   * cleared only by an operator's SQL as the tables' owner: a trigger
+   * (users_product_admin_owner_only) refuses the API's role any insert with
+   * it true and any update that changes it (42501).
    */
   is_product_admin: Generated<boolean>;
   /**
-   * human by default (D22, migration 1700000000035). A service account
+   * human by default (migration 1700000000035). A service account
    * (kind service) holds an address at @service-accounts.telflo.invalid, no
    * password and a verified email, and has no identity and no session (the
    * migration's checks and triggers); nobody else holds such an address.
@@ -67,7 +67,7 @@ export interface AuditEventsTable {
 /** Postgres enum organization_type. */
 export type OrganizationType = "personal" | "group";
 
-/** Postgres enum organization_role. viewer was retired in migration 014 (D7 decision 2). */
+/** Postgres enum organization_role. viewer was retired in migration 014. */
 export type OrganizationRole = "admin" | "contributor";
 
 export interface OrganizationsTable {
@@ -80,23 +80,23 @@ export interface OrganizationsTable {
   updated_at: UpdatedAt;
   deleted_at: Date | null;
   /**
-   * The "Public install links" switch (D17d-2 decision 20, migration
-   * 1700000000033): whether the organization's Linux Quick Deploy and Helm
-   * values links work. True by default; only an admin changes it.
+   * The "Public install links" switch (migration 1700000000033): whether
+   * the organization's Linux Quick Deploy and Helm values links work. True
+   * by default; only an admin changes it.
    */
   public_install_links_enabled: Generated<boolean>;
   /**
-   * The logo's id (D23-2 decisions 12 and 27, migration 1700000000036): a
-   * new one per upload; its bytes are the file store's
-   * (`organizations/<id>/logos/<logo_id>`). Null: no logo. Set exactly when
-   * `logo_content_type` is (ck_organizations_logo).
+   * The logo's id (migration 1700000000036): a new one per upload; its
+   * bytes are the file store's (`organizations/<id>/logos/<logo_id>`).
+   * Null: no logo. Set exactly when `logo_content_type` is
+   * (ck_organizations_logo).
    */
   logo_id: string | null;
   /** The logo's type, read from its first bytes at upload (ck_organizations_logo). */
   logo_content_type: OrganizationLogoContentType | null;
 }
 
-/** A logo's stored type (D23-2 decision 12): PNG, JPEG or WebP, never SVG. */
+/** A logo's stored type: PNG, JPEG or WebP, never SVG. */
 export type OrganizationLogoContentType = "image/png" | "image/jpeg" | "image/webp";
 
 export interface OrganizationMembersTable {
@@ -111,9 +111,9 @@ export interface OrganizationMembersTable {
 }
 
 /**
- * An admin's invitation of an email address (D6 decision 1). Pending while
- * `accepted_at` and `revoked_at` are both null; expired once past
- * `expires_at`, which the API compares with its own clock.
+ * An admin's invitation of an email address. Pending while `accepted_at` and
+ * `revoked_at` are both null; expired once past `expires_at`, which the API
+ * compares with its own clock.
  */
 export interface OrganizationInvitationsTable {
   id: Generated<string>;
@@ -136,12 +136,12 @@ export interface OrganizationInvitationsTable {
 }
 
 /**
- * A quick-deploy link (D17c-2 decision 22, migration 1700000000032): a
- * member's install for one of the organization's fleets, whose secret
- * (stored only as its sha-256) downloads it without signing in. Active while
- * neither revoked nor past `expires_at`, which the API compares with its own
- * clock. Timestamps have no default: the API writes them from its clock. The
- * columns fixed at the insert can't be updated (a compile error).
+ * A quick-deploy link (migration 1700000000032): a member's install for one
+ * of the organization's fleets, whose secret (stored only as its sha-256)
+ * downloads it without signing in. Active while neither revoked nor past
+ * `expires_at`, which the API compares with its own clock. Timestamps have
+ * no default: the API writes them from its clock. The columns fixed at the
+ * insert can't be updated (a compile error).
  */
 export interface QuickDeployLinksTable {
   /** Picked by the API before the insert (select uuidv7()): the sealed values' associated data names it. */
@@ -174,16 +174,15 @@ export interface QuickDeployLinksTable {
 }
 
 /**
- * quick_deploy_links.choices as stored, by kind (D17d-2 decision 21,
- * migration 1700000000033's comment): a Linux link's (D17c-2's rows carry
- * no `kind`) or a Helm values link's. Never a value, a display name or the
- * secret.
+ * quick_deploy_links.choices as stored, by kind (migration 1700000000033's
+ * comment): a Linux link's (no `kind`, or kind linux) or a Helm values link's.
+ * Never a value, a display name or the secret.
  */
 export type QuickDeployLinkChoicesColumn = QuickDeployLinuxChoicesColumn | QuickDeployHelmChoicesColumn;
 
 /** A Linux link's choices: the bundle request's validated fields. */
 export interface QuickDeployLinuxChoicesColumn {
-  /** Absent on every row the platform writes (D17c-2's shape); "linux" is read alike. */
+  /** Absent on every row the platform writes; "linux" is read alike. */
   kind?: "linux";
   method: "all-in-one" | "own-binary";
   arch: "amd64" | "arm64";
@@ -197,7 +196,7 @@ export interface QuickDeployLinuxChoicesColumn {
   envNames: string[];
 }
 
-/** A Helm values link's choices, from the server's state at the link's making (D17d-2 Preflight ruling 11). */
+/** A Helm values link's choices, from the server's state at the link's making. */
 export interface QuickDeployHelmChoicesColumn {
   kind: "helm";
   /** The group's role on its fleet: Install Links names the Agent and the Cluster by it. */
@@ -210,8 +209,8 @@ export interface QuickDeployHelmChoicesColumn {
 }
 
 /**
- * An organization's collector configuration (D7 decision 4). Deleted softly:
- * the repository ignores a row once `deleted_at` is set.
+ * An organization's collector configuration. Deleted softly: the repository
+ * ignores a row once `deleted_at` is set.
  *
  * Both timestamps have no default: the API writes them from its injected
  * clock, never `now()`, so they hold whole milliseconds and the list's cursor
@@ -233,25 +232,24 @@ export interface ConfigurationsTable {
   updated_at: Date;
   deleted_at: Date | null;
   /**
-   * The distribution it is built for (D13a decision 5): written on create
-   * (the catalogue's default when none is named), never changed. The update
-   * type is `never`, and a trigger refuses a change for every role.
+   * The distribution it is built for: written on create (the catalogue's
+   * default when none is named), never changed. The update type is `never`,
+   * and a trigger refuses a change for every role.
    */
   collector_distribution: ColumnType<string, string, never>;
   /**
-   * The slug of the flow it was created from (D12 decision 9), or null for
-   * one created blank: written on create, never changed, returned nowhere
-   * (Preflight ruling 9). No foreign key: a flow may be deleted, and the
-   * configuration keeps its copy. Null when left out on insert.
+   * The slug of the flow it was created from, or null for one created
+   * blank: written on create, never changed, returned nowhere. No foreign
+   * key: a flow may be deleted, and the configuration keeps its copy. Null
+   * when left out on insert.
    */
   source_flow_slug: ColumnType<string | null, string | null | undefined, never>;
 }
 
 /**
- * A configuration's content, by version (D8 decision 3). No `deleted_at`: a
- * version is reachable only through a live configuration, and the
- * repository joins it on `(configuration_id, organization_id)`, the composite
- * foreign key, to check.
+ * A configuration's content, by version. No `deleted_at`: a version is
+ * reachable only through a live configuration, and the repository joins it on
+ * `(configuration_id, organization_id)`, the composite foreign key, to check.
  *
  * `yaml_content` and both timestamps have no default: the API writes the
  * timestamps from its injected clock, never `now()`, and always the YAML.
@@ -262,12 +260,12 @@ export interface ConfigurationVersionsTable {
   id: Generated<string>;
   configuration_id: string;
   organization_id: string;
-  /** From 1, unique within the configuration: the highest plus one, under the configuration's lock (D10 decision 5). */
+  /** From 1, unique within the configuration: the highest plus one, under the configuration's lock. */
   version_number: number;
   /**
-   * The version's name (D10 decision 3): null, shown as "Version N", or 1 to
-   * 80 characters, trimmed by the contract (ck_configuration_versions_label_length).
-   * Null when left out on insert.
+   * The version's name: null, shown as "Version N", or 1 to 80 characters,
+   * trimmed by the contract (ck_configuration_versions_label_length). Null
+   * when left out on insert.
    */
   label: string | null;
   /** Exactly as sent, `''` included; at most 262,144 characters. Private: never logged. */
@@ -279,18 +277,18 @@ export interface ConfigurationVersionsTable {
   /** From the API's clock, on insert and on every save. */
   updated_at: Date;
   /**
-   * The builder's layout (D9a decision 6), jsonb arrays defaulting to `'[]'`:
-   * the text wins, and each node's config is a copy of it, so private too.
-   * Written as `JSON.stringify(array)`: node-postgres would send a bare array
-   * as a Postgres array literal (D9a Preflight ruling 12). Read as parsed
-   * JSON; the API's contract shapes it.
+   * The builder's layout, jsonb arrays defaulting to `'[]'`: the text wins,
+   * and each node's config is a copy of it, so private too. Written as
+   * `JSON.stringify(array)`: node-postgres would send a bare array as a
+   * Postgres array literal. Read as parsed JSON; the API's contract shapes
+   * it.
    */
   nodes: JSONColumnType<unknown[], string | undefined, string>;
   edges: JSONColumnType<unknown[], string | undefined, string>;
   pipelines: JSONColumnType<unknown[], string | undefined, string>;
   /**
-   * When the version was published (D11b decision 10), from the API's clock;
-   * null on a draft. Set together with `publication_id`
+   * When the version was published, from the API's clock; null on a draft.
+   * Set together with `publication_id`
    * (ck_configuration_versions_published_at_publication_id). Once set, a
    * trigger refuses every change to the version but `updated_at`,
    * `created_by_user_id` and `published_by_user_id` becoming null.
@@ -306,20 +304,19 @@ export interface ConfigurationVersionsTable {
    */
   collector_distribution: ColumnType<string, string, never>;
   /**
-   * The collector version it is pinned to (D13a decision 8), a version of
+   * The collector version it is pinned to, a version of
    * `collector_distribution` in the catalogue. A first version gets the
-   * distribution's default, a new one its source's (decision 9). The
-   * published-version trigger refuses changing it once published.
+   * distribution's default, a new one its source's. The published-version
+   * trigger refuses changing it once published.
    */
   collector_version: string;
 }
 
 /**
- * The version each person last opened of each configuration (D10 decision
- * 3): one row per `(organization_id, user_id, configuration_id)`, replaced on
- * every open. Two composite foreign keys keep it to a version of its own
- * configuration in its own organization; it goes with its configuration, its
- * version or its person.
+ * The version each person last opened of each configuration: one row per
+ * `(organization_id, user_id, configuration_id)`, replaced on every open. Two
+ * composite foreign keys keep it to a version of its own configuration in its
+ * own organization; it goes with its configuration, its version or its person.
  *
  * `selected_at` has no default: the API writes it from its injected clock,
  * never `now()`. The insert type requires it, so a write that forgets it is
@@ -337,9 +334,9 @@ export interface ConfigurationVersionSelectionsTable {
 }
 
 /**
- * A collector distribution of the catalogue (D13a decision 1), global (ADR
- * 0008). Written only by the migration step's sync, as the tables' owner;
- * the API's role may only read it.
+ * A collector distribution of the catalogue, global. Written only by the
+ * migration step's sync, as the tables' owner; the API's role may only read
+ * it.
  */
 export interface CollectorDistributionsTable {
   /** `otelcol-contrib`: the catalogue file's name. */
@@ -351,16 +348,16 @@ export interface CollectorDistributionsTable {
   /** Exactly one distribution is the default (uq_collector_distributions_one_default). */
   is_default: boolean;
   /**
-   * The collector's renames, the catalogue file's `renamedTypes` in its
-   * order (D13b decision 6, migration 1700000000025). Defaults to `[]`, so
-   * an insert may leave it out.
+   * The collector's renames, the catalogue file's `renamedTypes` in its order
+   * (migration 1700000000025). Defaults to `[]`, so an insert may leave it
+   * out.
    */
   renamed_types: ColumnType<CollectorRenamedType[], string | undefined, string>;
 }
 
 /**
- * One of the collector's renames (D13b decision 6): from upstream's
- * `since` on, the `kind` of component `deprecatedName` is called `name`.
+ * One of the collector's renames: from upstream's `since` on, the `kind` of
+ * component `deprecatedName` is called `name`.
  */
 export interface CollectorRenamedType {
   kind: "receiver" | "processor" | "exporter" | "connector" | "extension";
@@ -375,7 +372,7 @@ export interface CollectorBinaryDownload {
   sha256: string;
 }
 
-/** A version's components by section (D13a decision 6). */
+/** A version's components by section. */
 export interface CollectorSupportedComponents {
   receivers: string[];
   processors: string[];
@@ -385,9 +382,9 @@ export interface CollectorSupportedComponents {
 }
 
 /**
- * A version of a collector distribution (D13a decisions 2 to 4), global
- * (ADR 0008). Written only by the migration step's sync; the API's role may
- * only read it. Never deleted, only deprecated.
+ * A version of a collector distribution, global. Written only by the
+ * migration step's sync; the API's role may only read it. Never deleted, only
+ * deprecated.
  */
 export interface CollectorVersionsTable {
   distribution: string;
@@ -415,10 +412,9 @@ export interface CollectorVersionsTable {
 export type FlowSource = "telflo" | "community";
 
 /**
- * A prebuilt collector configuration (D12 decision 2, migration
- * 1700000000026), global (ADR 0008): one row per flow, no history. Anyone
- * reads the published ones through the API; only a product admin writes
- * them, which the API decides.
+ * A prebuilt collector configuration (migration 1700000000026), global: one
+ * row per flow, no history. Anyone reads the published ones through the API;
+ * only a product admin writes them, which the API decides.
  *
  * Both timestamps have no default: the API writes them from its injected
  * clock, never `now()`, as configurations' (the seeded flows' are the
@@ -462,22 +458,22 @@ export interface FlowsTable {
 }
 
 /**
- * A person's test file in one organization, "My Files" (D14a decision 7,
- * migration 1700000000028). The bytes are in the FileStore; this is what
- * the list shows. Row-level security admits only its owner, in its
- * organization; nothing updates a row.
+ * A person's test file in one organization, "My Files" (migration
+ * 1700000000028). The bytes are in the FileStore; this is what the list
+ * shows. Row-level security admits only its owner, in its organization;
+ * nothing updates a row.
  */
 export interface TestInputFilesTable {
   id: Generated<string>;
   organization_id: ColumnType<string, string, never>;
   owner_user_id: ColumnType<string, string, never>;
-  /** Trimmed, 1 to 200 characters. Private text (ADR 0024). */
+  /** Trimmed, 1 to 200 characters. Private text. */
   display_name: ColumnType<string, string, never>;
   /** The upload's or sample's own name, 1 to 255 characters. Private text. */
   file_name: ColumnType<string, string, never>;
   /** At most 2,000 characters; `''` when there is none. */
   description: ColumnType<string, string | undefined, never>;
-  /** From the name's last extension (D14a Preflight ruling 10). */
+  /** From the name's last extension. */
   content_type: ColumnType<string, string, never>;
   /** At most 10,485,760. */
   size_bytes: ColumnType<number, number, never>;
@@ -488,10 +484,10 @@ export interface TestInputFilesTable {
 }
 
 /**
- * A configuration version's test suite (D14b decision 8, migration
- * 1700000000029). Visible to whoever can see its configuration; the insert
- * policy names the context's user as its creator, and a trigger keeps its
- * identity (its version above all) for every role.
+ * A configuration version's test suite (migration 1700000000029). Visible
+ * to whoever can see its configuration; the insert policy names the
+ * context's user as its creator, and a trigger keeps its identity (its
+ * version above all) for every role.
  *
  * Both timestamps have no default: the API writes them from its clock, as
  * configurations', and a version copy writes the version's time.
@@ -502,7 +498,7 @@ export interface TestSuitesTable {
   organization_id: ColumnType<string, string, never>;
   configuration_id: ColumnType<string, string, never>;
   configuration_version_id: ColumnType<string, string, never>;
-  /** Trimmed, 1 to 200 characters. Configuration text (ADR 0024). */
+  /** Trimmed, 1 to 200 characters. Configuration text. */
   name: string;
   /** At most 2,000 characters; `''` when there is none. Configuration text. */
   description: ColumnType<string, string | undefined, string>;
@@ -515,11 +511,11 @@ export interface TestSuitesTable {
 }
 
 /**
- * A test definition's input (D14b decisions 1 and 4, migration
- * 1700000000029): a copy made when a definition is created, shared by its
- * version copies' definitions, its bytes in the FileStore. Visible to
- * whoever can see its configuration; never changed. It is removed, row then
- * bytes, once no definition names it, under the configuration's lock.
+ * A test definition's input (migration 1700000000029): a copy made when a
+ * definition is created, shared by its version copies' definitions, its
+ * bytes in the FileStore. Visible to whoever can see its configuration;
+ * never changed. It is removed, row then bytes, once no definition names
+ * it, under the configuration's lock.
  */
 export interface TestDefinitionInputsTable {
   id: ColumnType<string, string | undefined, never>;
@@ -537,11 +533,10 @@ export interface TestDefinitionInputsTable {
 }
 
 /**
- * A suite's test configuration (D14b decisions 2 and 9, migration
- * 1700000000029): created and deleted, never changed, so every column's
- * update type is `never`. The insert policy names the context's user as its
- * creator; composite keys tie it to a suite of its own version and an input
- * of its own configuration.
+ * A suite's test configuration (migration 1700000000029): created and
+ * deleted, never changed, so every column's update type is `never`. The
+ * insert policy names the context's user as its creator; composite keys tie
+ * it to a suite of its own version and an input of its own configuration.
  */
 export interface TestDefinitionsTable {
   id: ColumnType<string, string | undefined, never>;
@@ -566,11 +561,11 @@ export interface TestDefinitionsTable {
 }
 
 /**
- * A test template (D14b decision 3, migration 1700000000029): a
- * product-wide sample input, global (ADR 0008) as flows. Members read the
- * live ones; only a product admin writes them, which the API decides.
- * Deletes are soft: the API's role has no DELETE, and a trigger keeps the
- * file's columns and lets `deleted_at` be set once.
+ * A test template (migration 1700000000029): a product-wide sample input,
+ * global as flows. Members read the live ones; only a product admin
+ * writes them, which the API decides. Deletes are soft: the API's role
+ * has no DELETE, and a trigger keeps the file's columns and lets
+ * `deleted_at` be set once.
  */
 export interface TestTemplatesTable {
   id: ColumnType<string, string | undefined, never>;
@@ -599,11 +594,11 @@ export interface TestTemplatesTable {
 }
 
 /**
- * A library file (D23-2 decisions 19 and 28, migration 1700000000037): a
- * helper file the Learning Telflo tutorials use, global (ADR 0008) as test
- * templates. Members read the files; only a product admin writes them, which
- * the API decides. Hard-deleted; a trigger keeps the file's columns. The
- * bytes are the file store's (`global/library-files/<id>`).
+ * A library file (migration 1700000000037): a helper file the Learning
+ * Telflo tutorials use, global as test templates. Members read the files;
+ * only a product admin writes them, which the API decides. Hard-deleted; a
+ * trigger keeps the file's columns. The bytes are the file store's
+ * (`global/library-files/<id>`).
  */
 export interface LibraryFilesTable {
   id: ColumnType<string, string | undefined, never>;
@@ -626,10 +621,10 @@ export interface LibraryFilesTable {
 }
 
 /**
- * A regex library entry (D15b decision 7, migration 1700000000031): a named
- * pattern the validation-rule picker offers, global (ADR 0008) as test
- * templates. Members read the library; only a product admin writes it, which
- * the API decides. Hard-deleted. Seeded with 35 patterns.
+ * A regex library entry (migration 1700000000031): a named pattern the
+ * validation-rule picker offers, global as test templates. Members read the
+ * library; only a product admin writes it, which the API decides.
+ * Hard-deleted. Seeded with 35 patterns.
  *
  * Both timestamps have no default: the API writes them from its injected
  * clock, as flows' (the seeded entries' are the migration's time to the
@@ -652,9 +647,9 @@ export interface TestRegexTable {
 }
 
 /**
- * Postgres check ck_test_runs_status: a run's statuses (D14a decision 18),
- * and "Validation Failed" (D15a decision 3, migration 1700000000030): the
- * collector ran and at least one of the run's rules failed.
+ * Postgres check ck_test_runs_status: a run's statuses, and "Validation
+ * Failed" (migration 1700000000030): the collector ran and at least one of
+ * the run's rules failed.
  */
 export type TestRunStatus = "queued" | "running" | "succeeded" | "failed" | "validation_failed";
 
@@ -668,25 +663,25 @@ type Snapshot<Value> = ColumnType<Value, Value, never>;
 type DispatcherOnly<Value> = ColumnType<Value, never, never>;
 
 /**
- * A test run (D14a decisions 1, 20 and 27, migration 1700000000028): the
- * queue's entry and the run's record. A member inserts it queued, with its
- * snapshot, and nothing else; the API's role updates and deletes no row
- * (policies `using (false)`): its status, lease and results change only
- * through the dispatcher's SECURITY DEFINER functions (test_runs_claim,
- * _finish, _release, _reap, _fail_waiting), and a trigger refuses any change
- * to the snapshot for every role. So every column's update type is `never`,
- * and the ones the API never writes have an insert type `never` too:
- * `queued_at` above all, whose insert policy admits only `now()`.
+ * A test run (migration 1700000000028): the queue's entry and the run's
+ * record. A member inserts it queued, with its snapshot, and nothing else;
+ * the API's role updates and deletes no row (policies `using (false)`): its
+ * status, lease and results change only through the dispatcher's SECURITY
+ * DEFINER functions (test_runs_claim, _finish, _release, _reap,
+ * _fail_waiting), and a trigger refuses any change to the snapshot for every
+ * role. So every column's update type is `never`, and the ones the API never
+ * writes have an insert type `never` too: `queued_at` above all, whose
+ * insert policy admits only `now()`.
  */
 export interface TestRunsTable {
   /** Chosen by the API (uuidv7) before the insert: the input is copied into the run's folder first. */
   id: ColumnType<string, string | undefined, never>;
   organization_id: Snapshot<string>;
   /**
-   * The configuration and the version run; both null for a YAML run (D25
-   * decision 39, migration 1700000000040: the public API's run of a text
-   * with no configuration, visible to its creator alone), both set
-   * otherwise (ck_test_runs_configuration_together).
+   * The configuration and the version run; both null for a YAML run (migration
+   * 1700000000040: the public API's run of a text with no configuration,
+   * visible to its creator alone), both set otherwise
+   * (ck_test_runs_configuration_together).
    */
   configuration_id: Snapshot<string | null>;
   configuration_version_id: Snapshot<string | null>;
@@ -707,23 +702,23 @@ export interface TestRunsTable {
   input_name: Snapshot<string>;
   input_size_bytes: Snapshot<number>;
   /**
-   * The "Suite › Configuration" breadcrumb (D14b decision 11, migration
-   * 1700000000029): for a run queued from a definition, or a re-run of one,
-   * the suite and definition it came from, with their names when it was
-   * queued; all four set or all null (ck_test_runs_breadcrumb_together).
-   * The ids have no foreign key. The names are configuration text.
+   * The "Suite › Configuration" breadcrumb (migration 1700000000029): for a
+   * run queued from a definition, or a re-run of one, the suite and
+   * definition it came from, with their names when it was queued; all four
+   * set or all null (ck_test_runs_breadcrumb_together). The ids have no
+   * foreign key. The names are configuration text.
    */
   test_suite_id: ColumnType<string | null, string | null | undefined, never>;
   test_suite_name: ColumnType<string | null, string | null | undefined, never>;
   test_definition_id: ColumnType<string | null, string | null | undefined, never>;
   test_definition_name: ColumnType<string | null, string | null | undefined, never>;
   /**
-   * The rules' snapshot (D15a decision 14, migration 1700000000030): the
-   * validation pipeline whose rules the run copied when it was queued (no
-   * foreign key; null when there was none), and the rules, a JSON array of
-   * at most 200 in position order, `'[]'` for none (the table's default).
-   * Frozen by the guard trigger. A JSON text on insert, as the repository
-   * writes jsonb. The rules are configuration text.
+   * The rules' snapshot (migration 1700000000030): the validation pipeline
+   * whose rules the run copied when it was queued (no foreign key; null
+   * when there was none), and the rules, a JSON array of at most 200 in
+   * position order, `'[]'` for none (the table's default). Frozen by the
+   * guard trigger. A JSON text on insert, as the repository writes jsonb.
+   * The rules are configuration text.
    */
   validation_pipeline_id: ColumnType<string | null, string | null | undefined, never>;
   validation_rules: ColumnType<unknown[], string | undefined, never>;
@@ -757,17 +752,17 @@ export interface TestRunsTable {
   error_code: DispatcherOnly<string | null>;
   error_message: DispatcherOnly<string | null>;
   /**
-   * The rules' results, one per rule of `validation_rules` in its order
-   * (D15a decision 15), written by test_runs_finish; null until the run
-   * finishes, and on a run whose rules weren't checked.
+   * The rules' results, one per rule of `validation_rules` in its order,
+   * written by test_runs_finish; null until the run finishes, and on a run
+   * whose rules weren't checked.
    */
   validation_results: DispatcherOnly<unknown[] | null>;
 }
 
 /**
- * The tester's health as every API process sees it (D14a decision 12,
- * migration 1700000000028): one row, global. The API's role reads it and
- * changes it only through otelcol_testing_mark.
+ * The tester's health as every API process sees it (migration 1700000000028):
+ * one row, global. The API's role reads it and changes it only through
+ * otelcol_testing_mark.
  */
 export interface OtelcolTestingStateTable {
   id: ColumnType<true, never, never>;
@@ -776,10 +771,9 @@ export interface OtelcolTestingStateTable {
 }
 
 /**
- * The OTTL evaluator's health as every API process sees it (D15a Preflight
- * ruling 23, migration 1700000000030), as otelcol_testing_state: one row,
- * global. The API's role reads it and changes it only through
- * ottl_evaluator_mark.
+ * The OTTL evaluator's health as every API process sees it (migration
+ * 1700000000030), as otelcol_testing_state: one row, global. The API's role
+ * reads it and changes it only through ottl_evaluator_mark.
  */
 export interface OttlEvaluatorStateTable {
   id: ColumnType<true, never, never>;
@@ -787,7 +781,7 @@ export interface OttlEvaluatorStateTable {
   down_since: ColumnType<Date | null, never, never>;
 }
 
-/** Postgres check ck_validation_rules_kind: a rule's kinds (D15a decision 12). */
+/** Postgres check ck_validation_rules_kind: a rule's kinds. */
 export type ValidationRuleKind = "contains_text" | "not_contains_text" | "contains_regex" | "not_contains_regex" | "ottl";
 
 /** Postgres check ck_validation_rules_target: what a rule searches; an OTTL rule the output only. */
@@ -803,11 +797,11 @@ export type ValidationRuleOttlQuantifier = "all" | "any" | "none" | "count" | "d
 export type ValidationRuleOttlCountOperator = "eq" | "ne" | "gt" | "gte" | "lt" | "lte" | "between";
 
 /**
- * A configuration version's validation pipeline (D15a decision 12,
- * migration 1700000000030): one per YAML pipeline, holding its rules.
- * Visible to whoever can see its configuration; the insert policy names the
- * context's user as its creator. Created and deleted, never changed
- * (Preflight ruling 16), so every column's update type is `never`.
+ * A configuration version's validation pipeline (migration 1700000000030):
+ * one per YAML pipeline, holding its rules. Visible to whoever can see its
+ * configuration; the insert policy names the context's user as its creator.
+ * Created and deleted, never changed, so every column's update type is
+ * `never`.
  */
 export interface ValidationPipelinesTable {
   /** uuidv7 by default; a version copy names its own, in the source's order. */
@@ -826,12 +820,12 @@ export interface ValidationPipelinesTable {
 }
 
 /**
- * A validation pipeline's rule (D15a decision 12, migration 1700000000030),
- * in its position. A text or regex rule carries a pattern; an OTTL rule its
- * OTTL columns. Patterns, conditions and expressions are at most 8,192
- * bytes. A trigger keeps its pipeline, place and creator for every role; its
- * kind, target, pattern, OTTL, name and description may change. The insert
- * policy names the context's user as its creator.
+ * A validation pipeline's rule (migration 1700000000030), in its position. A
+ * text or regex rule carries a pattern; an OTTL rule its OTTL columns.
+ * Patterns, conditions and expressions are at most 8,192 bytes. A trigger
+ * keeps its pipeline, place and creator for every role; its kind, target,
+ * pattern, OTTL, name and description may change. The insert policy names
+ * the context's user as its creator.
  */
 export interface ValidationRulesTable {
   id: ColumnType<string, string | undefined, never>;
@@ -870,8 +864,8 @@ export interface ValidationRulesTable {
   description: ColumnType<string, string | undefined, string>;
   /**
    * Written by the public API's PUT of its validation pipeline (migration
-   * 1700000000039, D25 decision 32), which the next PUT replaces; false for
-   * a person's. Set on insert; a person's edit leaves it as it is.
+   * 1700000000039), which the next PUT replaces; false for a person's.
+   * Set on insert; a person's edit leaves it as it is.
    */
   is_api_owned: ColumnType<boolean, boolean | undefined, boolean>;
   /** The context's user on insert (the policy); null once their account is hard-deleted. */
@@ -891,7 +885,7 @@ export type SessionRevokedReason =
   | "account_taken_over"
   | "organization_access_lost"
   | "signed_out_elsewhere"
-  /** A product admin deleted the person, or the organization the session acted in with them (D29 decision 29, migration 1700000000042). */
+  /** A product admin deleted the person, or the organization the session acted in with them (migration 1700000000042). */
   | "account_deleted";
 
 export interface SessionsTable {
@@ -934,9 +928,9 @@ export interface UserIdentitiesTable {
 }
 
 /**
- * A person's own settings (D21 decision 18, migration 1700000000034): lazy,
- * no row means the defaults; the first save inserts it. No row-level
- * security: it belongs to the user, not to an organization.
+ * A person's own settings (migration 1700000000034): lazy, no row means the
+ * defaults; the first save inserts it. No row-level security: it belongs to
+ * the user, not to an organization.
  */
 export interface UserSettingsTable {
   user_id: ColumnType<string, string, never>;
@@ -945,7 +939,7 @@ export interface UserSettingsTable {
   /**
    * Only the editor and email keys ever saved, a JSON object of at most
    * 4 KiB (the check). Read through the API's schema, which fills in the
-   * defaults and reads a bad key as its default (D21 decision 19).
+   * defaults and reads a bad key as its default.
    */
   preferences: JSONColumnType<Record<string, unknown>, string | undefined, string>;
   /** From the API's clock, on insert; never changed. */
@@ -955,12 +949,12 @@ export interface UserSettingsTable {
 }
 
 /**
- * A service account's name beside its user (D22 decisions 5 and 18,
- * migration 1700000000035): its id is the user's id. Live while
- * `deleted_at` is null here and on the user, both set in one transaction.
- * The name is unique, case aside, among the organization's live accounts.
- * Timestamps have no default: the API writes them from its clock. The
- * columns fixed at the insert can't be updated (a compile error).
+ * A service account's name beside its user (migration 1700000000035): its
+ * id is the user's id. Live while `deleted_at` is null here and on the
+ * user, both set in one transaction. The name is unique, case aside,
+ * among the organization's live accounts. Timestamps have no default: the
+ * API writes them from its clock. The columns fixed at the insert can't
+ * be updated (a compile error).
  */
 export interface ServiceAccountsTable {
   user_id: ColumnType<string, string, never>;
@@ -974,16 +968,16 @@ export interface ServiceAccountsTable {
   deleted_at: Date | null;
 }
 
-/** What a token may do (D22 decision 8): read, or read and write. */
+/** What a token may do: read, or read and write. */
 export type ApiTokenAccess = "read" | "write";
 
 /**
- * A service account's API token (D22 decisions 7 to 9 and 18, migration
- * 1700000000035), stored only as the SHA-256 of the token and its first 11
- * characters. Live while neither revoked nor past `expires_at`, which the
- * API compares with its own clock. Revoked, never deleted by the API.
- * Timestamps have no default: the API writes them from its clock. The
- * columns fixed at the insert can't be updated (a compile error).
+ * A service account's API token (migration 1700000000035), stored only as
+ * the SHA-256 of the token and its first 11 characters. Live while neither
+ * revoked nor past `expires_at`, which the API compares with its own
+ * clock. Revoked, never deleted by the API. Timestamps have no default:
+ * the API writes them from its clock. The columns fixed at the insert
+ * can't be updated (a compile error).
  */
 export interface ApiTokensTable {
   id: ColumnType<string, string | undefined, never>;
@@ -1011,15 +1005,15 @@ export interface ApiTokensTable {
 }
 
 /**
- * A person's own API token (D25 decision 27, migration 1700000000038),
- * stored, as a service account's, only as the SHA-256 of the token and its
- * first 11 characters. It belongs to the user, not to an organization: the
- * organization is named per request (`X-Telflo-Org`). Row-level security
- * shows the context's user their own rows only. Live while neither revoked
- * nor past `expires_at` (the API's clock) and its user a live person.
- * Revoked, never deleted by the API. Timestamps have no default: the API
- * writes them from its clock. The columns fixed at the insert can't be
- * updated (a compile error).
+ * A person's own API token (migration 1700000000038), stored, as a service
+ * account's, only as the SHA-256 of the token and its first 11 characters.
+ * It belongs to the user, not to an organization: the organization is
+ * named per request (`X-Telflo-Org`). Row-level security shows the
+ * context's user their own rows only. Live while neither revoked nor past
+ * `expires_at` (the API's clock) and its user a live person. Revoked,
+ * never deleted by the API. Timestamps have no default: the API writes
+ * them from its clock. The columns fixed at the insert can't be updated (a
+ * compile error).
  */
 export interface PersonalApiTokensTable {
   id: ColumnType<string, string | undefined, never>;
@@ -1041,16 +1035,15 @@ export interface PersonalApiTokensTable {
   revoked_at: Date | null;
 }
 
-/** How a product admin handled a feedback item (D29 decision 22). */
+/** How a product admin handled a feedback item. */
 export type UserFeedbackOutcome = "acknowledged" | "dismissed";
 
 /**
- * A person's message from "Contact us" (D29 decision 22, migration
- * 1700000000041): pending while `handled_at` is null. A system resource:
- * the API's role may only insert it, with an id it sends (`select
- * uuidv7()`, never RETURNING); every read and change goes through the
- * product-admin functions. Its text is personal data: never logged or
- * audited.
+ * A person's message from "Contact us" (migration 1700000000041): pending
+ * while `handled_at` is null. A system resource: the API's role may only
+ * insert it, with an id it sends (`select uuidv7()`, never RETURNING); every
+ * read and change goes through the product-admin functions. Its text is
+ * personal data: never logged or audited.
  */
 export interface UserFeedbackTable {
   id: ColumnType<string, string, never>;
@@ -1068,9 +1061,9 @@ export interface UserFeedbackTable {
 }
 
 /**
- * Who a deleted person was (D29 decisions 4 and 23, migration
- * 1700000000041): written only by the delete function, read only by an
- * operator's SQL. The API's role holds nothing on it.
+ * Who a deleted person was (migration 1700000000041): written only by the
+ * delete function, read only by an operator's SQL. The API's role holds
+ * nothing on it.
  */
 export interface UserDeletionRecordsTable {
   /** The API's role never writes these: the delete function does (fixtures may). */
@@ -1080,18 +1073,18 @@ export interface UserDeletionRecordsTable {
   deleted_at: ColumnType<Date, Date, never>;
 }
 
-/** Postgres check ck_site_settings_organization_creation: who may create a group organization (D36-1 decision 51). */
+/** Postgres check ck_site_settings_organization_creation: who may create a group organization. */
 export type StoredOrganizationCreation = "everyone" | "product_admins";
 
 /**
- * The site's settings a product admin changes (D36-1 decision 51,
- * migration 1700000000044): one row, global, as otelcol_testing_state. The
- * API's role reads it and changes it only through the migration's
- * product-admin definer (the SystemRepository's call).
+ * The site's settings a product admin changes (migration 1700000000044): one
+ * row, global, as otelcol_testing_state. The API's role reads it and changes
+ * it only through the migration's product-admin definer (the
+ * SystemRepository's call).
  */
 export interface SiteSettingsTable {
   id: ColumnType<true, never, never>;
-  /** product_admins (the default, Q259) or everyone. */
+  /** product_admins (the default) or everyone. */
   organization_creation: ColumnType<StoredOrganizationCreation, never, never>;
 }
 

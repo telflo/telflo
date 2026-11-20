@@ -18,9 +18,8 @@ import {
 } from "./catalogue.js";
 
 /*
- * The catalogue's validator (D13a decision 2, Preflight ruling 8): its
- * eleven rules, and ruling 8's (a) to (h), each refused on its own; and
- * the committed catalogue passes.
+ * The catalogue's validator: its eleven rules, and checks (a) to (h), each
+ * refused on its own; and the committed catalogue passes.
  */
 
 /** Both binaries for every platform, at upstream's URLs for `version`. */
@@ -280,7 +279,7 @@ describe("the collector catalogue's validator", () => {
     });
   });
 
-  describe("Preflight ruling 8's additions", () => {
+  describe("the further checks, (a) to (h)", () => {
     it("(a) refuses a GitHub download URL that isn't upstream's release of the entry's own version and platform", () => {
       const otherRepository = entry({ version: "0.147.0", default: true });
       otherRepository.otelcolContrib!.linux_amd64!.downloadUrl =
@@ -434,7 +433,7 @@ describe("the collector catalogue's validator", () => {
     });
   });
 
-  describe("the collector's renames (D13b decision 6, Preflight rulings 15 and 16)", () => {
+  describe("the collector's renames", () => {
     const FILE_LOG: CatalogueRenamedType = {
       kind: "receiver",
       name: "file_log",
@@ -517,13 +516,13 @@ describe("the collector catalogue's validator", () => {
       );
     });
 
-    it("reports a kind's name renamed twice in one file once: the cross-file rule doesn't compare a file with itself (Ruling 53)", () => {
+    it("reports a kind's name renamed twice in one file once: the cross-file rule doesn't compare a file with itself", () => {
       expect(problemsOf(withRenames([FILE_LOG, { ...FILE_LOG, deprecatedName: "logfile" }]))).toEqual([
         "otelcol-contrib.json: the receiver file_log is renamed twice",
       ]);
     });
 
-    it("refuses a chain, a rename's deprecatedName another's name in the same kind, in either order (Ruling 52)", () => {
+    it("refuses a chain, a rename's deprecatedName another's name in the same kind, in either order", () => {
       // filelog → file_log, then file_log → log_file: file_log would be both a current and a deprecated name.
       const NEXT: CatalogueRenamedType = { kind: "receiver", name: "log_file", deprecatedName: "file_log", since: "0.170.0" };
       const chained =
@@ -544,7 +543,7 @@ describe("the collector catalogue's validator", () => {
       ]);
     });
 
-    it("passes a name that is another kind's deprecatedName: renames are kind-specific (Ruling 52)", () => {
+    it("passes a name that is another kind's deprecatedName: renames are kind-specific", () => {
       // An exporter renamed from file_log is no chain with the receiver renamed to file_log.
       expect(
         problemsOf(withRenames([FILE_LOG, { kind: "exporter", name: "log_file", deprecatedName: "file_log", since: "0.170.0" }])),
@@ -600,7 +599,7 @@ describe("the committed catalogue", () => {
     expect(readdirSync(directory)).toContain("otelcol-contrib.json");
   });
 
-  it("passes the validator: Contrib alone, the default, at 0.162.0 by default, offering the four newest and keeping the five it retired (D13b ruling 48), with the collector's 16 renames (D13b Preflight ruling 5)", async () => {
+  it("passes the validator: Contrib alone, the default, at 0.162.0 by default, offering the four newest and keeping the five it retired, with the collector's 16 renames", async () => {
     const distributions = validateCollectorCatalogue(await readCollectorCatalogueFiles());
     expect(distributions.map((each) => each.distribution)).toEqual(["otelcol-contrib"]);
     const [contrib] = distributions;
@@ -625,7 +624,7 @@ describe("the committed catalogue", () => {
       "0.160.0",
       "0.159.0",
     ]);
-    // The collector's renames, as the binaries showed them (D13b Preflight ruling 5).
+    // The collector's renames, as the binaries showed them.
     expect(contrib!.renamedTypes.map(({ kind, name, deprecatedName, since }) => `${kind} ${name} ${deprecatedName} ${since}`)).toEqual([
       "receiver file_log filelog 0.149.0",
       "receiver fluent_forward fluentforward 0.151.0",
@@ -644,7 +643,7 @@ describe("the committed catalogue", () => {
       "exporter prometheus_remote_write prometheusremotewrite 0.154.0",
       "connector span_metrics spanmetrics 0.151.0",
     ]);
-    // Retired, never deleted: a pin to one keeps resolving (D13a decision 4).
+    // Retired, never deleted: a pin to one keeps resolving.
     expect(
       contrib!.versions
         .filter((version) => version.deprecated)
@@ -658,7 +657,7 @@ describe("the committed catalogue", () => {
   });
 });
 
-describe("the API never reads the catalogue's files (Preflight ruling 7)", () => {
+describe("the API never reads the catalogue's files", () => {
   /** Every TypeScript source under `directory`, recursively. */
   const sources = (directory: string): string[] =>
     readdirSync(directory).flatMap((name) => {

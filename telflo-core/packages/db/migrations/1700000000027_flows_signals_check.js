@@ -1,5 +1,5 @@
 /**
- * A flow's signals are the contract's (D12 Ruling 37).
+ * A flow's signals are the contract's.
  *
  *   * flows.signals was any text[] (migration 1700000000026), while the
  *     API's response schemas (FlowSchema, FlowCardSchema in
@@ -36,7 +36,7 @@ export const up = (pgm) => {
     );
 
     comment on constraint ck_flows_signals on flows is
-      'the contract''s signals (D12 Ruling 37, FlowSignalsSchema): traces,
+      'the contract''s signals (FlowSignalsSchema): traces,
        metrics and logs, each at most once, in any order, or none; a null
        element or a second dimension is refused too. The API''s response
        schemas accept nothing else, so a stray value would make every read

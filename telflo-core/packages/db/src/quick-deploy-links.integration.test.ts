@@ -7,11 +7,10 @@ import { addMembership, addQuickDeployLink, createUserWithOrganization, openTest
 import type { TestDatabases } from "./testing.js";
 
 /**
- * quick_deploy_links (D17c-2 decision 22, migration 1700000000032;
- * Preflight ruling 1): its constraints, as the owner; its row-level
- * security and the lookup by the secret's hash, as the API's role (`db`),
- * which the policies constrain. schema.integration.test.ts has the
- * migration's catalogue (up, down, up).
+ * quick_deploy_links (migration 1700000000032): its constraints, as the owner;
+ * its row-level security and the lookup by the secret's hash, as the API's
+ * role (`db`), which the policies constrain. schema.integration.test.ts has
+ * the migration's catalogue (up, down, up).
  */
 describe("quick_deploy_links", () => {
   let databases: TestDatabases;

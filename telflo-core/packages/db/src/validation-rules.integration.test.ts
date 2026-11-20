@@ -22,27 +22,25 @@ import {
 /** The two-session race's own timeout: above waitsOnLock's bound, so a race that never waits fails there first. */
 const LOCK_RACE_TIMEOUT = 30_000;
 
-/** waitsOnLock's deadline, a hang guard well below LOCK_RACE_TIMEOUT (D14b Rulings 32 and 36). */
+/** waitsOnLock's deadline, a hang guard well below LOCK_RACE_TIMEOUT. */
 const LOCK_WAIT_DEADLINE_MS = 10_000;
 
 /*
- * Migration 1700000000030 (D15a decisions 3, 12 to 15, details 23;
- * Preflight rulings 10, 16, 17, 18 and 23): validation pipelines and their
- * rules, the runs' validation_failed status with the rules' snapshot and
- * results, test_runs_finish's final status, test_runs_rules and the
- * evaluator's state. Its up, down and up again are
- * schema.integration.test.ts's ("the validation rules migration …"). The
- * cross-tenant suite covers both tables from the resource registry, and
- * apps/api's draft-privacy.integration.test.ts their visibility within an
- * organization through the API's context, test-run-functions' the
- * dispatcher's functions refused from members' real contexts.
+ * Migration 1700000000030: validation pipelines and their rules, the runs'
+ * validation_failed status with the rules' snapshot and results,
+ * test_runs_finish's final status, test_runs_rules and the evaluator's state.
+ * Its up, down and up again are schema.integration.test.ts's ("the validation
+ * rules migration …"). The cross-tenant suite covers both tables from the
+ * resource registry, and apps/api's draft-privacy.integration.test.ts their
+ * visibility within an organization through the API's context,
+ * test-run-functions' the dispatcher's functions refused from members' real
+ * contexts.
  *
  * The database context is set here with set_config, as context.ts sets it:
- * these tests are the database's own. A rule's position (Preflight ruling
- * 16) is checked with two sessions as the API's login role, running the
- * statements the ruling names, since the rules' repository is Task 6's; one
- * session waits for the other's lock by a condition (pg_stat_activity),
- * never a time.
+ * these tests are the database's own. A rule's position is checked with two
+ * sessions as the API's login role, running the rules' repository's
+ * statements; one session waits for the other's lock by a condition
+ * (pg_stat_activity), never a time.
  */
 
 /** Whom a transaction acts as: a member (a user, an organization), the dispatcher, or nobody. */
@@ -52,7 +50,7 @@ interface Context {
   dispatcher?: boolean;
 }
 
-/** A text rule's snapshot on a run, as Task 7's queue writes it (its shape is the API's). */
+/** A text rule's snapshot on a run, as the API's queue writes it (its shape is the API's). */
 const snapshotRule = (pattern = "secret") => ({ id: randomUUID(), kind: "contains_text", target: "output", pattern });
 
 describe("validation pipelines, rules and the runs' validation status (migration 1700000000030)", () => {
@@ -321,7 +319,7 @@ describe("validation pipelines, rules and the runs' validation status (migration
       }
       let position = 1;
       for (const ottl_context of ["log", "span", "spanevent", "metric", "datapoint", "resource", "scope"]) {
-        // A logs pipeline with a span context: the database takes it; the API refuses it (Preflight ruling 16).
+        // A logs pipeline with a span context: the database takes it; the API refuses it.
         expect((await ruleIn(pipeline, { ...ottl({ ottl_context }), position: position++ } as never)).ottl_context).toBe(
           ottl_context,
         );
@@ -682,10 +680,9 @@ describe("validation pipelines, rules and the runs' validation status (migration
 
     /*
      * A policy that checked the author only would let any member who knew a
-     * pipeline's id insert a rule into it. Here each attempt
-     * names the pipeline's own organization, configuration and version
-     * (Preflight ruling 18): the composite key then lets it through, so only
-     * the insert policy stands in the way.
+     * pipeline's id insert a rule into it. Here each attempt names the
+     * pipeline's own organization, configuration and version: the composite
+     * key then lets it through, so only the insert policy stands in the way.
      */
     it("refuses a rule forged into another organization's validation pipeline, or another member's draft's, naming that pipeline's own organization, configuration and version (42501)", async () => {
       const w = await world();
@@ -789,9 +786,8 @@ describe("validation pipelines, rules and the runs' validation status (migration
       for (const result of Object.values(byId)) expect(result.numAffectedRows).toBe(0n);
       /*
        * A statement with no WHERE clause and no RETURNING reads no column, so
-       * Postgres applies only its command's policy, not the select policy
-       * (D14b Ruling 29): these reach the draft through the update and
-       * delete policies alone.
+       * Postgres applies only its command's policy, not the select policy:
+       * these reach the draft through the update and delete policies alone.
        */
       for (const [label, statement] of [
         ["update validation_rules", sql`update validation_rules set name = 'x'`],
@@ -856,7 +852,7 @@ describe("validation pipelines, rules and the runs' validation status (migration
         (await queue(w.published, w.ana, { validation_rules: JSON.stringify(Array.from({ length: 200 }, () => snapshotRule())) }))
           .validation_rules,
       ).toHaveLength(200);
-      // Each rule an object with a string id (Ruling 32), which its result names.
+      // Each rule an object with a string id, which its result names.
       for (const [label, element] of [
         ["a string", "contains_text"],
         ["null", null],
@@ -1068,7 +1064,7 @@ describe("validation pipelines, rules and the runs' validation status (migration
       expect(await runRow(run.id)).toEqual(before);
     });
 
-    it("test_runs_finish refuses results that aren't typed (Ruling 32, ck_test_runs_validation_results): a passed that is a string \"false\", null or an array, an element that isn't an object, an id missing or not a string; takes typed ones", async () => {
+    it("test_runs_finish refuses results that aren't typed (ck_test_runs_validation_results): a passed that is a string \"false\", null or an array, an element that isn't an object, an id missing or not a string; takes typed ones", async () => {
       const w = await world();
       const rules = [snapshotRule("one"), snapshotRule("two")];
       const typed = (first: unknown) => [first, { id: rules[1]!.id, passed: true }];
@@ -1161,13 +1157,13 @@ describe("validation pipelines, rules and the runs' validation status (migration
   });
 
   /*
-   * A rule's position (Preflight ruling 16): unique per validation pipeline,
-   * the next one max + 1 in the INSERT … SELECT, under the configuration's
-   * row lock (the organization FOR SHARE, then the configuration FOR UPDATE,
-   * as every configuration write takes them). Ana and Ben each add a rule to
-   * one pipeline, as the API's login role in two sessions.
+   * A rule's position: unique per validation pipeline, the next one max + 1 in
+   * the INSERT … SELECT, under the configuration's row lock (the organization
+   * FOR SHARE, then the configuration FOR UPDATE, as every configuration write
+   * takes them). Ana and Ben each add a rule to one pipeline, as the API's
+   * login role in two sessions.
    */
-  describe("a rule's position, two sessions as the API's role (Preflight ruling 16)", () => {
+  describe("a rule's position, two sessions as the API's role", () => {
     /** A session as the API's login role, in its own transaction with `context`. */
     const session = async (context: Required<Pick<Context, "userId" | "organizationId">>) => {
       const client = new pg.Client({ connectionString: process.env.TELFLO_DATABASE_URL });
@@ -1208,7 +1204,7 @@ describe("validation pipelines, rules and the runs' validation status (migration
       await s.query("select id from organizations where id = $1 and deleted_at is null for share", [target.organizationId]);
       await s.query("select id from configurations where id = $1 and deleted_at is null for update", [target.configurationId]);
     };
-    /** The add: the rule at max + 1 in its validation pipeline, as Task 6's statement; its position. */
+    /** The add: the rule at max + 1 in its validation pipeline, as the API's statement; its position. */
     const addRule = async (
       s: Session,
       pipeline: { id: string; organization_id: string; configuration_id: string; configuration_version_id: string },

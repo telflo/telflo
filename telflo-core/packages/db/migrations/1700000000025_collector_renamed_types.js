@@ -1,6 +1,5 @@
 /**
- * The collector's renames, per distribution (D13b decision 6, Preflight
- * rulings 15 and 16).
+ * The collector's renames, per distribution.
  *
  *   * collector_distributions.renamed_types: the catalogue file's
  *     `renamedTypes`, as the file holds it, in its order:
@@ -27,7 +26,7 @@ export const up = (pgm) => {
         check (jsonb_typeof(renamed_types) = 'array');
 
     comment on column collector_distributions.renamed_types is
-      'the collector''s renames (D13b decision 6): the catalogue file''s
+      'the collector''s renames: the catalogue file''s
        renamedTypes, in its order, [{ "kind", "name", "deprecatedName",
        "since" }, …]: from upstream''s version since on, the kind of
        component deprecatedName is called name. Kind-specific; written by

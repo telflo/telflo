@@ -14,12 +14,11 @@ import {
 import type { TestDatabases } from "./testing.js";
 
 /**
- * D5 decision 9's two functions, from
- * 1700000000010_organizations_and_memberships: what removing a member and
- * deleting an organization do to sessions and accounts. They are called as
- * the API's role (`db`), which is the only role allowed to run them, with the
- * organization context set to their argument; fixtures and reads go through
- * the owner.
+ * The two functions from 1700000000010_organizations_and_memberships that do
+ * what removing a member and deleting an organization do to sessions and
+ * accounts. They are called as the API's role (`db`), which is the only role
+ * allowed to run them, with the organization context set to their argument;
+ * fixtures and reads go through the owner.
  */
 describe("organization functions", () => {
   let databases: TestDatabases;
@@ -65,7 +64,7 @@ describe("organization functions", () => {
   };
 
   /**
-   * A service account of `organizationId` (D22, addServiceAccount): its one
+   * A service account of `organizationId` (addServiceAccount): its one
    * membership is there, and it has no personal organization.
    */
   const createServiceAccount = async (organizationId: string) =>
@@ -74,7 +73,7 @@ describe("organization functions", () => {
   /**
    * A person whose only membership is in `organizationId`: no personal
    * organization. Not a service account's shape when it holds a session or
-   * a second membership (a service account has neither, D22 decision 18), so
+   * a second membership (a service account has neither), so
    * it stays a person, a shape no API path creates but one the functions
    * must still handle.
    */
@@ -94,7 +93,7 @@ describe("organization functions", () => {
 
   /**
    * Runs `work` in a transaction as the API's role, with the organization
-   * context set as Task 3's context.ts will set it (`null`: none). Both
+   * context set as context.ts sets it (`null`: none). Both
    * functions refuse any organization but the context's.
    */
   const inContext = <T>(organizationId: string | null, work: (transaction: Kysely<Database>) => Promise<T>) =>
@@ -265,8 +264,8 @@ describe("organization functions", () => {
       expect(await deleteAccountsOnlyIn(deleting.id)).toBe(1);
     });
 
-    // The whole of decision 9's deletion, in one transaction as the API's
-    // role: without the account deletion, the organization's soft delete
+    // The whole of a group organization's deletion, in one transaction as the
+    // API's role: without the account deletion, the organization's soft delete
     // would fail the invariant at commit for the service account.
     it("lets a group organization be deleted in the same transaction", async () => {
       const owner = await createUserWithOrganization(ownerDb);

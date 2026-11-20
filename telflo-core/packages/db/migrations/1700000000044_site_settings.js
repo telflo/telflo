@@ -1,13 +1,13 @@
 /**
- * The site's settings a product admin changes (D36-1 decision 51; Q252,
- * Ruling 359): who may create an organization.
+ * The site's settings a product admin changes: who may create an
+ * organization.
  *
  *   * site_settings: one row (migration 028's otelcol_testing_state
  *     pattern: a boolean key, always true, and a check), inserted here with
  *     the column's default. organization_creation is `product_admins` (the
- *     default, in every registration mode, Q259: only a live product admin
- *     may create a group organization) or `everyone` (anyone signed in may,
- *     as before D36-1). A system resource: no organization, no row-level
+ *     default, in every registration mode: only a live product admin may
+ *     create a group organization) or `everyone` (anyone signed in may). A
+ *     system resource: no organization, no row-level
  *     security. The API's role reads it (SELECT: an organization's
  *     create and the signed-in user's `/me` read it) and changes it only
  *     through the definer below: INSERT, UPDATE and DELETE, which migration
@@ -24,14 +24,14 @@
  *     for the grant and the revoke. In order:
  *       - 22023 unless p_value is `everyone` or `product_admins`;
  *       - the row locked (for update), then the caller re-read under a row
- *         lock (for share) taken after it (Rulings 257 and 258): forbidden
+ *         lock (for share) taken after it: forbidden
  *         when the caller is no longer a live product admin (a removal
  *         committed while this waited wins);
  *       - unchanged when the row already holds p_value;
  *       - otherwise the row set to p_value: changed.
  *     It answers the outcome and the value the row held before.
  *     The switch applies to creations only: organizations that already
- *     exist keep their admins, who keep inviting (decision 51).
+ *     exist keep their admins, who keep inviting.
  *
  * down drops the function and the table: migration 043's catalogue exactly.
  */
@@ -52,7 +52,7 @@ export const up = (pgm) => {
     revoke insert, update, delete on site_settings from telflo_platform_runtime;
 
     comment on table site_settings is
-      'the site''s settings a product admin changes (D36-1 decision 51): one
+      'the site''s settings a product admin changes: one
        row. Global: no organization owns it and no row-level security. The
        API''s role reads it and changes it only through
        product_admin_set_organization_creation.';
@@ -60,7 +60,7 @@ export const up = (pgm) => {
       'always true: the table holds one row (ck_site_settings_singleton).';
     comment on column site_settings.organization_creation is
       'who may create a group organization: product_admins, live product
-       admins only (the default, Q259), or everyone signed in. Organizations
+       admins only (the default), or everyone signed in. Organizations
        that already exist are untouched either way.';
     comment on constraint site_settings_pkey on site_settings is
       'the row''s key, always true.';
@@ -86,7 +86,7 @@ export const up = (pgm) => {
       end if;
       me := current_setting('telflo.user_id')::uuid;
       select s.organization_creation into current_value from platform.site_settings s for update;
-      -- The caller after the row's lock (Rulings 257 and 258): a removal committed meanwhile wins.
+      -- The caller after the row's lock: a removal committed meanwhile wins.
       perform 1 from platform.users u where u.id = me for share;
       if not exists (select 1 from platform.users u
                       where u.id = me and u.deleted_at is null and u.kind = 'human' and u.is_product_admin) then
@@ -103,7 +103,7 @@ export const up = (pgm) => {
     $$;
 
     comment on function ${signature} is
-      'sets who may create an organization (D36-1 decision 51): 22023 unless
+      'sets who may create an organization: 22023 unless
        p_value is everyone or product_admins; the row locked (for update),
        then the caller (for share); forbidden when the caller is no longer a
        live product admin, unchanged when the row already holds p_value,
