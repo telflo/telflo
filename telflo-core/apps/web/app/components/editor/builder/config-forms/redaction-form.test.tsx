@@ -27,13 +27,11 @@ import { builderStore, componentNamed, openText } from "~/test/builder-store.js"
 import { formControls } from "~/test/form-controls.js";
 
 /*
- * The redaction processor (D9d Task 10): its form over the form contract,
- * and `PatternListField`.
- * Each field is driven as a person would on the OTTL corpus text (comments,
- * flow and block lists, regexes written as typed in every quote style, an
- * anchor and its merges elsewhere, a bare `0750` the collector reads as a
- * number), LF and CRLF, and writes only its key. The fixes have tests that
- * fail if the bug returns.
+ * The redaction processor: its form over the form contract, and
+ * `PatternListField`. Each field is driven as a person would on the OTTL
+ * corpus text (comments, flow and block lists, regexes written as typed in
+ * every quote style, an anchor and its merges elsewhere, a bare `0750` the
+ * collector reads as a number), LF and CRLF, and writes only its key.
  *
  * Collector claims cite contrib v0.162.0's `processor/redactionprocessor`.
  */
@@ -43,7 +41,7 @@ const CRLF = (lf: string) => lf.replace(/\n/g, "\r\n");
 
 /** The OTTL corpus (LF): its `redaction` has every list, a hash, a summary and a URL sanitizer. */
 const CORPUS = LF(corpusText("forms-ottl.yaml"));
-/** D9a's complex config: `allow_all_keys: true` and the SSN template's pattern single-quoted. */
+/** The complex config: `allow_all_keys: true` and the SSN template's pattern single-quoted. */
 const COMPLEX = LF(corpusText("complex-config.yaml"));
 
 const RD = "processors.redaction";
@@ -281,7 +279,7 @@ const CASES: FieldCase[] = [
     check: (v) => expect(v.hash_function).toBe("sha3"),
   },
   {
-    name: "Hash Function: None removes the key (decision 11)",
+    name: "Hash Function: None removes the key",
     edit: async (user) => {
       await openSection(user, "Value Masking");
       await pickIn(user, hashSelect(), "None (asterisk masking)");
@@ -346,7 +344,7 @@ const CASES: FieldCase[] = [
   },
 ];
 
-describe("every field writes only its key (decision 2)", () => {
+describe("every field writes only its key", () => {
   it.each(CASES.flatMap((c) => [[`${c.name}, LF`, c, false] as const, [`${c.name}, CRLF`, c, true] as const]))(
     "%s",
     async (_name, c, crlf) => {
@@ -395,14 +393,14 @@ const EVERYTHING = ownText(
   ].join("\n"),
 );
 
-describe("opening writes nothing (decision 2)", () => {
+describe("opening writes nothing", () => {
   async function openEverything(user: UserEvent) {
     for (let round = 0; round < 3; round++) {
       for (const button of screen.queryAllByRole("button", { expanded: false })) await user.click(button);
     }
   }
 
-  // One test per text, each with its own time limit (D9c Ruling 54).
+  // One test per text, each with its own time limit.
   it.each([
     // Allow All Keys; the four lists' rows; the template select, the staging input, Redact All Types, Hash; URL box and
     // its attributes; seven sanitizer boxes; Summary.
@@ -435,9 +433,9 @@ describe("opening writes nothing (decision 2)", () => {
   });
 });
 
-// ── Hash Function (decision 11) ──
+// ── Hash Function ──
 
-describe("Hash Function: the collector's set (decision 11)", () => {
+describe("Hash Function: the collector's set", () => {
   const OFFERED = ["None (asterisk masking)", "MD5", "SHA-1", "SHA-3", "HMAC-SHA256", "HMAC-SHA512"];
 
   it("offers None, MD5, SHA-1, SHA-3, HMAC-SHA256 and HMAC-SHA512, never sha256 (config.go:20-29, 97-124 refuses it)", async () => {
@@ -526,7 +524,7 @@ describe("Hash Function: the collector's set (decision 11)", () => {
     expect([...document.querySelectorAll("input")].map((input) => input.value).join()).not.toContain(SECRET);
   });
 
-  it("an empty hmac_key counts as none (config.go:131-132): HMAC disabled, the hint shown (final ruling F6)", async () => {
+  it("an empty hmac_key counts as none (config.go:131-132): HMAC disabled, the hint shown", async () => {
     for (const empty of ['""', "''"]) {
       const user = renderForm(ownText(`    hmac_key: ${empty}\n    hash_function: md5`));
       await openSection(user, "Value Masking");
@@ -548,7 +546,7 @@ describe("Hash Function: the collector's set (decision 11)", () => {
 
 // ── Quick Add Template and Blocked Values ──
 
-describe("Quick Add Template and Blocked Values (Parity Notes)", () => {
+describe("Quick Add Template and Blocked Values", () => {
   it("lists the PII, PCI, PHI and Secrets templates by category; the preview shows the chosen one", async () => {
     const user = renderForm(ownText(""));
     await openSection(user, "Value Masking");
@@ -600,7 +598,7 @@ describe("Quick Add Template and Blocked Values (Parity Notes)", () => {
     expect(entries()).toBe(0);
   });
 
-  it("Add reads the list when it is clicked, after the held edits are written (Ruling 46): the Raw YAML box's waiting edit is counted, not overwritten", async () => {
+  it("Add reads the list when it is clicked, after the held edits are written: the Raw YAML box's waiting edit is counted, not overwritten", async () => {
     const ssn = findPattern("US Social Security Number").pattern;
     const base = ownText("    summary: info");
     const renderPanel = async () => {
@@ -634,7 +632,7 @@ describe("Quick Add Template and Blocked Values (Parity Notes)", () => {
     expect(toasts("success")).toEqual([]);
   });
 
-  it("Add after an Instance Name typed and not left (Ruling 48a): the rename is written, and the list is the renamed component's, its first item kept", async () => {
+  it("Add after an Instance Name typed and not left: the rename is written, and the list is the renamed component's, its first item kept", async () => {
     const ssn = findPattern("US Social Security Number").pattern;
     openText(ownText("    blocked_values:\n      - keep+"));
     const user = userEvent.setup();
@@ -721,7 +719,7 @@ describe("PatternListField", () => {
     expect(screen.getByText("b+", { selector: "code" }).parentElement).toBe(second);
   });
 
-  it("a list it can't show (a mapping item, or not a list) is read-only with D9b's hint", () => {
+  it("a list it can't show (a mapping item, or not a list) is read-only with the unshowable-value hint", () => {
     renderField(ownText("    blocked_values:\n      - {pattern: a+, name: A}"));
     expect(screen.getByText(UNSHOWABLE_VALUE_MESSAGE)).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Add pattern" })).toBeNull();
@@ -731,7 +729,7 @@ describe("PatternListField", () => {
   });
 });
 
-// ── The lists hold empty rows (decision 3) ──
+// ── The lists hold empty rows ──
 
 describe("the lists' Add holds a row (never \"\")", () => {
   it.each([
@@ -773,7 +771,7 @@ describe("the lists' Add holds a row (never \"\")", () => {
 
 // ── Allow All Keys and the fail-closed alert ──
 
-describe("Allow All Keys and the fail-closed alert (Parity Notes)", () => {
+describe("Allow All Keys and the fail-closed alert", () => {
   const alertText = () => screen.queryByText("Fail-closed mode")?.parentElement?.querySelector("div")?.textContent;
 
   it("unset: unticked, the corrected alert, Allowed Keys shown", () => {
@@ -811,9 +809,9 @@ describe("Allow All Keys and the fail-closed alert (Parity Notes)", () => {
   });
 });
 
-// ── Sanitization and Diagnostics (decision 4) ──
+// ── Sanitization and Diagnostics ──
 
-describe("Sanitization (decisions 4 and 6)", () => {
+describe("Sanitization", () => {
   it("URL Sanitization unset shows unticked (factory.go:31-33), URL Attributes hidden, uncounted; ticking writes enabled: true", async () => {
     const base = ownText("    summary: info");
     const user = renderForm(base);
@@ -864,7 +862,7 @@ describe("Sanitization (decisions 4 and 6)", () => {
   });
 });
 
-describe("Diagnostics and copy (decision 4)", () => {
+describe("Diagnostics and copy", () => {
   it("Summary unset shows Silent (no summary) and Default silent (processor.go:423-443); never info", async () => {
     const user = renderForm(ownText(""));
     await openSection(user, "Diagnostics");
@@ -885,7 +883,7 @@ describe("Diagnostics and copy (decision 4)", () => {
     expect(within(fieldOf("Allowed Values")).getByText(ALLOWED_VALUES_DESCRIPTION)).toBeInTheDocument();
   });
 
-  it("the copy reads exactly as the spec gives it", () => {
+  it("the copy's words, exactly", () => {
     expect(HMAC_HINT).toBe("HMAC needs an hmac_key (32+ bytes; 64+ for HMAC-SHA512). Add it in the YAML below.");
     expect(FAIL_CLOSED_TEXT).toBe(
       'With allow_all_keys off and an empty allowed_keys list, every attribute (and every field of a map log body) not in Ignored Keys is removed. Enable "Allow All Keys" or add allowed keys.',
@@ -900,9 +898,9 @@ describe("Diagnostics and copy (decision 4)", () => {
   });
 });
 
-// ── Privacy (decision 13) ──
+// ── Privacy ──
 
-describe("privacy (decision 13)", () => {
+describe("privacy", () => {
   it("puts no key, pattern, value or hmac_key in any attribute: every section and row open, the template select open, a staged pattern", async () => {
     const MARK = "zq-mark";
     const marked = ownText(

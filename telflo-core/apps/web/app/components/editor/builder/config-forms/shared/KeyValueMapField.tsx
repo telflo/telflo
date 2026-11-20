@@ -12,9 +12,9 @@ import { useHeldText } from "~/lib/editor/held-text.js";
 import type { ValuePath } from "~/lib/graph/text-edits.js";
 
 /*
- * A mapping of string keys to string values, edited by key (D9c decision 9;
- * Preflight rulings 4 and 8), in one of two markups:
- * - `"staging"`: D9b's `HeadersConfigSection`: the rows, then a staging row
+ * A mapping of string keys to string values, edited by key, in one of two
+ * markups:
+ * - `"staging"` (`HeadersConfigSection`'s): the rows, then a staging row
  *   that adds a key (trimmed) on Enter or "+", with "Press Enter to add."
  *   (the headers; docker_stats' label maps, with no title);
  * - `"rows"`: filelog's attributes and resource and journald's match
@@ -23,46 +23,46 @@ import type { ValuePath } from "~/lib/graph/text-edits.js";
  * The nouns (placeholders, the add and remove labels, the clash message)
  * are the form's (`nouns`).
  *
- * D9b's mechanics (its decision 4), for both: a row's key is held while
- * typed and renamed in place, where it stands and with its comment, on blur
- * or Enter, trimmed (Ruling 76); a key another row has is refused with
- * `nouns.exists` under the row, as text (one per refused row, as D9b's), and
- * the row shows its key again; an empty key isn't a rename. A row's value is held as typing and written to
- * its key (clearing it writes `""`: a value is a string). Remove removes the
- * key's lines, and the mapping itself with its last key unless
- * `emptyRemovesKey` is false (journald's match keeps `{}`).
+ * The mechanics, for both: a row's key is held while typed and renamed in
+ * place, where it stands and with its comment, on blur or Enter, trimmed; a
+ * key another row has is refused with `nouns.exists` under the row, as text
+ * (one per refused row), and the row shows its key again; an empty key isn't a
+ * rename. A row's value is held as typing and written to its key (clearing it
+ * writes `""`: a value is a string). Remove removes the key's lines, and the
+ * mapping itself with its last key unless `emptyRemovesKey` is false
+ * (journald's match keeps `{}`).
  *
- * Changed in `"rows"` (decision 9; Add never writes `"": ""`, and a key
- * clash never collapses two rows): Add shows a held row that isn't in the
- * text. It is written when its key is committed (blur or Enter, trimmed,
- * a clash refused under it) with the value it holds (`key: ""` if none),
- * and becomes the key's row in place (the same key, so focus stays). The
- * key typed in it is a held edit (a save, or the form going, writes it); a
- * value typed while the key is empty is only the row's, not a held edit,
- * and goes with the row (the form going, a configuration loaded, Remove).
+ * In `"rows"` (Add never writes `"": ""`, and a key clash never collapses
+ * two rows), Add shows a held row that isn't in the text. It is written
+ * when its key is committed (blur or Enter, trimmed, a clash refused under
+ * it) with the value it holds (`key: ""` if none), and becomes the key's
+ * row in place (the same key, so focus stays). The key typed in it is a
+ * held edit (a save, or the form going, writes it); a value typed while
+ * the key is empty is only the row's, not a held edit, and goes with the
+ * row (the form going, a configuration loaded, Remove).
  *
- * Rows are keyed by their items (`useCardKeys`; D9c Ruling 68), a renamed
- * key keeping its row, never by the key's text: a removed row's Remove
- * button goes with it, so a click can't land on the next row. No attribute
- * carries a key or a value (decision 10).
+ * Rows are keyed by their items (`useCardKeys`), a renamed key keeping its
+ * row, never by the key's text: a removed row's Remove button goes with
+ * it, so a click can't land on the next row. No attribute carries a key or
+ * a value.
  *
- * With `holdUntilValue` (journald's match fields; D9c Ruling 73, decision
- * 3: `_UID: ""` matches entries whose field is empty,
- * `config_linux.go:155-192`), the held row is written only once both its key
- * and its value are typed: a key committed while the value is empty stays
- * the row's own, and the value's typing (a held edit then) writes the pair.
+ * With `holdUntilValue` (journald's match fields: `_UID: ""` matches entries
+ * whose field is empty, `config_linux.go:155-192`), the held row is written
+ * only once both its key and its value are typed: a key committed while the
+ * value is empty stays the row's own, and the value's typing (a held edit
+ * then) writes the pair.
  *
- * journald's match rows keep their own classes (D9c Task 8; Task 1 left
- * it to Task 8): `flex gap-2` rows (`rowClassName`), an icon-sized remove
- * button (`removeSize`, `removeClassName`), and an Add field button that
- * isn't full width (`addButtonClassName`).
+ * journald's match rows keep their own classes: `flex gap-2` rows
+ * (`rowClassName`), an icon-sized remove button (`removeSize`,
+ * `removeClassName`), and an Add field button that isn't full width
+ * (`addButtonClassName`).
  */
 
 /** A row's card key (`useCardKeys`), or the held row's. */
 type RowKey = number | typeof HELD;
 const HELD = "held";
 
-/** The words a map's rows use, the form's own (decision 9). */
+/** The words a map's rows use, the form's own. */
 export interface KeyValueNouns {
   /** A row's key placeholder ("Header name", "key", "_SYSTEMD_UNIT"). */
   key: string;
@@ -101,7 +101,7 @@ interface KeyValueMapFieldProps {
   removeClassName?: string;
   /** `"rows"`: the Add button's classes (journald's Add field: none, not full width). */
   addButtonClassName?: string;
-  /** `"rows"`: the held row is written only once both its key and its value are typed (Ruling 73). */
+  /** `"rows"`: the held row is written only once both its key and its value are typed. */
   holdUntilValue?: boolean;
 }
 
@@ -122,21 +122,21 @@ export function KeyValueMapField({
   const form = useForm();
   const view = form.read(path);
   const names = view.kind === "map" ? Object.keys(view.value) : [];
-  // Rows are keyed by their keys' items (Ruling 68), a rename keeping its row: a removed row's Remove button goes
-  // with it, so a click can't land on the next row's.
+  // Rows are keyed by their keys' items, a rename keeping its row: a removed row's Remove button goes with it, so a
+  // click can't land on the next row's.
   const cards = useCardKeys(names);
   const [holding, setHolding] = useState(false);
-  // Kept here, not in a row (D9c review): a row that goes (another removed above the held one, or the held row
-  // written) mustn't take a value typed before the key, or a clash, with it.
+  // Kept here, not in a row: a row that goes (another removed above the held one, or the held row written) mustn't
+  // take a value typed before the key, or a clash, with it.
   /** The held row's value: the row's own until its key is written, never a held edit. */
   const [heldValue, setHeldValue] = useState("");
   /** `holdUntilValue`: the held row's key, committed while its value is empty. */
   const [heldKey, setHeldKey] = useState("");
   /**
    * The rows a key was refused on, each by its row's card key (`HELD`: the held row), so a message follows its row;
-   * one per row, as D9b's Headers (final review M3). Each holds the row's key when refused (null for the held row):
-   * the message shows while the row still has that key (D9b's rule), until its key is typed in again or the row's
-   * key changes, from here or from outside (the YAML box, an undo).
+   * one per row. Each holds the row's key when refused (null for the held row): the message shows while the row
+   * still has that key, until its key is typed in again or the row's key changes, from here or from outside (the
+   * YAML box, an undo).
    */
   const [clashes, setClashes] = useState<ReadonlyMap<RowKey, string | null>>(() => new Map());
   const without = (on: RowKey) => (current: ReadonlyMap<RowKey, string | null>) => {
@@ -262,7 +262,7 @@ export function KeyValueMapField({
   );
 }
 
-/** D9b's staging row: a key and a value, added (trimmed) on Enter or "+"; a key another row has is refused. */
+/** The staging row: a key and a value, added (trimmed) on Enter or "+"; a key another row has is refused. */
 function StagingRow({ path, names, nouns }: { path: ValuePath; names: readonly string[]; nouns: KeyValueNouns }) {
   const form = useForm();
   const [newKey, setNewKey] = useState("");
@@ -359,7 +359,7 @@ function MapRow({
   /** Whether another row has this key. */
   taken: (typed: string) => boolean;
   onRemove: () => void;
-  /** The row's key was renamed: its row's key follows it (an integer-like key reorders the rows; Ruling 79). */
+  /** The row's key was renamed: its row's key follows it (an integer-like key reorders the rows). */
   onRenamed?: (to: string) => void;
   /** The held row's key was written. */
   onWritten?: () => void;
@@ -392,7 +392,7 @@ function MapRow({
   const nameText = useHeldText(
     name ?? held?.key ?? "",
     (typed) => {
-      // Trimmed, as the staging row's (Ruling 76): a key with spaces around it is that key.
+      // Trimmed, as the staging row's: a key with spaces around it is that key.
       const renamed = typed.trim();
       if (held !== undefined && name === null) {
         if (renamed === held.key) return;

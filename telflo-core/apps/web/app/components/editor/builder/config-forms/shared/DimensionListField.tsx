@@ -12,28 +12,27 @@ import type { ValuePath } from "~/lib/graph/text-edits.js";
 import type { ValueView } from "~/lib/graph/value-view.js";
 
 /*
- * spanmetrics' dimension rows (D9d decision 12): `[]Dimension{name, default}`
- * under `path`, a row per item (Name, Default, "Remove dimension"), and "Add
- * Dimension".
+ * spanmetrics' dimension rows: `[]Dimension{name, default}` under `path`, a
+ * row per item (Name, Default, "Remove dimension"), and "Add Dimension".
  *
- * - Fixed (decision 3): Add never appends `{name: ""}`, which the
- *   collector refuses ("dimension entry must set one of `name` or `glob`",
+ * - Add never appends `{name: ""}`, which the collector refuses ("dimension
+ *   entry must set one of `name` or `glob`",
  *   `connector/spanmetricsconnector/config.go:238-241`). Add holds a row
  *   (`useHeldItem`) until a name is typed; a Default typed first waits in
  *   it. The first name writes `{name, default?}` as the list's last item,
  *   and the row becomes the item's in place (the same key, so focus and
  *   caret stay). The held row goes when focus leaves it with nothing in it
- *   (as MultiValueField's held rows, D9c Preflight ruling 8; D9d Ruling
- *   33; focus moving into a field's `$` picker doesn't leave it, Ruling 38), when its list's length changes or it stops being a list (Ruling
- *   33a: another dimension edited keeps it), or with the form.
+ *   (as MultiValueField's held rows; focus moving into a field's `$` picker
+ *   doesn't leave it), when its list's length changes or it stops being a
+ *   list (another dimension edited keeps it), or with the form.
  * - A name cleared removes the item once the field is left (never written
  *   `""`); Default cleared removes `default`.
- * - An item that isn't a mapping, holds `glob` (a name typed beside it
- *   would be refused, `config.go:238-239`), or a name or default that isn't
- *   a one-line scalar, is a read-only row with D9b's hint; its Remove works.
- * - Rows are keyed by their items (D9c Ruling 68). Ids are
- *   `<id>-<index>-name` and `<id>-<index>-default`; the remove label is
- *   fixed (decision 13).
+ * - An item that isn't a mapping, holds `glob` (a name typed beside it would
+ *   be refused, `config.go:238-239`), or a name or default that isn't a
+ *   one-line scalar, is a read-only row with the unshowable-value hint; its
+ *   Remove works.
+ * - Rows are keyed by their items. Ids are `<id>-<index>-name` and
+ *   `<id>-<index>-default`; the remove label is fixed.
  */
 
 /** A Radix popover's portalled wrapper, as `useUndoRedo` finds one. */
@@ -183,7 +182,7 @@ function DimensionFields({
       else if (held) formRef.current.remove(["name"]);
       else onRemoveRef.current();
     },
-    // Emptied, it is removed only once it is left, not under the cursor (D9c Preflight ruling 8).
+    // Emptied, it is removed only once it is left, not under the cursor.
     { pause: (typed) => typed !== "" },
   );
   const defaultText = useHeldText(showable ? (value ?? "") : "", (typed) => {
@@ -198,8 +197,8 @@ function DimensionFields({
         className="grid grid-cols-[1fr_1fr_auto] items-center gap-2"
         onBlur={(e) => {
           // After the field's own blur wrote what it held; focus moving within the row keeps it, and so does focus
-          // moving into a popover (VaultAwareInput's `$` picker, portalled to <body>, which skips the field's blur
-          // and gives the field focus back; D9d Ruling 38).
+          // moving into a popover (VaultAwareInput's `$` picker, portalled to <body>, which skips the field's blur and
+          // gives the field focus back).
           const to = e.relatedTarget;
           if (!onLeave || (to instanceof Node && e.currentTarget.contains(to))) return;
           if (to instanceof Element && to.closest(POPPER_WRAPPER) !== null) return;

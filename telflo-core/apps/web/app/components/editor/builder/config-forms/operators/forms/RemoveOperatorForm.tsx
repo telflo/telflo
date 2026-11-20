@@ -3,12 +3,11 @@ import { useOperatorId } from "../operator-ids.js";
 import { FieldSelector } from "../shared/FieldSelector.js";
 
 /*
- * The `remove` operator's form (ADR 0018), over the card's scope (D9c
- * decisions 2 and 8). Ids are the card's (`op-<index>-remove-…`). Field is
- * required (`docs/operators/remove.md`), so it shows no default. It is
- * rootable (`transformer/remove/config.go:39`, `rootable_field.go:49-64`):
- * an empty suffix writes a bare `attributes` or `resource`, which removes
- * them all (decision 8).
+ * The `remove` operator's form, over the card's scope. Ids are the card's
+ * (`op-<index>-remove-…`). Field is required (`docs/operators/remove.md`), so
+ * it shows no default. It is rootable (`transformer/remove/config.go:39`,
+ * `rootable_field.go:49-64`): an empty suffix writes a bare `attributes` or
+ * `resource`, which removes them all.
  */
 
 const CODE = "rounded-[4px] bg-muted px-1 py-0.5 font-mono text-xs";

@@ -14,23 +14,21 @@ interface SampleEditorProps {
 }
 
 /**
- * The paste panel's writable Monaco (D14a decision 16). Differences:
- * - the person's theme and all four editor preferences, as every Monaco
- *   here (`useEditorPreferences`; D21 decisions 27 and 28), the tab size on
- *   the model, not a fixed tab size of 2 with the minimap off. The
- *   themes are defined before mount (D14a Preflight ruling 14);
+ * The paste panel's writable Monaco. In detail:
+ * - the person's theme and all four editor preferences, as every Monaco here
+ *   (`useEditorPreferences`), the tab size on the model, not a fixed tab size
+ *   of 2 with the minimap off. The themes are defined before mount;
  * - it mounts only once initMonaco() has resolved, as the YAML tab does: a
  *   mount before `loader.config` fetches Monaco from a CDN. "Loading
  *   editor…" until then; "The editor couldn't load." with "Try again" when it
  *   fails;
  * - JSON has its tokens only (initMonaco's mode configuration): no worker,
  *   no completion, no validation;
- * - replay (ADR 0024; decision 23): the sample is private text, so the
- *   editor sits in a `ph-no-capture` block, Monaco's screen-reader live
- *   region in the shell's one replay-blocked host (`useAriaContainer`,
- *   Ruling 48), word-based suggestions off (each word
- *   would be a suggestion row's `aria-label`), and no `path` (Monaco writes
- *   it into a `data-uri` attribute).
+ * - replay: the sample is private text, so the editor sits in a
+ *   `ph-no-capture` block, Monaco's screen-reader live region in the
+ *   shell's one replay-blocked host (`useAriaContainer`), word-based
+ *   suggestions off (each word would be a suggestion row's `aria-label`),
+ *   and no `path` (Monaco writes it into a `data-uri` attribute).
  */
 export function SampleEditor({ value, onChange, language }: SampleEditorProps) {
   const preferences = useEditorPreferences();

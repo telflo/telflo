@@ -25,10 +25,9 @@ export function arrowPath(x: number, y: number, position: Position): string {
 }
 
 /**
- * A pipeline edge: a bezier with an arrowhead and marching
- * dashes (`tf-edge-flow`, off under reduced motion), grey at rest, the
- * brand colour with a halo when selected. The path's `id` is the edge's
- * opaque id (D9a decision 7).
+ * A pipeline edge: a bezier with an arrowhead and marching dashes
+ * (`tf-edge-flow`, off under reduced motion), grey at rest, the brand colour
+ * with a halo when selected. The path's `id` is the edge's opaque id.
  */
 export function PipelineEdge({
   id,

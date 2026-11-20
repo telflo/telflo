@@ -2,7 +2,7 @@ import type { ValueView } from "~/lib/graph/value-view.js";
 
 /*
  * The counts the section headers show (a list's length, the set items'
- * count), read from the text (D9c Task 2).
+ * count), read from the text.
  */
 
 /** A list's length; 0 for anything that isn't a list. */

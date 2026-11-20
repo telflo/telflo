@@ -1,6 +1,6 @@
 /*
  * The Dynatrace signet, for the OTLP/HTTP exporter's "Dynatrace" quick
- * setup (D9b decision 8).
+ * setup.
  *
  * Source: the npm package `@dynatrace/strato-icons` 2.6.1, its
  * `DynatraceSignetIcon` (`__icons/DynatraceSignetIcon.js`, viewBox

@@ -14,37 +14,34 @@ import type { ValueView } from "~/lib/graph/value-view.js";
 import { useEditorStore } from "~/lib/stores/editor-store.js";
 
 /*
- * A pipeline multi-select (ADR 0018), over a list path in the form (D9d
- * decision 12; Task 3): each row a select over the canvas's pipelines, so a
- * target can't be mistyped. Routing's Target Pipelines and Default Pipelines,
- * and failover's levels.
+ * A pipeline multi-select, over a list path in the form: each row a select
+ * over the canvas's pipelines, so a target can't be mistyped. Routing's Target
+ * Pipelines and Default Pipelines, and failover's levels.
  *
  * - Choosing writes the row's item; for a routing or failover connector the
- *   store wires the pipeline's receivers in the same write (decision 8).
- *   Remove removes the item by its lines (with `emptyRemovesKey`, the last
- *   one takes the key with it; with `keepLast`, the last one's Remove is
- *   disabled with the form's hint: final ruling F2).
- * - Rows are keyed by their items (`useCardKeys`; D9c Ruling 68), never by
- *   position, so a Remove click can't land on the next item's row.
+ *   store wires the pipeline's receivers in the same write. Remove removes
+ *   the item by its lines (with `emptyRemovesKey`, the last one takes the
+ *   key with it; with `keepLast`, the last one's Remove is disabled with
+ *   the form's hint).
+ * - Rows are keyed by their items (`useCardKeys`), never by position, so a
+ *   Remove click can't land on the next item's row.
  * - A row offers the eligible pipelines (`options`, less `exclude`) that the
  *   list's other rows don't hold, and its own value.
- * - Changed (decision 8; Preflight ruling 12): a row's own value that is on
- *   the canvas but not eligible (a source, another signal) is shown as
- *   written; only a name not on the canvas is "(not found)", not every value
- *   outside the options.
- * - Fixed (decision 3): Add holds a row, written when a pipeline is chosen
- *   (never `""`); the held row goes when it is removed, when its
- *   list's length changes or it stops being a list (another row added or
- *   removed, by the form, an undo or the YAML box: D9d Rulings 33 and 33a),
- *   or with the form; another row chosen anew, a write elsewhere and their
- *   undos keep it. Add is disabled while there is a held or empty row, or
- *   nothing left to choose, with a no-options hint.
- * - Privacy (decision 13): an option's `value` is an index token into the
- *   canvas's pipelines (`pipeline-<i>`, the same in every row and render),
- *   or `not-found`; ids are the field's `id` with the row's index. Names are
+ * - A row's own value that is on the canvas but not eligible (a source,
+ *   another signal) is shown as written; only a name not on the canvas is
+ *   "(not found)", not every value outside the options.
+ * - Add holds a row, written when a pipeline is chosen (never `""`); the
+ *   held row goes when it is removed, when its list's length changes or it
+ *   stops being a list (another row added or removed, by the form, an undo
+ *   or the YAML box), or with the form; another row chosen anew, a write
+ *   elsewhere and their undos keep it. Add is disabled while there is a
+ *   held or empty row, or nothing left to choose, with a no-options hint.
+ * - Privacy: an option's `value` is an index token into the canvas's
+ *   pipelines (`pipeline-<i>`, the same in every row and render), or
+ *   `not-found`; ids are the field's `id` with the row's index. Names are
  *   text only.
  * - A list it can't show (not a list, an item that isn't one line of
- *   scalar) is read-only with D9b's hint.
+ *   scalar) is read-only with the unshowable-value hint.
  */
 
 /** The value of the option showing a name that isn't on the canvas. */
@@ -68,13 +65,13 @@ export interface PipelineListFieldProps {
   exclude?: readonly string[];
   /**
    * The list keeps its last item (a route's targets, a failover level): its
-   * Remove is disabled and this hint shown under it (final ruling F2).
+   * Remove is disabled and this hint shown under it.
    */
   keepLast?: string;
 }
 
 /**
- * The pipelines a routing or failover form's pickers offer (Task 4):
+ * The pipelines a routing or failover form's pickers offer:
  * `connectorPipelineOptions` over the text's model, for the component whose
  * source `form` is (its `componentKey`). Without one, every canvas pipeline.
  */

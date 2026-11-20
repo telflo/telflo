@@ -3,15 +3,14 @@ import { idPart, presenceOf, SectionHint, SectionToggle, UnshowableSectionHint }
 import type { ValuePath } from "~/lib/graph/text-edits.js";
 
 /*
- * The TLS section (ADR 0018), over the form's fields (D9b decisions 2 to
- * 4). Bound to the `tls` block's path under the form.
+ * The TLS section, over the form's fields. Bound to the `tls` block's path
+ * under the form.
  *
- * Kept (the owner's ruling): the box shows whether a
- * `tls` block is there; ticking it writes `min_version: "1.2"` and
- * `max_version: "1.3"` as the block, unticking removes the block. Each is
- * one change.
+ * The box shows whether a `tls` block is there; ticking it writes
+ * `min_version: "1.2"` and `max_version: "1.3"` as the block, unticking
+ * removes the block. Each is one change.
  *
- * Two variants (the owner's ruling, Preflight ruling 4):
+ * Two variants:
  * - "server" (receivers, health_check): the section as it is;
  * - "client" (the OTLP exporters): with no `tls` block an exporter still
  *   uses TLS, with the system's CAs, as its endpoint allows, so the box
@@ -19,22 +18,21 @@ import type { ValuePath } from "~/lib/graph/text-edits.js";
  *   and its reload (server settings the collector refuses on an exporter)
  *   aren't shown. It writes what the server variant writes.
  * The exporters' `insecure` box is the form's, not this section's.
- * resourcedetection's OpenShift detector (D9c Task 3) is a client of the
- * Kubernetes API (`configtls.ClientConfig`,
+ * resourcedetection's OpenShift detector is a client of the Kubernetes API
+ * (`configtls.ClientConfig`,
  * `processor/resourcedetectionprocessor/internal/openshift/config.go:50-52`)
- * and takes the client variant, with its own hint (`clientHint`): with no
- * CA file it trusts the service account's CA (`config.go:75-77`), not the
+ * and takes the client variant, with its own hint (`clientHint`): with no CA
+ * file it trusts the service account's CA (`config.go:75-77`), not the
  * system's.
  *
- * Changed (decision 3): the versions show unset as unset, the collector's
- * default as the placeholder and the "Default" hint.
+ * The versions show unset as unset, the collector's default as the
+ * placeholder and the "Default" hint.
  *
- * D9d (Task 5; the controller's ruling on remote write): `keepKeys` names
- * keys of the block that aren't the section's (remote write's `insecure`,
- * its own box, always shown). The box is on while the block holds any other
- * key; unticking removes the others and keeps those (the whole block when
- * it holds none of them); ticking writes the versions into the block beside
- * them, by key.
+ * `keepKeys` names keys of the block that aren't the section's (remote
+ * write's `insecure`, its own box, always shown). The box is on while the
+ * block holds any other key; unticking removes the others and keeps those
+ * (the whole block when it holds none of them); ticking writes the versions
+ * into the block beside them, by key.
  */
 
 export type TLSVariant = "server" | "client";

@@ -27,12 +27,11 @@ import { builderStore, componentNamed, openText } from "~/test/builder-store.js"
 import { hasHeldEdits } from "~/test/held-edits.js";
 
 /*
- * D9c's shared fields (D9c Task 1; decisions 5 and 9; Preflight rulings 1,
- * 8-12): what each shows of the text and what it writes, the held rows,
- * and privacy (decision 10).
+ * The shared fields: what each shows of the text and what it writes, the
+ * held rows, and privacy.
  */
 
-const TEXT = `# D9c's shared fields over a component's value.
+const TEXT = `# The shared fields over a component's value.
 receivers:
   filelog:
     priority: info
@@ -111,7 +110,7 @@ function pause(ms = FIELD_WRITE_DELAY_MS) {
   act(() => vi.advanceTimersByTime(ms));
 }
 
-describe("TextField's datalist (decision 9)", () => {
+describe("TextField's datalist", () => {
   it("offers fixed suggestions under a fixed id, and writes what is typed", () => {
     vi.useFakeTimers();
     const priorities = ["emerg", "alert", "crit", "err", "warning", "notice", "info", "debug"];
@@ -129,7 +128,7 @@ describe("TextField's datalist (decision 9)", () => {
   });
 });
 
-describe("EscapedTextField (decision 8; Preflight ruling 1)", () => {
+describe("EscapedTextField", () => {
   it("shows a newline as \\n, and the two characters '\\n' as \\\\n; blurring either unchanged writes nothing", () => {
     const calls = spyWrites();
     renderIn(
@@ -172,7 +171,7 @@ describe("EscapedTextField (decision 8; Preflight ruling 1)", () => {
   });
 });
 
-describe("CheckboxField's uncheckedRemoves (Preflight ruling 11)", () => {
+describe("CheckboxField's uncheckedRemoves", () => {
   it("unticking removes the key, with its lines; ticking writes true", async () => {
     const user = userEvent.setup();
     renderIn(
@@ -197,7 +196,7 @@ const CONDITIONS = [
   { value: "DiskPressure", label: "DiskPressure" },
 ];
 
-describe("CheckboxSetField (decisions 5 and 9; Preflight ruling 10)", () => {
+describe("CheckboxSetField", () => {
   it("ticks what the list holds, shows items outside its list after them, ticked, and the collector's default as the hint", () => {
     renderIn(
       "receivers.filelog",
@@ -242,7 +241,7 @@ describe("CheckboxSetField (decisions 5 and 9; Preflight ruling 10)", () => {
     expect(values()).not.toHaveProperty("conditions");
   });
 
-  it("an empty [] takes its first item in block style (D9b Ruling 85)", async () => {
+  it("an empty [] takes its first item in block style", async () => {
     const user = userEvent.setup();
     renderIn("receivers.filelog", <CheckboxSetField path={["empty_list"]} id="empty" label="Empty" items={CONDITIONS} />);
     await user.click(box("DiskPressure"));
@@ -299,7 +298,7 @@ const START_AT = [
   { value: "beginning", label: "Beginning" },
 ];
 
-describe("RadioField (decision 9; Preflight ruling 9)", () => {
+describe("RadioField", () => {
   it("checks the value's radio and writes another at once, keeping the line's comment", async () => {
     const user = userEvent.setup();
     const calls = spyWrites();
@@ -373,7 +372,7 @@ describe("RadioField (decision 9; Preflight ruling 9)", () => {
   });
 });
 
-describe("MultiValueField's addValue (Preflight ruling 12)", () => {
+describe("MultiValueField's addValue", () => {
   it("Add appends the seed", async () => {
     const user = userEvent.setup();
     renderIn(
@@ -385,7 +384,7 @@ describe("MultiValueField's addValue (Preflight ruling 12)", () => {
   });
 });
 
-describe("held empty rows (decision 9; Preflight ruling 8)", () => {
+describe("held empty rows", () => {
   const units = (addButtonText = "Add unit") => (
     <MultiValueField path={["units"]} label="Units" placeholder="e.g. ssh" addButtonText={addButtonText} holdEmpty />
   );
@@ -493,7 +492,7 @@ describe("held empty rows (decision 9; Preflight ruling 8)", () => {
   });
 });
 
-describe("privacy (decision 10)", () => {
+describe("privacy", () => {
   it("no attribute holds a value: an extra checkbox item, an out-of-list radio value, an escaped text, a held row", () => {
     const MARK = "MARKER";
     openText(
@@ -528,7 +527,7 @@ describe("privacy (decision 10)", () => {
   });
 });
 
-describe("the review's fixes (D9c Task 1)", () => {
+describe("control characters, and held rows when the length changes", () => {
   it("EscapedTextField shows a carriage return as \\r and writes it back; another control character is read-only", () => {
     vi.useFakeTimers();
     renderIn(
@@ -568,7 +567,7 @@ describe("the review's fixes (D9c Task 1)", () => {
   });
 });
 
-describe("strings the collector would read as another type are quoted (Ruling 69)", () => {
+describe("strings the collector would read as another type are quoted", () => {
   it("a TextField typed 1_000 or 2024-01-01 writes a quoted string, not an integer or a time to yaml.v3", () => {
     vi.useFakeTimers();
     renderIn("receivers.filelog", <TextField path={["priority"]} id="priority" label="Priority" />);
@@ -604,7 +603,7 @@ describe("strings the collector would read as another type are quoted (Ruling 69
     expect(operator().value).toBe(750);
   });
 
-  it("add's Value typed as a flow collection holding such a string writes the collection, that string quoted, and shows it (Ruling 78)", () => {
+  it("add's Value typed as a flow collection holding such a string writes the collection, that string quoted, and shows it", () => {
     vi.useFakeTimers();
     openText(TEXT.replace("    priority: info\n", '    operators:\n      - type: add\n        field: attributes.x\n        value: ""\n'));
     render(

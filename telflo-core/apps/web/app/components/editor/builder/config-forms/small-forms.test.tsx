@@ -19,17 +19,15 @@ import { selectIsDirty, selectUndoDescription, useEditorStore } from "~/lib/stor
 import { builderStore, componentNamed, openText } from "~/test/builder-store.js";
 
 /*
- * The small forms (D9b Task 5): the debug, batch, memory_limiter,
- * forward, health_check, pprof and zpages forms over the form's fields.
- * Each field is driven as a person would (typing, clicking) and writes only
- * its key: the text changes in that key's lines only, on a text with
- * comments, an anchor and a merge, `0750`, and CRLF line endings (decision
- * 2). What they show follows decision 3. Six batch processor cases close
- * the file.
+ * The small forms: the debug, batch, memory_limiter, forward, health_check,
+ * pprof and zpages forms over the form's fields. Each field is driven as a
+ * person would (typing, clicking) and writes only its key: the text changes
+ * in that key's lines only, on a text with comments, an anchor and a merge,
+ * `0750`, and CRLF line endings. Six batch processor cases close the file.
  */
 
 const FORMS = [
-  "# The small forms (D9b Task 5).",
+  "# The small forms.",
   "receivers:",
   "  otlp:",
   "    protocols:",
@@ -396,7 +394,7 @@ const CASES: FieldCase[] = [
 
 const CRLF = (lf: string) => lf.replace(/\n/g, "\r\n");
 
-describe("every field of each form writes only its key (decision 2)", () => {
+describe("every field of each form writes only its key", () => {
   it.each(CASES.flatMap((c) => [[`${c.name}, LF`, c, false] as const, [`${c.name}, CRLF`, c, true] as const]))(
     "%s",
     async (_name, c, crlf) => {
@@ -454,7 +452,7 @@ describe("every field of each form writes only its key (decision 2)", () => {
   });
 });
 
-describe("what the small forms show (decision 3)", () => {
+describe("what the small forms show", () => {
   it("values as the text writes them: 0750 as 0750, a duration as written", () => {
     renderForm("processors.batch", <BatchProcessorForm />);
     expect(field("Timeout")).toHaveValue("10s");
@@ -518,7 +516,7 @@ describe("what the small forms show (decision 3)", () => {
     expect(screen.getByText("Body returned with HTTP 503.")).toBeInTheDocument();
   });
 
-  it("pprof's and zpages' endpoints default to localhost, the collector's (Preflight ruling 8)", () => {
+  it("pprof's and zpages' endpoints default to localhost, the collector's", () => {
     renderForm("extensions.pprof", <PprofForm />);
     expect(field("Endpoint")).toHaveAttribute("placeholder", "localhost:1777");
     expect(hint("Address the pprof HTTP server listens on. · Default localhost:1777")).toBeInTheDocument();
@@ -633,7 +631,7 @@ describe("BatchProcessorForm cases", () => {
   });
 });
 
-describe("privacy (decision 10)", () => {
+describe("privacy", () => {
   it("puts no config value in any attribute of the seven forms, their sections opened", async () => {
     const MARK = "zq-mark";
     const marked = [

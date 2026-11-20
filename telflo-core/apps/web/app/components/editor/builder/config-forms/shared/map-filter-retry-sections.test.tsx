@@ -17,11 +17,9 @@ import { builderStore, componentNamed, openText } from "~/test/builder-store.js"
 import { hasHeldEdits } from "~/test/held-edits.js";
 
 /*
- * D9c's shared sections (D9c Task 1): KeyValueMapField's two layouts and its
- * held row (decision 9; Preflight rulings 4 and 8), IncludeExcludeSection
- * (decisions 3 and 9; Preflight ruling 5) and StanzaRetrySection (decision
- * 9), and privacy (decision 10). D9b's Headers tests, over the staging
- * layout, are in shared-sections.test.tsx, unchanged.
+ * More shared sections: KeyValueMapField's two layouts and its held row,
+ * IncludeExcludeSection and StanzaRetrySection, and privacy. The Headers
+ * tests, over the staging layout, are in shared-sections.test.tsx.
  */
 
 const TEXT = `receivers:
@@ -113,7 +111,7 @@ function pause(ms = FIELD_WRITE_DELAY_MS) {
   act(() => vi.advanceTimersByTime(ms));
 }
 
-describe("KeyValueMapField's rows layout (decision 9; Preflight rulings 4 and 8)", () => {
+describe("KeyValueMapField's rows layout", () => {
   const attributes = (path = ["attributes"], extra: { emptyRemovesKey?: boolean } = {}) => (
     <KeyValueMapField
       path={path}
@@ -235,7 +233,7 @@ describe("KeyValueMapField's rows layout (decision 9; Preflight rulings 4 and 8)
 });
 
 describe("KeyValueMapField's staging layout with other nouns (docker_stats' label maps)", () => {
-  it("uses the form's nouns in D9b's markup", async () => {
+  it("uses the form's nouns in the staging markup", async () => {
     const user = userEvent.setup();
     renderIn(
       "receivers.filelog",
@@ -291,7 +289,7 @@ async function pick(user: ReturnType<typeof userEvent.setup>, combo: HTMLElement
   await user.click(screen.getByRole("option", { name: option }));
 }
 
-describe("IncludeExcludeSection (decisions 3 and 9; Preflight ruling 5)", () => {
+describe("IncludeExcludeSection", () => {
   it("with no filter, Include Only shows a held first row: nothing is written until something is typed", async () => {
     const user = userEvent.setup();
     const calls = spyWrites();
@@ -324,7 +322,7 @@ describe("IncludeExcludeSection (decisions 3 and 9; Preflight ruling 5)", () => 
     expect(combos()[0]).toHaveTextContent("Include Only");
   });
 
-  // Its own time limit (D9c Rulings 54 and 80).
+  // Its own time limit.
   it("the held first row becomes the item's row in place: typing on after the pause keeps focus and writes the same item", async () => {
     const user = userEvent.setup();
     // Radix's select needs real timers: the pause is waited for.
@@ -368,7 +366,7 @@ describe("IncludeExcludeSection (decisions 3 and 9; Preflight ruling 5)", () => 
       exclude: { devices: ["loop0"], match_type: "strict" },
     });
     expect(text()).toContain("          devices: [sda] # the data disk\n          match_type: strict\n        exclude:\n");
-    // The exclude list's own label, and the mode select reading the side last picked (Ruling 48).
+    // The exclude list's own label, and the mode select reading the side last picked.
     expect(screen.getAllByText("Exclude", { selector: "span" }).some((span) => span.classList.contains("w-[180px]"))).toBe(true);
     expect(combos()[0]).toHaveTextContent("Exclude");
   });
@@ -440,7 +438,7 @@ describe("IncludeExcludeSection (decisions 3 and 9; Preflight ruling 5)", () => 
   });
 });
 
-describe("StanzaRetrySection (decision 9)", () => {
+describe("StanzaRetrySection", () => {
   it("unset is off; ticking writes enabled: true, adding the block; the intervals show their defaults as placeholders", async () => {
     const user = userEvent.setup();
     renderIn("receivers.filelog/unset", <StanzaRetrySection path={["retry_on_failure"]} />);
@@ -483,7 +481,7 @@ describe("StanzaRetrySection (decision 9)", () => {
   });
 });
 
-describe("privacy (decision 10)", () => {
+describe("privacy", () => {
   it("no attribute in the sections holds a value, and none sits inside a <form>", async () => {
     const user = userEvent.setup();
     const MARK = "MARKER";
@@ -537,7 +535,7 @@ describe("privacy (decision 10)", () => {
   });
 });
 
-describe("the review's fixes (D9c Task 1)", () => {
+describe("held values and picks when the list changes elsewhere", () => {
   const NOUNS = ATTRIBUTE_NOUNS;
 
   it("a value typed in the held row before its key, and its clash, stay when a row above it is removed", () => {

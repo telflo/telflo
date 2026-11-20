@@ -1,23 +1,22 @@
 /**
- * Compare's "Create an OTTL rule" (D15b Task 6: decisions 4, 5, 6 and 12;
- * Preflight rulings 8, 12, 13, 14 and 17): the footer's count, plural,
- * chips, cap and "Showing 5 of {n}."; nothing for no candidates; the
- * truncation sentences; the footer's status regions mounted empty as
- * Compare opens and filled once its files show, a long key wrapped whole
- * in its chip (Ruling 32), the chips' group bounded and scrolling (Ruling
- * 34); the files parsed and the rules detected once per
- * opening; a chip's lookup of the run's validation pipeline (held, busy,
- * looked up once, dropped once Compare has closed); none → a toast, Compare
- * kept open; found → Compare closes and the rule editor opens prefilled (OTTL
- * condition, the run's signal's context with the validation store cold, the
- * chip's Require and Condition); Save adds the rule through D15a's save and
- * toasts; the editor's session (an answer after Escape acts on nothing); the
- * hold (a Play all's answer leaves the editor open, a version switch closes
- * it); the focus back to the Compare link, else the selected row; and
- * replay's rule (no key or value in an attribute; the toasts carrying names
- * blocked). Ruling 26: a lookup or a save answered after a version switch
- * (the results gone) toasts nothing; Compare closed with Escape or Close
- * gives the focus back to the Compare link.
+ * Compare's "Create an OTTL rule": the footer's count, plural, chips, cap
+ * and "Showing 5 of {n}."; nothing for no candidates; the truncation
+ * sentences; the footer's status regions mounted empty as Compare opens and
+ * filled once its files show, a long key wrapped whole in its chip, the
+ * chips' group bounded and scrolling; the files parsed and the rules
+ * detected once per opening; a chip's lookup of the run's validation
+ * pipeline (held, busy, looked up once, dropped once Compare has closed);
+ * none → a toast, Compare kept open; found → Compare closes and the rule
+ * editor opens prefilled (OTTL condition, the run's signal's context with
+ * the validation store cold, the chip's Require and Condition); Save adds
+ * the rule through the rules' own save and toasts; the editor's session (an
+ * answer after Escape acts on nothing); the hold (a Play all's answer
+ * leaves the editor open, a version switch closes it); the focus back to
+ * the Compare link, else the selected row; and replay's rule (no key or
+ * value in an attribute; the toasts carrying names blocked). A lookup or a
+ * save answered after a version switch (the results gone) toasts nothing;
+ * Compare closed with Escape or Close gives the focus back to the Compare
+ * link.
  *
  * Rendered through TestingTab, as TestRunsPanel's tests: Monaco is stubbed
  * (the DiffEditor shows its texts as text); the API is its client's
@@ -187,7 +186,7 @@ beforeEach(() => {
   useEditorStore.setState(initialEditor, true);
   useTestingStore.setState({ ...initialTesting, lastRunDurationSeconds: 5 }, true);
   useTestSuitesStore.getState().reset();
-  // Cold: the Validation subtab never opened (decision 6).
+  // Cold: the Validation subtab never opened.
   useValidationPipelinesStore.getState().reset();
   useEditorStore.getState().load({ organizationId: GROUP_ID, configuration: MINE, version: VERSION });
   useUserStore.getState().setCurrent(signedInMember(GROUP_ID));
@@ -258,7 +257,7 @@ async function openEditorFrom(chip: string) {
   return { ...view, editor };
 }
 
-describe("Compare's footer (decision 4; Preflight ruling 17)", () => {
+describe("Compare's footer", () => {
   it("says 'Detected 3 candidate rules:' and offers each as a chip, in its words and order, a group labelled by that line, each titled 'Create an OTTL rule asserting this change'; the output's several batches and the NDJSON input read", async () => {
     const { dialog } = await openCompare();
 
@@ -299,7 +298,7 @@ describe("Compare's footer (decision 4; Preflight ruling 17)", () => {
     ["seven chips", false, ["Detected 7 candidate rules:", "Showing 5 of 7."]],
     ["a run cut at 10 MiB", true, ["Output was cut at 10 MiB, so no rules are suggested.", ""]],
   ])(
-    "mounts the footer's two status regions empty as Compare opens, while its files load, and fills those same regions once they show (%s; Ruling 32)",
+    "mounts the footer's two status regions empty as Compare opens, while its files load, and fills those same regions once they show (%s)",
     async (_label, outputTruncated, lines) => {
       const added = Object.fromEntries(Array.from({ length: 7 }, (_each, index) => [`zq-key${index + 1}`, "zq-value"]));
       runsServed = [{ ...RUN, outputTruncated }];
@@ -330,7 +329,7 @@ describe("Compare's footer (decision 4; Preflight ruling 17)", () => {
     },
   );
 
-  it("shows a long key whole in its chip, wrapped, never cut, and in no title (Ruling 32)", async () => {
+  it("shows a long key whole in its chip, wrapped, never cut, and in no title", async () => {
     const key = `zq-${"very-long-attribute-key-".repeat(12)}end`;
     filesServed = { [RUN.id]: filesOf("logs", [{ a: "1" }], [{ a: "1", [key]: "zq-value" }]) };
     const { dialog } = await openCompare();
@@ -348,7 +347,7 @@ describe("Compare's footer (decision 4; Preflight ruling 17)", () => {
     }
   });
 
-  it("keeps very long keys whole in a group at most 10rem tall that scrolls, so the diff editor keeps its room (three 3,000-character keys; Ruling 34's m2)", async () => {
+  it("keeps very long keys whole in a group at most 10rem tall that scrolls, so the diff editor keeps its room (three 3,000-character keys)", async () => {
     const keys = [1, 2, 3].map((index) => `zq-${index}-${"k".repeat(2995)}`);
     filesServed = { [RUN.id]: filesOf("logs", [{ a: "1" }], [{ a: "1", ...Object.fromEntries(keys.map((key) => [key, "zq-value"])) }]) };
     const { dialog } = await openCompare();
@@ -418,7 +417,7 @@ describe("Compare's footer (decision 4; Preflight ruling 17)", () => {
   });
 });
 
-describe("a chip: the lookup (decision 5; Preflight ruling 14)", () => {
+describe("a chip: the lookup", () => {
   it("finds the run's validation pipeline by its version and pipeline, read from the API; Compare closes and the editor opens prefilled: OTTL condition, the run's signal's context, the chip's Require and Condition, Name and Description empty", async () => {
     const { editor } = await openEditorFrom(CHIPS[1]);
 
@@ -442,7 +441,7 @@ describe("a chip: the lookup (decision 5; Preflight ruling 14)", () => {
     expect(within(editor).getByLabelText("OTTL condition")).toHaveValue('attributes["zq-level"] == "zq-warn"');
   });
 
-  it("saves through D15a's save, Add rule: the rule as prefilled, on the run's version and pipeline; toasts 'Rule added to logs/zqotlp' (ph-no-capture); the focus back on the Compare link", async () => {
+  it("saves through the rules' own save, Add rule: the rule as prefilled, on the run's version and pipeline; toasts 'Rule added to logs/zqotlp' (ph-no-capture); the focus back on the Compare link", async () => {
     const { user, editor } = await openEditorFrom(CHIPS[2]);
 
     await user.click(within(editor).getByRole("button", { name: "Add rule" }));
@@ -556,7 +555,7 @@ describe("a chip: the lookup (decision 5; Preflight ruling 14)", () => {
   it.each([
     ["no validation pipeline for the run's", "none"],
     ["a failed lookup", "failed"],
-  ] as const)("drops a lookup answered after a version switch, the results gone: %s toasts nothing (Ruling 26)", async (_what, outcome) => {
+  ] as const)("drops a lookup answered after a version switch, the results gone: %s toasts nothing", async (_what, outcome) => {
     const answer = deferred<ValidationPipelinesResponse>();
     listPipelines.mockReturnValueOnce(answer.promise);
     const { user, dialog } = await openCompare();
@@ -575,7 +574,7 @@ describe("a chip: the lookup (decision 5; Preflight ruling 14)", () => {
   });
 });
 
-describe("the prefilled editor (decision 6; Preflight ruling 12)", () => {
+describe("the prefilled editor", () => {
   it.each([
     ["logs", "log"],
     ["traces", "span"],
@@ -621,7 +620,7 @@ describe("the prefilled editor (decision 6; Preflight ruling 12)", () => {
     expect(createRule).not.toHaveBeenCalled();
   });
 
-  it.each(["added", "refused"] as const)("acts on nothing when its save is answered (%s) after a version switch: no toast, no 'Rule added' (Ruling 26)", async (outcome) => {
+  it.each(["added", "refused"] as const)("acts on nothing when its save is answered (%s) after a version switch: no toast, no 'Rule added'", async (outcome) => {
     const answer = deferred<ValidationRuleResponse>();
     createRule.mockReturnValueOnce(answer.promise);
     const { user, editor } = await openEditorFrom(CHIPS[2]);
@@ -641,7 +640,7 @@ describe("the prefilled editor (decision 6; Preflight ruling 12)", () => {
   });
 });
 
-describe("closing Compare (Ruling 26)", () => {
+describe("closing Compare", () => {
   it.each([
     ["Escape", async (user: ReturnType<typeof userEvent.setup>) => user.keyboard("{Escape}")],
     [
@@ -665,7 +664,7 @@ describe("closing Compare (Ruling 26)", () => {
   });
 });
 
-describe("the hold (Preflight ruling 13)", () => {
+describe("the hold", () => {
   it("keeps the editor and what was typed in it through a Play all's answer selecting another run; closed, the focus goes to that run's row", async () => {
     const suite = testSuiteFixture();
     vi.spyOn(apiClient, "getTestSuites").mockResolvedValue({ suites: [suite] });
@@ -711,7 +710,7 @@ describe("the hold (Preflight ruling 13)", () => {
     expect(document.activeElement?.closest("li")).toBe(screen.getByRole("button", { name: /Queued/ }).closest("li"));
   });
 
-  it("serves no focus request while the editor shows: a Play all's answer selecting its first run neither moves the focus off Name nor selects what was typed there (Ruling 32)", async () => {
+  it("serves no focus request while the editor shows: a Play all's answer selecting its first run neither moves the focus off Name nor selects what was typed there", async () => {
     const suite = testSuiteFixture();
     vi.spyOn(apiClient, "getTestSuites").mockResolvedValue({ suites: [suite] });
     let release: (value: { definitions: ReturnType<typeof testDefinitionFixture>[] }) => void = () => undefined;
@@ -763,7 +762,7 @@ describe("the hold (Preflight ruling 13)", () => {
     expect(name).toHaveValue("zq-env guards");
 
     // The request was dropped, not kept: closing the editor gives the focus to the selected row once (focusAfterEditor's
-    // fallback), and nothing pulls it there later, when the list next renders (D14b Ruling 42).
+    // fallback), and nothing pulls it there later, when the list next renders.
     await user.keyboard("{Escape}");
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
     await waitFor(() => expect(document.activeElement).toHaveAttribute("aria-pressed", "true"));
@@ -779,7 +778,7 @@ describe("the hold (Preflight ruling 13)", () => {
   });
 });
 
-describe("replay (Preflight ruling 17; ADR 0024)", () => {
+describe("replay", () => {
   it("puts no key or value in any attribute (the chips, their busy state, the editor), every text inside ph-no-capture; the toasts carrying a pipeline's name blocked", async () => {
     const markers: string[] = [];
     /** Every attribute carrying a marker; an input's or textarea's value is masked by replay (maskAllInputs). */

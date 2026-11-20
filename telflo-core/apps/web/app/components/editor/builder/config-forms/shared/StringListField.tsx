@@ -8,18 +8,18 @@ import { VaultAwareInput } from "~/components/ui/vault-aware-input.js";
 import type { ValueChange, ValuePath } from "~/lib/graph/text-edits.js";
 
 /*
- * A string list (ADR 0018), over the form (D9b decision 2):
- * add/remove string list used by list-shaped config fields (bearer tokens,
- * label sets, …). Existing rows are read-only; Enter or "+" appends the
- * trimmed value as an item, and Remove removes the item's lines. With
- * `emptyRemovesKey`, removing the last item removes the key (the bearer
- * form's `tokens.length ? tokens : undefined`); otherwise it leaves `[]`.
+ * A string list, over the form: add/remove string list used by list-shaped
+ * config fields (bearer tokens, label sets, …). Existing rows are
+ * read-only; Enter or "+" appends the trimmed value as an item, and Remove
+ * removes the item's lines. With `emptyRemovesKey`, removing the last item
+ * removes the key (the bearer form's `tokens.length ? tokens : undefined`);
+ * otherwise it leaves `[]`.
  *
- * Changed (decision 10; Preflight ruling 5): each row's remove button says
- * "Remove", never "Remove <value>", a token in an attribute.
+ * Each row's remove button says "Remove", never "Remove <value>", a token in
+ * an attribute.
  *
- * D9d (decision 12; the span processor's filters): `alsoOnAppend` gives
- * changes written with an appended item, in the same write (the filter's
+ * For the span processor's filters, `alsoOnAppend` gives changes written
+ * with an appended item, in the same write (the filter's
  * `match_type: strict` with its first item), and `onEmptied` the changes
  * removing the last item writes in place of removing it (or the key): the
  * filter side's removal while nothing else is left in it.

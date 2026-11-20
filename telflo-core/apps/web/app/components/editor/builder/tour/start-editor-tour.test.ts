@@ -15,9 +15,8 @@ import { useEditorStore } from "~/lib/stores/editor-store.js";
 import { builderStore, openText } from "~/test/builder-store.js";
 
 /*
- * The editor tour (D9a decision 14; the Appearance table's tour
- * rows): its two step sets, word for word with the spec's changes, the set
- * the canvas calls for, the steps' effects on the editor, and completion.
+ * The editor tour: its two step sets, word for word, the set the canvas
+ * calls for, the steps' effects on the editor, and completion.
  */
 
 const STARTER = corpusText("starter.yaml");
@@ -110,7 +109,7 @@ afterEach(() => {
 });
 
 describe("the step sets", () => {
-  it("says its words for a canvas with components, with the spec's changes", () => {
+  it("says its words for a canvas with components", () => {
     expect(copy(stepsWithComponents())).toEqual([
       {
         title: "Component Toolbox",
@@ -154,7 +153,7 @@ describe("the step sets", () => {
     ]);
   });
 
-  it("says its words for an empty canvas, with the spec's changes", () => {
+  it("says its words for an empty canvas", () => {
     expect(copy(stepsEmpty())).toEqual([
       {
         title: "Component Toolbox",
@@ -188,7 +187,7 @@ describe("the step sets", () => {
     ]);
   });
 
-  it("has the validation bar's sentence again, exactly the spec's, in YAML View and Configuration & YAML only (D13b decision 16)", () => {
+  it("has the validation bar's sentence, word for word, in YAML View and Configuration & YAML only", () => {
     const sentences = new Map([
       ["YAML View", "A validation status bar at the bottom shows whether your config is valid."],
       ["Configuration & YAML", "— a validation bar at the bottom confirms if your config is valid."],
@@ -207,7 +206,7 @@ describe("the step sets", () => {
     }
   });
 
-  it("has no AI step, and names neither the AI nor a download; only Version History names publishing (ADR 0007; D11b decision 13)", () => {
+  it("has no AI step, and names neither the AI nor a download; only Version History names publishing", () => {
     for (const steps of [stepsWithComponents(), stepsEmpty()]) {
       for (const step of steps) {
         if (typeof step.element === "string") {
@@ -222,7 +221,7 @@ describe("the step sets", () => {
     }
   });
 
-  it("ends both sets on the version picker, Version History, which can't be used while shown (D10 decision 15)", () => {
+  it("ends both sets on the version picker, Version History, which can't be used while shown", () => {
     for (const steps of [stepsWithComponents(), stepsEmpty()]) {
       const last = steps.at(-1)!;
       expect(last).toEqual({
@@ -312,7 +311,7 @@ describe("startEditorTour", () => {
     expect(builderStore().activeTab).toBe("config");
   });
 
-  it("highlights the version picker last, with no interaction while it is shown (D10 decision 15)", () => {
+  it("highlights the version picker last, with no interaction while it is shown", () => {
     openText(STARTER);
     renderAnchors();
 
@@ -431,7 +430,7 @@ describe("completion", () => {
   });
 });
 
-describe("an editor without a version picker (D31-1's public editor: `versionHistory: false`)", () => {
+describe("an editor without a version picker (the public editor: `versionHistory: false`)", () => {
   it("leaves out Version History, ending both sets on the toolbar's actions; the other steps as before", () => {
     for (const [without, all] of [
       [stepsWithComponents({ versionHistory: false }), stepsWithComponents()],

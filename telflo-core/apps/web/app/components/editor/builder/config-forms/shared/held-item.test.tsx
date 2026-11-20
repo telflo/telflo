@@ -14,10 +14,9 @@ import { useEditorStore } from "~/lib/stores/editor-store.js";
 import { builderStore, componentNamed, openText } from "~/test/builder-store.js";
 
 /*
- * Held cards and DimensionListField (D9d Task 2; decision 12; Preflight
- * ruling 22): a card that isn't in the text until its first field is
- * typed, then `seed ∪ typed` appended or inserted as one change, the card
- * becoming the item's in place; never an empty item.
+ * Held cards and DimensionListField: a card that isn't in the text until
+ * its first field is typed, then `seed ∪ typed` appended or inserted as one
+ * change, the card becoming the item's in place; never an empty item.
  */
 
 const TEXT = `processors:
@@ -97,7 +96,7 @@ const transforms = (key = "metricstransform") =>
   (parseYaml(text()) as { processors: Record<string, { transforms?: unknown[] }> }).processors[key]!.transforms;
 const pause = () => act(() => vi.advanceTimersByTime(FIELD_WRITE_DELAY_MS));
 
-/** metricstransform's seed (Preflight ruling 8): `include` placed first, written once typed. */
+/** metricstransform's seed: `include` placed first, written once typed. */
 const SEED = { include: undefined, match_type: "strict", action: "update" };
 
 let latest: HeldItem | null = null;
@@ -144,7 +143,7 @@ function Card({ index, position, held }: { index: number; position: number; held
 const include = (index: number) => screen.getByRole("textbox", { name: `Include ${index}` }) as HTMLInputElement;
 const count = (index: number) => screen.getByRole("textbox", { name: `Count ${index}` }) as HTMLInputElement;
 
-describe("held cards (decision 12; Preflight ruling 22)", () => {
+describe("held cards", () => {
   it("Add holds a card that isn't in the text; its first typing appends seed ∪ typed as one change, the card becoming the item's", () => {
     const calls = spyWrites();
     renderIn("processors.metricstransform", <Transforms />);
@@ -223,7 +222,7 @@ describe("held cards (decision 12; Preflight ruling 22)", () => {
     expect(text()).toBe(TEXT);
   });
 
-  it("holds one message per message and adjusted paths: the same message for another path stays when a change drops the first (D9d Ruling 45)", () => {
+  it("holds one message per message and adjusted paths: the same message for another path stays when a change drops the first", () => {
     vi.spyOn(toast, "info").mockImplementation(() => "");
     renderIn("processors.metricstransform/empty", <Transforms />);
     fireEvent.click(screen.getByRole("button", { name: "Add Transform" }));
@@ -233,7 +232,7 @@ describe("held cards (decision 12; Preflight ruling 22)", () => {
     // The same message for the same paths again is held once.
     act(() => latest!.notice([{ message, adjusted: [["other"]] }]));
     expect(toast.info).not.toHaveBeenCalled();
-    // Count typed: the message adjusting count goes (Ruling 41d); the one adjusting other comes with the write, once.
+    // Count typed: the message adjusting count goes; the one adjusting other comes with the write, once.
     fireEvent.change(count(0), { target: { value: "3" } });
     fireEvent.blur(count(0));
     expect(transforms("metricstransform/empty")).toEqual([{ match_type: "strict", action: "update", count: 3 }]);
@@ -256,12 +255,9 @@ describe("held cards (decision 12; Preflight ruling 22)", () => {
   });
 
   /*
-   * D9d Ruling 33a (refining Ruling 33, D9c Preflight ruling 8): a held card
-   * belongs to its list's shape. An edit inside another card of its list,
-   * and that edit's undo and redo, keep it (its index is worked out when it
-   * is written). This test replaces 7be9be6's "is dropped when its own list
-   * changes by a write it didn't make (another card's field, an undo of
-   * it)", whose cases now keep it; Drop still drops it.
+   * A held card belongs to its list's shape. An edit inside another card of
+   * its list, and that edit's undo and redo, keep it (its index is worked
+   * out when it is written); Drop still drops it.
    */
   it("survives an edit of another card's field in its list, and that edit's undo and redo; Drop drops it; neither writes", () => {
     const calls = spyWrites();
@@ -347,10 +343,8 @@ describe("held cards (decision 12; Preflight ruling 22)", () => {
   });
 
   /*
-   * Ruling 33a: what drops it is its list's length changing, or the list
-   * no longer being one. This test replaces 7be9be6's "is dropped by a
-   * YAML-box edit of its list, and by an undo that changes its list", whose
-   * edit inside an item (and its undo) now keeps it.
+   * What drops it is its list's length changing, or the list no longer
+   * being one; a YAML-box edit inside an item (and its undo) keeps it.
    */
   it("is dropped when another item is added or removed (a write, the YAML box, an undo, a redo) or the list is replaced; a YAML-box edit inside an item keeps it", () => {
     spyWrites();
@@ -420,7 +414,7 @@ const dimensionsOf = () =>
 const nameAt = (index: number) => document.getElementById(`dims-${index}-name`) as HTMLInputElement;
 const defaultAt = (index: number) => document.getElementById(`dims-${index}-default`) as HTMLInputElement;
 
-describe("DimensionListField (decision 12)", () => {
+describe("DimensionListField", () => {
   it("shows a row per dimension; a glob or a non-mapping is a read-only row with the hint, whose Remove works", () => {
     const calls = spyWrites();
     renderIn("connectors.spanmetrics", <DimensionListField path={["dimensions"]} id="dims" />);
@@ -457,7 +451,7 @@ describe("DimensionListField (decision 12)", () => {
     expect(document.activeElement).toBe(name);
   });
 
-  it("a held row left with nothing in it is dropped (D9d Ruling 33, as MultiValueField's); focus moving within it keeps it", () => {
+  it("a held row left with nothing in it is dropped (as MultiValueField's); focus moving within it keeps it", () => {
     const calls = spyWrites();
     renderIn("connectors.spanmetrics", <DimensionListField path={["dimensions"]} id="dims" />);
     fireEvent.click(screen.getByRole("button", { name: "Add Dimension" }));
@@ -485,7 +479,7 @@ describe("DimensionListField (decision 12)", () => {
     expect(dimensionsOf()).toHaveLength(4);
   });
 
-  it("focus moving into a field's $ picker (a popover in <body>) keeps the held row; a pick lands in it (D9d Ruling 38)", () => {
+  it("focus moving into a field's $ picker (a popover in <body>) keeps the held row; a pick lands in it", () => {
     const calls = spyWrites();
     renderIn("connectors.spanmetrics", <DimensionListField path={["dimensions"]} id="dims" />);
     fireEvent.click(screen.getByRole("button", { name: "Add Dimension" }));
@@ -510,7 +504,7 @@ describe("DimensionListField (decision 12)", () => {
     expect(nameAt(5)).toBeNull();
   });
 
-  it("a held row survives an edit of another dimension and its undo; another dimension removed, or that undone, drops it (D9d Ruling 33a)", () => {
+  it("a held row survives an edit of another dimension and its undo; another dimension removed, or that undone, drops it", () => {
     const calls = spyWrites();
     renderIn("connectors.spanmetrics", <DimensionListField path={["dimensions"]} id="dims" />);
     fireEvent.click(screen.getByRole("button", { name: "Add Dimension" }));
@@ -556,7 +550,7 @@ describe("DimensionListField (decision 12)", () => {
   });
 });
 
-describe("privacy (decision 13)", () => {
+describe("privacy", () => {
   it("no attribute holds a value: dimension rows, a held row's typing, a held card's", () => {
     const MARK = "MARKER";
     renderIn(

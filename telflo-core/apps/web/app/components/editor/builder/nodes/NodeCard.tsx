@@ -14,7 +14,7 @@ import { cn } from "~/lib/utils.js";
  * same hue.
  *
  * The title and subtitle are text (masked by the app shell's replay
- * masking); nothing a person wrote goes into an attribute (D9a decision 7).
+ * masking); nothing a person wrote goes into an attribute.
  */
 
 const handleClass = "!w-2.5 !h-2.5 !rounded-full !border-2 !bg-card transition-transform hover:!scale-125";
@@ -36,8 +36,8 @@ interface NodeCardProps {
   sourceHandleStatic?: boolean;
   /**
    * Whether connections can be drawn from and to the ports: React Flow's
-   * `isConnectable` for the node, false in manual edit mode (Preflight
-   * ruling 18), so its ports aren't live under the lock.
+   * `isConnectable` for the node, false in manual edit mode, so its ports
+   * aren't live under the lock.
    */
   connectable?: boolean;
   /** How many nodes share the component; the "N pipelines" line shows above one. */

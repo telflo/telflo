@@ -5,24 +5,22 @@ import { Label } from "~/components/ui/label.js";
 import type { ValuePath } from "~/lib/graph/text-edits.js";
 
 /*
- * The OTLP exporters' `tls.insecure` box (D9b decision 4): a warn alert and
- * checkbox, shown while a `tls` block is there,
- * writing `insecure` in it by key.
+ * The OTLP exporters' `tls.insecure` box: a warn alert and checkbox, shown
+ * while a `tls` block is there, writing `insecure` in it by key.
  *
- * Changed (decision 4, Parity Notes "Appearance"; Preflight ruling 4, from
- * the collector's `configtls`, `configgrpc` and `confighttp` at v0.162.0):
- * "Skip TLS verification (insecure)" would say something the collector
- * doesn't do. `insecure` turns TLS off on gRPC (unless the
- * endpoint is https:// or a CA file is set), and on HTTP drops these
- * settings, leaving the endpoint's scheme to decide. Each exporter's label
- * and hint say what it does, naming `insecure_skip_verify` for skipping
- * verification. Unset shows unticked (the collector's `false`); a value
- * that isn't a boolean leaves the box read-only with decision 3's hint.
+ * "Skip TLS verification (insecure)" would say something the collector doesn't
+ * do (its `configtls`, `configgrpc` and `confighttp` at v0.162.0). `insecure`
+ * turns TLS off on gRPC (unless the endpoint is https:// or a CA file is set),
+ * and on HTTP drops these settings, leaving the endpoint's scheme to decide.
+ * Each exporter's label and hint say what it does, naming
+ * `insecure_skip_verify` for skipping verification. Unset shows unticked (the
+ * collector's `false`); a value that isn't a boolean leaves the box read-only
+ * with the unshowable-value hint.
  */
 
 export type InsecureProtocol = "grpc" | "http";
 
-/** The label and the hint's two halves around `insecure_skip_verify`, per exporter (the spec's copy). */
+/** The label and the hint's two halves around `insecure_skip_verify`, per exporter. */
 export const INSECURE_COPY: Readonly<Record<InsecureProtocol, { label: string; before: string; after: string }>> = {
   grpc: {
     label: "Disable TLS (plaintext, insecure)",

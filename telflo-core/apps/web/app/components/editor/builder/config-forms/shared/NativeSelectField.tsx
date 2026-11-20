@@ -3,13 +3,12 @@ import { UNSET_OPTION, UNSHOWABLE_VALUE_MESSAGE, useForm, WRITTEN_OPTION } from 
 import type { ValuePath } from "~/lib/graph/text-edits.js";
 
 /*
- * A native `<select>`, over the form (D9c Task 8's syslog
- * Encoding and Framing Trailer, promoted for D9d decision 12: tail
- * sampling's policy type, booleans and error mode). It shows the text's
- * value, a value outside the options as an extra option showing it as
- * written, and writes the chosen option at once; an option whose value is
- * `""` removes the key (syslog's Framing Trailer None). A value it can't
- * show (a mapping, a list) makes it read-only with decision 3's hint.
+ * A native `<select>`, over the form (syslog's Encoding and Framing Trailer,
+ * tail sampling's policy type, booleans and error mode). It shows the text's
+ * value, a value outside the options as an extra option showing it as written,
+ * and writes the chosen option at once; an option whose value is `""` removes
+ * the key (syslog's Framing Trailer None). A value it can't show (a mapping, a
+ * list) makes it read-only with the unshowable-value hint.
  *
  * - Unset shows `unset` (the collector's default, an option's value), or,
  *   with `unsetOption` or without `unset`, a first option (blank, or
@@ -17,9 +16,9 @@ import type { ValuePath } from "~/lib/graph/text-edits.js";
  *   it removes the key (or calls `onUnset`).
  * - `onSelect` writes another option in place of setting `path` to it (tail
  *   sampling's type switch).
- * - The extra option's `value` attribute is the fixed `WRITTEN_OPTION`
- *   token (decision 13), never the value; choosing it writes nothing. A
- *   text value equal to `UNSET_OPTION` is such a value.
+ * - The extra option's `value` attribute is the fixed `WRITTEN_OPTION` token,
+ *   never the value; choosing it writes nothing. A text value equal to
+ *   `UNSET_OPTION` is such a value.
  */
 
 const NATIVE_SELECT = "w-full h-8 border border-border bg-background rounded-md px-2 text-sm";

@@ -1,16 +1,14 @@
 /*
- * The Datadog mark, for the Datadog receiver and exporter (D9a decision
- * 10), and the OTLP/HTTP
- * exporter's "Datadog" quick setup (D9b decision 8), tinted `#632CA6`.
+ * The Datadog mark, for the Datadog receiver and exporter, and the
+ * OTLP/HTTP exporter's "Datadog" quick setup, tinted `#632CA6`.
  *
  * Source: Simple Icons release 16.33.0 (tag `16.33.0`, commit
  * e01988cc57a3aca39621023f9881e9b733ebcd77), `icons/datadog.svg`,
  * https://github.com/simple-icons/simple-icons/blob/16.33.0/icons/datadog.svg
  * (Simple Icons cites https://www.datadoghq.com/about/resources). The path
- * data is Simple Icons' exactly (re-pinned in D9b; unchanged since D9a).
- * License: CC0-1.0 (Simple Icons). Datadog is a trademark of Datadog, Inc.;
- * the mark names the system the component talks to, under Datadog's brand
- * guidelines. Listed in docs/third-party-assets.md.
+ * data is Simple Icons' exactly. License: CC0-1.0 (Simple Icons). Datadog is
+ * a trademark of Datadog, Inc.; the mark names the system the component talks
+ * to, under Datadog's brand guidelines. Listed in docs/third-party-assets.md.
  *
  * A monochrome silhouette in the component type's colour; decorative, so
  * hidden from assistive technology (the card's title names the component).

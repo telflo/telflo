@@ -25,18 +25,17 @@ import { selectIsDirty, selectUndoDescription, useEditorStore } from "~/lib/stor
 import { builderStore, componentNamed, openText } from "~/test/builder-store.js";
 
 /*
- * The OTLP receiver and exporters (D9b Task 6): their three forms
- * over the form's fields. Each field is driven as a person would (typing,
- * clicking, picking) and writes only its key: the text changes in that
- * key's lines only, on a text with comments, an anchor and a merge, `0750`,
- * and CRLF line endings (decision 2). What they show follows decision 3.
- * 27 cases (OTLPReceiverForm 8, OTLPExporterForm 6, OTLPHTTPExporterForm
- * 13) follow, their YAML checks as text-edit checks; "custom keeps user
- * headers" now keeps the person's own `Authorization` too (decision 4).
+ * The OTLP receiver and exporters: their three forms over the form's
+ * fields. Each field is driven as a person would (typing, clicking,
+ * picking) and writes only its key: the text changes in that key's lines
+ * only, on a text with comments, an anchor and a merge, `0750`, and CRLF
+ * line endings. 27 cases (OTLPReceiverForm 8, OTLPExporterForm 6,
+ * OTLPHTTPExporterForm 13) follow, their YAML checks as text-edit checks;
+ * "custom keeps user headers" keeps the person's own `Authorization` too.
  */
 
 const OTLP = [
-  "# The OTLP forms (D9b Task 6).",
+  "# The OTLP forms.",
   "receivers:",
   "  otlp: # the receiver",
   "    protocols:",
@@ -793,7 +792,7 @@ const CASES: FieldCase[] = [
 
 const CRLF = (lf: string) => lf.replace(/\n/g, "\r\n");
 
-describe("every field of the three forms writes only its key (decision 2)", () => {
+describe("every field of the three forms writes only its key", () => {
   it.each(CASES.flatMap((c) => [[`${c.name}, LF`, c, false] as const, [`${c.name}, CRLF`, c, true] as const]))(
     "%s",
     async (_name, c, crlf) => {
@@ -855,7 +854,7 @@ describe("every field of the three forms writes only its key (decision 2)", () =
   });
 });
 
-describe("the OTLP receiver shows the text (decisions 3, 4)", () => {
+describe("the OTLP receiver shows the text", () => {
   it("a bare grpc: shows gRPC on, with its default endpoint as the placeholder; HTTP, missing, off", () => {
     renderForm("receivers.otlp/bare", receiver);
     expect(box("Enable gRPC Protocol")).toBeChecked();
@@ -895,7 +894,7 @@ describe("the OTLP receiver shows the text (decisions 3, 4)", () => {
     }
   });
 
-  it("a protocol whose value can't hold settings shows on, read-only, with decision 3's hint", () => {
+  it("a protocol whose value can't hold settings shows on, read-only, with the unshowable-value hint", () => {
     const scalar = OTLP.replace("  otlp/bare:\n    protocols:\n      grpc:\n", "  otlp/bare:\n    protocols:\n      grpc: [a]\n");
     renderForm("receivers.otlp/bare", receiver, scalar);
     expect(box("Enable gRPC Protocol")).toBeChecked();
@@ -908,7 +907,7 @@ describe("the OTLP receiver shows the text (decisions 3, 4)", () => {
   const UNSHOWABLE = "This value is written in a form this field can't show. Edit it in the YAML below.";
   const NOTICE = /^Enable at least one protocol to configure/;
 
-  it("grpc: [x] (neither a mapping nor null): ticked and read-only, and the sections show the hint, not 'Enable at least one protocol' (Ruling 74)", async () => {
+  it("grpc: [x] (neither a mapping nor null): ticked and read-only, and the sections show the hint, not 'Enable at least one protocol'", async () => {
     const list = OTLP.replace("  otlp/bare:\n    protocols:\n      grpc:\n", "  otlp/bare:\n    protocols:\n      grpc: [x]\n");
     const user = renderForm("receivers.otlp/bare", receiver, list);
     expect(box("Enable gRPC Protocol")).toBeChecked();
@@ -924,7 +923,7 @@ describe("the OTLP receiver shows the text (decisions 3, 4)", () => {
     expect(text()).toBe(list);
   });
 
-  it("protocols: foo (not a mapping): both boxes unticked and read-only with the hint, the sections too; nothing written (Ruling 74)", async () => {
+  it("protocols: foo (not a mapping): both boxes unticked and read-only with the hint, the sections too; nothing written", async () => {
     const scalar = OTLP.replace("  otlp/bare:\n    protocols:\n      grpc:\n", "  otlp/bare:\n    protocols: foo # a scalar\n");
     const user = renderForm("receivers.otlp/bare", receiver, scalar);
     for (const name of ["Enable gRPC Protocol", "Enable HTTP Protocol"]) {
@@ -966,7 +965,7 @@ describe("the OTLP receiver shows the text (decisions 3, 4)", () => {
     expect(text()).toBe(OTLP);
   });
 
-  it("has no Profiles URL Path: the collector has no profiles_url_path at v0.162.0, and one in the text is left alone (Ruling 52)", async () => {
+  it("has no Profiles URL Path: the collector has no profiles_url_path at v0.162.0, and one in the text is left alone", async () => {
     const withProfiles = OTLP.replace(
       "        traces_url_path: /traces # custom\n",
       "        traces_url_path: /traces # custom\n        profiles_url_path: /p # unknown to the collector\n",
@@ -992,7 +991,7 @@ describe("the OTLP receiver shows the text (decisions 3, 4)", () => {
   });
 });
 
-describe("the exporters' TLS: the client variant and the insecure box's copy (decision 4)", () => {
+describe("the exporters' TLS: the client variant and the insecure box's copy", () => {
   it("OTLP gRPC: \"Customize TLS for OTLP gRPC\", its hint, no Client CA fields, and the gRPC insecure copy", async () => {
     const user = renderForm(GRPC_EXPORTER, grpcExporter);
     await openSection(user, "Security");
@@ -1042,7 +1041,7 @@ describe("the exporters' TLS: the client variant and the insecure box's copy (de
     expect(screen.queryByRole("checkbox", { name: INSECURE_COPY.http.label })).toBeNull();
   });
 
-  it("an insecure value that isn't a boolean leaves the box read-only with decision 3's hint", async () => {
+  it("an insecure value that isn't a boolean leaves the box read-only with the unshowable-value hint", async () => {
     const odd = OTLP.replace("      insecure: true # plaintext\n", "      insecure: ${env:INSECURE}\n");
     const user = renderForm(GRPC_EXPORTER, grpcExporter, odd);
     await openSection(user, "Security");
@@ -1053,7 +1052,7 @@ describe("the exporters' TLS: the client variant and the insecure box's copy (de
   });
 });
 
-describe("the exporters show the text (decision 3)", () => {
+describe("the exporters show the text", () => {
   it("gRPC: a compression outside the options shows as an extra option, as written", async () => {
     const user = renderForm(GRPC_EXPORTER, grpcExporter);
     const compression = screen.getByRole("combobox", { name: "Compression" });
@@ -1102,7 +1101,7 @@ describe("the exporters show the text (decision 3)", () => {
   });
 });
 
-describe("the OTLP/HTTP quick setups, in the text (decision 4)", () => {
+describe("the OTLP/HTTP quick setups, in the text", () => {
   const grafana = QUICK_SETUP_PRESETS.find((p) => p.id === "grafana")!;
   const dynatrace = QUICK_SETUP_PRESETS.find((p) => p.id === "dynatrace")!;
   const datadog = QUICK_SETUP_PRESETS.find((p) => p.id === "datadog")!;
@@ -1333,7 +1332,7 @@ describe("OTLPExporterForm cases", () => {
     expect(input("otelcol:4317")).toBeInTheDocument();
   });
 
-  it("renders timeout value from config; unset, the default is the placeholder (decision 3)", () => {
+  it("renders timeout value from config; unset, the default is the placeholder", () => {
     renderForm(GRPC_EXPORTER, grpcExporter, exporterDefaults());
     expect(input("5s")).toBeInTheDocument();
 
@@ -1424,7 +1423,7 @@ describe("OTLPHTTPExporterForm cases", () => {
       ]);
     });
 
-    it("keeps the user's own headers when clearing to custom, their own Authorization included (changed, decision 4)", () => {
+    it("keeps the user's own headers when clearing to custom, their own Authorization included", () => {
       expect(
         getQuickSetupChanges(
           { endpoint: grafana.endpoint, headers: { ...grafana.headers, "X-Custom": "abc" } },
@@ -1500,7 +1499,7 @@ describe("OTLPHTTPExporterForm cases", () => {
   });
 });
 
-describe("privacy (decision 10)", () => {
+describe("privacy", () => {
   it("puts no config value or header name in any attribute of the three forms, their sections and menus opened", async () => {
     const MARK = "zq-mark";
     const marked = [

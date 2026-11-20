@@ -9,36 +9,34 @@ import { Label } from "~/components/ui/label.js";
 import type { ValueChange } from "~/lib/graph/text-edits.js";
 
 /*
- * The `syslog_parser` operator's form (ADR 0018), over the card's scope (D9c
- * decisions 2 and 8). Ids are the card's (`op-<index>-syslog-…`).
+ * The `syslog_parser` operator's form, over the card's scope. Ids are the
+ * card's (`op-<index>-syslog-…`).
  *
- * Changed:
  * - Protocol offers the collector's three: `rfc5424`, `rfc3164` and `none`
- *   (decision 6; `parser/syslog/config.go:19-24, 81-85`). The collector
- *   requires it (`:82-83`), so unset shows no selection and no "Default"
- *   (decision 4; never RFC 5424 shown but not written). A protocol
- *   outside the three shows as written, an extra option.
- * - The Timestamp section isn't shown (decision 4): with no `timestamp`
- *   block the parser reads the message's own time with its native parser
+ *   (`parser/syslog/config.go:19-24, 81-85`). The collector requires it
+ *   (`:82-83`), so unset shows no selection and no "Default" (never RFC
+ *   5424 shown but not written). A protocol outside the three shows as
+ *   written, an extra option.
+ * - The Timestamp section isn't shown: with no `timestamp` block the
+ *   parser reads the message's own time with its native parser
  *   (`config.go:66-74`); a section would replace it with a strptime layout
- *   over a time value, which fails. A `timestamp` block already in
- *   the text is kept, as every key the form doesn't show.
+ *   over a time value, which fails. A `timestamp` block already in the
+ *   text is kept, as every key the form doesn't show.
  * - Location shows for RFC 3164; the protocol is compared
  *   as the collector reads it, lower-cased (`config.go:64`). Location's
  *   unset hint is the collector's "Default UTC" (`config.go:98-100`),
  *   beside its placeholder.
- * - "Enable octet counting" shows for every protocol (D9c Ruling 62,
- *   decision 4; not for RFC 5424 only): the collector
- *   frames RFC 3164 and none by octet count too (`parser.go:169-173,
- *   199-209`). Ticking it removes a `non_transparent_framing_trailer` in
- *   the same change, with decision 7's toast "Removed the framing trailer:
- *   it can't be used with octet counting." (D9c Ruling 61; D9d decision 7): the collector refuses both
- *   (`config.go:86-87`).
+ * - "Enable octet counting" shows for every protocol (not for RFC 5424 only):
+ *   the collector frames RFC 3164 and none by octet count too
+ *   (`parser.go:169-173, 199-209`). Ticking it removes a
+ *   `non_transparent_framing_trailer` in the same change, with the toast
+ *   "Removed the framing trailer: it can't be used with octet counting.": the
+ *   collector refuses both (`config.go:86-87`).
  * - Switching Protocol to RFC 3164 or none removes a
- *   `non_transparent_framing_trailer` in the same change, with decision 7's
- *   toast "Removed the framing trailer: it's only used with RFC 5424."
- *   (D9c Ruling 58; D9d decision 7): the collector refuses the trailer with any
- *   other protocol (`config.go:88-91`).
+ *   `non_transparent_framing_trailer` in the same change, with the toast
+ *   "Removed the framing trailer: it's only used with RFC 5424.": the
+ *   collector refuses the trailer with any other protocol
+ *   (`config.go:88-91`).
  * - Parse From shows the collector's `body` when unset
  *   (`helper/parser.go:26`). "Enable octet counting" writes `true` or
  *   `false`; unset is off (`config.go:56`).
@@ -46,7 +44,7 @@ import type { ValueChange } from "~/lib/graph/text-edits.js";
 
 export const REMOVED_PARSER_TRAILER = "Removed the framing trailer: it's only used with RFC 5424.";
 
-/** Toasted once ticking "Enable octet counting" removed the trailer (D9c Ruling 61). */
+/** Toasted once ticking "Enable octet counting" removed the trailer. */
 export const REMOVED_TRAILER_FOR_OCTETS = "Removed the framing trailer: it can't be used with octet counting.";
 
 const PROTOCOL_OPTIONS = [
@@ -62,7 +60,7 @@ export function SyslogParserForm() {
   const protocol = view.kind === "scalar" && typeof view.value === "string" ? view.value.toLowerCase() : undefined;
   const adjustments = useAdjustments();
 
-  /** decision 7: a protocol other than RFC 5424 takes no framing trailer (config.go:88-91), in the same change. */
+  /** A protocol other than RFC 5424 takes no framing trailer (config.go:88-91), in the same change. */
   const switchProtocol = (next: string) => {
     const trailer = next !== "rfc5424" && form.read(["non_transparent_framing_trailer"]).kind !== "absent";
     const result = form.apply([
@@ -75,7 +73,7 @@ export function SyslogParserForm() {
   const octetView = form.read(["enable_octet_counting"]);
   const octets = octetView.kind === "absent" ? false : typeof octetView.value === "boolean" ? octetView.value : null;
   const octetId = opId("syslog-octet");
-  /** decision 7: octet counting takes no framing trailer (config.go:86-87), in the same change; unticking writes false. */
+  /** Octet counting takes no framing trailer (config.go:86-87), in the same change; unticking writes false. */
   const toggleOctets = (on: boolean) => {
     const trailer = on && form.read(["non_transparent_framing_trailer"]).kind !== "absent";
     const changes: ValueChange[] = [{ path: ["enable_octet_counting"], value: on }];

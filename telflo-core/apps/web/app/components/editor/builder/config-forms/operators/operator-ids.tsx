@@ -1,11 +1,10 @@
 import { createContext, useContext, type ReactNode } from "react";
 
 /*
- * Every id in an operator card is the card's own (D9c decision 8; plan Task
- * 5): `op-<index>-<field>`. Fixed ids (`json-parse-from`,
- * `severity-enable`, …) would be shared by every card, so a label clicked in
- * the second JSON parser would toggle the first one's box. The index is the
- * card's position, never a value (decision 10).
+ * Every id in an operator card is the card's own: `op-<index>-<field>`.
+ * Fixed ids (`json-parse-from`, `severity-enable`, …) would be shared by
+ * every card, so a label clicked in the second JSON parser would toggle the
+ * first one's box. The index is the card's position, never a value.
  */
 
 const OperatorIndexContext = createContext<number | null>(null);

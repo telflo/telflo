@@ -24,12 +24,12 @@ import { builderStore, componentNamed, openText } from "~/test/builder-store.js"
 import { formControls } from "~/test/form-controls.js";
 
 /*
- * The tail sampling processor (D9d Task 8): its form over the form
- * contract. Each field is driven as a person would, on the traces corpus
- * text (comments, an anchor and its aliases, flow and block lists) and on a
- * text of the policy types the corpus lacks (a bare `0750` the collector
- * reads as a number, an anchor, flow mappings, an extension's policy), LF
- * and CRLF, and writes only its key.
+ * The tail sampling processor: its form over the form contract. Each field
+ * is driven as a person would, on the traces corpus text (comments, an
+ * anchor and its aliases, flow and block lists) and on a text of the policy
+ * types the corpus lacks (a bare `0750` the collector reads as a number, an
+ * anchor, flow mappings, an extension's policy), LF and CRLF, and writes
+ * only its key.
  *
  * Collector claims cite contrib v0.162.0's `processor/tailsamplingprocessor`
  * (`config.go`, `processor.go`, `internal/sampling/*.go`) and `pkg/ottl`.
@@ -40,14 +40,14 @@ const CRLF = (lf: string) => lf.replace(/\n/g, "\r\n");
 
 /** The traces corpus (LF): its tail_sampling has comments, an alias of an anchored block, flow and block lists. */
 const CORPUS = LF(corpusText("forms-traces.yaml"));
-/** D9a's complex config: its tail_sampling's values are quoted. */
+/** The complex config: its tail_sampling's values are quoted. */
 const COMPLEX = LF(corpusText("complex-config.yaml"));
 
 const TS = "processors.tail_sampling";
 
 /** The policy types the corpus lacks, each as a person writes it. */
 const TYPES_TEXT = [
-  "# The tail sampling policies the traces corpus lacks (D9d Task 8): comments,",
+  "# The tail sampling policies the traces corpus lacks: comments,",
   "# an anchor and its alias, flow mappings and a bare 0750.",
   "x-states: &states [premium, enterprise]",
   "receivers:",
@@ -559,7 +559,7 @@ const CASES: FieldCase[] = [
   },
 ];
 
-describe("every field writes only its key (decision 2)", () => {
+describe("every field writes only its key", () => {
   it.each(CASES.flatMap((c) => [[`${c.name}, LF`, c, false] as const, [`${c.name}, CRLF`, c, true] as const]))(
     "%s",
     async (_name, c, crlf) => {
@@ -581,7 +581,7 @@ describe("every field writes only its key (decision 2)", () => {
     },
   );
 
-  it("D9a's complex config: the quoted Decision Wait and a quoted policy name are retyped in place", async () => {
+  it("the complex config: the quoted Decision Wait and a quoted policy name are retyped in place", async () => {
     const user = renderForm(COMPLEX);
     await retypeInto(user, byId("decision-wait"), "45s");
     await retypeInto(user, byId("policy-0-name"), "errors");
@@ -603,12 +603,12 @@ describe("every field writes only its key (decision 2)", () => {
 
 // ── Opening writes nothing ──
 
-describe("opening writes nothing (decision 2)", () => {
-  // One test per text, each with its own time limit (D9c Ruling 54).
+describe("opening writes nothing", () => {
+  // One test per text, each with its own time limit.
   it.each([
     ["the traces corpus", CORPUS, 9],
     ["the traces corpus, CRLF", CRLF(CORPUS), 9],
-    ["D9a's complex config", COMPLEX, 3],
+    ["the complex config", COMPLEX, 3],
     ["the other types", TYPES_TEXT, 10],
     ["the other types, CRLF", CRLF(TYPES_TEXT), 10],
   ] as const)(
@@ -858,7 +858,7 @@ const SEEDS: SeedCase[] = [
   },
 ];
 
-describe("the type switch (Parity Notes: one change, every known block removed, the seed written)", () => {
+describe("the type switch (one change, every known block removed, the seed written)", () => {
   it("offers the collector's 17 types (config.go:20-58), the 13 common ones first", () => {
     renderForm(onePolicy("latency", "        latency: {threshold_ms: 5}"));
     const options = within(byId("policy-0-type")).getAllByRole("option");
@@ -885,7 +885,7 @@ describe("the type switch (Parity Notes: one change, every known block removed, 
     expect(SEEDS.map((seed) => seed.type).sort()).toEqual([...POLICY_TYPE_KEYS].sort());
   });
 
-  it.each(SEEDS)("switching to $type writes the spec's seed, which the collector builds ($rule)", async ({ type, item, builds }) => {
+  it.each(SEEDS)("switching to $type writes its seed, which the collector builds ($rule)", async ({ type, item, builds }) => {
     const from = type === "latency" ? "        probabilistic: {sampling_percentage: 5}" : "        latency: {threshold_ms: 5}";
     const before = onePolicy(type === "latency" ? "probabilistic" : "latency", from);
     const user = renderForm(before);
@@ -1010,7 +1010,7 @@ describe("a policy as the text has it (spec: never a throw on a block the form d
     });
   });
 
-  it("a block, an item or a list it can't show is read-only with D9b's hint; the card still moves and is removed", async () => {
+  it("a block, an item or a list it can't show is read-only with the unshowable-value hint; the card still moves and is removed", async () => {
     const user = renderForm(
       ownText(["    policies:", "      - name: a", "        type: latency", "        latency: [1000]", "      - just a string"].join("\n")),
     );
@@ -1155,7 +1155,7 @@ describe("the policy cards", () => {
     expect(byId("policy-0-name")).toHaveProperty("value", "slow");
   });
 
-  it("the first card starts expanded and the others collapsed; the toggle's label and aria-expanded follow it (D9c Ruling 52)", async () => {
+  it("the first card starts expanded and the others collapsed; the toggle's label and aria-expanded follow it", async () => {
     const user = renderForm(CORPUS);
     expect(toggles().map((button) => button.getAttribute("aria-label"))).toEqual([
       "Collapse policy",
@@ -1241,7 +1241,7 @@ describe("dragging a policy (form.move)", () => {
 
 // ── The fields ──
 
-describe("the top level and Advanced (D9b decision 3)", () => {
+describe("the top level and Advanced", () => {
   it("shows the collector's defaults as placeholders and hints (factory.go:29-37; config.go:310-323)", async () => {
     const user = renderForm(ownText("    policies: []"));
     expect(byId("decision-wait")).toHaveProperty("placeholder", "30s");
@@ -1277,7 +1277,7 @@ describe("the top level and Advanced (D9b decision 3)", () => {
 });
 
 describe("the policy fields", () => {
-  it("unticking the last status code leaves [] (status_code.go:30-31 refuses it: D13)", async () => {
+  it("unticking the last status code leaves [] (status_code.go:30-31 refuses it)", async () => {
     const user = renderForm(CORPUS);
     await user.click(byId("policy-0-status-1"));
     expect(text()).toBe(CORPUS.replace("          status_codes: [ERROR]\n", "          status_codes: []\n"));
@@ -1404,7 +1404,7 @@ describe("the policy fields", () => {
 
 // ── Privacy ──
 
-describe("privacy (decision 13)", () => {
+describe("privacy", () => {
   it("puts no config value in any attribute or option value: every card and section open", async () => {
     const MARK = "zq-mark";
     const marked = ownText(
@@ -1484,7 +1484,7 @@ describe("dispatch and copy", () => {
     expect(formFor("exporter", "tail_sampling")).toBeUndefined();
   });
 
-  it("hints and alerts read exactly as the Parity Notes give them", () => {
+  it("the hints' and alerts' words, exactly", () => {
     expect(POLICIES_INFO).toBe("A trace is sampled if any policy matches, unless a drop policy matches first. Policies evaluate in order.");
     expect(AND_EMPTY_HINT).toBe("With no sub-policies, this policy samples every trace.");
     expect(DROP_EMPTY_HINT).toBe("With no sub-policies, this policy drops every trace.");

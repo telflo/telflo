@@ -1,6 +1,6 @@
 /*
  * The Kubernetes mark, for the Kubernetes receivers and the k8sattributes
- * processor (D9a decision 10).
+ * processor.
  *
  * Source: devicon, `icons/kubernetes/kubernetes-plain.svg` at commit
  * d98a72cb9a6d8e543ddbddc32bac231572349e96 (2021-05-15),

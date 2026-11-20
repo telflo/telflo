@@ -15,21 +15,17 @@ import { selectIsDirty, selectUndoDescription, useEditorStore } from "~/lib/stor
 import { builderStore, componentNamed, openText } from "~/test/builder-store.js";
 
 /*
- * The transformer and flow operator forms (D9c Task 7): the 14
- * forms in the operator cards, over the form contract. Each field is driven
- * as a person would (typing, clicking, picking) on the logs corpus'
- * `filelog/transforms` (comments, flow items, quoted scalars; the corpus
- * around them has an anchor and merges and `0750`), LF and CRLF, and writes
- * only its key: the text changes in that key's lines only, as one undo
- * entry, and parses to the value (decision 2). The fixes each have a test
- * that fails if the bug returns: add's value written as
- * typed (decision 2; Preflight ruling 2); retain's held rows and hint
- * (decision 9; Preflight ruling 13); flatten's copy and no Depth (decision
- * 4); unquote's and move's hints (decision 4); regex_replace's pattern
- * switch (decision 3; Preflight ruling 25); router's routes with no output
- * and the hint (decision 3; Preflight ruling 18); recombine's Combine With,
- * exclusive patterns and defaults (decisions 3, 4, 7 and 8; Preflight
- * ruling 1).
+ * The transformer and flow operator forms: the 14 forms in the operator
+ * cards, over the form contract. Each field is driven as a person would
+ * (typing, clicking, picking) on the logs corpus' `filelog/transforms`
+ * (comments, flow items, quoted scalars; the corpus around them has an
+ * anchor and merges and `0750`), LF and CRLF, and writes only its key: the
+ * text changes in that key's lines only, as one undo entry, and parses to
+ * the value. Each of these has a test that fails if it breaks: add's value
+ * written as typed; retain's held rows and hint; flatten's copy and no
+ * Depth; unquote's and move's hints; regex_replace's pattern switch;
+ * router's routes with no output and the hint; recombine's Combine With,
+ * exclusive patterns and defaults.
  *
  * Collector claims cite contrib v0.162.0 (`pkg/stanza/`).
  */
@@ -146,7 +142,7 @@ const withTransforms = (lines: readonly string[]) =>
 /** The 14 as Add Operator seeds them, as flow items: every field unset but the seed's. */
 const SEEDS = withTransforms(TRANSFORM_TYPES.map((type) => JSON.stringify(operatorSeed(type))));
 
-// ── Every field writes only its key (decision 2) ──
+// ── Every field writes only its key ──
 
 interface FieldCase {
   name: string;
@@ -392,7 +388,7 @@ const CASES: FieldCase[] = [
     check: (op) => expect(op.drop_ratio).toBe(1),
   },
   {
-    name: "filter Drop Ratio: 1.5, outside 0-1, written as typed (decision 3; filter/config.go:61-63)",
+    name: "filter Drop Ratio: 1.5, outside 0-1, written as typed (filter/config.go:61-63)",
     edit: (user) => retypeInto(user, field(FILTER, "filter-ratio"), "1.5"),
     from: "        drop_ratio: 0.5 # half\n",
     to: "        drop_ratio: 1.5 # half\n",
@@ -425,7 +421,7 @@ const CASES: FieldCase[] = [
     check: (op) => expect((op.routes as Value[])[1]).toEqual({ expr: "true", output: "kept" }),
   },
   {
-    name: "router Add Route appends {expr: true}, with no output (decision 3)",
+    name: "router Add Route appends {expr: true}, with no output",
     edit: async (user) => user.click(buttonIn(ROUTER, "router-default", "Add Route")),
     from: ROUTES,
     to: `${ROUTES}          - expr: "true"\n`,
@@ -466,7 +462,7 @@ const CASES: FieldCase[] = [
     check: (op) => expect(op.combine_field).toBe("body.log"),
   },
   {
-    name: "recombine Combine With: \\n typed is written as a newline, double-quoted (decision 8)",
+    name: "recombine Combine With: \\n typed is written as a newline, double-quoted",
     edit: (user) => retypeInto(user, field(RECOMBINE, "recombine-with"), "\\n"),
     from: '        combine_with: "\\t"\n',
     to: '        combine_with: "\\n"\n',
@@ -515,7 +511,7 @@ const CASES: FieldCase[] = [
   },
 ];
 
-describe("every field of each transformer and flow operator writes only its key (decision 2)", () => {
+describe("every field of each transformer and flow operator writes only its key", () => {
   it.each(CASES.flatMap((c) => [[`${c.name}, LF`, c, false] as const, [`${c.name}, CRLF`, c, true] as const]))(
     "%s",
     async (_name, c, crlf) => {
@@ -537,7 +533,7 @@ describe("every field of each transformer and flow operator writes only its key 
     20_000,
   );
 
-  it("the cards are the 14 transformers and flow operators, each with its form (Task 7)", () => {
+  it("the cards are the 14 transformers and flow operators, each with its form", () => {
     renderTransforms();
     expect(operatorsOf(CORPUS).map((op) => op.type)).toEqual(TRANSFORM_TYPES);
     for (const type of TRANSFORM_TYPES) expect(OPERATOR_FORMS[type]).toBeDefined();
@@ -547,7 +543,7 @@ describe("every field of each transformer and flow operator writes only its key 
 
 // ── The fixes ──
 
-describe("add: the value is written as typed, and shown as typed (decision 2; Preflight ruling 2)", () => {
+describe("add: the value is written as typed, and shown as typed", () => {
   it.each([
     ["1.0", 1],
     ["true", true],
@@ -583,7 +579,7 @@ describe("add: the value is written as typed, and shown as typed (decision 2; Pr
     expect(hintIn(cardOf("op-0-add-value"), UNSHOWABLE_VALUE_MESSAGE)).not.toBeNull();
   });
 
-  it("retyping a quoted \"42\" as 42 writes the number (writeSame, as Ruling 47)", async () => {
+  it("retyping a quoted \"42\" as 42 writes the number (writeSame)", async () => {
     const user = renderTransforms(CORPUS.replace(ADD_VALUE, '        value: "42"\n'));
     expect(field(ADD, "add-value").value).toBe("42");
     await retypeInto(user, field(ADD, "add-value"), "42");
@@ -598,7 +594,7 @@ describe("add: the value is written as typed, and shown as typed (decision 2; Pr
     expect(entries()).toBe(0);
   });
 
-  it("the JSON example is real JSON, and typing it writes a mapping (decision 4)", async () => {
+  it("the JSON example is real JSON, and typing it writes a mapping", async () => {
     const user = renderTransforms();
     const card = cardOf("op-0-add-value");
     expect(within(card).getByText('{"key": "value"}')).toBeInTheDocument();
@@ -608,7 +604,7 @@ describe("add: the value is written as typed, and shown as typed (decision 2; Pr
   });
 });
 
-describe("move and unquote: their hints say what the collector does (decision 4)", () => {
+describe("move and unquote: their hints say what the collector does", () => {
   it("move's example promotes to resource[\"host.name\"], a key with dots (entry/field.go:152-226)", () => {
     renderTransforms();
     const card = cardOf("op-2-move-from");
@@ -626,7 +622,7 @@ describe("move and unquote: their hints say what the collector does (decision 4)
   });
 });
 
-describe("retain: held rows, and a hint of fields the collector takes (decision 9; Preflight ruling 13)", () => {
+describe("retain: held rows, and a hint of fields the collector takes", () => {
   it("Add Field writes nothing until something is typed, and a held row left empty goes", async () => {
     const user = renderTransforms();
     await user.click(buttonIn(RETAIN, "retain-field-0", "Add Field"));
@@ -666,7 +662,7 @@ describe("retain: held rows, and a hint of fields the collector takes (decision 
   });
 });
 
-describe("flatten: what it does, and no Depth (decisions 3 and 4)", () => {
+describe("flatten: what it does, and no Depth", () => {
   it("says it moves a map's fields up one level, with the collector's example (flatten.md; flatten/transformer.go:35-58)", () => {
     renderTransforms();
     const card = cardOf("op-5-flatten-field");
@@ -693,7 +689,7 @@ describe("flatten: what it does, and no Depth (decisions 3 and 4)", () => {
   });
 });
 
-describe("regex_replace: the pattern switch (decision 3; Preflight ruling 25)", () => {
+describe("regex_replace: the pattern switch", () => {
   const SEEDED = withTransforms([JSON.stringify(operatorSeed("regex_replace")), "{type: noop}"]);
   const SEED_LINE = '      - {"type":"regex_replace","field":"body","regex_name":"ansi_control_sequences","replace_with":""}\n';
 
@@ -732,7 +728,7 @@ describe("regex_replace: the pattern switch (decision 3; Preflight ruling 25)", 
     expect(field(0, "regex-replace-well-known")).not.toBeNull();
   });
 
-  it("the Custom choice follows its card when the card moves (Preflight ruling 25)", async () => {
+  it("the Custom choice follows its card when the card moves", async () => {
     layOutRows();
     const user = renderTransforms(SEEDED);
     await pickIn(user, field(0, "regex-replace-pattern-type"), "Custom Regex");
@@ -758,7 +754,7 @@ describe("regex_replace: the pattern switch (decision 3; Preflight ruling 25)", 
   });
 });
 
-describe("router: routes with no output, and the hint (decision 3; Preflight ruling 18)", () => {
+describe("router: routes with no output, and the hint", () => {
   it("Add Route appends a route with no output, and its Output shows the hint (router/transformer.go:98-118)", async () => {
     const base = withTransforms(["type: router"]);
     const user = renderTransforms(base);
@@ -784,7 +780,7 @@ describe("router: routes with no output, and the hint (decision 3; Preflight rul
     expect(hintIn(route(1), ROUTE_WITHOUT_OUTPUT_HINT)).toBeNull();
   });
 
-  // Its own time limit (D9c Rulings 54 and 80).
+  // Its own time limit.
   it("clearing an Output removes the key (a route without one is valid); the hint comes back", async () => {
     const user = renderTransforms();
     await retypeInto(user, field(ROUTER, "route-output-0"), "");
@@ -801,7 +797,7 @@ describe("router: routes with no output, and the hint (decision 3; Preflight rul
   });
 });
 
-describe("recombine: Combine With, the exclusive patterns and the defaults (decisions 3, 4, 7 and 8)", () => {
+describe("recombine: Combine With, the exclusive patterns and the defaults", () => {
   it("'\\n' (two characters) shows \\\\n, and blurring it writes nothing", async () => {
     const user = renderTransforms(CORPUS, "receivers.filelog");
     const input = within(cardOf("op-4-recombine-with")).getByDisplayValue("\\\\n");
@@ -864,7 +860,7 @@ describe("recombine: Combine With, the exclusive patterns and the defaults (deci
   });
 });
 
-describe("the other defaults and required fields (D9b decision 3)", () => {
+describe("the other defaults and required fields", () => {
   it("sanitize_utf8's unset Field shows the collector's body (sanitizeutf8/transformer.go:37)", () => {
     renderTransforms(withTransforms(["{type: sanitize_utf8}"]));
     expect(hintIn(cardOf("op-0-sanitize-utf8-field"), "String field to sanitize. · Default body")).not.toBeNull();
@@ -886,7 +882,7 @@ describe("the other defaults and required fields (D9b decision 3)", () => {
   });
 });
 
-// ── A card moved by keyboard (Preflight ruling 25), as `operators.test.tsx` drags one ──
+// ── A card moved by keyboard, as `operators.test.tsx` drags one ──
 
 const ROW_HEIGHT = 40;
 let dragFrom = 0;
@@ -930,7 +926,7 @@ async function dragByKeyboard(handle: HTMLElement, steps: number) {
   await press(handle, " ", "Space");
 }
 
-// ── Opening writes nothing (D9b decision 2) ──
+// ── Opening writes nothing ──
 
 describe("opening and expanding each transformer and flow operator card writes nothing", () => {
   const TEXTS = [
@@ -939,7 +935,7 @@ describe("opening and expanding each transformer and flow operator card writes n
     ["the seeds, every other field unset", SEEDS],
   ] as const;
 
-  // One test per form and text, each with its own time limit (D9c Ruling 54).
+  // One test per form and text, each with its own time limit.
   it.each(TRANSFORM_TYPES.flatMap((type, card) => TEXTS.map(([name, base]) => [type, name, card, base] as const)))(
     "%s on %s: collapsed, expanded, every field focused and left",
     async (_type, _name, card, base) => {
@@ -960,9 +956,9 @@ describe("opening and expanding each transformer and flow operator card writes n
   );
 });
 
-// ── Privacy (decision 10) ──
+// ── Privacy ──
 
-describe("privacy (decision 10)", () => {
+describe("privacy", () => {
   it("puts no config value in any attribute across the transformer and flow cards, every menu opened", async () => {
     const MARK = "zq-mark";
     const base = withTransforms([
@@ -1019,9 +1015,9 @@ describe("privacy (decision 10)", () => {
   }, 20_000);
 });
 
-// ── The Task 7 review's fixes (D9c Rulings 67 and 70) ──
+// ── filter's example, and the forms' hints ──
 
-describe("filter's example reads the service.name key (Ruling 67; decision 4)", () => {
+describe("filter's example reads the service.name key", () => {
   it("resource[\"service.name\"], not the nested path resource.service.name", () => {
     renderTransforms();
     const card = cardOf("op-10-filter-expr");
@@ -1030,7 +1026,7 @@ describe("filter's example reads the service.name key (Ruling 67; decision 4)", 
   });
 });
 
-describe("the review's hints (Ruling 70)", () => {
+describe("the forms' hints", () => {
   const EMPTY_JOIN = "Empty: entries are joined directly.";
   const WITH_EMPTY = CORPUS.replace('        combine_with: "\\t"\n', '        combine_with: ""\n');
 

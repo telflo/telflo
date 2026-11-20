@@ -20,14 +20,13 @@ interface RunTestDialogProps {
 }
 
 /**
- * The run dialog (D14a decisions 16 to 20; D14b Preflight rulings 16 and
- * 17), wrapping TestConfigurationPanel.tsx. It opens with the remembered
- * duration, input (a file or a template) and pipeline, remembers the input
- * and pipeline it runs with (the panel itself writes nothing), and closes
- * once the run is queued (or once the fixture-shape check has asked). A
- * template deleted since it was picked is forgotten. In the playground (D31-1
- * decision 31, Ruling 291) its Run is locked and remembers nothing: no input
- * or pipeline is kept for the next opening.
+ * The run dialog, wrapping TestConfigurationPanel.tsx. It opens with the
+ * remembered duration, input (a file or a template) and pipeline, remembers
+ * the input and pipeline it runs with (the panel itself writes nothing),
+ * and closes once the run is queued (or once the fixture-shape check has
+ * asked). A template deleted since it was picked is forgotten. In the
+ * playground its Run is locked and remembers nothing: no input or pipeline
+ * is kept for the next opening.
  */
 export function RunTestDialog({ open, onOpenChange, onRun, onCloseAutoFocus }: RunTestDialogProps) {
   const lastRunDurationSeconds = useTestingStore((state) => state.lastRunDurationSeconds);
@@ -56,7 +55,7 @@ export function RunTestDialog({ open, onOpenChange, onRun, onCloseAutoFocus }: R
           initialPipelineName={selectedPipelineName}
           onCancel={() => onOpenChange(false)}
           onSubmit={async ({ input, pipelineName, durationSeconds }) => {
-            // Only the run dialog remembers its choice (D14b Preflight ruling 16).
+            // Only the run dialog remembers its choice.
             const testing = useTestingStore.getState();
             // The playground's Run is locked (the tab's `onRun`): nothing to remember.
             if (locked === null) {

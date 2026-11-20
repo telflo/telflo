@@ -13,18 +13,17 @@ import type { ValueChange, ValuePath } from "~/lib/graph/text-edits.js";
 import type { ValueView } from "~/lib/graph/value-view.js";
 
 /*
- * The include/exclude section (ADR 0018), over the form (D9b decision 2):
- * hostmetrics' filters, a mode select (No Filter, Include Only, Exclude),
- * a Match select (Strict Match, Regex Match) and the list's rows, each
- * block (`include: {devices: […], match_type: strict}`) at its own path.
+ * The include/exclude section, over the form: hostmetrics' filters, a
+ * mode select (No Filter, Include Only, Exclude), a Match select (Strict
+ * Match, Regex Match) and the list's rows, each block
+ * (`include: {devices: […], match_type: strict}`) at its own path.
  *
- * Changed (D9c decisions 3 and 9; Preflight ruling 5):
  * - a list with items needs a `match_type`, which the collector requires
  *   (`internal/filter/filterset/config.go:37-48` at v0.162.0): an item
  *   added to a side is written with `match_type: strict` (or the match
  *   chosen before its first item) whenever the block has none, a null one
- *   included (D9c Ruling 48: a text's side with items and no `match_type`
- *   gets one with the next item);
+ *   included (a text's side with items and no `match_type` gets one with
+ *   the next item);
  * - include and exclude are independent: the collector builds and applies
  *   both (`receiver/hostmetricsreceiver/internal/scraper/diskscraper/
  *   disk_scraper_others.go:51-63`, `filesystemscraper/config.go:78-117`),
@@ -35,20 +34,20 @@ import type { ValueView } from "~/lib/graph/value-view.js";
  *   both blocks;
  * - the mode is read from the text (include if its list has items, else
  *   exclude, else No Filter), unless a side picked has no item yet: that
- *   side's first row is held (decision 9; never `[""]`), and
- *   the mode is the form's until the side has an item, typed there or
- *   written elsewhere. While both sides show, the mode select reads the
- *   side last picked there, while it still shows (Ruling 48);
- * - rows are held as D9c's held rows (`MultiValueField`'s `holdEmpty`):
- *   Add shows a row that isn't in the text, its first typing appends the
- *   item, and a row emptied and left removes its item; removing the last
- *   row removes that side's block;
+ *   side's first row is held (never `[""]`), and the mode is the form's until
+ *   the side has an item, typed there or written elsewhere. While both sides
+ *   show, the mode select reads the side last picked there, while it still
+ *   shows;
+ * - rows are held rows (`MultiValueField`'s `holdEmpty`): Add shows a row
+ *   that isn't in the text, its first typing appends the item, and a row
+ *   emptied and left removes its item; removing the last row removes that
+ *   side's block;
  * - an unset `match_type` beside items shows blank (the collector has no
  *   default); one outside the options shows as an extra option, as
- *   written (D9b decision 3).
+ *   written.
  * Ids are fixed (`<id>-mode`, `<id>-include-match`, `<id>-include-<index>`),
  * and each row's remove button says "Remove <item label>", a label the form
- * gives, never a value (D9b decision 10).
+ * gives, never a value.
  */
 
 type Side = "include" | "exclude";
@@ -107,7 +106,7 @@ export function IncludeExcludeSection({
   const form = useForm();
   /** A side picked that has no item yet, and the match chosen for it: the form's, until its first item. */
   const [pending, setPending] = useState<{ side: Side; match?: string } | null>(null);
-  /** The side last picked in the mode select: what it reads while that side shows (Ruling 48). */
+  /** The side last picked in the mode select: what it reads while that side shows. */
   const [picked, setPicked] = useState<Side | null>(null);
   const paths: Record<Side, ValuePath> = { include: includePath, exclude: excludePath };
   const lists: Record<Side, string[] | null> = {
@@ -122,8 +121,8 @@ export function IncludeExcludeSection({
     );
   }
   const has = (side: Side) => (lists[side]?.length ?? 0) > 0;
-  // A side picked is the form's only until it has items, however they came (the YAML box, an undo): then the
-  // text says the mode, and emptied again it doesn't come back as picked (D9c review).
+  // A side picked is the form's only until it has items, however they came (the YAML box, an undo): then the text
+  // says the mode, and emptied again it doesn't come back as picked.
   if (pending !== null && has(pending.side)) setPending(null);
   const pendingSide = pending !== null && !has(pending.side) ? pending.side : null;
   const sides = (["include", "exclude"] as const).filter((side) => has(side) || pendingSide === side);
@@ -225,10 +224,9 @@ export function IncludeExcludeSection({
 }
 
 /**
- * One side's rows and its Add button. Rows are held rows (Preflight ruling
- * 8): the held one, at the list's end, is appended by its first typing; an
- * item added is written with the side's `match_type` when the block has
- * none (Ruling 48).
+ * One side's rows and its Add button. Rows are held rows: the held one, at the
+ * list's end, is appended by its first typing; an item added is written with
+ * the side's `match_type` when the block has none.
  */
 function FilterList({
   id,
@@ -267,8 +265,8 @@ function FilterList({
   }
   const holding = startHeld || heldAt === items.length;
   const rows = holding ? [...items, ""] : items;
-  // Rows keyed by their items (Ruling 68): a row emptied and left removes its item as the pointer goes down on a
-  // Remove button, and the click must not land on the next item's row. The held row takes the key its item gets.
+  // Rows keyed by their items: a row emptied and left removes its item as the pointer goes down on a Remove button,
+  // and the click must not land on the next item's row. The held row takes the key its item gets.
   const cards = useCardKeys(items);
   const rowKeys = holding ? [...cards.keys, cards.next] : cards.keys;
 

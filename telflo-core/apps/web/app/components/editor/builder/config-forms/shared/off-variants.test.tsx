@@ -14,11 +14,11 @@ import { useEditorStore } from "~/lib/stores/editor-store.js";
 import { builderStore, componentNamed, openText } from "~/test/builder-store.js";
 
 /*
- * The retry and queue sections' off variants and ids (D9d Task 2; spec
- * decision 12; Preflight ruling 4): what each `absentMeans` shows over
- * every shape of the block, what ticking and unticking write, two of each
- * section with their own ids, and the remote write default. D9b's own
- * tests (`shared-sections.test.tsx`) are unchanged.
+ * The retry and queue sections' off variants and ids: what each
+ * `absentMeans` shows over every shape of the block, what ticking and
+ * unticking write, two of each section with their own ids, and the remote
+ * write default. The sections' other tests are in
+ * `shared-sections.test.tsx`.
  */
 
 const TEXT = `exporters:
@@ -106,7 +106,7 @@ async function retypeInto(user: UserEvent, input: HTMLElement, typed: string) {
 const SHAPES = ["absent", "null", "empty", "keys", "false", "true", "odd"] as const;
 type Shown = "on" | "off" | "unshowable";
 
-/** What each variant shows over each shape (Preflight ruling 4). */
+/** What each variant shows over each shape. */
 const EXPECTED: Record<AbsentMeans, Record<(typeof SHAPES)[number], Shown>> = {
   on: { absent: "on", null: "on", empty: "on", keys: "on", false: "off", true: "on", odd: "unshowable" },
   // configoptional.Default: written is on, unless `enabled: false` (core configoptional/optional.go:172-220).
@@ -121,7 +121,7 @@ function shownBy(name: string): Shown {
   return element.getAttribute("aria-checked") === "true" ? "on" : "off";
 }
 
-describe("absentMeans over every shape of the block (Preflight ruling 4)", () => {
+describe("absentMeans over every shape of the block", () => {
   for (const absentMeans of ["on", "off-optional", "off-struct"] as const) {
     it(`${absentMeans}: retry and queue`, () => {
       for (const shape of SHAPES) {
@@ -142,7 +142,7 @@ describe("absentMeans over every shape of the block (Preflight ruling 4)", () =>
 });
 
 describe("ticking and unticking an off variant", () => {
-  it("ticking writes D9b's block; unticking removes the key", async () => {
+  it("ticking writes the default block; unticking removes the key", async () => {
     const user = userEvent.setup();
     const calls = spyWrites();
     renderIn(
@@ -181,7 +181,7 @@ describe("ticking and unticking an off variant", () => {
 });
 
 describe("ids and defaults", () => {
-  it("two of each section have their own ids by idPrefix; D9b's ids are unprefixed", () => {
+  it("two of each section have their own ids by idPrefix; without it the ids are unprefixed", () => {
     renderIn(
       "exporters.loadbalancing/true",
       <>

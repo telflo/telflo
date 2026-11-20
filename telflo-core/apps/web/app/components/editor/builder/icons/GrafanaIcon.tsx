@@ -1,6 +1,6 @@
 /*
  * The Grafana mark, for the OTLP/HTTP exporter's "Grafana Cloud" quick
- * setup (D9b decision 8).
+ * setup.
  *
  * Source: Simple Icons release 16.33.0 (tag `16.33.0`, commit
  * e01988cc57a3aca39621023f9881e9b733ebcd77), `icons/grafana.svg`,

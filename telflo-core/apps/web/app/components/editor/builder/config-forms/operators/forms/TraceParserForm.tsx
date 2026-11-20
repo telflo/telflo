@@ -7,30 +7,28 @@ import { Checkbox } from "~/components/ui/checkbox.js";
 import { Label } from "~/components/ui/label.js";
 
 /*
- * The `trace_parser` operator's form (ADR 0018), over the card's scope (D9c
- * decisions 2, 4 and 8). Ids are the card's (`op-<index>-trace-id-…`,
- * `op-<index>-span-id-…`).
+ * The `trace_parser` operator's form, over the card's scope. Ids are the
+ * card's (`op-<index>-trace-id-…`, `op-<index>-span-id-…`).
  *
- * Kept (Parity Notes): ticking "Parse Trace ID" writes
+ * Ticking "Parse Trace ID" writes
  * `trace_id: {parse_from: attributes.trace_id}`, unticking removes
  * `trace_id`; "Parse Span ID" likewise with `span_id`.
- * Changed:
+ *
  * - Under each box, the hint "Off: the collector still reads
- *   body.trace_id." / "…body.span_id." (decision 4): unticked, the block is
+ *   body.trace_id." / "…body.span_id.": unticked, the block is
  *   gone, and the collector then reads `body.trace_id` and `body.span_id`
  *   (`helper/trace.go:59-83`; a missing field is skipped, `:86-90`).
  * - Each box is ticked while its block is in the text (never a local copy
  *   set once from the config); a block the box can't show (not
- *   a mapping) makes it read-only, with decision 3's hint.
+ *   a mapping) makes it read-only, with the unshowable-value hint.
  * - A block without `parse_from` shows the collector's default,
  *   `body.trace_id` or `body.span_id` (`trace.go:64-73`), as FieldSelector's
- *   placeholder and the hint's "Default …" (D9b decision 3; never an empty
- *   path).
+ *   placeholder and the hint's "Default …" (never an empty path).
  */
 
-/** Under "Parse Trace ID" (decision 4, Appearance). */
+/** Under "Parse Trace ID". */
 export const TRACE_ID_OFF_HINT = "Off: the collector still reads body.trace_id.";
-/** Under "Parse Span ID" (decision 4, Appearance). */
+/** Under "Parse Span ID". */
 export const SPAN_ID_OFF_HINT = "Off: the collector still reads body.span_id.";
 
 function IdBlock({

@@ -13,19 +13,19 @@ import { selectUndoDescription, useEditorStore } from "~/lib/stores/editor-store
 import { builderStore, componentNamed, openText } from "~/test/builder-store.js";
 
 /*
- * The resource, attributes and filter forms (D9b Task 7): their
- * forms over sortable lists and item paths. Each field is driven as a
- * person would (typing, clicking, picking, dragging by keyboard) and writes
- * only its key: the text changes in that key's lines only, on a text with
- * comments, an anchor and a merge, `0750`, and CRLF line endings (decision
- * 2). Reordering moves an item's own lines, its comments and `0750` with it
- * (Preflight ruling 2). resource's action change keeps the item's other
- * keys; attributes' cache is written under `include`/`exclude` `.regexp`,
- * and a top-level `cacheenabled` is left alone (decision 4).
+ * The resource, attributes and filter forms: their forms over sortable
+ * lists and item paths. Each field is driven as a person would (typing,
+ * clicking, picking, dragging by keyboard) and writes only its key: the
+ * text changes in that key's lines only, on a text with comments, an anchor
+ * and a merge, `0750`, and CRLF line endings. Reordering moves an item's
+ * own lines, its comments and `0750` with it. resource's action change
+ * keeps the item's other keys; attributes' cache is written under
+ * `include`/`exclude` `.regexp`, and a top-level `cacheenabled` is left
+ * alone.
  */
 
 const FORMS = [
-  "# The resource, attributes and filter forms (D9b Task 7).",
+  "# The resource, attributes and filter forms.",
   "receivers:",
   "  otlp:",
   "    protocols:",
@@ -167,7 +167,7 @@ async function openCard(user: UserEvent, header: string) {
   await user.click(screen.getByText(header));
 }
 
-// ── Sortable rows by keyboard (Preflight ruling 15) ──
+// ── Sortable rows by keyboard ──
 
 const ROW_HEIGHT = 40;
 
@@ -624,7 +624,7 @@ const CASES: FieldCase[] = [
   },
 ];
 
-describe("every field of each form writes only its key (decision 2)", () => {
+describe("every field of each form writes only its key", () => {
   it.each(CASES.flatMap((c) => [[`${c.name}, LF`, c, false] as const, [`${c.name}, CRLF`, c, true] as const]))(
     "%s",
     async (_name, c, crlf) => {
@@ -688,7 +688,7 @@ describe("every field of each form writes only its key (decision 2)", () => {
   });
 });
 
-describe("reordering moves an item's own lines (Preflight ruling 2)", () => {
+describe("reordering moves an item's own lines", () => {
   beforeEach(layOutRows);
 
   it("resource: an attribute dragged down keeps its comments, and 0750 stays 0750", async () => {
@@ -785,7 +785,7 @@ describe("reordering moves an item's own lines (Preflight ruling 2)", () => {
   });
 });
 
-describe("what the forms show (decision 3)", () => {
+describe("what the forms show", () => {
   it("resource: values as written (0750), the value source, delete's Key Pattern, its copy", () => {
     renderForm(RESOURCE, <ResourceProcessorForm />);
     expect(screen.getByText("Resource Attributes")).toBeInTheDocument();
@@ -1029,7 +1029,7 @@ describe("what the forms show (decision 3)", () => {
   });
 });
 
-describe("values the forms can't show (decision 3)", () => {
+describe("values the forms can't show", () => {
   const UNSHOWABLE = /This value is written in a form this field can't show/;
 
   it("a list that isn't a list, or an item that isn't a mapping, shows the hint; the rest works", async () => {
@@ -1139,7 +1139,7 @@ describe("filter examples add to their list", () => {
   });
 });
 
-describe("privacy (decision 10)", () => {
+describe("privacy", () => {
   beforeEach(layOutRows);
 
   it("puts no config value in any attribute: cards and sections open, a menu open, a drag in progress", async () => {

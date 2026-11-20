@@ -3,17 +3,16 @@ import { useOperatorId } from "../operator-ids.js";
 import { FieldSelector } from "../shared/FieldSelector.js";
 
 /*
- * The `uri_parser` operator's form (ADR 0018), over the card's scope (D9c
- * decisions 2 and 8). Ids are the card's (`op-<index>-uri-…`).
+ * The `uri_parser` operator's form, over the card's scope. Ids are the card's
+ * (`op-<index>-uri-…`).
  *
- * Fixed (decision 4): `fragment` is gone from the description and the
- * output fields: the parser writes scheme, user,
- * host, port, path and query (`internal/coreinternal/parseutils/uri.go:100-128`),
- * and a fragment only under the alpha `parser.uri.ecscompliant` gate, as
- * `url.fragment` (`:56-98`; `pkg/stanza/operator/parser/uri/parser.go:34`).
- * Changed (D9b decision 3): unset Parse From and Parse To show the
- * collector's `body` and `attributes` (`helper/parser.go:26-27`), Parse To
- * rootable (`:35`).
+ * The description and the output fields leave out `fragment`: the parser
+ * writes scheme, user, host, port, path and query
+ * (`internal/coreinternal/parseutils/uri.go:100-128`), and a fragment only
+ * under the alpha `parser.uri.ecscompliant` gate, as `url.fragment` (`:56-98`;
+ * `pkg/stanza/operator/parser/uri/parser.go:34`). Unset Parse From and Parse
+ * To show the collector's `body` and `attributes` (`helper/parser.go:26-27`),
+ * Parse To rootable (`:35`).
  */
 
 const CODE = "rounded-[4px] bg-muted px-1 py-0.5 font-mono text-xs";

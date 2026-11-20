@@ -28,14 +28,13 @@ import { builderStore, componentNamed, openText } from "~/test/builder-store.js"
 import { formControls } from "~/test/form-controls.js";
 
 /*
- * The S3 exporter and receiver, ClickHouse and file forms (D9d Task 12):
- * their forms over the form contract. Each field is driven as a
- * person would on the storage corpus text (comments, an anchor and its
- * merge, block and flow lists, `0750`, LF as the file has it, and CRLF),
- * and writes only its key. 19 cases (S3 receiver 10, S3 exporter 5,
- * ClickHouse exporter 4) close the file: their fixtures are the corpus
- * file's, their round trips the corpus invariant's, and their form-edit sides
- * are the tests here.
+ * The S3 exporter and receiver, ClickHouse and file forms: their forms over
+ * the form contract. Each field is driven as a person would on the storage
+ * corpus text (comments, an anchor and its merge, block and flow lists,
+ * `0750`, LF as the file has it, and CRLF), and writes only its key. 19
+ * cases (S3 receiver 10, S3 exporter 5, ClickHouse exporter 4) close the
+ * file: their fixtures are the corpus file's, their round trips the corpus
+ * invariant's, and their form-edit sides are the tests here.
  *
  * Collector claims cite contrib v0.162.0 (`exporter/awss3exporter`,
  * `receiver/awss3receiver`, `exporter/clickhouseexporter`,
@@ -321,7 +320,7 @@ const EXPORTER_CASES: FieldCase[] = [
     check: (v) => expect(up(v)).not.toHaveProperty("unique_key_func_name"),
   },
   {
-    name: "Storage Class: one of the four added (decision 6)",
+    name: "Storage Class: one of the four added",
     key: EX,
     edit: async (user) => {
       await openSection(user, "Object Layout");
@@ -970,7 +969,7 @@ const FILE_CASES: FieldCase[] = [
   },
 ];
 
-describe("every field writes only its key (decision 2)", () => {
+describe("every field writes only its key", () => {
   it.each(
     [...EXPORTER_CASES, ...RECEIVER_CASES, ...CLICKHOUSE_CASES, ...FILE_CASES].flatMap((c) => [
       [`${c.key}: ${c.name}, LF`, c, false] as const,
@@ -1009,8 +1008,8 @@ async function openEverything(user: UserEvent) {
   }
 }
 
-describe("opening writes nothing (decision 2)", () => {
-  // One test per text, each with its own time limit (D9c Ruling 54).
+describe("opening writes nothing", () => {
+  // One test per text, each with its own time limit.
   it.each([
     // 4 top fields; marshaler, compression, 2 encodings; 6 layout; 2 routing; 7 connection; timeout, 2 boxes.
     ["the S3 exporter, the storage corpus", CORPUS, EX, 30],
@@ -1064,7 +1063,7 @@ describe("opening writes nothing (decision 2)", () => {
 // ── The S3 exporter ──
 
 describe("the S3 exporter's queue, selects and copy", () => {
-  it("the Sending Queue is off while absent: the exporter's queue is configoptional.Default (factory.go:51); ticking writes D9b's block, unticking removes it", async () => {
+  it("the Sending Queue is off while absent: the exporter's queue is configoptional.Default (factory.go:51); ticking writes the default block, unticking removes it", async () => {
     const base = own("exporters", "awss3", "    s3uploader:\n      s3_bucket: b");
     const user = renderForm(base, EX);
     await openSection(user, "Timeout, Retry & Queue");
@@ -1099,7 +1098,7 @@ describe("the S3 exporter's queue, selects and copy", () => {
     }
   });
 
-  it("unset shows each default as its placeholder and hint (D9b decision 3), Partition Timezone Local (s3_writer.go:94-103)", async () => {
+  it("unset shows each default as its placeholder and hint, Partition Timezone Local (s3_writer.go:94-103)", async () => {
     const user = renderForm(own("exporters", "awss3", ""), EX);
     expect(byId("awss3-region")).toHaveAttribute("placeholder", "us-east-1");
     await openSection(user, "Format & Compression");
@@ -1116,7 +1115,7 @@ describe("the S3 exporter's queue, selects and copy", () => {
     expect(text()).toBe(own("exporters", "awss3", ""));
   });
 
-  it("a value equal to the unset sentinel shows as written, under the written-value token (Preflight ruling 21)", async () => {
+  it("a value equal to the unset sentinel shows as written, under the written-value token", async () => {
     const user = renderForm(own("exporters", "awss3", `    s3uploader:\n      acl: ${UNSET_OPTION}`), EX);
     await openSection(user, "Object Layout");
     expect(combo("Canned ACL")).toHaveTextContent(UNSET_OPTION);
@@ -1154,7 +1153,7 @@ describe("the S3 exporter's queue, selects and copy", () => {
   });
 });
 
-// ── The S3 receiver's mode switch (decisions 3, 7) ──
+// ── The S3 receiver's mode switch ──
 
 const pickMode = (user: UserEvent, label: "SQS notifications (continuous)" | "Time range (one-shot replay)") =>
   pickIn(user, combo("Ingest Mode"), label);
@@ -1229,7 +1228,7 @@ describe("the S3 receiver's Ingest Mode", () => {
     expect(combo("Ingest Mode")).toHaveTextContent("SQS notifications (continuous)");
   });
 
-  it("the held Time range stays through edits to the form's other fields and their undo (Ruling 48e); a time typed then takes it", async () => {
+  it("the held Time range stays through edits to the form's other fields and their undo; a time typed then takes it", async () => {
     const user = renderForm(CORPUS, RX_SQS);
     await pickMode(user, "Time range (one-shot replay)");
     await retypeInto(user, byId("awss3r-bucket"), "other-bucket");
@@ -1247,7 +1246,7 @@ describe("the S3 receiver's Ingest Mode", () => {
     expect(toasts("info").at(-1)).toBe(TIME_RANGE_TOAST);
   });
 
-  it("the held Time range goes when sqs changes by a write it didn't make: an undo, the YAML box (Ruling 48e)", async () => {
+  it("the held Time range goes when sqs changes by a write it didn't make: an undo, the YAML box", async () => {
     const user = renderForm(CORPUS, RX_SQS);
     await retypeInto(user, byId("awss3r-queue-url"), "https://sqs.example/q2");
     await pickMode(user, "Time range (one-shot replay)");
@@ -1290,7 +1289,7 @@ describe("the S3 receiver's Ingest Mode", () => {
   });
 });
 
-// ── The S3 receiver's encodings (decision 3) ──
+// ── The S3 receiver's encodings ──
 
 describe("the S3 receiver's Encodings", () => {
   const extensionOf = (n: number) => screen.getByRole("textbox", { name: `Encoding ${n} extension` });
@@ -1314,7 +1313,7 @@ describe("the S3 receiver's Encodings", () => {
     expect(toasts("info")).toEqual([]);
   });
 
-  it("the first encoding of a receiver without encodings is a block list (D9b Ruling 85); suffix written only when typed", async () => {
+  it("the first encoding of a receiver without encodings is a block list; suffix written only when typed", async () => {
     const user = renderForm(CORPUS, RX);
     await openSection(user, "Encodings");
     await user.click(screen.getByRole("button", { name: "Add Encoding" }));
@@ -1360,7 +1359,7 @@ describe("the S3 receiver's Encodings", () => {
     expect(LF(text())).not.toContain("{}");
   });
 
-  it("an item that isn't a mapping is a read-only row with D9b's hint; its Remove works", async () => {
+  it("an item that isn't a mapping is a read-only row with the unshowable-value hint; its Remove works", async () => {
     const user = renderForm(own("receivers", "awss3", "    encodings:\n      - text_encoding\n      - extension: b"), RX);
     await openSection(user, "Encodings");
     expect(extensionOf(1)).toBeDisabled();
@@ -1392,7 +1391,7 @@ describe("ClickHouse's defaults, hints and pruning", () => {
     expect(combo("Compression")).toHaveTextContent("lz4");
   });
 
-  it("the hints (Preflight ruling 17): TLS (config.go:223-234), async_insert and compress (config.go:182-191), the engine's parameters (config.go:281-284)", async () => {
+  it("the hints: TLS (config.go:223-234), async_insert and compress (config.go:182-191), the engine's parameters (config.go:281-284)", async () => {
     const user = renderForm(CORPUS, CH);
     await openSection(user, "TLS");
     expect(hint(TLS_HINT)).toBeInTheDocument();
@@ -1409,7 +1408,7 @@ describe("ClickHouse's defaults, hints and pruning", () => {
     expect(hint(`Raw parameter string passed to the engine. ${ENGINE_PARAMS_HINT}`)).toBeInTheDocument();
   });
 
-  it("Password is a plain text field (decision 11)", () => {
+  it("Password is a plain text field", () => {
     renderForm(CORPUS, CH);
     expect(byId("clickhouse-password")).toHaveAttribute("type", "text");
     expect(byId("clickhouse-password")).toHaveValue("${env:CLICKHOUSE_PASSWORD}");
@@ -1461,7 +1460,7 @@ describe("ClickHouse's defaults, hints and pruning", () => {
 
 // ── File ──
 
-describe("the file exporter's rotation (decisions 4, 7)", () => {
+describe("the file exporter's rotation", () => {
   it("the hint: rotation is on while the block is in the text (config.go:195-199)", async () => {
     const user = renderForm(CORPUS, FILE_APPEND);
     await openSection(user, "Rotation");
@@ -1511,7 +1510,7 @@ describe("the file exporter's rotation (decisions 4, 7)", () => {
     expect(valueOf("exporters.file").rotation).toEqual({ localtime: true });
   });
 
-  it("a rotation: {} in the text stays until a key typed into it is cleared (Preflight ruling 23)", async () => {
+  it("a rotation: {} in the text stays until a key typed into it is cleared", async () => {
     const base = own("exporters", "file", "    path: ./o.json\n    rotation: {}");
     const user = renderForm(base, "exporters.file");
     await openSection(user, "Rotation");
@@ -1524,7 +1523,7 @@ describe("the file exporter's rotation (decisions 4, 7)", () => {
 
 // ── Privacy ──
 
-describe("privacy (decision 13)", () => {
+describe("privacy", () => {
   function scan(mark: string): string[] {
     const leaks: string[] = [];
     for (const element of document.querySelectorAll("*")) {
@@ -1625,7 +1624,7 @@ describe("privacy (decision 13)", () => {
   });
 });
 
-// ── S3 and ClickHouse cases (Parity Notes) ──
+// ── S3 and ClickHouse cases ──
 
 describe("S3 receiver (10), S3 exporter (5) and ClickHouse exporter (4) cases", () => {
   const nodeOf = (key: string) => {

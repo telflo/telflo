@@ -7,10 +7,10 @@ import { useHeldText } from "~/lib/editor/held-text.js";
 import type { ValuePath } from "~/lib/graph/text-edits.js";
 
 /*
- * The field selector (ADR 0018), over the form: a
- * stanza field path (`attributes.level`) as a prefix select (body,
- * attributes, resource, custom…) and a suffix input. It reads the path from
- * the text at `path` and writes it there as typed (held, D9b decision 2).
+ * The field selector, over the form: a stanza field path
+ * (`attributes.level`) as a prefix select (body, attributes, resource,
+ * custom…) and a suffix input. It reads the path from the text at `path`
+ * and writes it there as typed (held).
  *
  * The collector reads a field as `body`, `attributes` or `resource`, then
  * its keys, dot-separated or bracketed (`entry/field.go:111-133, 152-226`);
@@ -20,7 +20,7 @@ import type { ValuePath } from "~/lib/graph/text-edits.js";
  * remove's `field` (`transformer/remove/config.go:39`). A bare `body` is a
  * field everywhere (`:128-129`).
  *
- * Fixed (D9c decisions 3 and 8; Preflight ruling 17):
+ * How it reads and writes:
  * - a `body` suffix is shown and editable (`body.message` never shows as
  *   `body`);
  * - switching to custom… keeps the whole path as written (not the suffix
@@ -35,36 +35,35 @@ import type { ValuePath } from "~/lib/graph/text-edits.js";
  *   back as that prefix and suffix. A path the prefix and suffix wouldn't
  *   write back exactly shows as custom…, as written;
  * - a suffix with a dot outside its brackets shows the hint "Dots nest keys.
- *   For a key with dots, use brackets: attributes["log.file.path"]"
- *   (decision 8; D9c Ruling 57): `attributes.log.file.path` would be a
- *   nested path, not the flat semconv key. `["a.b"]` shows none;
+ *   For a key with dots, use brackets: attributes["log.file.path"]":
+ *   `attributes.log.file.path` would be a nested path, not the flat semconv
+ *   key. `["a.b"]` shows none;
  * - picking a prefix for a custom path that starts with one replaces it
- *   (`attributes.["x"]` → resource: `resource["x"]`; Ruling 57), where
- *   a plain join would double it (`resource.attributes.["x"]`); a custom
- *   path with no prefix becomes the suffix.
- * Changed (D9b decision 3): unset shows the select empty (its placeholder the
- * default's prefix, when the field has a default) and the custom input with
- * the default, or the field's example, as its placeholder (never the
- * default as the value); what is typed there is
- * the path as typed, and the input stays custom… while it is typed in.
- * The person's pick (custom…, or a prefix waiting for its suffix) holds only
- * while the key reads as it did when the pick was made, or as this selector
- * last wrote it: a change from elsewhere (an undo, the YAML box) drops it
- * (Ruling 57), so a stale prefix never comes back. A
- * value the selector can't show (a mapping, a list, a line break) is
- * read-only with decision 3's hint. The suffix and custom inputs get fixed
- * ids of their own (`<id>-suffix`, `<id>-custom`); the label still points
- * at the select.
+ *   (`attributes.["x"]` → resource: `resource["x"]`), where a plain join
+ *   would double it (`resource.attributes.["x"]`); a custom path with no
+ *   prefix becomes the suffix.
+ *
+ * Unset shows the select empty (its placeholder the default's prefix, when the
+ * field has a default) and the custom input with the default, or the field's
+ * example, as its placeholder (never the default as the value); what is typed
+ * there is the path as typed, and the input stays custom… while it is typed
+ * in. The person's pick (custom…, or a prefix waiting for its suffix) holds
+ * only while the key reads as it did when the pick was made, or as this
+ * selector last wrote it: a change from elsewhere (an undo, the YAML box)
+ * drops it, so a stale prefix never comes back. A value the selector can't
+ * show (a mapping, a list, a line break) is read-only with the
+ * unshowable-value hint. The suffix and custom inputs get fixed ids of their
+ * own (`<id>-suffix`, `<id>-custom`); the label still points at the select.
  */
 
 export type FieldPrefix = "body" | "attributes" | "resource";
 
 const FIELD_PREFIXES: readonly FieldPrefix[] = ["body", "attributes", "resource"];
 
-/** The hint under a suffix with a dot in it (decision 8). */
+/** The hint under a suffix with a dot in it. */
 export const BRACKET_HINT = 'Dots nest keys. For a key with dots, use brackets: attributes["log.file.path"]';
 
-/** Whether a suffix has a dot outside its quoted brackets: a nested path, where the bracket hint helps (Ruling 57). */
+/** Whether a suffix has a dot outside its quoted brackets: a nested path, where the bracket hint helps. */
 export function nestsWithDots(suffix: string): boolean {
   return suffix.replace(/\[\s*"[^"]*"\s*\]|\[\s*'[^']*'\s*\]/g, "").includes(".");
 }
@@ -72,7 +71,7 @@ export function nestsWithDots(suffix: string): boolean {
 /**
  * What picking a prefix keeps of a custom path: a prefix it starts with is
  * dropped (`attributes.["x"]` → `["x"]`, `resource.a` → `a`), so it isn't
- * doubled (Ruling 57); a path with none is kept whole.
+ * doubled; a path with none is kept whole.
  */
 export function suffixOfCustom(path: string): string {
   for (const prefix of FIELD_PREFIXES) {
@@ -83,7 +82,7 @@ export function suffixOfCustom(path: string): string {
   return path;
 }
 
-/** A suffix joined to its prefix: a bracketed one without a dot (Preflight ruling 17). */
+/** A suffix joined to its prefix: a bracketed one without a dot. */
 export function joinField(prefix: FieldPrefix, suffix: string): string {
   if (suffix === "") return prefix;
   return suffix.startsWith("[") ? `${prefix}${suffix}` : `${prefix}.${suffix}`;
@@ -124,7 +123,7 @@ export function FieldSelector({
   const parts = typeof written === "string" && !unshowable ? splitField(written) : null;
   /**
    * The person's pick the text doesn't show: custom…, or a prefix waiting
-   * for its suffix, with the key's value it holds for (Ruling 57).
+   * for its suffix, with the key's value it holds for.
    */
   const [pick, setPick] = useState<{ value: FieldPrefix | "custom"; at: string | undefined | null } | null>(null);
   let picked = pick?.value ?? null;

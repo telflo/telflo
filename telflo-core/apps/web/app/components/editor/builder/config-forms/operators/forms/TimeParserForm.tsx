@@ -7,44 +7,39 @@ import { LAYOUT_TYPE_OPTIONS, useLayoutControl } from "../shared/TimestampConfig
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select.js";
 
 /*
- * The `time_parser` operator's form (ADR 0018), with the strptime
- * cheat-sheet, over the card's scope (D9c decisions 2, 3 and 7). Ids are
- * the card's (`op-<index>-time-…`); the custom layout's input gets
- * `…-time-layout-custom`. The Layout label still points at `…-time-layout`,
- * which no control has (the select is `…-time-layout-preset`).
+ * The `time_parser` operator's form, with the strptime cheat-sheet, over
+ * the card's scope. Ids are the card's (`op-<index>-time-…`); the custom
+ * layout's input gets `…-time-layout-custom`. The Layout label still points
+ * at `…-time-layout`, which no control has (the select is
+ * `…-time-layout-preset`).
  *
- * Fixed (decisions 3 and 7; Preflight rulings 14 and 15; Ruling 50):
  * - Layout offers the layout type's presets (`LAYOUT_PRESETS`, shared with
  *   the timestamp section, all six here): the strptime ones, the first
  *   labelled with what it writes ("%Y-%m-%d %H:%M:%S", not Go's notation);
- *   Go layouts under Go time (Preflight ruling 14; never strptime strings
- *   there); under epoch the collector's `s` "Unix epoch (seconds)"
- *   and `s.us` "Unix epoch with fractional" (`helper/time.go:98-106`;
- *   `%s` and `%s.%f` are refused there, and `%s` is nanoseconds to
- *   strptime). Picking a preset writes `layout` only, never `layout_type`
- *   (each type offers its own).
+ *   Go layouts under Go time (never strptime strings there); under epoch
+ *   the collector's `s` "Unix epoch (seconds)" and `s.us` "Unix epoch with
+ *   fractional" (`helper/time.go:98-106`; `%s` and `%s.%f` are refused
+ *   there, and `%s` is nanoseconds to strptime). Picking a preset writes
+ *   `layout` only, never `layout_type` (each type offers its own).
  * - Switching Layout Type sets the new type's first preset when the layout
- *   is another type's preset, in the same change (one undo entry), with
- *   the toast "Layout set to the first <type> preset." (D9d decision 7;
- *   `useLayoutControl`, `layoutAfterSwitch`);
- *   a custom layout is typed text and is kept (Preflight ruling 14).
- * - Custom... is per-card state, following
- *   the card (Preflight ruling 25); it shows while the layout is none of
- *   the type's presets.
- * Changed (D9b decision 3; Ruling 31): an unset Layout Type shows the
- * collector's `strptime` (`helper/time.go:37-41, 62-64`) as the placeholder
- * and "Default strptime"; a type outside the three (`native`) shows as
- * written, an extra option, and Layout offers Custom... only. A layout the
- * select can't show is read-only with decision 3's hint. Parse From and
- * Layout have no default: the collector requires both (`time.go:75-81`).
- * Timezone keeps its placeholder with no "Default" hint (the
- * collector's is the host's local zone, or UTC for a layout ending in `Z`,
- * `time.go:127-141`; Ruling 51).
- * D9c Ruling 63: clearing the custom layout removes `layout` (D9b's rule;
- * never `""`); Timezone is hidden under epoch, where the
- * collector doesn't read `location` (`time.go:114-117`), and a location in
- * the text is kept; the seven epoch layouts (`time.go:100`) all count as
- * epoch's in the switch (`EPOCH_LAYOUTS`).
+ *   is another type's preset, in the same change (one undo entry), with the
+ *   toast "Layout set to the first <type> preset." (`useLayoutControl`,
+ *   `layoutAfterSwitch`); a custom layout is typed text and is kept.
+ * - Custom... is per-card state, following the card; it shows while the
+ *   layout is none of the type's presets.
+ *
+ * An unset Layout Type shows the collector's `strptime`
+ * (`helper/time.go:37-41, 62-64`) as the placeholder and "Default strptime"; a
+ * type outside the three (`native`) shows as written, an extra option, and
+ * Layout offers Custom... only. A layout the select can't show is read-only
+ * with the unshowable-value hint. Parse From and Layout have no default: the
+ * collector requires both (`time.go:75-81`). Timezone keeps its placeholder
+ * with no "Default" hint (the collector's is the host's local zone, or UTC for
+ * a layout ending in `Z`, `time.go:127-141`). Clearing the custom layout
+ * removes `layout` (never `""`); Timezone is hidden under epoch, where the
+ * collector doesn't read `location` (`time.go:114-117`), and a location in the
+ * text is kept; the seven epoch layouts (`time.go:100`) all count as epoch's
+ * in the switch (`EPOCH_LAYOUTS`).
  */
 
 export function TimeParserForm() {

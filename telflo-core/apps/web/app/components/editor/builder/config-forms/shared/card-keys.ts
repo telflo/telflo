@@ -2,11 +2,9 @@ import { useState } from "react";
 
 /*
  * The cards of a sortable list keep their local state (expanded, a held
- * row, a field's typing) with their item, not their position (D9c
- * Preflight ruling 25). k8sobjects'
- * objects (Task 2), k8sattributes' rules, labels and annotations (Task 3)
- * and the operator cards (Task 5) key their cards by these keys, never by
- * a value (decision 10).
+ * row, a field's typing) with their item, not their position. k8sobjects'
+ * objects, k8sattributes' rules, labels and annotations and the operator
+ * cards key their cards by these keys, never by a value.
  *
  * Each key remembers its item as it last read (a snapshot of its value).
  * - The form's own add, remove and move say what they did: the keys are
@@ -14,21 +12,21 @@ import { useState } from "react";
  *   snapshots. This holds when an item's typing is written just before it
  *   moves (a move writes held edits first), which no snapshot could match.
  * - Any other change to the list (an undo or redo, the YAML box, another
- *   field of the card) is matched by snapshot (D9c Rulings 35, 55 and 65):
- *   the old and new snapshots are aligned by a longest common subsequence
- *   (as the text edits' `listSteps` aligns a list), a common prefix and
- *   suffix first, ties broken toward the same index, and each aligned item
- *   keeps its key. So with two identical items, the one not edited keeps
- *   its key, and the edited one keeps its own (Ruling 55: had the other's
- *   key matched it, React would move the focused card, and its typing, onto
- *   the other item). An item the alignment leaves out then takes the first
- *   unused key whose snapshot it equals (an item moved past others: undoing
- *   a move of `B` in `[A, A, B]` gives every card back its key); an item
- *   none equals, while the list keeps its length, takes the key at its own
- *   position if that is unused (a card's own field edited in place); any
- *   other item gets a fresh key, so its card starts afresh, as a new card
- *   of its list starts (collapsed for the Kubernetes cards, expanded for an
- *   operator's), with no held row, never another card's state.
+ *   field of the card) is matched by snapshot: the old and new snapshots
+ *   are aligned by a longest common subsequence (as the text edits'
+ *   `listSteps` aligns a list), a common prefix and suffix first, ties
+ *   broken toward the same index, and each aligned item keeps its key. So
+ *   with two identical items, the one not edited keeps its key, and the
+ *   edited one keeps its own (had the other's key matched it, React would
+ *   move the focused card, and its typing, onto the other item). An item
+ *   the alignment leaves out then takes the first unused key whose snapshot
+ *   it equals (an item moved past others: undoing a move of `B` in
+ *   `[A, A, B]` gives every card back its key); an item none equals, while
+ *   the list keeps its length, takes the key at its own position if that is
+ *   unused (a card's own field edited in place); any other item gets a
+ *   fresh key, so its card starts afresh, as a new card of its list starts
+ *   (collapsed for the Kubernetes cards, expanded for an operator's), with
+ *   no held row, never another card's state.
  *
  * Batching: the form's write to the store and the key change it makes land
  * in one render (React batches every update in one event or task under
@@ -59,8 +57,8 @@ function sameList(a: readonly string[], b: readonly string[]): boolean {
 
 /**
  * Which old index each new snapshot aligns with, by a longest common
- * subsequence (Ruling 65): the common prefix and suffix, then a table over
- * the middle, ties broken toward the same index.
+ * subsequence: the common prefix and suffix, then a table over the middle,
+ * ties broken toward the same index.
  */
 function align(old: readonly string[], now: readonly string[]): (number | undefined)[] {
   const matched: (number | undefined)[] = now.map(() => undefined);
@@ -104,7 +102,7 @@ function align(old: readonly string[], now: readonly string[]): (number | undefi
   return matched;
 }
 
-/** The keys for `snapshots`, matched against the keys' last snapshots (Rulings 35, 55 and 65). Exported for its tests. */
+/** The keys for `snapshots`, matched against the keys' last snapshots. Exported for its tests. */
 export function rematch(state: CardState, snapshots: readonly string[]): CardState {
   const aligned = align(state.snapshots, snapshots);
   const used = new Set<number>(aligned.filter((at): at is number => at !== undefined));
@@ -131,8 +129,8 @@ export function rematch(state: CardState, snapshots: readonly string[]): CardSta
  * The cards' own keys for `items` (the list's values, in order), and the
  * form's own changes to report once each is written: `add` (an item
  * appended), `remove(index)`, `move(from, to)`. `next` is the key `add`
- * gives: a held card (journald's held match, D9c Task 8) takes it, so it
- * is the same card once its item is written.
+ * gives: a held card (journald's held match) takes it, so it is the same card
+ * once its item is written.
  */
 export function useCardKeys(items: readonly unknown[]) {
   const snapshots = items.map(snapshotOf);
@@ -170,11 +168,11 @@ function isArrayIndex(key: string): boolean {
 
 /**
  * Where the key at `index` of a mapping's keys (`Object.keys` of its value,
- * in that order) lands once renamed to `to` (D9c Ruling 79): a mapping's
- * keys are read in the text's order, but JavaScript lists integer-like keys
- * first, ascending, so a rename to `5` moves the row to the top. The form
- * reports the rename as a move (`useCardKeys`' `move`), so the row keeps
- * its key, and its input its focus, wherever it lands.
+ * in that order) lands once renamed to `to`: a mapping's keys are read in
+ * the text's order, but JavaScript lists integer-like keys first,
+ * ascending, so a rename to `5` moves the row to the top. The form reports
+ * the rename as a move (`useCardKeys`' `move`), so the row keeps its key,
+ * and its input its focus, wherever it lands.
  */
 export function renamedIndex(names: readonly string[], index: number, to: string): number {
   const renamed = names.map((name, at) => (at === index ? to : name));

@@ -3,32 +3,31 @@ import { presenceOf, SectionHint, SectionToggle, UnshowableSectionHint } from ".
 import type { ValuePath } from "~/lib/graph/text-edits.js";
 
 /*
- * A Prometheus scrape job's `tls_config` (D9d decisions 3, 12; Preflight
- * ruling 29): the TLS section's markup and copy for the fields Prometheus
- * has, over the form's fields.
+ * A Prometheus scrape job's `tls_config`: the TLS section's markup and copy
+ * for the fields Prometheus has, over the form's fields.
  *
  * The receiver hands its `config:` block to Prometheus' strict loader
  * (contrib v0.162.0 `receiver/prometheusreceiver/config.go:187-205`;
  * prometheus v3.14.0 `config/config.go:81`, `yaml.UnmarshalStrict`), so the
  * block is prometheus/common v0.71.0's `TLSConfig`
  * (`config/http_config.go:1324-1353`), not the collector's `configtls`:
- * - Fixed: the versions are `TLS10`-`TLS13` (`http_config.go:72-91`;
- *   `"1.2"` is refused, "unknown TLS version: 1.2"), so the box
- *   writes `{min_version: TLS12, max_version: TLS13}`. Prometheus has no
- *   default for either, so unset shows blank.
- * - Fixed: no Client CA File, its reload, Reload Interval or the system
+ * - The versions are `TLS10`-`TLS13` (`http_config.go:72-91`; `"1.2"` is
+ *   refused, "unknown TLS version: 1.2"), so the box writes
+ *   `{min_version: TLS12, max_version: TLS13}`. Prometheus has no default for
+ *   either, so unset shows blank.
+ * - No Client CA File, its reload, Reload Interval or the system
  *   pool box: the scrape client has no such keys, and the strict loader
- *   refuses them. A key already in the text is kept (D13 reports it).
- * - Changed (Parity Notes): the box reads "Customize TLS for this job's
- *   scrapes", with the hint that `scheme` decides whether TLS is used (an
- *   https scrape with no `tls_config` uses the system's CAs; the label and
- *   the ids never name the job).
+ *   refuses them. A key already in the text is kept.
+ * - The box reads "Customize TLS for this job's scrapes", with the hint
+ *   that `scheme` decides whether TLS is used (an https scrape with no
+ *   `tls_config` uses the system's CAs; the label and the ids never name
+ *   the job).
  *
  * Ids are `<idPrefix>-…`, the prefix fixed by the form by the job's index
- * (`prometheus-job-0-tls`), never its name (decision 13).
+ * (`prometheus-job-0-tls`), never its name.
  */
 
-/** The box's label and hint (the spec's copy). */
+/** The box's label and hint. */
 export const PROMETHEUS_TLS_LABEL = "Customize TLS for this job's scrapes";
 export const PROMETHEUS_TLS_HINT = "Off: https scrapes use the system's CAs. Scheme decides whether TLS is used.";
 

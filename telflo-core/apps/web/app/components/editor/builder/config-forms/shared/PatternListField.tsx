@@ -9,29 +9,27 @@ import type { ValuePath } from "~/lib/graph/text-edits.js";
 import type { ValueView } from "~/lib/graph/value-view.js";
 
 /*
- * A pattern list (ADR 0018), over a list path in the form (D9d decision 12;
- * Task 10): redaction's Blocked Values.
+ * A pattern list, over a list path in the form: redaction's Blocked Values.
  *
  * - Rows show each item, the pattern, as `code` (not editable), and a trash
  *   button ("Remove pattern") that removes the item by its lines; removing
- *   the last leaves `[]`. Rows are keyed by their items
- *   (`useCardKeys`; D9c Ruling 68), never by position or a value.
- * - Changed (Parity Notes, redaction): items are strings, never
- *   `{pattern, name}`: the collector takes strings only
- *   (`processor/redactionprocessor/config.go:72`, `BlockedValues []string`).
- *   The list holds strings; the name badge is `nameFor(pattern)`, display
- *   only (the form derives it from the regex library by exact pattern), so
- *   there is no "Remove name" button: no key stands behind the badge.
+ *   the last leaves `[]`. Rows are keyed by their items (`useCardKeys`),
+ *   never by position or a value.
+ * - Items are strings, never `{pattern, name}`: the collector takes strings
+ *   only (`processor/redactionprocessor/config.go:72`,
+ *   `BlockedValues []string`). The list holds strings; the name badge is
+ *   `nameFor(pattern)`, display only (the form derives it from the regex
+ *   library by exact pattern), so there is no "Remove name" button: no key
+ *   stands behind the badge.
  * - Staging is local state (nothing is in the text until it is added), a
- *   `VaultAwareInput` (the `$` picker; D9d's controller
- *   ruling). Enter, or "+" ("Add pattern"), trims what was typed and appends
- *   it as a string, written as typed (decision 2: never escape-aware); the
- *   button is disabled while the trimmed text is empty, so `""` is never
- *   written. No duplicate check.
+ *   `VaultAwareInput` (the `$` picker). Enter, or "+" ("Add pattern"), trims
+ *   what was typed and appends it as a string, written as typed (never
+ *   escape-aware); the button is disabled while the trimmed text is empty, so
+ *   `""` is never written. No duplicate check.
  * - A value that isn't a list, or an item that isn't a scalar, can't be
- *   shown: read-only with D9b's hint.
- * - Privacy (decision 13): the id is the form's, fixed; labels are fixed;
- *   a pattern and its badge are text only.
+ *   shown: read-only with the unshowable-value hint.
+ * - Privacy: the id is the form's, fixed; labels are fixed; a pattern and its
+ *   badge are text only.
  */
 
 export interface PatternListFieldProps {

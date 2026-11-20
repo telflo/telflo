@@ -11,11 +11,10 @@ import { useEditorStore } from "~/lib/stores/editor-store.js";
 import { builderStore, componentNamed, openText } from "~/test/builder-store.js";
 
 /*
- * Decision 7's toast (D9c Ruling 87; D9d decision 7): a write that also
- * adjusted another setting toasts its messages, joined, once; a write
- * refused, or one that changed nothing, toasts nothing. Nothing renders
- * inline: D9c's alerts are gone. The forms' own tests drive each of the
- * twelve adjusting writes; this one drives the hook's contract.
+ * The adjustment toast: a write that also adjusted another setting toasts
+ * its messages, joined, once; a write refused, or one that changed nothing,
+ * toasts nothing. Nothing renders inline. The forms' own tests drive each
+ * of the twelve adjusting writes; this one drives the hook's contract.
  */
 
 const TEXT = ["receivers:", "  filelog:", "    start_at: beginning", "exporters:", "  debug: {}", ""].join("\n");
@@ -69,7 +68,7 @@ function renderControl(messages: readonly string[], forced?: ValuesResult) {
   return user;
 }
 
-describe("decision 7's toast (D9c Ruling 87, D9d decision 7)", () => {
+describe("the adjustment toast", () => {
   it("a write made toasts its message once and renders no inline notice", async () => {
     const user = renderControl([FIRST]);
     await user.click(screen.getByRole("button", { name: "Write" }));

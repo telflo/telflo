@@ -1,6 +1,6 @@
 /*
  * The ClickHouse bars, which ClickStack ships as its mark, for the
- * ClickHouse exporter (D9a decision 10).
+ * ClickHouse exporter.
  *
  * Source: the ClickHouse repository, `website/images/logo-clickhouse.svg`
  * at commit 12bd453a43819176d25ecf247033f6cb1af54beb (the artwork Simple

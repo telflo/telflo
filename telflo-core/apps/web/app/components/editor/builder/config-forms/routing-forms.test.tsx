@@ -21,17 +21,16 @@ import { builderStore, componentNamed, openText } from "~/test/builder-store.js"
 import { formControls } from "~/test/form-controls.js";
 
 /*
- * The routing, failover and load-balancing forms (D9d Task 4): their
- * forms over the form contract. Each field is driven as a person would on
- * the routing corpus text (comments, an anchor and merges, flow and block
- * lists, CRLF) with a `0750`, LF and CRLF, and writes only its key.
- * The routing (5) and failover (5) cases follow decision 8: choosing a target
- * writes the connector's entry and the pipeline's receiver in one undo entry,
- * with its toast; removing one removes the receiver unless something still
- * names the pipeline or it is the pipeline's only receiver. The fixes each
- * have a test that fails if the bug returns: held routes, levels and rows
- * (decision 3), the cascades and their toasts (decision 7), the defaults
- * shown (decision 4), the choices added (decision 6), privacy (decision 13).
+ * The routing, failover and load-balancing forms: their forms over the form
+ * contract. Each field is driven as a person would on the routing corpus text
+ * (comments, an anchor and merges, flow and block lists, CRLF) with a `0750`,
+ * LF and CRLF, and writes only its key. The routing (5) and failover (5)
+ * cases: choosing a target writes the connector's entry and the pipeline's
+ * receiver in one undo entry, with its toast; removing one removes the
+ * receiver unless something still names the pipeline or it is the pipeline's
+ * only receiver. Each of these has a test that fails if it breaks: held
+ * routes, levels and rows, the cascades and their toasts, the defaults shown,
+ * the choices added, privacy.
  *
  * Collector claims cite contrib v0.162.0: `connector/routingconnector`,
  * `connector/failoverconnector`, `exporter/loadbalancingexporter`.
@@ -57,7 +56,7 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-/** The info toasts shown so far (decisions 7 and 8). */
+/** The info toasts shown so far. */
 const infoToasts = () => vi.mocked(toast.info).mock.calls.map(([message]) => message);
 
 function ComponentForm({ nodeId, children }: { nodeId: string; children: ReactNode }) {
@@ -146,7 +145,7 @@ function cardOf(title: string): HTMLElement {
   return label.closest("div.rounded-md") as HTMLElement;
 }
 
-// ── Sortable cards by keyboard (D9b Preflight ruling 15) ──
+// ── Sortable cards by keyboard ──
 
 const ROW_HEIGHT = 40;
 
@@ -416,7 +415,7 @@ const CASES: FieldCase[] = [
   },
 ];
 
-describe("every field of each form writes only its key (decision 2)", () => {
+describe("every field of each form writes only its key", () => {
   it.each(CASES.flatMap((c) => [[`${c.name}, LF`, c, false] as const, [`${c.name}, CRLF`, c, true] as const]))(
     "%s",
     async (_name, c, crlf) => {
@@ -438,7 +437,7 @@ describe("every field of each form writes only its key (decision 2)", () => {
   );
 });
 
-describe("opening writes nothing (decision 2)", () => {
+describe("opening writes nothing", () => {
   const KEYS = [ROUTING, SEVERITY, FAILOVER, LB, LB_K8S, LB_DNS];
   /** What each form shows once opened, at least: its text fields, every control, and a field. */
   const OPENED: Record<string, { textboxes: number; all: number; field: string }> = {
@@ -449,7 +448,7 @@ describe("opening writes nothing (decision 2)", () => {
     [LB_K8S]: { textboxes: 10, all: 20, field: "lb-k8s-ports" },
     [LB_DNS]: { textboxes: 10, all: 17, field: "lb-dns-hostname" },
   };
-  // One test per form and text, each with its own time limit (D9c Ruling 54).
+  // One test per form and text, each with its own time limit.
   it.each(KEYS.flatMap((key) => [[key, "LF", CORPUS] as const, [key, "CRLF", CRLF(CORPUS)] as const]))(
     "opening %s (%s), every section and card, focusing every field, writes nothing and leaves the editor clean",
     async (key, _name, base) => {
@@ -476,7 +475,7 @@ describe("opening writes nothing (decision 2)", () => {
   );
 });
 
-// ── Routing cases, with decision 8 ──
+// ── Routing cases: a target wires its pipeline ──
 
 const ROUTING_TEXT = `receivers:
   otlp:
@@ -511,7 +510,7 @@ service:
 const routingValue = () => valueOf(ROUTING);
 const routeTargets = (index = 0) => ((routingValue().table as Value[])[index]!.pipelines as string[]) ?? [];
 
-describe("RoutingConnectorForm: cases with decision 8", () => {
+describe("RoutingConnectorForm: targets wire their pipelines", () => {
   it("shows selected target pipelines in dropdown triggers, not text inputs", async () => {
     const user = renderForm(ROUTING, ROUTING_TEXT);
     await openSection(user, "Fallback & Errors");
@@ -535,7 +534,7 @@ describe("RoutingConnectorForm: cases with decision 8", () => {
     expect(receiversOf("traces/extra")).toEqual(["otlp", "routing"]);
     expect(entries()).toBe(1);
     expect(infoToasts()).toEqual(["Added routing to the receivers of traces/extra."]);
-    // Inside ph-no-capture: it names a pipeline (Ruling 301).
+    // Inside ph-no-capture: it names a pipeline.
     expect(vi.mocked(toast.info).mock.calls.at(-1)?.[1]).toEqual({ className: "ph-no-capture" });
     act(() => void builderStore().undo());
     expect(text()).toBe(ROUTING_TEXT);
@@ -609,7 +608,7 @@ describe("RoutingConnectorForm: routes", () => {
   });
 
   // The deliberate break: a held route seeded with `condition: ""` fails this test.
-  it("a held route's pipeline chosen first writes {context: resource, pipelines: [p]} and wires p, in one entry (Preflight ruling 10)", async () => {
+  it("a held route's pipeline chosen first writes {context: resource, pipelines: [p]} and wires p, in one entry", async () => {
     const user = renderForm(ROUTING, ROUTING_TEXT);
     await user.click(screen.getByRole("button", { name: "Add Route" }));
     await user.click(within(cardOf("Route 2")).getByRole("button", { name: "Add Pipeline" }));
@@ -640,7 +639,7 @@ describe("RoutingConnectorForm: routes", () => {
     expect(entries()).toBe(1);
   });
 
-  it("a held route stays through a write elsewhere in the form (D9d Ruling 33)", async () => {
+  it("a held route stays through a write elsewhere in the form", async () => {
     const user = renderForm(ROUTING, ROUTING_TEXT);
     await user.click(screen.getByRole("button", { name: "Add Route" }));
     await openSection(user, "Fallback & Errors");
@@ -665,7 +664,7 @@ describe("RoutingConnectorForm: routes", () => {
     expect(byId("route-0-match")).toHaveTextContent("Statement (route() where ...)");
   });
 
-  it("Context switched to Request renames a statement to a condition in place, one entry, with the toast (decision 7)", async () => {
+  it("Context switched to Request renames a statement to a condition in place, one entry, with the toast", async () => {
     const user = renderForm(SEVERITY);
     await user.click(screen.getByRole("button", { name: /^Route 2/ }));
     await pickIn(user, byId("route-1-context"), "Request (HTTP/gRPC metadata, deprecated)");
@@ -685,7 +684,7 @@ describe("RoutingConnectorForm: routes", () => {
     expect(screen.getByText(/The request context only supports a single/)).toBeInTheDocument();
   });
 
-  it("Context switched to Request with both a statement and a condition removes the statement, with the toast (Preflight ruling 11)", async () => {
+  it("Context switched to Request with both a statement and a condition removes the statement, with the toast", async () => {
     const both = ROUTING_TEXT.replace("        pipelines: [traces/audit]\n", "        statement: route()\n        pipelines: [traces/audit]\n");
     const user = renderForm(ROUTING, both);
     await pickIn(user, byId("route-0-context"), "Request (HTTP/gRPC metadata, deprecated)");
@@ -738,7 +737,7 @@ describe("RoutingConnectorForm: routes", () => {
     expect(within(cardOf("Route 1")).queryByText("Context", { selector: "label" })).toBeNull();
   });
 
-  it("dragging a route in a flow table spread over lines moves each route's comments with it (D9d Ruling 39)", async () => {
+  it("dragging a route in a flow table spread over lines moves each route's comments with it", async () => {
     layOutRows();
     const table = (routes: readonly string[]) => ROUTING_TEXT.replace(
       "    table:\n      - context: resource\n        condition: 'attributes[\"tenant\"] == \"acme\"'\n        pipelines: [traces/audit]\n",
@@ -757,7 +756,7 @@ describe("RoutingConnectorForm: routes", () => {
     expect(infoToasts()).toEqual([]);
   });
 
-  it("shows unset as the collector's defaults: Context blank with the inferred hint, Action move, Error Mode ignore (decision 4)", async () => {
+  it("shows unset as the collector's defaults: Context blank with the inferred hint, Action move, Error Mode ignore", async () => {
     const user = renderForm(SEVERITY);
     expect(byId("route-0-context")).toHaveTextContent("");
     expect(hint("Where the expression is evaluated. Use the coarsest context that works. · Default: inferred from the expression's paths, else resource")).toBeInTheDocument();
@@ -799,14 +798,14 @@ describe("RoutingConnectorForm: routes", () => {
     expect(screen.queryByText("Unmatched telemetry is dropped")).toBeNull();
   });
 
-  it("a table it can't show is read-only with D9b's hint; Add Route is disabled", () => {
+  it("a table it can't show is read-only with the unshowable-value hint; Add Route is disabled", () => {
     renderForm(ROUTING, ROUTING_TEXT.replace(/ {4}table:\n[\s\S]*?\nservice:/, "    table: oops\nservice:"));
     expect(screen.getByText(UNSHOWABLE_VALUE_MESSAGE)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Add Route" })).toBeDisabled();
   });
 });
 
-// ── Failover cases, with decision 8 ──
+// ── Failover cases: a target wires its pipeline ──
 
 const FAILOVER_TEXT = `receivers:
   otlp:
@@ -838,7 +837,7 @@ service:
 
 const levels = () => valueOf(FAILOVER).priority_levels as string[][];
 
-describe("FailoverConnectorForm: cases with decision 8", () => {
+describe("FailoverConnectorForm: targets wire their pipelines", () => {
   it("renders one card per level with its pipelines in dropdown triggers", () => {
     renderForm(FAILOVER, FAILOVER_TEXT);
     expect(screen.getByText("Priority 1")).toBeInTheDocument();
@@ -918,7 +917,7 @@ describe("FailoverConnectorForm: levels and recovery", () => {
   });
 });
 
-describe("routing and failover keep a route's and a level's last pipeline (final ruling F2)", () => {
+describe("routing and failover keep a route's and a level's last pipeline", () => {
   it("a route's last target pipeline's Remove is disabled, with the hint; Default Pipelines' last one removes the key", async () => {
     const user = renderForm(ROUTING, ROUTING_TEXT);
     const remove = within(cardOf("Route 1")).getByRole("button", { name: "Remove pipeline" });
@@ -969,7 +968,7 @@ describe("routing and failover keep a route's and a level's last pipeline (final
   });
 });
 
-describe("routing's and failover's empty alerts while a card is held (final ruling F3); the route toggle (F4)", () => {
+describe("routing's and failover's empty alerts while a card is held; the route toggle", () => {
   it("No routes configured hides while a route is held, and comes back when it is removed", async () => {
     const user = renderForm(ROUTING, ROUTING_TEXT.replace(/ {4}table:\n[\s\S]*?\nservice:/, "    table: []\nservice:"));
     expect(screen.getByText("No routes configured")).toBeInTheDocument();
@@ -1025,7 +1024,7 @@ describe("LoadBalancingExporterForm", () => {
     expect(valueOf(LB).protocol).toEqual({ otlp: { timeout: "2s" } });
   });
 
-  it("switching the resolver removes the other's block and writes the seed, one entry, with the toast (decision 7)", async () => {
+  it("switching the resolver removes the other's block and writes the seed, one entry, with the toast", async () => {
     const user = renderForm(LB);
     await pickIn(user, byId("lb-resolver-type"), "DNS (Dynamic Discovery)");
     expect((valueOf(LB).resolver as Value)).toEqual({
@@ -1053,7 +1052,7 @@ describe("LoadBalancingExporterForm", () => {
     expect(entries()).toBe(1);
   });
 
-  it("Custom Attributes is held until its first attribute, then written with it in one change (Preflight ruling 6)", async () => {
+  it("Custom Attributes is held until its first attribute, then written with it in one change", async () => {
     const user = renderForm(LB);
     await pickIn(user, byId("lb-routing-key"), "Custom Attributes");
     expect(text()).toBe(CORPUS);
@@ -1129,7 +1128,7 @@ describe("LoadBalancingExporterForm", () => {
     expect(entries()).toBe(0);
   });
 
-  it("shows the collector's defaults: the routing key per signal, timeouts 5s and 1m, top-level retry and queue off, the protocol's on (decision 4)", async () => {
+  it("shows the collector's defaults: the routing key per signal, timeouts 5s and 1m, top-level retry and queue off, the protocol's on", async () => {
     const user = renderForm(LB_K8S, CORPUS.replace("    retry_on_failure:\n      enabled: true\n      initial_interval: 5s\n", ""));
     cleanup();
     useEditorStore.setState(initialState, true);
@@ -1157,7 +1156,7 @@ describe("LoadBalancingExporterForm", () => {
     expect(hint("Each port creates a separate backend per pod. · Default 4317")).toBeInTheDocument();
   });
 
-  it("offers the routing keys with the signals that take them, randomness included (decision 6), and the corrected copy", async () => {
+  it("offers the routing keys with the signals that take them, randomness included, and the corrected copy", async () => {
     const user = renderForm(LB);
     expect(await optionsOf(user, byId("lb-routing-key"))).toEqual([
       "Trace ID (traces, logs)",
@@ -1191,9 +1190,9 @@ describe("LoadBalancingExporterForm", () => {
   });
 });
 
-// ── Privacy (decision 13) ──
+// ── Privacy ──
 
-describe("privacy (decision 13)", () => {
+describe("privacy", () => {
   beforeEach(layOutRows);
 
   it("puts no config value or pipeline name in any attribute: every section and card open, the menus open, drags in progress", async () => {
@@ -1308,7 +1307,7 @@ describe("privacy (decision 13)", () => {
 // ── The YAML box and other writes keep the held items' rules ──
 
 describe("held items and the YAML box", () => {
-  it("a held route goes when the YAML box changes its table's length (D9d Ruling 33a)", async () => {
+  it("a held route goes when the YAML box changes its table's length", async () => {
     const user = renderForm(ROUTING, ROUTING_TEXT);
     await user.click(screen.getByRole("button", { name: "Add Route" }));
     expect(screen.getByText("Route 2")).toBeInTheDocument();

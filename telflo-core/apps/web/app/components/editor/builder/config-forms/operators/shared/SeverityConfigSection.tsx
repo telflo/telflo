@@ -13,38 +13,38 @@ import type { ValueChange } from "~/lib/graph/text-edits.js";
 import type { ValueView } from "~/lib/graph/value-view.js";
 
 /*
- * The severity section (ADR 0018), a parser's `severity` block, over the
- * form (D9c decisions 2 and 8). It sits in an operator
- * card, under the card's scope; its ids are the card's (`op-<index>-…`,
- * decision 8: fixed ids such as `severity-enable` or `sev-parse-from` would
- * be shared by every card).
+ * The severity section, a parser's `severity` block, over the form. It sits
+ * in an operator card, under the card's scope; its ids are the card's
+ * (`op-<index>-…`: fixed ids such as `severity-enable` or `sev-parse-from`
+ * would be shared by every card).
  *
- * Kept (Parity Notes): ticking "Parse Severity" writes
+ * Ticking "Parse Severity" writes
  * `{parse_from: attributes.level, preset: default}`; unticking removes the
  * block; "Overwrite severity text…" writes `true` or `false`; a mapping level
  * typed as `a, b` is written as a list, one value as a string, none removes
  * the level, and the last level's removal removes `mapping`.
- * Fixed (decision 8):
+ *
  * - the "Custom severity mapping" box is on while `mapping` is there, and
  *   while it was ticked or its rows typed in (never reset on a change,
  *   which would collapse it under the person's typing); it is per-card state,
  *   so it follows the card;
  * - mapping keys are read case-insensitively and written under the spelling
- *   the text has (`WARN:` stays `WARN:`; Preflight ruling 26): the collector
- *   lower-cases them itself (`helper/severity_builder.go:125-126`, through
- *   the aliases' lookup, `helper/severity.go:75-79`), so nothing is
- *   lower-cased on render;
+ *   the text has (`WARN:` stays `WARN:`): the collector lower-cases them
+ *   itself (`helper/severity_builder.go:125-126`, through the aliases'
+ *   lookup, `helper/severity.go:75-79`), so nothing is lower-cased on
+ *   render;
  * - a mapping the six rows can't show — a key that isn't one of the six
  *   levels (`warning`, `info2`, `5`, the aliases, `severity_builder.go:18-86`),
  *   a level written twice in two spellings, a value that isn't a string or
  *   a list of strings (a number, a `{min, max}` range, `:167-225`), a value
  *   with a comma the rows would split — makes the rows and the box
- *   read-only, with decision 3's hint (never `[object Object]`).
- * Changed (D9b decision 3; Ruling 31): an unset Preset shows the collector's
- * default (`getBuiltinMapping`'s default, `severity_builder.go:18-107`) as
- * the placeholder and "Default default"; a preset outside the two (`otel`,
- * `aliases`, `:22`) shows as an extra option, as written. Parse From has no
- * default: the collector requires it (`:149-151`).
+ *   read-only, with the unshowable-value hint (never `[object Object]`).
+ *
+ * An unset Preset shows the collector's default (`getBuiltinMapping`'s
+ * default, `severity_builder.go:18-107`) as the placeholder and "Default
+ * default"; a preset outside the two (`otel`, `aliases`, `:22`) shows as an
+ * extra option, as written. Parse From has no default: the collector
+ * requires it (`:149-151`).
  */
 
 export const SEVERITY_LEVELS = ["trace", "debug", "info", "warn", "error", "fatal"] as const;
@@ -71,7 +71,7 @@ function scalarString(view: ValueView): string | null {
   return view.kind === "scalar" && typeof view.value === "string" ? view.value : null;
 }
 
-/** The `mapping` under the form's scope, as the six rows read it (Preflight ruling 26). */
+/** The `mapping` under the form's scope, as the six rows read it. */
 export function readSeverityMapping(form: FormSource): SeverityMapping {
   const empty = { trace: "", debug: "", info: "", warn: "", error: "", fatal: "" };
   const view = form.read(["mapping"]);

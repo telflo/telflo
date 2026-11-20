@@ -6,19 +6,18 @@ import { enabledOf, SectionHint, SectionToggle, UnshowableSectionHint, type Abse
 import type { ValuePath } from "~/lib/graph/text-edits.js";
 
 /*
- * The sending queue section (ADR 0018), over the form's fields (D9b
- * decisions 2 to 4). Bound to the `sending_queue` block's path.
+ * The sending queue section, over the form's fields. Bound to the
+ * `sending_queue` block's path.
  *
- * Kept (the owner's ruling): ticking the box writes
- * `enabled: true`, `num_consumers: 10` and `queue_size: 1000` as the
- * block; unticking writes `enabled: false` in place of the block. Each is
- * one change.
+ * Ticking the box writes `enabled: true`, `num_consumers: 10` and
+ * `queue_size: 1000` as the block; unticking writes `enabled: false` in
+ * place of the block. Each is one change.
  *
- * Fixed (decision 4): the box shows on while `enabled` is unset, as the
- * collector has it; the fields show unset as unset (decision 3).
+ * The box shows on while `enabled` is unset, as the collector has it; the
+ * fields show unset as unset.
  *
- * Kept (Preflight ruling 21, Parity Notes): the Batching hints read as if
- * batching were on, though writing any `batch.*` key turns it on.
+ * The Batching hints read as if batching were on, though writing any
+ * `batch.*` key turns it on.
  */
 
 const SIZERS = [
@@ -31,20 +30,19 @@ interface SendingQueueSectionProps {
   /** The `sending_queue` block's path under the form. */
   path: ValuePath;
   showBatchSettings?: boolean;
-  /** Before every id (`"lb-"`), fixed by the form (D9d Preflight ruling 4). */
+  /** Before every id (`"lb-"`), fixed by the form. */
   idPrefix?: string;
-  /** What an absent block means (D9d Preflight ruling 4): an off variant's unticking removes the key. */
+  /** What an absent block means: an off variant's unticking removes the key. */
   absentMeans?: AbsentMeans;
 }
 
 /*
- * D9d (decision 12; Preflight ruling 4): `idPrefix` sets the ids apart
- * where a form shows the section twice (load balancing's `"lb-"`); D9b's
- * ids are unprefixed. `absentMeans: "off-optional"` is a
- * `configoptional.Default` queue (load balancing's top level, the S3
- * exporter): absent shows off, a null block or one without
- * `enabled: false` on (its fields write it as a mapping); ticking writes
- * the block and unticking removes the key.
+ * `idPrefix` sets the ids apart where a form shows the section twice (load
+ * balancing's `"lb-"`); without it the ids are unprefixed.
+ * `absentMeans: "off-optional"` is a `configoptional.Default` queue (load
+ * balancing's top level, the S3 exporter): absent shows off, a null block or
+ * one without `enabled: false` on (its fields write it as a mapping); ticking
+ * writes the block and unticking removes the key.
  */
 export function SendingQueueSection({ path, showBatchSettings = true, idPrefix = "", absentMeans = "on" }: SendingQueueSectionProps) {
   const form = useForm();

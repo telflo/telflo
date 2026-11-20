@@ -19,17 +19,16 @@ interface FileViewerDialogProps {
 }
 
 /**
- * A test file, the run's text or its logs in a read-only viewer (D14a
- * decisions 22 and 23). JSON and
+ * A test file, the run's text or its logs in a read-only viewer. JSON and
  * NDJSON are pretty-printed; Copy puts them back as they were (one compact
  * document a line for NDJSON, compact JSON for one document, the text as it
- * is otherwise). Differences:
+ * is otherwise). In detail:
  * - Copy says "Copied to clipboard" (else "Failed to copy to clipboard",
  *   the YAML tab's words) as it closes the dialog, never silently;
  * - a failure shows the API's words, else "Failed to load file", and a
  *   session that ended shows the fallback (the session-ended handler takes
  *   the browser to sign in);
- * - replay (ADR 0024): the whole dialog is `ph-no-capture`, the viewer's
+ * - replay: the whole dialog is `ph-no-capture`, the viewer's
  *   live region inside it (TestFileViewer); the title, which may be a file's
  *   name, is text only.
  */
