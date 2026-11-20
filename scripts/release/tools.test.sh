@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# tools.sh's self-test (D36-2 decision 110), offline: a fixture lock whose
-# downloads are local files (file:// URLs), a fixture platform, a `curl`
-# wrapper that records each call before handing it to the real curl, and a
-# `docker` stand-in that records its argv and DOCKER_CONFIG. Cases:
+# tools.sh's self-test, offline: a fixture lock whose downloads are local
+# files (file:// URLs), a fixture platform, a `curl` wrapper that records each
+# call before handing it to the real curl, and a `docker` stand-in that
+# records its argv and DOCKER_CONFIG. Cases:
 #   - a download whose sha256 matches the lock is accepted and made
 #     executable; a wrong one is refused, exit 1, and the download removed;
 #   - from an archive, only the lock's member is taken, and only when its
@@ -11,7 +11,7 @@
 #   - a checked file is never overwritten (a second fetch keeps it; a
 #     tampered one is refused by `path` and by `fetch`); a binary swapped
 #     together with its .checked record is refused by `path` (the lock's
-#     binary sha256, Ruling 399);
+#     binary sha256);
 #   - with CI set (not ""/false/0), TELFLO_TOOLS_DIR, TELFLO_TOOLS_LOCK and
 #     TELFLO_TOOLS_PLATFORM are each refused (exit 2, nothing read or made);
 #   - `path` never downloads (no curl call, no .tools/ made);
@@ -26,8 +26,8 @@
 # The deliberate breaks (run with TOOLS_SH=<copy>): the download's sha256
 # comparison removed must fail the wrong-sum case and the download-sum-alone
 # case (an archive's download wrong, its member the lock's binary: only that
-# comparison refuses it, Ruling 408); the binary's sha256 check in `path`
-# removed must fail the swapped-binary case.
+# comparison refuses it); the binary's sha256 check in `path` removed must
+# fail the swapped-binary case.
 #
 # Run: bash scripts/release/tools.test.sh   (TOOLS_SH=<path> tests another copy)
 # bash 3.2 compatible; PASS/FAIL lines; exit 1 when any failed.
@@ -160,7 +160,7 @@ binary_mismatch() {
 }
 run_case "an archive whose member's sha256 isn't the lock's binary sha256: refused (exit 1), nothing installed" binary_mismatch
 
-# The download's own check, alone (Ruling 408): the archive's sha256 isn't the lock's while its member
+# The download's own check, alone: the archive's sha256 isn't the lock's while its member
 # is exactly the lock's binary (so the binary's check would pass): refused before anything is extracted.
 fresh
 download_sum_alone() {

@@ -5,7 +5,7 @@
 # the stack to run without Google settings, as CI's does: no
 # TELFLO_OIDC_GOOGLE_* reaches docker-compose.yml.
 #
-# Which site (D36-2 decision 97): TELFLO_SMOKE_SITE=oss|saas, required, with
+# Which site: TELFLO_SMOKE_SITE=oss|saas, required, with
 # no default (unset or anything else exits 2 before anything runs; the gates'
 # scripts/gates/smoke-env.sh sets it beside the site's values). `saas` is the
 # run described below, on the SaaS's values. `oss` runs the open-source
@@ -19,65 +19,64 @@
 # printed; the link's page loads through the gateway (its path: the token is
 # in the fragment) and its token sets the password (POST
 # /api/v1/auth/password-resets, 204); the sign-in lands in the group
-# organization the bootstrap made (D36-1 decision 56), where /me shows the
+# organization the bootstrap made, where /me shows the
 # account its admin and a product admin, asked for no Terms; the flag is then
 # cleared by SQL (marked before the bootstrap runs, so the EXIT trap clears it
 # too), and the ordinary account's create is 403
-# organization_creation_restricted (the switch is on by default, Q259), so no
+# organization_creation_restricted (the switch is on by default), so no
 # organization is made through the gateway; the invitee joins by the
-# invitation read from Mailpit, with no Terms; D29's third account joins the
-# group organization by an invitation too, and is removed from it (DELETE
-# .../members/:userId, 204) before its delete; the playground's three pages
-# are 404, the published flows' anonymous reads 404 not_found, the sales
-# inquiry 404 not_found (nothing reaches Mailpit) and the CLI's anonymous
-# validate exits 3 login_required. Every other step is the same. Last, in both
-# modes, the API's, the gateway's and the web server's logs are searched
-# (grep -cF -f, counts only) for the run's secrets: both passwords, the
-# invitations' tokens and, in oss, the set-password link's token.
+# invitation read from Mailpit, with no Terms; the product-administration
+# steps' third account joins the group organization by an invitation too, and
+# is removed from it (DELETE .../members/:userId, 204) before its delete; the
+# playground's three pages are 404, the published flows' anonymous reads 404
+# not_found, the sales inquiry 404 not_found (nothing reaches Mailpit) and the
+# CLI's anonymous validate exits 3 login_required. Every other step is the
+# same. Last, in both modes, the API's, the gateway's and the web server's
+# logs are searched (grep -cF -f, counts only) for the run's secrets: both
+# passwords, the invitations' tokens and, in oss, the set-password link's
+# token.
 #
 # Checks the paths that only the assembled stack exercises: the gateway
 # routes pages to the web app and /api/ to the API, the public surface
-# included (D22 decision 33: /api/public/v1/whoami without a token is the
+# included (/api/public/v1/whoami without a token is the
 # API's one 401 invalid_api_token with WWW-Authenticate: Bearer, no token
 # sent or printed), migrations ran, the API
 # reaches Postgres and Mailpit over the compose network, the emailed link
 # points at the gateway's origin, nginx passes the CSRF header through, the
 # session cookies work and rotate through the gateway, a session switches
-# to an organization it created and back (D5), an invitation to it arrives
-# by email and a new account joins it from the link's token (D6), a
-# configuration is created, listed, deleted and gone from the list (D7), the
+# to an organization it created and back, an invitation to it arrives by email
+# and a new account joins it from the link's token, a configuration is
+# created, listed, deleted and gone from the list, the
 # new account lists its Initial Configuration, and a configuration's version
-# is read, saved with a small graph and read back equal (D8, D9a), and saved
+# is read, saved with a small graph and read back equal, and saved
 # again with a body over 2 MiB (on the route the gateway allows 5 MiB), a
 # second version is created from the first with a body over 2 MiB (the
 # create's path has the gateway's 5 MiB too), renamed, the first selected,
-# and both read back (D10), the second is published through the gateway, its
+# and both read back, the second is published through the gateway, its
 # snapshot found in the opamp-server (the second version's, by its id,
 # holding the YAML saved, by its SHA-256, for the configuration's collector
-# distribution and the version's collector version, D13a), and none found
-# there once the configuration is deleted (D11b), a password reset arrives by email and takes
+# distribution and the version's collector version), and none found there once
+# the configuration is deleted, a password reset arrives by email and takes
 # effect, the web server's loaders reach the
 # API over TELFLO_API_INTERNAL_URL, and with no OIDC provider configured the
-# API lists none and has no Google start endpoint (D2c). robots.txt
-# disallows every path (D36-1 Preflight ruling 12: the marketing site and its
-# sitemap left the web app), and a sales inquiry reaches Mailpit at
-# TELFLO_SALES_INQUIRY_TO (the gates' smoke-env.sh runs the SaaS's values,
-# the inquiries on). The playground (D31-1 decision 46), signed out:
-# /playground, /playground/editor and /public-editor render with their
-# titles, and the open read of the published
+# API lists none and has no Google start endpoint. robots.txt disallows every
+# path, and a sales inquiry reaches Mailpit at TELFLO_SALES_INQUIRY_TO (the
+# gates' smoke-env.sh runs the SaaS's values, the inquiries on). The
+# playground, signed out: /playground, /playground/editor and /public-editor
+# render with their titles, and the open read of the published
 # flows (no session, no-store) lists log-volume-cost-control, answers its YAML
 # by slug and 404s an unknown slug flow_not_found. The inquiry is limited to 3
 # per IP per 10 minutes, so a fourth run within 10 minutes fails there with
 # 429. The identity routes (register, verify, sign-in, password reset, the
 # invitation's preview and registration, Google's start) share a limit of 30
 # requests per IP per 5 minutes (RATE_LIMITS' identityPerIp; refresh has its
-# own bucket of 150): a run makes 11 of them, 15 on a throwaway stack (D29's
-# third account); an oss run 13 (each account's register and verify become one
-# request: the set-password link's, the third account's invitation
-# registration; the refused register isn't counted, its gate answering
-# first), so two quick runs in a row from one address fit and a third
-# fails at register or sign-in with 429 until the window moves on. The
-# opamp-server (D11a): its management API answers /health on its published
+# own bucket of 150): a run makes 11 of them, 15 on a throwaway stack (the
+# product-administration steps' third account); an oss run 13 (each account's
+# register and verify become one request: the set-password link's, the third
+# account's invitation registration; the refused register isn't counted, its
+# gate answering first), so two quick runs in a row from one address fit and a
+# third fails at register or sign-in with 429 until the window moves on. The
+# opamp-server: its management API answers /health on its published
 # port and refuses an /api/ call without the secret; the platform's real
 # client, run inside the API container, registers an organization and posts,
 # reads, lists and deletes a publication under it through the real server,
@@ -87,28 +86,27 @@
 # and, at the end, after the account signs in again, renames the group
 # organization there when it's renamed through the gateway and removes it
 # there when it's deleted through the gateway, the account keeping its
-# personal organization (D11a decision 20); and each side's login role is
+# personal organization; and each side's login role is
 # refused a connection to the other's database, over the network, so the
-# password path is exercised rather than the server container's local trust
-# (D11a Preflight ruling 10).
-# Who may create an organization (D36-1 decision 51; Q259): a fresh stack
-# lets only product admins. On a throwaway stack, before the organization
-# above is created, /me's mayCreateOrganizations is false and the account's
-# create 403 organization_creation_restricted; the account, a product admin
+# password path is exercised rather than the server container's local trust.
+# Who may create an organization: a fresh stack lets only product admins. On a
+# throwaway stack, before the organization above is created, /me's
+# mayCreateOrganizations is false and the account's create 403
+# organization_creation_restricted; the account, a product admin
 # by SQL for that one call, turns the switch off through PATCH
 # /api/v1/product-admin/settings (200, no-store), creates the organization
 # as an ordinary account, and the switch goes back on by SQL (the EXIT trap
 # too, for a run that ends in between). On any other stack the switch must
 # be off already, or the run fails saying so.
-# The collector validator (D13b): it answers /health on its published port
+# The collector validator: it answers /health on its published port
 # and refuses a validate call without the secret; and through the gateway,
 # the platform checks a version's text with the real collector of the
-# version's pin (D13b decision 17): a valid text answers `valid`, a text
+# version's pin: a valid text answers `valid`, a text
 # naming an unknown component `invalid` with that component's path. The
 # configuration's version 1 is pinned to the catalogue's default version,
 # the one the image always holds (every offered one by default; CI's stack
 # job and the throwaway gate stacks build it with OTELCOL_VERSIONS=default,
-# the catalogue's default only). The collector tester (D14a): it answers
+# the catalogue's default only). The collector tester: it answers
 # /testing/v1/health through its forwarder's published port (the tester
 # itself sits only on an internal network) and refuses a run without the
 # secret there; and through the gateway, a real run: a small OTLP logs
@@ -116,13 +114,13 @@
 # an OTLP receiver to the debug exporter is queued on version 1's pin, the
 # API's dispatcher sends it to the tester, whose collector runs it, and the
 # run, polled until it ends, succeeds with an output holding the record.
-# Test suites (D14b): through the gateway, a suite is created on version 1
+# Test suites: through the gateway, a suite is created on version 1
 # with a test configuration copied from that file, Played (queued by its
 # definition's id, on version 1's pin), and its run succeeds carrying the
 # suite's and the configuration's names as its breadcrumb, with the same
 # record in its output; version 2, created from version 1 below, lists a copy
-# of the suite and its configuration (D14b decisions 4 and 12).
-# Validation rules (D15a): the OTTL evaluator answers /health through its
+# of the suite and its configuration.
+# Validation rules: the OTTL evaluator answers /health through its
 # forwarder's published port (it sits only on an internal network of its
 # own) and refuses, before routing, a call without the secret, with a wrong
 # one, and on an unknown path; and through the gateway, a validation
@@ -132,16 +130,15 @@
 # words (400 validation_rule_invalid), a run of the uploaded file whose rules
 # pass succeeds with a passed result per rule, and once a rule the record
 # breaks is saved (every record tagged env: prod), a second run ends
-# `validation_failed`, its failed result carrying its detail (D15a decisions
-# 2, 3, 6 and 15); version 2 lists a copy of the validation pipeline and its
-# rules (decision 17).
-# The regex library and Compare's rules (D15b decision 13, Preflight ruling
-# 7): through the gateway, the account, a member, reads the library (at
-# least 35 entries, the seed's count; "US Social Security Number"'s regex
-# byte for byte), saves its "AWS Access Key" as a not_contains_regex rule as
-# the picker does and an OTTL rule as Compare's "Create an OTTL rule" writes
-# it for a key with quotes and brackets (stored byte for byte), each
-# checked by the real evaluator, and once "Production only" is deleted a run of a second file, whose extra record carries the
+# `validation_failed`, its failed result carrying its detail; version 2 lists
+# a copy of the validation pipeline and its rules.
+# The regex library and Compare's rules: through the gateway, the account, a
+# member, reads the library (at least 35 entries, the seed's count; "US Social
+# Security Number"'s regex byte for byte), saves its "AWS Access Key" as a
+# not_contains_regex rule as the picker does and an OTTL rule as Compare's
+# "Create an OTTL rule" writes it for a key with quotes and brackets (stored
+# byte for byte), each checked by the real evaluator, and once "Production
+# only" is deleted a run of a second file, whose extra record carries the
 # attribute `y`, succeeds with every rule passing, in order (the key read
 # unescaped, as the two keys `x` and `y`, would fail there); a member's write
 # to the library is 403 product_admin_required. Then, only on a throwaway
@@ -155,7 +152,7 @@
 # 403. A run that ends between those steps deletes the entry it created, if
 # it's still there, and clears the flag (the EXIT trap). The copy to version
 # 2 carries the four rules left.
-# The fleet model (D16a): the opamp-server's agent endpoint answers /health
+# The fleet model: the opamp-server's agent endpoint answers /health
 # on its published port; through its management API (curl, the secret in a
 # 0600 header file) a server fleet is created in the personal organization,
 # with a group "gateways"; a configuration of the fleet's own is published
@@ -164,15 +161,15 @@
 # real collector (the OpAMP supervisor 0.162.0 running otelcol-contrib
 # 0.162.0, docker/smoke-collector, built from the stack's validator image)
 # started with the fleet's default bearer, edge-01, naming the Default group
-# (every smoke collector names its group: D17d-1), enrolls there, is handed
+# (every smoke collector names its group), enrolls there, is handed
 # the rotate token and applies the published version (its
 # effective SHA-256 the saved YAML's, in sync); a second opamp-server replica
 # is started (`docker compose run`), and edge-02, on the same local file in
 # "gateways" with nothing assigned, enrolled through it, is read through the
 # first replica unassigned (no pin, nothing resolved, nothing served: it
-# keeps running its own file, D16c), and the fleet's former imports path
+# keeps running its own file), and the fleet's former imports path
 # answers 404; hand-made polls on the default token show the agent's door
-# requiring a group (D17d-1): a fresh collector naming no group is refused
+# requiring a group: a fresh collector naming no group is refused
 # 403 "Forbidden" and not enrolled, one naming a group "doomed" (made through
 # the management API) enrolls there, and once that group is deleted (204) its
 # collector is gone (404 collector_not_found) and the same instance uid naming
@@ -193,12 +190,11 @@
 # collector's binary (docker/smoke-collector) the catalogue's default
 # version, the one the validator image always holds: a run against either
 # fails at once, naming what to change.
-# The fleet model through the platform (D16b decision 24, Preflight ruling
-# 18): in the group organization, after its rename and before its delete,
-# through the gateway as its signed-in admin (the cookie jar and
-# X-Telflo-CSRF), a configuration "# D16b" is published and its versions'
-# list (filter=published, D17b-1) answers exactly that version, its id,
-# number, label and published date only; a fleet is created
+# The fleet model through the platform: in the group organization, after its
+# rename and before its delete, through the gateway as its signed-in admin
+# (the cookie jar and X-Telflo-CSRF), a configuration of its own is published
+# and its versions' list (filter=published) answers exactly that version, its
+# id, number, label and published date only; a fleet is created
 # with an id the script chose (201, no-store, both bearers) and again with
 # the same id (200, the fleet without bearers), listed and read; the
 # published version is assigned to its Default group by its version id
@@ -206,11 +202,11 @@
 # version beside it; edge-b1, from the smoke collector's image, started with
 # the platform's default bearer and naming the Default group, is read
 # through the platform's collector
-# list (no-store, D17b-1) holding the rotate token and applying the published
+# list (no-store) holding the rotate token and applying the published
 # version (its SHA-256, in sync, the served version named), then read alone
 # and its error history read (each no-store), and edge-b2, in a group with
 # nothing assigned, is read through the platform unassigned (no pin, nothing
-# resolved, nothing served, D16c), and the platform's former imports path
+# resolved, nothing served), and the platform's former imports path
 # answers 404 not_found; edge-b2 is pinned to the published version through
 # the platform (200, no-store), read applying it from its pin (in sync), and
 # unpinned (200, unassigned again, still served that version); the
@@ -225,35 +221,33 @@
 # organization_not_found. A run that
 # ends among those steps removes its collectors, the fleet (through the
 # management API), the image and the configuration (the EXIT trap).
-# Installing (D17c-1 decision 53, Preflight ruling 17): in that fleet, after
-# its token history and while its published version is assigned, a group
-# with that version and a read-only mount; its install facts read through
-# the platform (no-store, no bearer, this stack's endpoint, the image of the
-# catalogue's default version); the container install run from the facts in
-# the local ghcr.io/telflo/telflo/collector image (`--pull never`; without
-# it these steps are skipped, saying why), its bearer from a reveal passed
-# only through the environment, enrolling in the group; the All In One bundle
-# downloaded, unpacked (its four files and modes, no placeholder, no bearer)
-# and run in that image as root, downloading otelcol-contrib and the
-# supervisor for the image's arch from GitHub (sha256-checked), enrolling a
-# second; then the default token revoked, a new one issued, and the container
-# install run again with it on the same volume, reconnecting as the same
-# collector. Its containers and volume are named for the compose project and
-# removed at the end (or by the EXIT trap), then the group, whose delete
-# deletes its three collectors with it (D17d-1: each read 404, the fleet's
-# count down by three).
-# Quick-deploy links (D17c-2 decision 34, Preflight ruling 16): in that
-# group, after the All In One collector enrolls and before the default token
-# is revoked, the API's TELFLO_PUBLIC_API_URL must be http://gateway
-# (a throwaway stack is started with it; compose's default would send the
-# commands to the host's gateway); a foreground link made (201, no-store,
-# its url), listed (active, no download, no secret), downloaded from the
-# host through the gateway with no session (the download's headers, the
-# four files, no bearer), and its Quick Deploy command, printed by the
-# contracts' builder in the API container, run for real in the collector
-# image on the compose network (a `sudo` shim; the All In One's binaries
-# mounted so nothing is downloaded again), enrolling a third collector; a
-# systemd link's command run with the `sudo` shim and a recording
+# Installing: in that fleet, after its token history and while its published
+# version is assigned, a group with that version and a read-only mount; its
+# install facts read through the platform (no-store, no bearer, this stack's
+# endpoint, the image of the catalogue's default version); the container
+# install run from the facts in the local ghcr.io/telflo/telflo/collector
+# image (`--pull never`; without it these steps are skipped, saying why), its
+# bearer from a reveal passed only through the environment, enrolling in the
+# group; the All In One bundle downloaded, unpacked (its four files and modes,
+# no placeholder, no bearer) and run in that image as root, downloading
+# otelcol-contrib and the supervisor for the image's arch from GitHub
+# (sha256-checked), enrolling a second; then the default token revoked, a new
+# one issued, and the container install run again with it on the same volume,
+# reconnecting as the same collector. Its containers and volume are named for
+# the compose project and removed at the end (or by the EXIT trap), then the
+# group, whose delete deletes its three collectors with it (each read 404, the
+# fleet's count down by three).
+# Quick-deploy links: in that group, after the All In One collector enrolls
+# and before the default token is revoked, the API's TELFLO_PUBLIC_API_URL
+# must be http://gateway (a throwaway stack is started with it; compose's
+# default would send the commands to the host's gateway); a foreground link
+# made (201, no-store, its url), listed (active, no download, no secret),
+# downloaded from the host through the gateway with no session (the download's
+# headers, the four files, no bearer), and its Quick Deploy command, printed
+# by the contracts' builder in the API container, run for real in the
+# collector image on the compose network (a `sudo` shim; the All In One's
+# binaries mounted so nothing is downloaded again), enrolling a third
+# collector; a systemd link's command run with the `sudo` shim and a recording
 # `systemctl` (no systemd there): opamp.env 0600 root's holding the bearer,
 # the unit's text exact, daemon-reload, enable and restart in order, no
 # secret on a shim's arguments; the API's and the gateway's logs holding
@@ -263,29 +257,27 @@
 # the logs searched again after both refusals. The link's secret and the
 # bearer never reach a command line, nor a failed check's message. Without the
 # collector image these steps are skipped with the install's.
-# A Kubernetes fleet's groups (D17d-1 spec decisions 17 and 18, Preflight
-# rulings 11 to 13): through the gateway, in the group organization, before
-# its delete, a server fleet's group refuses the annotations' Kubernetes key
-# (400 at annotations.telflo.kubernetes), on its create and on a save; a
-# kubernetes-supervisor fleet made through the platform lists its Default
-# group alone; the Cluster (named cluster, role cluster) and a gateway (2
-# replicas, a hostPath volume) are made, each answered with its annotations
+# A Kubernetes fleet's groups: through the gateway, in the group organization,
+# before its delete, a server fleet's group refuses the annotations'
+# Kubernetes key (400 at annotations.telflo.kubernetes), on its create and on
+# a save; a kubernetes-supervisor fleet made through the platform lists its
+# Default group alone; the Cluster (named cluster, role cluster) and a gateway
+# (2 replicas, a hostPath volume) are made, each answered with its annotations
 # as sent; that fleet's creates refuse telflo.dockerMounts, a gateway named
 # node, a role not the name's and no telflo.kubernetes at all (each 400 at
 # its field), its groups a rename (409 collector_group_name_fixed), its
 # Default group a save naming the role gateway (400) and the gateway a save
-# of annotations without its settings (400, Ruling 48), none of them written;
+# of annotations without its settings (400), none of them written;
 # the Default group's save naming node is answered 200; the gateway and then
 # the fleet are deleted (204 each). A run that ends among those steps removes
 # the fleet (the EXIT trap).
-# The Helm install through the platform (D17d-2 decision 30, Preflight ruling
-# 19), in that Kubernetes fleet before its gateway's delete, with no
-# collector image or cluster: D16b's published version assigned to the Agent
-# and the gateway, their Helm facts read (no-store, no bearer, the
-# platform's chart and image, release, the Agent's fullnameOverride from the
-# fleet's id and none for the gateway (D18), namespace, replicas and
-# volumes); the Linux bundle and a Linux
-# link refused on the Kubernetes fleet and a Helm link on D16b's server
+# The Helm install through the platform, in that Kubernetes fleet before its
+# gateway's delete, with no collector image or cluster: the published version
+# of edge-b1's fleet (above) assigned to the Agent and the gateway, their Helm
+# facts read (no-store, no bearer, the platform's chart and image, release,
+# the Agent's fullnameOverride from the fleet's id and none for the gateway,
+# namespace, replicas and volumes); the Linux bundle and a Linux
+# link refused on the Kubernetes fleet and a Helm link on edge-b1's server
 # fleet, each 409 fleet_type_not_installable in its direction's words; the
 # organization's "Public install links" switch read on; a Helm values link
 # made for the Agent (201, no-store, its choices by kind) and downloaded from
@@ -299,74 +291,70 @@
 # link's create 409 public_install_links_disabled, nothing counted) and on
 # again (200, downloaded from a client container on the compose network,
 # its quick_deploy_link.downloaded audit row holding that container's
-# address, not the gateway's: Ruling 52), the link revoked (410); the API's
+# address, not the gateway's), the link revoked (410); the API's
 # and the gateway's logs holding neither the link's secret nor a downloaded
 # token. The values file
 # holds the bearer by design: never printed, never searched for a bearer's
 # shape; each download's token joins the secrets the logs are searched for.
-# Organization variables (D20 decision 40, Preflight ruling 36): in D16b's
-# fleet, after edge-b2's unpin and before the configuration's in-use
-# refusal, through the gateway as the group organization's signed-in admin,
-# on edge-b2 in "unassigned-b" (never the Default group, whose assignment
-# the later steps rely on): the variables SMOKE_TAG (a$b-1) and SMOKE_UNUSED
-# are created (201, no-store); a configuration of its own, whose processor
-# attributes/d20 inserts an attribute of the value ${org:SMOKE_TAG}, is
-# published and assigned to "unassigned-b"; edge-b2 applies the text
-# filled in, by the SHA-256 the script computes with the value's `$`
-# doubled (a$$b-1; the resolution keeps the published text's), in sync;
-# SMOKE_TAG's new value is pushed (served.at moves, a new SHA-256, in sync
-# again); SMOKE_UNUSED's change is not (served.at and the SHA-256 unchanged,
-# in sync at every read, while edge-b2's lastSeenAt moves 3 times: its
-# polls); SMOKE_TAG's delete is refused 409 variable_in_use, its details
-# exactly the version and "unassigned-b" with their names and the totals,
-# holding neither the variable's name nor its value; a variable group
-# overriding SMOKE_TAG bound to "unassigned-b", then another pinned on
-# edge-b2, each pushes its own value; then edge-b2's pinned variable group,
-# the group's variable group and its assignment are cleared (edge-b2
-# unassigned again), and the variable groups, the variables and the
+# Organization variables: in edge-b1's fleet, after edge-b2's unpin and before
+# the configuration's in-use refusal, through the gateway as the group
+# organization's signed-in admin, on edge-b2 in "unassigned-b" (never the
+# Default group, whose assignment the later steps rely on): the variables
+# SMOKE_TAG (a$b-1) and SMOKE_UNUSED are created (201, no-store); a
+# configuration of its own, whose processor attributes/d20 inserts an
+# attribute of the value ${org:SMOKE_TAG}, is published and assigned to
+# "unassigned-b"; edge-b2 applies the text filled in, by the SHA-256 the
+# script computes with the value's `$` doubled (a$$b-1; the resolution keeps
+# the published text's), in sync; SMOKE_TAG's new value is pushed (served.at
+# moves, a new SHA-256, in sync again); SMOKE_UNUSED's change is not
+# (served.at and the SHA-256 unchanged, in sync at every read, while edge-b2's
+# lastSeenAt moves 3 times: its polls); SMOKE_TAG's delete is refused 409
+# variable_in_use, its details exactly the version and "unassigned-b" with
+# their names and the totals, holding neither the variable's name nor its
+# value; a variable group overriding SMOKE_TAG bound to "unassigned-b", then
+# another pinned on edge-b2, each pushes its own value; then edge-b2's pinned
+# variable group, the group's variable group and its assignment are cleared
+# (edge-b2 unassigned again), and the variable groups, the variables and the
 # configuration are deleted (204 each, both lists empty, its published
 # version gone from the opamp-server). A run that ends among those steps
 # deletes them (the EXIT trap). With the collectors' 30 s heartbeat these
 # steps take about four minutes.
-# The file store (D23-1 spec decision 33, Preflight ruling 19): before any
-# step, the API's TELFLO_FILE_STORE is read from its container, local or s3,
-# and must be TELFLO_SMOKE_FILE_STORE when that is set; on s3 (a stack
-# started with TELFLO_FILE_STORE=s3 and --profile s3), the object store's
-# filer, read inside object-store, holds the uploaded test file at its
-# key with its size (the API's volume doesn't), the first run's output, and
-# the test configuration's input under test-definition-inputs/. The object
+# The file store: before any step, the API's TELFLO_FILE_STORE is read from
+# its container, local or s3, and must be TELFLO_SMOKE_FILE_STORE when that is
+# set; on s3 (a stack started with TELFLO_FILE_STORE=s3 and --profile s3), the
+# object store's filer, read inside object-store, holds the uploaded test file
+# at its key with its size (the API's volume doesn't), the first run's output,
+# and the test configuration's input under test-definition-inputs/. The object
 # store's logs are never read: they name the access key id.
-# Logos and the library (D23-2 decision 64, Preflight ruling 24): after
-# D17d-2's logs check, in the group organization, a 2 MiB PNG logo is set
-# through the gateway (a multipart PATCH: its name, then the file; the
-# gateway's 3 MiB location) and read back publicly with no cookie (its
-# bytes; image/png, immutable caching, nosniff, CSP sandbox, CORP
-# cross-origin, no Set-Cookie), /me names its id, and a body over 3 MiB is
-# the gateway's own 413; on s3 the object is at its key. Then, on a
-# throwaway stack only (as D15b's product-admin steps, granting and clearing
-# the flag on their own), a 10 MiB library file is added (an 11 MiB + 1
-# body is the gateway's 413), its link made (201, no-store, the path's
-# pattern) and downloaded from the host through the gateway with no session
-# (its bytes; octet-stream, no-store, nosniff, attachment), the file
+# Logos and the library: after the Helm install's logs check, in the group
+# organization, a 2 MiB PNG logo is set through the gateway (a multipart
+# PATCH: its name, then the file; the gateway's 3 MiB location) and read back
+# publicly with no cookie (its bytes; image/png, immutable caching, nosniff,
+# CSP sandbox, CORP cross-origin, no Set-Cookie), /me names its id, and a body
+# over 3 MiB is the gateway's own 413; on s3 the object is at its key. Then,
+# on a throwaway stack only (as the regex library's product-admin steps,
+# granting and clearing the flag on their own), a 10 MiB library file is added
+# (an 11 MiB + 1 body is the gateway's 413), its link made (201, no-store, the
+# path's pattern) and downloaded from the host through the gateway with no
+# session (its bytes; octet-stream, no-store, nosniff, attachment), the file
 # deleted (204) and its link then 404 "Not found." in plain text; the API's
 # and the gateway's logs hold no tll_ and log both downloads as GET
 # /api/v1/library-links/[redacted] (200, 404). The link is built from the
-# gateway's own origin and its path (Q162), never printed: sizes and
+# gateway's own origin and its path, never printed: sizes and
 # statuses only. A run that ends between the file's create and its delete
 # deletes its row by SQL (the EXIT trap). After the group organization's
 # delete, the logo's read is 404 "Not found."; on s3 its object is gone
 # (polled).
-# Product administration (D29 decision 46, Preflight ruling 19): after the
-# library's steps, on a throwaway stack only (as D15b's product-admin
-# steps, granting and clearing the flag on their own), both sessions
-# refreshed, the account is made a product admin by SQL and, through the
-# gateway's /api/v1/product-admin/ routes (every answer no-store), finds
-# itself the only product admin listed (fails otherwise), grants the
-# invitee by email (201 with their id, then 200), lists both, removes the
-# invitee (204) and is refused its own removal, 409 last_product_admin
-# (the one real last-admin refusal outside the integration suite). The
-# invitee sends feedback (201); the product admins' email reaches the
-# account in Mailpit naming the invitee and the gateway's User Feedback
+# Product administration: after the library's steps, on a throwaway stack only
+# (as the regex library's product-admin steps, granting and clearing the flag
+# on their own), both sessions refreshed, the account is made a product admin
+# by SQL and, through the gateway's /api/v1/product-admin/ routes (every
+# answer no-store), finds itself the only product admin listed (fails
+# otherwise), grants the invitee by email (201 with their id, then 200), lists
+# both, removes the invitee (204) and is refused its own removal, 409
+# last_product_admin (the one real last-admin refusal outside the integration
+# suite). The invitee sends feedback (201); the product admins' email reaches
+# the account in Mailpit naming the invitee and the gateway's User Feedback
 # page, its text and HTML holding the feedback's marker on 0 lines; the
 # item is listed (its cursor followed until found), dismissed (204) and
 # again 404 feedback_not_found. The invitee's delete is 409
@@ -379,21 +367,19 @@
 # deletion record (its address, deleted by the account), its anonymous
 # deleted-<24 hex>@deleted-accounts.telflo.invalid row with no password,
 # its freed address, the organizations whose name holds its address and
-# its sessions holding an IP address or user agent count 1, 1, 0, 0 and 0
-# (Ruling 266); its personal organization, found registered in the
-# opamp-server before the delete (stack_smoke <id>), is gone from it after
-# (stack_smoke group-gone). The API's and the
-# gateway's logs hold the search's term on 0 lines and the gateway's
-# access log the search as "GET /api/v1/product-admin/users HTTP/…" (no
-# query; counts only), and the flag is cleared. Replies are read by jq
+# its sessions holding an IP address or user agent count 1, 1, 0, 0 and 0; its
+# personal organization, found registered in the opamp-server before the
+# delete (stack_smoke <id>), is gone from it after (stack_smoke group-gone).
+# The API's and the gateway's logs hold the search's term on 0 lines and the
+# gateway's access log the search as "GET /api/v1/product-admin/users HTTP/…"
+# (no query; counts only), and the flag is cleared. Replies are read by jq
 # for ids and booleans, never printed; a failure prints statuses, error
 # codes and counts. A run that ends between the invitee's grant and its
 # removal clears the invitee's flag by SQL too (the EXIT trap clears both
 # flags); a run that dies mid-block leaves the third account and the
 # feedback item on the throwaway stack.
-# The public API (D25 decision 53, Preflight ruling 23): in the group
-# organization, after the library's and the product-administration steps
-# and before the gateway's delete,
+# The public API: in the group organization, after the library's and the
+# product-administration steps and before the gateway's delete,
 # its admin's session mints a service account's write and read tokens and a
 # personal write token (each checked by its shape, never printed); through
 # the gateway each drives the public surface: /whoami for both kinds, /orgs,
@@ -410,49 +396,47 @@
 # it alone sends 61 /whoami (the 61st the per-token limit's 429 with
 # Retry-After), and the personal token is revoked (then 401); last, the
 # API's and the gateway's logs hold none of the tokens and not the marker
-# (grep -cF counts only). The session is refreshed first (Ruling 184).
-# The telflo CLI (D27 decision 36, Preflight ruling 18): before any step,
-# the CLI TELFLO_SMOKE_CLI names (by default the checkout's
-# telflo-core/apps/cli/dist/index.js, run with node; the gates name the
-# package check's install of the tarball) must be there and print its -V,
-# or the run fails at once. In D25's section, after the route-14 413 and
-# before the per-token limit (so D25's log search for the personal token
-# covers it), the CLI, with a HOME and a TELFLO_CLI_CONFIG_DIR (0700) of the
-# work folder's and XDG_CONFIG_HOME, TELFLO_TOKEN, TELFLO_SERVER, TELFLO_ORG
-# and TELFLO_CONFIG_DIR unset, logs in from its standard input with the
-# personal token (--server the gateway, --org the group organization; the
-# credentials file 0600 in a 0700 folder), then runs whoami and org list,
-# config create, push (the draft in place), publish and pull -o (byte for
-# byte), validate on the pin and anonymously with an empty config folder
-# (valid, and an invalid text exit 4), ottl lint (exit 0 and 4), test (a
-# spec, a sample file and two OTTL rules, in the real tester), fleet create
-# (no bearer), fleet groups, deploy --group (the Default group: an install
-# needs a group that serves a version), fleet install --platform docker
-# (its stdout 0600, `grep -q '^docker run'` only), logout (then whoami exit
-# 3); every output goes to 0600 files read by jq, grep and cmp. Then no
+# (grep -cF counts only). The session is refreshed first.
+# The telflo CLI: before any step, the CLI TELFLO_SMOKE_CLI names (by default
+# the checkout's telflo-core/apps/cli/dist/index.js, run with node; the gates
+# name the package check's install of the tarball) must be there and print its
+# -V, or the run fails at once. In the public API's section, after the
+# route-14 413 and before the per-token limit (so that section's log search
+# for the personal token covers it), the CLI, with a HOME and a
+# TELFLO_CLI_CONFIG_DIR (0700) of the work folder's and XDG_CONFIG_HOME,
+# TELFLO_TOKEN, TELFLO_SERVER, TELFLO_ORG and TELFLO_CONFIG_DIR unset, logs in
+# from its standard input with the personal token (--server the gateway, --org
+# the group organization; the credentials file 0600 in a 0700 folder), then
+# runs whoami and org list, config create, push (the draft in place), publish
+# and pull -o (byte for byte), validate on the pin and anonymously with an
+# empty config folder (valid, and an invalid text exit 4), ottl lint (exit 0
+# and 4), test (a spec, a sample file and two OTTL rules, in the real tester),
+# fleet create (no bearer), fleet groups, deploy --group (the Default group:
+# an install needs a group that serves a version), fleet install --platform
+# docker (its stdout 0600, `grep -q '^docker run'` only), logout (then whoami
+# exit 3); every output goes to 0600 files read by jq, grep and cmp. Then no
 # tf_, tqd_ or tll_ in its outputs but install's stdout, and install's
 # stdout's lines (grep -cF -f) in none of its other outputs nor the API's
 # and the gateway's logs, counts only; the session is refreshed again.
 # Behavior is tested by the workspace's own suites; this proves the pieces
 # are wired together.
-# See ADR 0017.
 #
 # Every `docker compose` call here takes its project from the environment
 # (COMPOSE_FILE, COMPOSE_PROJECT_NAME), so the script can drive a throwaway
-# copy of the stack on other host ports (D11a Preflight ruling 11) when
-# those, the seven URLs and the replica's port below are set.
+# copy of the stack on other host ports when those, the seven URLs and the
+# replica's port below are set.
 set -euo pipefail
 
 # throwaway_stack: true when COMPOSE_PROJECT_NAME names a throwaway stack: set,
 # and none of telflo (the self-host install's), telflo-dev (the development
-# stack's) and the owner's running stack's (D36-2 decisions 96 and 109).
+# stack's) and telflo-platform (a developer's own running stack's).
 throwaway_stack() {
   case "${COMPOSE_PROJECT_NAME:-}" in
     "" | telflo | telflo-dev | telflo-platform) return 1 ;;
   esac
 }
 
-# The site the stack runs (D36-2 decision 97): required, no default, checked
+# The site the stack runs: required, no default, checked
 # before anything runs (exit 2). `oss` makes its first account with
 # telflo-admin bootstrap and clears a product admin's flag by SQL: a throwaway
 # stack's only.
@@ -476,16 +460,15 @@ MAILPIT_URL="${TELFLO_MAILPIT_API_URL:-http://localhost:58025}"
 OPAMP_MANAGEMENT_URL="${TELFLO_OPAMP_MANAGEMENT_HOST_URL:-http://127.0.0.1:51235}"
 # The collector validator's published port, on the same loopback only.
 OTELCOL_VALIDATOR_URL="${TELFLO_OTELCOL_VALIDATOR_HOST_URL:-http://127.0.0.1:51236}"
-# The collector tester's, through its forwarder (D14a Preflight ruling 4), on
-# the same loopback only.
+# The collector tester's, through its forwarder, on the same loopback only.
 OTELCOL_TESTING_URL="${TELFLO_OTELCOL_TESTING_HOST_URL:-http://127.0.0.1:51237}"
-# The OTTL evaluator's, through its own forwarder (D15a Preflight ruling 13),
-# on the same loopback only. The default, 127.0.0.1:51238, is the dev stack's
-# evaluator port (`npm run dev:services`, the owner's stack), so a run against
-# a throwaway stack must set TELFLO_OTTL_EVALUATOR_HOST_URL to its own
-# forwarder's port, as it sets the other host URLs above.
+# The OTTL evaluator's, through its own forwarder, on the same loopback only.
+# The default, 127.0.0.1:51238, is the dev stack's evaluator port (`npm run
+# dev:services`, a developer's own stack), so a run against a throwaway stack
+# must set TELFLO_OTTL_EVALUATOR_HOST_URL to its own forwarder's port, as it
+# sets the other host URLs above.
 OTTL_EVALUATOR_URL="${TELFLO_OTTL_EVALUATOR_HOST_URL:-http://127.0.0.1:51238}"
-# The opamp-server's agent endpoint, where collectors poll (D16a), on the
+# The opamp-server's agent endpoint, where collectors poll, on the
 # same loopback only, and the host port the fleet steps publish their second
 # opamp-server replica's agent endpoint on.
 OPAMP_AGENT_URL="${TELFLO_OPAMP_AGENT_HOST_URL:-http://127.0.0.1:51234}"
@@ -493,7 +476,7 @@ OPAMP_REPLICA_PORT="${TELFLO_OPAMP_REPLICA_HOST_PORT:-51239}"
 EMAIL="stack-smoke-$(date +%s)-$$@example.com"
 PASSWORD="a-sufficiently-long-password"
 # The Terms a registration accepts: the SaaS's version; the open-source
-# defaults ask for none, so no registration sends one (D36-1 decision 32).
+# defaults ask for none, so no registration sends one.
 if [ "$SMOKE_SITE" = "saas" ]; then TERMS_VERSION="2026-01-01"; else TERMS_VERSION=""; fi
 # The group organization: the bootstrap's (oss) or created through the
 # gateway (saas), below.
@@ -503,20 +486,20 @@ ORGANIZATION_NAME="Stack smoke $(date +%s)-$$"
 # Secure cookies on http://localhost), so curl's jar keeps and sends them
 # either way; this script does not assert the attribute.
 work_dir=$(mktemp -d)
-# A run that ends inside D15b's product-admin steps (below) deletes the
-# library entry it created, by id, if it's still there, then clears the
-# account's flag again: each best effort, in a subshell so a failure there
-# can't skip the rest, the entry first (while the run still knows its id;
-# the delete is SQL, so the flag isn't needed for it). Then the work
-# directory goes. In oss, telflo-admin bootstrap makes the account the first
-# product admin: marked here before it runs, so a run that ends before the
-# flag is cleared (below) clears it too.
+# A run that ends inside the regex library's product-admin steps (below)
+# deletes the library entry it created, by id, if it's still there, then
+# clears the account's flag again: each best effort, in a subshell so a
+# failure there can't skip the rest, the entry first (while the run still
+# knows its id; the delete is SQL, so the flag isn't needed for it). Then the
+# work directory goes. In oss, telflo-admin bootstrap makes the account the
+# first product admin: marked here before it runs, so a run that ends before
+# the flag is cleared (below) clears it too.
 product_admin_granted=""
 created_regex_id=""
-# D23-2's library steps (below) do the same with the library file they add:
+# The library steps (below) do the same with the library file they add:
 # its row deleted by SQL (delete_created_library_file), before the flag.
 created_library_file_id=""
-# D29's product-administration steps (below) grant the invitee the flag
+# The product-administration steps (below) grant the invitee the flag
 # through the API: a run that ends between that grant and its removal clears
 # the invitee's flag by SQL too (product_admin false "$INVITEE_EMAIL"), so
 # the EXIT trap clears both flags.
@@ -525,7 +508,7 @@ invitee_product_admin_granted=""
 # throwaway stack, for the account's create, and on again at once: a run
 # that ends between the two puts it back on by SQL (organization_creation_on).
 organization_creation_opened=""
-# D16a's fleet steps (below) leave, until their last steps remove them: the
+# The fleet steps (below) leave, until their last steps remove them: the
 # collectors' containers, the second replica's, the fleet, the smoke
 # collector's image, and the fleet's configuration and its published
 # version. A run that ends among them removes what it made, by name and id,
@@ -558,9 +541,9 @@ remove_fleet_steps() {
     smoke_collector_image=""
   fi
 }
-# D16b's steps (below), in the group organization, leave until their last
-# steps remove them: edge-b1's and edge-b2's containers, the fleet (the
-# organization's delete removes it in the opamp-server), the smoke
+# The platform fleet steps (below), in the group organization, leave until
+# their last steps remove them: edge-b1's and edge-b2's containers, the fleet
+# (the organization's delete removes it in the opamp-server), the smoke
 # collector's image built again for them, and their configuration. A run
 # that ends among them removes each, best effort: the containers, the fleet
 # through the management API (so the configuration is no longer in use),
@@ -569,7 +552,7 @@ d16b_containers=""
 d16b_fleet_id=""
 d16b_image=""
 d16b_configuration_id=""
-# D17d-1's Kubernetes fleet (below), made through the platform in the group
+# The Kubernetes fleet (below), made through the platform in the group
 # organization, until its last step deletes it: removed the same way.
 k8s_fleet_id=""
 remove_d16b_steps() {
@@ -587,14 +570,14 @@ remove_d16b_steps() {
       "$GATEWAY_URL/api/v1/organizations/$group_id/configurations/$d16b_configuration_id" -H 'X-Telflo-CSRF: 1' || true
   fi
 }
-# D20's steps (below), in D16b's fleet's group "unassigned-b", leave until
-# their last steps delete them: two variables, two variable groups and a
-# configuration, each through the platform. A run that ends among them
-# deletes each by id, best effort, through the gateway, once D16b's fleet is
-# removed (remove_d16b_steps, before), so nothing uses them any more: the
-# variable groups, then the variables, then the configuration, then its
-# published version through the management API, in case the platform's
-# after-response delete didn't.
+# The organization-variable steps (below), in edge-b1's fleet's group
+# "unassigned-b", leave until their last steps delete them: two variables, two
+# variable groups and a configuration, each through the platform. A run that
+# ends among them deletes each by id, best effort, through the gateway, once
+# edge-b1's fleet is removed (remove_d16b_steps, before), so nothing uses them
+# any more: the variable groups, then the variables, then the configuration,
+# then its published version through the management API, in case the
+# platform's after-response delete didn't.
 d20_variable_ids=""
 d20_variable_group_ids=""
 d20_configuration_id=""
@@ -615,16 +598,17 @@ remove_d20_steps() {
     management DELETE "$OPAMP_MANAGEMENT_URL/api/v1/organizations/$group_id/publications/$d20_publication_id" || true
   fi
 }
-# D17c-1's install steps (below), in D16b's fleet, leave until their last
+# The install steps (below), in edge-b1's fleet, leave until their last
 # step removes them: the installed collectors' containers (the container
 # install's and the All In One bundle's) and the container install's
 # volume, each named for the compose project. A run that ends among them
 # removes each by name, best effort, the containers before the volume (the
-# fleet and the group go with D16b's fleet).
+# fleet and the group go with edge-b1's fleet).
 install_containers=""
 install_volume=""
-# D25's public API steps (below) make a personal token on the account, revoked at their end: a run that ends
-# among them revokes it (on_exit). Everything else they make is the group organization's.
+# The public API steps (below) make a personal token on the account, revoked
+# at their end: a run that ends among them revokes it (on_exit). Everything
+# else they make is the group organization's.
 d25_personal_token_id=""
 remove_install_steps() {
   local container
@@ -658,7 +642,8 @@ on_exit() {
   if [ -n "$d20_variable_ids$d20_variable_group_ids$d20_configuration_id$d20_publication_id" ]; then
     (remove_d20_steps) >/dev/null 2>&1 || true
   fi
-  # D25's personal token, revoked through the session (the service account and its tokens go with the group).
+  # The public API steps' personal token, revoked through the session (the service account and its tokens go with the
+  # group).
   if [ -n "$d25_personal_token_id" ]; then
     curl -s -o /dev/null --max-time 30 -b "$JAR" -X DELETE "$GATEWAY_URL/api/v1/auth/me/api-tokens/$d25_personal_token_id" \
       -H 'X-Telflo-CSRF: 1' >/dev/null 2>&1 || true
@@ -701,10 +686,10 @@ stack_psql() {
 # grant is marked (product_admin_granted) before it's sent, so a run that
 # dies after an UPDATE that went through (whatever psql answered) still has
 # the EXIT trap clear it; its revoke is unmarked only once it's known to
-# have gone through. Another account's mark is its caller's (D29's invitee,
-# granted through the API: invitee_product_admin_granted). The session
-# needs no new sign-in: every request reads the flag from the user's row
-# (D12 decision 3).
+# have gone through. Another account's mark is its caller's (the
+# product-administration steps' invitee, granted through the API:
+# invitee_product_admin_granted). The session needs no new sign-in: every
+# request reads the flag from the user's row.
 product_admin() {
   local flag=$1 email=${2:-$EMAIL} output ids
   if [ "$flag" = "true" ] && [ "$email" = "$EMAIL" ]; then product_admin_granted=yes; fi
@@ -720,7 +705,7 @@ SQL
 
 # organization_creation_on: puts the product admins' switch "Only product
 # admins can create organizations" back on by SQL (stack_psql), as a fresh
-# stack has it (Q259): the organization steps' clean-up, and the EXIT
+# stack has it: the organization steps' clean-up, and the EXIT
 # trap's when a run ends while they have it off.
 organization_creation_on() {
   stack_psql <<'SQL'
@@ -728,9 +713,9 @@ update site_settings set organization_creation = 'product_admins';
 SQL
 }
 
-# The settings and files the fleet steps (D16a) rely on, checked before any
-# step, so a run against the wrong ones fails at once, naming what to change
-# (Ruling 48). The agent URL this script polls must be the agent port this
+# The settings and files the fleet steps rely on, checked before any step, so
+# a run against the wrong ones fails at once, naming what to change.
+# The agent URL this script polls must be the agent port this
 # stack publishes: compose's own answer, whatever the host URL settings say.
 step "TELFLO_OPAMP_AGENT_HOST_URL is the agent port this stack publishes: docker compose port opamp-server 51234"
 published_agent=$(docker compose port opamp-server 51234 2>/dev/null | tail -n1 || true)
@@ -751,8 +736,7 @@ fi
 # the stack's validator image, which always holds the catalogue's default
 # version (CI's stack job and the throwaway gate stacks build it with
 # OTELCOL_VERSIONS=default), and runs it under the supervisor image of the
-# same version (its FROM tag): all three must name the same version
-# (Rulings 48 and 53).
+# same version (its FROM tag): all three must name the same version.
 step "the smoke collector's collector and supervisor are the catalogue's default version"
 repo_dir="$(dirname "$0")/.."
 catalog_default=$(jq -r '[.versions[] | select(.default == true) | .version] | if length == 1 then .[0] else empty end' \
@@ -765,7 +749,7 @@ smoke_supervisor_version=$(sed -n 's|^FROM otel/opentelemetry-collector-opampsup
 [ "$smoke_collector_version" = "$catalog_default" ] && [ "$smoke_supervisor_version" = "$catalog_default" ] ||
   fail "docker/smoke-collector/Dockerfile copies /opt/otelcol/v${smoke_collector_version:-?}/otelcol-contrib and runs it under the supervisor image ${smoke_supervisor_version:-?} (its FROM tag), but the catalogue's default (catalog/distributions/otelcol-contrib.json) is $catalog_default, the one version the validator image always holds: move the smoke collector to $catalog_default (its COPY path, and its supervisor image's FROM tag and digest)"
 
-# D27's CLI steps (in D25's public section, below; Preflight ruling 18) run the CLI that TELFLO_SMOKE_CLI names
+# The CLI steps (in the public API section, below) run the CLI that TELFLO_SMOKE_CLI names
 # (the gates set it to the package check's install of the tarball), by default the checkout's own build, with node.
 # The gate runs this script from a copy with no build, so a missing or broken CLI fails here, before any step. Every
 # CLI run has a HOME and a TELFLO_CLI_CONFIG_DIR of the work folder's (0700), and XDG_CONFIG_HOME, TELFLO_TOKEN,
@@ -781,15 +765,14 @@ mkdir -m 700 "$CLI_DIR" "$CLI_HOME" "$CLI_CONFIG" "$CLI_ANONYMOUS_CONFIG" || fai
 cli_env() {
   env -u XDG_CONFIG_HOME -u TELFLO_TOKEN -u TELFLO_SERVER -u TELFLO_ORG -u TELFLO_CONFIG_DIR HOME="$CLI_HOME" "$@"
 }
-step "the CLI the D27 steps run (TELFLO_SMOKE_CLI, by default telflo-core/apps/cli/dist/index.js) is there, and node runs its -V"
+step "the CLI the smoke runs (TELFLO_SMOKE_CLI, by default telflo-core/apps/cli/dist/index.js) is there, and node runs its -V"
 [ -f "$SMOKE_CLI" ] ||
   fail "the CLI isn't there: no $SMOKE_CLI (build it with npm run build -w @telflo/cli in telflo-core, or set TELFLO_SMOKE_CLI to an installed copy's dist/index.js)"
 smoke_cli_version=$(cli_env TELFLO_CLI_CONFIG_DIR="$CLI_CONFIG" node "$SMOKE_CLI" -V </dev/null 2>/dev/null) ||
   fail "node $SMOKE_CLI -V failed: rebuild the CLI (npm run build -w @telflo/cli), or set TELFLO_SMOKE_CLI to a working copy"
 [[ "$smoke_cli_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || fail "node $SMOKE_CLI -V printed no version"
 
-# The file store the stack's API runs on (D23-1 spec decision 33, Preflight
-# ruling 19): compose's TELFLO_FILE_STORE, local unless the stack was
+# The file store the stack's API runs on: compose's TELFLO_FILE_STORE, local unless the stack was
 # started with TELFLO_FILE_STORE=s3 and the profile s3. A run told which to
 # expect (TELFLO_SMOKE_FILE_STORE, as the gates' two runs are; not
 # TELFLO_FILE_STORE, which the shell running this may hold for its own
@@ -836,7 +819,7 @@ object_store_missing() {
 # <version id> <sha256> <distribution> <collector version>. It prints
 # one line per step and never the secret, the YAML or an organization's or a
 # configuration's name, and asks for what the platform sends after its
-# responses (D11a decision 20, D11b decision 12) for up to about 10 s.
+# responses for up to about 10 s.
 stack_smoke() { docker compose exec -T api node dist/opamp-server/stack-smoke.js "$@"; }
 
 # The SHA-256 (hex) of standard input's bytes: sha256sum where there is one
@@ -865,8 +848,9 @@ grep -qi '^www-authenticate: Bearer' "$work_dir/whoami-headers" ||
 # register_verified <email> <password> [<label>]: registers <email> with <password> and the current terms
 # through the gateway, finds its verification email in Mailpit (30 s at most), loads the emailed link's page
 # through the gateway and verifies the account with the link's token: the four steps of the smoke's first
-# account, below, and D29's third account's. Its step lines and failures name <label>, the email by default;
-# D29 passes fixed words, so the third account's address is never printed.
+# account, below, and the product-administration steps' third account's. Its step lines and failures name
+# <label>, the email by default; those steps pass fixed words, so the third account's address is never
+# printed.
 register_verified() {
   local email=$1 password=$2 label=${3:-$1} body response status message_id text link token verified
   step "gateway routes /api/ to the API: register $label"
@@ -911,9 +895,8 @@ register_verified() {
 if [ "$SMOKE_SITE" = "saas" ]; then
   register_verified "$EMAIL" "$PASSWORD"
 else
-  # The open-source defaults (D36-2 decision 97): nobody registers; the first
-  # account is the bootstrap's (D36-2 decision 92, as a Compose install makes
-  # it), and its password is set through the link the command prints.
+  # The open-source defaults: nobody registers; the first account is the bootstrap's (as a Compose
+  # install makes it), and its password is set through the link the command prints.
   step "registration isn't open (invite-only): POST /api/v1/auth/register is 403 registration_not_open"
   response=$(curl -s -w '\n%{http_code}' -X POST "$GATEWAY_URL/api/v1/auth/register" \
     -H 'content-type: application/json' -H 'X-Telflo-CSRF: 1' \
@@ -992,7 +975,7 @@ if [ "$SMOKE_SITE" = "saas" ]; then
   # The personal organization, which the organization steps switch back to.
   personal_id=$(jq -r '.organization.id' <<<"$body")
 else
-  # The sign-in lands in the organization joined last (D36-1 decision 56): the bootstrap's group organization,
+  # The sign-in lands in the organization joined last: the bootstrap's group organization,
   # the account its admin and the first product admin; the open-source defaults ask for no Terms.
   [ "$(jq -c '[.organization.name, .organization.type, .organization.role, .isProductAdmin, .mayCreateOrganizations, .termsAcceptanceRequired]' <<<"$body")" = \
     "$(jq -cn --arg name "$ORGANIZATION_NAME" '[$name, "group", "admin", true, true, false]')" ] ||
@@ -1037,19 +1020,18 @@ read -r status content_type < <(curl -s -o /dev/null -w '%{http_code} %{content_
 [ "$status" = "200" ] || fail "GET /app returned HTTP $status"
 [[ "$content_type" == text/html* ]] || fail "GET /app returned $content_type, not HTML"
 
-# Who may create an organization (D36-1 decision 51; Q259): the product
-# admins' switch "Only product admins can create organizations" is on in a
-# fresh stack. On a throwaway stack (as the product-admin steps below), the
-# account, an ordinary one, is refused first; made a product admin by SQL
-# for one call, it turns the switch off through the real PATCH
-# /api/v1/product-admin/settings, and its flag is cleared again; it creates
-# its group organization as the ordinary account it is, and the switch goes
-# back on by SQL at once (or in the EXIT trap), so the next run finds a
-# fresh stack's default. On any other stack (it may be the owner's) nothing
-# changes: the create needs the switch off already, and a run that finds it
-# on fails saying so. In oss the bootstrap made the group organization as the
-# first product admin; once its flag is cleared, the account's own create is
-# refused, and nothing changes the switch.
+# Who may create an organization: the product admins' switch "Only product
+# admins can create organizations" is on in a fresh stack. On a throwaway
+# stack (as the product-admin steps below), the account, an ordinary one, is
+# refused first; made a product admin by SQL for one call, it turns the switch
+# off through the real PATCH /api/v1/product-admin/settings, and its flag is
+# cleared again; it creates its group organization as the ordinary account it
+# is, and the switch goes back on by SQL at once (or in the EXIT trap), so the
+# next run finds a fresh stack's default. On any other stack (it may be a
+# developer's own) nothing changes: the create needs the switch off already,
+# and a run that finds it on fails saying so. In oss the bootstrap made the
+# group organization as the first product admin; once its flag is cleared, the
+# account's own create is refused, and nothing changes the switch.
 # /api/v1/auth/me's mayCreateOrganizations for the account: true or false.
 may_create_organizations() {
   curl -s --max-time 30 -b "$JAR" "$GATEWAY_URL/api/v1/auth/me" | jq -r '.mayCreateOrganizations' 2>/dev/null || true
@@ -1067,7 +1049,7 @@ if [ "$SMOKE_SITE" = "oss" ]; then
   # The bootstrap made the group organization as the first product admin (above). Its flag goes now, by SQL as
   # the product-admin steps below clear theirs: the account is an ordinary admin of its organizations, as every
   # step after assumes, and the EXIT trap clears it should this fail.
-  step "the bootstrap's flag cleared by SQL: /api/v1/auth/me's isProductAdmin and mayCreateOrganizations are false, and the account's POST /api/v1/organizations is 403 organization_creation_restricted (the switch on by default, Q259)"
+  step "the bootstrap's flag cleared by SQL: /api/v1/auth/me's isProductAdmin and mayCreateOrganizations are false, and the account's POST /api/v1/organizations is 403 organization_creation_restricted (the switch on by default)"
   product_admin false
   response=$(curl -s --max-time 30 -w '\n%{http_code}' -b "$JAR" "$GATEWAY_URL/api/v1/auth/me" || true)
   status=$(tail -n1 <<<"$response")
@@ -1078,7 +1060,7 @@ if [ "$SMOKE_SITE" = "oss" ]; then
   [ "$status" = "403" ] && [ "$(jq -r '.error.code // empty' <<<"$body" 2>/dev/null)" = "organization_creation_restricted" ] ||
     fail "an ordinary account's create returned HTTP $status $(jq -r '.error.code // empty' <<<"$body" 2>/dev/null), not 403 organization_creation_restricted"
 elif throwaway_stack; then
-  step "only product admins create organizations, as a fresh stack has it (Q259): /api/v1/auth/me's mayCreateOrganizations is false, and the account's POST /api/v1/organizations is 403 organization_creation_restricted"
+  step "only product admins create organizations, as a fresh stack has it: /api/v1/auth/me's mayCreateOrganizations is false, and the account's POST /api/v1/organizations is 403 organization_creation_restricted"
   [ "$(may_create_organizations)" = "false" ] ||
     fail "/api/v1/auth/me's mayCreateOrganizations is $(may_create_organizations), not false: is the switch on, as a fresh stack has it?"
   create_organization
@@ -1159,7 +1141,7 @@ else
   step "the session is in it already: the sign-in landed there (/api/v1/auth/me above), so no switch"
 fi
 
-# Invitations (D6) act on the active organization, so the admin invites
+# Invitations act on the active organization, so the admin invites
 # while the session is in the group organization.
 INVITEE_EMAIL="stack-smoke-invitee-$(date +%s)-$$@example.com"
 step "invite $INVITEE_EMAIL to it: POST /api/v1/organizations/:id/invitations"
@@ -1186,7 +1168,7 @@ done
 
 text=$(curl -s "$MAILPIT_URL/api/v1/message/$message_id" | jq -r '.Text')
 # The token is in the link's fragment, which a browser never sends to a
-# server (D6 decision 2).
+# server.
 link=$(grep -oE 'https?://[^[:space:]]+/accept-invitation#token=[A-Za-z0-9_-]+' <<<"$text" | head -n1)
 [ -n "$link" ] || fail "the invitation email contains no accept link with #token="
 [[ "$link" == "$GATEWAY_URL/accept-invitation#token="* ]] ||
@@ -1205,9 +1187,9 @@ response=$(curl -s -w '\n%{http_code}' -X POST "$GATEWAY_URL/api/v1/invitation-p
 status=$(tail -n1 <<<"$response")
 body=$(sed '$d' <<<"$response")
 [ "$status" = "200" ] || fail "invitation-previews returned HTTP $status: $body"
-# mayRegister (D36-1 decision 52): a group organization's invitation may make an
-# account in every registration mode but closed (the SaaS's open, oss's invite-only).
-# organizationType (Q264): the page names a personal workspace by its type.
+# mayRegister: a group organization's invitation may make an account in every registration mode but
+# closed (the SaaS's open, oss's invite-only). organizationType: the page names a personal workspace by
+# its type.
 expected_preview=$(jq -Scn --arg name "$ORGANIZATION_NAME" --arg email "$INVITEE_EMAIL" \
   '{organizationName: $name, organizationType: "group", email: $email, role: "contributor", status: "pending", hasAccount: false, mayRegister: true}')
 [ "$(jq -Sc '.invitation' <<<"$body")" = "$expected_preview" ] ||
@@ -1243,10 +1225,10 @@ switch_to "$personal_id"
 [ "$(jq -r '.organization.type' <<<"$body")" = "personal" ] ||
   fail "after switching back, /me is not in the personal organization: $body"
 
-# The opamp-server (D11a), before the configurations: the publish below
-# registers the organization itself (D11b decision 11), so it would hide a
-# broken registration hook (D11b Preflight ruling 14). The personal
-# organization must be registered by now, by the platform's hook alone.
+# The opamp-server, before the configurations: the publish below registers the
+# organization itself, so it would hide a broken registration hook. The
+# personal organization must be registered by now, by the platform's hook
+# alone.
 step "the opamp-server's management API answers /health on its published port"
 status=$(curl -s -o /dev/null -w '%{http_code}' "$OPAMP_MANAGEMENT_URL/health")
 [ "$status" = "200" ] || fail "GET $OPAMP_MANAGEMENT_URL/health returned HTTP $status"
@@ -1266,7 +1248,7 @@ code=$(sed '$d' <<<"$response" | jq -r '.error.code // empty')
 step "the platform's client registers an organization and posts, reads, lists and deletes a publication in the opamp-server, and finds $EMAIL's personal organization registered"
 stack_smoke "$personal_id" || fail "the platform's client against the opamp-server failed (above)"
 
-# The collector validator (D13b). A valid and an invalid text are checked
+# The collector validator. A valid and an invalid text are checked
 # through the gateway below, once there is a configuration.
 step "the collector validator answers /health on its published port"
 status=$(curl -s -o /dev/null -w '%{http_code}' "$OTELCOL_VALIDATOR_URL/health")
@@ -1282,13 +1264,13 @@ code=$(sed '$d' <<<"$response" | jq -r '.error.code // empty')
 [ "$status" = "401" ] && [ "$code" = "unauthorized" ] ||
   fail "a validate call without the secret returned HTTP $status: $(sed '$d' <<<"$response")"
 
-# The collector tester (D14a). It answers 503 until kwok's fake cluster is up,
+# The collector tester. It answers 503 until kwok's fake cluster is up,
 # a few seconds after it starts (compose's --wait doesn't wait for it: the API
 # depends on it started, not healthy), so its health is asked for up to 120
 # times, each ask cut off after 5 s (a connection the forwarder accepts but
-# never answers would otherwise hang the loop; D14a Ruling 47). A curl that
+# never answers would otherwise hang the loop). A curl that
 # fails (refused, reset, cut off: exit 7, 28, 52, 56) writes 000 and must not
-# end the script under `set -e`, so the loop asks again (Ruling 52). A real
+# end the script under `set -e`, so the loop asks again. A real
 # run is queued through the gateway below, once there is a configuration.
 #
 # Each curl in the tester's sections ends `|| true`: one that fails reports
@@ -1320,12 +1302,12 @@ code=$(sed '$d' <<<"$response" | jq -r '.error.code // empty')
 json_field() { jq -r "$1" <<<"$2" 2>/dev/null || true; }
 json_compact() { jq -c "$1" <<<"$2" 2>/dev/null || true; }
 
-# The OTTL evaluator (D15a). It sits on an internal network of its own and is
+# The OTTL evaluator. It sits on an internal network of its own and is
 # reached here through its forwarder's published port, as the tester is.
 # Its health is asked for up to 60 times, each ask cut off after 5 s; a curl
 # that fails writes 000 and the loop asks again. Health needs no secret;
 # every other path is refused before routing without the right one, an
-# unknown path included (Preflight ruling 10). Each curl ends `|| true`, as
+# unknown path included. Each curl ends `|| true`, as
 # the tester's do.
 step "the OTTL evaluator answers /health through its forwarder's published port"
 status=""
@@ -1366,7 +1348,7 @@ expect_evaluator_refusal POST /ottl/v1/evaluate "an evaluate call with a wrong s
 step "the OTTL evaluator refuses an unknown path without the secret, before routing"
 expect_evaluator_refusal GET /ottl/v1/functions "GET /ottl/v1/functions without the secret"
 
-# Configurations (D7) act on the active organization, now the personal one.
+# Configurations act on the active organization, now the personal one.
 CONFIGURATIONS_URL="$GATEWAY_URL/api/v1/organizations/$personal_id/configurations"
 CONFIGURATION_NAME="Stack smoke $(date +%s)-$$"
 
@@ -1390,8 +1372,7 @@ body=$(sed '$d' <<<"$response")
 [ "$status" = "201" ] || fail "creating a configuration returned HTTP $status: $body"
 configuration_id=$(jq -r '.configuration.id' <<<"$body")
 [ -n "$configuration_id" ] && [ "$configuration_id" != "null" ] || fail "the created configuration has no id: $body"
-# Its collector distribution (D13a decision 5), which the published
-# snapshot must name.
+# Its collector distribution, which the published snapshot must name.
 configuration_distribution=$(jq -r '.configuration.collectorDistribution' <<<"$body")
 [[ "$configuration_distribution" =~ ^[a-z0-9]+(-[a-z0-9]+)*$ ]] ||
   fail "the created configuration has no collector distribution: $body"
@@ -1407,7 +1388,7 @@ grep -qx "$configuration_id" <<<"$listed_ids" ||
 jq -e 'any(.items[]; .name == "Initial Configuration")' <<<"$body" >/dev/null ||
   fail "the new account's list does not include its Initial Configuration: $body"
 
-# Reads the configuration and its version (D8) into $body, and the version's
+# Reads the configuration and its version into $body, and the version's
 # id into $version_id. Called directly, not in $(...), so a failure here ends
 # the script.
 get_configuration() {
@@ -1440,7 +1421,7 @@ get_configuration
 [ "$(jq -c '[.version.nodes, .version.edges, .version.pipelines]' <<<"$body")" = '[[],[],[]]' ] ||
   fail "the new configuration's graph is not empty: $body"
 
-# The builder's graph as a save stores it (D9a decision 6): a pipeline's
+# The builder's graph as a save stores it: a pipeline's
 # group, two components in it and the edge between them. jsonb keeps no key
 # order, so the graph read back is compared with its keys sorted (jq -S).
 graph_of() { jq -S '{nodes, edges, pipelines}' "$@"; }
@@ -1474,7 +1455,7 @@ get_configuration
 [ "$(jq '.version' <<<"$body" | graph_of)" = "$(graph_of "$work_dir/save-body.json")" ] ||
   fail "the read does not return the saved graph: $body"
 
-# The platform's validation (D13b decision 12): the version's text checked
+# The platform's validation: the version's text checked
 # by the real collector of its pin, through the gateway. The body's YAML is
 # what is checked, not what the version holds. The answer's collectorVersion
 # is the version's pin, read above.
@@ -1509,7 +1490,7 @@ validate_yaml "$INVALID_YAML"
 [ "$(jq -c '[.errors[].componentPath]' <<<"$body")" = '["exporters::nosuchexporter"]' ] ||
   fail "the invalid text's errors don't name exporters::nosuchexporter: $body"
 
-# A real test run (D14a): the account's own test file, uploaded through the
+# A real test run: the account's own test file, uploaded through the
 # gateway as the browser does (multipart, its parts in the API's order), a
 # run of version 1 queued with a text piping an OTLP receiver to the debug
 # exporter on the version's pin, the dispatcher's send to the tester over the
@@ -1538,12 +1519,12 @@ test_file_id=$(jq -r '.file.id' <<<"$body")
 [ "$(jq -r '.file.sizeBytes' <<<"$body")" = "$(wc -c <"$work_dir/stack-smoke-logs.json" | tr -d ' ')" ] ||
   fail "the uploaded test file has another size: $body"
 
-# On s3 (D23-1 spec decision 33): the upload is an object at its key (D14a
-# decision 3's layout, the account's own test inputs), its size the file's,
-# and not a file on the API's volume. Compose 2.6.0's exec answers 1 also
-# when the service is stopped or unknown, so the look carries its own
-# control and codes: 3 when the volume's directory isn't there, 0 when the
-# file is, 4 when it isn't; anything else is exec's own failure.
+# On s3: the upload is an object at its key (the account's own test inputs),
+# its size the file's, and not a file on the API's volume. Compose 2.6.0's
+# exec answers 1 also when the service is stopped or unknown, so the look
+# carries its own control and codes: 3 when the volume's directory isn't
+# there, 0 when the file is, 4 when it isn't; anything else is exec's own
+# failure.
 if [ "$file_store_kind" = "s3" ]; then
   test_file_key="organizations/$personal_id/users/$user_id/test-inputs/$test_file_id"
   step "S3: the object store holds the uploaded file at its key with its size, and the API's volume doesn't: the filer's metadata in object-store, test -e in api"
@@ -1605,9 +1586,9 @@ if [ "$file_store_kind" = "s3" ]; then
     fail "couldn't read, or the object store holds no object at, the run's output's key"
 fi
 
-# A suite's run (D14b): a suite on version 1, through the gateway, and a test
+# A suite's run: a suite on version 1, through the gateway, and a test
 # configuration in it whose input the API copies from the test file uploaded
-# above (D14b decision 1), then Played as the Suites subtab's Run test does:
+# above, then Played as the Suites subtab's Run test does:
 # {definitionId, yaml, collectorVersion}, the API taking the input, pipeline,
 # signal and duration from the configuration. The dispatcher sends it to the
 # tester as any run, and it succeeds carrying its breadcrumb: the suite's and
@@ -1641,10 +1622,10 @@ definition_id=$(jq -r '.definition.id' <<<"$body")
 [ "$(jq -r '.definition.inputName' <<<"$body")" = "stack-smoke-logs.json" ] ||
   fail "the test configuration's input isn't the uploaded file's copy: $(jq -c '.definition | {inputName}' <<<"$body")"
 
-# On s3: the store's copy of the file (D23-1 spec decision 20: a read, then
-# a write) is an object of the file's size under the organization's
-# definition inputs, which the reply doesn't name by id. The listing's
-# entries hold a small file's bytes (Content): only sizes are read from it.
+# On s3: the store's copy of the file (a read, then a write) is an object of
+# the file's size under the organization's definition inputs, which the reply
+# doesn't name by id. The listing's entries hold a small file's bytes
+# (Content): only sizes are read from it.
 if [ "$file_store_kind" = "s3" ]; then
   step "S3: the object store holds the test configuration's input under test-definition-inputs/, the file's size: the filer's listing in object-store"
   definition_inputs=$(object_store_json "organizations/$personal_id/test-definition-inputs/") ||
@@ -1696,7 +1677,7 @@ body=$(sed '$d' <<<"$response")
 grep -qF "$TEST_RECORD_BODY" <<<"$body" ||
   fail "the suite run's output doesn't hold the record ($TEST_RECORD_BODY): $(head -c 500 <<<"$body")"
 
-# Validation rules (D15a): a validation pipeline on version 1 for its `logs`
+# Validation rules: a validation pipeline on version 1 for its `logs`
 # pipeline, through the gateway, with rules the API has the real evaluator
 # check at Save, then two runs of the uploaded file, which the dispatcher
 # has the evaluator check after the tester answers: one whose rules pass
@@ -1827,7 +1808,7 @@ poll_run "$passing_run_id"
 [ "$(json_compact '[.run.validationResults[] | .passed]' "$body")" = "[true,true]" ] ||
   fail "the run's results aren't two passes: $(json_compact '.run.validationResults' "$body")"
 
-# Ana's Record attribute rule (D15a's Scope): every record tagged env: prod.
+# A Record attribute rule: every record tagged env: prod.
 # The uploaded record has no env attribute, so it breaks it.
 step "save a rule the record breaks: all log records have env == \"prod\""
 PROD_RULE_NAME="Production only"
@@ -1851,17 +1832,17 @@ poll_run "$failing_run_id"
 [ "$(json_field '.run.errorCode' "$body")" = "null" ] && [ "$(json_field '.run.outputSizeBytes | type' "$body")" = "number" ] ||
   fail "the validation_failed run has an error or no output: $(json_compact '.run | {errorCode, outputSizeBytes}' "$body")"
 
-# The regex library and Compare's rules (D15b decision 13, Preflight ruling
-# 7). Through the gateway, as the smoke's account, a member: the library is
-# read (at least 35 entries, the seed's count; the SSN's regex byte for
-# byte), one of its entries is saved as a rule the way the picker saves it,
-# and a rule is saved the way Compare's "Create an OTTL rule" writes one,
-# for an attribute key built to break out of its string literal unless
-# escaped; the real evaluator checks both at Save, and with "Production only" deleted a
-# run of a second file succeeds with every rule passing, in order. Then, on
-# a throwaway stack only, the account is made a product admin by SQL on the
-# stack's database, creates, renames and deletes an entry, a lookahead is
-# refused by the real evaluator's RE2, and the flag is cleared again.
+# The regex library and Compare's rules. Through the gateway, as the smoke's
+# account, a member: the library is read (at least 35 entries, the seed's
+# count; the SSN's regex byte for byte), one of its entries is saved as a rule
+# the way the picker saves it, and a rule is saved the way Compare's "Create
+# an OTTL rule" writes one, for an attribute key built to break out of its
+# string literal unless escaped; the real evaluator checks both at Save, and
+# with "Production only" deleted a run of a second file succeeds with every
+# rule passing, in order. Then, on a throwaway stack only, the account is made
+# a product admin by SQL on the stack's database, creates, renames and deletes
+# an entry, a lookahead is refused by the real evaluator's RE2, and the flag
+# is cleared again.
 TEST_REGEXES_URL="$GATEWAY_URL/api/v1/test-regexes"
 SEEDED_SSN_REGEX='\d{3}-\d{2}-\d{4}'
 
@@ -1875,7 +1856,7 @@ SQL
 }
 
 # delete_created_library_file <id>: the EXIT trap's clean-up of the library
-# file D23-2's steps added (below), by its id, by SQL (stack_psql), as
+# file the library steps added (below), by its id, by SQL (stack_psql), as
 # delete_created_regex's: a global row every account of the stack would
 # otherwise list. Deletes nothing if it's gone. Its bytes stay in the
 # throwaway stack's file store, unreachable with no row.
@@ -2002,8 +1983,8 @@ expected_rules=$(jq -cn --arg a "$record_rule_id" --arg b "$ssn_rule_id" --arg c
 
 # The record carrying `y` came through, `y` and all: else the `none` rule's
 # pass would prove nothing about the key read as two. The output is one
-# OTLP document or `{"records": [...]}` (D14a); its log records are read
-# with jq, and the one with this run's body must carry `y` (Ruling 35).
+# OTLP document or `{"records": [...]}`; its log records are read with jq, and
+# the one with this run's body must carry `y`.
 step "the run's output holds the record carrying y: GET .../test-runs/:runId/files/output"
 response=$(curl -s --max-time 30 -w '\n%{http_code}' -b "$JAR" "$TEST_RUNS_URL/$library_run_id/files/output" || true)
 status=$(tail -n1 <<<"$response")
@@ -2087,8 +2068,7 @@ fi
 
 # 262,144 characters of YAML, the limit, each written \u0001 in JSON (about
 # 1.5 MiB), and 5,000 nodes, the contract's bound (about 0.8 MiB): over 2 MiB,
-# D8's limit, which the save route and the gateway raise to 5 MiB (D9a
-# decision 6, Preflight ruling 11).
+# the default limit, which the save route and the gateway raise to 5 MiB.
 step "save 262,144 × U+0001 and 5,000 nodes through the gateway: a body over 2 MiB is accepted on the save route"
 jq -n '{
   yamlContent: ("\u0001" * 262144),
@@ -2106,10 +2086,9 @@ get_configuration
 [ "$(jq '.version' <<<"$body" | graph_of)" = "$(graph_of "$work_dir/large-save-body.json")" ] ||
   fail "the read does not return the large save's 5,000 nodes: $(jq '.version.nodes | length' <<<"$body") of them"
 
-# Versions (D10). The create sends the editor's content as the save does, so
+# Versions. The create sends the editor's content as the save does, so
 # its body can be as large: the large save's body with the source version,
-# over 2 MiB, on the create's path, which the gateway also allows 5 MiB
-# (D10 Preflight ruling 9).
+# over 2 MiB, on the create's path, which the gateway also allows 5 MiB.
 step "create version 2 from version 1 with a body over 2 MiB: POST .../configurations/:configurationId/versions"
 jq --arg source "$version_id" '. + {sourceVersionId: $source}' \
   "$work_dir/large-save-body.json" >"$work_dir/create-version-body.json"
@@ -2168,9 +2147,9 @@ body=$(sed '$d' <<<"$response")
   fail "version 2 holds YAML of another length: $(jq -r '.version.yamlContent | length' <<<"$body")"
 [ "$(jq '.versions | length' <<<"$body")" = "2" ] || fail "version 2's read lists $(jq '.versions | length' <<<"$body") versions, not 2"
 
-# The version copy (D14b decisions 4 and 12): version 2, created from
-# version 1, has its own copy of version 1's suite and of its test
-# configuration, under their names, with new ids.
+# The version copy: version 2, created from version 1, has its own copy of
+# version 1's suite and of its test configuration, under their names, with new
+# ids.
 SECOND_TEST_SUITES_URL="$CONFIGURATIONS_URL/$configuration_id/versions/$second_version_id/test-suites"
 step "version 2 carries a copy of the suite: GET .../versions/:versionId/test-suites"
 response=$(curl -s -w '\n%{http_code}' -b "$JAR" "$SECOND_TEST_SUITES_URL" || true)
@@ -2192,10 +2171,10 @@ body=$(sed '$d' <<<"$response")
 [ "$(jq -r '.definitions[0].id' <<<"$body")" != "$definition_id" ] ||
   fail "the copied suite's test configuration is version 1's, not a copy"
 
-# The validation pipelines' copy (D15a decision 17): version 2 has its own
-# copy of version 1's validation pipeline and its four rules, in order (D15a's
-# two that pass and D15b's library and Compare-shaped rules; "Production
-# only" was deleted before the copy).
+# The validation pipelines' copy: version 2 has its own copy of version 1's
+# validation pipeline and its four rules, in order (the two that pass, then
+# the library and Compare-shaped rules; "Production only" was deleted before
+# the copy).
 SECOND_VALIDATION_PIPELINES_URL="$CONFIGURATIONS_URL/$configuration_id/versions/$second_version_id/validation-pipelines"
 step "version 2 carries a copy of the validation pipeline and its rules: GET .../versions/:versionId/validation-pipelines"
 response=$(curl -s --max-time 30 -w '\n%{http_code}' -b "$JAR" "$SECOND_VALIDATION_PIPELINES_URL" || true)
@@ -2220,7 +2199,7 @@ for original in "$record_rule_id" "$ssn_rule_id" "$aws_rule_id" "$compare_rule_i
     fail "the copied validation pipeline holds version 1's rule $original, not a copy"
 done
 
-# Publishing (D11b): version 2, holding the large save's YAML, through the
+# Publishing: version 2, holding the large save's YAML, through the
 # gateway; the platform puts its snapshot in the opamp-server first, then
 # records it.
 step "publish version 2: POST .../versions/:versionId/publish"
@@ -2233,7 +2212,7 @@ body=$(sed '$d' <<<"$response")
   fail "the publish answered another version: $(jq -c '.version | {id, versionNumber}' <<<"$body")"
 [ "$(jq -r '.version.publishedAt | type' <<<"$body")" = "string" ] && [ "$(jq -r '.version.publishedBy.email' <<<"$body")" = "$EMAIL" ] ||
   fail "the publish didn't answer version 2 as published by $EMAIL: $(jq -c '.version | {publishedAt, publishedBy}' <<<"$body")"
-# The collector version version 2 is pinned to (D13a decision 8), which the
+# The collector version version 2 is pinned to, which the
 # published snapshot must name.
 second_version_collector=$(jq -r '.version.collectorVersion' <<<"$body")
 [[ "$second_version_collector" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] ||
@@ -2241,9 +2220,9 @@ second_version_collector=$(jq -r '.version.collectorVersion' <<<"$body")
 
 # The snapshot is version 2's, by its id, holds the YAML saved as version 2,
 # by its SHA-256: jq -j writes the saved string's UTF-8 bytes as they are,
-# with no newline added (D11b Ruling 29), and names the collector it was
+# with no newline added, and names the collector it was
 # published for, the configuration's distribution and version 2's pin, as
-# the real opamp-server stored it (D13a decision 7).
+# the real opamp-server stored it.
 second_version_sha256=$(jq -j '.yamlContent' "$work_dir/create-version-body.json" | sha256_of)
 [[ "$second_version_sha256" =~ ^[0-9a-f]{64}$ ]] || fail "couldn't compute the SHA-256 of version 2's YAML"
 step "the opamp-server holds the configuration's one snapshot: version 2's, holding the YAML saved, for $configuration_distribution $second_version_collector"
@@ -2263,21 +2242,21 @@ if grep -qx "$configuration_id" <<<"$listed_ids"; then
 fi
 
 # The platform removes a deleted configuration's snapshots after the
-# response (D11b decision 12), so this asks for up to about 10 s.
+# response, so this asks for up to about 10 s.
 step "the platform removed the deleted configuration's snapshots from the opamp-server"
 stack_smoke publications "$personal_id" "$configuration_id" 0 ||
   fail "the opamp-server still holds snapshots of the deleted configuration $configuration_id (above)"
 
-# The fleet model (D16a): a real collector, the OpAMP supervisor 0.162.0
+# The fleet model: a real collector, the OpAMP supervisor 0.162.0
 # running otelcol-contrib 0.162.0 (docker/smoke-collector, built here under
 # a throwaway tag from the stack's own validator image and removed at the
 # end), enrolled through the opamp-server's management API and its agent
-# endpoint (Preflight ruling 28). In the personal organization, still signed
-# in, after D11b's steps: the fleet's published version is a configuration
+# endpoint. In the personal organization, still signed in, after the
+# publishing steps: the fleet's published version is a configuration
 # of its own, since one in use can't be deleted (409 publication_in_use)
-# and D11b's delete above must still pass. The management API is called
-# with curl, its secret (the API container's own setting) in a 0600 header
-# file under the work directory, never on a command line; so are the
+# and the configuration's delete above must still pass. The management API is
+# called with curl, its secret (the API container's own setting) in a 0600
+# header file under the work directory, never on a command line; so are the
 # bearers, which reach a collector by a bare `docker run -e`. Every wait is
 # a bounded number of polls. A run that ends inside these steps removes its
 # collectors, the second replica, the fleet, the published version and the
@@ -2407,7 +2386,7 @@ fi
 # start_collector <name> <endpoint> <bearer> <group id> starts one
 # collector, a container of its own on the compose network (its instance
 # uid made on its first start), named <project>-<name>. The group is
-# required: the opamp-server refuses a collector naming none (D17d-1), and
+# required: the opamp-server refuses a collector naming none, and
 # the smoke collector's image has no script of its own to refuse it.
 start_collector() {
   local container="$compose_project-$1"
@@ -2467,13 +2446,12 @@ start_collector edge-02 "$replica_url" "$default_bearer" "$gateways_group_id"
 
 step "edge-02, with nothing assigned, is unassigned and sent no configuration, read through the first replica (at most 30 polls)"
 wait_for_collector edge-02 30 "(.pin == null) and (.resolution == null) and (.served == null) and (.sync == \"unassigned\") and (.groupId == \"$gateways_group_id\") and (.enrollmentTokenId == \"$rotate_token_id\")"
-step "the fleet's former imports path answers 404 not_found (D16c removed importing)"
+step "the fleet's former imports path answers 404 not_found"
 management GET "$FLEETS_URL/$fleet_id/imports"
 [ "$status" = "404" ] && [ "$(json_field '.error.code' "$body")" = "not_found" ] ||
   fail "the fleet's former imports path returned HTTP $status: $body"
 
-# The agent's door requires a group (D17d-1 spec decisions 3, 5, 20 and 21;
-# Preflight rulings 5, 7, 8 and 19): hand-made AgentToServer messages of
+# The agent's door requires a group: hand-made AgentToServer messages of
 # fresh instance uids (field 1, 16 bytes) on the default token's bearer, from
 # a 0600 header file, to the first replica's agent endpoint. One whose agent
 # description (field 3) names no group is refused 403 with the fixed body
@@ -2518,7 +2496,7 @@ named_message() {
   { printf '\n\020'; cat "$1"; printf '\032\105\022\103\n\031%s\022\046\n\044%s' telflo.collector_group_id "$2"; } >"$work_dir/$3"
 }
 
-step "D17d-1: a fresh collector whose agent description names no group is refused 403 \"Forbidden\" on the default token, and isn't enrolled"
+step "a fresh collector whose agent description names no group is refused 403 \"Forbidden\" on the default token, and isn't enrolled"
 fresh_uid "$work_dir/no-group-uid.bin"
 no_group_uid=$uid
 # Field 3, an AgentDescription present and empty.
@@ -2533,7 +2511,7 @@ management GET "$FLEETS_URL/$fleet_id/collectors?limit=100"
 [ "$status" = "200" ] && [ "$(json_field "any(.collectors[]; .instanceUid == \"$no_group_uid\")" "$body")" = "false" ] ||
   fail "the fleet's collectors (HTTP $status) hold the collector refused for naming no group: $(json_compact '[.collectors[]? | {id, instanceUid, groupId}]' "$body")"
 
-step "D17d-1: create the group \"doomed\" through the management API; a fresh collector naming it enrolls (200) and is listed in it (at most 10 polls)"
+step "create the group \"doomed\" through the management API; a fresh collector naming it enrolls (200) and is listed in it (at most 10 polls)"
 management POST "$FLEETS_URL/$fleet_id/groups" '{"name": "doomed"}'
 [ "$status" = "201" ] || fail "creating the group \"doomed\" returned HTTP $status: $body"
 doomed_group_id=$(json_field '.id' "$body")
@@ -2555,7 +2533,7 @@ done
 [ -n "$doomed_collector_id" ] ||
   fail "the collector naming \"doomed\" isn't its group's one collector within 10 polls (HTTP $status): $(json_compact '[.collectors[]? | {id, instanceUid, groupId}]' "$body")"
 
-step "D17d-1: delete the group \"doomed\": 204, its collector deleted with it (404 collector_not_found), and the same instance uid naming it again refused 403 \"Forbidden\""
+step "delete the group \"doomed\": 204, its collector deleted with it (404 collector_not_found), and the same instance uid naming it again refused 403 \"Forbidden\""
 management DELETE "$FLEETS_URL/$fleet_id/groups/$doomed_group_id"
 [ "$status" = "204" ] || fail "deleting the group \"doomed\" returned HTTP $status: $body"
 management GET "$FLEETS_URL/$fleet_id/collectors/$doomed_collector_id"
@@ -2573,7 +2551,7 @@ rm -f "$work_dir/group-poll-body"
 # replica's agent endpoint: answered before the revocation, refused after it
 # by both within the token cache's 10 seconds. It carries no agent
 # description, so it is answered 200 with an ask for the full state and
-# never enrolled (D16a Ruling 54); the bearer is checked first all the same.
+# never enrolled; the bearer is checked first all the same.
 (umask 077 && printf 'Authorization: Bearer %s\n' "$rotate_bearer" >"$work_dir/rotate-headers")
 { printf '\n\020'; head -c 16 /dev/urandom; } >"$work_dir/agent-to-server.pb"
 agent_poll() {
@@ -2602,8 +2580,8 @@ remove_fleet_steps
 [ -z "$fleet_cleanup_failed" ] || fail "removing the fleet's pieces failed: $fleet_cleanup_failed"
 
 # With the fleet gone its published version is in use no longer, so the
-# platform's after-response delete (D11b decision 12), which a group's
-# assignment refused (409 publication_in_use, logged), now succeeds.
+# platform's after-response delete, which a group's assignment refused (409
+# publication_in_use, logged), now succeeds.
 step "delete the fleet's configuration through the gateway: its published version leaves the opamp-server"
 status=$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 -b "$JAR" -X DELETE "$CONFIGURATIONS_URL/$fleet_configuration_id" \
   -H 'X-Telflo-CSRF: 1')
@@ -2635,8 +2613,7 @@ status=$(tail -n1 <<<"$response")
 
 step "the API delivered the reset email to Mailpit"
 # Searched by recipient and subject: the verification email to the same
-# address is already there, and the reset email is sent after the response
-# (D3 Preflight ruling 7).
+# address is already there, and the reset email is sent after the response.
 reset_query=$(jq -rn --arg query "to:\"$EMAIL\" subject:\"Reset your Telflo password\"" '$query | @uri')
 message_id=""
 for _ in $(seq 1 30); do
@@ -2648,7 +2625,7 @@ done
 
 text=$(curl -s "$MAILPIT_URL/api/v1/message/$message_id" | jq -r '.Text')
 # The token is in the link's fragment, which a browser never sends to a
-# server (D3 Ruling 14).
+# server.
 link=$(grep -oE 'https?://[^[:space:]]+/reset-password#token=[A-Za-z0-9_-]+' <<<"$text" | head -n1)
 [ -n "$link" ] || fail "the reset email contains no reset link with #token="
 [[ "$link" == "$GATEWAY_URL/reset-password#token="* ]] ||
@@ -2701,9 +2678,8 @@ printf 'User-agent: *\nDisallow: /\n' | cmp -s - "$work_dir/robots.txt" ||
   fail "robots.txt is not exactly 'User-agent: *' and 'Disallow: /': $(cat "$work_dir/robots.txt")"
 
 if [ "$SMOKE_SITE" = "saas" ]; then
-  # The playground (D31-1 decision 46, Preflight ruling 19), signed out: its
-  # pages render through the gateway with their fixed titles, and the open read
-  # of the published flows answers from
+  # The playground, signed out: its pages render through the gateway with
+  # their fixed titles, and the open read of the published flows answers from
   # the flows table (migration 026 seeds log-volume-cost-control) with no
   # session, no-store. The anonymous validate the editors call is the CLI's
   # step below ($cli_steps).
@@ -2752,7 +2728,7 @@ if [ "$SMOKE_SITE" = "saas" ]; then
   d31_steps="opened the playground, its editor and the public editor signed out (each with its title), and read the published flows with no session (the list holding $PUBLISHED_FLOW_SLUG and its YAML by slug, both no-store; an unknown slug 404 flow_not_found)"
 
   # The inquiry goes to TELFLO_SALES_INQUIRY_TO, which the stack's API was
-  # given (required while TELFLO_SALES_INQUIRY is on: D36-1 decision 25; no
+  # given (required while TELFLO_SALES_INQUIRY is on; no
   # default address); the name, unique to this run and free of quotes, is in
   # the subject.
   INQUIRY_NAME="Stack smoke $(date +%s)-$$"
@@ -2781,8 +2757,8 @@ if [ "$SMOKE_SITE" = "saas" ]; then
   [ "$reply_to" = "$EMAIL" ] || fail "the inquiry's Reply-To is '$reply_to', not the submitter ($EMAIL)"
   inquiry_steps="delivered a sales inquiry"
 else
-  # The open-source defaults (D36-2 decision 97): the playground, the published flows' anonymous reads and the
-  # sales inquiry are off, each a 404 (D36-1 decision 31): the pages the web app's, the routes the API's
+  # The open-source defaults: the playground, the published flows' anonymous reads and the
+  # sales inquiry are off, each a 404: the pages the web app's, the routes the API's
   # not_found, answered before anything else reads the request (the inquiry's limit included).
   for page_path in /playground /playground/editor /public-editor; do
     step "the playground is off (TELFLO_PLAYGROUND=false): GET $page_path through the gateway, signed out, is 404"
@@ -2839,8 +2815,8 @@ refused_connection telflo_platform telflo-api-local telflo_opamp_server
 step "telflo_opamp_server, the opamp-server's role, is refused the platform's database"
 refused_connection telflo_opamp_server telflo-opamp-local telflo_platform
 
-# The group organization's rename and delete reach the opamp-server too (D11a
-# decision 20). Last, so no step above depends on the group organization.
+# The group organization's rename and delete reach the opamp-server too.
+# Last, so no step above depends on the group organization.
 # Both act on the active organization and need its admin, so the account,
 # signed out above, signs in again and switches to it.
 step "sign in again with the new password and switch to the group organization"
@@ -2868,15 +2844,15 @@ step "the platform renamed the group organization in the opamp-server"
 stack_smoke group-renamed "$group_id" "$RENAMED_ORGANIZATION_NAME" ||
   fail "the group organization $group_id does not have its new name in the opamp-server (above)"
 
-# The fleet model through the platform (D16b decision 24, Preflight ruling
-# 18): the platform's fleet routes, through the gateway, as the group
-# organization's signed-in admin, with a real collector. After D16a's steps
-# (which built the smoke collector, and the management API's header file)
-# and before the group organization's delete, which then removes the fleet
-# in the opamp-server. Every call goes through platform(): the cookie jar,
-# X-Telflo-CSRF, the reply's headers and body each in a 0600 file under the
-# work directory. A reply that carries a bearer (a create's, a reveal's, a
-# rotation's) is never printed: a failure there prints only its error code.
+# The fleet model through the platform: the platform's fleet routes, through
+# the gateway, as the group organization's signed-in admin, with a real
+# collector. After the fleet steps (which built the smoke collector, and the
+# management API's header file) and before the group organization's delete,
+# which then removes the fleet in the opamp-server. Every call goes through
+# platform(): the cookie jar, X-Telflo-CSRF, the reply's headers and body each
+# in a 0600 file under the work directory. A reply that carries a bearer (a
+# create's, a reveal's, a rotation's) is never printed: a failure there prints
+# only its error code.
 # The bearers reach a collector by a bare `docker run -e`, never a command
 # line. Every wait is a bounded number of polls. A run that ends inside these
 # steps removes what they made (the EXIT trap: remove_d16b_steps).
@@ -2912,7 +2888,7 @@ reply_code() {
 }
 # Whether the last reply's body holds the text $1 (a bearer), without printing either: the file read
 # and the match are bash's own ($(<file), [[ == ]]), so the bearer is in no command's argv (ps). A reply file
-# that isn't there or can't be read counts as holding it (D17c-2 Ruling 51): every caller's guard then fails
+# that isn't there or can't be read counts as holding it: every caller's guard then fails
 # closed. It is opened first (`true <file`, a regular builtin) so a failed read never meets errexit: bash 5.2
 # exits on a failed $(<file) even inside `||`.
 reply_holds() {
@@ -2924,7 +2900,7 @@ reply_holds() {
 
 D16B_YAML=$'# D16b: published by the stack smoke test, managed through the platform\nreceivers:\n  otlp:\n    protocols:\n      http:\n        endpoint: 127.0.0.1:4320\nprocessors:\n  batch: {}\nexporters:\n  debug:\n    verbosity: basic\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      processors: [batch]\n      exporters: [debug]\n'
 D16B_CONFIGURATION_NAME="Stack smoke D16b $(date +%s)-$$"
-step "D16b: publish a configuration in the group organization through the gateway: create it, save \"# D16b\" and publish version 1"
+step "publish a configuration in the group organization through the gateway: create it, save its YAML and publish version 1"
 platform POST "$D16B_CONFIGURATIONS_URL" "$(jq -cn --arg name "$D16B_CONFIGURATION_NAME" \
   '{name: $name, description: "The stack smoke test fleet'"'"'s configuration, managed through the platform"}')"
 [ "$status" = "201" ] || fail "creating the D16b configuration returned HTTP $status: $(head -c 500 <<<"$body")"
@@ -2941,7 +2917,7 @@ platform POST "$D16B_CONFIGURATIONS_URL/$d16b_configuration_id/versions/$d16b_ve
   fail "publishing the D16b configuration returned HTTP $status: $(head -c 500 <<<"$body")"
 d16b_yaml_sha256=$(jq -j -n --arg yaml "$D16B_YAML" '$yaml' | sha256_of)
 
-step "list the configuration's published versions: GET .../configurations/:configurationId/versions?filter=published answers exactly version 1, its id, number, label and published date only (D17b-1)"
+step "list the configuration's published versions: GET .../configurations/:configurationId/versions?filter=published answers exactly version 1, its id, number, label and published date only"
 platform GET "$D16B_CONFIGURATIONS_URL/$d16b_configuration_id/versions?filter=published"
 [ "$status" = "200" ] || fail "listing the D16b configuration's published versions returned HTTP $status: $(reply_code)"
 [ "$(reply_json --arg id "$d16b_version_id" '(.versions | length) == 1 and .versions[0].id == $id and .versions[0].versionNumber == 1 and (.versions[0].publishedAt | type) == "string"')" = "true" ] ||
@@ -2949,7 +2925,7 @@ platform GET "$D16B_CONFIGURATIONS_URL/$d16b_configuration_id/versions?filter=pu
 [ "$(reply_json '[.versions[] | keys == ["id", "label", "publishedAt", "versionNumber"]] | all')" = "true" ] ||
   fail "the D16b configuration's versions' list carries more than each version's id, number, label and published date: $(reply_json -c '[.versions[]? | keys]')"
 
-# The id a browser chooses for a safe retry (decision 15): a random UUID v4,
+# The id a browser chooses for a safe retry: a random UUID v4,
 # from /dev/urandom so neither uuidgen nor a GNU date is needed. Recorded
 # before the create, so a create whose reply is lost is still removed.
 d16b_hex=$(od -An -N16 -tx1 /dev/urandom | tr -d ' \n')
@@ -2994,10 +2970,10 @@ platform GET "$D16B_FLEETS_URL/$d16b_fleet_id"
   [ "$(json_field '.fleet.type' "$body")" = "server" ] && [ "$(json_field '.fleet.summary.collectors' "$body")" = "0" ] ||
   fail "reading the fleet returned HTTP $status: $(head -c 500 <<<"$body")"
 
-# The summary's last seen and rotate token (D17a decision 31, Preflight
-# ruling 7), from the read above: no collector yet, and the create's one
-# rotate token, valid and never expiring, with no grace.
-step "the new fleet's summary answers no last seen and one valid rotate token that never expires, in no grace (D17a)"
+# The summary's last seen and rotate token, from the read above: no collector
+# yet, and the create's one rotate token, valid and never expiring, with no
+# grace.
+step "the new fleet's summary answers no last seen and one valid rotate token that never expires, in no grace"
 [ "$(reply_json '.fleet.summary.lastSeenAt == null and .fleet.summary.rotateToken == {expiresAt: null, graceEndsAt: null, validCount: 1}')" = "true" ] ||
   fail "the new fleet's summary isn't unseen with one rotate token: $(reply_json -c '.fleet.summary | {lastSeenAt, rotateToken}')"
 
@@ -3017,8 +2993,8 @@ d16b_publication_id=$(json_field '.group.assignedPublishedVersionId' "$body")
 
 # A collector of this block: a container of its own on the compose network,
 # named <project>-<name>, built from the smoke collector's image again
-# (D16a's steps removed theirs).
-step "build the smoke collector again for the D16b steps: docker/smoke-collector"
+# (the fleet steps removed theirs).
+step "build the smoke collector again for the platform fleet steps: docker/smoke-collector"
 d16b_image="telflo-smoke-collector:$compose_project-d16b-$$"
 if ! output=$(docker build -q --build-arg "VALIDATOR_IMAGE=$validator_image" -t "$d16b_image" \
   "$(dirname "$0")/../docker/smoke-collector" 2>&1); then
@@ -3038,7 +3014,7 @@ d16b_start_collector() {
 }
 
 # d16b_redact: its standard input for a failure's message, every tqd_… (a
-# quick-deploy link's secret), every tf_… (an API token, D25) and every run of
+# quick-deploy link's secret), every tf_… (an API token) and every run of
 # 100 or more base64 characters (a bearer's shape) replaced.
 d16b_redact() {
   LC_ALL=C sed -E -e 's#tqd_[A-Za-z0-9_-]+#[redacted]#g' -e 's#tf_[A-Za-z0-9_-]+#[redacted]#g' \
@@ -3047,12 +3023,12 @@ d16b_redact() {
 # d16b_wait_for_collector <name> <polls> <jq condition> [<container>] [<redaction>]:
 # reads the fleet's collector of that name through the platform's collector
 # list (searched by `q`), once a second, until the condition holds of it;
-# $collector holds it. The reply that satisfies it must be no-store (D17b-1
-# decision 30). When it never holds, <container>'s last 50 lines of output
-# are printed before the failure, and the collector last read in it, both
-# through <redaction> (a function filtering its standard input; d16b_redact
-# when none is given; D17c-2's quick-deploy steps pass qd_diagnostic: whole
-# when it holds no secret, else redacted).
+# $collector holds it. The reply that satisfies it must be no-store. When it
+# never holds, <container>'s last 50 lines of output are printed before the
+# failure, and the collector last read in it, both through <redaction> (a
+# function filtering its standard input; d16b_redact when none is given; the
+# quick-deploy steps pass qd_diagnostic: whole when it holds no secret, else
+# redacted).
 d16b_wait_for_collector() {
   local name=$1 polls=$2 condition=$3 logs_of=${4:-} redaction=${5:-d16b_redact}
   collector=""
@@ -3090,7 +3066,7 @@ d16b_start_collector edge-b2 "$d16b_default_bearer" "$d16b_unassigned_group_id"
 step "edge-b1, read through the platform, holds the rotate token and applies the published version: its SHA-256, in sync, the served version named (at most 60 polls)"
 d16b_wait_for_collector edge-b1 60 "(.enrollmentTokenId == \"$d16b_rotate_token_id\") and (.groupId == \"$d16b_default_group_id\") and (.effective.status == \"applied\") and (.effective.sha256 == \"$d16b_yaml_sha256\") and (.drift == \"inSync\") and (.served.kind == \"version\") and (.served.publishedVersionId == \"$d16b_publication_id\") and (.served.version.versionId == \"$d16b_version_id\") and (.served.version.configurationId == \"$d16b_configuration_id\")"
 
-step "read edge-b1 alone and its error history through the platform: GET .../collectors/:collectorId and .../errors, each no-store (D17b-1)"
+step "read edge-b1 alone and its error history through the platform: GET .../collectors/:collectorId and .../errors, each no-store"
 d16b_edge_b1_id=$(jq -r '.id' <<<"$collector")
 platform GET "$D16B_FLEETS_URL/$d16b_fleet_id/collectors/$d16b_edge_b1_id"
 [ "$status" = "200" ] && [ "$(reply_json '.collector.id')" = "$d16b_edge_b1_id" ] ||
@@ -3101,11 +3077,11 @@ platform GET "$D16B_FLEETS_URL/$d16b_fleet_id/collectors/$d16b_edge_b1_id/errors
   fail "reading edge-b1's error history through the platform returned HTTP $status: $(reply_code)"
 no_store || fail "a collector's error history, carrying its error text, isn't Cache-Control: no-store"
 
-# The fleet's last seen is its collectors' latest (D17a decision 31): a time
+# The fleet's last seen is its collectors' latest: a time
 # of the last 5 minutes by jq's clock (the reply's milliseconds dropped for
 # fromdateiso8601), once edge-b1 polls. Read until it is, a second apart,
 # then the list must agree.
-step "the fleet's summary answers a last seen of the last 5 minutes, in its read and the list (D17a, at most 10 polls)"
+step "the fleet's summary answers a last seen of the last 5 minutes, in its read and the list (at most 10 polls)"
 d16b_seen=""
 for _ in $(seq 1 10); do
   platform GET "$D16B_FLEETS_URL/$d16b_fleet_id"
@@ -3128,7 +3104,7 @@ platform GET "$D16B_FLEETS_URL/$d16b_fleet_id/imports"
 [ "$status" = "404" ] && [ "$(reply_code)" = "not_found" ] ||
   fail "the platform's former imports path returned HTTP $status: $(head -c 500 <<<"$body")"
 
-# A pin through the platform (D16c's final review): edge-b2 is pinned to the
+# A pin through the platform: edge-b2 is pinned to the
 # published version, applies it as its pin's (in sync), and is unpinned
 # before the configuration's in-use and delete steps below, so only the
 # Default group's assignment uses the version there.
@@ -3151,26 +3127,25 @@ platform PATCH "$D16B_FLEETS_URL/$d16b_fleet_id/collectors/$d16b_edge_b2_id" '{"
   [ "$(reply_json '.collector.drift')" = "unassigned" ] && [ "$(reply_json '.collector.served.publishedVersionId')" = "$d16b_publication_id" ] ||
   fail "unpinning edge-b2 returned HTTP $status: $(reply_json -c 'if .collector then (.collector | {pin, resolution, served, drift}) else .error end')"
 
-# Organization variables reaching a real supervisor (D20 decision 40,
-# Preflight ruling 36): on edge-b2 in "unassigned-b", never the Default
-# group, whose assignment the steps below rely on. Through the platform, as
-# the group organization's signed-in admin: a variable SMOKE_TAG (a$b-1) and
-# one the text doesn't use; a configuration of this block's own whose
-# processor attributes/d20 inserts an attribute of the value
-# ${org:SMOKE_TAG}, assigned to "unassigned-b"; edge-b2 applies the text
-# filled in, every `$` of the value doubled (`a$$b-1`, which the collector's
-# own pass reads as a$b-1), its SHA-256 computed here (d20_filled_in_sha256)
-# and never the published text's. Each change of what it uses (the value, a
-# variable group bound to its group, one pinned on it) is a push (served.at
-# moves) of that level's value, in sync again; a change of the unused
-# variable is none: served.at stays while edge-b2 polls three times (its
-# lastSeenAt moving), in sync throughout. SMOKE_TAG's delete is refused
-# while the version is assigned (409 variable_in_use, naming the version and
-# its group, with the totals). The block ends as it found "unassigned-b":
-# nothing assigned, no variable group, edge-b2 unpinned; then its variable
-# groups, variables and configuration are deleted. A run that ends among
-# these steps removes them (the EXIT trap: remove_d20_steps, after the
-# fleet's removal, so nothing uses them any more; the published version,
+# Organization variables reaching a real supervisor: on edge-b2 in
+# "unassigned-b", never the Default group, whose assignment the steps below
+# rely on. Through the platform, as the group organization's signed-in admin:
+# a variable SMOKE_TAG (a$b-1) and one the text doesn't use; a configuration
+# of this block's own whose processor attributes/d20 inserts an attribute of
+# the value ${org:SMOKE_TAG}, assigned to "unassigned-b"; edge-b2 applies the
+# text filled in, every `$` of the value doubled (`a$$b-1`, which the
+# collector's own pass reads as a$b-1), its SHA-256 computed here
+# (d20_filled_in_sha256) and never the published text's. Each change of what
+# it uses (the value, a variable group bound to its group, one pinned on it)
+# is a push (served.at moves) of that level's value, in sync again; a change
+# of the unused variable is none: served.at stays while edge-b2 polls three
+# times (its lastSeenAt moving), in sync throughout. SMOKE_TAG's delete is
+# refused while the version is assigned (409 variable_in_use, naming the
+# version and its group, with the totals). The block ends as it found
+# "unassigned-b": nothing assigned, no variable group, edge-b2 unpinned; then
+# its variable groups, variables and configuration are deleted. A run that
+# ends among these steps removes them (the EXIT trap: remove_d20_steps, after
+# the fleet's removal, so nothing uses them any more; the published version,
 # recorded once the publish answers, through the management API).
 D20_VARIABLES_URL="$D16B_ORGANIZATION_URL/variables"
 D20_VARIABLE_GROUPS_URL="$D16B_ORGANIZATION_URL/variable-groups"
@@ -3192,7 +3167,7 @@ d20_uuid() {
 }
 # d20_filled_in <value>: D20_YAML filled in as the opamp-server's poll fills
 # it in (orgvariables.Render): its one live reference replaced by the value,
-# every `$` of it doubled (decision 8), the bytes around it as published.
+# every `$` of it doubled, the bytes around it as published.
 # Printed with no newline added (jq -j).
 d20_filled_in() {
   jq -j -n --arg yaml "$D20_YAML" --arg value "$1" '$yaml | split("${org:SMOKE_TAG}") | join($value | split("$") | join("$$"))'
@@ -3235,7 +3210,7 @@ d20_wait_for_push() {
   d20_sha256=$sha
 }
 
-step "D20: create the organization variables SMOKE_TAG = $D20_VALUE and SMOKE_UNUSED through the platform: POST .../variables answers each 201, no-store, as sent"
+step "create the organization variables SMOKE_TAG = $D20_VALUE and SMOKE_UNUSED through the platform: POST .../variables answers each 201, no-store, as sent"
 d20_create "$D20_VARIABLES_URL" d20_variable_ids '{id: $id, name: "SMOKE_TAG", value: $value, description: null}' --arg value "$D20_VALUE"
 d20_smoke_tag_id=$d20_id
 [ "$(reply_json --arg id "$d20_smoke_tag_id" --arg value "$D20_VALUE" '.variable | .id == $id and .name == "SMOKE_TAG" and .value == $value and .description == null')" = "true" ] ||
@@ -3245,7 +3220,7 @@ d20_unused_id=$d20_id
 [ "$(reply_json --arg id "$d20_unused_id" '.variable | .id == $id and .name == "SMOKE_UNUSED" and .value == "unused-1"')" = "true" ] ||
   fail "SMOKE_UNUSED's create didn't answer it as sent: $(reply_json -c '.variable | {id, name, value, description}' | d16b_redact)"
 
-step "D20: publish a configuration of its own whose attributes/d20 inserts \${org:SMOKE_TAG}: create it, save it and publish version 1"
+step "publish a configuration of its own whose attributes/d20 inserts \${org:SMOKE_TAG}: create it, save it and publish version 1"
 platform POST "$D16B_CONFIGURATIONS_URL" "$(jq -cn --arg name "$D20_CONFIGURATION_NAME" \
   '{name: $name, description: "The stack smoke test'"'"'s configuration filled in with an organization variable"}')"
 [ "$status" = "201" ] || fail "creating the D20 configuration returned HTTP $status: $(reply_code)"
@@ -3280,7 +3255,7 @@ d20_expected="${D20_YAML%%"$d20_reference"*}"'a$$b-1'"${D20_YAML#*"$d20_referenc
 [ "$(d20_filled_in_sha256 "$D20_VALUE")" = "$(printf '%s' "$d20_expected" | sha256_of)" ] ||
   fail "the script's fill-in (d20_filled_in) doesn't write $D20_VALUE as a\$\$b-1 in place of \${org:SMOKE_TAG}"
 
-step "D20: assign it to \"unassigned-b\" by its version id: PATCH .../groups/:groupId answers its configuration and version"
+step "assign it to \"unassigned-b\" by its version id: PATCH .../groups/:groupId answers its configuration and version"
 platform PATCH "$D16B_FLEETS_URL/$d16b_fleet_id/groups/$d16b_unassigned_group_id" \
   "$(jq -cn --arg id "$d20_version_id" '{assignedVersionId: $id}')"
 [ "$status" = "200" ] &&
@@ -3290,12 +3265,12 @@ platform PATCH "$D16B_FLEETS_URL/$d16b_fleet_id/groups/$d16b_unassigned_group_id
 [ "$(reply_json '.group.assignedPublishedVersionId')" = "$d20_publication_id" ] ||
   fail "the D20 assignment doesn't name its published version $d20_publication_id: $(reply_json -c '.group.assignedPublishedVersionId')"
 
-step "D20: edge-b2 applies the text filled in with $D20_VALUE (\$ doubled), by its SHA-256, in sync, the resolution's the published text's (at most 60 polls)"
-# Before this push edge-b2 was served D16b's version: any served time counts.
+step "edge-b2 applies the text filled in with $D20_VALUE (\$ doubled), by its SHA-256, in sync, the resolution's the published text's (at most 60 polls)"
+# Before this push edge-b2 was served the Default group's published version: any served time counts.
 d20_served_at=""
 d20_wait_for_push "SMOKE_TAG" "$D20_VALUE" "(.pinnedVariableGroupId == null)"
 
-step "D20: change SMOKE_TAG's value to $D20_NEW_VALUE: PATCH .../variables/:variableId answers it, no-store; edge-b2 is sent the text again (served.at moves), its new SHA-256, in sync (at most 60 polls)"
+step "change SMOKE_TAG's value to $D20_NEW_VALUE: PATCH .../variables/:variableId answers it, no-store; edge-b2 is sent the text again (served.at moves), its new SHA-256, in sync (at most 60 polls)"
 platform PATCH "$D20_VARIABLES_URL/$d20_smoke_tag_id" "$(jq -cn --arg value "$D20_NEW_VALUE" '{value: $value}')"
 [ "$status" = "200" ] && [ "$(reply_json --arg value "$D20_NEW_VALUE" '.variable.value == $value and .variable.name == "SMOKE_TAG"')" = "true" ] ||
   fail "changing SMOKE_TAG's value returned HTTP $status: $(reply_code)"
@@ -3309,7 +3284,7 @@ d20_wait_for_push "SMOKE_TAG's new" "$D20_NEW_VALUE" "(.pinnedVariableGroupId ==
 # sent again whatever the marker says, so it is the in-sync read at every
 # read, from the first after the change, that holds the marker to the
 # names the text uses.
-step "D20: change SMOKE_UNUSED, which the text doesn't use: edge-b2 is sent nothing (served.at and its SHA-256 as they were) and reads in sync at every read while its lastSeenAt moves 3 times (at most 180 reads)"
+step "change SMOKE_UNUSED, which the text doesn't use: edge-b2 is sent nothing (served.at and its SHA-256 as they were) and reads in sync at every read while its lastSeenAt moves 3 times (at most 180 reads)"
 platform PATCH "$D20_VARIABLES_URL/$d20_unused_id" '{"value": "unused-2"}'
 [ "$status" = "200" ] && [ "$(reply_json '.variable.value')" = "unused-2" ] ||
   fail "changing SMOKE_UNUSED's value returned HTTP $status: $(reply_code)"
@@ -3335,7 +3310,7 @@ for _ in $(seq 1 180); do
 done
 [ "$d20_moves" -ge 3 ] || fail "edge-b2's lastSeenAt moved $d20_moves times, not 3, within 180 reads"
 
-step "D20: SMOKE_TAG's delete is refused while its version is assigned: DELETE .../variables/:variableId answers 409 variable_in_use naming the version and \"unassigned-b\", with the totals, and neither the variable's name nor its value"
+step "SMOKE_TAG's delete is refused while its version is assigned: DELETE .../variables/:variableId answers 409 variable_in_use naming the version and \"unassigned-b\", with the totals, and neither the variable's name nor its value"
 platform DELETE "$D20_VARIABLES_URL/$d20_smoke_tag_id"
 [ "$status" = "409" ] && [ "$(reply_code)" = "variable_in_use" ] ||
   fail "deleting SMOKE_TAG while it is used returned HTTP $status: $(reply_code)"
@@ -3354,7 +3329,7 @@ platform GET "$D20_VARIABLES_URL"
   fail "after the refused delete, the variables' list (HTTP $status) doesn't hold SMOKE_TAG with its value: $(reply_code)"
 no_store || fail "the variables' list, carrying their values, isn't Cache-Control: no-store"
 
-step "D20: bind a variable group overriding SMOKE_TAG with $D20_GROUP_VALUE to \"unassigned-b\": POST .../variable-groups, PUT .../overrides/:variableId, PATCH .../groups/:groupId; edge-b2 is sent the override's value, in sync (at most 60 polls)"
+step "bind a variable group overriding SMOKE_TAG with $D20_GROUP_VALUE to \"unassigned-b\": POST .../variable-groups, PUT .../overrides/:variableId, PATCH .../groups/:groupId; edge-b2 is sent the override's value, in sync (at most 60 polls)"
 d20_create "$D20_VARIABLE_GROUPS_URL" d20_variable_group_ids '{id: $id, name: "smoke-d20-group", description: null}'
 d20_group_variable_group_id=$d20_id
 [ "$(reply_json --arg id "$d20_group_variable_group_id" '.variableGroup | .id == $id and .name == "smoke-d20-group" and .overrideCount == 0')" = "true" ] ||
@@ -3372,7 +3347,7 @@ platform PATCH "$D16B_FLEETS_URL/$d16b_fleet_id/groups/$d16b_unassigned_group_id
   fail "binding the variable group to \"unassigned-b\" returned HTTP $status: $(reply_code)"
 d20_wait_for_push "the group's variable group's" "$D20_GROUP_VALUE" "(.pinnedVariableGroupId == null)"
 
-step "D20: pin another variable group, overriding SMOKE_TAG with $D20_PIN_VALUE, on edge-b2: PATCH .../collectors/:collectorId with pinnedVariableGroupId answers it, no version pinned; edge-b2 is sent the pinned group's value, in sync (at most 60 polls)"
+step "pin another variable group, overriding SMOKE_TAG with $D20_PIN_VALUE, on edge-b2: PATCH .../collectors/:collectorId with pinnedVariableGroupId answers it, no version pinned; edge-b2 is sent the pinned group's value, in sync (at most 60 polls)"
 d20_create "$D20_VARIABLE_GROUPS_URL" d20_variable_group_ids '{id: $id, name: "smoke-d20-pin", description: null}'
 d20_pin_variable_group_id=$d20_id
 platform PUT "$D20_VARIABLE_GROUPS_URL/$d20_pin_variable_group_id/overrides/$d20_smoke_tag_id" \
@@ -3388,7 +3363,7 @@ platform PATCH "$D16B_FLEETS_URL/$d16b_fleet_id/collectors/$d16b_edge_b2_id" \
 no_store || fail "a collector's update's reply, carrying its reported attributes and error text, isn't Cache-Control: no-store"
 d20_wait_for_push "the pinned variable group's" "$D20_PIN_VALUE" "(.pinnedVariableGroupId == \"$d20_pin_variable_group_id\")"
 
-step "D20: clean up, leaving \"unassigned-b\" as it was: edge-b2's pinned variable group cleared, then the group's variable group and assignment (PATCH each answers null), edge-b2 unassigned again (at most 60 polls)"
+step "clean up, leaving \"unassigned-b\" as it was: edge-b2's pinned variable group cleared, then the group's variable group and assignment (PATCH each answers null), edge-b2 unassigned again (at most 60 polls)"
 platform PATCH "$D16B_FLEETS_URL/$d16b_fleet_id/collectors/$d16b_edge_b2_id" '{"pinnedVariableGroupId": null}'
 [ "$status" = "200" ] &&
   [ "$(reply_json '.collector | has("pin") and .pin == null and has("pinnedVariableGroupId") and .pinnedVariableGroupId == null')" = "true" ] ||
@@ -3398,7 +3373,7 @@ platform PATCH "$D16B_FLEETS_URL/$d16b_fleet_id/groups/$d16b_unassigned_group_id
   fail "clearing \"unassigned-b\"'s variable group and assignment returned HTTP $status: $(reply_code)"
 d16b_wait_for_collector edge-b2 60 "(.groupId == \"$d16b_unassigned_group_id\") and (.pin == null) and (.pinnedVariableGroupId == null) and (.resolution == null) and (.drift == \"unassigned\")"
 
-step "D20: delete the two variable groups, the two variables (no longer in use) and the configuration: each DELETE answers 204, the lists are empty, and its published version leaves the opamp-server"
+step "delete the two variable groups, the two variables (no longer in use) and the configuration: each DELETE answers 204, the lists are empty, and its published version leaves the opamp-server"
 for d20_id in "$d20_pin_variable_group_id" "$d20_group_variable_group_id"; do
   platform DELETE "$D20_VARIABLE_GROUPS_URL/$d20_id"
   [ "$status" = "204" ] || fail "deleting the variable group $d20_id returned HTTP $status: $(reply_code)"
@@ -3445,7 +3420,7 @@ no_store || fail "the reveal, carrying a bearer, isn't Cache-Control: no-store"
   fail "the reveal didn't answer the default token with its bearer"
 d16b_revealed_bearer=$(reply_json '.token.bearer')
 body=""
-# The same token encrypted anew under a fresh nonce (D16a: bearers are never
+# The same token encrypted anew under a fresh nonce (bearers are never
 # stored, each reveal seals the token again): as long as the create's, not
 # the same text. Compared by bash's own [ ], never a command's argv.
 [ -n "$d16b_revealed_bearer" ] && [ "${#d16b_revealed_bearer}" -eq "${#d16b_default_bearer}" ] &&
@@ -3453,7 +3428,7 @@ body=""
   fail "the reveal's bearer isn't the default token's sealed anew (its length differs, or it repeats the create's)"
 
 # The grace's end in RFC 3339 with seconds, from jq's clock: no GNU date
-# needed. Kept, for the summary's check after it (D17a).
+# needed. Kept, for the summary's check after it.
 step "rotate the rotate token with 120 s of grace: POST .../tokens/rotate answers the new token, its predecessor the old one, no-store"
 d16b_grace_ends_at=$(jq -rn 'now + 120 | floor | todate')
 platform POST "$D16B_FLEETS_URL/$d16b_fleet_id/tokens/rotate" \
@@ -3468,10 +3443,9 @@ d16b_new_rotate_bearer=$(reply_json '.token.bearer')
   fail "the rotation didn't answer a new token whose predecessor is $d16b_rotate_token_id"
 body=""
 
-# During the grace (D17a decision 31): the new token current and never
-# expiring, the old one valid until the grace's end (answered with
-# milliseconds), two valid.
-step "the fleet's summary answers the rotation's grace: two valid rotate tokens, the grace ending when the rotation said (D17a, at most 5 polls)"
+# During the grace: the new token current and never expiring, the old one
+# valid until the grace's end (answered with milliseconds), two valid.
+step "the fleet's summary answers the rotation's grace: two valid rotate tokens, the grace ending when the rotation said (at most 5 polls)"
 d16b_rotating=""
 for _ in $(seq 1 5); do
   platform GET "$D16B_FLEETS_URL/$d16b_fleet_id"
@@ -3496,7 +3470,7 @@ platform POST "$D16B_FLEETS_URL/$d16b_fleet_id/tokens/$d16b_rotate_token_id/revo
   [ "$(json_field '.token.revokedAt | type' "$body")" = "string" ] ||
   fail "revoking the old rotate token returned HTTP $status: $(head -c 500 <<<"$body")"
 
-step "the fleet's summary answers the grace over: one valid rotate token, in no grace (D17a)"
+step "the fleet's summary answers the grace over: one valid rotate token, in no grace"
 platform GET "$D16B_FLEETS_URL/$d16b_fleet_id"
 [ "$status" = "200" ] && [ "$(reply_json '.fleet.summary.rotateToken == {expiresAt: null, graceEndsAt: null, validCount: 1}')" = "true" ] ||
   fail "the fleet's summary (HTTP $status) after the revoke isn't one rotate token in no grace: $(reply_json -c '.fleet.summary.rotateToken')"
@@ -3514,12 +3488,12 @@ fi
   [ "$(reply_json --arg id "$d16b_default_token_id" '[.tokens[] | select(.id == $id) | .revokedAt] == [null]')" = "true" ] ||
   fail "the token list doesn't hold the old rotate token revoked and the new one and the default one live: $(reply_json -c '[.tokens[] | {id, kind, revokedAt}]')"
 
-# The token history through the platform (D17b-2 decision 36): the fleet's
+# The token history through the platform: the fleet's
 # six events so far (its create's two `issued`, the reveal's `viewed`, the
 # rotation's `rotated` and `issued`, the revoke's `revoked`), newest first,
 # each by the smoke's person, and no bearer anywhere in the reply; then a
 # page of 1 and its cursor reach the second event. Not no-store (ids, times
-# and the person's email, D17b-2 decision 20).
+# and the person's email).
 step "read the token history through the platform: GET .../tokens/events answers issued, viewed, rotated and revoked, newest first, each by the smoke's person, no bearer; a page of 1 and its cursor"
 platform GET "$D16B_FLEETS_URL/$d16b_fleet_id/tokens/events"
 [ "$status" = "200" ] || fail "reading the token history returned HTTP $status: $(reply_code)"
@@ -3549,9 +3523,8 @@ platform GET "$D16B_FLEETS_URL/$d16b_fleet_id/tokens/events?limit=1&cursor=$d16b
   [ "$(reply_json '.nextCursor | type')" = "string" ] ||
   fail "the token history's cursor (HTTP $status) didn't reach its second event: $(reply_code)"
 
-# The public download's helpers (D17c-2 Preflight ruling 16), shared by the
-# quick-deploy steps (with the collector image) and D17d-2's Helm values
-# link (always): every file they read or write is in $qd_dir, 0700.
+# The public download's helpers, shared by the quick-deploy steps (with the collector image) and
+# the Helm install's values link (always): every file they read or write is in $qd_dir, 0700.
 qd_dir="$work_dir/quick-deploy"
 (umask 077 && mkdir -p "$qd_dir")
 # qd_public_get <url> <name> [<base>]: a GET of the link <url> (its base, <base> or http://gateway,
@@ -3571,10 +3544,9 @@ qd_header_is() {
     colon > 1 && tolower(substr($0, 1, colon - 1)) == tolower(name) && substr($0, colon + 1) == " " value { found = 1 }
     END { exit found ? 0 : 1 }' "$qd_dir/$1.headers"
 }
-# qd_redact: its standard input for a failure's message, every tqd_…, tll_… (a library link, D23-2), tf_… (an
-# API token, D25) and
-# every run of 20 or more base64 or base64url characters (a link's secret's, a bearer's shape) replaced (bytes,
-# not characters: LC_ALL=C).
+# qd_redact: its standard input for a failure's message, every tqd_…, tll_… (a library link), tf_… (an API
+# token) and every run of 20 or more base64 or base64url characters (a link's secret's, a bearer's shape)
+# replaced (bytes, not characters: LC_ALL=C).
 qd_redact() {
   LC_ALL=C sed -E -e 's#tqd_[A-Za-z0-9_-]+#[redacted]#g' -e 's#tll_[A-Za-z0-9_-]+#[redacted]#g' \
     -e 's#tf_[A-Za-z0-9_-]+#[redacted]#g' -e 's#[A-Za-z0-9+/_=-]{20,}#[redacted]#g'
@@ -3660,11 +3632,10 @@ qd_refused() {
     qd_header_is "$1" referrer-policy no-referrer
 }
 
-# Installing collectors through the platform (D17c-1 spec decision 53,
-# Preflight ruling 17), in D16b's fleet, while its published version is
-# still assigned: a group "install-i" with that version and one read-only
-# mount; the install's facts read through the platform; the container
-# install run from them in the collector image built locally
+# Installing collectors through the platform, in edge-b1's fleet, while its
+# published version is still assigned: a group "install-i" with that version
+# and one read-only mount; the install's facts read through the platform; the
+# container install run from them in the collector image built locally
 # (scripts/build-collector-image.sh <the catalogue's default>, never pulled:
 # `--pull never`), with the bearer of a reveal; the All In One bundle
 # downloaded, unpacked into a fresh directory, and run in that image as root
@@ -3683,8 +3654,8 @@ qd_refused() {
 
 # install_run_args <facts file> <container> <volume> <display name> <network>:
 # docker's arguments for the container install, beginning with `run` (call it
-# as `docker "${install_args[@]}"`; decision 40's command), built from the
-# install's facts (GET .../groups/:groupId/install), in the array
+# as `docker "${install_args[@]}"`; the container install's command), built
+# from the install's facts (GET .../groups/:groupId/install), in the array
 # install_args: detached, never pulled, named <container> on <network>,
 # the image's state on the volume <volume>, a `-v` per group mount (`:ro`
 # when read-only), the group's id, the endpoint, whether insecure
@@ -3725,7 +3696,7 @@ else
     fail "the work directory's path ($install_mount_host) isn't one a group's mount takes (letters, digits, '.', '_', '-' and '/'): set TMPDIR to such a directory"
   install_mounts=$(jq -cn --arg h "$install_mount_host" '[{hostPath: $h, containerPath: "/var/log/telflo-smoke", readOnly: true}]')
 
-  step "D17c-1: create the group \"$install_group_name\" with the published version and a read-only mount through the platform: POST .../groups answers its annotations"
+  step "create the group \"$install_group_name\" with the published version and a read-only mount through the platform: POST .../groups answers its annotations"
   platform POST "$D16B_FLEETS_URL/$d16b_fleet_id/groups" "$(jq -cn --arg name "$install_group_name" --arg v "$d16b_version_id" \
     --argjson mounts "$install_mounts" '{name: $name, assignedVersionId: $v, annotations: {telflo: {dockerMounts: $mounts}}}')"
   [ "$status" = "201" ] && [ "$(reply_json --argjson mounts "$install_mounts" '.group.annotations == {telflo: {dockerMounts: $mounts}}')" = "true" ] &&
@@ -3832,8 +3803,8 @@ else
   [ "$status" = "200" ] && [ "$(reply_json '[.collectors[].name] | sort == ["install-aio", "install-c1"]')" = "true" ] ||
     fail "the group's collectors (HTTP $status) aren't install-c1 and install-aio: $(reply_json -c '[.collectors[]?.name]')"
 
-  # Quick-deploy links (D17c-2 decision 34, Preflight ruling 16), in
-  # "install-i", while the default token the install revealed is still valid:
+  # Quick-deploy links, in "install-i", while the default token the install
+  # revealed is still valid:
   # L1 (All In One, foreground) made, listed, downloaded from the host through
   # the gateway, and its Quick Deploy command run for real in the collector
   # image on the compose network, enrolling install-qd1; L2 (the systemd
@@ -3848,7 +3819,7 @@ else
   # The secrets known so far (the bearer, then each link's as it is made) are
   # written, one a line, to a 0600 file that grep reads (`-f`), never onto a
   # command line, before anything is compared or printed. A failed check
-  # prints no secret (Ruling 42): every file, reply or output it prints is
+  # prints no secret: every file, reply or output it prints is
   # either searched for them first (qd_search, failing with no excerpt;
   # qd_reply and qd_reply_code, which also refuse a reply holding any tqd_),
   # printed whole only when it holds none of them, no tqd_ and no run of 100
@@ -3871,7 +3842,7 @@ else
   # (above) are mounted read-only into the root path, so the start script
   # downloads nothing again. Their containers are named for the compose
   # project and removed with the install's (or by the EXIT trap).
-  step "D17c-2: the API's TELFLO_PUBLIC_API_URL is http://gateway, the gateway as a container on the compose network reaches it"
+  step "the API's TELFLO_PUBLIC_API_URL is http://gateway, the gateway as a container on the compose network reaches it"
   qd_public_api_url=$(docker compose exec -T api printenv TELFLO_PUBLIC_API_URL) ||
     fail "couldn't read the API's TELFLO_PUBLIC_API_URL"
   [ "$qd_public_api_url" = "http://gateway" ] ||
@@ -3881,10 +3852,10 @@ else
   # The shims: no secret reaches either (the command puts none on a command line), which the calls' check shows.
   cat >"$qd_dir/bin/sudo" <<'SHIM'
 #!/bin/sh
-# The stack smoke's sudo (D17c-2 Preflight ruling 16): the collector image
-# runs as root and has none. Records its arguments in /qd-out/calls, takes
-# the one option the Quick Deploy command passes (--preserve-env=OPAMP_TOKEN:
-# the environment is kept as it is) and runs the rest.
+# The stack smoke's sudo: the collector image runs as root and has none.
+# Records its arguments in /qd-out/calls, takes the one option the Quick
+# Deploy command passes (--preserve-env=OPAMP_TOKEN: the environment is kept
+# as it is) and runs the rest.
 printf 'sudo %s\n' "$*" >>/qd-out/calls
 case "$1" in
   --preserve-env=OPAMP_TOKEN) shift ;;
@@ -3894,8 +3865,8 @@ exec "$@"
 SHIM
   cat >"$qd_dir/bin/systemctl" <<'SHIM'
 #!/bin/sh
-# The stack smoke's systemctl (D17c-2 Preflight ruling 16): the collector
-# image has no systemd. Records its arguments in /qd-out/calls, and succeeds.
+# The stack smoke's systemctl: the collector image has no systemd. Records its
+# arguments in /qd-out/calls, and succeeds.
 printf 'systemctl %s\n' "$*" >>/qd-out/calls
 SHIM
   chmod 0755 "$qd_dir/bin/sudo" "$qd_dir/bin/systemctl"
@@ -3905,8 +3876,8 @@ SHIM
 
   # qd_command <url> <root path> <display name> <systemd: true|false> <file>: the Quick Deploy command for the
   # link <url> and the install's bearer, printed by the contracts' quickDeployCommands in the API container (its
-  # working directory /app/apps/api; the image's compiled @telflo/contracts, D36-1 Preflight ruling 27), into
-  # <file>, 0600, its error output into <file>.err, 0600 (printed only redacted). The link and the bearer reach it by
+  # working directory /app/apps/api; the image's compiled @telflo/contracts), into <file>, 0600, its error
+  # output into <file>.err, 0600 (printed only redacted). The link and the bearer reach it by
   # name only.
   qd_command() {
     local script='import { quickDeployCommands } from "@telflo/contracts";
@@ -4092,7 +4063,7 @@ systemctl restart telflo-supervisor.service" ] ||
   step "the API's and the gateway's logs, after the two refusals, still hold neither link's secret nor the bearer, and log both refusals as GET /api/v1/quick-deploy/[redacted] … 410: docker compose logs api gateway"
   (umask 077 && docker compose logs --no-color api gateway >"$qd_dir/logs-after" 2>&1) || fail "reading the API's and the gateway's logs failed"
   qd_logs_clean "$qd_dir/logs-after" " after the refusals"
-  # The positive half (Ruling 51): the logs read are the ones holding the two refusals, so an empty or a truncated
+  # The positive half: the logs read are the ones holding the two refusals, so an empty or a truncated
   # file can't pass the check above. grep -c prints its count (0 too) unless the file can't be read: then the
   # count is empty and the comparison fails.
   qd_refusals=$(grep -cE '"GET /api/v1/quick-deploy/\[redacted\] HTTP/[0-9.]+" 410 ' -- "$qd_dir/logs-after" 2>/dev/null || true)
@@ -4133,10 +4104,10 @@ systemctl restart telflo-supervisor.service" ] ||
   [ "$status" = "200" ] && [ "$(reply_json '.fleet.summary.collectors')" = "$install_count_before" ] ||
     fail "the fleet's collectors went from $install_count_before to $(reply_json '.fleet.summary.collectors') with the re-run: it enrolled anew"
 
-  # The group's delete deletes its collectors with it (D17d-1 spec decisions 3 and 21, Preflight ruling 19):
-  # read before it, the group's three collectors and the fleet's count; after it, each collector 404 and the
-  # count down by three. The containers go first, so none polls again meanwhile.
-  step "remove the installed collectors, their volume and the group \"$install_group_name\", whose delete deletes its three collectors with it (D17d-1): each 404 collector_not_found, the fleet's count down by three"
+  # The group's delete deletes its collectors with it: read before it, the group's three collectors and the
+  # fleet's count; after it, each collector 404 and the count down by three. The containers go first, so
+  # none polls again meanwhile.
+  step "remove the installed collectors, their volume and the group \"$install_group_name\", whose delete deletes its three collectors with it: each 404 collector_not_found, the fleet's count down by three"
   platform GET "$D16B_FLEETS_URL/$d16b_fleet_id/collectors?groupId=$install_group_id"
   install_group_collector_ids=$(reply_json '[.collectors[].id] | join(" ")')
   [ "$status" = "200" ] && [ "$(reply_json '[.collectors[].name] | sort == ["install-aio", "install-c1", "install-qd1"]')" = "true" ] ||
@@ -4166,31 +4137,30 @@ systemctl restart telflo-supervisor.service" ] ||
   unset install_bearer install_new_bearer
 fi
 
-# A Kubernetes fleet's groups through the platform (D17d-1 spec decisions 6,
-# 17 and 18; Preflight rulings 11 to 13 and 19): the platform keeps a group's
-# Kubernetes settings in its annotations, under telflo.kubernetes ({role,
-# namespace, replicas (a gateway's only), volumes}), and checks them by the
-# fleet's type. In the group organization: a server fleet's group (D16b's)
-# refuses the key; a kubernetes-supervisor fleet made through the platform
-# (its id chosen and recorded first, as D16b's) lists its Default group (the
-# Agent) alone; the Cluster (named cluster, role cluster) and a gateway (role
-# gateway, with replicas and a hostPath volume) are made, each answered with
-# its annotations as sent (the platform passes them through as the
-# opamp-server stores them: no defaults added); that fleet's creates refuse
-# telflo.dockerMounts, a gateway named node, a role not the name's and a
-# create carrying no telflo.kubernetes, and its groups any rename (409
-# collector_group_name_fixed); none of the refused is written. The update
-# side: the server group "unassigned-b" refuses the key, the Kubernetes
-# fleet's Default group (the Agent, role node whether stored or not) refuses
-# a save naming the role gateway, and the gateway refuses a save of
-# annotations without its settings (Ruling 48: once written, a Kubernetes
-# group's settings are never dropped), none written; its first save, naming
-# node, is answered 200 with its annotations as sent. Then the gateway is
-# deleted (204), then the fleet (204). The fleet's create carries its bearers:
-# never printed, the body dropped at once. A failed refusal prints the status,
-# the error code and the details' field paths only (never a name, namespace
-# or path). A run that ends inside these steps removes the fleet (the EXIT
-# trap: remove_d16b_steps).
+# A Kubernetes fleet's groups through the platform: the platform keeps a
+# group's Kubernetes settings in its annotations, under telflo.kubernetes
+# ({role, namespace, replicas (a gateway's only), volumes}), and checks them
+# by the fleet's type. In the group organization: a server fleet's group
+# (edge-b1's fleet's) refuses the key; a kubernetes-supervisor fleet made
+# through the platform (its id chosen and recorded first, as edge-b1's
+# fleet's) lists its Default group (the Agent) alone; the Cluster (named
+# cluster, role cluster) and a gateway (role gateway, with replicas and a
+# hostPath volume) are made, each answered with its annotations as sent (the
+# platform passes them through as the opamp-server stores them: no defaults
+# added); that fleet's creates refuse telflo.dockerMounts, a gateway named
+# node, a role not the name's and a create carrying no telflo.kubernetes, and
+# its groups any rename (409 collector_group_name_fixed); none of the refused
+# is written. The update side: the server group "unassigned-b" refuses the
+# key, the Kubernetes fleet's Default group (the Agent, role node whether
+# stored or not) refuses a save naming the role gateway, and the gateway
+# refuses a save of annotations without its settings (once written, a
+# Kubernetes group's settings are never dropped), none written; its first
+# save, naming node, is answered 200 with its annotations as sent. Then the
+# gateway is deleted (204), then the fleet (204). The fleet's create carries
+# its bearers: never printed, the body dropped at once. A failed refusal
+# prints the status, the error code and the details' field paths only (never a
+# name, namespace or path). A run that ends inside these steps removes the
+# fleet (the EXIT trap: remove_d16b_steps).
 # k8s_refused <status> <code> [<field path>]: whether the last reply is that
 # refusal, naming that field (a detail's instancePath) when one is given.
 k8s_refused() {
@@ -4211,7 +4181,7 @@ k8s_key_absent() {
   [ "$(reply_json --arg id "$1" '.group.id == $id and ((.group.annotations // {}) | has("telflo") | not)')" = "true" ]
 }
 
-step "D17d-1: a server fleet's group refuses the annotations' Kubernetes key: POST .../groups answers 400 invalid_request at annotations.telflo.kubernetes"
+step "a server fleet's group refuses the annotations' Kubernetes key: POST .../groups answers 400 invalid_request at annotations.telflo.kubernetes"
 platform POST "$D16B_FLEETS_URL/$d16b_fleet_id/groups" "$(jq -cn --argjson k "$K8S_GATEWAY_KEY" '{name: "k8s-on-server", annotations: {telflo: {kubernetes: $k}}}')"
 k8s_refused 400 invalid_request /annotations/telflo/kubernetes ||
   fail "a server fleet's group with the Kubernetes key wasn't refused at annotations.telflo.kubernetes: $(k8s_refusal_seen)"
@@ -4220,7 +4190,7 @@ k8s_hex=$(od -An -N16 -tx1 /dev/urandom | tr -d ' \n')
 k8s_fleet_id="${k8s_hex:0:8}-${k8s_hex:8:4}-4${k8s_hex:13:3}-$(printf '%x' $(((0x${k8s_hex:16:2} & 0x3f) | 0x80)))${k8s_hex:18:2}-${k8s_hex:20:12}"
 [[ "$k8s_fleet_id" =~ ^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$ ]] || fail "couldn't make a UUID for the Kubernetes fleet: $k8s_fleet_id"
 K8S_FLEET_URL="$D16B_FLEETS_URL/$k8s_fleet_id"
-step "D17d-1: create a kubernetes-supervisor fleet through the platform: POST .../fleets answers 201 and its Default group; its groups list the Default group alone"
+step "create a kubernetes-supervisor fleet through the platform: POST .../fleets answers 201 and its Default group; its groups list the Default group alone"
 platform POST "$D16B_FLEETS_URL" "$(jq -cn --arg id "$k8s_fleet_id" --arg label "stack-smoke-k8s-$(date +%s)-$$" \
   '{id: $id, label: $label, type: "kubernetes-supervisor", rotateExpiresAt: null}')"
 body=""
@@ -4228,14 +4198,14 @@ body=""
 [ "$(reply_json '.fleet.type')" = "kubernetes-supervisor" ] && [ "$(reply_json '.defaultGroup.isDefault')" = "true" ] ||
   fail "the Kubernetes fleet's creation didn't answer a kubernetes-supervisor fleet with its Default group"
 k8s_default_group_id=$(reply_json '.defaultGroup.id')
-# Its default token's id (not its bearer): D17d-2's Helm link names it.
+# Its default token's id (not its bearer): the Helm install's link names it.
 k8s_default_token_id=$(reply_json '.tokens.default.id')
 : >"$D16B_REPLY_BODY"
 platform GET "$K8S_FLEET_URL/groups"
 [ "$status" = "200" ] && [ "$(reply_json --arg id "$k8s_default_group_id" '(.groups | length) == 1 and .groups[0].id == $id and .groups[0].isDefault')" = "true" ] ||
   fail "the new Kubernetes fleet's groups (HTTP $status) aren't its Default group alone: $(k8s_group_names)"
 
-step "D17d-1: create the Cluster (named cluster, role cluster) and a gateway (role gateway, 2 replicas, a hostPath volume): POST .../groups answers 201 and each group's annotations as sent"
+step "create the Cluster (named cluster, role cluster) and a gateway (role gateway, 2 replicas, a hostPath volume): POST .../groups answers 201 and each group's annotations as sent"
 platform POST "$K8S_FLEET_URL/groups" "$(jq -cn --argjson k "$K8S_CLUSTER_KEY" '{name: "cluster", annotations: {telflo: {kubernetes: $k}}}')"
 [ "$status" = "201" ] && [ "$(reply_json --argjson k "$K8S_CLUSTER_KEY" '.group.name == "cluster" and (.group.isDefault | not) and .group.annotations == {telflo: {kubernetes: $k}}')" = "true" ] ||
   fail "creating the Cluster answered $(k8s_refusal_seen), or not the Cluster with its annotations as sent"
@@ -4244,7 +4214,7 @@ platform POST "$K8S_FLEET_URL/groups" "$(jq -cn --argjson k "$K8S_GATEWAY_KEY" '
   fail "creating the gateway answered $(k8s_refusal_seen), or not the gateway with its annotations as sent"
 k8s_gateway_id=$(reply_json '.group.id')
 
-step "D17d-1: the Kubernetes fleet's creates refuse telflo.dockerMounts (400 at annotations.telflo.dockerMounts), a gateway named node (400 at name), a role not the name's (400 at annotations.telflo.kubernetes.role) and no telflo.kubernetes at all (400 at annotations.telflo.kubernetes), and its groups a rename (409 collector_group_name_fixed); none is written"
+step "the Kubernetes fleet's creates refuse telflo.dockerMounts (400 at annotations.telflo.dockerMounts), a gateway named node (400 at name), a role not the name's (400 at annotations.telflo.kubernetes.role) and no telflo.kubernetes at all (400 at annotations.telflo.kubernetes), and its groups a rename (409 collector_group_name_fixed); none is written"
 platform POST "$K8S_FLEET_URL/groups" "$(jq -cn --argjson k "$K8S_GATEWAY_KEY" \
   '{name: "gw-mounts", annotations: {telflo: {kubernetes: $k, dockerMounts: [{hostPath: "/var/log/telflo-smoke", containerPath: "/var/log/telflo-smoke", readOnly: true}]}}}')"
 k8s_refused 400 invalid_request /annotations/telflo/dockerMounts ||
@@ -4254,7 +4224,7 @@ k8s_refused 400 invalid_request /name || fail "a gateway named node wasn't refus
 platform POST "$K8S_FLEET_URL/groups" "$(jq -cn --argjson k "$K8S_CLUSTER_KEY" '{name: "gw-mismatch", annotations: {telflo: {kubernetes: $k}}}')"
 k8s_refused 400 invalid_request /annotations/telflo/kubernetes/role ||
   fail "a gateway's create with the role cluster wasn't refused at annotations.telflo.kubernetes.role: $(k8s_refusal_seen)"
-# A create carrying no telflo.kubernetes: its settings are required (Ruling 48).
+# A create carrying no telflo.kubernetes: its settings are required.
 platform POST "$K8S_FLEET_URL/groups" '{"name": "gw-bare"}'
 k8s_refused 400 invalid_request /annotations/telflo/kubernetes ||
   fail "a gateway's create with no Kubernetes settings wasn't refused at annotations.telflo.kubernetes: $(k8s_refusal_seen)"
@@ -4264,7 +4234,7 @@ platform GET "$K8S_FLEET_URL/groups"
 [ "$status" = "200" ] && [ "$(k8s_group_names)" = '["(default)","cluster","gw-smoke"]' ] ||
   fail "after the refusals, the Kubernetes fleet's groups (HTTP $status) aren't the Default group, cluster and gw-smoke: $(k8s_group_names)"
 
-step "D17d-1: the update side: a server group's save with telflo.kubernetes (400 at annotations.telflo.kubernetes), the Kubernetes Default group's save naming the role gateway (400 at annotations.telflo.kubernetes.role) and the gateway's save of annotations without its settings (400 at annotations.telflo.kubernetes) are refused, none written; the Default group's save naming node is answered 200 with its annotations as sent"
+step "the update side: a server group's save with telflo.kubernetes (400 at annotations.telflo.kubernetes), the Kubernetes Default group's save naming the role gateway (400 at annotations.telflo.kubernetes.role) and the gateway's save of annotations without its settings (400 at annotations.telflo.kubernetes) are refused, none written; the Default group's save naming node is answered 200 with its annotations as sent"
 platform PATCH "$D16B_FLEETS_URL/$d16b_fleet_id/groups/$d16b_unassigned_group_id" "$(jq -cn --argjson k "$K8S_GATEWAY_KEY" '{annotations: {telflo: {kubernetes: $k}}}')"
 k8s_refused 400 invalid_request /annotations/telflo/kubernetes ||
   fail "a server fleet's group's save with the Kubernetes key wasn't refused at annotations.telflo.kubernetes: $(k8s_refusal_seen)"
@@ -4287,42 +4257,42 @@ platform PATCH "$K8S_FLEET_URL/groups/$k8s_default_group_id" "$(jq -cn --argjson
 [ "$status" = "200" ] && [ "$(reply_json --argjson k "$K8S_NODE_KEY" '.group.isDefault and .group.annotations == {telflo: {kubernetes: $k}}')" = "true" ] ||
   fail "the Default group's save naming node answered $(k8s_refusal_seen), or not the Default group with its annotations as sent"
 
-# The Helm install through the platform (D17d-2 decisions 15 to 21 and 30;
-# Preflight ruling 19), in that Kubernetes fleet, before its gateway's and
-# its own delete. No collector image and no cluster: the values file and the
-# switch are the platform's (the real install is scripts/check-helm-install.sh).
-# D16b's published version is assigned to the Agent and the gateway; their
-# Helm facts are read (no-store, no bearer: the chart, the image's
-# repository, the release, role, namespace, replicas, volumes); the Linux
-# bundle and a Linux link are refused on this fleet, and a Helm link on
-# D16b's server fleet, each 409 fleet_type_not_installable in its
-# direction's words; the organization's "Public install links" switch reads
-# on; a Helm values link is made for the Agent (201, no-store, its choices
-# by kind) and downloaded from the host through the gateway with no session:
-# 200 text/yaml; charset=utf-8, no-store, nosniff, no-referrer, attachment
-# values.yaml, its fixed lines, one token line of a bearer's shape, and the
-# whole file byte for byte the contracts' helmValuesYaml of the Agent's facts
-# and that token (printed in the API container: qd_command's way, the token
-# by name only); then the switch is turned off by its PATCH (the download
-# 403 "Install links are turned off for this organization." in plain text,
-# a Helm and a Linux link's create 409 public_install_links_disabled, the
-# count unchanged), on again (the download 200 again, its token not the
-# first's, made from a client container on the compose network, whose
-# quick_deploy_link.downloaded audit row, read by the link's id through
-# stack_psql, holds that container's address, never the gateway's: the API
-# sees the client behind the gateway, TELFLO_TRUST_PROXY_HOPS "1" with
-# default.conf's X-Forwarded-For; Ruling 52), the link revoked (its
-# download 410); the API's and the gateway's logs hold neither the link's
-# secret nor either downloaded token, and log
+# The Helm install through the platform, in that Kubernetes fleet, before its
+# gateway's and its own delete. No collector image and no cluster: the values
+# file and the switch are the platform's (the real install is
+# scripts/check-helm-install.sh).
+# The Default group's published version in edge-b1's fleet is assigned to the
+# Agent and the gateway; their Helm facts are read (no-store, no bearer: the
+# chart, the image's repository, the release, role, namespace, replicas,
+# volumes); the Linux bundle and a Linux link are refused on this fleet, and a
+# Helm link on edge-b1's server fleet, each 409 fleet_type_not_installable in
+# its direction's words; the organization's "Public install links" switch
+# reads on; a Helm values link is made for the Agent (201, no-store, its
+# choices by kind) and downloaded from the host through the gateway with no
+# session: 200 text/yaml; charset=utf-8, no-store, nosniff, no-referrer,
+# attachment values.yaml, its fixed lines, one token line of a bearer's shape,
+# and the whole file byte for byte the contracts' helmValuesYaml of the
+# Agent's facts and that token (printed in the API container: qd_command's
+# way, the token by name only); then the switch is turned off by its PATCH
+# (the download 403 "Install links are turned off for this organization." in
+# plain text, a Helm and a Linux link's create 409
+# public_install_links_disabled, the count unchanged), on again (the download
+# 200 again, its token not the first's, made from a client container on the
+# compose network, whose quick_deploy_link.downloaded audit row, read by the
+# link's id through stack_psql, holds that container's address, never the
+# gateway's: the API sees the client behind the gateway,
+# TELFLO_TRUST_PROXY_HOPS "1" with default.conf's X-Forwarded-For), the link
+# revoked (its download 410); the API's and the gateway's logs hold neither
+# the link's secret nor either downloaded token, and log
 # exactly the four public requests as GET /api/v1/quick-deploy/[redacted]
 # with their statuses (counted from the logs read before the first).
 #
-# The values file holds the bearer by design (decision 1): it is never
-# printed, never searched for a bearer's shape (D17c-2's check, inverted
+# The values file holds the bearer by design: it is never printed, never
+# searched for a bearer's shape (the quick-deploy check, inverted
 # here), and its token, read by bash's own regex match (on no command
 # line), joins the secrets file (qd_secrets) before anything is compared or
 # printed, as each download's does: each reveal seals a new text. Every
-# diagnostic goes through D17c-2's guards (qd_search, qd_reply_code,
+# diagnostic goes through the quick-deploy guards (qd_search, qd_reply_code,
 # qd_shown). The link's base is the API's TELFLO_PUBLIC_API_URL whatever it
 # is: qd_public_get sends the request to $GATEWAY_URL, helm_client_get to
 # http://gateway from its container. Four public requests:
@@ -4330,7 +4300,7 @@ platform PATCH "$K8S_FLEET_URL/groups/$k8s_default_group_id" "$(jq -cn --argjson
 # EXIT trap and the switch as it was then, on the smoke's own group
 # organization: deleted below on a successful run, left (turned off,
 # perhaps) in the throwaway stack by a failed one, which is harmless.
-# The platform's own chart and image (D18 decisions 9 and 10): the settings' defaults.
+# The platform's own chart and image: the settings' defaults.
 HELM_CHART_REFERENCE="oci://ghcr.io/telflo/telflo/charts/supervisor-collector"
 HELM_CHART_VERSION="0.1.0"
 HELM_IMAGE_REPOSITORY="ghcr.io/telflo/telflo/collector"
@@ -4362,8 +4332,8 @@ process.stdout.write(helmValuesYaml(helmValuesInputOf(facts, process.env.HV_TOKE
 }
 # helm_client_get <url> <name> <base>: qd_public_get's GET of the link, made instead from a client container on the
 # compose network ($compose_project-helm-client, the gateway's own image, `--pull never`, removed after it, and by
-# the EXIT trap as D16b's containers are): the link's base <base> replaced by http://gateway, the link a
-# config line on curl's standard input (on no command line); the body and the headers copied out into
+# the EXIT trap as edge-b1's and edge-b2's containers are): the link's base <base> replaced by http://gateway, the
+# link a config line on curl's standard input (on no command line); the body and the headers copied out into
 # $qd_dir/<name> and $qd_dir/<name>.headers (0600), the status into $status, the container's and the gateway's
 # addresses on the compose network (docker inspect) into $helm_client_ip and $helm_gateway_ip.
 helm_client_get() {
@@ -4398,7 +4368,7 @@ LINKS_DISABLED_DOWNLOAD_WORDS="Install links are turned off for this organizatio
 HELM_SETTINGS_URL="$D16B_ORGANIZATION_URL/settings"
 HELM_LINKS_URL="$K8S_FLEET_URL/quick-deploy-links"
 
-step "D17d-2: assign D16b's published version to the Kubernetes fleet's Agent and gateway: PATCH .../groups/:groupId answers each with it"
+step "assign the published version of edge-b1's fleet's Default group to the Kubernetes fleet's Agent and gateway: PATCH .../groups/:groupId answers each with it"
 for helm_group_id in "$k8s_default_group_id" "$k8s_gateway_id"; do
   platform PATCH "$K8S_FLEET_URL/groups/$helm_group_id" "$(jq -cn --arg v "$d16b_version_id" '{assignedVersionId: $v}')"
   [ "$status" = "200" ] && [ "$(reply_json --arg v "$d16b_version_id" '.group.assignedVersion.versionId == $v')" = "true" ] ||
@@ -4406,7 +4376,7 @@ for helm_group_id in "$k8s_default_group_id" "$k8s_gateway_id"; do
 done
 
 helm_agent_facts="$qd_dir/helm-agent-facts.json"
-step "D17d-2: read the Agent's Helm facts: GET .../groups/:groupId/install answers no-store, no bearer, $install_image, this stack's endpoint, chart $HELM_CHART_VERSION, release telflo-node in telflo-collectors, fullnameOverride ${k8s_fleet_id:0:8}-default (D18), no replicas, no volumes"
+step "read the Agent's Helm facts: GET .../groups/:groupId/install answers no-store, no bearer, $install_image, this stack's endpoint, chart $HELM_CHART_VERSION, release telflo-node in telflo-collectors, fullnameOverride ${k8s_fleet_id:0:8}-default, no replicas, no volumes"
 platform GET "$K8S_FLEET_URL/groups/$k8s_default_group_id/install"
 [ "$status" = "200" ] || fail "reading the Agent's Helm facts returned HTTP $status: $(reply_code)"
 no_store || fail "the Agent's Helm facts, carrying configuration text, aren't Cache-Control: no-store"
@@ -4423,11 +4393,11 @@ fi
   fail "the Agent's Helm facts aren't its group's, this stack's endpoint ($server_url), $install_image, chart $HELM_CHART_REFERENCE $HELM_CHART_VERSION and fullnameOverride ${k8s_fleet_id:0:8}-default (TELFLO_COLLECTOR_IMAGE_REPOSITORY and TELFLO_HELM_CHART_* must be the defaults for these steps): $(reply_json -c '{imageTag, endpoint, groupId, envVarNames, helm: (.helm | {chartReference, chartVersion, imageRepository, fullnameOverride, role, replicas})}')"
 (umask 077 && cp "$D16B_REPLY_BODY" "$helm_agent_facts")
 
-step "D17d-2: read the gateway's Helm facts: no-store, no bearer, its release gw-smoke, no fullnameOverride (D18), role gateway, namespace, 2 replicas and its volume as saved"
+step "read the gateway's Helm facts: no-store, no bearer, its release gw-smoke, no fullnameOverride, role gateway, namespace, 2 replicas and its volume as saved"
 platform GET "$K8S_FLEET_URL/groups/$k8s_gateway_id/install"
 [ "$status" = "200" ] || fail "reading the gateway's Helm facts returned HTTP $status: $(reply_code)"
 no_store || fail "the gateway's Helm facts, carrying configuration text, aren't Cache-Control: no-store"
-# No bearer (D17c-1's rule for the install facts), grep's status tested (qd_none: an unread reply fails the run).
+# No bearer (as in the install facts), grep's status tested (qd_none: an unread reply fails the run).
 if [ "$(reply_json '[.. | objects | has("bearer")] | any')" != "false" ] ||
   ! qd_none "the gateway's Helm facts" -E '[A-Za-z0-9+/]{100,}' -- "$D16B_REPLY_BODY"; then
   fail "the gateway's Helm facts carry a bearer, or a run of 100 or more base64 characters"
@@ -4437,7 +4407,7 @@ fi
     and .helm.namespace == $k.namespace and .helm.replicas == $k.replicas and .helm.volumes == $k.volumes')" = "true" ] ||
   fail "the gateway's Helm facts aren't its release, no fullnameOverride, role, namespace, replicas and volume as saved: $(reply_json -c '.helm | if type == "object" then {release, fullnameOverride, role, replicas} else type end')"
 
-step "D17d-2: each install refuses the other fleet type in its direction's words: the Linux bundle and a Linux link on the Kubernetes fleet's Agent, a Helm link on D16b's server fleet (409 fleet_type_not_installable each)"
+step "each install refuses the other fleet type in its direction's words: the Linux bundle and a Linux link on the Kubernetes fleet's Agent, a Helm link on edge-b1's server fleet (409 fleet_type_not_installable each)"
 platform POST "$K8S_FLEET_URL/groups/$k8s_default_group_id/install-bundle" '{"method": "all-in-one", "arch": "amd64", "rootPath": "/etc/otelcol", "env": []}'
 helm_refused 409 fleet_type_not_installable "$FLEET_TYPE_NOT_INSTALLABLE_WORDS" ||
   fail "the Linux bundle on the Kubernetes fleet's Agent answered HTTP $status $(reply_code), not 409 fleet_type_not_installable in the Kubernetes direction's words"
@@ -4449,12 +4419,12 @@ platform POST "$D16B_FLEETS_URL/$d16b_fleet_id/groups/$d16b_default_group_id/qui
 helm_refused 409 fleet_type_not_installable "$FLEET_TYPE_NOT_HELM_INSTALLABLE_WORDS" ||
   fail "a Helm link on D16b's server fleet answered HTTP $status $(qd_reply_code), not 409 fleet_type_not_installable in the server direction's words"
 
-step "D17d-2: the organization's settings: GET .../settings answers publicInstallLinks true (the default)"
+step "the organization's settings: GET .../settings answers publicInstallLinks true (the default)"
 platform GET "$HELM_SETTINGS_URL"
 [ "$status" = "200" ] && [ "$(reply_json -c '.')" = '{"publicInstallLinks":true}' ] ||
   fail "reading the organization's settings returned HTTP $status: $(reply_code) $(reply_json -c 'if type == "object" then keys else type end')"
 
-step "D17d-2: make a Helm values link for the Agent: POST .../groups/:groupId/quick-deploy-links {kind: helm} answers 201, no-store, its url, the default token's id and its choices by kind"
+step "make a Helm values link for the Agent: POST .../groups/:groupId/quick-deploy-links {kind: helm} answers 201, no-store, its url, the default token's id and its choices by kind"
 helm_public_api_url=$(docker compose exec -T api printenv TELFLO_PUBLIC_API_URL) || fail "couldn't read the API's TELFLO_PUBLIC_API_URL"
 platform POST "$K8S_FLEET_URL/groups/$k8s_default_group_id/quick-deploy-links" '{"kind": "helm", "env": []}'
 [ "$status" = "201" ] || fail "making the Helm link returned HTTP $status: $(qd_reply_code)"
@@ -4473,7 +4443,8 @@ helm_link_id=$(reply_json '.link.id')
   fail "the Helm link isn't the Agent's, on the fleet's default token, active with no download, its choices kind helm, telflo-node in telflo-collectors: $(qd_reply -c '.link | if type == "object" then {status, downloadCount, choices} else type end')"
 
 # The gateway's access log before the Helm link's first download: the positive half of the logs' check (below)
-# counts exactly the lines this block adds, D17c-2's downloads (when its install steps ran) logged the same way.
+# counts exactly the lines this block adds, the quick-deploy links' downloads (when the install steps ran)
+# logged the same way.
 # helm_access_count <status> <file>: the lines GET /api/v1/quick-deploy/[redacted] … <status> in <file>; grep -c
 # prints its count (0 too) unless the file can't be read (then nothing).
 helm_access_count() {
@@ -4482,7 +4453,7 @@ helm_access_count() {
 (umask 077 && docker compose logs --no-color api gateway >"$qd_dir/helm-logs-before" 2>&1) ||
   fail "reading the API's and the gateway's logs before the Helm link's downloads failed"
 
-step "D17d-2: download the Helm link from the host through the gateway, with no session: 200, text/yaml; charset=utf-8, no-store, nosniff, no-referrer, attachment values.yaml; its fixed lines, one token line of a bearer's shape (never printed)"
+step "download the Helm link from the host through the gateway, with no session: 200, text/yaml; charset=utf-8, no-store, nosniff, no-referrer, attachment values.yaml; its fixed lines, one token line of a bearer's shape (never printed)"
 qd_public_get "$helm_url" helm-values "$helm_public_api_url"
 # Its headers searched first (none of the public route's may hold a secret): a failure below prints them.
 qd_search "the Helm link's download's headers" "$qd_dir/helm-values.headers"
@@ -4508,19 +4479,19 @@ done
 qd_none "the Helm link's values.yaml" -E '^(replicas|collectorEnv):' -- "$qd_dir/helm-values" ||
   fail "the Agent's values.yaml has replicas or collectorEnv (the file not printed: it holds the bearer)"
 
-step "D17d-2: the values.yaml is byte for byte the contracts' helmValuesYaml of the Agent's facts and its own token, printed in the API container (neither printed here)"
+step "the values.yaml is byte for byte the contracts' helmValuesYaml of the Agent's facts and its own token, printed in the API container (neither printed here)"
 helm_values_built "$helm_agent_facts" "$qd_dir/helm-values-built" ||
   fail "printing the Agent's values in the API container failed, its error redacted: $(qd_redacted "$qd_dir/helm-values-built.err" 600)"
 cmp -s -- "$qd_dir/helm-values" "$qd_dir/helm-values-built" ||
   fail "the Helm link's values.yaml isn't the contracts' helmValuesYaml of the Agent's facts and its token (neither file printed: both hold the bearer)"
 
-step "D17d-2: the fleet's links list the Helm link active with one download, and no secret"
+step "the fleet's links list the Helm link active with one download, and no secret"
 platform GET "$HELM_LINKS_URL"
 if reply_holds "$helm_secret" || reply_holds "tqd_" || reply_holds "$helm_token"; then fail "the links' list holds the link's secret or the bearer"; fi
 [ "$status" = "200" ] && [ "$(reply_json --arg id "$helm_link_id" '[.links[] | select(.id == $id) | .status == "active" and .downloadCount == 1 and .choices.kind == "helm"] == [true]')" = "true" ] ||
   fail "the links' list (HTTP $status) doesn't answer the Helm link active with one download: $(qd_reply_code)"
 
-step "D17d-2: turn the organization's public install links off: PATCH .../settings answers false; the Helm link's download is then 403 \"$LINKS_DISABLED_DOWNLOAD_WORDS\" in plain text, a Helm and a Linux link's create 409 public_install_links_disabled, and the count stays 1"
+step "turn the organization's public install links off: PATCH .../settings answers false; the Helm link's download is then 403 \"$LINKS_DISABLED_DOWNLOAD_WORDS\" in plain text, a Helm and a Linux link's create 409 public_install_links_disabled, and the count stays 1"
 platform PATCH "$HELM_SETTINGS_URL" '{"publicInstallLinks": false}'
 [ "$status" = "200" ] && [ "$(reply_json -c '.')" = '{"publicInstallLinks":false}' ] || fail "turning the public install links off returned HTTP $status: $(reply_code)"
 platform GET "$HELM_SETTINGS_URL"
@@ -4540,7 +4511,7 @@ platform GET "$HELM_LINKS_URL"
 [ "$status" = "200" ] && [ "$(reply_json --arg id "$helm_link_id" '[.links[] | select(.id == $id) | .status == "active" and .downloadCount == 1] == [true]') $(reply_json '[.links[] | select(.choices.kind == "helm")] | length')" = "true 1" ] ||
   fail "while the links are off, the fleet's links (HTTP $status) aren't the one Helm link, active with its one download: $(qd_reply_code)"
 
-step "D17d-2: turn them on again: PATCH .../settings answers true, and the Helm link's download, from a client container on the compose network, is 200 text/yaml again, with a token of its own (revealed anew)"
+step "turn them on again: PATCH .../settings answers true, and the Helm link's download, from a client container on the compose network, is 200 text/yaml again, with a token of its own (revealed anew)"
 platform PATCH "$HELM_SETTINGS_URL" '{"publicInstallLinks": true}'
 [ "$status" = "200" ] && [ "$(reply_json -c '.')" = '{"publicInstallLinks":true}' ] || fail "turning the public install links on again returned HTTP $status: $(reply_code)"
 helm_first_token=$helm_token
@@ -4560,11 +4531,11 @@ if qd_none "the second download's values.yaml" -F -f "$qd_dir/secrets" -- "$qd_d
   fail "the secrets file doesn't hold the second download's token: the logs' search would miss it (neither printed)"
 fi
 
-# Ruling 52: the per-IP limits and the audit's requester are the client's only when the API trusts the gateway's
+# The per-IP limits and the audit's requester are the client's only when the API trusts the gateway's
 # one hop (docker-compose.yml's TELFLO_TRUST_PROXY_HOPS "1", default.conf's X-Forwarded-For); with none trusted
 # every client is the gateway. The link's downloaded rows by its id, oldest first (ids and addresses only: the
 # metadata, which holds ids, isn't read); the second is the client container's.
-step "D17d-2: the API sees the client's address behind the gateway: the second download's quick_deploy_link.downloaded audit row holds the client container's address ($helm_client_ip), not the gateway's ($helm_gateway_ip)"
+step "the API sees the client's address behind the gateway: the second download's quick_deploy_link.downloaded audit row holds the client container's address ($helm_client_ip), not the gateway's ($helm_gateway_ip)"
 [ "$helm_client_ip" != "$helm_gateway_ip" ] || fail "the client container's address is the gateway's ($helm_gateway_ip)"
 helm_audit_ips=$(stack_psql -v id="$helm_link_id" <<'SQL'
 select coalesce(host(ip_address), 'none') from audit_events
@@ -4579,7 +4550,7 @@ helm_audit_note=""
 [ "$helm_audit_rows" = "2" ] && [ "$helm_audit_second" = "$helm_client_ip" ] ||
   fail "the Helm link's quick_deploy_link.downloaded rows hold the addresses $(tr '\n' ' ' <<<"$helm_audit_ips")($helm_audit_rows rows), the second not the client container's $helm_client_ip$helm_audit_note"
 
-step "D17d-2: revoke the Helm link: POST .../quick-deploy-links/:linkId/revoke; its download is then 410 \"This install link is revoked: make a new one.\" in plain text, and its count stays 2"
+step "revoke the Helm link: POST .../quick-deploy-links/:linkId/revoke; its download is then 410 \"This install link is revoked: make a new one.\" in plain text, and its count stays 2"
 platform POST "$HELM_LINKS_URL/$helm_link_id/revoke"
 [ "$status" = "200" ] && [ "$(reply_json '.link.status == "revoked" and .link.choices.kind == "helm"')" = "true" ] ||
   fail "revoking the Helm link returned HTTP $status: $(qd_reply_code)"
@@ -4590,10 +4561,10 @@ platform GET "$HELM_LINKS_URL"
 [ "$status" = "200" ] && [ "$(reply_json --arg id "$helm_link_id" '[.links[] | select(.id == $id) | .status == "revoked" and .downloadCount == 2] == [true]')" = "true" ] ||
   fail "the Helm link isn't listed revoked with its 2 downloads: HTTP $status $(qd_reply -c --arg id "$helm_link_id" '[.links[]? | select(.id == $id) | {status, downloadCount}]')"
 
-step "D17d-2: the API's and the gateway's logs hold neither the Helm link's secret nor either downloaded token, and log its downloads (200), the switch's refusal (403) and the revoked one's (410) as GET /api/v1/quick-deploy/[redacted]: docker compose logs api gateway"
+step "the API's and the gateway's logs hold neither the Helm link's secret nor either downloaded token, and log its downloads (200), the switch's refusal (403) and the revoked one's (410) as GET /api/v1/quick-deploy/[redacted]: docker compose logs api gateway"
 (umask 077 && docker compose logs --no-color api gateway >"$qd_dir/helm-logs" 2>&1) || fail "reading the API's and the gateway's logs failed"
 qd_logs_clean "$qd_dir/helm-logs" " after the Helm link's downloads"
-# The positive half (D17c-2 Ruling 51): the logs read hold the requests just made, so an empty or a truncated
+# The positive half: the logs read hold the requests just made, so an empty or a truncated
 # file can't pass the check above; exactly those, counted from the log read before the first download.
 for helm_seen in "200 2" "403 1" "410 1"; do
   helm_code=${helm_seen% *}
@@ -4604,11 +4575,11 @@ for helm_seen in "200 2" "403 1" "410 1"; do
 done
 unset helm_url helm_secret helm_token helm_first_token
 
-# Logos and the library (D23-2 decision 64, Preflight ruling 24), in the group organization, its admin's session
-# (the switch above). Every call goes through platform() or platform_form(); the logo's public reads and the
-# library link's downloads go from the host through the gateway with no cookie. The library link is a secret
-# (decision 47): it lives in shell variables, reaches curl on its standard input (qd_public_get), and is never
-# printed; every failure here prints statuses, sizes and error codes only (qd_reply_code).
+# Logos and the library, in the group organization, its admin's session (the switch above). Every call goes
+# through platform() or platform_form(); the logo's public reads and the library link's downloads go from the
+# host through the gateway with no cookie. The library link is a secret: it lives in shell variables, reaches
+# curl on its standard input (qd_public_get), and is never printed; every failure here prints statuses, sizes
+# and error codes only (qd_reply_code).
 # platform_form <method> <url> <curl's form arguments>...: platform() with a multipart body, its parts in the
 # order given (names and descriptions by --form-string: curl reads no @ or < in them); 120 s for 11 MiB.
 platform_form() {
@@ -4627,14 +4598,14 @@ gateway_refused_too_large() {
 
 # The session's access cookie is refreshed first (the steps above take minutes; it lasts 15). The session stays
 # in the group organization: the /me step below checks it.
-step "D23-2: refresh the session's access cookie before the logo's steps: POST /api/v1/auth/refresh answers 200"
+step "refresh the session's access cookie before the logo's steps: POST /api/v1/auth/refresh answers 200"
 response=$(curl -s --max-time 30 -w '\n%{http_code}' -b "$JAR" -c "$JAR" -X POST "$GATEWAY_URL/api/v1/auth/refresh" \
   -H 'X-Telflo-CSRF: 1') || fail "refreshing before the logo's steps got no reply (curl exit $?)"
 status=$(tail -n1 <<<"$response")
 [ "$status" = "200" ] || fail "refreshing before the logo's steps returned HTTP $status: $(sed '$d' <<<"$response")"
 
 LOGO_BYTES=2097152
-step "D23-2: set the group organization's logo through the gateway: PATCH /api/v1/organizations/:id multipart (its name, then a $LOGO_BYTES-byte PNG, at the gateway's 3 MiB location) answers 200 with a new logoId"
+step "set the group organization's logo through the gateway: PATCH /api/v1/organizations/:id multipart (its name, then a $LOGO_BYTES-byte PNG, at the gateway's 3 MiB location) answers 200 with a new logoId"
 logo_file="$work_dir/logo.png"
 { printf '\211PNG\r\n\032\n'; head -c $((LOGO_BYTES - 8)) /dev/urandom; } >"$logo_file"
 [ "$(wc -c <"$logo_file" | tr -d ' ')" = "$LOGO_BYTES" ] || fail "couldn't write the $LOGO_BYTES-byte logo"
@@ -4645,12 +4616,12 @@ logo_id=$(reply_json '.organization.logoId // empty')
   [ "$(reply_json '.organization.id')" = "$group_id" ] && [ "$(reply_json '.organization.name')" = "$RENAMED_ORGANIZATION_NAME" ] ||
   fail "setting the logo returned HTTP $status: $(reply_code) (logoId ${logo_id:-none})"
 
-step "D23-2: /api/v1/auth/me names the group organization's new logo: organization.logoId"
+step "/api/v1/auth/me names the group organization's new logo: organization.logoId"
 platform GET "$GATEWAY_URL/api/v1/auth/me"
 [ "$status" = "200" ] && [ "$(reply_json '.organization.id')" = "$group_id" ] && [ "$(reply_json '.organization.logoId')" = "$logo_id" ] ||
   fail "GET /api/v1/auth/me returned HTTP $status, its organization $(reply_json '.organization.id // empty') with logoId $(reply_json '.organization.logoId // empty'), not $group_id with $logo_id"
 
-step "D23-2: read the logo publicly through the gateway with no cookie: GET /api/v1/organization-logos/:organizationId/:logoId answers 200, its bytes, image/png, immutable, nosniff, CSP sandbox, CORP cross-origin, no Set-Cookie"
+step "read the logo publicly through the gateway with no cookie: GET /api/v1/organization-logos/:organizationId/:logoId answers 200, its bytes, image/png, immutable, nosniff, CSP sandbox, CORP cross-origin, no Set-Cookie"
 status=$(curl -s --max-time 30 -o "$qd_dir/logo-read" -D "$qd_dir/logo-read.headers" -w '%{http_code}' \
   "$GATEWAY_URL/api/v1/organization-logos/$group_id/$logo_id" || true)
 [ "$status" = "200" ] || fail "the logo's public read returned HTTP $status"
@@ -4662,7 +4633,7 @@ qd_header_is logo-read content-type image/png && qd_header_is logo-read cache-co
   fail "the logo's public read's headers aren't image/png, immutable, nosniff, sandbox and cross-origin: $(grep -iE '^(content-type|cache-control|x-content-type-options|content-security-policy|cross-origin-resource-policy):' "$qd_dir/logo-read.headers" | tr -d '\r' | tr '\n' ';')"
 qd_none "the logo's public read's headers" -i '^set-cookie:' -- "$qd_dir/logo-read.headers" || fail "the logo's public read sets a cookie"
 
-# On s3: the logo is an object at its key (decision 18: organizations/<id>/logos/<logoId>), its size the file's.
+# On s3: the logo is an object at its key (organizations/<id>/logos/<logoId>), its size the file's.
 logo_key="organizations/$group_id/logos/$logo_id"
 if [ "$file_store_kind" = "s3" ]; then
   step "S3: the object store holds the logo at its key with its size: the filer's metadata in object-store"
@@ -4672,7 +4643,7 @@ if [ "$file_store_kind" = "s3" ]; then
     fail "the object store's object at the logo's key has another size: $(jq -c '{FileSize}' <<<"$object_metadata" 2>/dev/null)"
 fi
 
-step "D23-2: a body over 3 MiB on the organization's path is the gateway's own 413 (nginx's page, before the API)"
+step "a body over 3 MiB on the organization's path is the gateway's own 413 (nginx's page, before the API)"
 logo_too_large="$work_dir/logo-too-large.png"
 { printf '\211PNG\r\n\032\n'; head -c $((3 * 1048576 + 1 - 8)) /dev/zero; } >"$logo_too_large"
 platform_form PATCH "$GATEWAY_URL/api/v1/organizations/$group_id" \
@@ -4680,16 +4651,17 @@ platform_form PATCH "$GATEWAY_URL/api/v1/organizations/$group_id" \
 gateway_refused_too_large ||
   fail "a $((3 * 1048576 + 1))-byte logo returned HTTP $status ($(reply_code)), not the gateway's 413"
 
-# The library (D23-2 decisions 41 to 48): a product admin's file, as D15b's product-admin steps above, only on a
-# throwaway stack, with its own grant and clear of the flag.
+# The library: a product admin's file, as the regex library's product-admin
+# steps above, only on a throwaway stack, with its own grant and clear of the
+# flag.
 if throwaway_stack; then
   library_steps="had a product admin add a 10 MiB library file (11 MiB + 1 refused by the gateway), made its link and downloaded it through the gateway with no session (no tll_ in the logs), deleted it (its link then 404)"
-  step "D23-2: make the account a product admin by SQL on the stack's database: /api/v1/auth/me shows isProductAdmin true"
+  step "make the account a product admin by SQL on the stack's database: /api/v1/auth/me shows isProductAdmin true"
   product_admin true
   expect_product_admin true
 
   LIBRARY_BYTES=10485760
-  step "D23-2: as a product admin, add a library file: POST /api/v1/library-files multipart (name, description, a $LIBRARY_BYTES-byte file) answers 201, no-store"
+  step "as a product admin, add a library file: POST /api/v1/library-files multipart (name, description, a $LIBRARY_BYTES-byte file) answers 201, no-store"
   library_file="$work_dir/library.bin"
   head -c "$LIBRARY_BYTES" /dev/urandom >"$library_file"
   LIBRARY_FILE_NAME="Stack smoke library $(date +%s)-$$"
@@ -4706,7 +4678,7 @@ if throwaway_stack; then
     --argjson size "$LIBRARY_BYTES" '{name: $name, description: "Made by the stack smoke test", fileName: "stack-smoke.bin", sizeBytes: $size}')" ] ||
     fail "the library file's create answered other fields: sizeBytes $(reply_json '.libraryFile.sizeBytes // empty'), fileName $(reply_json '.libraryFile.fileName // empty')"
 
-  step "D23-2: a library body over 11 MiB is the gateway's own 413 (nginx's page, before the API)"
+  step "a library body over 11 MiB is the gateway's own 413 (nginx's page, before the API)"
   library_too_large="$work_dir/library-too-large.bin"
   head -c $((11 * 1048576 + 1)) /dev/zero >"$library_too_large"
   platform_form POST "$GATEWAY_URL/api/v1/library-files" --form-string "name=$LIBRARY_FILE_NAME too large" \
@@ -4714,7 +4686,7 @@ if throwaway_stack; then
   gateway_refused_too_large ||
     fail "an $((11 * 1048576 + 1))-byte library file returned HTTP $status ($(reply_code)), not the gateway's 413"
 
-  step "D23-2: make the file's link: POST /api/v1/library-files/:id/link answers 201, no-store, a path /api/v1/library-links/tll_ and 71 base64url characters (never printed)"
+  step "make the file's link: POST /api/v1/library-files/:id/link answers 201, no-store, a path /api/v1/library-links/tll_ and 71 base64url characters (never printed)"
   platform POST "$GATEWAY_URL/api/v1/library-files/$library_file_id/link"
   [ "$status" = "201" ] || fail "making the library link returned HTTP $status: $(qd_reply_code)"
   no_store || fail "the library link's reply, carrying the link, isn't Cache-Control: no-store"
@@ -4725,7 +4697,7 @@ if throwaway_stack; then
     fail "the library link's reply isn't one path /api/v1/library-links/, tll_ and 71 base64url characters"
   # The link first: every log read below is searched for it.
   qd_secrets "$library_link"
-  # The link as the web builds it (Q162): the origin the browser reached, here the gateway's, and the path.
+  # The link as the web builds it: the origin the browser reached, here the gateway's, and the path.
   library_url="$GATEWAY_URL$library_path"
 
   # The gateway's access log before the link's first download: the logs' check (below) counts exactly the
@@ -4738,7 +4710,7 @@ if throwaway_stack; then
   (umask 077 && docker compose logs --no-color api gateway >"$qd_dir/library-logs-before" 2>&1) ||
     fail "reading the API's and the gateway's logs before the library link's downloads failed"
 
-  step "D23-2: download the link from the host through the gateway with no session: 200, its bytes, application/octet-stream, no-store, nosniff, attachment, no Set-Cookie"
+  step "download the link from the host through the gateway with no session: 200, its bytes, application/octet-stream, no-store, nosniff, attachment, no Set-Cookie"
   qd_public_get "$library_url" library-download "$GATEWAY_URL"
   [ "$status" = "200" ] || fail "downloading the library link returned HTTP $status"
   cmp -s "$library_file" "$qd_dir/library-download" ||
@@ -4750,7 +4722,7 @@ if throwaway_stack; then
   qd_none "the library link's download's headers" -i '^set-cookie:' -- "$qd_dir/library-download.headers" ||
     fail "the library link's download sets a cookie"
 
-  step "D23-2: delete the file: DELETE /api/v1/library-files/:id answers 204; its link is then 404 \"Not found.\" in plain text"
+  step "delete the file: DELETE /api/v1/library-files/:id answers 204; its link is then 404 \"Not found.\" in plain text"
   platform DELETE "$GATEWAY_URL/api/v1/library-files/$library_file_id"
   [ "$status" = "204" ] || fail "deleting the library file returned HTTP $status: $(reply_code)"
   created_library_file_id=""
@@ -4759,7 +4731,7 @@ if throwaway_stack; then
   qd_refused library-gone "Not found." 404 ||
     fail "the deleted file's link returned HTTP $status, not 404 Not found. in plain text, redacted: $(qd_redacted "$qd_dir/library-gone" 300)"
 
-  step "D23-2: the API's and the gateway's logs hold neither the link nor any tll_, and log its downloads as GET /api/v1/library-links/[redacted] (one 200, one 404): docker compose logs api gateway"
+  step "the API's and the gateway's logs hold neither the link nor any tll_, and log its downloads as GET /api/v1/library-links/[redacted] (one 200, one 404): docker compose logs api gateway"
   (umask 077 && docker compose logs --no-color api gateway >"$qd_dir/library-logs" 2>&1) ||
     fail "reading the API's and the gateway's logs failed"
   qd_logs_clean "$qd_dir/library-logs" " after the library link's downloads"
@@ -4774,7 +4746,7 @@ if throwaway_stack; then
   done
   unset library_path library_link library_url
 
-  step "D23-2: clear the flag by SQL: /api/v1/auth/me shows isProductAdmin false"
+  step "clear the flag by SQL: /api/v1/auth/me shows isProductAdmin false"
   product_admin false
   expect_product_admin false
 else
@@ -4782,8 +4754,8 @@ else
   step "SKIPPED: the library's steps (grant the flag by SQL, add a library file, make and download its link, delete it, clear the flag) run only on a throwaway stack: COMPOSE_PROJECT_NAME is ${COMPOSE_PROJECT_NAME:-unset}, not a throwaway stack's"
 fi
 
-# Product administration (D29 decision 46, Preflight ruling 19), after the library's steps, on a throwaway stack
-# only (as D15b's and D23-2's product-admin steps, granting and clearing the flag on their own). The smoke's
+# Product administration, after the library's steps, on a throwaway stack only (as the regex library's and the
+# library's product-admin steps, granting and clearing the flag on their own). The smoke's
 # account, its flag set by SQL, drives the product-admin routes through the gateway (/api/v1/product-admin/,
 # every answer no-store): it grants the invitee (verified when they joined from the invitation) by email and
 # removes them, is refused its own removal as the stack's only product admin (the one real last-admin refusal
@@ -4819,7 +4791,7 @@ if throwaway_stack; then
 
   # The steps above take minutes; the access cookie lasts 15. The invitee's session hasn't been used since they
   # joined: its refresh cookie, from then, is still live.
-  step "D29: refresh the account's and the invitee's sessions (POST /api/v1/auth/refresh answers 200 for each) and read the invitee's id from /api/v1/auth/me"
+  step "refresh the account's and the invitee's sessions (POST /api/v1/auth/refresh answers 200 for each) and read the invitee's id from /api/v1/auth/me"
   for d29_jar in "$JAR" "$INVITEE_JAR"; do
     status=$(curl -s --max-time 30 -o /dev/null -w '%{http_code}' -b "$d29_jar" -c "$d29_jar" -X POST \
       "$GATEWAY_URL/api/v1/auth/refresh" -H 'X-Telflo-CSRF: 1' || true)
@@ -4830,16 +4802,16 @@ if throwaway_stack; then
   [ "$status" = "200" ] && [ -n "$d29_invitee_id" ] && d29_reply_is --arg email "$INVITEE_EMAIL" '.user.email == $email' ||
     fail "GET /api/v1/auth/me as the invitee returned HTTP $status $(reply_code), not the invitee"
 
-  step "D29: make the account a product admin by SQL on the stack's database: /api/v1/auth/me shows isProductAdmin true"
+  step "make the account a product admin by SQL on the stack's database: /api/v1/auth/me shows isProductAdmin true"
   product_admin true
   expect_product_admin true
 
-  step "D29: list the product admins: GET /api/v1/product-admin/product-admins answers 200, no-store, the account alone (a throwaway stack's only one)"
+  step "list the product admins: GET /api/v1/product-admin/product-admins answers 200, no-store, the account alone (a throwaway stack's only one)"
   d29_call "$JAR" GET "$D29_ADMIN_URL/product-admins"
   [ "$status" = "200" ] && no_store && d29_reply_is --arg id "$user_id" '[.items[].id] == [$id]' ||
     fail "the product admins' list returned HTTP $status $(reply_code), $(reply_json '.items | length') items, not the account alone with no-store"
 
-  step "D29: grant the invitee by email: POST /api/v1/product-admin/product-admins answers 201 with their id and email, then 200 again, no-store"
+  step "grant the invitee by email: POST /api/v1/product-admin/product-admins answers 201 with their id and email, then 200 again, no-store"
   d29_grant=$(jq -cn --arg email "$INVITEE_EMAIL" '{email: $email}')
   # Marked before it's sent: the EXIT trap clears the invitee's flag if the run ends before the removal below.
   invitee_product_admin_granted=yes
@@ -4850,32 +4822,32 @@ if throwaway_stack; then
       fail "granting the invitee returned HTTP $status $(reply_code), not $d29_expected with their id and email and no-store"
   done
 
-  step "D29: the product admins' list holds the account and the invitee"
+  step "the product admins' list holds the account and the invitee"
   d29_call "$JAR" GET "$D29_ADMIN_URL/product-admins"
   [ "$status" = "200" ] && no_store &&
     d29_reply_is --arg a "$user_id" --arg b "$d29_invitee_id" '([.items[].id] | sort) == ([$a, $b] | sort)' ||
     fail "the product admins' list returned HTTP $status $(reply_code), $(reply_json '.items | length') items, not the account and the invitee"
 
-  step "D29: remove the invitee: DELETE /api/v1/product-admin/product-admins/:userId answers 204, no-store"
+  step "remove the invitee: DELETE /api/v1/product-admin/product-admins/:userId answers 204, no-store"
   d29_call "$JAR" DELETE "$D29_ADMIN_URL/product-admins/$d29_invitee_id"
   [ "$status" = "204" ] && no_store || fail "removing the invitee returned HTTP $status $(reply_code), not 204 with no-store"
   invitee_product_admin_granted=""
 
-  step "D29: the last product admin's removal is refused: removing the account itself answers 409 last_product_admin, and /api/v1/auth/me still shows isProductAdmin true"
+  step "the last product admin's removal is refused: removing the account itself answers 409 last_product_admin, and /api/v1/auth/me still shows isProductAdmin true"
   d29_call "$JAR" DELETE "$D29_ADMIN_URL/product-admins/$user_id"
   d29_refused 409 last_product_admin "removing the last product admin"
   expect_product_admin true
 
   D29_MARKER="d29feedbackmarker$(date +%s)$$"
   D29_FEEDBACK_TEXT="Sent by the stack smoke test: $D29_MARKER"
-  step "D29: the invitee sends feedback: POST /api/v1/feedback answers 201 with its id"
+  step "the invitee sends feedback: POST /api/v1/feedback answers 201 with its id"
   d29_call "$INVITEE_JAR" POST "$GATEWAY_URL/api/v1/feedback" "$(jq -cn --arg text "$D29_FEEDBACK_TEXT" '{text: $text}')"
   d29_feedback_id=$(reply_json '.id // empty')
   [ "$status" = "201" ] && [ -n "$d29_feedback_id" ] ||
     fail "sending the invitee's feedback returned HTTP $status $(reply_code), not 201 with an id"
 
   # Sent after the response, to every product admin: the account alone, once the invitee's flag is removed.
-  step "D29: the product admins' email reached the account in Mailpit, naming the invitee and linking to the gateway's User Feedback page, without the feedback's text (counted)"
+  step "the product admins' email reached the account in Mailpit, naming the invitee and linking to the gateway's User Feedback page, without the feedback's text (counted)"
   d29_query=$(jq -rn --arg query "to:\"$EMAIL\" subject:\"Telflo - New User Feedback Request\"" '$query | @uri')
   message_id=""
   for _ in $(seq 1 30); do
@@ -4893,7 +4865,7 @@ if throwaway_stack; then
     grep -qF -e "Review Request: $GATEWAY_URL/product-admin/user-feedback" -- "$d29_mail" ||
     fail "the product admins' email doesn't name the invitee and link to $GATEWAY_URL/product-admin/user-feedback"
 
-  step "D29: list the pending feedback: GET /api/v1/product-admin/feedback answers 200, no-store, holding the invitee's item with its text and sender (its cursor followed until found)"
+  step "list the pending feedback: GET /api/v1/product-admin/feedback answers 200, no-store, holding the invitee's item with its text and sender (its cursor followed until found)"
   d29_url="$D29_ADMIN_URL/feedback"
   d29_found=""
   for _ in $(seq 1 20); do
@@ -4910,19 +4882,19 @@ if throwaway_stack; then
   done
   [ -n "$d29_found" ] || fail "the pending feedback doesn't hold the invitee's item with its text and sender"
 
-  step "D29: dismiss it: POST /api/v1/product-admin/feedback/:id/dismiss answers 204, no-store, then again 404 feedback_not_found"
+  step "dismiss it: POST /api/v1/product-admin/feedback/:id/dismiss answers 204, no-store, then again 404 feedback_not_found"
   d29_call "$JAR" POST "$D29_ADMIN_URL/feedback/$d29_feedback_id/dismiss"
   [ "$status" = "204" ] && no_store || fail "dismissing the feedback returned HTTP $status $(reply_code), not 204 with no-store"
   d29_call "$JAR" POST "$D29_ADMIN_URL/feedback/$d29_feedback_id/dismiss"
   d29_refused 404 feedback_not_found "dismissing the feedback again"
 
-  step "D29: the invitee's delete is refused, a member of the group organization: DELETE /api/v1/product-admin/users/:userId answers 409 user_delete_blocked, its details { kind: member }"
+  step "the invitee's delete is refused, a member of the group organization: DELETE /api/v1/product-admin/users/:userId answers 409 user_delete_blocked, its details { kind: member }"
   d29_call "$JAR" DELETE "$D29_ADMIN_URL/users/$d29_invitee_id"
   d29_refused 409 user_delete_blocked "deleting the invitee"
   d29_reply_is '.error.details == {kind: "member"}' ||
     fail "deleting the invitee was refused with the details $(reply_json -c '.error.details'), not { kind: member }"
 
-  step "D29: the account's own delete is refused: DELETE /api/v1/product-admin/users/:userId answers 409 user_delete_self"
+  step "the account's own delete is refused: DELETE /api/v1/product-admin/users/:userId answers 409 user_delete_self"
   d29_call "$JAR" DELETE "$D29_ADMIN_URL/users/$user_id"
   d29_refused 409 user_delete_self "deleting the account itself"
 
@@ -4932,19 +4904,19 @@ if throwaway_stack; then
   D29_THIRD_EMAIL="$D29_THIRD_LOCAL@example.com"
   D29_THIRD_JAR="$work_dir/d29-third-cookies"
   if [ "$SMOKE_SITE" = "saas" ]; then
-    step "D29: register and verify a third account through the gateway (its address never printed)"
+    step "register and verify a third account through the gateway (its address never printed)"
     register_verified "$D29_THIRD_EMAIL" "$PASSWORD" "the third account"
   else
     # Nobody registers on the open-source defaults: the third account joins the group organization (the
     # session's active one, as since the second sign-in) by an invitation read from Mailpit, as the invitee did,
     # and is removed from it before its delete (a member's delete is refused, as the invitee's above).
-    step "D29: invite a third account to the group organization: POST /api/v1/organizations/:id/invitations answers 201 (its address never printed)"
+    step "invite a third account to the group organization: POST /api/v1/organizations/:id/invitations answers 201 (its address never printed)"
     d29_call "$JAR" POST "$GATEWAY_URL/api/v1/organizations/$group_id/invitations" \
       "$(jq -cn --arg email "$D29_THIRD_EMAIL" '{email: $email, role: "contributor"}')"
     [ "$status" = "201" ] && d29_reply_is --arg email "$D29_THIRD_EMAIL" '.invitation.email == $email' ||
       fail "inviting the third account returned HTTP $status $(reply_code), not 201 naming its address"
 
-    step "D29: the invitation email reached the third account in Mailpit; its token, from the accept link at the gateway's origin, makes the account: POST /api/v1/invitation-registrations answers 201, signed in, in the group organization"
+    step "the invitation email reached the third account in Mailpit; its token, from the accept link at the gateway's origin, makes the account: POST /api/v1/invitation-registrations answers 201, signed in, in the group organization"
     d29_query=$(jq -rn --arg query "to:\"$D29_THIRD_EMAIL\" subject:\"You've been invited to join\"" '$query | @uri')
     message_id=""
     for _ in $(seq 1 30); do
@@ -4967,7 +4939,7 @@ if throwaway_stack; then
     unset d29_link d29_invitation_token
   fi
 
-  step "D29: sign the third account in: POST /api/v1/auth/sessions answers 200, and /api/v1/auth/me names it"
+  step "sign the third account in: POST /api/v1/auth/sessions answers 200, and /api/v1/auth/me names it"
   d29_sign_in=$(jq -cn --arg email "$D29_THIRD_EMAIL" --arg password "$PASSWORD" '{email: $email, password: $password}')
   status=$(curl -s --max-time 30 -o /dev/null -w '%{http_code}' -c "$D29_THIRD_JAR" -X POST "$GATEWAY_URL/api/v1/auth/sessions" \
     -H 'content-type: application/json' -H 'X-Telflo-CSRF: 1' --data-binary "$d29_sign_in" || true)
@@ -4981,12 +4953,12 @@ if throwaway_stack; then
     fail "GET /api/v1/auth/me as the third account returned HTTP $status $(reply_code), not the third account"
 
   if [ "$SMOKE_SITE" = "oss" ]; then
-    step "D29: the group organization's admin removes the third account from it, so nothing blocks its delete: DELETE /api/v1/organizations/:id/members/:userId answers 204"
+    step "the group organization's admin removes the third account from it, so nothing blocks its delete: DELETE /api/v1/organizations/:id/members/:userId answers 204"
     d29_call "$JAR" DELETE "$GATEWAY_URL/api/v1/organizations/$group_id/members/$d29_third_id"
     [ "$status" = "204" ] || fail "removing the third account from the group organization returned HTTP $status $(reply_code), not 204"
   fi
 
-  step "D29: find the third account by its address: GET /api/v1/product-admin/users?q= answers 200, no-store, that one person, no block, no next page"
+  step "find the third account by its address: GET /api/v1/product-admin/users?q= answers 200, no-store, that one person, no block, no next page"
   d29_call "$JAR" GET "$D29_ADMIN_URL/users?q=$(jq -rn --arg q "$D29_THIRD_EMAIL" '$q | @uri')"
   [ "$status" = "200" ] && no_store && d29_reply_is --arg id "$d29_third_id" --arg email "$D29_THIRD_EMAIL" \
     '.nextCursor == null and (.items | length) == 1 and (.items[0] | .id == $id and .email == $email and .isProductAdmin == false and .block == null)' ||
@@ -4994,15 +4966,15 @@ if throwaway_stack; then
 
   # So the check that it's gone after the delete can't pass vacuously. stack_smoke's personal-organization mode
   # also runs its own publication sequence first (as for the first account) and prints no name.
-  step "D29: the platform registered the third account's personal organization in the opamp-server (under a personal organization's name)"
+  step "the platform registered the third account's personal organization in the opamp-server (under a personal organization's name)"
   stack_smoke "$d29_third_organization_id" ||
     fail "the third account's personal organization $d29_third_organization_id isn't registered in the opamp-server (above)"
 
-  step "D29: delete the third account: DELETE /api/v1/product-admin/users/:userId answers 204, no-store"
+  step "delete the third account: DELETE /api/v1/product-admin/users/:userId answers 204, no-store"
   d29_call "$JAR" DELETE "$D29_ADMIN_URL/users/$d29_third_id"
   [ "$status" = "204" ] && no_store || fail "deleting the third account returned HTTP $status $(reply_code), not 204 with no-store"
 
-  step "D29: the third account's session ended: GET /api/v1/auth/me and POST /api/v1/auth/refresh with its cookies answer 401 unauthenticated"
+  step "the third account's session ended: GET /api/v1/auth/me and POST /api/v1/auth/refresh with its cookies answer 401 unauthenticated"
   d29_call "$D29_THIRD_JAR" GET "$GATEWAY_URL/api/v1/auth/me"
   [ "$status" = "401" ] && [ "$(reply_code)" = "unauthenticated" ] ||
     fail "GET /api/v1/auth/me as the deleted third account returned HTTP $status $(reply_code), not 401 unauthenticated"
@@ -5010,12 +4982,12 @@ if throwaway_stack; then
   [ "$status" = "401" ] && [ "$(reply_code)" = "unauthenticated" ] ||
     fail "refreshing the deleted third account's session returned HTTP $status $(reply_code), not 401 unauthenticated"
 
-  step "D29: the third account's sign-in is refused: POST /api/v1/auth/sessions with its address and password answers 401 invalid_credentials"
+  step "the third account's sign-in is refused: POST /api/v1/auth/sessions with its address and password answers 401 invalid_credentials"
   d29_call "$D29_THIRD_JAR" POST "$GATEWAY_URL/api/v1/auth/sessions" "$d29_sign_in"
   [ "$status" = "401" ] && [ "$(reply_code)" = "invalid_credentials" ] ||
     fail "signing the deleted third account in returned HTTP $status $(reply_code), not 401 invalid_credentials"
 
-  step "D29: by SQL on the stack's database, the third account's deletion record (its original address, deleted by the account) and its anonymous address (no password, deleted_at set), its address freed, no organization named with it, no session of its holding an IP address or user agent: counts 1, 1, 0, 0 and 0"
+  step "by SQL on the stack's database, the third account's deletion record (its original address, deleted by the account) and its anonymous address (no password, deleted_at set), its address freed, no organization named with it, no session of its holding an IP address or user agent: counts 1, 1, 0, 0 and 0"
   d29_counts=$(stack_psql -v id="$d29_third_id" -v email="$D29_THIRD_EMAIL" -v admin="$user_id" <<'SQL'
 select count(*) from user_deletion_records
  where user_id = :'id'::uuid and original_email = lower(:'email') and deleted_by_user_id = :'admin'::uuid
@@ -5033,11 +5005,11 @@ SQL
     fail "the third account's deletion record, anonymous address, freed address, organizations named with it and sessions holding an IP or user agent counted $(tr '\n' ' ' <<<"$d29_counts"), not 1 1 0 0 0"
 
   # stack_smoke's group-gone checks any organization by its id (its line calls it a group organization).
-  step "D29: the platform removed the third account's personal organization from the opamp-server"
+  step "the platform removed the third account's personal organization from the opamp-server"
   stack_smoke group-gone "$d29_third_organization_id" ||
     fail "the third account's personal organization $d29_third_organization_id is still registered in the opamp-server (above)"
 
-  step "D29: the API's and the gateway's logs hold no search term, and the gateway logged the search by its path alone: docker compose logs api gateway (counts only)"
+  step "the API's and the gateway's logs hold no search term, and the gateway logged the search by its path alone: docker compose logs api gateway (counts only)"
   d29_logs="$work_dir/d29-logs"
   (umask 077 && docker compose logs --no-color api gateway >"$d29_logs" 2>&1) ||
     fail "reading the API's and the gateway's logs failed"
@@ -5047,21 +5019,21 @@ SQL
   [[ "$d29_search_lines" =~ ^[1-9][0-9]*$ ]] ||
     fail "the gateway's access log holds ${d29_search_lines:-no} lines \"GET /api/v1/product-admin/users HTTP/…\", not at least one for the search"
 
-  step "D29: clear the flag by SQL: /api/v1/auth/me shows isProductAdmin false"
+  step "clear the flag by SQL: /api/v1/auth/me shows isProductAdmin false"
   product_admin false
   expect_product_admin false
 else
   d29_steps="skipped the product-administration steps (not a throwaway stack)"
-  step "SKIPPED: D29's product-administration steps (grant the flag by SQL, grant and remove the invitee, send and dismiss feedback, delete a third account, clear the flag) run only on a throwaway stack: COMPOSE_PROJECT_NAME is ${COMPOSE_PROJECT_NAME:-unset}, not a throwaway stack's"
+  step "SKIPPED: the product-administration steps (grant the flag by SQL, grant and remove the invitee, send and dismiss feedback, delete a third account, clear the flag) run only on a throwaway stack: COMPOSE_PROJECT_NAME is ${COMPOSE_PROJECT_NAME:-unset}, not a throwaway stack's"
 fi
 
-# The public API (D25 decision 53, Preflight rulings 21 and 23), in the group organization, through the gateway:
-# its admin's session mints a service account's write and read tokens and a personal write token (each checked
-# by its shape, never printed: shell variables, curl's standard input as a config line, grep's -f files 0600);
-# then each token alone drives the public surface. The configuration's YAML names a pipeline holding a marker
-# (configuration text, Ruling 167) that route 14's path carries; the API's and the gateway's logs are then
-# searched for every token and the marker, counts only. The personal token is revoked at the end (and by the
-# EXIT trap); the service account and everything made here go with the group organization's delete below.
+# The public API, in the group organization, through the gateway: its admin's session mints a service
+# account's write and read tokens and a personal write token (each checked by its shape, never printed: shell
+# variables, curl's standard input as a config line, grep's -f files 0600); then each token alone drives the
+# public surface. The configuration's YAML names a pipeline holding a marker (configuration text) that route
+# 14's path carries; the API's and the gateway's logs are then searched for every token and the marker, counts
+# only. The personal token is revoked at the end (and by the EXIT trap); the service account and everything
+# made here go with the group organization's delete below.
 # d25_call <token's variable> <method> <path under /api/public/v1> [<JSON body file>] [<X-Telflo-Org>]: one call;
 # the status into $status, the body and headers into platform()'s 0600 files (reply_json, reply_code, no_store
 # read them). The token reaches curl as a config line on its standard input (printf is a builtin): never argv.
@@ -5106,14 +5078,14 @@ D25_MARKER="d25pipelinemarker$(date +%s)$$"
 D25_YAML=$'receivers:\n  otlp:\n    protocols:\n      http: {}\nexporters:\n  debug: {}\nservice:\n  pipelines:\n    logs:\n      receivers: [otlp]\n      exporters: [debug]\n    logs/'"$D25_MARKER"$':\n      receivers: [otlp]\n      exporters: [debug]\n'
 D25_INVALID_YAML=$'receivers:\n  not_a_receiver: {}\nexporters:\n  debug: {}\nservice:\n  pipelines:\n    logs:\n      receivers: [not_a_receiver]\n      exporters: [debug]\n'
 
-# The steps above take minutes; the access cookie lasts 15 (as D23-2's refresh before the logo).
-step "D25: refresh the session's access cookie: POST /api/v1/auth/refresh answers 200"
+# The steps above take minutes; the access cookie lasts 15 (as the refresh before the logo).
+step "refresh the session's access cookie: POST /api/v1/auth/refresh answers 200"
 response=$(curl -s --max-time 30 -w '\n%{http_code}' -b "$JAR" -c "$JAR" -X POST "$GATEWAY_URL/api/v1/auth/refresh" \
   -H 'X-Telflo-CSRF: 1') || fail "refreshing before the D25 steps got no reply (curl exit $?)"
 status=$(tail -n1 <<<"$response")
 [ "$status" = "200" ] || fail "refreshing before the D25 steps returned HTTP $status: $(sed '$d' <<<"$response")"
 
-step "D25: mint a service account's write and read tokens and a personal write token through the session (201, no-store; each tf_ and 43 base64url characters, never printed)"
+step "mint a service account's write and read tokens and a personal write token through the session (201, no-store; each tf_ and 43 base64url characters, never printed)"
 platform POST "$D16B_ORGANIZATION_URL/service-accounts" "$(jq -cn --arg name "Stack smoke D25 $(date +%s)-$$" '{name: $name}')"
 [ "$status" = "201" ] || fail "creating the D25 service account returned HTTP $status: $(reply_code)"
 d25_service_account_id=$(reply_json '.serviceAccount.id // empty')
@@ -5125,7 +5097,7 @@ d25_mint d25_personal_token "$GATEWAY_URL/api/v1/auth/me/api-tokens" "D25 person
   printf '%s\n' "$d25_personal_token" >"$work_dir/d25-secret-personal" && printf '%s\n' "$D25_MARKER" >"$work_dir/d25-marker") ||
   fail "writing the D25 search files failed"
 
-step "D25: GET /whoami as the service account (service_account, the group organization) and as the person (person, no organization header needed)"
+step "GET /whoami as the service account (service_account, the group organization) and as the person (person, no organization header needed)"
 d25_call d25_write_token GET /whoami
 [ "$status" = "200" ] && no_store && d25_reply_is --arg org "$group_id" '.kind == "service_account" and .organizationId == $org and .access == "write"' ||
   fail "the service account's /whoami returned HTTP $status: $(reply_code)"
@@ -5133,7 +5105,7 @@ d25_call d25_personal_token GET /whoami
 [ "$status" = "200" ] && d25_reply_is '.kind == "person" and .access == "write"' ||
   fail "the person's /whoami returned HTTP $status: $(reply_code)"
 
-step "D25: GET /orgs: the service account's one organization; the person's memberships, the group's among them"
+step "GET /orgs: the service account's one organization; the person's memberships, the group's among them"
 d25_call d25_read_token GET /orgs
 [ "$status" = "200" ] && d25_reply_is --arg org "$group_id" '[.items[].id] == [$org]' ||
   fail "the service account's /orgs returned HTTP $status: $(reply_code)"
@@ -5141,7 +5113,7 @@ d25_call d25_personal_token GET /orgs
 [ "$status" = "200" ] && d25_reply_is --arg org "$group_id" --arg personal "$personal_id" '([.items[].id] | index($org) != null and index($personal) != null)' ||
   fail "the person's /orgs returned HTTP $status: $(reply_code)"
 
-step "D25: the person without X-Telflo-Org is 400 organization_required; with the group's id, GET /configurations is 200"
+step "the person without X-Telflo-Org is 400 organization_required; with the group's id, GET /configurations is 200"
 d25_call d25_personal_token GET /configurations
 [ "$status" = "400" ] && [ "$(reply_code)" = "organization_required" ] ||
   fail "the person's /configurations without X-Telflo-Org returned HTTP $status $(reply_code), not 400 organization_required"
@@ -5149,13 +5121,13 @@ d25_call d25_personal_token GET /configurations "" "$group_id"
 [ "$status" = "200" ] && no_store && d25_reply_is '.items | type == "array"' ||
   fail "the person's /configurations with X-Telflo-Org returned HTTP $status: $(reply_code)"
 
-step "D25: a read token on a write route: POST /configurations is 403 insufficient_access"
+step "a read token on a write route: POST /configurations is 403 insufficient_access"
 d25_body create --arg name "Stack smoke D25 $(date +%s)-$$" --arg yaml "$D25_YAML" '{name: $name, yaml: $yaml}'
 d25_call d25_read_token POST /configurations "$d25_file"
 [ "$status" = "403" ] && [ "$(reply_code)" = "insufficient_access" ] ||
   fail "a read token's POST /configurations returned HTTP $status $(reply_code), not 403 insufficient_access"
 
-step "D25: create a configuration (201), PATCH its version 1 ?validate=true with the real validator (an invalid text 422, nothing saved; a valid one 200)"
+step "create a configuration (201), PATCH its version 1 ?validate=true with the real validator (an invalid text 422, nothing saved; a valid one 200)"
 d25_call d25_write_token POST /configurations "$d25_file"
 [ "$status" = "201" ] || fail "creating the D25 configuration returned HTTP $status: $(reply_code)"
 d25_configuration_id=$(reply_json '.id // empty')
@@ -5170,7 +5142,7 @@ d25_call d25_write_token PATCH "/configurations/$d25_configuration_id/versions/1
 [ "$status" = "200" ] && d25_reply_is '.versionNumber == 1 and .status == "draft"' ||
   fail "a valid text's PATCH ?validate=true returned HTTP $status: $(reply_code)"
 
-step "D25: route 14: PUT .../validation-pipelines/logs/<the marker> and its %2F spelling replace its rules (200), and the list shows them"
+step "route 14: PUT .../validation-pipelines/logs/<the marker> and its %2F spelling replace its rules (200), and the list shows them"
 d25_body rules '{signal: "logs", rules: [{kind: "contains_text", target: "output", pattern: "stack smoke"}]}'
 d25_call d25_write_token PUT "/configurations/$d25_configuration_id/versions/1/validation-pipelines/logs/$D25_MARKER" "$d25_file"
 [ "$status" = "200" ] || [ "$status" = "201" ] || fail "PUT route 14 (a raw slash) returned HTTP $status: $(reply_code)"
@@ -5180,14 +5152,14 @@ d25_call d25_read_token GET "/configurations/$d25_configuration_id/versions/1/va
 [ "$status" = "200" ] && d25_reply_is --arg name "logs/$D25_MARKER" '[.items[] | select(.pipeline == $name) | .rules | length] == [1]' ||
   fail "the version's validation pipelines returned HTTP $status, or not the marker's pipeline with its one rule"
 
-step "D25: publish version 1 (200): the opamp-server holds it"
+step "publish version 1 (200): the opamp-server holds it"
 d25_call d25_write_token POST "/configurations/$d25_configuration_id/versions/1/publish"
 [ "$status" = "200" ] && d25_reply_is '.publishedVersionNumber == 1 and .isPublished == true' ||
   fail "publishing the D25 configuration's version 1 returned HTTP $status: $(reply_code)"
 stack_smoke publications "$group_id" "$d25_configuration_id" 1 ||
   fail "the opamp-server doesn't hold the D25 configuration's published version (above)"
 
-step "D25: POST /validate with the real validator: a valid text is valid, an invalid one names its errors"
+step "POST /validate with the real validator: a valid text is valid, an invalid one names its errors"
 d25_call d25_read_token POST /validate "$work_dir/d25-valid.json"
 [ "$status" = "200" ] && d25_reply_is '.valid == true and (.errors | length) == 0' ||
   fail "/validate of a valid text returned HTTP $status: $(reply_code)"
@@ -5195,13 +5167,13 @@ d25_call d25_read_token POST /validate "$work_dir/d25-invalid.json"
 [ "$status" = "200" ] && d25_reply_is '.valid == false and (.errors | length) > 0' ||
   fail "/validate of an invalid text returned HTTP $status: $(reply_code)"
 
-step "D25: POST /ottl/lint with the real evaluator's lint endpoint: a valid and a broken condition, each item answered"
+step "POST /ottl/lint with the real evaluator's lint endpoint: a valid and a broken condition, each item answered"
 d25_body lint '{context: "log", conditions: ["attributes[\"env\"] == \"prod\"", "attributes[\"env\" =="]}'
 d25_call d25_read_token POST /ottl/lint "$d25_file"
 [ "$status" = "200" ] && d25_reply_is '.valid == false and .ottlVersion != null and .checked == 2 and [.items[].valid] == [true, false]' ||
   fail "/ottl/lint returned HTTP $status: $(reply_code) $(reply_json -c '{valid, checked, ottlVersion}')"
 
-step "D25: a fleet (201, no bearer in the reply), a group assigned the published version (201), and a docker install (200, no-store, its command a docker run: a boolean, never printed)"
+step "a fleet (201, no bearer in the reply), a group assigned the published version (201), and a docker install (200, no-store, its command a docker run: a boolean, never printed)"
 d25_body fleet --arg label "d25-$(date +%s)-$$" '{label: $label, type: "server"}'
 d25_call d25_write_token POST /fleets "$d25_file"
 # Exactly the route's five keys (jq's keys are sorted): no bearer, no tokens object, nothing else.
@@ -5222,13 +5194,13 @@ d25_reply_is '.platform == "docker" and (.command | startswith("docker run"))' |
   fail "the D25 docker install's command isn't a docker run (not printed)"
 (umask 077 && : >"$D16B_REPLY_BODY")
 
-step "D25: a YAML test run with an inline sample and a rule (202 queued), run by the real tester: read back with the read token until it ends succeeded, then its output holds the record"
+step "a YAML test run with an inline sample and a rule (202 queued), run by the real tester: read back with the read token until it ends succeeded, then its output holds the record"
 d25_body run --arg yaml "$TEST_RUN_YAML" --rawfile sample "$work_dir/stack-smoke-logs.json" --arg record "$TEST_RECORD_BODY" \
   '{yaml: $yaml, sample: $sample, signal: "logs", pipeline: "logs", durationSeconds: 2, rules: [{kind: "contains_text", target: "output", pattern: $record}]}'
 d25_call d25_write_token POST /test-runs "$d25_file"
 [ "$status" = "202" ] && d25_reply_is '.status == "queued"' || fail "queuing the D25 YAML run returned HTTP $status: $(reply_code)"
 d25_run_id=$(reply_json '.id // empty')
-# Two seconds apart: the read token's 60 a minute (decision 26) is never reached.
+# Two seconds apart: the read token's 60 a minute is never reached.
 d25_run_status=""
 for _ in $(seq 1 90); do
   d25_call d25_read_token GET "/test-runs/$d25_run_id"
@@ -5243,7 +5215,7 @@ d25_call d25_read_token GET "/test-runs/$d25_run_id/output"
 [ "$status" = "200" ] && grep -qF "$TEST_RECORD_BODY" "$D16B_REPLY_BODY" ||
   fail "the D25 run's output returned HTTP $status, or doesn't hold the record"
 
-step "D25: GET /openapi.json (OpenAPI 3.1, no token) and GET /docs/ (the reference page with its CSP), /docs a 301 to /docs/"
+step "GET /openapi.json (OpenAPI 3.1, no token) and GET /docs/ (the reference page with its CSP), /docs a 301 to /docs/"
 status=$(curl -q -s --max-time 30 -o "$work_dir/d25-openapi.json" -w '%{http_code}' "$D25_PUBLIC_URL/openapi.json" || true)
 [ "$status" = "200" ] && [ "$(jq -r '.openapi | startswith("3.1")' "$work_dir/d25-openapi.json" 2>/dev/null)" = "true" ] ||
   fail "GET /api/public/v1/openapi.json returned HTTP $status, or not an OpenAPI 3.1 document"
@@ -5261,26 +5233,26 @@ for d25_asset in swagger-ui-bundle.js swagger-ui.css init.js; do
   [ "$status" = "200" ] || fail "GET /api/public/v1/docs/$d25_asset returned HTTP $status"
 done
 
-step "D25: a 2.2 MiB body to /validate is the gateway's own 413 (nginx's page, before the API)"
+step "a 2.2 MiB body to /validate is the gateway's own 413 (nginx's page, before the API)"
 d25_large="$work_dir/d25-too-large.json"
 (umask 077 && { printf '{"yaml":"'; head -c 2306867 /dev/zero | tr '\0' 'a'; printf '"}'; } >"$d25_large")
 d25_call d25_read_token POST /validate "$d25_large"
 gateway_refused_too_large || fail "a 2.2 MiB body to /validate returned HTTP $status ($(reply_code)), not the gateway's 413"
 
-step "D25: route 14's PUT with a body over 1 MiB, its path and query naming the pipeline, is the gateway's own 413 (its error log line, crit only, Ruling 184)"
+step "route 14's PUT with a body over 1 MiB, its path and query naming the pipeline, is the gateway's own 413 (its error log line, crit only)"
 d25_large_put="$work_dir/d25-too-large-put.json"
 (umask 077 && { printf '{"signal":"logs","rules":[{"kind":"contains_text","target":"output","pattern":"'; head -c 1258291 /dev/zero | tr '\0' 'a'; printf '"}]}'; } >"$d25_large_put")
 d25_call d25_write_token PUT "/configurations/$d25_configuration_id/versions/1/validation-pipelines/logs/$D25_MARKER?q=$D25_MARKER" "$d25_large_put"
 gateway_refused_too_large || fail "a 1.2 MiB body to route 14 returned HTTP $status ($(reply_code)), not the gateway's 413"
 
-# D27 (decision 36, Preflight ruling 18): the telflo CLI ($SMOKE_CLI, checked at the start) drives the same public
-# surface through the gateway, logged in from its standard input with D25's personal token in the group
-# organization, before D25's last steps, so D25's search of the logs for that token covers these calls too. Each
-# run's stdout and stderr go to 0600 files in $CLI_DIR, read only by jq, grep and cmp (booleans and counts): no
-# token, bearer or install command is ever printed, and a failure prints the exit code and the CLI's own fixed
-# words (its JSON error, tokens redacted), never an install's. The token reaches the CLI on a pipe from printf (a
-# builtin): never argv. The configuration and the fleet made here go with the group organization's delete below;
-# the credentials file goes with the work folder.
+# The telflo CLI ($SMOKE_CLI, checked at the start) drives the same public surface through the gateway, logged in
+# from its standard input with the public API steps' personal token in the group organization, before those steps'
+# last ones, so their search of the logs for that token covers these calls too. Each run's stdout and stderr go to
+# 0600 files in $CLI_DIR, read only by jq, grep and cmp (booleans and counts): no token, bearer or install command
+# is ever printed, and a failure prints the exit code and the CLI's own fixed words (its JSON error, tokens
+# redacted), never an install's. The token reaches the CLI on a pipe from printf (a builtin): never argv. The
+# configuration and the fleet made here go with the group organization's delete below; the credentials file goes
+# with the work folder.
 # cli_run <name> <args>...: one run of the CLI on the stored login ($CLI_CONFIG), its standard input /dev/null, its
 # stdout and stderr into $CLI_DIR/<name>.out and .err; its exit code into $cli_code.
 cli_run() {
@@ -5308,7 +5280,7 @@ cli_said() {
 }
 CLI_STAMP="$(date +%s)-$$"
 
-step "D27: telflo login reads D25's personal token from its standard input (--server the gateway, --org the group organization): exit 0, 'Logged in … as D25 personal (…)', the credentials file 0600 in a 0700 folder"
+step "telflo login reads the public API steps' personal token from its standard input (--server the gateway, --org the group organization): exit 0, 'Logged in … as D25 personal (…)', the credentials file 0600 in a 0700 folder"
 cli_code=0
 (umask 077 && printf '%s\n' "$d25_personal_token" |
   cli_env TELFLO_CLI_CONFIG_DIR="$CLI_CONFIG" node "$SMOKE_CLI" login --server "$GATEWAY_URL" --org "$group_id" \
@@ -5318,7 +5290,7 @@ cli_code=0
 [ -n "$(find "$CLI_CONFIG" -maxdepth 0 -type d -perm 700)" ] && [ -n "$(find "$CLI_CONFIG/credentials.json" -maxdepth 0 -type f -perm 600 2>/dev/null)" ] ||
   fail "telflo login's credentials file isn't $CLI_CONFIG/credentials.json with mode 0600 in a 0700 folder"
 
-step "D27: telflo whoami and telflo org list (--json): the person's write token D25 personal, from the file, in the group organization, the current one of its organizations"
+step "telflo whoami and telflo org list (--json): the person's write token D25 personal, from the file, in the group organization, the current one of its organizations"
 cli_run whoami --json whoami
 [ "$cli_code" = "0" ] &&
   cli_json_is whoami --arg org "$group_id" '.kind == "person" and .source == "file" and .tokenName == "D25 personal" and .access == "write" and .organizationId == $org' ||
@@ -5327,7 +5299,7 @@ cli_run org-list --json org list
 [ "$cli_code" = "0" ] && cli_json_is org-list --arg org "$group_id" '.current == $org and ([.items[].id] | index($org)) != null' ||
   fail "telflo org list didn't list the group organization as the current one: $(cli_said org-list)"
 
-step "D27: telflo config create (draft v1), config push (the draft updated in place, validated), config publish (v1) and config pull -o (the pushed text, byte for byte)"
+step "telflo config create (draft v1), config push (the draft updated in place, validated), config publish (v1) and config pull -o (the pushed text, byte for byte)"
 (umask 077 && printf '%s' "$TEST_RUN_YAML" >"$CLI_DIR/config.yaml" && printf '# D27: pushed by the telflo CLI\n%s' "$TEST_RUN_YAML" >"$CLI_DIR/config-pushed.yaml") ||
   fail "writing the CLI's configuration files failed"
 cli_run config-create --json config create --name "Stack smoke CLI $CLI_STAMP" -f "$CLI_DIR/config.yaml"
@@ -5350,7 +5322,7 @@ if [ "$SMOKE_SITE" = "saas" ]; then
 else
   d27_anonymous="the open route off: both exit 3 login_required"
 fi
-step "D27: telflo validate, logged in on the configuration's pin (valid, exit 0), then anonymously with an empty config folder ($d27_anonymous; no login written)"
+step "telflo validate, logged in on the configuration's pin (valid, exit 0), then anonymously with an empty config folder ($d27_anonymous; no login written)"
 cli_run validate --json validate "$CLI_DIR/config-pushed.yaml" --config "$cli_configuration_id"
 [ "$cli_code" = "0" ] && cli_json_is validate '.valid == true and (.errors | length) == 0' ||
   fail "telflo validate --config of a valid text didn't answer valid: $(cli_said validate)"
@@ -5360,7 +5332,7 @@ cli_run validate --json validate "$CLI_DIR/config-pushed.yaml" --config "$cli_co
 cli_code=0
 (umask 077 && cli_env TELFLO_CLI_CONFIG_DIR="$CLI_ANONYMOUS_CONFIG" TELFLO_SERVER="$GATEWAY_URL" node "$SMOKE_CLI" --json validate "$CLI_DIR/config.yaml" \
   </dev/null >"$CLI_DIR/validate-anonymous.out" 2>"$CLI_DIR/validate-anonymous.err") || cli_code=$?
-# cli_login_required <name>: oss's answer (D36-1 decision 31, its anonymous route off, the API's 404): exit 3,
+# cli_login_required <name>: oss's answer (its anonymous route off, the API's 404): exit 3,
 # its --json error login_required.
 cli_login_required() { [ "$cli_code" = "3" ] && [ "$(jq -r '.error.code // empty' "$CLI_DIR/$1.err" 2>/dev/null)" = "login_required" ]; }
 if [ "$SMOKE_SITE" = "saas" ]; then
@@ -5382,7 +5354,7 @@ else
 fi
 [ -z "$(ls -A "$CLI_ANONYMOUS_CONFIG")" ] || fail "telflo validate without a login wrote into its config folder"
 
-step "D27: telflo ottl lint --context log: a valid condition (exit 0), a broken one (exit 4, its item invalid)"
+step "telflo ottl lint --context log: a valid condition (exit 0), a broken one (exit 4, its item invalid)"
 cli_run ottl-lint --json ottl lint --context log --expr 'attributes["env"] == "prod"'
 [ "$cli_code" = "0" ] && cli_json_is ottl-lint '.valid == true and .checked == 1' ||
   fail "telflo ottl lint of a valid condition didn't pass: $(cli_said ottl-lint)"
@@ -5390,7 +5362,7 @@ cli_run ottl-lint-broken --json ottl lint --context log --expr 'attributes["env"
 [ "$cli_code" = "4" ] && cli_json_is ottl-lint-broken '.valid == false and [.items[].valid] == [false]' ||
   fail "telflo ottl lint of a broken condition didn't exit 4: $(cli_said ottl-lint-broken)"
 
-step "D27: telflo test --spec (a sample file and two OTTL rules) --config, on the published v1 in the real tester: succeeded, both rules passed (exit 0)"
+step "telflo test --spec (a sample file and two OTTL rules) --config, on the published v1 in the real tester: succeeded, both rules passed (exit 0)"
 (umask 077 && cp "$work_dir/stack-smoke-logs.json" "$CLI_DIR/sample.json" &&
   jq -n --arg body "$TEST_RECORD_BODY" '{signal: "logs", pipeline: "logs", duration: 2, sample: "./sample.json", rules: [
     {name: "the record came through", context: "log", quantifier: "any", condition: ("body == \"" + $body + "\"")},
@@ -5401,10 +5373,11 @@ cli_run test --json test --spec "$CLI_DIR/spec.yaml" --config "$cli_configuratio
   cli_json_is test '.status == "succeeded" and .rulesSource == "inline" and ([.results[] | [.name, .passed]] == [["the record came through", true], ["nothing else came through", true]])' ||
   fail "telflo test didn't end succeeded with both rules passed: $(cli_said test) (status $(cli_json test '.status // empty'))"
 
-step "D27: telflo fleet create --json (no bearer in its reply), fleet groups (the Default group), deploy --group (the Default group serves v1) and fleet install --platform docker (exit 0, its stdout a docker run: a boolean, never printed)"
+step "telflo fleet create --json (no bearer in its reply), fleet groups (the Default group), deploy --group (the Default group serves v1) and fleet install --platform docker (exit 0, its stdout a docker run: a boolean, never printed)"
 cli_run fleet-create --json fleet create --label "cli-$CLI_STAMP" --type server
 cli_fleet_id=$(cli_json fleet-create '.id // empty')
-# Exactly the route's five keys (jq's keys are sorted), as D25's fleet: no bearer, nothing else.
+# Exactly the route's five keys (jq's keys are sorted), as the public API steps' fleet: no bearer, nothing
+# else.
 [ "$cli_code" = "0" ] && [ -n "$cli_fleet_id" ] && cli_json_is fleet-create 'keys == ["id","label","tokenExpiresAt","tokenId","type"] and .type == "server"' ||
   fail "telflo fleet create didn't answer a server fleet's five keys: $(cli_said fleet-create)"
 cli_run fleet-groups --json fleet groups "$cli_fleet_id"
@@ -5420,7 +5393,7 @@ cli_run install fleet install "$cli_fleet_id" --platform docker
 [ "$cli_code" = "0" ] || fail "telflo fleet install --platform docker exited $cli_code (its output not printed)"
 grep -q '^docker run' "$CLI_DIR/install.out" || fail "telflo fleet install's stdout isn't a docker run (not printed)"
 
-step "D27: telflo logout --json removes the credentials file; telflo whoami is then exit 3, not logged in"
+step "telflo logout --json removes the credentials file; telflo whoami is then exit 3, not logged in"
 cli_run logout --json logout
 [ "$cli_code" = "0" ] && cli_json_is logout '.removed == true' && [ ! -e "$CLI_CONFIG/credentials.json" ] ||
   fail "telflo logout didn't remove the credentials file: $(cli_said logout)"
@@ -5428,7 +5401,7 @@ cli_run whoami-after --json whoami
 [ "$cli_code" = "3" ] && [ "$(jq -r '.error.code // empty' "$CLI_DIR/whoami-after.err" 2>/dev/null)" = "auth_error" ] ||
   fail "telflo whoami after logout wasn't exit 3 auth_error: $(cli_said whoami-after)"
 
-step "D27: no tf_, tqd_ or tll_ in the CLI's outputs but install's stdout, and install's stdout in none of the other outputs nor the API's and the gateway's logs: grep -c, counts only"
+step "no tf_, tqd_ or tll_ in the CLI's outputs but install's stdout, and install's stdout in none of the other outputs nor the API's and the gateway's logs: grep -c, counts only"
 # The CLI's outputs: every run's stdout and stderr (19 runs) but install's stdout, and the YAML config pull wrote.
 cli_outputs=("$CLI_DIR/config-pulled.yaml")
 for cli_file in "$CLI_DIR"/*.out "$CLI_DIR"/*.err; do
@@ -5454,13 +5427,13 @@ cli_steps="drove the telflo CLI ($smoke_cli_version) through the gateway: logged
 
 # The CLI's steps take minutes; the access cookie lasts 15, and the per-token step mints its token and the next
 # step revokes the personal one through the session.
-step "D27: refresh the session's access cookie: POST /api/v1/auth/refresh answers 200"
+step "refresh the session's access cookie: POST /api/v1/auth/refresh answers 200"
 response=$(curl -s --max-time 30 -w '\n%{http_code}' -b "$JAR" -c "$JAR" -X POST "$GATEWAY_URL/api/v1/auth/refresh" \
   -H 'X-Telflo-CSRF: 1') || fail "refreshing after the CLI's steps got no reply (curl exit $?)"
 status=$(tail -n1 <<<"$response")
 [ "$status" = "200" ] || fail "refreshing after the CLI's steps returned HTTP $status: $(sed '$d' <<<"$response")"
 
-step "D25, last: the per-token limit, 60 a minute, on a token minted for it alone: 61 GET /whoami, the first 60 answered 200, the 61st 429 rate_limited with Retry-After"
+step "the per-token limit, 60 a minute, on a token minted for it alone: 61 GET /whoami, the first 60 answered 200, the 61st 429 rate_limited with Retry-After"
 # A fresh token: its minute starts with its first request, so the 61 run in one window (an older token's could
 # reset part-way).
 d25_mint d25_limit_token "$D16B_ORGANIZATION_URL/service-accounts/$d25_service_account_id/api-tokens" "D25 limit" read
@@ -5476,7 +5449,7 @@ d25_call d25_limit_token GET /whoami
   fail "a fresh token's 61st /whoami returned HTTP $status $(reply_code), not 429 rate_limited"
 grep -qiE '^retry-after: [1-9][0-9]*'$'\r''?$' "$D16B_REPLY_HEADERS" || fail "the per-token limit's 429 has no Retry-After"
 
-step "D25: revoke the personal token through the session (204); it's then the one 401"
+step "revoke the personal token through the session (204); it's then the one 401"
 platform DELETE "$GATEWAY_URL/api/v1/auth/me/api-tokens/$d25_personal_token_id"
 [ "$status" = "204" ] || fail "revoking the D25 personal token returned HTTP $status: $(reply_code)"
 d25_personal_token_id=""
@@ -5484,7 +5457,7 @@ d25_call d25_personal_token GET /whoami
 [ "$status" = "401" ] && [ "$(reply_code)" = "invalid_api_token" ] ||
   fail "the revoked personal token's /whoami returned HTTP $status $(reply_code), not 401 invalid_api_token"
 
-step "D25, after every public call: the API's and the gateway's logs hold no token and no pipeline name: grep -cF of each, counts only (docker compose logs api gateway)"
+step "after every public API call: the API's and the gateway's logs hold no token and no pipeline name: grep -cF of each, counts only (docker compose logs api gateway)"
 (umask 077 && docker compose logs --no-color api gateway >"$work_dir/d25-logs" 2>&1) ||
   fail "reading the API's and the gateway's logs failed"
 [ -s "$work_dir/d25-logs" ] || fail "the API's and the gateway's logs are empty, so the search proves nothing"
@@ -5499,7 +5472,7 @@ grep -qF '"PUT /api/public/v1/[redacted] HTTP/1.1"' "$work_dir/d25-logs" ||
 unset d25_write_token d25_read_token d25_personal_token d25_limit_token
 d25_steps="drove the public API through the gateway with a service account's write and read tokens and a personal token (whoami and orgs for both kinds, the person's organization header 400 then 200, a read token refused a write, a configuration created, checked by the real validator and published to the opamp-server, a pipeline's rules replaced by its name, /validate, the real evaluator's /ottl/lint, a fleet, a group and a docker install, a YAML test run in the real tester read back with its output, the document, the reference page with its CSP, nginx's 413 and the per-token 429), no token or pipeline name in the API's or the gateway's logs"
 
-step "D17d-1: delete the gateway (204: the Default group and the Cluster left), then the Kubernetes fleet (204)"
+step "delete the gateway (204: the Default group and the Cluster left), then the Kubernetes fleet (204)"
 platform DELETE "$K8S_FLEET_URL/groups/$k8s_gateway_id"
 [ "$status" = "204" ] || fail "deleting the gateway returned HTTP $status: $(reply_code)"
 platform GET "$K8S_FLEET_URL/groups"
@@ -5519,9 +5492,8 @@ platform DELETE "$D16B_CONFIGURATIONS_URL/$d16b_configuration_id"
 [ "$status" = "204" ] || fail "deleting the configuration once unassigned returned HTTP $status: $(head -c 500 <<<"$body")"
 d16b_deleted_configuration_id=$d16b_configuration_id
 d16b_configuration_id=""
-# The platform's after-response delete (D11b decision 12), which the
-# Default group's assignment would have refused, now removes it (as D16a's
-# steps check theirs).
+# The platform's after-response delete, which the Default group's assignment
+# would have refused, now removes it (as the fleet steps check theirs).
 stack_smoke publications "$group_id" "$d16b_deleted_configuration_id" 0 ||
   fail "the opamp-server still holds the published version of the D16b configuration $d16b_deleted_configuration_id after its delete (above)"
 
@@ -5545,12 +5517,12 @@ status=$(curl -s -o /dev/null -w '%{http_code}' -b "$JAR" -X DELETE "$GATEWAY_UR
   -H 'X-Telflo-CSRF: 1')
 [ "$status" = "204" ] || fail "deleting the organization returned HTTP $status"
 
-# The organization's logo went with it (D23-2 decision 38): its public read is the plain 404 at once (no live
+# The organization's logo went with it: its public read is the plain 404 at once (no live
 # organization), and on s3 its object is removed after the delete's commit (polled). A poll counts only the
 # filer's definite 404 for the key (object_store_missing), never a read that failed some other way, and is then
 # checked against the bucket's own listing, so a filer that can't be read never passes for one without the
 # object.
-step "D23-2: the deleted organization's logo: GET /api/v1/organization-logos/:organizationId/:logoId answers 404 \"Not found.\" in plain text"
+step "the deleted organization's logo: GET /api/v1/organization-logos/:organizationId/:logoId answers 404 \"Not found.\" in plain text"
 status=$(curl -s --max-time 30 -o "$qd_dir/logo-gone" -D "$qd_dir/logo-gone.headers" -w '%{http_code}' \
   "$GATEWAY_URL/api/v1/organization-logos/$group_id/$logo_id" || true)
 qd_refused logo-gone "Not found." 404 ||
@@ -5573,7 +5545,7 @@ step "the platform removed the group organization from the opamp-server"
 stack_smoke group-gone "$group_id" ||
   fail "the group organization $group_id is still registered in the opamp-server (above)"
 
-# The organization's delete reaches the opamp-server (D16b decision 20) and
+# The organization's delete reaches the opamp-server and
 # takes its fleets with it: the management API then answers the
 # organization's fleets 404 organization_not_found. Polled: the platform's
 # delete runs after its response, retried on a failure.
@@ -5593,7 +5565,7 @@ d16b_fleet_id=""
 
 # The delete moved the session to the account's fallback organization: its
 # access cookie is answered access_token_expired, and a refresh issues one
-# for the personal organization (D5 decisions 9 and 10).
+# for the personal organization.
 step "the account is kept: its session refreshes into its personal organization"
 response=$(curl -s -w '\n%{http_code}' -b "$JAR" -c "$JAR" -X POST "$GATEWAY_URL/api/v1/auth/refresh" \
   -H 'X-Telflo-CSRF: 1')
@@ -5608,7 +5580,7 @@ body=$(sed '$d' <<<"$response")
   fail "after the delete, /me is not the account in its personal organization: $body"
 
 
-# The run's secrets in no log (D36-2 decision 97): both passwords, the invitations' tokens and, in oss, the
+# The run's secrets in no log: both passwords, the invitations' tokens and, in oss, the
 # bootstrap's set-password link's token (run-secrets, written as each was read), searched in the API's, the
 # gateway's and the web server's logs at the end of the run, counts only.
 if [ "$SMOKE_SITE" = "saas" ]; then

@@ -1,8 +1,7 @@
-// The kind smoke's collector values (scripts/smoke-kind.sh; D33-1
-// spec decision 35, Preflight ruling 19): the values file the Helm dialog's
-// download gives for a group, built by the contracts' own builders
-// (helmValuesInputOf, helmValuesYaml), as the browser builds it, from the
-// group's install facts and the fleet's default token's bearer.
+// The kind smoke's collector values (scripts/smoke-kind.sh): the values file
+// the Helm dialog's download gives for a group, built by the contracts' own
+// builders (helmValuesInputOf, helmValuesYaml), as the browser builds it, from
+// the group's install facts and the fleet's default token's bearer.
 //
 // The smoke runs it as the text of `node --import tsx --input-type=module -e`
 // in a telflo-core with its node_modules (where @telflo/contracts resolves),

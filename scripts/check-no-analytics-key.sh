@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
-# Fails if a PostHog key is committed (D36-1 decision 47, Preflight ruling
-# 30; the owner's Q250: PostHog stays in the app, off unless configured, and
-# no key is ever in this repository).
+# Fails if a PostHog key is committed (PostHog stays in the app, off unless
+# configured, and no key is ever in this repository).
 #
 #   scripts/check-no-analytics-key.sh [root]     (root: default the current directory)
 #

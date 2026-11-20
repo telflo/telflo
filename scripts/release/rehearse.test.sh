@@ -10,7 +10,7 @@
 #      pmset and caffeinate, a fixture kubeconfig (TELFLO_REHEARSE_KUBECONFIG,
 #      the script's test-only setting), HOME a folder of the test (git's
 #      url.insteadOf points the opamp-server clone at a local repository):
-#      battery, low disk, an owner's project or port, an earlier run's
+#      battery, low disk, a developer's own project or port, an earlier run's
 #      leftovers, a kube context or kubeconfig changed during a run, a step
 #      failing, --keep, --cleanup removing only its own names (and images
 #      only while their recorded ids hold), a running rehearsal's labels
@@ -66,12 +66,12 @@ out="$(env CI=true TELFLO_REHEARSE_KUBECONFIG= "$shell" "$script" --version "$ve
 check "TELFLO_REHEARSE_KUBECONFIG named but empty, with CI: refused too (exit 2)" "[ $rc -eq 2 ]"
 for pb in 58022 51020 7970 52890 51134 50079 1023 65401 abc 0; do
   run --version "$version" --work "$tmp/w" --port-base "$pb" --dry-run
-  check "--port-base $pb (an owner's port among the rehearsal's, or out of range): refused (exit 2)" \
+  check "--port-base $pb (a developer's own stack's port among the rehearsal's, or out of range): refused (exit 2)" \
     "[ $rc -eq 2 ] && { has \"one the owner's stack or dev servers use\" || has '--port-base must be a number'; }"
 done
 for p in telflo telflo-dev telflo-platform; do
   out="$(env COMPOSE_PROJECT_NAME="$p" "$shell" "$script" --version "$version" --work "$tmp/w" --dry-run 2>&1)"; rc=$?
-  check "COMPOSE_PROJECT_NAME=$p (the owner's): refused (exit 2)" "[ $rc -eq 2 ] && has 'COMPOSE_PROJECT_NAME is $p'"
+  check "COMPOSE_PROJECT_NAME=$p (a developer's own stack's): refused (exit 2)" "[ $rc -eq 2 ] && has 'COMPOSE_PROJECT_NAME is $p'"
 done
 run --version 9.9.9 --work "$tmp/w" --dry-run
 check "a --version that isn't HEAD's Chart.yaml's: refused (exit 1)" "[ $rc -eq 1 ] && has \"--version must be both\""
@@ -303,7 +303,7 @@ for base in range(int(sys.argv[1]), 60000, 211):
 pb="$(free_base $((40000 + $$ % 3000)))"
 power_ac() { printf "Now drawing from 'AC Power'\n -InternalBattery-0 (id=1)\t100%%; charged; 0:00 remaining present: true\n" >"$sd/power"; }
 power_battery() { printf "Now drawing from 'Battery Power'\n -InternalBattery-0 (id=1)\t88%%; discharging; 7:25 remaining present: true\n" >"$sd/power"; }
-reset() { # the stand-ins' state: the owner's things, the pins local, AC, 40 GB free, no hooks
+reset() { # the stand-ins' state: a developer's own things, the pins local, AC, 40 GB free, no hooks
   rm -rf "$sd"; mkdir -p "$sd"
   printf '%s\n' telflo-platform-db-1 telflo-dev-api-1 buildx_buildkit_telflo-multi0 owner-telflo-rehearse-copy >"$sd/containers"
   printf '%s\n' telflo-platform_db buildx_buildkit_telflo-multi0_state >"$sd/volumes"
@@ -364,7 +364,7 @@ check "the end removed, by name: the smoke's leftovers, the builder it made, the
    && ! listed containers buildx_buildkit_telflo-release0 && ! listed volumes buildx_buildkit_telflo-release0_state \
    && ! grep -q '^ghcr.io/telflo/telflo/api:$version ' '$sd/images' && ! grep -q '^ghcr.io/telflo/telflo/collector:0.162.0 ' '$sd/images' \
    && ! grep -q '^telflo-smoke-collector:telflo-rehearse-stack-42 ' '$sd/images' && has 'removed:'"
-check "nothing else removed: the owner's containers, volumes, networks and images, a name only containing telflo-rehearse-, an image there before" \
+check "nothing else removed: a developer's own containers, volumes, networks and images, a name only containing telflo-rehearse-, an image there before" \
   "listed containers telflo-platform-db-1 && listed containers telflo-dev-api-1 && listed containers buildx_buildkit_telflo-multi0 \
    && listed containers owner-telflo-rehearse-copy && listed volumes telflo-platform_db && listed networks telflo-platform_default \
    && grep -q '^postgres:18 ' '$sd/images' && grep -q '^telflo-smoke-collector:owner-tag ' '$sd/images' \
@@ -406,7 +406,7 @@ hrun -- --version "$version" --work "$tmp/w4" --registry 127.0.0.1:5999 --port-b
 check "Docker's disk under 25 GB: fails (exit 1) after the registry's pull, before any other pull or step" \
   "[ $rc -eq 1 ] && has \"Docker's disk has 24 GB free: the rehearsal needs 25 GB\" && [ \"\$(grep -c ' pull ' '$sd/steps.log')\" -eq 1 ] && ! grep -qv '^tools.sh ' '$sd/steps.log'"
 
-# An owner's project or port; an earlier run's leftovers.
+# A developer's own project or port; an earlier run's leftovers.
 reset
 hrun COMPOSE_PROJECT_NAME=telflo-platform -- --version "$version" --work "$tmp/w5" --registry 127.0.0.1:5999 --port-base "$pb"
 check "COMPOSE_PROJECT_NAME=telflo-platform: refused (exit 2), nothing run" "[ $rc -eq 2 ] && has 'COMPOSE_PROJECT_NAME is telflo-platform' && [ \$(steps_ran) -eq 0 ]"
@@ -539,7 +539,7 @@ kill "$live_pid" 2>/dev/null; wait "$live_pid" 2>/dev/null
 
 # A run that starts its own registry (no --registry): the container is labelled with the run's
 # work folder, pid and start time (the marker's labels), so while the run goes on it names a
-# running rehearsal (Ruling 402); removed at the end.
+# running rehearsal; removed at the end.
 reset
 cat >>"$sd/hook-steps.sh" <<'HOOK'
 if [ "$1" = stack-smoke ]; then

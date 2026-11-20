@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# static.sh's self-test (D36-2 decision 96), on fixture trees only (the
-# real gates never run here):
+# static.sh's self-test, on fixture trees only (the real gates never run
+# here):
 #   - `--list` names every scripts/**/*.test.sh and scripts/release/check-*.sh
 #     of a fixture tree, the fixed list first, and nothing else it finds;
 #   - a failing gate makes the run exit 1 and names it, and the gates after

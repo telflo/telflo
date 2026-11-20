@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
-# The archive smoke (D36-2 decision 98): the README's Quick start, run as
-# written on the release's Compose archive, then the install checked from
-# the outside.
+# The archive smoke: the README's Quick start, run as written on the
+# release's Compose archive, then the install checked from the outside.
 #
 #   scripts/smoke-compose-install.sh --archive <telflo-compose-<version>.tar.gz> --sums <SHA256SUMS>
 #       --work <dir> [--project <name>] [--http-port <p>] [--agent-port <p>] [--mailpit-port <p>]
@@ -38,8 +37,8 @@
 # from its link (POST /api/v1/invitation-registrations). Then its own
 # checks: every service healthy (one-shots exited 0, Mailpit running); only
 # the gateway's and the agent's ports published, on 127.0.0.1, and
-# Mailpit's on 127.0.0.1; .env 0600, secrets/ 0700 with its files 0644
-# (Preflight ruling 1); no development secret in .env or secrets/ (by sha256,
+# Mailpit's on 127.0.0.1; .env 0600, secrets/ 0700 with its files 0644; no
+# development secret in .env or secrets/ (by sha256,
 # deploy/compose/setup.sh's list, which check-compose-install.sh holds
 # complete); the open-source defaults in force (registration refused 403
 # registration_not_open, /playground 404); a configuration created,
@@ -64,8 +63,8 @@
 #
 # The refusals (exit 2, before anything starts): usage; the project's name
 # (one that is never a throwaway, or one with containers, volumes or
-# networks already); the ports (the owner's stack's and dev servers', in
-# use, or the same twice); the work folder (relative, not empty, a path with
+# networks already); the ports (a developer's own stack's and dev servers',
+# in use, or the same twice); the work folder (relative, not empty, a path with
 # characters a URL or a group's mount can't hold, inside this tree); the
 # archive's name or version; README.md's Quick start (markers, a text to
 # replace not there exactly once, no bootstrap or `docker compose down`
@@ -136,7 +135,7 @@ HTTP_PORT=${HTTP_PORT:-58280}
 AGENT_PORT=${AGENT_PORT:-58281}
 MAILPIT_PORT=${MAILPIT_PORT:-58282}
 
-# The project: never the Compose install's, the development stack's or the owner's running stack.
+# The project: never the Compose install's, the development stack's or a developer's own running stack.
 case "$PROJECT" in
   telflo | telflo-dev | telflo-platform)
     refuse "--project $PROJECT is never a throwaway project (the Compose install's, the development stack's or the owner's running stack)" ;;

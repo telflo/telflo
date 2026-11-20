@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# check-compose-install.sh: the Compose install (deploy/compose, D36-2
-# decisions 64, 69, 88-90; Preflight ruling 1) holds its rules:
+# check-compose-install.sh: the Compose install (deploy/compose) holds its
+# rules:
 #
 #   - the four copied files are byte for byte their sources:
 #     gateway/default.conf and gateway/extra-routes.conf (docker/gateway/),

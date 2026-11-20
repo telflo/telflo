@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# static.sh: the full suite's static gates (D36-2 decision 96;
-# docs/conventions/testing.md, "CI gates"), one at a time.
+# static.sh: the full suite's static gates (docs/conventions/testing.md,
+# "CI gates"), one at a time.
 #
 #   bash scripts/gates/static.sh [--tree <dir>] --work <dir> [--redact-literals <file>] [--discovered-only]
 #   bash scripts/gates/static.sh [--tree <dir>] --list [--discovered-only]
@@ -73,7 +73,7 @@ if [ "$list" = 0 ]; then
   fi
 fi
 
-# The platform chart's folder (D36-2 decision 108).
+# The platform chart's folder.
 platform_chart=charts/telflo
 
 FIXED="naming licenses collector-entrypoint collector-build-script supervisor-chart-render opamp-server-pin typecheck typecheck-web lint web-build cli-build cli-package gateway-logs platform-chart-render chart-cloud-neutral analytics-key"

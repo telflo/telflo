@@ -1,8 +1,7 @@
 # shellcheck shell=bash
-# oci.sh: the release scripts' shared steps for OCI archives and registries
-# (D36-2 decisions 71, 78, 80, 81 and 86; Preflight rulings 5 and 6, Ruling
-# 383). Sourced, never run. The caller sets TELFLO_OCI_PREFIX (its messages'
-# prefix) and TELFLO_OCI_TMP (a temporary directory of its own) first.
+# oci.sh: the release scripts' shared steps for OCI archives and registries.
+# Sourced, never run. The caller sets TELFLO_OCI_PREFIX (its messages' prefix)
+# and TELFLO_OCI_TMP (a temporary directory of its own) first.
 #
 #   telflo_registry_ok <registry>        exit 0 for ghcr.io or a loopback
 #                                        127.0.0.1:<port> / localhost:<port>
@@ -40,8 +39,7 @@
 #                                        (exit 1, its content never printed) unless
 #                                        a JSON object with a non-empty "auths" and
 #                                        no credential store or helper in any
-#                                        spelling (the publish scripts' rule, D18
-#                                        Rulings 32 and 34)
+#                                        spelling (the publish scripts' rule)
 #   telflo_docker_config                 DOCKER_CONFIG: the caller's, checked, or a
 #                                        new one with no login in TELFLO_OCI_TMP
 #   telflo_digest_decision <status> <remote> <want>
@@ -445,8 +443,8 @@ telflo_oci_unpack() { # <tar> <dir> <want>
   telflo_oci_run "$1" unpack "$1" "$2" "$3"
 }
 
-# The one comparison every copy makes (decision 80): a tag already holding
-# the archive's digest is skipped, a tag holding another is never touched.
+# The one comparison every copy makes: a tag already holding the archive's
+# digest is skipped, a tag holding another is never touched.
 telflo_digest_decision() { # <telflo_remote_digest status> <remote digest> <want>
   case "$1" in
     3) echo push ;;

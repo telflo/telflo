@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
-# check-version.sh's self-test (D36-2 decision 75; Q279): the real tree
-# passes; in a throwaway copy (the two scripts beside this test, and a
-# charts/telflo/Chart.yaml written per case) the release versions pass and
-# everything else fails:
+# check-version.sh's self-test: the real tree passes; in a throwaway copy
+# (the two scripts beside this test, and a charts/telflo/Chart.yaml written
+# per case) the release versions pass and everything else fails:
 #   pass: 0.1.0, 0.1.12, 1.0.0 (and a quoted or unquoted appVersion);
 #   fail: 0.1.0-rc.1, 0.1.0+1, v0.1.0, 01.0.0, 0.1 (and other leading
 #         zeros, a fourth part, a blank inside the quotes), an empty value,

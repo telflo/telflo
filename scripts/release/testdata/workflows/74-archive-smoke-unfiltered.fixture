@@ -1,4 +1,4 @@
-# Breaks one rule: the archive smoke called directly, its output not through redact.sh (Ruling 408).
+# Breaks one rule: the archive smoke called directly, its output not through redact.sh.
 file: release.yml
 rule: required-steps
 <<<

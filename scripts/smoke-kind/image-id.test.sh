@@ -1,6 +1,6 @@
 #!/bin/bash
 # Tests for scripts/smoke-kind/image-id.sh (the kind smoke's step-4 image-id
-# check, D36-2 Ruling 394) and its store switch through scripts/release/
+# check) and its store switch through scripts/release/
 # oci.sh's telflo_engine_store, offline: a stand-in `docker` first on PATH
 # answers `info` (the classic or containerd image store), `image inspect`
 # (the host's id) and `exec <node> crictl|ctr` (the node's record) from the

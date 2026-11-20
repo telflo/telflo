@@ -1,10 +1,9 @@
 #!/usr/bin/env bash
-# Tests for scripts/check-no-analytics-key.sh (D36-1 decision 47, Preflight
-# ruling 30). Each case is a throwaway git checkout in a temporary directory
-# removed on exit; no key is ever committed here: the keys are made at run
-# time (`openssl rand`), and the checks on them are boolean (grep -q on the
-# script's output), never printing one. git runs with no global or system
-# configuration.
+# Tests for scripts/check-no-analytics-key.sh. Each case is a throwaway git
+# checkout in a temporary directory removed on exit; no key is ever committed
+# here: the keys are made at run time (`openssl rand`), and the checks on them
+# are boolean (grep -q on the script's output), never printing one. git runs
+# with no global or system configuration.
 #
 # Run:  bash scripts/check-no-analytics-key.test.sh
 # bash 3.2 compatible (macOS's /bin/bash).

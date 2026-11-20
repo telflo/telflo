@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # check-doc-links.sh: every relative link in the repository's Markdown docs
-# leads somewhere (D36-2 Ruling 393).
+# leads somewhere.
 #
 #   scripts/release/check-doc-links.sh       (no argument; from anywhere)
 #

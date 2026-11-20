@@ -1,9 +1,8 @@
 #!/usr/bin/env node
-// check-workflows.mjs: the release workflows' static check (D36-2 decisions
-// 77, 83-85, 87 and 103; Preflight rulings 7 (PR-9-PR-15); Rulings 391-392).
-// It reads .github/workflows/release.yml and collector.yml with the `yaml`
-// package telflo-core already holds, and their raw text, and holds every rule
-// below; each failure is printed as `check-workflows: <file>: <rule>: <why>`.
+// check-workflows.mjs: the release workflows' static check. It reads
+// .github/workflows/release.yml and collector.yml with the `yaml` package
+// telflo-core already holds, and their raw text, and holds every rule below;
+// each failure is printed as `check-workflows: <file>: <rule>: <why>`.
 //
 //   node scripts/release/check-workflows.mjs [--dir <workflows folder>] [--root <repository>]
 //
@@ -12,12 +11,12 @@
 //   yaml                 each file parses with no error, duplicate key, anchor or alias; every
 //                        job and step is a block mapping (no flow-style `{ … }` step)
 //   workflow-keys        the top level holds only name, on, permissions, concurrency and jobs
-//   matrix               each job's strategy exactly its spec's (Ruling 402): release.yml's
+//   matrix               each job's strategy exactly its spec's: release.yml's
 //                        build `matrix: { image: [api, web, otelcol-validator, otelcol-testing,
 //                        ottl-evaluator] }`; collector.yml's build, test and publish `matrix:
 //                        { version: ${{ fromJSON(needs.check.outputs.versions) }} }`; no
 //                        include or exclude; no other job a strategy
-//   job-env              a job's own env: is exactly its spec's (Ruling 402): the publishing
+//   job-env              a job's own env: is exactly its spec's: the publishing
 //                        jobs `TELFLO_CRANE: ""`, every other job none (values reach a step
 //                        through its own env:, where required-steps pins them)
 //   job-keys             a job holds only needs, if, runs-on, timeout-minutes, permissions,
@@ -34,9 +33,9 @@
 //                        (and env values) below: version verify-tag.sh, the collector checks
 //                        and archive; static static.sh; build and package their scripts; the
 //                        smokes load-images.sh then their steps.sh step (stack-smoke,
-//                        archive-smoke, kind-smoke: the smoke's output through redact.sh,
-//                        decision 84, Ruling 408); publish the push scripts,
-//                        pull-back.sh, the collector check and steps.sh github-release last;
+//                        archive-smoke, kind-smoke: the smoke's output through redact.sh);
+//                        publish the push scripts, pull-back.sh, the collector check and
+//                        steps.sh github-release last;
 //                        collector.yml's check, build, test, publish and chart likewise
 //   job-outputs          a job's outputs are exactly its spec's (release's version: tag,
 //                        version and commit from steps.tag, the verify-tag.sh step, and
@@ -55,15 +54,14 @@
 //                        but HELM_REGISTRY_CONFIG, proxies, HOME, TMPDIR …) refuses nothing the
 //                        allow-list doesn't: it only words the message ("it changes what runs
 //                        or where"), so a name added to the allow-list by mistake is still
-//                        refused when the deny list names it (Ruling 402, nit 4)
+//                        refused when the deny list names it
 //   env-values           DOCKER_CONFIG is always ${{ runner.temp }}/docker, HELM_REGISTRY_CONFIG
 //                        ${{ runner.temp }}/helm/registry/config.json, GHCR_USER ${{ github.actor }}
-//   load-platform        every load-images.sh call names --platform linux/amd64 (the runner's;
-//                        Ruling 400)
+//   load-platform        every load-images.sh call names --platform linux/amd64 (the runner's)
 //   smoke-direct         no run: names a smoke script (smoke-compose-install.sh, smoke-kind.sh,
 //                        smoke-test-stack.sh): the smokes run only through steps.sh, their output
 //                        through redact.sh, so an extra step beside the required one can't
-//                        reach an unfiltered log (Ruling 409)
+//                        reach an unfiltered log
 //   trigger              release.yml: only `push: tags: ["v*"]`; collector.yml: only
 //                        workflow_dispatch
 //   pull-request-target  no pull_request_target anywhere
@@ -101,7 +99,7 @@
 //   github-env           GITHUB_ENV and GITHUB_PATH nowhere
 //   status-functions     no always(), failure() or cancelled(), and no continue-on-error, but
 //                        one: collector.yml's chart job's if: is exactly CHART_IF below, its
-//                        `!cancelled()` (Ruling 401: a skipped publish, nothing to build,
+//                        `!cancelled()` (a skipped publish, nothing to build,
 //                        mustn't skip a chart-only bump); that expression on any other job,
 //                        or any other status function, is refused
 //   secrets              no secret but secrets.GITHUB_TOKEN, and that only in a job that
@@ -109,7 +107,7 @@
 //   token-env            the job's token is `${{ secrets.GITHUB_TOKEN }}` only (never
 //                        github.token), and only docker/login-action's password or a step's
 //                        env: GH_TOKEN on release.yml's version job's verify-tag.sh (the
-//                        lightweight-tag fallback, Ruling 396) or on steps.sh github-release,
+//                        lightweight-tag fallback) or on steps.sh github-release,
 //                        GHCR_TOKEN on steps.sh helm-login; never a job's env, another
 //                        action's input or any other place
 //   telflo-crane         TELFLO_CRANE never set to a value at any level (each parsed env:, and
@@ -125,8 +123,8 @@
 //   publish-environment  the publishing jobs, and only they, run in the `release` environment
 //   publish-if           a job's if: is exactly its spec's: release.yml's jobs none;
 //                        collector.yml's build and test `${{ needs.check.outputs.has == 'true' }}`
-//                        (nothing to build: skipped, Ruling 399), publish that and
-//                        inputs.publish, chart CHART_IF (Ruling 401)
+//                        (nothing to build: skipped), publish that and
+//                        inputs.publish, chart CHART_IF
 //   artifacts            uploads keep 3 days, fail on no files, and hold only files of
 //                        ${{ runner.temp }}/oci/, /collector/ or /release/ (images and release
 //                        files); downloads go to one of those folders
@@ -165,7 +163,7 @@ try {
   process.exit(2);
 }
 
-// The allow-list: each action, its commit and its version (Preflight ruling 7, PR-14).
+// The allow-list: each action, its commit and its version.
 const ACTIONS = {
   "actions/checkout": ["3d3c42e5aac5ba805825da76410c181273ba90b1", "v7.0.1"],
   "actions/setup-node": ["949feb2413d6458794dcd2491c4babbbce0c15c1", "v7.1.0"],
@@ -190,13 +188,13 @@ const COLLECTOR_OUT = "${{ needs.version.outputs.collector_version }}";
 const MATRIX_VERSION = "${{ matrix.version }}";
 const HAS = "${{ needs.check.outputs.has == 'true' }}";
 const PUBLISH_HAS = "${{ inputs.publish && needs.check.outputs.has == 'true' }}";
-// The one status function the workflows hold (Ruling 401): the chart job runs with publish when
-// the check passed and the publish passed, or the publish was skipped because nothing was to be
-// built (a chart-only bump); never after a failed or cancelled test or publish.
+// The one status function the workflows hold: the chart job runs with publish when the check
+// passed and the publish passed, or the publish was skipped because nothing was to be built (a
+// chart-only bump); never after a failed or cancelled test or publish.
 const CHART_IF =
   "${{ !cancelled() && inputs.publish && needs.check.result == 'success' && (needs.publish.result == 'success' || (needs.publish.result == 'skipped' && needs.check.outputs.has == 'false')) }}";
 const STATUS_FUNCTION = /\b(always|failure|cancelled|success)\s*\(/g;
-// The matrices (Ruling 402).
+// The matrices.
 const RELEASE_MATRIX = { matrix: { image: ["api", "web", "otelcol-validator", "otelcol-testing", "ottl-evaluator"] } };
 const COLLECTOR_MATRIX = { matrix: { version: "${{ fromJSON(needs.check.outputs.versions) }}" } };
 const PUBLISHING_ENV = { TELFLO_CRANE: "" };
@@ -604,7 +602,7 @@ for (const [file, spec] of Object.entries(SPECS)) {
   if (text.includes("--no-attest")) problem(file, "no-attest", "--no-attest appears (a rehearsal's only, never a workflow's)");
   if (/GITHUB_ENV|GITHUB_PATH/.test(text)) problem(file, "github-env", "GITHUB_ENV or GITHUB_PATH appears (a step must not set a later one's environment)");
   {
-    // The text: no status function but the chart job's one allowed expression (Ruling 401).
+    // The text: no status function but the chart job's one allowed expression.
     const found = [...text.matchAll(STATUS_FUNCTION)].length;
     const jobsMap = isMap(wf.jobs) ? wf.jobs : {};
     const allowed = file === "collector.yml" && isMap(jobsMap.chart) && jobsMap.chart.if === CHART_IF ? 1 : 0;

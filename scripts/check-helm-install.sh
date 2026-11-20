@@ -1,55 +1,52 @@
 #!/usr/bin/env bash
-# Checks the Helm install for real (D17d-2 spec decision 28, Preflight ruling
-# 18; D18 spec decision 31, Preflight ruling 18): against a throwaway compose
-# stack and a throwaway minikube profile (CHECK_HELM_PROFILE, default
-# d18-helm), through the platform's API as a signed-in person, with the
-# platform's published chart and image (oci://ghcr.io/telflo/telflo/charts/
-# supervisor-collector, ghcr.io/telflo/telflo/collector: the stack's
-# defaults), it installs an Agent, the Cluster and a 2-replica gateway each
-# with the dialog's `helm upgrade --install` and values file (both printed by
-# the contracts' builders in the API container, as the dialog builds them
-# from the facts and a reveal), and one more gateway with a Helm values
-# link's Quick Deploy command (its curl downloading the values through the
-# gateway, then the install); finds each release's pods by the chart's
-# object name (`app=<fullname>`: the facts' fullnameOverride, the fleet id's
-# first 8 characters and -default or -cluster, else the gateway's name) and
-# checks each enrolls in its group through the platform's collector list (its
-# name the pod's, handed the rotate token). Then (D18 Ruling 27) the Agent's
-# install re-pointed at another namespace (its saved namespace changed, the
-# release unchanged) must be refused by Helm (its ClusterRole belongs to the
-# release in the first namespace) and leave nothing in that namespace; then
-# (D18 Ruling 45) each role moves as its namespace warning says: the Agent
-# uninstalled in the first namespace, then installed into the moved one, its
-# collectors the same records; the Cluster's moved install refused alike,
-# then uninstalled and installed, a new record, the old one stopping; a
-# gateway installed into its new namespace first, then uninstalled in the
-# old, new records, the old ones stopping, its Service's address moving; a
-# second fleet of the same account installs its Agent and Cluster into
-# namespaces of its own and enrolls beside the first's, the four ClusterRoles
-# and the two DaemonSets' storage hostPaths distinct, the first fleet's
-# collectors still moving on. Optionally (CHECK_HELM_NEW_DEFAULT_TOKEN=1)
-# it revokes the default token, issues a new one and runs the Agent's command
-# again with it: the token's checksum on the pod template rolls the DaemonSet
-# (D18 decision 6; no `kubectl delete pod`): `kubectl rollout status`, each
-# old pod waited for until it is deleted, then the collectors read, and only
-# the new pods' records seen after that read count (D17d-2 Ruling 45: only
-# evidence that began after the restart completed), on the rotate token,
-# while the others stay connected; it lists the new pod's storage directory
-# (the node's /var/lib/telflo/supervisor/<fullname>; names only, D17d-2
-# Ruling 48: no file beyond the supervisor's own state may hold what
-# connection settings look like). Then it searches every file it leaves in
-# the work directory for the secrets (every bearer and link secret it
-# obtains, both fleets' creates, the reveals, the printed and the downloaded
-# values files, the link and the registry's pull token, joins the secrets
-# file the moment it exists, Ruling 50; failing closed; a failed run's EXIT
-# path searches them too, before its teardown, and names the paths only),
-# uninstalls each release with its printed `helm uninstall` and deletes the
-# namespaces it made (their PVCs with them), both fleets and the
-# configuration. It never prints a values file, a Secret, a bearer or a
-# link's secret: every diagnostic is redacted (`tqd_…` and every run of 20 or
-# more base64 or base64url characters, `+` and `/` included), but for the
-# storage listing's names, printed as they are once the listing is found to
-# hold none of the run's secrets.
+# Checks the Helm install for real: against a throwaway compose stack and a
+# throwaway minikube profile (CHECK_HELM_PROFILE, default d18-helm), through
+# the platform's API as a signed-in person, with the platform's published
+# chart and image (oci://ghcr.io/telflo/telflo/charts/supervisor-collector,
+# ghcr.io/telflo/telflo/collector: the stack's defaults), it installs an
+# Agent, the Cluster and a 2-replica gateway each with the dialog's
+# `helm upgrade --install` and values file (both printed by the contracts'
+# builders in the API container, as the dialog builds them from the facts and
+# a reveal), and one more gateway with a Helm values link's Quick Deploy
+# command (its curl downloading the values through the gateway, then the
+# install); finds each release's pods by the chart's object name
+# (`app=<fullname>`: the facts' fullnameOverride, the fleet id's first 8
+# characters and -default or -cluster, else the gateway's name) and checks
+# each enrolls in its group through the platform's collector list (its name
+# the pod's, handed the rotate token). Then the Agent's install re-pointed at
+# another namespace (its saved namespace changed, the release unchanged) must
+# be refused by Helm (its ClusterRole belongs to the release in the first
+# namespace) and leave nothing in that namespace; then each role moves as its
+# namespace warning says: the Agent uninstalled in the first namespace, then
+# installed into the moved one, its collectors the same records; the Cluster's
+# moved install refused alike, then uninstalled and installed, a new record,
+# the old one stopping; a gateway installed into its new namespace first, then
+# uninstalled in the old, new records, the old ones stopping, its Service's
+# address moving; a second fleet of the same account installs its Agent and
+# Cluster into namespaces of its own and enrolls beside the first's, the four
+# ClusterRoles and the two DaemonSets' storage hostPaths distinct, the first
+# fleet's collectors still moving on. Optionally
+# (CHECK_HELM_NEW_DEFAULT_TOKEN=1) it revokes the default token, issues a new
+# one and runs the Agent's command again with it: the token's checksum on the
+# pod template rolls the DaemonSet (no `kubectl delete pod`):
+# `kubectl rollout status`, each old pod waited for until it is deleted, then
+# the collectors read, and only the new pods' records seen after that read
+# count (only evidence that began after the restart completed), on the rotate
+# token, while the others stay connected; it lists the new pod's storage
+# directory (the node's /var/lib/telflo/supervisor/<fullname>; names only: no
+# file beyond the supervisor's own state may hold what connection settings
+# look like). Then it searches every file it leaves in the work directory for
+# the secrets (every bearer and link secret it obtains, both fleets' creates,
+# the reveals, the printed and the downloaded values files, the link and the
+# registry's pull token, joins the secrets file the moment it exists; failing
+# closed; a failed run's EXIT path searches them too, before its teardown, and
+# names the paths only), uninstalls each release with its printed
+# `helm uninstall` and deletes the namespaces it made (their PVCs with them),
+# both fleets and the configuration. It never prints a values file, a Secret,
+# a bearer or a link's secret: every diagnostic is redacted (`tqd_…` and every
+# run of 20 or more base64 or base64url characters, `+` and `/` included), but
+# for the storage listing's names, printed as they are once the listing is
+# found to hold none of the run's secrets.
 #
 # Usage (the stack and the profile are the caller's; see
 # docs/conventions/testing.md, "The real Helm install"):
@@ -62,35 +59,33 @@
 #   [CHECK_HELM_NEW_DEFAULT_TOKEN=1] \
 #   scripts/check-helm-install.sh <work dir>
 #
-# It refuses, before touching anything, unless COMPOSE_PROJECT_NAME is set
-# and names a throwaway stack (not telflo, the self-host install's,
-# telflo-dev, the development stack's, or the owner's running stack's; D36-2
-# decisions 96 and 109), the two URLs are set and aren't
-# the owner's stack's ports (50080, 58025), the work directory exists,
-# CHECK_HELM_PROFILE (when set) is a DNS-1123 label, isn't minikube (the
-# owner's own profile) and isn't a name YAML reads as a number, a boolean or
-# null (kubectl writes such a name quoted, which the file's reading below
-# refuses: D18 Ruling 40), and KUBECONFIG is one file in the work directory
-# minified to the profile's context (`minikube -p <profile> kubectl -- config
-# view --flatten --minify --context=<profile> > <work dir>/kubeconfig`): its
-# only context and cluster the profile, its current context; and the server
-# kubectl will use, resolved as kubectl resolves the current context (`kubectl
-# config view --minify`), the profile's own https:// server on a port that
-# isn't 8080 (as a number), reached directly: no proxy-url, no proxy variable
-# (D18 Rulings 33 and 35: with no server, kubectl would reach
-# http://localhost:8080, the owner's development API); and, before those, the
-# whole file only what minikube writes (D18 Ruling 38: an allowlist of keys,
-# place by place, read from the file's own text, and exactly one cluster,
-# context and user, each the profile; no exec plugin, auth-provider, proxy,
-# TLS override or impersonation can get through). Every HELM_*
-# variable of the caller's environment is unset (`helm env` names them:
-# HELM_KUBECONTEXT, HELM_KUBEAPISERVER, HELM_KUBETOKEN, HELM_NAMESPACE,
-# HELM_DRIVER… would send helm elsewhere than that context; a note names
-# those unset, never their values), then Helm's homes (HELM_CACHE_HOME,
-# HELM_CONFIG_HOME, HELM_DATA_HOME, its registry and repository config, its
-# plugins) are set in the work directory, and the printed commands run with
-# HOME and DOCKER_CONFIG there too. The chart is pulled anonymously, for real
-# (D18 Preflight ruling 21: Docker and Helm ask the macOS keychain's
+# It refuses, before touching anything, unless COMPOSE_PROJECT_NAME is set and
+# names a throwaway stack (not telflo, the self-host install's, telflo-dev,
+# the development stack's, or a developer's own running stack's), the two URLs
+# are set and aren't a developer's own stack's ports (50080, 58025), the work
+# directory exists, CHECK_HELM_PROFILE (when set) is a DNS-1123 label, isn't
+# minikube (a developer's own profile) and isn't a name YAML reads as a
+# number, a boolean or null (kubectl writes such a name quoted, which the
+# file's reading below refuses), and KUBECONFIG is one file in the work
+# directory minified to the profile's context (`minikube -p <profile> kubectl
+# -- config view --flatten --minify --context=<profile> > <work dir>/kubeconfig`):
+# its only context and cluster the profile, its current context; and the
+# server kubectl will use, resolved as kubectl resolves the current context
+# (`kubectl config view --minify`), the profile's own https:// server on a
+# port that isn't 8080 (as a number), reached directly: no proxy-url, no proxy
+# variable (with no server, kubectl would reach http://localhost:8080, a
+# developer's own development API); and, before those, the whole file only
+# what minikube writes (an allowlist of keys, place by place, read from the
+# file's own text, and exactly one cluster, context and user, each the
+# profile; no exec plugin, auth-provider, proxy, TLS override or impersonation
+# can get through). Every HELM_* variable of the caller's environment is unset
+# (`helm env` names them: HELM_KUBECONTEXT, HELM_KUBEAPISERVER,
+# HELM_KUBETOKEN, HELM_NAMESPACE, HELM_DRIVER… would send helm elsewhere than
+# that context; a note names those unset, never their values), then Helm's
+# homes (HELM_CACHE_HOME, HELM_CONFIG_HOME, HELM_DATA_HOME, its registry and
+# repository config, its plugins) are set in the work directory, and the
+# printed commands run with HOME and DOCKER_CONFIG there too. The chart is
+# pulled anonymously, for real (Docker and Helm ask the macOS keychain's
 # credential helper when their config holds no auth, and a stored ghcr.io
 # login breaks even a public pull): the work directory's Docker config.json
 # and Helm registry config are seeded `{"auths":{"telflo-check.invalid":{}}}`,
@@ -101,8 +96,8 @@
 # run. Then it requires the stack's opamp-server to hand collectors
 # OPAMP_SERVER_URL=http://host.minikube.internal:<its published agent
 # port>/opamp/api/v1 (the facts' endpoint), and the API's
-# TELFLO_PUBLIC_API_URL to be TELFLO_GATEWAY_URL (the link's curl runs on
-# this machine); and none of the namespaces it makes may exist yet.
+# TELFLO_PUBLIC_API_URL to be TELFLO_GATEWAY_URL (the link's curl runs on this
+# machine); and none of the namespaces it makes may exist yet.
 #
 # The image: the pods run <the facts' image repository>:<the collector
 # version> with pullPolicy IfNotPresent. Unless that tag can be pulled
@@ -122,7 +117,7 @@
 set -euo pipefail
 
 PROFILE=${CHECK_HELM_PROFILE:-d18-helm}
-# The platform's own packages (D18 decisions 9 and 11): the stack's defaults, and what this check installs.
+# The platform's own packages: the stack's defaults, and what this check installs.
 PLATFORM_CHART_REFERENCE="oci://ghcr.io/telflo/telflo/charts/supervisor-collector"
 PLATFORM_CHART_VERSION="0.1.0"
 PLATFORM_IMAGE_REPOSITORY="ghcr.io/telflo/telflo/collector"
@@ -133,7 +128,7 @@ NS_REACH=telflo-hc-reach
 NS_MOVED=telflo-hc-moved
 NS_CMOVED=telflo-hc-cmoved
 NS_GMOVED=telflo-hc-gmoved
-# Where each moved release runs (D18 Ruling 45: the moves below change them), and the records the moves replaced.
+# Where each moved release runs (the moves below change them), and the records the moves replaced.
 agent_dir=telflo-node
 agent_ns=$NS_NODE
 cluster_dir=telflo-cluster
@@ -177,15 +172,15 @@ if [ -n "${CHECK_HELM_LOCAL_IMAGE:-}" ]; then
   [[ "$CHECK_HELM_LOCAL_IMAGE" =~ ^[a-z0-9]+([._:/-][a-z0-9]+)*:[A-Za-z0-9_][A-Za-z0-9_.-]*$ ]] ||
     refuse "CHECK_HELM_LOCAL_IMAGE isn't an image name with a tag"
 fi
-# D18 Ruling 40: a profile YAML 1.1 reads as a number (all digits, 1e3, 0x1f, 0o17, 0b101) or as a boolean or
-# null (y, n, yes, no, true, false, on, off, null, ~, in any case) is written quoted by kubectl (`name: "123"`),
-# and the kubeconfig's key allowlist below reads plain names only: refused here, saying why.
+# A profile YAML 1.1 reads as a number (all digits, 1e3, 0x1f, 0o17, 0b101) or as a boolean or null (y, n, yes, no,
+# true, false, on, off, null, ~, in any case) is written quoted by kubectl (`name: "123"`), and the kubeconfig's key
+# allowlist below reads plain names only: refused here, saying why.
 profile_lower=$(printf '%s' "$PROFILE" | tr '[:upper:]' '[:lower:]')
 case "$profile_lower" in
   y | n | yes | no | true | false | on | off | null | "~")
     refuse "CHECK_HELM_PROFILE ($PROFILE) is a word YAML reads as a boolean or null: kubectl writes such a name quoted in the kubeconfig, which this check doesn't read; name another profile (default d18-helm)" ;;
 esac
-# A YAML 1.1 date (2001-12-14) too (D18 Ruling 45's nit): kubectl writes it quoted.
+# A YAML 1.1 date (2001-12-14) too: kubectl writes it quoted.
 [[ ! "$profile_lower" =~ ^[0-9]{4}-[0-9]{1,2}-[0-9]{1,2}$ ]] ||
   refuse "CHECK_HELM_PROFILE ($PROFILE) is a date to YAML: kubectl writes such a name quoted in the kubeconfig, which this check doesn't read; name another profile (default d18-helm)"
 [[ ! "$profile_lower" =~ ^([0-9]+(e-?[0-9]+)?|0x[0-9a-f]+|0o[0-7]+|0b[01]+)$ ]] ||
@@ -207,9 +202,9 @@ kube_current=$(kubectl config current-context 2>/dev/null || true)
 [ "$kube_contexts" = "$PROFILE" ] && [ "$kube_clusters" = "$PROFILE" ] ||
   refuse "KUBECONFIG isn't minified to the context $PROFILE (its contexts: $(echo $kube_contexts); its clusters: $(echo $kube_clusters)): $kubeconfig_how"
 [ "$kube_current" = "$PROFILE" ] || refuse "KUBECONFIG's current context is ${kube_current:-none}, not $PROFILE: $kubeconfig_how"
-# D18 Ruling 38: the kubeconfig the check hands kubectl and Helm holds only what minikube writes: an ALLOWLIST, so no
-# key kubectl or Helm would act on (a user's exec plugin or auth-provider, a proxy, a TLS override, an impersonation)
-# gets through, whatever the key. Two reads, neither printed, both of the file only:
+# The kubeconfig the check hands kubectl and Helm holds only what minikube writes: an ALLOWLIST, so no key kubectl or
+# Helm would act on (a user's exec plugin or auth-provider, a proxy, a TLS override, an impersonation) gets through,
+# whatever the key. Two reads, neither printed, both of the file only:
 #   1. the file's own text, which both kubectl and Helm read: every line a block-style `key: value` line (no flow
 #      mapping but `preferences: {}`, no comment, quote, anchor, tag, block scalar or continuation), so every key
 #      shows, and each key allowed at its place (the allowlist below). The text, not kubectl's view, holds the
@@ -298,13 +293,12 @@ print("ok")
 kube_shape=$(kubectl config view --raw -o json 2>/dev/null | python3 -I -c "$KUBECONFIG_SHAPE_READER" "$PROFILE" "$KUBECONFIG" 2>/dev/null || true)
 [ "$kube_shape" = "ok" ] ||
   refuse "${kube_shape:-the kubeconfig's shape couldn't be read}: the check takes only minikube's kubeconfig ($kubeconfig_how)"
-# D18 Rulings 33 and 35: no kubectl call may reach anything but the profile's cluster, directly. The server kubectl
-# WILL use is the one the current context's cluster names, as `kubectl config view --minify` resolves it (a read of
-# the file only; it fails on a context naming a cluster the file doesn't hold): that context's cluster must be the
-# profile; its server an https:// address (none, or http://, would send kubectl to http://localhost:8080, the owner's
-# development API) whose port, read as a number, isn't 8080 (no leading zero, digits only); no proxy-url; and no
-# proxy variable in the environment (kubectl would reach the server through it). All before any call that talks to
-# a cluster.
+# No kubectl call may reach anything but the profile's cluster, directly. The server kubectl WILL use is the one the
+# current context's cluster names, as `kubectl config view --minify` resolves it (a read of the file only; it fails on
+# a context naming a cluster the file doesn't hold): that context's cluster must be the profile; its server an
+# https:// address (none, or http://, would send kubectl to http://localhost:8080, a developer's own development API)
+# whose port, read as a number, isn't 8080 (no leading zero, digits only); no proxy-url; and no proxy variable in the
+# environment (kubectl would reach the server through it). All before any call that talks to a cluster.
 minified=$(kubectl config view --minify \
   -o jsonpath='{.contexts[0].context.cluster}{"\n"}{.clusters[0].name}{"\n"}{.clusters[0].cluster.server}{"\n"}{.clusters[0].cluster.proxy-url}{"\n"}' 2>/dev/null) ||
   refuse "KUBECONFIG's current context $PROFILE names a cluster the file doesn't hold (kubectl config view --minify fails): $kubeconfig_how"
@@ -352,11 +346,11 @@ export HELM_REPOSITORY_CONFIG="$work/helm/config/repositories.yaml" HELM_PLUGINS
 helm_home="$work/helm/home"
 helm_docker_config="$work/helm/docker-config"
 mkdir -p "$HELM_CACHE_HOME" "$HELM_CONFIG_HOME" "$HELM_DATA_HOME" "$helm_home" "$helm_docker_config"
-# The anonymous pull, for real (D18 Preflight ruling 21): Docker's config and Helm's registry config hold an auth
-# entry for a name that resolves nowhere (so neither looks for a credential store), and refusing stand-ins for the
-# credential helpers Docker and Helm would otherwise ask (the macOS keychain's among them) come first on PATH for
-# every printed command. A stand-in logs its first argument only (`get`, `list`…), never reads its input, and exits 1;
-# a line in their log fails the run (credential_helpers_called).
+# The anonymous pull, for real: Docker's config and Helm's registry config hold an auth entry for a name that resolves
+# nowhere (so neither looks for a credential store), and refusing stand-ins for the credential helpers Docker and Helm
+# would otherwise ask (the macOS keychain's among them) come first on PATH for every printed command. A stand-in logs
+# its first argument only (`get`, `list`…), never reads its input, and exits 1; a line in their log fails the run
+# (credential_helpers_called).
 printf '{"auths":{"telflo-check.invalid":{}}}\n' >"$helm_docker_config/config.json"
 printf '{"auths":{"telflo-check.invalid":{}}}\n' >"$HELM_REGISTRY_CONFIG"
 CREDENTIAL_HELPERS="$work/credential-helpers"
@@ -511,9 +505,9 @@ clean() {
 }
 # secret <value>: adds a bearer or a link's secret to the secrets file (printf is a builtin: no argv).
 secret() { printf '%s\n' "$1" >>"$SECRETS"; }
-# The invariant (D17d-2 Ruling 50, as D17c-2 Ruling 42's): every bearer or link secret the run obtains joins the
-# secrets file the moment it exists, before anything else reads or logs what holds it, so no file the run leaves or
-# prints goes unsearched for it. The places it obtains one, each audited:
+# The invariant: every bearer or link secret the run obtains joins the secrets file the moment it exists, before
+# anything else reads or logs what holds it, so no file the run leaves or prints goes unsearched for it. The places it
+# obtains one, each audited:
 #   1. each fleet's create reply (the first fleet's and the second's): the default and rotate tokens' bearers (each
 #      sealed anew, so neither is a later reveal's text): read from the reply into the secrets file, shape-checked,
 #      before anything else reads it;
@@ -690,8 +684,8 @@ facts_of() {
     fail "the Helm facts of $2 name the chart $(reply_json '.helm.chartReference') $(reply_json '.helm.chartVersion') and the image repository $(reply_json '.helm.imageRepository'), not the platform's $PLATFORM_CHART_REFERENCE $PLATFORM_CHART_VERSION and $PLATFORM_IMAGE_REPOSITORY (TELFLO_HELM_CHART_REFERENCE, TELFLO_HELM_CHART_VERSION and TELFLO_COLLECTOR_IMAGE_REPOSITORY must be the defaults: this check installs the published packages)"
   cp "$REPLY_BODY" "$3"
 }
-# expect_facts <dir> <release> <namespace> <fullnameOverride, or null>: the facts in <dir> name them (D18: the
-# Agent's and the Cluster's override the fleet id's first 8 characters and -default or -cluster, a gateway's none).
+# expect_facts <dir> <release> <namespace> <fullnameOverride, or null>: the facts in <dir> name them (the Agent's and
+# the Cluster's override the fleet id's first 8 characters and -default or -cluster, a gateway's none).
 expect_facts() {
   [ "$(jq -r --arg r "$2" --arg ns "$3" --argjson o "$4" \
     '.helm.release == $r and .helm.namespace == $ns and (.helm | has("fullnameOverride")) and .helm.fullnameOverride == $o' \
@@ -759,9 +753,9 @@ else
   [ -n "$local_image" ] ||
     fail "$image can't be pulled anonymously: build it locally (scripts/build-collector-image.sh $(jq -r '.collector.version' "$work/telflo-node/facts.json")) and pass its tag as CHECK_HELM_LOCAL_IMAGE"
   # The image's inspection and minikube's load and tag run under the seeded Docker config and the credential helpers'
-  # stand-ins too (D18 Ruling 33). The seeded config names no Docker context, so docker (and minikube's Docker client)
-  # use the default one (DOCKER_HOST, else /var/run/docker.sock); it must be the engine the caller's config reaches
-  # (the same engine id), or the image found here isn't the one minikube loads.
+  # stand-ins too. The seeded config names no Docker context, so docker (and minikube's Docker client) use the default
+  # one (DOCKER_HOST, else /var/run/docker.sock); it must be the engine the caller's config reaches (the same engine
+  # id), or the image found here isn't the one minikube loads.
   engine=$(docker info --format '{{.ID}}' 2>/dev/null || true)
   seeded_engine=$(PATH="$COMMAND_PATH" DOCKER_CONFIG="$helm_docker_config" docker info --format '{{.ID}}' 2>/dev/null || true)
   [ -n "$engine" ] && [ "$seeded_engine" = "$engine" ] ||
@@ -804,9 +798,9 @@ reach=$(kubectl -n "$NS_REACH" logs telflo-hc-reach 2>/dev/null || true)
 # ---- The dialog's install: values and command printed by the contracts in the API container.
 # print_install <dir> <release> <bearer variable's value>: the contracts build, from the group's facts in <dir> (whose
 # release must be <release>) and the bearer (by name only), what the Helm dialog's download and screen give: the
-# values file (named with a fresh download fragment, Ruling 37, after the release, not the directory),
-# `helm upgrade --install …` naming it, and `helm uninstall …`. Written into <dir>/<the values file's name> (holding
-# the bearer), <dir>/install.sh and <dir>/uninstall.sh, 0600.
+# values file (named with a fresh download fragment, after the release, not the directory), `helm upgrade --install …`
+# naming it, and `helm uninstall …`. Written into <dir>/<the values file's name> (holding the bearer),
+# <dir>/install.sh and <dir>/uninstall.sh, 0600.
 print_install() {
   local dir="$work/$1" release=$2 values_file
   [ "$(jq -r '.helm.release' "$dir/facts.json")" = "$release" ] || fail "the Helm facts in $1 aren't the release $release's"
@@ -902,7 +896,7 @@ wait_enrolled() {
     sleep 1
   done
   # A record's name is its pod's only while that pod runs: a moved Agent's records keep their first pods' names, and
-  # the platform names a new collector anew while an old record holds its pod's name (D18 Rulings 45 and 46).
+  # the platform names a new collector anew while an old record holds its pod's name.
   if kubectl -n "$namespace" get pod "$4" >/dev/null 2>&1; then
     kubectl -n "$namespace" logs "$4" --tail=40 2>&1 | redact >&2 || true
     fail "the pod $4's collector didn't enroll in its group, handed the rotate token, through the platform within $5 polls (last HTTP $status)"
@@ -1001,16 +995,16 @@ platform GET "$FLEET_URL/quick-deploy-links"
 [ "$status" = "200" ] && [ "$(reply_json --arg id "$link_id" '[.links[] | select(.id == $id) | .downloadCount] == [1]')" = "true" ] ||
   fail "the Helm link isn't listed with its one download (HTTP $status)"
 
-# ---- D18 Rulings 27 and 45: each role's namespace move, in the order and with the outcome the group dialog's
-# warning gives (KubernetesGroupDialog's namespaceChangeWarning). The Agent and the Cluster own a cluster-wide
-# ClusterRole named after the fleet (meta.helm.sh/release-namespace): their install into a new namespace is refused
-# while the release runs in the old one, so the screen says to uninstall there first; the Agent's state is the
-# node's hostPath (/var/lib/telflo/supervisor/<fullname>, outside any namespace), so its collectors stay the same
-# records; the Cluster's is its PVC in the old namespace, so it enrolls again as a new collector (the old one
-# offline). A gateway owns nothing cluster-wide: the screen says to install into the new namespace first, then
-# uninstall in the old; its pods come back as new collectors (their PVCs are per namespace), and its Service's
-# address (<name>.<namespace>.svc) changes. Each outcome is read only from evidence that began after the move
-# completed (D17d-2 Ruling 45): the collectors read once the new install returned and every old pod was deleted.
+# ---- Each role's namespace move, in the order and with the outcome the group dialog's warning gives
+# (KubernetesGroupDialog's namespaceChangeWarning). The Agent and the Cluster own a cluster-wide ClusterRole named
+# after the fleet (meta.helm.sh/release-namespace): their install into a new namespace is refused while the release
+# runs in the old one, so the screen says to uninstall there first; the Agent's state is the node's hostPath
+# (/var/lib/telflo/supervisor/<fullname>, outside any namespace), so its collectors stay the same records; the
+# Cluster's is its PVC in the old namespace, so it enrolls again as a new collector (the old one offline). A gateway
+# owns nothing cluster-wide: the screen says to install into the new namespace first, then uninstall in the old; its
+# pods come back as new collectors (their PVCs are per namespace), and its Service's address (<name>.<namespace>.svc)
+# changes. Each outcome is read only from evidence that began after the move completed: the collectors read once the
+# new install returned and every old pod was deleted.
 # expect_ownership_refusal <dir> <role label> <release> <fullname> <old namespace> <new namespace>: the printed
 # install in <dir> (the release moved to <new namespace> while it runs in <old namespace>) is refused by Helm over
 # the ClusterRole <fullname>'s release namespace, and leaves nothing in <new namespace>.
@@ -1144,7 +1138,7 @@ expect_new_records() {
   echo "    40 s later, none of $label's old records moved on"
 }
 
-step "Ruling 27: the Agent's saved namespace changed to $NS_MOVED through the platform, its printed install (the release telflo-node unchanged) is refused by Helm over the ClusterRole $node_fullname, which the release in $NS_NODE owns; nothing is left in $NS_MOVED and the Agent keeps running in $NS_NODE"
+step "the Agent's saved namespace changed to $NS_MOVED through the platform, its printed install (the release telflo-node unchanged) is refused by Helm over the ClusterRole $node_fullname, which the release in $NS_NODE owns; nothing is left in $NS_MOVED and the Agent keeps running in $NS_NODE"
 agent_pods_before_move=$(pods_of "$NS_NODE" "$node_fullname")
 save_agent "$FLEET_URL" "$agent_group_id" "$NS_MOVED"
 mkdir -p "$work/node-moved"
@@ -1157,7 +1151,7 @@ expect_ownership_refusal node-moved Agent telflo-node "$node_fullname" "$NS_NODE
 [ "$(pods_of "$NS_NODE" "$node_fullname")" = "$agent_pods_before_move" ] ||
   fail "the Agent's pods in $NS_NODE changed with the refused install into $NS_MOVED"
 
-step "Ruling 45: then as the Agent's warning says: its printed uninstall in $NS_NODE first, then its install into $NS_MOVED; its collectors stay the same records (the node's state keeps their instance uids) and move on"
+step "then as the Agent's warning says: its printed uninstall in $NS_NODE first, then its install into $NS_MOVED; its collectors stay the same records (the node's state keeps their instance uids) and move on"
 group_read "$agent_group_id" "$work/agent-before-move.json"
 agent_old_ids=$(record_ids "$work/agent-before-move.json")
 [ "$(printf '%s\n' $agent_old_ids | grep -c .)" = "$node_count" ] || fail "the Agent's group holds $(printf '%s\n' $agent_old_ids | grep -c .) records on the rotate token before its move, not $node_count"
@@ -1171,7 +1165,7 @@ agent_dir=node-moved
 agent_ns=$NS_MOVED
 
 cluster_old_ns=$NS_CLUSTER
-step "Ruling 45: the Cluster's saved namespace changed to $NS_CMOVED: its printed install is refused by Helm over the ClusterRole $cluster_fullname; then, as its warning says, its printed uninstall in $NS_CLUSTER, then its install: its pod enrolls as a new collector (its PVC is per namespace) and the old record stops"
+step "the Cluster's saved namespace changed to $NS_CMOVED: its printed install is refused by Helm over the ClusterRole $cluster_fullname; then, as its warning says, its printed uninstall in $NS_CLUSTER, then its install: its pod enrolls as a new collector (its PVC is per namespace) and the old record stops"
 platform PATCH "$FLEET_URL/groups/$cluster_group_id" "$(jq -cn --arg ns "$NS_CMOVED" '{annotations: {telflo: {kubernetes: {role: "cluster", namespace: $ns, volumes: []}}}}')"
 [ "$status" = "200" ] || fail "saving the Cluster's namespace $NS_CMOVED returned HTTP $status: $(reply_code)"
 mkdir -p "$work/cluster-moved"
@@ -1190,7 +1184,7 @@ expect_new_records "the Cluster" "$cluster_group_id" "$NS_CMOVED" "$cluster_full
 cluster_dir=cluster-moved
 cluster_ns=$NS_CMOVED
 
-step "Ruling 45: $GATEWAY_GROUP's saved namespace changed to $NS_GMOVED: as its warning says, its install into $NS_GMOVED first (no cluster-wide object: Helm accepts it), then its printed uninstall in $NS_GATEWAYS; its pods come back as new collectors, the old ones stop, and its Service's address changes"
+step "$GATEWAY_GROUP's saved namespace changed to $NS_GMOVED: as its warning says, its install into $NS_GMOVED first (no cluster-wide object: Helm accepts it), then its printed uninstall in $NS_GATEWAYS; its pods come back as new collectors, the old ones stop, and its Service's address changes"
 platform PATCH "$FLEET_URL/groups/$gateway_group_id" "$(jq -cn --arg ns "$NS_GMOVED" '{annotations: {telflo: {kubernetes: {role: "gateway", namespace: $ns, replicas: 2,
   volumes: [{hostPath: "/var/log", hostPathType: "Directory", mountPath: "/var/log/host", readOnly: true}]}}}}')"
 [ "$status" = "200" ] || fail "saving $GATEWAY_GROUP's namespace $NS_GMOVED returned HTTP $status: $(reply_code)"
@@ -1218,7 +1212,7 @@ group_read "$gateway_group_id" "$work/gateway-moved.json"
 expect_new_records "$GATEWAY_GROUP" "$gateway_group_id" "$NS_GMOVED" "$GATEWAY_GROUP" "$gateway_old_ids" "$work/gateway-moved.json"
 gateway_ns=$NS_GMOVED
 
-# ---- The second fleet (D18 decisions 4 and 31): the same account, its Agent and Cluster in namespaces of its own.
+# ---- The second fleet: the same account, its Agent and Cluster in namespaces of its own.
 fleet2_id=$(uuid4)
 while [ "${fleet2_id:0:8}" = "${fleet_id:0:8}" ]; do fleet2_id=$(uuid4); done
 step "a second fleet (its id's first 8 characters ${fleet2_id:0:8}, not the first's ${fleet_id:0:8}): its Agent in $NS2_NODE and its Cluster in $NS2_CLUSTER, installed with their printed commands (the releases telflo-node and telflo-cluster again), enroll beside the first fleet's"
@@ -1292,7 +1286,7 @@ platform GET "$FLEET_URL/collectors"
 cp "$REPLY_BODY" "$work/collectors-fleet2-enrolled.json"
 moving_on "$FLEET_URL" "$rotate_token_id" "$work/collectors-fleet2-enrolled.json"
 
-# ---- Optional (D17d-2 Preflight ruling 32; D18 decision 6): a new default token, the Agent's command again: the
+# ---- Optional: a new default token, the Agent's command again: the
 # token's checksum on the pod template rolls the DaemonSet.
 if [ "${CHECK_HELM_NEW_DEFAULT_TOKEN:-}" = "1" ]; then
   step "a new default token: revoke the default token and issue a new one; the running pods keep working (they hold the rotate token)"
@@ -1326,12 +1320,12 @@ if [ "${CHECK_HELM_NEW_DEFAULT_TOKEN:-}" = "1" ]; then
   print_install "$agent_dir" telflo-node "$new_bearer"
   unset new_bearer bearer
   run_install "$agent_dir" install.sh
-  # Only evidence that began after the restart completed counts (D17d-2 Ruling 45): an old pod keeps polling on the
-  # rotate token while it terminates, and a new pod may connect, then fail, before the rollout ends; so the collectors
-  # are read only once the rollout completed and every old pod is deleted, and the Agent's records must then move on
-  # from that read (the same record when the node's hostPath state keeps the instance uid). The supervisor keeps no
-  # connection settings on disk (its storage directory's listing below shows it), so a new pod reaching the rotate
-  # token read the Secret's new default token. No `kubectl delete pod`: the chart's checksum/token rolls the pods.
+  # Only evidence that began after the restart completed counts: an old pod keeps polling on the rotate token while it
+  # terminates, and a new pod may connect, then fail, before the rollout ends; so the collectors are read only once
+  # the rollout completed and every old pod is deleted, and the Agent's records must then move on from that read (the
+  # same record when the node's hostPath state keeps the instance uid). The supervisor keeps no connection settings on
+  # disk (its storage directory's listing below shows it), so a new pod reaching the rotate token read the Secret's
+  # new default token. No `kubectl delete pod`: the chart's checksum/token rolls the pods.
   kubectl -n "$agent_ns" rollout status "daemonset/$node_fullname" --timeout=180s >"$work/rollout.log" 2>&1 ||
     fail "kubectl rollout status daemonset/$node_fullname didn't complete within 180 s: $(shown "$work/rollout.log" 5)"
   for pod in $old_agent_pods; do
@@ -1384,12 +1378,12 @@ if [ "${CHECK_HELM_NEW_DEFAULT_TOKEN:-}" = "1" ]; then
     echo "    $new_agent_pod connected in the Agent's group on the new default token after the rollout (listed as ${new_agent#* }), handed the rotate token"
   done
   storage_pod=$(printf '%s\n' $new_agent_pods | head -n1)
-  # The Agent's storage directory after the restart (D17d-2 Ruling 48), names only, recorded in the run's output: the
-  # supervisor's storage.directory /app/opamp, the node's hostPath /var/lib/telflo/supervisor/<fullname> (kept across
-  # the roll). opampsupervisor 0.162.0 writes there (its documented storage, and the only file names in its binary)
+  # The Agent's storage directory after the restart, names only, recorded in the run's output: the supervisor's
+  # storage.directory /app/opamp, the node's hostPath /var/lib/telflo/supervisor/<fullname> (kept across the roll).
+  # opampsupervisor 0.162.0 writes there (its documented storage, and the only file names in its binary)
   # persistent_state.yaml (the instance uid), last_recv_remote_config.dat and last_recv_own_telemetry_config.dat (the
-  # last remote and own-telemetry configuration received), effective.yaml (the collector's composed configuration,
-  # its OpAMP extension pointed at the supervisor's own local server) and agent.log (the collector's output: the
+  # last remote and own-telemetry configuration received), effective.yaml (the collector's composed configuration, its
+  # OpAMP extension pointed at the supervisor's own local server) and agent.log (the collector's output: the
   # supervisor's default agent log file). Its connection settings (the server's endpoint and headers: the token) are
   # in /app/supervisor-config.yaml (the entrypoint's, in the container, not on the hostPath) and, once an offer is
   # applied, in memory only. The rule: no file but the two last_recv_*.dat files named above may hold what connection
@@ -1448,4 +1442,4 @@ trap - EXIT
 if called=$(credential_helpers_called); then
   fail "a credential helper was called during the teardown ($called): Helm or Docker asked a credential store"
 fi
-echo "OK: installed the Agent, the Cluster and $GATEWAY_GROUP with the dialog's values and helm upgrade --install, and $LINK_GROUP with a Helm values link's Quick Deploy command, in $PROFILE, from the platform's chart pulled anonymously (no credential helper called); every pod, found by the chart's names, enrolled in its group through the platform; Helm refused the Agent's and the Cluster's install into another namespace while their release ran, then each role's move as its warning says kept the Agent's collectors and gave the Cluster and $GATEWAY_GROUP new ones, its Service's address moved (Rulings 27 and 45); a second fleet's Agent and Cluster enrolled beside the first's, with their own ClusterRoles and storage paths, while the first's stayed connected$new_token_words; then uninstalled them and deleted the namespaces made"
+echo "OK: installed the Agent, the Cluster and $GATEWAY_GROUP with the dialog's values and helm upgrade --install, and $LINK_GROUP with a Helm values link's Quick Deploy command, in $PROFILE, from the platform's chart pulled anonymously (no credential helper called); every pod, found by the chart's names, enrolled in its group through the platform; Helm refused the Agent's and the Cluster's install into another namespace while their release ran, then each role's move as its warning says kept the Agent's collectors and gave the Cluster and $GATEWAY_GROUP new ones, its Service's address moved; a second fleet's Agent and Cluster enrolled beside the first's, with their own ClusterRoles and storage paths, while the first's stayed connected$new_token_words; then uninstalled them and deleted the namespaces made"

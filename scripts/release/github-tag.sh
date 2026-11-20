@@ -1,5 +1,5 @@
 # shellcheck shell=bash
-# github-tag.sh: a release tag as GitHub holds it (D36-2 Rulings 396 and 399),
+# github-tag.sh: a release tag as GitHub holds it,
 # asked of GitHub's API with the job's token. Sourced, never run: by
 # scripts/release/verify-tag.sh (the version job, when the checkout holds the
 # tag as a lightweight one) and scripts/release/steps.sh github-release (the

@@ -1,6 +1,6 @@
 # shellcheck shell=bash
-# version.sh: the release version's one pattern and a reader of Chart.yaml
-# (D36-2 decisions 75 and 100; Q279). Sourced, never run:
+# version.sh: the release version's one pattern and a reader of Chart.yaml.
+# Sourced, never run:
 #
 #   . scripts/release/version.sh
 #   telflo_version_ok <text>            exit 0 when <text> is a release version

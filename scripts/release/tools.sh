@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
-# tools.sh: the release pipeline's private tools (D36-2 decision 110; Q281,
-# Ruling 383). kind, crane, gitleaks and a newer buildx as pinned release binaries,
-# each checked against the sha256 in tools.lock, in the git-ignored .tools/
-# at the repository's root; the images the local runs need, by digest only.
+# tools.sh: the release pipeline's private tools. kind, crane, gitleaks and a
+# newer buildx as pinned release binaries, each checked against the sha256 in
+# tools.lock, in the git-ignored .tools/ at the repository's root; the images the local runs need, by digest only.
 # Nothing system-wide, no Homebrew, never ~/.docker or Docker Desktop's
 # settings: buildx is reached through a temporary DOCKER_CONFIG.
 #
@@ -31,7 +30,7 @@
 # fetch for another platform; in a workflow (CI set to anything but "",
 # false or 0: oci.sh's telflo_in_ci) any of them set is refused (exit 2):
 # there the tools are the repository's tools.lock's, for the runner's own
-# platform, in the repository's .tools/ (Ruling 399).
+# platform, in the repository's .tools/.
 # bash 3.2 compatible.
 set -uo pipefail
 
@@ -178,7 +177,7 @@ fetch_one() { # <tool>
   say "$tool $T_VERSION ($plat): $B_PATH"
 }
 
-# Docker with no login and the refusing stand-ins (brief-rules' D18 rules).
+# Docker with no login and the refusing stand-ins.
 docker_guard() {
   mkdir -p "$TOOLS_DIR/docker-config" "$TOOLS_DIR/standins" || fail "cannot make $TOOLS_DIR's docker folders"
   printf '{"auths":{"telflo-agent.invalid":{}}}\n' >"$TOOLS_DIR/docker-config/config.json"

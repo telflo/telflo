@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# smoke-compose-install.sh's self-test: its refusals only (D36-2 Task 9).
+# smoke-compose-install.sh's self-test: its refusals only.
 # Each case runs the smoke in a throwaway copy (the smoke, quick-start.sh,
 # version.sh, setup.sh and the catalogue at their places, and a README.md:
 # the real one, or one changed per case) and checks it exits 2 with the
@@ -9,7 +9,7 @@
 #   no argument, an unknown option, an option without its value (usage);
 #   --project naming each project that is never a throwaway (refused before
 #   any folder is made), a project name with other characters;
-#   a port of the owner's stack, a README default, the same port twice;
+#   a port of a developer's own stack, a README default, the same port twice;
 #   a relative --work, a --work that isn't empty, one with a space;
 #   an archive not named telflo-compose-<x.y.z>.tar.gz, one without
 #   compose.yaml, one whose compose.yaml doesn't name a Telflo image at its
@@ -131,7 +131,7 @@ done
 fresh; run_args "$VERSION" --project 'Bad Name'; expect_refused "a project name with capitals and a space" "--project must be lower-case"
 
 # ---- Ports.
-fresh; run_args "$VERSION" --mailpit-port 58025; expect_refused "the owner's Mailpit port" "port 58025 is"
+fresh; run_args "$VERSION" --mailpit-port 58025; expect_refused "a developer's own Mailpit port" "port 58025 is"
 fresh; run_args "$VERSION" --http-port 8080; expect_refused "the README's gateway port" "port 8080 is"
 fresh; run_args "$VERSION" --agent-port 33960; expect_refused "the same port twice" "must differ"
 

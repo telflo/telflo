@@ -1,18 +1,17 @@
 #!/bin/bash
-# Tests for scripts/create-secrets.sh (D33-1 spec decision 33, Preflight
-# rulings 4 and 17). No cluster: `kubectl` is a fake first on PATH that
-# records each call's argv (one line per call) and the apply's standard input,
-# answers `create secret … --dry-run=client -o yaml` with the Secret's YAML
-# built from the --from-file files (recording the folder's and files' modes
-# while they exist), and can be told to fail (FAKE_KUBECTL_FAIL=create or
-# apply: it then writes the values it was handed to its stderr, as a failing
-# apply can echo its patch; namespace: kubectl's namespace-not-found line;
-# FAKE_KUBECTL_FAIL_AT=<name>: only that Secret's apply fails), or told to be
-# slow (FAKE_KUBECTL_SLOW=1: the create waits for a release file, so a signal
-# can reach the script mid-run).
-# Every other command the script runs (base64, openssl, stat, mktemp, chmod,
-# mkdir, rm, tr, dirname, cat, grep) is a wrapper first on PATH recording its
-# argv before running the real one, so the canaries see every argv.
+# Tests for scripts/create-secrets.sh. No cluster: `kubectl` is a fake first on
+# PATH that records each call's argv (one line per call) and the apply's
+# standard input, answers `create secret … --dry-run=client -o yaml` with the
+# Secret's YAML built from the --from-file files (recording the folder's and
+# files' modes while they exist), and can be told to fail
+# (FAKE_KUBECTL_FAIL=create or apply: it then writes the values it was handed
+# to its stderr, as a failing apply can echo its patch; namespace: kubectl's
+# namespace-not-found line; FAKE_KUBECTL_FAIL_AT=<name>: only that Secret's
+# apply fails), or told to be slow (FAKE_KUBECTL_SLOW=1: the create waits for a
+# release file, so a signal can reach the script mid-run). Every other command
+# the script runs (base64, openssl, stat, mktemp, chmod, mkdir, rm, tr,
+# dirname, cat, grep) is a wrapper first on PATH recording its argv before
+# running the real one, so the canaries see every argv.
 #
 # The canaries are boolean: every value the run handles (the generated ones,
 # the optional ones, the registry token and the login's base64), raw and in
@@ -423,7 +422,7 @@ run --context dev-ctx "$variant"
 check "a section given twice refused" "[ $rc -eq 1 ] && has 'the section [telflo-postgres] appears twice' && no_kubectl && no_leak"
 variant empty-optional-section '/^sendgrid-api-key=/d; /^smtp-username=/d; /^smtp-password=/d'
 run --context dev-ctx "$variant"
-check "[telflo-mail] holding no key refused, naming its keys (D36-1 decision 39)" \
+check "[telflo-mail] holding no key refused, naming its keys" \
   "[ $rc -eq 1 ] && has \"[telflo-mail] holds no key: give sendgrid-api-key, or smtp-username and smtp-password\" && no_kubectl && no_leak"
 variant mail-username-alone '/^sendgrid-api-key=/d; /^smtp-password=/d'
 run --context dev-ctx "$variant"

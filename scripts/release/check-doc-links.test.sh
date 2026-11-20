@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# check-doc-links.sh's self-test (D36-2 Ruling 393): the real tree passes;
-# in throwaway copies (the script beside this test, at scripts/release/, and
-# docs written per case) a sound set of docs passes, in a git checkout and
-# in a copy that isn't one, and each of these fails, naming the problem:
+# check-doc-links.sh's self-test: the real tree passes; in throwaway copies
+# (the script beside this test, at scripts/release/, and docs written per
+# case) a sound set of docs passes, in a git checkout and in a copy that
+# isn't one, and each of these fails, naming the problem:
 #   a link to a missing file; a #anchor no heading makes; an anchor on a file
 #   that isn't Markdown; a link leading outside the repository; a link to a
 #   file git ignores (in a checkout); a broken image, reference definition

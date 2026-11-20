@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 # load-images.sh: each OCI archive's image for one platform into the Docker
-# engine, under its release name, for the smokes (D36-2 decisions 71 and 77;
-# Preflight ruling 6; Ruling 400).
+# engine, under its release name, for the smokes.
 #
 #   scripts/release/load-images.sh --oci <dir> --version <v> [--image <name>]... [--platform linux/amd64|linux/arm64]
 #

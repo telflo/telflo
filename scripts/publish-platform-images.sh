@@ -1,9 +1,7 @@
 #!/usr/bin/env bash
 # Builds the platform's images into OCI archives and copies those same bytes
 # to ghcr.io/telflo/telflo/<name>: api, web, otelcol-validator,
-# otelcol-testing and ottl-evaluator, from HEAD's committed files (D33-1
-# decisions 11, 12 and 30; D36-2 decisions 71, 72, 75, 78 and 80; Preflight
-# rulings 5 and 6).
+# otelcol-testing and ottl-evaluator, from HEAD's committed files.
 #
 #   scripts/publish-platform-images.sh --dry-run --builder <name> [--image <name>]... [--version x.y.z] [--registry <r>]
 #   scripts/publish-platform-images.sh --build --image <name> --builder <name> [--platform <p>] [--version x.y.z]
@@ -55,11 +53,11 @@
 # publish tested bytes): it is refused, naming --build-oci and --push-oci.
 #
 # The version (each image's tag, and its version label) is HEAD's
-# charts/telflo/Chart.yaml's appVersion, x.y.z (D33-1 decision 11:
-# one version per platform release, the chart's appVersion). Without that
-# file at HEAD, --version gives it; with it, a --version that differs is
-# refused. There is no `latest` tag, and a published version is never pushed
-# again: a fix is a new version.
+# charts/telflo/Chart.yaml's appVersion, x.y.z (one version per platform
+# release, the chart's appVersion). Without that file at HEAD, --version
+# gives it; with it, a --version that differs is refused. There is no
+# `latest` tag, and a published version is never pushed again: a fix is a
+# new version.
 #
 # --registry is ghcr.io (the default) or a loopback registry, 127.0.0.1:<port>
 # or localhost:<port> (the rehearsal's); the repository is always
@@ -98,26 +96,26 @@
 #     "credHelpers" key in any spelling (Go's encoding/json matches keys
 #     case-insensitively), or has a key that folds to "auths" but isn't
 #     "auths";
-#   - (--dry-run) a tag the registry already holds, asked by `crane digest`
-#     (Preflight ruling 6): a digest, it exists (refused); MANIFEST_UNKNOWN
-#     or NAME_UNKNOWN, it doesn't; anything else (a new or private package
-#     answers an anonymous read so) the dry run says it can't tell, printing
-#     crane's error line, and goes on.
+#   - (--dry-run) a tag the registry already holds, asked by `crane digest`:
+#     a digest, it exists (refused); MANIFEST_UNKNOWN or NAME_UNKNOWN, it
+#     doesn't; anything else (a new or private package answers an anonymous
+#     read so) the dry run says it can't tell, printing crane's error line,
+#     and goes on.
 #
-# The build contexts are the commit itself: HEAD's raw blobs (`git
-# ls-tree`, `git cat-file blob`) under the images' paths, written into a
-# fresh temporary directory, each checked against its tree entry (`git
-# hash-object --no-filters`), so no ignored or untracked file of the working
-# tree reaches an image and no local attribute, filter or line-ending
+# The build contexts are the commit itself: HEAD's raw blobs (`git ls-tree`,
+# `git cat-file blob`) under the images' paths, written into a fresh temporary
+# directory, each checked against its tree entry
+# (`git hash-object --no-filters`), so no ignored or untracked file of the
+# working tree reaches an image and no local attribute, filter or line-ending
 # setting alters one. A symlink or a submodule is refused. As compose builds
 # them: api and web from the repository's root (the root .dockerignore, an
-# allowlist) with telflo-core/Dockerfile's `api` or `web` target; the
-# validator and the tester from the root with their Dockerfiles' `runtime`
-# target and OTELCOL_VERSIONS=all (every version the catalogue offers;
-# decision 11); the evaluator from its own folder. Each Dockerfile's VERSION
-# and REVISION arguments (its version and revision labels) are the version
-# and HEAD: the only build arguments that vary, and never a secret (the
-# provenance attestation records every build argument; decision 72).
+# allowlist) with telflo-core/Dockerfile's `api` or `web` target; the validator
+# and the tester from the root with their Dockerfiles' `runtime` target and
+# OTELCOL_VERSIONS=all (every version the catalogue offers); the evaluator from
+# its own folder. Each Dockerfile's VERSION and REVISION arguments (its version
+# and revision labels) are the version and HEAD: the only build arguments that
+# vary, and never a secret (the provenance attestation records every build
+# argument).
 #
 # It never logs in to a registry: the registry is read and written with the
 # caller's DOCKER_CONFIG once checked (the configuration holding the
@@ -136,7 +134,7 @@ for v in $(env | sed -n 's/^\(GIT_[A-Za-z0-9_]*\)=.*/\1/p'); do unset "$v"; done
 # Local `git replace` objects never stand in for HEAD's.
 export GIT_NO_REPLACE_OBJECTS=1
 
-# The release helpers: the registry, crane and the OCI archives (D36-2).
+# The release helpers: the registry, crane and the OCI archives.
 # shellcheck source=scripts/release/oci.sh
 . "$ROOT/scripts/release/oci.sh"
 
@@ -207,13 +205,12 @@ context_of() { # <image> <context root>
 # under the path, written below the destination at their repository paths
 # (`git ls-tree` then `git cat-file blob`): no attribute, filter or
 # line-ending conversion of the local git setup applies, as `git archive`'s
-# would. A symlink or a submodule is refused, naming its path; the
-# executable mode (100755) is kept. Each file written must hash to its tree
-# entry.
-# Copied from scripts/build-collector-image.sh (D18 Rulings 36 and 37), with
-# the listing written to a file first as D26's publish-image.sh does, so a
-# failing `git ls-tree` is noticed, not taken for a shorter tree. D18's
-# scripts stay byte-for-byte unchanged.
+# would. A symlink or a submodule is refused, naming its path; the executable
+# mode (100755) is kept. Each file written must hash to its tree entry.
+# Copied from scripts/build-collector-image.sh, with the listing written to a
+# file first as the opamp-server repository's publish-image.sh does, so a
+# failing `git ls-tree` is noticed, not taken for a shorter tree.
+# scripts/build-collector-image.sh's own copy stays unchanged.
 extract_head_dir() {
   local entry meta path mode rest sha count=0 tab=$'\t' listing
   listing="$2.ls-tree.$(printf '%s' "$1" | tr '/.' '__')"
@@ -246,8 +243,8 @@ extract_head_dir() {
 # helper in any spelling (Docker reads keys case-insensitively, as Go's
 # encoding/json does, and auto-detects the keychain's helper when "auths" is
 # empty). Its content is never printed.
-# Copied unchanged from scripts/build-collector-image.sh (D18 Rulings 32 and
-# 34), as D26's publish-image.sh carries it.
+# Copied unchanged from scripts/build-collector-image.sh, as the opamp-server
+# repository's publish-image.sh carries it.
 check_caller_credentials() {
   command -v python3 >/dev/null 2>&1 || fail "python3 is required to check $1's file"
   [ -f "$2" ] || fail "$1: its file ($2) is missing"
@@ -294,7 +291,7 @@ PY
 }
 
 # exactly_one <sed expression> <file> <what>: the one value the expression
-# prints from the file; refused unless exactly one line matches (D26's).
+# prints from the file; refused unless exactly one line matches.
 exactly_one() {
   local found count
   found="$(sed -n "$1" "$2")"
@@ -490,7 +487,7 @@ if [ "$mode" = push-oci ]; then
     wants+=("$want")
   done
   # Attestations are required for every registry but a loopback one (a
-  # rehearsal's --no-attest builds; decision 72).
+  # rehearsal's --no-attest builds).
   attest_required=""
   telflo_registry_loopback "$registry" || attest_required=attest
   # Every archive checked (every blob hashed), then every tag asked, before
@@ -560,8 +557,8 @@ for image in "${selected[@]}"; do
   [ -f "$tmp/source/$dockerfile" ] || fail "HEAD has no $dockerfile"
 done
 
-# The SBOM generator, pinned by digest in tools.lock (Preflight ruling 5: a
-# bare --sbom=true is refused).
+# The SBOM generator, pinned by digest in tools.lock (a bare --sbom=true is
+# refused).
 if [ "$mode" = dry-run ] || { [ "$mode" = build-oci ] && ! $no_attest; }; then
   sbom_generator="$("${BASH:-bash}" "$ROOT/scripts/release/tools.sh" ref syft-scanner)" \
     || fail "scripts/release/tools.lock names no syft-scanner image (the SBOM generator)"

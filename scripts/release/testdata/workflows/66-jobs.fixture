@@ -1,4 +1,4 @@
-# Breaks one rule: a job the spec doesn't name.
+# Breaks one rule: a job the check doesn't expect.
 file: release.yml
 rule: jobs
 <<<

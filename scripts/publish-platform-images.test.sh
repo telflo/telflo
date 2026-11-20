@@ -408,16 +408,16 @@ for i in api web otelcol-validator otelcol-testing ottl-evaluator; do
 done
 tr_fixture "$offline/ottl-evaluator.oci.tar" 1.2.3 "$rev" O-ottl-evaluator no-attest >"$offline/ottl-evaluator.digest"
 run --push-oci "$offline"
-check "a --no-attest archive refused for ghcr.io (decision 72), before any registry call" \
+check "a --no-attest archive refused for ghcr.io, before any registry call" \
   "[ $rc -eq 1 ] && has \"ottl-evaluator.oci.tar: the linux/amd64 image has no attestation manifest\" && has 'nothing pushed' && [ -f '$logs/crane-calls.log' ] && [ ! -s '$logs/crane-calls.log' ]"
 tr_fixture "$offline/ottl-evaluator.oci.tar" 1.2.3 "$rev" O-ottl-evaluator >"$offline/ottl-evaluator.digest"
 tr_tamper "$offline/ottl-evaluator.oci.tar" flip-layer
 run --push-oci "$offline"
 check "a corrupt blob in the last archive (one layer byte flipped) refused in pass 1, before any registry call" \
   "[ $rc -eq 1 ] && has \"ottl-evaluator.oci.tar: the archive's blobs/sha256/\" && has \"doesn't hash to its name\" && [ ! -s '$logs/crane-calls.log' ]"
-# CI: crane only tools.sh's checked one (oci.sh's rule, Rulings 392 and 399): the file
-# `tools.sh path crane` gives, hashed against tools.lock's binary sha256; never PATH's, never
-# another named one. (The accepted case is oci.test.sh's, whose lock names its stand-in's sum.)
+# CI: crane only tools.sh's checked one (oci.sh's rule): the file `tools.sh path crane` gives,
+# hashed against tools.lock's binary sha256; never PATH's, never another named one. (The accepted
+# case is oci.test.sh's, whose lock names its stand-in's sum.)
 run_ci() { reset_logs; out="$(env CI=true "$@" TMPDIR="$tmp/t" DOCKER_CONFIG="$tmp/docker" "$shell" "$tmp/repo/scripts/publish-platform-images.sh" --dry-run --builder owner-builder --image api 2>&1)"; rc=$?; }
 run_ci TELFLO_CRANE="$bin/crane"
 check "CI=true: a TELFLO_CRANE outside the repository's .tools/ refused (no checked crane there), crane never run" \

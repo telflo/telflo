@@ -1,5 +1,5 @@
 # Breaks one rule: the required archive-smoke step kept, and an extra step calling the smoke
-# directly (its output not through redact.sh; the final fix review's minor 1, Ruling 409).
+# directly (its output not through redact.sh).
 file: release.yml
 rule: smoke-direct
 <<<

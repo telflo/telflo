@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# release-notes.sh: the GitHub Release's notes (D36-2 decision 82), Markdown
-# on stdout, the same bytes for the same inputs.
+# release-notes.sh: the GitHub Release's notes, Markdown on stdout, the same
+# bytes for the same inputs.
 #
 #   scripts/release/release-notes.sh --oci <dir> --chart <tgz> --version <v>
 #

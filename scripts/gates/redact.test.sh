@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# redact.sh's self-test (D36-2 decision 96): every pattern the gates redact
-# is redacted, with values made at run time (base64's + / = among them) and
-# kept in files of a private temporary folder (never on an argv), and
-# checked by boolean only: the output holds no value, and the line holds a
-# REDACTED marker. Prints PASS/FAIL lines and REDACTED counts, never a value.
+# redact.sh's self-test: every pattern the gates redact is redacted, with
+# values made at run time (base64's + / = among them) and kept in files of a
+# private temporary folder (never on an argv), and checked by boolean only:
+# the output holds no value, and the line holds a REDACTED marker. Prints
+# PASS/FAIL lines and REDACTED counts, never a value.
 #
 # Run: bash scripts/gates/redact.test.sh   (REDACT_SH=<path> tests another copy)
 # Offline; bash 3.2 compatible; exit 1 when any case failed.

@@ -1,17 +1,15 @@
 #!/usr/bin/env node
 // Waits until a URL answers 200, a bounded number of times, then exits 0; or
 // gives up and exits 1. `npm run dev:services` (telflo-core/package.json)
-// waits with it for the opamp-server's management /health, then the
-// collector validator's /health (D13b), then the collector tester's
-// /testing/v1/health through its forwarder (D14a; 200 once kwok's cluster
-// is up), then the OTTL evaluator's /health through its own forwarder
-// (D15a), then the object store's /healthz on 127.0.0.1:51240 (D23-1, for
-// the API's S3 tests), since `docker compose up --wait` never returns on
-// Compose 2.6.0 once a one-shot service (opamp-bootstrap,
-// opamp-migrate) is in the dependency closure (D11b Preflight ruling
-// 10). The object store's wait is given no compose file and service, so a
-// give-up prints no logs: SeaweedFS's log names the access key id (D23-1
-// Preflight ruling 18). Each wait is 60 attempts, counted after `docker
+// waits with it for the opamp-server's management /health, then the collector
+// validator's /health, then the collector tester's /testing/v1/health through
+// its forwarder (200 once kwok's cluster is up), then the OTTL evaluator's
+// /health through its own forwarder, then the object store's /healthz on
+// 127.0.0.1:51240 (for the API's S3 tests), since `docker compose up --wait`
+// never returns on Compose 2.6.0 once a one-shot service (opamp-bootstrap,
+// opamp-migrate) is in the dependency closure. The object store's wait is
+// given no compose file and service, so a give-up prints no logs: SeaweedFS's
+// log names the access key id. Each wait is 60 attempts, counted after `docker
 // compose up -d` returns, so the validator's, the tester's and the
 // evaluator's first image builds (minutes, with every offered collector)
 // happen before their waits.

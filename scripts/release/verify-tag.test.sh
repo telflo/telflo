@@ -1,10 +1,10 @@
 #!/bin/bash
-# Tests for scripts/release/verify-tag.sh (D36-2 decision 76), offline: a
-# throwaway git repository (a bare origin, a clone of it holding the
-# script, version.sh, oci.sh and a charts/telflo/Chart.yaml) and a stand-in
-# crane first on PATH that answers `crane digest` from a list of refs present
-# (a digest), denied (DENIED) or absent (MANIFEST_UNKNOWN). Refusing
-# credential-helper stand-ins come first on PATH: none may be called.
+# Tests for scripts/release/verify-tag.sh, offline: a throwaway git
+# repository (a bare origin, a clone of it holding the script, version.sh,
+# oci.sh and a charts/telflo/Chart.yaml) and a stand-in crane first on PATH
+# that answers `crane digest` from a list of refs present (a digest), denied
+# (DENIED) or absent (MANIFEST_UNKNOWN). Refusing credential-helper stand-ins
+# come first on PATH: none may be called.
 # Run:  bash scripts/release/verify-tag.test.sh   (bash 3.2 compatible)
 set -u
 TMPDIR="$(cd -- "${TMPDIR:-/tmp}" && pwd)" || exit 1; export TMPDIR

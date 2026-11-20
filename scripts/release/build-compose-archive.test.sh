@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# build-compose-archive.sh's self-test (D36-2 decision 88). In a throwaway
-# git repository holding the script, version.sh, a Chart.yaml and the real
-# deploy/compose files (committed):
+# build-compose-archive.sh's self-test. In a throwaway git repository
+# holding the script, version.sh, a Chart.yaml and the real deploy/compose
+# files (committed):
 #   - the archive lists exactly deploy/compose's committed files under
 #     telflo-compose-<version>/, nothing else (an untracked .env and
 #     secrets/, and an ignored file, left out); setup.sh executable, the

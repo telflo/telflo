@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
-# build-compose-archive.sh: the Compose install's release archive (D36-2
-# decision 88): exactly deploy/compose at a commit, under one top folder
-# telflo-compose-<version>/, modes kept (setup.sh 0755, the rest 0644:
-# tar.umask 022), gzipped:
+# build-compose-archive.sh: the Compose install's release archive: exactly
+# deploy/compose at a commit, under one top folder telflo-compose-<version>/,
+# modes kept (setup.sh 0755, the rest 0644: tar.umask 022), gzipped:
 #
 #   git archive --prefix=telflo-compose-<version>/ <commit>:deploy/compose | gzip -n
 #

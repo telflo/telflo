@@ -1,11 +1,10 @@
 #!/usr/bin/env bash
-# check-readme-quick-start.sh's self-test, and quick-start.sh's (D36-2
-# decisions 94 and 98): the real README passes; in a throwaway copy (the
-# three scripts beside this test, a Chart.yaml at 0.1.0 and a README.md
-# written per case, shaped like the real Quick start) a sound Quick start
-# passes and quick-start.sh lists its commands in order (comments, blank
-# lines and other fences dropped, a continued line joined), and each of
-# these fails, naming the problem:
+# check-readme-quick-start.sh's self-test, and quick-start.sh's: the real
+# README passes; in a throwaway copy (the three scripts beside this test, a
+# Chart.yaml at 0.1.0 and a README.md written per case, shaped like the real
+# Quick start) a sound Quick start passes and quick-start.sh lists its
+# commands in order (comments, blank lines and other fences dropped, a
+# continued line joined), and each of these fails, naming the problem:
 #   a marker missing or twice, the end marker first; a command with a blank
 #   line between it and its comment, two commands under one comment, a
 #   command first in its block; a block left open, a joined command left

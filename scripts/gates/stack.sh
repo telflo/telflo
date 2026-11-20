@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
-# stack.sh: the throwaway Compose stack the stack smoke runs on (D36-2
-# decision 96), never the owner's, the development stack or a user's
-# install: it refuses the projects `telflo` (the Compose install's),
-# `telflo-dev` (docker-compose.yml's) and the owner's running stack's.
+# stack.sh: the throwaway Compose stack the stack smoke runs on, never a
+# developer's own running stack, the development stack or a user's install:
+# it refuses the projects `telflo` (the Compose install's), `telflo-dev`
+# (docker-compose.yml's) and `telflo-platform` (a developer's own running
+# stack's).
 #
 #   stack.sh up    --project <name> --work <dir> --images dev-tag:<tag>|release:<version>
 #                  --site oss|saas [--file-store local|s3] [--port-base <n>] [--tree <dir>] [--dry-run]

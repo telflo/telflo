@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# The cloud-neutral check's self-test (D33-1 decision 32): the check passes
-# on the platform's two charts as they are, and fails on a copy broken each
-# way it must catch:
+# The cloud-neutral check's self-test: the check passes on the platform's
+# two charts as they are, and fails on a copy broken each way it must
+# catch:
 #   - a cloud marker in a file the chart packages: a template (the chart's
 #     and the vendored opamp-server chart's), values.yaml, values.schema.json,
 #     the README, NOTES.txt;
@@ -12,8 +12,8 @@
 #     vendored chart, and in supervisor-collector; and an annotation map
 #     left out of the chart's list.
 # A checksum/<name> key, which a template may write, passes, and so does
-# exactly `helm.sh/resource-policy: keep` (Ruling 331); that key with
-# another value, a key beside it, or another helm.sh key still fails.
+# exactly `helm.sh/resource-policy: keep`; that key with another value, a key
+# beside it, or another helm.sh key still fails.
 #
 # Run: scripts/check-chart-cloud-neutral.test.sh
 # Offline; prints PASS/FAIL lines only; exit 1 when any case failed. Every
@@ -285,7 +285,7 @@ keep_ok() {
     has "PASS - supervisor-collector: no template writes an annotation key itself" &&
     grep -qx '    helm.sh/resource-policy: keep' "$REPO_DIR/charts/telflo/templates/api.yaml"
 }
-run_case "exactly helm.sh/resource-policy: keep passes, in either chart (the API's file-store claim holds it; Ruling 331)" keep_ok
+run_case "exactly helm.sh/resource-policy: keep passes, in either chart (the API's file-store claim holds it)" keep_ok
 keep_other_value() {
   fresh && keep_key delete "" >"$P/templates/keep-key.yaml" && check
   fails_with "telflo: template templates/keep-key.yaml line $(keep_key delete "" >"$c.fx"; line_of "$c.fx" 'helm.sh/resource-policy') writes an annotation key itself" \
