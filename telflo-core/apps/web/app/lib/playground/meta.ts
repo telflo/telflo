@@ -3,10 +3,10 @@ import { canonicalMeta } from "~/lib/seo.js";
 import type { ThemeHandle } from "~/lib/theme.js";
 
 /*
- * The playground's pages' head (D31-1 decision 17, Preflight ruling 15):
- * crawlable (robots unchanged), each with its own fixed title and its own
- * canonical (a child never inherits the layout's). Titles are fixed words:
- * never a configuration's, a flow's or a fleet's name (ADR 0024).
+ * The playground's pages' head: crawlable (robots unchanged), each with
+ * its own fixed title and its own canonical (a child never inherits the
+ * layout's). Titles are fixed words: never a configuration's, a flow's or
+ * a fleet's name.
  */
 
 /** The playground's description. */
@@ -27,7 +27,7 @@ export const PLAYGROUND_TITLES = {
   publicEditor: "Public Editor - Telflo",
 } as const;
 
-/** Every playground route's handle: root renders the remembered theme (decision 14). */
+/** Every playground route's handle: root renders the remembered theme. */
 export const PLAYGROUND_HANDLE = { theme: "remembered" } satisfies ThemeHandle;
 
 type MetaMatches = Parameters<typeof canonicalMeta>[0];

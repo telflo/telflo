@@ -15,11 +15,11 @@ export const RegisterRequestSchema = z
     // password characters, and silently removing them would lock people out.
     password: z.string().min(PASSWORD_MINIMUM_LENGTH).max(PASSWORD_MAXIMUM_LENGTH),
     // The Terms version the person accepted, when the site asks for Terms
-    // (D36-1 decisions 29 and 32: the version is the API's setting,
-    // TELFLO_TERMS_VERSION, "" asking for none). Any version but the current
-    // one is refused by the API with `terms_version_not_current`, not by this
-    // schema (Ruling 18), as for the terms acceptance endpoint. Optional, so a
-    // site that asks for no Terms sends none.
+    // (the version is the API's setting, TELFLO_TERMS_VERSION, "" asking for
+    // none). Any version but the current one is refused by the API with
+    // `terms_version_not_current`, not by this schema, as for the terms
+    // acceptance endpoint. Optional, so a site that asks for no Terms sends
+    // none.
     acceptedTermsVersion: z.string().min(1).max(32).optional(),
   })
   .strict();
@@ -75,8 +75,7 @@ export type VerificationEmailRequest = z.infer<typeof VerificationEmailRequestSc
 
 /**
  * The answer of both email endpoints, for any well-formed address. Like
- * RegisterResponseSchema, it is identical whether or not an account exists
- * (D3 decision 2).
+ * RegisterResponseSchema, it is identical whether or not an account exists.
  */
 export const AcceptedResponseSchema = z
   .object({ status: z.literal("accepted") })
@@ -87,9 +86,8 @@ export type AcceptedResponse = z.infer<typeof AcceptedResponseSchema>;
 /**
  * `PUT /api/v1/auth/me/terms-acceptance`: records acceptance of the current
  * terms. Any version but the API's current one (its TELFLO_TERMS_VERSION
- * setting, D36-1 decision 29) is refused with
- * `terms_version_not_current`, not by this schema, so a stale page reads as
- * that rather than as a malformed body.
+ * setting) is refused with `terms_version_not_current`, not by this schema,
+ * so a stale page reads as that rather than as a malformed body.
  */
 export const TermsAcceptanceRequestSchema = z
   .object({ version: z.string().min(1).max(32) })
@@ -100,13 +98,12 @@ export type TermsAcceptanceRequest = z.infer<typeof TermsAcceptanceRequestSchema
 /**
  * The error codes the identity endpoints return in the error envelope, named
  * once so a misspelled code is a type error. One code for an unknown,
- * expired or used reset link (D3 decision 4). `terms_acceptance_required` is
- * any data endpoint's 403 for a user who hasn't accepted the current terms
- * (D7 decision 10). `product_admin_required` is the 403 of a product
- * administration endpoint for a user without the product-admin flag (D12
- * decision 3). `email_reserved` is the `422` of registration, inviting and
- * registering from an invitation for an address at the service accounts'
- * domain (D22 decision 23).
+ * expired or used reset link. `terms_acceptance_required` is any data
+ * endpoint's 403 for a user who hasn't accepted the current terms.
+ * `product_admin_required` is the 403 of a product administration endpoint
+ * for a user without the product-admin flag. `email_reserved` is the `422`
+ * of registration, inviting and registering from an invitation for an
+ * address at the service accounts' domain.
  */
 export const IDENTITY_ERROR_CODES = [
   "invalid_verification_token",
@@ -120,8 +117,8 @@ export const IDENTITY_ERROR_CODES = [
 export type IdentityErrorCode = (typeof IDENTITY_ERROR_CODES)[number];
 
 /**
- * `email_reserved`'s words (D22 decision 23). The refusal is about the
- * domain, never about an account: every address at it gets these words,
- * whether or not a service account holds it.
+ * `email_reserved`'s words. The refusal is about the domain, never about an
+ * account: every address at it gets these words, whether or not a service
+ * account holds it.
  */
 export const EMAIL_RESERVED_MESSAGE = "This address can't be used";

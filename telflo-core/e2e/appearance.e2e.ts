@@ -15,24 +15,24 @@ import {
   waitForHydration,
 } from "./support/session.js";
 
-// The theme (D21 decisions 2, 5 and 22-27): Light, Dark or Navy, Dark by
-// default, in the server's HTML before the first paint. A signed-in page
-// renders the stored theme; the auth screens the theme this browser was last
-// told (the `telflo_theme` cookie on a full load); every other page `dark`.
-// A change in Appearance applies at once, with no reload, to the shell, the
-// canvas, every open Monaco and the toasts (decision 24).
+// The theme: Light, Dark or Navy, Dark by default, in the server's HTML
+// before the first paint. A signed-in page renders the stored theme; the
+// auth screens the theme this browser was last told (the `telflo_theme`
+// cookie on a full load); every other page `dark`. A change in Appearance
+// applies at once, with no reload, to the shell, the canvas, every open
+// Monaco and the toasts.
 //
-// - "No flash" is read with JavaScript off (Preflight ruling 39,
-//   support/session.ts's serverHtmlClass): a second context with the first's
-//   cookies, so no script of the page can have set the class.
+// - "No flash" is read with JavaScript off (support/session.ts's
+//   serverHtmlClass): a second context with the first's cookies, so no script
+//   of the page can have set the class.
 // - An open Monaco is shown to follow a change made in a SECOND tab of the
 //   same browser, while its page stays mounted: the editor's tab then
 //   navigates to its own address with a search, which revalidates the
 //   signed-in layout as any navigation does, and the same `.monaco-editor`
-//   element is still there (Preflight ruling 51). Going back to the page
-//   would mount a new Monaco and prove nothing.
+//   element is still there. Going back to the page would mount a new
+//   Monaco and prove nothing.
 // - Colours are read as computed styles once transitions have settled
-//   (`toHaveCSS` retries until they have; Preflight ruling 52).
+//   (`toHaveCSS` retries until they have).
 
 const PASSWORD = "correct horse battery staple";
 const PREFERENCES_PATH = "/api/v1/auth/me/preferences";
@@ -60,13 +60,12 @@ const PIPELINE_YAML = [
  * (`body.tf-app`, the theme's background token, app.css), the canvas's
  * background (React Flow's, app.css), Monaco's code surface
  * (lib/editor/monaco-themes.ts; Light's is Monaco's built-in `vs`) and a
- * toast (the popover token, which the Toaster gives sonner: Preflight
- * ruling 22, B3).
+ * toast (the popover token, which the Toaster gives sonner).
  */
 const COLOURS = {
   dark: { shell: "rgb(16, 19, 23)", canvas: "rgb(13, 16, 20)", monaco: "rgb(20, 24, 29)", toast: "rgb(27, 32, 39)" },
   navy: { shell: "rgb(12, 21, 36)", canvas: "rgb(10, 17, 32)", monaco: "rgb(15, 26, 46)", toast: "rgb(22, 35, 58)" },
-  // Light's Monaco is Monaco's own `vs` (Q128): its background, #fffffe.
+  // Light's Monaco is Monaco's own `vs`: its background, #fffffe.
   light: { monaco: "rgb(255, 255, 254)" },
 } as const;
 
@@ -308,7 +307,7 @@ test("a change in Appearance applies at once to the shell and a toast, and in a 
     ),
   ).toBe(true);
 
-  // Light (Q128): the same Monaco leaves telflo-navy for Monaco's own `vs`,
+  // Light: the same Monaco leaves telflo-navy for Monaco's own `vs`,
   // since Monaco's theme is global and Light sets it too.
   const savedLight = settings.waitForResponse(isPreferencesWrite);
   await themeButton(settings, "Light").click();
@@ -368,7 +367,7 @@ test("a page that isn't found stays dark whatever the account's theme", async ({
 
   await open(page, "/settings/appearance");
   await expect(html(page)).toHaveAttribute("class", "");
-  // Outside every layout: root's 404 (the marketing pages, which were too, left with D36-1 decision 20).
+  // Outside every layout: root's 404.
   const response = await page.goto(`/no-such-page-${randomUUID()}`);
   expect(response?.status()).toBe(404);
   await waitForHydration(page);

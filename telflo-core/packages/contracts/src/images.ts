@@ -1,17 +1,17 @@
 /*
  * An organization's logo is typed from its bytes, never its name or the
- * type a browser or a client declares (D23-2 decisions 32 and 34): the API
- * refuses anything else before a byte is written, and the web checks with
- * the same function before it sends. SVG (it can carry script), GIF, HTML
- * and an empty file are refused.
+ * type a browser or a client declares: the API refuses anything else
+ * before a byte is written, and the web checks with the same function
+ * before it sends. SVG (it can carry script), GIF, HTML and an empty file
+ * are refused.
  */
 
-/** The logo types Telflo keeps (D23-2 decision 32), as `imageTypeOf` names them. */
+/** The logo types Telflo keeps, as `imageTypeOf` names them. */
 export const ORGANIZATION_LOGO_TYPES = ["image/png", "image/jpeg", "image/webp"] as const;
 
 export type OrganizationLogoType = (typeof ORGANIZATION_LOGO_TYPES)[number];
 
-/** A logo's largest size: 2 MiB (D23-2 decisions 32 and 34). */
+/** A logo's largest size: 2 MiB. */
 export const ORGANIZATION_LOGO_MAXIMUM_BYTES = 2_097_152;
 
 const PNG_SIGNATURE = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a] as const;

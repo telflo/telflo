@@ -1,7 +1,6 @@
 /*
- * The fixture-shape check's cases, and the target pipeline's narrowing
- * (D14a Task 9). The corpus cases shared with the tester are in
- * fixture-shape.parity.test.ts.
+ * The fixture-shape check's cases, and the target pipeline's narrowing. The
+ * corpus cases shared with the tester are in fixture-shape.parity.test.ts.
  */
 
 import { describe, expect, it } from "vitest";
@@ -386,7 +385,7 @@ describe("detectFixtureMismatch", () => {
 
 
 // ---------------------------------------------------------------------------
-// The target pipeline (D14a Task 9): the tester's narrowing
+// The target pipeline: the tester's narrowing
 // ---------------------------------------------------------------------------
 
 /** A logs pipeline fed by filelog, and a sibling logs pipeline fed by OTLP. */
@@ -457,7 +456,7 @@ describe("detectFixtureMismatch with the target pipeline", () => {
 });
 
 // ---------------------------------------------------------------------------
-// file_log, filelog's name from collector 0.149.0 (Ruling 49)
+// file_log, filelog's name from collector 0.149.0
 // ---------------------------------------------------------------------------
 
 describe("file_log, filelog's later name", () => {

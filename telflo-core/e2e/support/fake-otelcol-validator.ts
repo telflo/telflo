@@ -5,15 +5,14 @@ import {
   type FakeOtelcolValidator,
 } from "../../apps/api/src/testing/fake-otelcol-validator.js";
 
-// The browser tests' collector validator (D13b decision 17, Preflight ruling
-// 20): the OpenAPI-checked fake from apps/api/src/testing, which
-// start-fake-otelcol-validator.ts runs as a Playwright web server. It checks
-// every request the E2E API sends it, and every reply it sends, against
-// services/otelcol-validator/openapi.yaml, and answers by the text, so tests
-// running in parallel each get the answer their own text asks for: valid by
-// default; invalid with an error per component whose type starts with
-// `unknown_`; an env_var requirement per `${env:NAME}`; 503 when the text
-// holds `# fake-otelcol-validator: unavailable`.
+// The browser tests' collector validator: the OpenAPI-checked fake from
+// apps/api/src/testing, which start-fake-otelcol-validator.ts runs as a
+// Playwright web server. It checks every request the E2E API sends it, and
+// every reply it sends, against services/otelcol-validator/openapi.yaml, and
+// answers by the text, so tests running in parallel each get the answer their
+// own text asks for: valid by default; invalid with an error per component
+// whose type starts with `unknown_`; an env_var requirement per `${env:NAME}`;
+// 503 when the text holds `# fake-otelcol-validator: unavailable`.
 //
 // As with the fake opamp-server (support/fake-opamp-server.ts), it runs in a
 // process of its own, so each violation, as the fake sees it, is written to

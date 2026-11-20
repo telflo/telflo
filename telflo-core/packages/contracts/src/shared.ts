@@ -3,7 +3,7 @@ import { z } from "zod";
 /**
  * Field schemas and limits used by more than one contract module. Internal to
  * the package, except `emailSchema`, which index.ts re-exports for the API's
- * settings (D4 Preflight minor).
+ * settings.
  */
 
 /** Bounded so a huge body cannot make every Argon2id hash arbitrarily costly. */

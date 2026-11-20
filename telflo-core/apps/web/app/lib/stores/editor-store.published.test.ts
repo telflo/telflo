@@ -17,10 +17,10 @@ import type { OTelNode } from "~/lib/graph/types.js";
 import { GROUP_ID, MINE, PUBLISHED_FIELDS, versionFixture, versionSummaryOf } from "~/test/configurations.js";
 
 /*
- * A published version is read-only (D11b decision 4; Preflight ruling 11):
- * its own mode, driven by `selectIsVersionPublished`, in which selection
- * works and every change is refused in the store. And the summary a publish
- * answers replaces the open version's without a reload (rulings 11 and 12).
+ * A published version is read-only: its own mode, driven by
+ * `selectIsVersionPublished`, in which selection works and every change is
+ * refused in the store. And the summary a publish answers replaces the open
+ * version's without a reload.
  */
 
 const STARTER = corpusText("starter.yaml");
@@ -78,7 +78,7 @@ describe("selectIsVersionPublished", () => {
   });
 });
 
-describe("a published version in the store (Preflight ruling 11)", () => {
+describe("a published version in the store", () => {
   /** Runs `change` and expects the text, the graph and the history untouched, and nothing toasted. */
   function expectRefused(change: () => unknown) {
     const { text, graph, history } = store();
@@ -212,7 +212,7 @@ describe("undo and redo on a version published under the editor", () => {
   });
 });
 
-describe("replaceVersionSummary (Preflight rulings 11 and 12)", () => {
+describe("replaceVersionSummary", () => {
   it("puts the summary in the list and in the open version, keeping its text, graph, history and canvas: no reload", () => {
     open(DRAFT);
     const batch = nodeOf("processors.batch", "traces");
@@ -229,7 +229,7 @@ describe("replaceVersionSummary (Preflight rulings 11 and 12)", () => {
     for (const key of ["text", "savedText", "graph", "history", "canvasKey", "loadCount", "selectedNode"] as const) {
       expect(after[key]).toBe(before[key]);
     }
-    // Unsaved text stays on screen (a stale tab, ruling 12): still dirty.
+    // Unsaved text stays on screen (a stale tab): still dirty.
     expect(selectIsDirty(after)).toBe(true);
   });
 
@@ -280,7 +280,7 @@ describe("replaceVersionSummary (Preflight rulings 11 and 12)", () => {
     expect(store().isYamlEditing).toBe(true);
   });
 
-  it("takes Undo All in a stale tab's manual edit mode: the screen goes back to the published text, out of the mode, and the canvas can be inspected (Ruling 31)", () => {
+  it("takes Undo All in a stale tab's manual edit mode: the screen goes back to the published text, out of the mode, and the canvas can be inspected", () => {
     open(DRAFT);
     const typed = `${STARTER}# typed\n`;
     store().setText(typed);
@@ -301,7 +301,7 @@ describe("replaceVersionSummary (Preflight rulings 11 and 12)", () => {
     expect(store().apply()).toEqual({ ok: false, reason: "There are no typed changes to apply." });
   });
 
-  it("Undo All on a published version puts back what was published, text and graph, not a canvas change made before the typing and never saved: clean, out of the mode, still locked (Ruling 34)", () => {
+  it("Undo All on a published version puts back what was published, text and graph, not a canvas change made before the typing and never saved: clean, out of the mode, still locked", () => {
     open(DRAFT);
     const published = { text: store().savedText, graph: store().savedGraph };
     // A canvas change, unsaved: the text and the graph both change.
@@ -351,7 +351,7 @@ describe("replaceVersionSummary (Preflight rulings 11 and 12)", () => {
   });
 });
 
-describe("replaceVersion: a re-read after a teammate's publish (Ruling 35)", () => {
+describe("replaceVersion: a re-read after a teammate's publish", () => {
   // A teammate edited the version, saved and published it: content this tab never loaded.
   const TEAMMATE_TEXT = STARTER.replace("timeout: '10s'", "timeout: '3s'");
   const TEAMMATE_PUBLISHED = {

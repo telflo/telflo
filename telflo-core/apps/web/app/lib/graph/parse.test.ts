@@ -7,11 +7,10 @@ import { labelFor, parse, paletteSubType } from "./parse.js";
 import type { Graph, OTelNode } from "./types.js";
 
 /*
- * The parser's cases on `parse` and the `yaml` package (D9a Parity Notes),
- * then D9a's own: each refusal
- * (Preflight ruling 9), YAML 1.2's numbers (ruling 2), merge keys, renamed
- * types, and decision 3's fixes. Its text is the corpus's
- * parser-kubernetes.yaml; renamedYaml is renamed-types.yaml.
+ * The parser's cases on `parse` and the `yaml` package, then the builder's
+ * own: each refusal, YAML 1.2's numbers, merge keys, renamed types, a
+ * connector's place, extensions and undeclared components. Its text is the
+ * corpus's parser-kubernetes.yaml; renamedYaml is renamed-types.yaml.
  */
 
 function parseYAMLToGraph(text: string): Graph {
@@ -28,7 +27,7 @@ function reasonFor(text: string): string {
 
 const testYaml = corpusText("parser-kubernetes.yaml");
 
-/** A pipeline's group id, by the pipeline's name (ids are opaque, decision 7). */
+/** A pipeline's group id, by the pipeline's name (ids are opaque). */
 function groupOf(result: Graph, pipelineName: string): string {
   const pipeline = result.pipelines.find((p) => p.name === pipelineName);
   if (!pipeline) throw new Error(`no pipeline ${pipelineName}`);
@@ -188,13 +187,13 @@ describe("parseYAMLToGraph", () => {
     expect(otlpReceiver?.data.componentType).toBe("receiver");
     expect(otlpReceiver?.data.componentSubType).toBe("otlp");
     expect(otlpReceiver?.data.config).toHaveProperty("protocols");
-    // D9a: the node records its key and its pipeline, for matching and edits.
+    // The node records its key and its pipeline, for matching and edits.
     expect(otlpReceiver?.data.key).toBe("receivers.otlp");
     expect(otlpReceiver?.data.pipeline).toBe("traces");
   });
 
-  // D9a Parity Notes: saved positions are kept by matching (decision 5, the
-  // store's layout-match), so `parse` itself takes none and lays out afresh.
+  // Saved positions are kept by matching (the store's layout-match), so
+  // `parse` itself takes none and lays out afresh.
   it("should compute deterministic positions: the same text lays out the same", () => {
     const initialResult = parseYAMLToGraph(testYaml);
     const result = parseYAMLToGraph(testYaml);
@@ -249,7 +248,7 @@ describe("parseYAMLToGraph with renamed (snake_case) component types", () => {
     expect(subTypes).toContain("k8sattributes");
   });
 
-  it("gives otlp_grpc the OTLP exporter's label and keeps its key (decision 3)", () => {
+  it("gives otlp_grpc the OTLP exporter's label and keeps its key", () => {
     const result = parseYAMLToGraph(renamedYaml);
     const exporter = result.nodes.find((n) => n.data.key === "exporters.otlp_grpc");
 
@@ -258,7 +257,7 @@ describe("parseYAMLToGraph with renamed (snake_case) component types", () => {
     expect(exporter?.data.sharedConfigId).toBe("exporter-otlp_grpc");
   });
 
-  it("gives otlp_http (the collector's name for otlphttp since 2026-01-08) the OTLP/HTTP exporter's label and keeps its key (D9b Preflight ruling 6)", () => {
+  it("gives otlp_http (the collector's name for otlphttp since 2026-01-08) the OTLP/HTTP exporter's label and keeps its key", () => {
     const result = parseYAMLToGraph(corpusText("renamed-types-canonical.yaml"));
     const exporter = result.nodes.find((n) => n.data.key === "exporters.otlp_http");
 
@@ -273,7 +272,7 @@ describe("parseYAMLToGraph with renamed (snake_case) component types", () => {
     ["kubelet_stats", "kubeletstats", "Kubelet Stats"],
     ["host_metrics", "hostmetrics", "Host Metrics"],
   ])(
-    "gives %s (the collector's name at v0.162.0) the palette's %s entry and keeps its key (D9c decision 2; Preflight ruling 28)",
+    "gives %s (the collector's name at v0.162.0) the palette's %s entry and keeps its key",
     (spelled, palette, label) => {
       const result = parseYAMLToGraph(corpusText("renamed-types-canonical.yaml"));
       const receiver = result.nodes.find((n) => n.data.key === `receivers.${spelled}`);
@@ -284,10 +283,11 @@ describe("parseYAMLToGraph with renamed (snake_case) component types", () => {
       expect(result.nodes.map((n) => n.data.label)).not.toContain(spelled.toUpperCase());
     },
   );
-  // D9d decision 2: each `type` with the palette's spelling as `deprecated_type` at v0.162.0:
+  // Each `type` with the palette's spelling as `deprecated_type` at v0.162.0:
   // processor/cumulativetodeltaprocessor/metadata.yaml:2-3, receiver/awss3receiver/metadata.yaml:2-3,
-  // connector/spanmetricsconnector/metadata.yaml:1-2. The S3 exporter is still `awss3` (exporter/awss3exporter/metadata.yaml:1).
-  describe("D9d's renamed types", () => {
+  // connector/spanmetricsconnector/metadata.yaml:1-2. The S3 exporter is still `awss3`
+  // (exporter/awss3exporter/metadata.yaml:1).
+  describe("the renamed types", () => {
     const TEXT = [
       "receivers:",
       "  otlp:",
@@ -333,7 +333,7 @@ describe("parseYAMLToGraph with renamed (snake_case) component types", () => {
       expect(node?.data.label.startsWith(findPaletteEntry(kind, palette)!.label)).toBe(true);
     });
 
-    it("the aws_s3 rename is the receiver's only: an exporter spelled aws_s3 (refused by the collector) gets no palette entry (final ruling F8)", () => {
+    it("the aws_s3 rename is the receiver's only: an exporter spelled aws_s3 (refused by the collector) gets no palette entry", () => {
       expect(labelFor("aws_s3", "receiver")).toEqual({ label: findPaletteEntry("receiver", "awss3")!.label, subType: "awss3" });
       expect(labelFor("aws_s3/archive", "exporter")).toEqual({ label: "AWS_S3 (archive)", subType: "aws_s3", instanceName: "archive" });
       const result = parseYAMLToGraph(TEXT.replace("  awss3:\n    s3uploader:", "  aws_s3:\n    s3uploader:").replace("exporters: [awss3, span_metrics]", "exporters: [aws_s3, span_metrics]"));
@@ -344,7 +344,7 @@ describe("parseYAMLToGraph with renamed (snake_case) component types", () => {
   });
 });
 
-describe("parse refuses a text the canvas can't show, and says why (Preflight ruling 9)", () => {
+describe("parse refuses a text the canvas can't show, and says why", () => {
   it("more than one document", () => {
     expect(reasonFor("receivers: {}\n---\nexporters: {}\n")).toBe(
       "Line 2, column 1: The text holds more than one YAML document; a configuration is one.",
@@ -441,7 +441,7 @@ describe("parse refuses a text the canvas can't show, and says why (Preflight ru
   });
 });
 
-describe("parse reads YAML 1.2's core schema (Preflight ruling 2)", () => {
+describe("parse reads YAML 1.2's core schema", () => {
   const exporter = () =>
     parseYAMLToGraph(corpusText("numbers.yaml")).nodes.find((n) => n.data.key === "exporters.file")!.data
       .config as Record<string, unknown>;
@@ -459,7 +459,7 @@ describe("parse reads YAML 1.2's core schema (Preflight ruling 2)", () => {
   });
 });
 
-describe("parse (D9a)", () => {
+describe("parse", () => {
   it("reads empty text as the three default pipelines, empty", () => {
     for (const text of ["", "# only a comment\n"]) {
       const graph = parseYAMLToGraph(text);
@@ -499,7 +499,7 @@ describe("parse (D9a)", () => {
     expect(config("processors.batch/large")).toEqual({ timeout: "10s", send_batch_size: 8192 });
   });
 
-  it("keeps a connector's place in a pipeline without processors (decision 3)", () => {
+  it("keeps a connector's place in a pipeline without processors", () => {
     const graph = parseYAMLToGraph(corpusText("connector-memberships.yaml"));
     const node = (key: string) => graph.nodes.find((n) => n.data.key === key)!;
     const bridge = groupOf(graph, "traces/bridge");
@@ -514,7 +514,7 @@ describe("parse (D9a)", () => {
     expect(has(graph.nodes.find((n) => n.data.key === "receivers.otlp" && n.data.pipeline === "traces/in")!.id, node("connectors.forward").id)).toBe(true);
   });
 
-  it("reads service.extensions: unlisted is disabled, listed but undeclared stays (decision 3)", () => {
+  it("reads service.extensions: unlisted is disabled, listed but undeclared stays", () => {
     const disabled = parseYAMLToGraph(corpusText("extensions-disabled.yaml"));
     const enabled = (graph: Graph) =>
       graph.nodes.filter((n) => n.type === "extension").map((n) => [n.data.key, n.data.enabled, n.data.declared]);
@@ -532,7 +532,7 @@ describe("parse (D9a)", () => {
     ]);
   });
 
-  it("shows a component a pipeline names but nobody declares, marked and without config (decision 3)", () => {
+  it("shows a component a pipeline names but nobody declares, marked and without config", () => {
     const graph = parseYAMLToGraph(corpusText("undeclared-references.yaml"));
     const undeclared = componentNodes(graph)
       .filter((n) => n.data.declared === false)

@@ -7,10 +7,10 @@ import { signInThroughApi } from "./support/session.js";
 import { confirmField, deleteButton, deleteDialog, openUsers, searchBox, searchFor, userRow } from "./support/users-admin-page.js";
 import { toastWith } from "./support/validation-pipelines-page.js";
 
-// The Users page (D29 decisions 3, 9, 29, 38 and 45), in the browser: a
-// product admin finds people by their address and by their group's name,
-// sees why a delete is blocked, and deletes a person after typing their
-// email; the person's other browser is signed out on its next request.
+// The Users page, in the browser: a product admin finds people by their
+// address and by their group's name, sees why a delete is blocked, and
+// deletes a person after typing their email; the person's other browser is
+// signed out on its next request.
 //
 // - The page lists every account in the e2e database, parallel workers'
 //   included: each test finds only its own people by searching for their
@@ -19,7 +19,7 @@ import { toastWith } from "./support/validation-pipelines-page.js";
 //   when the test ends, however it ends (`admins`).
 // - The page shows other people's emails and organization names
 //   (synthetic `e2e-<uuid>@example.com` fixtures): the privacy check
-//   collects, goes to about:blank, then asserts (Preflight ruling 18).
+//   collects, goes to about:blank, then asserts.
 
 const PASSWORD = "correct horse battery staple";
 
@@ -80,7 +80,7 @@ test("explains a block without offering a delete: a member of a group someone el
   await deleteButton(userRow(page, person.email)).click();
   const dialog = deleteDialog(page);
   await expect(dialog.getByRole("heading", { name: "Cannot delete user", exact: true })).toBeVisible();
-  // Collected as a boolean, asserted on about:blank (decision 45, D23-2 Ruling 144).
+  // Collected as a boolean, asserted on about:blank.
   const sentence = `${person.email} is a member of organization ${group.organizationName} (contributor). Remove them from the organization before deleting this account.`;
   const explains = await within(
     dialog.textContent().then((text) => (text ?? "").replace(/\s+/g, " ").includes(sentence)),
@@ -141,7 +141,7 @@ test("deletes a person after their email is typed: the toast, the row gone, and 
   } finally {
     await theirs.close();
   }
-  // Counted, asserted on about:blank (decision 45, D23-2 Ruling 144).
+  // Counted, asserted on about:blank.
   const toastsWithTheEmail = toastsHolding(toasts, [person.email]).length;
   await page.goto("about:blank");
   expect(toastsWithTheEmail, "toasts holding the email").toBe(0);

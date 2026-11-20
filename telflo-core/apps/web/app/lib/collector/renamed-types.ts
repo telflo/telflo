@@ -3,23 +3,21 @@ import { CollectorRenamedTypesSchema, type CollectorRenamedType } from "@telflo/
 import { COMPONENT_TYPES, type ComponentType } from "../graph/types.js";
 
 /*
- * The collector's renames (D13b decision 6), read from the catalogue when
- * the web is built (Preflight ruling 15): each
- * `catalog/distributions/<distribution>.json`'s `renamedTypes`, bundled by
- * Vite, never fetched from the API (the parser is synchronous and runs
- * everywhere). The catalogue is the one source: there is no second copy
- * here. The web image copies `catalog/` before it builds.
+ * The collector's renames, read from the catalogue when the web is built:
+ * each `catalog/distributions/<distribution>.json`'s `renamedTypes`,
+ * bundled by Vite, never fetched from the API (the parser is synchronous
+ * and runs everywhere). The catalogue is the one source: there is no
+ * second copy here. The web image copies `catalog/` before it builds.
  *
- * Every rename is kind-specific (Preflight ruling 15, D9d's final ruling F8
- * generalised): from upstream's `since` on, the collector calls the `kind`
- * of component `deprecatedName` by `name`, and keeps the old name as a
- * deprecated alias. Another kind spelled `name` is a type the collector
- * doesn't have (an `otlp_grpc` receiver, an `aws_s3` exporter).
+ * Every rename is kind-specific: from upstream's `since` on, the collector
+ * calls the `kind` of component `deprecatedName` by `name`, and keeps the old
+ * name as a deprecated alias. Another kind spelled `name` is a type the
+ * collector doesn't have (an `otlp_grpc` receiver, an `aws_s3` exporter).
  *
  * The palette keeps the old spellings, so the parser maps a current name to
  * its palette entry for the label, icon, help and form (`paletteSubType`),
  * and the text keeps its spelling. A component dropped from the palette is
- * written as the version's pin knows it (`spelledType`, D13b decision 5).
+ * written as the version's pin knows it (`spelledType`).
  */
 
 /** Each catalogue file's `renamedTypes`, by the file's path, as Vite bundles them. */
@@ -39,12 +37,12 @@ export type RenamedTypeTable = Readonly<Record<ComponentType, Readonly<Record<st
  * `renamedTypes`), checked against the catalogue's format, by distribution
  * (the file's name), in each file's order. A file without a valid list
  * throws, naming it, and so does no file at all (the glob matched nothing:
- * `catalog/` missing where the web is built, Ruling 53). Vite bundles an
+ * `catalog/` missing where the web is built). Vite bundles an
  * empty glob without complaint, so this throws when the module loads, not
  * when it is bundled: the built server at its start (its one bundle reads
  * the renames as it is imported), the dev server at its first page, every
  * test that imports it. The web image's build checks for the files before
- * it builds, and refuses without them (`telflo-core/Dockerfile`, Ruling 60).
+ * it builds, and refuses without them (`telflo-core/Dockerfile`).
  */
 export function readRenamedTypes(files: Readonly<Record<string, unknown>>): Readonly<Record<string, readonly RenamedType[]>> {
   if (Object.keys(files).length === 0) {
@@ -63,9 +61,9 @@ export function readRenamedTypes(files: Readonly<Record<string, unknown>>): Read
 }
 
 /**
- * The union of every distribution's renames, by kind (Preflight ruling 15).
- * A kind's current name has one deprecated name across the files (the
- * catalogue's cross-file rule); a file that disagrees throws.
+ * The union of every distribution's renames, by kind. A kind's current name
+ * has one deprecated name across the files (the catalogue's cross-file rule);
+ * a file that disagrees throws.
  */
 export function renamedTypeTable(byDistribution: Readonly<Record<string, readonly RenamedType[]>>): RenamedTypeTable {
   const table = Object.fromEntries(COMPONENT_TYPES.map((kind) => [kind, {} as Record<string, string>])) as Record<
@@ -114,15 +112,14 @@ export function isAtOrAfter(version: string, since: string): boolean {
 }
 
 /**
- * The type a component dropped from the palette is written with (D13b
- * decision 5, Preflight ruling 22): the palette's `paletteType` of `kind`,
- * unless `distribution`'s catalogue file renames that kind's
- * `paletteType` (its `deprecatedName`) and the pin `collectorVersion` is at
- * or after the rename's `since`, when the current name. A null pin, a
- * distribution the catalogue doesn't have, or a pin not in the catalogue's
- * format keeps the palette's (old) name, which every offered collector
- * still accepts. Changing the pin never rewrites text already written:
- * this decides only what a new component is called.
+ * The type a component dropped from the palette is written with: the
+ * palette's `paletteType` of `kind`, unless `distribution`'s catalogue file
+ * renames that kind's `paletteType` (its `deprecatedName`) and the pin
+ * `collectorVersion` is at or after the rename's `since`, when the current
+ * name. A null pin, a distribution the catalogue doesn't have, or a pin not
+ * in the catalogue's format keeps the palette's (old) name, which every
+ * offered collector still accepts. Changing the pin never rewrites text
+ * already written: this decides only what a new component is called.
  */
 export function spelledType(
   kind: ComponentType,

@@ -10,10 +10,10 @@
  * route edges labeled by priority level. Only the incoming side (which
  * pipeline feeds the connector) is an edge.
  *
- * Generation is the model the graph describes (`deriveModel`; D9a Parity
- * Notes); the round trips read the corpus's YAML (failover-connector.yaml is
- * the generated YAML for buildFailoverScenario("metrics", "metrics"), with
- * the target's processor chain). The validation tests wait for D13.
+ * Generation is the model the graph describes (`deriveModel`); the round
+ * trips read the corpus's YAML (failover-connector.yaml is the generated
+ * YAML for buildFailoverScenario("metrics", "metrics"), with the target's
+ * processor chain).
  */
 import { describe, expect, it } from "vitest";
 
@@ -267,7 +267,7 @@ describe("Failover connector — target pipeline layout", () => {
   });
 });
 
-describe("Failover connector — reading a config the text holds (D9a)", () => {
+describe("Failover connector — reading a config the text holds", () => {
   it("reads no targets from a config that isn't failover's shape", () => {
     expect(summarizeFailoverTargets(undefined)).toEqual([]);
     expect(summarizeFailoverTargets({ priority_levels: "no" })).toEqual([]);
@@ -278,11 +278,11 @@ describe("Failover connector — reading a config the text holds (D9a)", () => {
 });
 
 /*
- * D9d decision 8 (Preflight ruling 1): with the text's order, the failover
- * connector's receiver membership is the text's own while it is a node; the
- * D9a cases above pass no order (the config's derivation).
+ * With the text's order, the failover connector's receiver membership is the
+ * text's own while it is a node; the cases above pass no order (the config's
+ * derivation).
  */
-describe("Failover connector — membership with the text's order (D9d decision 8)", () => {
+describe("Failover connector — membership with the text's order", () => {
   const TEXT = [
     "receivers:",
     "  otlp:",
@@ -328,7 +328,7 @@ describe("Failover connector — membership with the text's order (D9d decision 
     expect(model.pipelines.get("traces/backup")).toEqual({ receivers: ["otlp"], processors: ["batch"], exporters: ["debug"] });
     expect(model.pipelines.get("traces/listed")).toEqual({ receivers: ["failover"], processors: ["batch"], exporters: ["debug"] });
 
-    // D9a's derivation, without an order, reads the levels instead.
+    // The config's derivation, without an order, reads the levels instead.
     const fromConfig = deriveModel(graph);
     expect(fromConfig.pipelines.get("traces/backup")?.receivers).toEqual(["otlp", "failover"]);
     expect(fromConfig.pipelines.get("traces/listed")?.receivers).toEqual([]);

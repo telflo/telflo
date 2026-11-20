@@ -5,22 +5,22 @@ import { ActiveOrganizationSchema } from "./sessions.js";
 import { emailSchema } from "./shared.js";
 
 /*
- * Organization invitations (D6). The error codes are in organizations.ts,
+ * Organization invitations. The error codes are in organizations.ts,
  * with the rest of the organization endpoints' codes: sessions.ts imports
  * organizations.ts, so this module, which imports sessions.ts, can't be
  * where organizations.ts reads them from.
  */
 
 /**
- * How long an invitation link works, from its latest send (D6 decision 2).
- * A constant, as D3's reset lifetime is; the email states it.
+ * How long an invitation link works, from its latest send. A constant, as
+ * a password reset link's lifetime is; the email states it.
  */
 export const INVITATION_TTL_DAYS = 7;
 
 /*
- * The invitee's refusals (D6 decision 9), which the API answers with and the
- * accept page shows without asking, from a preview's status or a missing
- * token. One source, so the page and the API can't drift apart.
+ * The invitee's refusals, which the API answers with and the accept page
+ * shows without asking, from a preview's status or a missing token. One
+ * source, so the page and the API can't drift apart.
  */
 
 /** `invitation_not_found`: an unknown, revoked or superseded token, a deleted organization, or no token at all. */
@@ -34,15 +34,15 @@ export const INVITATION_EXPIRED_MESSAGE =
 /** `invitation_already_accepted`. */
 export const INVITATION_ALREADY_ACCEPTED_MESSAGE = "This invitation has already been accepted.";
 /**
- * An invitation that can't make an account on this site (D36-1 decision 52:
- * a personal organization's, under invite-only): the registration's 403
+ * An invitation that can't make an account on this site (a personal
+ * organization's, under invite-only): the registration's 403
  * `registration_not_open` and the accept page's notice alike. Nothing about
  * whether the address has an account.
  */
 export const INVITATION_SIGN_IN_ONLY_MESSAGE =
   "This invitation can't create a new account. Sign in with an existing account to accept it.";
 
-/** `invitation_email_mismatch`: names the invited address, which only it can accept (decision 3). */
+/** `invitation_email_mismatch`: names the invited address, which only it can accept. */
 export function invitationEmailMismatchMessage(email: string): string {
   return `This invitation was sent to ${email}. Sign in with that address to accept it.`;
 }
@@ -50,17 +50,17 @@ export function invitationEmailMismatchMessage(email: string): string {
 /**
  * `POST /api/v1/organizations/:organizationId/invitations`. The address is
  * trimmed and lowercased, as registration's is. The role is admin or
- * contributor (D7 decision 2).
+ * contributor.
  */
 export const CreateInvitationRequestSchema = z.object({ email: emailSchema, role: OrganizationRoleSchema }).strict();
 
 export type CreateInvitationRequest = z.infer<typeof CreateInvitationRequestSchema>;
 
 /**
- * A pending invitation, as the Invited tab lists it (decision 7).
- * `invitedAt` is when it was created; `expiresAt` moves with every resend.
- * `isExpired` is the API's comparison with its own clock, so the page never
- * decides it from the browser's. The timestamps are ISO 8601.
+ * A pending invitation, as the Invited tab lists it. `invitedAt` is when it
+ * was created; `expiresAt` moves with every resend. `isExpired` is the
+ * API's comparison with its own clock, so the page never decides it from
+ * the browser's. The timestamps are ISO 8601.
  */
 export const InvitationSchema = z
   .object({
@@ -99,7 +99,7 @@ export const InvitationTokenRequestSchema = z.object({ token: InvitationTokenSch
 
 export type InvitationTokenRequest = z.infer<typeof InvitationTokenRequestSchema>;
 
-/** A revoked or superseded invitation isn't a status: it is a 404 (decision 9). */
+/** A revoked or superseded invitation isn't a status: it is a 404. */
 export const InvitationStatusSchema = z.enum(["pending", "expired", "accepted"]);
 
 export type InvitationStatus = z.infer<typeof InvitationStatusSchema>;
@@ -109,12 +109,11 @@ export type InvitationStatus = z.infer<typeof InvitationStatusSchema>;
  * the invited address, so the page offers sign-in or sign-up; only someone
  * holding the token learns it, and only about the address it was sent to.
  * `mayRegister` says whether this invitation can make a new account on this
- * site (D36-1 decisions 35 and 52): false under `closed`, and under
- * `invite-only` for an invitation from a personal organization; then the
- * page offers sign-in only. It reads the site's mode and the organization's
- * type, nothing about the address. `organizationType` lets the page name a
- * personal workspace called by its owner's email as "<email>'s
- * organization" (D36-1 Q264), as the invite dialog does.
+ * site: false under `closed`, and under `invite-only` for an invitation
+ * from a personal organization; then the page offers sign-in only. It reads
+ * the site's mode and the organization's type, nothing about the address.
+ * `organizationType` lets the page name a personal workspace called by its
+ * owner's email as "<email>'s organization", as the invite dialog does.
  */
 export const InvitationPreviewResponseSchema = z
   .object({

@@ -2,11 +2,11 @@ import { INSTALL_MASKED_TOKEN, installDisplayNameProblem, installPathProblem, sh
 import { QUICK_DEPLOY_MASKED_SECRET, QUICK_DEPLOY_URL_PATTERN } from "./quick-deploy.js";
 
 /*
- * The Quick Deploy command (D17c-2 decisions 8 and 29; Preflight ruling 14),
- * built from a link's create reply (its `url`, the one copy of the link's
- * secret) and the reveal of the link's default token. The install dialog
- * builds it in the browser; the stack's smoke prints it through the API's
- * image, so both run this very text. Pure: no request, no environment.
+ * The Quick Deploy command, built from a link's create reply (its `url`,
+ * the one copy of the link's secret) and the reveal of the link's default
+ * token. The install dialog builds it in the browser; the stack's smoke
+ * prints it through the API's image, so both run this very text. Pure: no
+ * request, no environment.
  *
  * The whole command is a subshell: `(` alone on the first line, `)` at
  * the end of the last command's line (`… restart telflo-supervisor.service )`,
@@ -14,7 +14,7 @@ import { QUICK_DEPLOY_MASKED_SECRET, QUICK_DEPLOY_URL_PATTERN } from "./quick-de
  * exported only inside it, so it never reaches the ENVIRONMENT of the
  * person's shell (nor does the `cd` move that shell). It does reach the
  * shell's HISTORY: the pasted command, the bearer and the link's secret in
- * it, stays there, as D17c-1's install command does. The paste's exit
+ * it, stays there, as the install dialog's own commands do. The paste's exit
  * status is the chain's: an Ansible `shell:` task, or any script, sees a
  * refused download fail, and a shell running with `set -e` (errexit)
  * stops, or closes, there; for a script or Ansible that is intended.
@@ -61,7 +61,7 @@ import { QUICK_DEPLOY_MASKED_SECRET, QUICK_DEPLOY_URL_PATTERN } from "./quick-de
  * takes effect).
  *
  * The command holds the bearer and the link's secret: a secret as an install
- * command is (ADR 0024): shown only inside `ph-no-capture`, on the clipboard
+ * command is: shown only inside `ph-no-capture`, on the clipboard
  * only by its copy, never in a URL, toast, log, error or audit row. The
  * preview (`quickDeployPreview`) takes no bearer and masks the secret.
  */
@@ -172,9 +172,9 @@ function quickDeployLines(link: string, https: boolean, token: string, rootPath:
 }
 
 /**
- * The Quick Deploy command (decision 29): the foreground variant, or
- * (`systemd`) the service's. Throws on a link, a bearer, a root path or a
- * display name outside its rule (a broken contract).
+ * The Quick Deploy command: the foreground variant, or (`systemd`) the
+ * service's. Throws on a link, a bearer, a root path or a display name
+ * outside its rule (a broken contract).
  */
 export function quickDeployCommands({ url, rootPath, bearer, displayName, systemd }: QuickDeployCommandParts): string {
   const link = checkedLink(url);
@@ -183,7 +183,7 @@ export function quickDeployCommands({ url, rootPath, bearer, displayName, system
 }
 
 /**
- * The preview (decision 29): the command with the bearer `••••••••••••••••`
+ * The preview: the command with the bearer `••••••••••••••••`
  * and the link's secret `tqd_••••••••`, its base kept. It takes no bearer,
  * so it can hold none; it holds no character of the secret.
  */

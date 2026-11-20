@@ -1,24 +1,24 @@
 import { API_TOKENS_LIVE_MAXIMUM, API_TOKEN_NOT_FOUND_MESSAGE, type ServiceAccountErrorCode } from "./service-accounts.js";
 
 /**
- * A person's own API tokens (D25 decisions 3, 27-29 and 50; Preflight
- * ruling 14), on their Account page, beside D21's account routes:
+ * A person's own API tokens, on their Account page, beside the account
+ * routes:
  *
  *   GET    /api/v1/auth/me/api-tokens             → ApiTokensResponseSchema
  *   POST   /api/v1/auth/me/api-tokens             CreateApiTokenRequestSchema → 201 CreatedApiTokenResponseSchema (no-store)
  *   DELETE /api/v1/auth/me/api-tokens/{tokenId}   → 204 (a revoke)
  *
- * The shapes are D22's (service-accounts.ts): a token as listed (its prefix,
- * never the token), the create's request, and the create's reply, the only
- * place a personal token crosses the API. A personal token acts as its
- * person in every organization they belong to, named per request by
- * `X-Telflo-Org`; only its person lists or revokes it.
+ * The shapes are the service accounts' (service-accounts.ts): a token as
+ * listed (its prefix, never the token), the create's request, and the create's
+ * reply, the only place a personal token crosses the API. A personal token
+ * acts as its person in every organization they belong to, named per request
+ * by `X-Telflo-Org`; only its person lists or revokes it.
  *
- * The refusals are D22's `api_token_*` codes with a person's words: never a
- * token, its prefix or its name.
+ * The refusals are the service accounts' `api_token_*` codes with a person's
+ * words: never a token, its prefix or its name.
  */
 
-/** The codes the personal-token routes answer (D22's, Preflight ruling 14). */
+/** The codes the personal-token routes answer (the service accounts'). */
 export const PERSONAL_API_TOKEN_ERROR_CODES = [
   "api_token_not_found",
   "api_token_name_taken",
@@ -27,7 +27,7 @@ export const PERSONAL_API_TOKEN_ERROR_CODES = [
 
 export type PersonalApiTokenErrorCode = (typeof PERSONAL_API_TOKEN_ERROR_CODES)[number];
 
-/** A person may hold this many live tokens (decision 27): D22's number for an account. */
+/** A person may hold this many live tokens: the service accounts' number for an account. */
 export const PERSONAL_API_TOKENS_LIVE_MAXIMUM = API_TOKENS_LIVE_MAXIMUM;
 
 /** A token of the person's not yet revoked, expired ones included, has the name, case aside. */

@@ -1,8 +1,7 @@
 /*
- * `/cli-auth`'s parts (D27 decisions 20-22; Preflight rulings 13-16): the
- * page's parameters read from its fragment, the token's name, the handoff
- * to the CLI's listener, and which addresses name the page (for LoginForm's
- * way back and for analytics' `blocked`).
+ * `/cli-auth`'s parts: the page's parameters read from its fragment, the
+ * token's name, the handoff to the CLI's listener, and which addresses name
+ * the page (for LoginForm's way back and for analytics' `blocked`).
  *
  * It imports nothing: analytics.ts imports it, and no module of the API
  * client's may join analytics' imports.
@@ -16,7 +15,7 @@
 /** The page's path (routes.ts). */
 export const CLI_AUTH_PATH = "/cli-auth";
 
-/** What the CLI's listener sent the browser here with (decision 20). */
+/** What the CLI's listener sent the browser here with. */
 export interface CliAuthParameters {
   /** 32 random bytes, base64url: 43 characters. */
   state: string;
@@ -50,7 +49,7 @@ export function parseCliAuthFragment(hash: string): CliAuthParameters | null {
   return { state, port: portNumber, host };
 }
 
-/** The start every CLI token for `host` has: what Approve revokes, exactly (decision 21). */
+/** The start every CLI token for `host` has: what Approve revokes, exactly. */
 export function cliTokenNamePrefix(host: string): string {
   return `CLI — ${host} · `;
 }
@@ -60,7 +59,7 @@ export function cliTokenName(host: string, now: Date): string {
   return cliTokenNamePrefix(host) + now.toISOString().slice(0, 19).replace("T", " ");
 }
 
-/** How long the page waits on the listener before it shows the token to paste (Preflight ruling 11). */
+/** How long the page waits on the listener before it shows the token to paste. */
 export const HANDOFF_WAIT_MS = 60_000;
 
 /** What the page posts to the listener: the token, or Cancel's answer. */
@@ -111,9 +110,9 @@ export function namesCliAuth(redirectTo: string): boolean {
 
 /**
  * Whether a document's address is this page's, or `/login`'s with a
- * `redirectTo` naming it (Preflight ruling 14): PostHog never starts in
- * either, since posthog-js stores `location.href` before any `before_send`
- * and replay records the sign-in buttons' links.
+ * `redirectTo` naming it: PostHog never starts in either, since posthog-js
+ * stores `location.href` before any `before_send` and replay records the
+ * sign-in buttons' links.
  */
 export function isCliAuthDocument(href: string): boolean {
   let url: URL;

@@ -12,9 +12,9 @@ import {
 } from "./test-suites-store.js";
 
 /*
- * The Suites subtab's store (D14b Preflight rulings 14 and 18): reads, a
- * definitions read under way kept for a later Play all, answers for another
- * version or after signing out dropped, and the edits.
+ * The Suites subtab's store: reads, a definitions read under way kept for a
+ * later Play all, answers for another version or after signing out dropped,
+ * and the edits.
  */
 
 const TARGET = { organizationId: GROUP_ID, configurationId: MINE.id, versionId: VERSION_ID };
@@ -134,7 +134,7 @@ describe("a suite's definitions", () => {
     expect(read).not.toHaveBeenCalled();
   });
 
-  it("answer the read under way rather than start another, so a Play all can await it (Preflight ruling 14); the next read is fresh", async () => {
+  it("answer the read under way rather than start another, so a Play all can await it; the next read is fresh", async () => {
     await holdTarget();
     const answer = deferred<TestDefinitionsResponse>();
     const read = vi.spyOn(apiClient, "getTestDefinitions").mockReturnValueOnce(answer.promise);
@@ -229,7 +229,7 @@ describe("signing out (reset)", () => {
   });
 });
 
-describe("reads and writes made meanwhile (D14b Ruling 38)", () => {
+describe("reads and writes made meanwhile", () => {
   const CREATED = testSuiteFixture({ id: "0199f000-0000-7000-8000-000000000002", name: "zq-created" });
   const NEW_DEFINITION = testDefinitionFixture({ id: "0199f100-0000-7000-8000-000000000002", name: "zq-new" });
 

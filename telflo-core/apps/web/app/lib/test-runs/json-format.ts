@@ -1,9 +1,9 @@
 /*
  * Pretty-printing a test file's JSON or NDJSON for a viewer, and putting an
- * edited pretty view back into the file's own form for Copy (D14a Task 10's
+ * edited pretty view back into the file's own form for Copy (the test file
  * viewers use it). Its `prettyPrint` is split in two, the reading
  * (`parseJsonText`) and the printing (`prettyPrintParsed`), so Compare parses
- * each file once (D15b).
+ * each file once.
  */
 
 /** How a text was read: one JSON document, NDJSON (one document a line), or neither. */
@@ -13,7 +13,7 @@ export type JsonFormat = "single" | "ndjson" | "raw";
  * A text read as JSON, once: one document, NDJSON's documents (one a line,
  * blank lines skipped), or neither (`raw`, an empty text included). Compare
  * reads each file once and both pretty-prints and detects from what this
- * gives (D15b Preflight ruling 8).
+ * gives.
  */
 export type ParsedJsonText = { format: "single"; document: unknown } | { format: "ndjson"; documents: unknown[] } | { format: "raw" };
 
@@ -139,10 +139,9 @@ export function toCanonicalFormat(text: string, format: JsonFormat): string {
 }
 
 /**
- * A test file's bytes as text, for a viewer (D14a Preflight ruling 14: the
- * bytes arrive undecoded): UTF-16 (either order) or UTF-8 by its byte-order
- * mark, which is dropped, else UTF-8. A byte that isn't valid shows as
- * U+FFFD; nothing is refused.
+ * A test file's bytes as text, for a viewer (the bytes arrive undecoded):
+ * UTF-16 (either order) or UTF-8 by its byte-order mark, which is dropped,
+ * else UTF-8. A byte that isn't valid shows as U+FFFD; nothing is refused.
  */
 export function decodeFileText(bytes: Uint8Array): string {
   if (bytes.length >= 2 && bytes[0] === 0xff && bytes[1] === 0xfe) return new TextDecoder("utf-16le").decode(bytes.subarray(2));

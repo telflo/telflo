@@ -13,8 +13,7 @@ import {
 } from "./collector-schema.js";
 
 /*
- * Which schema the pin gets, and the options monaco-yaml gets for it (D13c
- * decisions 2 and 11; Preflight rulings 12 and 13; Ruling 26).
+ * Which schema the pin gets, and the options monaco-yaml gets for it.
  */
 
 const CATALOGUE: Record<string, readonly SchemaCatalogueVersion[]> = {
@@ -38,7 +37,7 @@ describe("schemaPathFor", () => {
     expect(schemaPathFor(null, null, CATALOGUE)).toBeNull();
   });
 
-  it("gives syntax only to a retired version (decision 2)", () => {
+  it("gives syntax only to a retired version", () => {
     expect(schemaPathFor("otelcol-contrib", "0.158.0", CATALOGUE)).toBeNull();
   });
 

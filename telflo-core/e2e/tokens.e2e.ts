@@ -14,16 +14,16 @@ import { enrollFakeCollector, recordFakeTokenEvents } from "./support/fake-opamp
 import { isGetOf, nextPoll } from "./support/polling.js";
 import { signInThroughApi, switchOrganizationThroughApi, waitForHydration } from "./support/session.js";
 
-// A server fleet's Tokens tab (D17b-2 decision 35; Preflight ruling 16), and
-// a Kubernetes-supervisor fleet's new default token words (D18 decision 30), in
-// the browser, against the E2E API and its fake opamp-server. Each test works
-// in an organization of its own (a new user's, or a new group's), so tests
-// and browsers run in parallel. Fleets, rotations and revokes the test isn't
-// about are made through the API as the page's session (`page.request`, the
-// CSRF header set); collectors on a token, and a history to page through,
-// through the fake's control port (support/fake-opamp-server.ts), before the
-// page reads them, but for the events seeded while the page polls: that
-// test drives the page's clock (`nextPoll`, support/polling.ts).
+// A server fleet's Tokens tab, and a Kubernetes-supervisor fleet's new
+// default token words, in the browser, against the E2E API and its fake
+// opamp-server. Each test works in an organization of its own (a new user's,
+// or a new group's), so tests and browsers run in parallel. Fleets, rotations
+// and revokes the test isn't about are made through the API as the page's
+// session (`page.request`, the CSRF header set); collectors on a token, and a
+// history to page through, through the fake's control port
+// (support/fake-opamp-server.ts), before the page reads them, but for the
+// events seeded while the page polls: that test drives the page's clock
+// (`nextPoll`, support/polling.ts).
 //
 // The E2E API runs with test limits (start-api.ts), so the bearer replies'
 // 10 a minute never binds here (the web tests cover it). A bearer, taken
@@ -41,7 +41,7 @@ const REVEAL_PATH = new RegExp(`^${FLEET_PATH}/tokens/[^/]+/reveal$`);
 const REVOKE_PATH = new RegExp(`^${FLEET_PATH}/tokens/[^/]+/revoke$`);
 const NEW_DEFAULT_PATH = new RegExp(`^${FLEET_PATH}/tokens/default$`);
 const LINKS_PATH = new RegExp(`^${FLEET_PATH}/quick-deploy-links$`);
-/** The tab's reads and polls: the tokens, the history's first page and the install links' (D17c-2 Preflight ruling 21). */
+/** The tab's reads and polls: the tokens, the history's first page and the install links'. */
 const isTokensRead = isGetOf(TOKENS_PATH);
 const isEventsRead = isGetOf(EVENTS_PATH);
 const isLinksRead = isGetOf(LINKS_PATH);
@@ -69,7 +69,7 @@ const NEW_DEFAULT_DESCRIPTION =
 const NEW_DEFAULT_RESULT = "It is shown now only; Reveal gives it again. Re-run the install command on each host that used the revoked token.";
 const CONTAINER_REINSTALL =
   "On a container host, remove the old container first (docker rm -f telflo-collector); keep the telflo-opamp volume to keep the same collector.";
-/** A Kubernetes-supervisor fleet's words (D17d-1 Ruling 55; D18 decisions 6 and 30: the chart's checksum/token rolls the pods). */
+/** A Kubernetes-supervisor fleet's words (the chart's checksum/token rolls the pods). */
 const NEW_DEFAULT_DESCRIPTION_KUBERNETES =
   "Issues a new default token for installing collectors. The revoked one stays revoked: pods that start with it are refused until their group's Helm release is upgraded with the new token.";
 const NEW_DEFAULT_RESULT_KUBERNETES =
@@ -153,7 +153,7 @@ function headerRotate(page: Page): Locator {
 
 /**
  * The rotate-before-expiry banner, by its name: a `region` landmark rendered only when there is a banner, with
- * no live semantics (Ruling 31). Behind a dialog it is hidden from the tree, so not found.
+ * no live semantics. Behind a dialog it is hidden from the tree, so not found.
  */
 function bannerOf(page: Page): Locator {
   return panel(page).getByRole("region", { name: TOKEN_BANNER_LABEL, exact: true });
@@ -256,7 +256,7 @@ test("the table's statuses: Valid, Current, Being replaced until its date, Revok
   for (const row of [rotate.nth(2), rotate.nth(3)]) await expect(cell(row, 5).getByRole("button")).toHaveCount(0);
   await expect(panel(page).getByRole("button", { name: "Reveal the default token", exact: true })).toBeVisible();
 
-  // Install links (D17c-2 decision 31), between the tokens and the History: none made yet.
+  // Install links, between the tokens and the History: none made yet.
   await expect(panel(page).getByRole("heading", { name: "Install links" })).toBeVisible();
   await expect(panel(page).getByText("No install links for this fleet yet.")).toBeVisible();
   await expect(panel(page).getByText("Links appear here when you make a Quick Deploy command in the install dialog.")).toBeVisible();
@@ -390,7 +390,7 @@ test("revokes: the default token's and the only rotate token's words with their 
     await enrollFakeCollector(organizationId, fleetId, { name: `on-rotate-${name}-${unique()}`, tokenId: created.tokens.rotate.id });
   }
   await openTokens(page, fleetId);
-  // No banner: nothing of it rendered, hidden or not (Ruling 31).
+  // No banner: nothing of it rendered, hidden or not.
   await expect(bannerOf(page)).toHaveCount(0);
   await expect(panel(page).getByRole("region", { name: TOKEN_BANNER_LABEL, exact: true, includeHidden: true })).toHaveCount(0);
   const rotateRow = rowsOfKind(page, "Rotate");
@@ -430,7 +430,7 @@ test("revokes: the default token's and the only rotate token's words with their 
   await bannerOf(page).getByRole("button", { name: "Rotate token", exact: true }).click();
   const rotateDialog = page.getByRole("dialog", { name: "Rotate token" });
   await expect(rotateDialog).toContainText(NO_PREDECESSOR_FORM);
-  // Behind the dialog, the banner and its button are hidden from the tree (Ruling 31: no aria-live for hideOthers to skip).
+  // Behind the dialog, the banner and its button are hidden from the tree (no aria-live for hideOthers to skip).
   await expect(page.getByRole("region", { name: TOKEN_BANNER_LABEL, exact: true })).toHaveCount(0);
   await expect(page.getByRole("region", { name: TOKEN_BANNER_LABEL, exact: true, includeHidden: true })).toHaveCount(1);
   await expect(page.getByRole("button", { name: "Rotate token", exact: true })).toHaveCount(1);
@@ -440,7 +440,7 @@ test("revokes: the default token's and the only rotate token's words with their 
   await rotateDialog.getByRole("button", { name: "Rotate token" }).click();
   const response = await answered;
   expect(response.status()).toBe(201);
-  // The default grace still sent (Preflight ruling 6): the end of today + 30 days.
+  // The default grace still sent: the end of today + 30 days.
   const sentGrace = (response.request().postDataJSON() as { graceEndsAt: string }).graceEndsAt;
   expect(sentGrace).toBe(await endOfLocalDay(page, await localDate(page, 30)));
   const { token } = (await response.json()) as EnrollmentTokenRotatedResponse;
@@ -459,7 +459,7 @@ test("revokes: the default token's and the only rotate token's words with their 
   await expect.poll(() => historyColumn(page, 1, 4)).toEqual(["Issued", "Revoked", "Issued", "Issued"]);
 });
 
-// D17c-1 decision 45 (Preflight ruling 31): a revoked default token followed by a new one.
+// A revoked default token followed by a new one.
 test("issues a new default token after the default token is revoked: its bearer only inside ph-no-capture, the button gone, both default tokens named by their dates", async ({
   page,
 }) => {
@@ -512,8 +512,8 @@ test("issues a new default token after the default token is revoked: its bearer 
   expect(((await again.json()) as { error: { code: string } }).error.code).toBe("enrollment_token_default_exists");
 });
 
-// D18 decisions 6 and 30 (Preflight ruling 17): a Kubernetes-supervisor fleet's new default token names its groups' Helm
-// releases, whose upgrade now restarts the pods (the chart's checksum/token), in place of the hosts' install command.
+// A Kubernetes-supervisor fleet's new default token names its groups' Helm releases, whose upgrade restarts the pods
+// (the chart's checksum/token), in place of the hosts' install command.
 test("a Kubernetes-supervisor fleet's new default token: its description and result in the Helm words exactly, the bearer only inside ph-no-capture, gone after Done", async ({
   page,
 }) => {

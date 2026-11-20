@@ -1,14 +1,14 @@
 import { randomUUID } from "node:crypto";
 import { expect, type Page } from "@playwright/test";
 import { E2E_SAAS_TERMS_VERSION } from "./support/environment.js";
-// The SaaS pair (D36-1 Preflight ruling 16): open registration, the Terms, the playground and the anonymous reads.
+// The SaaS pair: open registration, the Terms, the playground and the anonymous reads.
 import { test } from "./support/saas.js";
 import { findIdentities, findMemberships, findUsersByEmail, seedUser, uniqueEmail } from "./support/database.js";
 import { clickGoogle, denyAtProvider, signInAtProvider } from "./support/oidc.js";
 import { waitForHydration } from "./support/session.js";
 
-// Signing in and creating accounts with Google (D2c), against the fake
-// OpenID Provider the E2E API's Google settings name (start-fake-oidc-provider.ts).
+// Signing in and creating accounts with Google, against the fake OpenID
+// Provider the E2E API's Google settings name (start-fake-oidc-provider.ts).
 // Each test types its own email into the fake's form.
 
 const PASSWORD = "correct horse battery staple";
@@ -20,7 +20,7 @@ function termsDialog(page: Page) {
   return page.getByRole("dialog", { name: "Updated Terms of Service" });
 }
 
-/** Opens a page and waits for React, as every full page load must (D2b Ruling 11). */
+/** Opens a page and waits for React, as every full page load must. */
 async function open(page: Page, path: string): Promise<void> {
   await page.goto(path);
   await waitForHydration(page);
@@ -45,7 +45,7 @@ test("a new user from /register lands on /app behind the terms dialog; Accept ma
   await expect(dialog).toBeHidden();
 
   // The shell answers: its organization popover opens.
-  // The personal organization, named by the email alone (Q263).
+  // The personal organization, named by the email alone.
   await expect(page.getByTitle("Switch organization")).toContainText(email);
   await expect(page.getByTitle("Switch organization")).not.toContainText("workspace");
   await page.getByTitle("Switch organization").click();
@@ -161,7 +161,7 @@ test("an unverified provider email gets the can't-be-used message, and no user i
   expect(await findUsersByEmail(email)).toEqual([]);
 });
 
-test("a non-Gmail provider email with no hosted domain gets the same message, and no user is created (Ruling 7)", async ({
+test("a non-Gmail provider email with no hosted domain gets the same message, and no user is created", async ({
   page,
 }) => {
   const email = uniqueEmail("example.com");
@@ -177,7 +177,7 @@ test("a non-Gmail provider email with no hosted domain gets the same message, an
 });
 
 for (const path of ["/login", "/register"]) {
-  test(`Back from the provider leaves ${path} usable, not Redirecting... (Ruling 16)`, async ({ page }) => {
+  test(`Back from the provider leaves ${path} usable, not Redirecting...`, async ({ page }) => {
     await open(page, path);
 
     await clickGoogle(page);
@@ -205,7 +205,7 @@ for (const path of ["/login", "/register"]) {
 // the start endpoint answers 204, so the click leaves the page where it is,
 // "Redirecting...", and a persisted pageshow is what a restore fires.
 for (const path of ["/login", "/register"]) {
-  test(`${path} restored from the back/forward cache (a persisted pageshow) is usable again (Ruling 16)`, async ({
+  test(`${path} restored from the back/forward cache (a persisted pageshow) is usable again`, async ({
     page,
   }) => {
     await page.route("**/api/v1/auth/oidc/google*", (route) => route.fulfill({ status: 204 }));

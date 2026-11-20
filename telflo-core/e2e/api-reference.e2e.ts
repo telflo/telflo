@@ -6,29 +6,28 @@ import { within } from "./support/privacy.js";
 import { createApiTokenThroughApi, createServiceAccountThroughApi } from "./support/service-accounts.js";
 import { signInThroughApi } from "./support/session.js";
 
-// The API reference page (D25 decisions 49, 51 and 53; Preflight ruling 20):
-// Swagger UI, served by the API at /api/public/v1/docs/ and reached here
-// through the web's origin (the dev server proxies /api, as the gateway
-// does), Authorized with a REAL service account's token minted at run time
-// through the API, then try-it on GET /whoami. The one page where a token
-// is typed: Authorize keeps it in memory only, every input is
-// autocomplete=off (Firefox's form history kept it otherwise), the curl
-// block names $TELFLO_TOKEN, the try-it request sends no cookie (a session
-// is signed in on this origin), nothing reaches a URL, browser storage or
-// another host (PostHog's stub among them), and a reload holds no token.
+// The API reference page: Swagger UI, served by the API at
+// /api/public/v1/docs/ and reached here through the web's origin (the dev
+// server proxies /api, as the gateway does), Authorized with a REAL
+// service account's token minted at run time through the API, then try-it
+// on GET /whoami. The one page where a token is typed: Authorize keeps it
+// in memory only, every input is autocomplete=off (Firefox's form history
+// kept it otherwise), the curl block names $TELFLO_TOKEN, the try-it
+// request sends no cookie (a session is signed in on this origin), nothing
+// reaches a URL, browser storage or another host (PostHog's stub among
+// them), and a reload holds no token.
 //
-// A token is a secret (D22 decision 48): built by the API, never written
-// here and never printed. While the page holds it the test only COLLECTS
-// booleans (every wait caught), goes to about:blank, and asserts there
-// (D23-2 Ruling 144: Playwright writes the page's ARIA snapshot to
-// error-context.md). Run in Chromium, Firefox and WebKit: the page is a
-// runtime of its own.
+// A token is a secret: built by the API, never written here and never
+// printed. While the page holds it the test only COLLECTS booleans (every
+// wait caught), goes to about:blank, and asserts there (Playwright writes the
+// page's ARIA snapshot to error-context.md). Run in Chromium, Firefox and
+// WebKit: the page is a runtime of its own.
 
 // No trace for this spec: a failed run's trace would keep the token put into Authorize's field, where the
 // other token specs' traces keep only replies (personal-tokens.e2e.ts' recorded residue). Every action and
 // navigation is bounded, and the whole time the page holds the token is bounded too (collectMs: what is left
-// of the test's timeout less AFTER_COLLECT_MS, Ruling 187), so the test always reaches about:blank before
-// anything can fail (Ruling 185: a hang there once wrote the page, the token in it, to error-context.md).
+// of the test's timeout less AFTER_COLLECT_MS), so the test always reaches about:blank before anything can
+// fail (a hang there would write the page, the token in it, to error-context.md).
 test.use({ trace: "off", actionTimeout: 10_000, navigationTimeout: 15_000 });
 
 /**
@@ -144,7 +143,7 @@ test("the API reference: Authorize with a real token, try GET /whoami, and the t
     going();
 
     // Try it: Swagger UI resolves an expanded operation's subtree asynchronously; until then its body is a
-    // spinner beside Execute, and an Execute sends nothing (WebKit's OperationNotFoundError, Preflight B18).
+    // spinner beside Execute, and an Execute sends nothing (WebKit's OperationNotFoundError).
     const operation = page.locator(WHOAMI_OPERATION);
     await operation.locator(".opblock-summary").click().catch(() => undefined);
     collected.resolved = await operation

@@ -15,14 +15,13 @@ import {
 } from "@telflo/contracts";
 
 /*
- * A Kubernetes-supervisor fleet's groups as its screens name them (D17d-1
- * decisions 6, 17 and 23; Preflight rulings 24 and 25). A group's role comes
- * from the contracts' `collectorGroupRole` (the fleet's Default group is the
- * Agent, the group named `cluster` the Cluster, any other a gateway pool),
- * never from the stored `kubernetes.role`, so an unreadable key never hides
- * a role. A server fleet's groups are named by their names, in the API's
- * order, as before. Nothing here puts a name anywhere but the text it
- * returns (ADR 0024).
+ * A Kubernetes-supervisor fleet's groups as its screens name them. A group's
+ * role comes from the contracts' `collectorGroupRole` (the fleet's Default
+ * group is the Agent, the group named `cluster` the Cluster, any other a
+ * gateway pool), never from the stored `kubernetes.role`, so an unreadable key
+ * never hides a role. A server fleet's groups are named by their names, in the
+ * API's order, as before. Nothing here puts a name anywhere but the text it
+ * returns.
  */
 
 /** A role's words on screen: the Role column's, the Groups tab's badges'. */
@@ -48,7 +47,7 @@ export function groupLabel(group: NamedGroup, fleetType: FleetType): string {
 /**
  * The name in the collectors grid's Group column: a gateway's (after its
  * role's badge), null for a Kubernetes fleet's Agent and Cluster, whose
- * badge alone names them (Ruling 66, as the Groups tab); a server group's.
+ * badge alone names them (as the Groups tab); a server group's.
  */
 export function groupColumnText(group: NamedGroup, fleetType: FleetType): string | null {
   const role = collectorGroupRole(group, fleetType);
@@ -78,9 +77,9 @@ export interface KubernetesGroupRow {
 }
 
 /**
- * A Kubernetes fleet's Groups tab's rows (D17d-1 decision 6): the Agent (the
- * Default group), the Cluster (its group, or none before its first Assign),
- * then the gateway pools in the API's order.
+ * A Kubernetes fleet's Groups tab's rows: the Agent (the Default group),
+ * the Cluster (its group, or none before its first Assign), then the
+ * gateway pools in the API's order.
  */
 export function kubernetesGroupRows(groups: readonly CollectorGroup[]): KubernetesGroupRow[] {
   const ordered = groupsInFleetOrder(groups, "kubernetes-supervisor");
@@ -100,8 +99,8 @@ export function kubernetesRowName(row: KubernetesGroupRow): string {
 /**
  * A row's key (its React key and its controls' ids): the Cluster's role
  * (`role-cluster`) before and after its group exists, so its first Assign
- * keeps the row and its button, and the focus goes back to its Edit
- * (D17d-1 Ruling 55); the Agent's and a gateway's group id (never a name).
+ * keeps the row and its button, and the focus goes back to its Edit;
+ * the Agent's and a gateway's group id (never a name).
  */
 export function kubernetesRowKey(row: KubernetesGroupRow): string {
   return row.role === "cluster" ? "role-cluster" : (row.group?.id ?? `role-${row.role}`);
@@ -121,14 +120,14 @@ export function kubernetesSettingsOf(group: CollectorGroup | null): { readable: 
 /**
  * The namespace a Kubernetes group's Helm release is installed into, as the
  * screens derive it, null exactly where the API's `helmFactsOf` refuses the
- * group (D17d-2 Ruling 44; Ruling 49): its saved settings', the Agent's with
- * none saved (before its first save) the default, `telflo-collectors`; null
- * for settings `kubernetesOf` can't read, a Cluster or a gateway with none,
- * a stored role that isn't the group's (`collectorGroupRole`'s), or a
- * gateway whose name `gatewayNameProblem` refuses (a group written around
- * the platform: nothing is installed from its facts, so nothing names where
- * it runs). The namespace warning's and the uninstall lines' one reader:
- * "none saved" is never "no namespace" for the Agent.
+ * group: its saved settings', the Agent's with none saved (before its first
+ * save) the default, `telflo-collectors`; null for settings `kubernetesOf`
+ * can't read, a Cluster or a gateway with none, a stored role that isn't
+ * the group's (`collectorGroupRole`'s), or a gateway whose name
+ * `gatewayNameProblem` refuses (a group written around the platform:
+ * nothing is installed from its facts, so nothing names where it runs). The
+ * namespace warning's and the uninstall lines' one reader: "none saved" is
+ * never "no namespace" for the Agent.
  */
 export function releaseNamespaceOf(group: CollectorGroup): string | null {
   const role = collectorGroupRole(group, "kubernetes-supervisor") ?? "node";
@@ -141,11 +140,10 @@ export function releaseNamespaceOf(group: CollectorGroup): string | null {
 }
 
 /**
- * A Kubernetes group's `helm uninstall` (D17d-2 decision 25; Preflight
- * rulings 20 and 31): its release (`helmReleaseName` by its role) in its
- * namespace (`releaseNamespaceOf`: the Agent with no settings saved, the
- * default); null wherever `releaseNamespaceOf` is (where `helmFactsOf`
- * refuses the group: Ruling 49), or when the builder refuses either part
+ * A Kubernetes group's `helm uninstall`: its release (`helmReleaseName` by its
+ * role) in its namespace (`releaseNamespaceOf`: the Agent with no settings
+ * saved, the default); null wherever `releaseNamespaceOf` is (where
+ * `helmFactsOf` refuses the group), or when the builder refuses either part
  * (nothing to say then).
  */
 export function helmUninstallOf(group: CollectorGroup): string | null {
@@ -197,9 +195,9 @@ export function sameKubernetesSettings(a: KubernetesAnnotations | null, b: Kuber
 }
 
 /**
- * Whether two annotations hold the same Kubernetes settings as a dialog
- * shows them (D17c-1 Ruling 61's check, `sameShownMounts`'s twin): the same
- * settings, or both none, or both unreadable.
+ * Whether two annotations hold the same Kubernetes settings as a dialog shows
+ * them (`sameShownMounts`'s twin): the same settings, or both none, or both
+ * unreadable.
  */
 export function sameShownKubernetes(a: CollectorGroup["annotations"], b: CollectorGroup["annotations"]): boolean {
   const first = kubernetesOf(a);
@@ -253,8 +251,8 @@ export interface KubernetesVolumeRecipe {
 }
 
 /**
- * The one-click volumes: read-only directories of the node's logs, in the
- * spec's words.
+ * The one-click volumes: read-only directories of the node's logs, each
+ * with its description.
  */
 export const KUBERNETES_VOLUME_RECIPES: readonly KubernetesVolumeRecipe[] = [
   { path: KUBERNETES_AGENT_LOG_PATH, description: "the kubelet's container logs (CRI)", hostPathType: "Directory", readOnly: true },
@@ -264,7 +262,7 @@ export const KUBERNETES_VOLUME_RECIPES: readonly KubernetesVolumeRecipe[] = [
   { path: "/run/log/journal", description: "systemd's journal (volatile)", hostPathType: "Directory", readOnly: true },
 ];
 
-/** The recipes a role's dialog offers: the Agent's leave out the path its chart already mounts (Preflight rulings 11 and 33). */
+/** The recipes a role's dialog offers: the Agent's leave out the path its chart already mounts. */
 export function volumeRecipesFor(role: KubernetesRole): readonly KubernetesVolumeRecipe[] {
   return role === "node" ? KUBERNETES_VOLUME_RECIPES.filter((recipe) => recipe.path !== KUBERNETES_AGENT_LOG_PATH) : KUBERNETES_VOLUME_RECIPES;
 }

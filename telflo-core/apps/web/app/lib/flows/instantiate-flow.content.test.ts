@@ -6,11 +6,11 @@ import { MINE } from "~/test/configurations.js";
 import { createConfigurationFromContent, createRequestFor, type ConfigurationContent } from "./instantiate-flow.js";
 
 /*
- * The create-from-content helper (D31-1 Preflight ruling 4), generalized
- * from "Use this flow": one create with the name, the description, the four
- * content fields and both pin fields; the flow's slug only when given. The
- * playground's handoff sends no slug. "Use this flow" goes through it
- * unchanged (instantiate-flow.test.ts).
+ * The create-from-content helper, generalized from "Use this flow": one
+ * create with the name, the description, the four content fields and both
+ * pin fields; the flow's slug only when given. The playground's handoff
+ * sends no slug. "Use this flow" goes through it unchanged
+ * (instantiate-flow.test.ts).
  */
 
 const ORGANIZATION_ID = "00000000-0000-4000-8000-000000000003";

@@ -9,8 +9,8 @@ import {
 import { E2E_API_URL } from "./support/environment.js";
 
 // The E2E API's after-response jobs, counted, and the teardown's wait for
-// them (D11b Ruling 25): global-setup.ts reads the fake opamp-server's
-// violations only once the count is 0. No page: these need no browser.
+// them: global-setup.ts reads the fake opamp-server's violations only
+// once the count is 0. No page: these need no browser.
 
 /** A promise and the function that resolves it. */
 function deferred() {

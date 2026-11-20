@@ -12,17 +12,17 @@ import { editText, TextEditError, writeValues } from "./text-edits.js";
 import type { ComponentRename, ValueChange } from "./text-edits.js";
 
 /*
- * The text edits' property test (D9a Task 4): random sequences of graph
- * operations over every corpus text. Each operation is what a canvas action
- * does to the configuration the graph describes (add, remove, connect,
- * disconnect, rename, move between pipelines, add and delete pipelines,
- * edit a value, enable or disable an extension). After each one:
+ * The text edits' property test: random sequences of graph operations over
+ * every corpus text. Each operation is what a canvas action does to the
+ * configuration the graph describes (add, remove, connect, disconnect,
+ * rename, move between pipelines, add and delete pipelines, edit a value,
+ * enable or disable an extension). After each one:
  * - the text reads back as the operations' model, exactly;
  * - the graph read from the text derives that model again (the round-trip
  *   invariant), whenever the text has pipelines;
  * - every line outside the change is kept, byte for byte, in order.
  * A reorder of a flow list spread over lines (`flow-spread.yaml`) may be
- * refused (D9d Ruling 34); the step then changes nothing.
+ * refused; the step then changes nothing.
  *
  * Seeded (mulberry32), so a failure names its file, seed and step, and
  * replays. No new dependency (fast-check isn't one of the app's).
@@ -32,8 +32,8 @@ const SEEDS = [1, 7, 42];
 
 /**
  * A write's text, or undefined when the editor refuses it as a reorder of a
- * flow sequence spread over lines (D9d Ruling 34): such a list can't be
- * reordered by splices, and the refusal changes nothing.
+ * flow sequence spread over lines: such a list can't be reordered by
+ * splices, and the refusal changes nothing.
  */
 function unlessReorderRefused(write: () => string): string | undefined {
   try {
@@ -97,7 +97,7 @@ const STRINGS = [
   "!bang",
   "0.0.0.0:4317",
   "${env:TOKEN}",
-  // Strings to `yaml`, another type to the collector's yaml.v3 (Ruling 69): never written plain.
+  // Strings to `yaml`, another type to the collector's yaml.v3: never written plain.
   "1_000",
   "2024-01-01",
   "0b101",
@@ -105,8 +105,7 @@ const STRINGS = [
 
 /**
  * The plain string scalars in `text` the collector would read as another
- * type (Ruling 69), as their characters: a write may keep the text's own,
- * never add one.
+ * type, as their characters: a write may keep the text's own, never add one.
  */
 function collectorMisreads(text: string): string[] {
   const found: string[] = [];
@@ -355,7 +354,7 @@ describe("the text edits' property: random graph operations over the corpus", ()
 });
 
 /*
- * writeValues' property (D9b Task 1): random change lists a form could send
+ * writeValues' property: random change lists a form could send
  * (set a leaf, set a value whole, add a key or a nested path, append, remove
  * a key or an item, move an item, rename a key, a number written as typed)
  * to a random component of every corpus text. After each write:
@@ -417,7 +416,7 @@ function updateIn(root: unknown, path: readonly Segment[], update: (value: unkno
 /**
  * One change to the component's value `value`, and the value after it. A
  * change sets, removes, moves or renames something inside the value, never
- * the value itself (ruling 30).
+ * the value itself.
  */
 function randomValueChange(random: Random, value: unknown): { change: ValueChange; next: unknown } {
   const everywhere = places(value);
@@ -546,14 +545,13 @@ describe("writeValues' property: random change lists over the corpus", () => {
 });
 
 /*
- * D9c Task 1 (Preflight rulings 1 and 2): over every corpus text, strings
- * with line breaks (the ones a literal block carries and the ones it
- * can't) and values written as typed (numbers, booleans, one-line flow
- * collections), each set as a new key of a component and in place of its
- * first scalar key. Each reads back as written, every other component,
- * pipeline and extension reads as before, and every line outside the
- * component is kept, byte for byte: the double quotes and the typed
- * values change nothing else.
+ * Over every corpus text, strings with line breaks (the ones a literal block
+ * carries and the ones it can't) and values written as typed (numbers,
+ * booleans, one-line flow collections), each set as a new key of a component
+ * and in place of its first scalar key. Each reads back as written, every
+ * other component, pipeline and extension reads as before, and every line
+ * outside the component is kept, byte for byte: the double quotes and the
+ * typed values change nothing else.
  */
 
 const BREAKS = ["\n", "\n\n", " \n", "\t", "a\n\n", "x\ny", "trailing newline\n", "  leading\nspace"];
@@ -561,7 +559,7 @@ const TYPED: Readonly<Record<string, unknown>> = { "1.0": 1, True: true, '{"k": 
 const COMPONENTS_PER_TEXT = 6;
 
 describe("strings with line breaks and values written as typed, over the corpus", () => {
-  // Its own time limit (D9c Rulings 54 and 80).
+  // Its own time limit.
   it.each(CORPUS.map((entry) => [entry.name, entry.text] as const))("%s", (name, text) => {
     const before = read(text).model;
     const keys = [...before.components.keys()]

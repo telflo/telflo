@@ -20,27 +20,26 @@ import { openProductAdmins } from "./support/product-admins-page.js";
 import { signInThroughApi } from "./support/session.js";
 import { toastWith } from "./support/validation-pipelines-page.js";
 
-// Who may bring new people in (D36-1 decisions 51 and 52; Q252), on the
-// default pair (invite-only, the open source's default):
+// Who may bring new people in, on the default pair (invite-only, the open
+// source's default):
 //
 // - A product admin turns on "Only product admins can create
 //   organizations" on the Product admins page: an ordinary account's
 //   Create Organization is then disabled with the reason, and the API
 //   refuses its create; turned off again, it is offered again.
-// - A personal organization sends no invitation (Q268, decision 57): its
-//   Invited page offers no Invite Member, saying why, and the API refuses
-//   an invite. One left from when the site was open can't make an
-//   account: the accept page offers sign-in only, saying why, and the
-//   registration is refused.
+// - A personal organization sends no invitation: its Invited page offers
+//   no Invite Member, saying why, and the API refuses an invite. One left
+//   from when the site was open can't make an account: the accept page
+//   offers sign-in only, saying why, and the registration is refused.
 //
-// The switch is one global row and other specs create organizations, so
-// this spec runs alone, after every other spec, one browser at a time (the
-// `*-exclusive` projects, playwright.config.ts's EXCLUSIVE_SPECS; Ruling
-// 360). It starts from the browser tests' baseline, off (global-setup.ts's
-// truncation), not a fresh install's default, on (Q259): the `admins`
-// fixture sets that baseline before its test and puts it back however the
-// test ends (the invitation's test doesn't depend on the switch).
-// Run it alone with `--project chromium-exclusive --no-deps`.
+// The switch is one global row and other specs create organizations, so this
+// spec runs alone, after every other spec, one browser at a time (the
+// `*-exclusive` projects, playwright.config.ts's EXCLUSIVE_SPECS). It starts
+// from the browser tests' baseline, off (global-setup.ts's truncation), not a
+// fresh install's default, on: the `admins` fixture sets that baseline before
+// its test and puts it back however the test ends (the invitation's test
+// doesn't depend on the switch). Run it alone with
+// `--project chromium-exclusive --no-deps`.
 
 const PASSWORD = "correct horse battery staple";
 
@@ -118,7 +117,7 @@ test("a personal organization sends no invitation: no Invite Member, the API ref
   const inviter = await seedUser({ password: PASSWORD });
   await signInThroughApi(page, inviter);
 
-  // The Invited page says why in Invite Member's place (D36-1 decision 57, Q268).
+  // The Invited page says why in Invite Member's place.
   await open(page, "/org-admin");
   await expect(page.getByText(PERSONAL_ORGANIZATION_INVITATIONS_DISABLED_MESSAGE, { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Invite Member" })).toHaveCount(0);
@@ -130,10 +129,10 @@ test("a personal organization sends no invitation: no Invite Member, the API ref
   const sentCode = ((await sent.json()) as { error?: { code?: string } }).error?.code;
   expect({ status: sent.status(), code: sentCode }).toEqual({ status: 403, code: "personal_organization_invitations_disabled" });
 
-  // An invitation left from when the site was open (decision 52 is its backstop).
+  // An invitation left from when the site was open (the registration's refusal is its backstop).
   const stranger = uniqueEmail();
   const token = await seedInvitation({ organizationId: inviter.organizationId, email: stranger });
-  // A personal workspace named by its owner's email is "<email>'s organization" (D36-1 Q264).
+  // A personal workspace named by its owner's email is "<email>'s organization".
   expect(inviter.organizationName).toBe(inviter.email.toLowerCase());
 
   const visitorContext = await browser.newContext({ baseURL: E2E_WEB_URL });

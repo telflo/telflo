@@ -1,10 +1,9 @@
 import { cliAuthUrl, newState, startLoginListener, type ListenerOutcome } from "../../apps/cli/src/login-listener.js";
 
-// `/cli-auth`'s browser tests (D27 decision 35; Preflight ruling 17): the
-// CLI's own listener, started from the spec (node's side), and the page's
-// address as the CLI opens it. The listener imports only node's built-ins,
-// so e2e/tsconfig.json lists its file. What it receives is a token: specs
-// check it with boolean canaries only.
+// `/cli-auth`'s browser tests: the CLI's own listener, started from the spec
+// (node's side), and the page's address as the CLI opens it. The listener
+// imports only node's built-ins, so e2e/tsconfig.json lists its file. What it
+// receives is a token: specs check it with boolean canaries only.
 
 export interface StartedListener {
   port: number;

@@ -1,9 +1,8 @@
 import { expect, type BrowserContext, type Page, type Request } from "@playwright/test";
 import { E2E_ANALYTICS_WEB_URL, E2E_POSTHOG_STUB_URL, E2E_SAAS_WEB_URL } from "./environment.js";
 
-// The playground's request invariant (D31-1 decision 22, Preflight ruling
-// 17; Ruling 300): on every playground page and the blank public editor,
-// the only requests are
+// The playground's request invariant: on every playground page and the blank
+// public editor, the only requests are
 // - the web's own documents and React Router's data requests for the
 //   playground's own pages (`/playground…`, `/public-editor`), and its
 //   scripts, styles, fonts, images, media and manifests (by resource type;
@@ -11,11 +10,11 @@ import { E2E_ANALYTICS_WEB_URL, E2E_POSTHOG_STUB_URL, E2E_SAAS_WEB_URL } from ".
 //   by the context's workers, as WebKit reports its script as "xhr"),
 //   Vite's development paths, React Router's `/__manifest` and the static
 //   schemas: GETs or HEADs of web-origin paths outside `/api/`; any other
-//   web-origin fetch only of a playground page (Ruling 303);
+//   web-origin fetch only of a playground page;
 // - and never, whatever its path or resource type, a web-origin answer
 //   outside the playground's pages that is an HTML page or a redirect: a
-//   server render is what reads the session (Ruling 310: `/editor/x.js`,
-//   asked from inside the playground, renders the signed-in layout);
+//   server render is what reads the session (`/editor/x.js`, asked from
+//   inside the playground, renders the signed-in layout);
 // - the `/api/` requests of PLAYGROUND_API_ALLOWLIST, exactly (a method and a
 //   path pattern each, no query): an allowlist, not a deny-list;
 // - analytics, per consent, to PostHog's origin only (the stub's, on the
@@ -30,15 +29,15 @@ import { E2E_ANALYTICS_WEB_URL, E2E_POSTHOG_STUB_URL, E2E_SAAS_WEB_URL } from ".
 // recorded. A recorder never holds a request's body or query, so it never
 // holds a visitor's text.
 
-/** One `/api/` request decision 22 allows: its method and its path's pattern. */
+/** One `/api/` request the playground allows: its method and its path's pattern. */
 export interface AllowedApiRequest {
   method: string;
   pattern: RegExp;
-  /** How the spec names it. */
+  /** Its method and path, as a label. */
   name: string;
 }
 
-/** Decision 22's exact list. */
+/** The playground's exact list. */
 export const PLAYGROUND_API_ALLOWLIST: readonly AllowedApiRequest[] = [
   { method: "POST", pattern: /^\/api\/public\/v1\/validate\/anonymous$/, name: "POST /api/public/v1/validate/anonymous" },
   { method: "GET", pattern: /^\/api\/v1\/published-flows$/, name: "GET /api/v1/published-flows" },
@@ -80,7 +79,7 @@ export interface PlaygroundRequestRecorder {
 const DECODING_ROUNDS = 8;
 
 /**
- * One round of percent-decoding, tolerant (Ruling 303): each run of `%XX`
+ * One round of percent-decoding, tolerant: each run of `%XX`
  * escapes is decoded as UTF-8 where it can be, else escape by escape for
  * the ASCII ones, so one malformed escape (`%ZZ`, a lone `%E0`) leaves the
  * rest decoded rather than all of it encoded.
@@ -112,13 +111,13 @@ export function decodedPath(path: string): string {
 /** The redirect statuses (304 Not Modified is a cache's answer, not a redirect). */
 const REDIRECTS = new Set([301, 302, 303, 307, 308]);
 
-/** The resource types a page loads as the web's own files (Ruling 303). */
+/** The resource types a page loads as the web's own files. */
 const ASSET_TYPES = new Set(["script", "stylesheet", "image", "font", "media", "manifest"]);
 
 /**
  * The web's own fetches that aren't a page's: React Router's route
  * discovery (`/__manifest`, its query the routes' paths) and the static
- * collector schemas Monaco reads (`/schemas/…`), decision 22's "static
+ * collector schemas Monaco reads (`/schemas/…`), the invariant's "static
  * schemas".
  */
 function isWebOwnFetch(path: string): boolean {
@@ -148,25 +147,25 @@ export function isPlaygroundPagePath(path: string): boolean {
   return /^\/playground(\/|$)/.test(page) || page === "/public-editor";
 }
 
-/** Whether `request` is within decision 22 (the PostHog stub counts only when `analytics` is on). */
+/** Whether `request` is within the invariant (the PostHog stub counts only when `analytics` is on). */
 export function isWithinPlaygroundInvariant(request: RecordedPlaygroundRequest, analytics: boolean): boolean {
   if (request.origin === "data:" || request.origin === "blob:") return true;
-  // The playground runs on the SaaS pair, and the analytics server (D36-1 Preflight ruling 16).
+  // The playground runs on the SaaS pair, and the analytics server.
   const webOrigins = analytics ? [E2E_SAAS_WEB_URL, E2E_ANALYTICS_WEB_URL] : [E2E_SAAS_WEB_URL];
   if (webOrigins.includes(request.origin)) {
-    // Decoded and case aside, as the gateway's catch-all for `/api/` matches it (Rulings 282, 300): `/API/v1/…` and
-    // `/%61pi/v1/…` are `/api/` requests too.
+    // Decoded and case aside, as the gateway's catch-all for `/api/` matches it: `/API/v1/…` and `/%61pi/v1/…` are
+    // `/api/` requests too.
     const path = decodedPath(request.path).toLowerCase();
     if (path === "/api" || path.startsWith("/api/")) return request.allowedAs !== undefined;
     if (request.method !== "GET" && request.method !== "HEAD") return false;
     // A server render outside the playground's pages (an HTML page or a redirect), whatever was asked: it reads
-    // the session (Ruling 310).
+    // the session.
     const rendered = request.response !== undefined && (request.response.html || REDIRECTS.has(request.response.status));
     if (rendered && !isPlaygroundPagePath(request.path)) return false;
-    // The web's own files (Rulings 303, 310).
+    // The web's own files.
     if (request.kind === "asset" || isViteDevPath(path) || isScriptOrStyleFile(request, path) || isWebOwnFetch(path)) return true;
-    // A document, a data read or any other fetch: only of a playground page (Rulings 300, 303); another page's
-    // is the visitor sent off the playground.
+    // A document, a data read or any other fetch: only of a playground page; another page's is the visitor
+    // sent off the playground.
     return isPlaygroundPagePath(request.path);
   }
   return analytics && request.origin === E2E_POSTHOG_STUB_URL;
@@ -188,8 +187,8 @@ export function recordPlaygroundRequests(context: BrowserContext, { analytics = 
   const requests: RecordedPlaygroundRequest[] = [];
   const recordedOf = new WeakMap<Request, RecordedPlaygroundRequest>();
   // Dedicated workers' script URLs (origin and path), from every page's `worker` events: how a worker's script is
-  // told apart where WebKit reports its resource type as "xhr" (Ruling 310; probed in all three browsers). Firefox
-  // reports a URL `new URL` refuses for a worker whose script failed to load: not a worker, then (Ruling 312).
+  // told apart where WebKit reports its resource type as "xhr" (probed in all three browsers). Firefox
+  // reports a URL `new URL` refuses for a worker whose script failed to load: not a worker, then.
   const workerFiles = new Set<string>();
   const watchWorkers = (page: Page) =>
     page.on("worker", (worker) => {
@@ -239,7 +238,7 @@ export function recordPlaygroundRequests(context: BrowserContext, { analytics = 
 /**
  * Samples `probe` every 100 ms, at least `samples` times (so about
  * `samples` / 10 seconds, with no fixed sleep), and returns every answer:
- * for "nothing happens for a while" checks (Ruling 304), as a single look
+ * for "nothing happens for a while" checks, as a single look
  * could pass before the thing would happen.
  */
 export async function sampled<T>(probe: () => T | Promise<T>, samples = 20): Promise<T[]> {

@@ -20,17 +20,16 @@ import {
 } from "../../apps/api/src/testing/fake-opamp-server.js";
 import { E2E_OPAMP_CONTROL_URL, E2E_OPAMP_URL } from "./environment.js";
 
-// The browser tests' opamp-server (D11b decision 8): the OpenAPI-checked fake
-// from apps/api/src/testing, which start-fake-opamp-server.ts runs as a
-// Playwright web server. The fake checks every request the E2E API sends it,
-// and every reply it sends, against vendor/opamp-server/openapi.yaml.
-// In a vitest file, close() fails the file on an unread violation; here the
-// fake runs in a process of its own, which Playwright kills when the run ends,
-// so nothing would read them. Instead each violation, as the fake sees it,
-// is written to stderr (Playwright shows a web server's stderr) and appended
-// to a file, and global-setup.ts's teardown, which runs before the web
-// servers stop, fails the run if the file holds any
-// (assertNoFakeOpampServerViolations).
+// The browser tests' opamp-server: the OpenAPI-checked fake from
+// apps/api/src/testing, which start-fake-opamp-server.ts runs as a Playwright
+// web server. The fake checks every request the E2E API sends it, and every
+// reply it sends, against vendor/opamp-server/openapi.yaml. In a vitest file,
+// close() fails the file on an unread violation; here the fake runs in a
+// process of its own, which Playwright kills when the run ends, so nothing
+// would read them. Instead each violation, as the fake sees it, is written to
+// stderr (Playwright shows a web server's stderr) and appended to a file, and
+// global-setup.ts's teardown, which runs before the web servers stop, fails
+// the run if the file holds any (assertNoFakeOpampServerViolations).
 //
 // A violation names an operation, a field or a path, never a value: the
 // fake's messages carry no secret, YAML or name.
@@ -85,19 +84,19 @@ export function assertNoFakeOpampServerViolations(violationsPath: string): void 
   }
 }
 
-/** A snapshot the E2E API put in the fake (D11b decision 11), as the fake holds it. */
+/** A snapshot the E2E API put in the fake, as the fake holds it. */
 export interface FakeSnapshot {
   publicationId: string;
   versionId: string;
   versionNumber: number;
   yaml: string;
-  /** The collector it was published for (D13a decision 7): the configuration's distribution and the version's pin. */
+  /** The collector it was published for: the configuration's distribution and the version's pin. */
   collector: { distribution: string; version: string };
 }
 
 /**
  * The collector a snapshot of a version should hold: the version row's
- * distribution and pin, as the database holds them (D13a decision 7).
+ * distribution and pin, as the database holds them.
  */
 export function collectorOf(version: { collector_distribution: string; collector_version: string }): FakeSnapshot["collector"] {
   return { distribution: version.collector_distribution, version: version.collector_version };
@@ -134,8 +133,8 @@ export async function fakeSnapshots(organizationId: string, configurationId: str
 }
 
 // ---------------------------------------------------------------------------
-// The control port (D17a decision 30, Preflight ruling 6): test-only, on a
-// port of its own, as the collector tester's (D14a Ruling 36).
+// The control port: test-only, on a port of its own, as the collector
+// tester's.
 //
 // The fleet screens show collectors, which only a collector's poll makes on
 // the real server. The browser tests make them here instead, thin over the
@@ -149,9 +148,9 @@ export async function fakeSnapshots(organizationId: string, configurationId: str
 //   effective?, reported?}: setCollectorState, 204. `reported` is
 //   {collectorVersion?, ip?, hostIp?, attributes?}, each scalar a string or
 //   null, attributes null or an object of string values, which the fake
-//   bounds as the agent side does (D17b-1 decision 33, Preflight ruling 3);
-//   `served` is {kind: "publication", id, sha256?, at?} or {kind: null,
-//   sha256, at?} (a published version deleted since);
+//   bounds as the agent side does; `served` is {kind: "publication", id,
+//   sha256?, at?} or {kind: null, sha256, at?} (a published version deleted
+//   since);
 // - POST /organizations/{o}/collectors/{c}/errors {message, configSha256?,
 //   reportedAt?}: recordCollectorError, 201 {id} (the message cut to 8 KiB,
 //   the newest 100 kept, no 30-day window: seed recent dates);
@@ -161,7 +160,7 @@ export async function fakeSnapshots(organizationId: string, configurationId: str
 //   viewed) on one of the fleet's tokens (default its default token), by
 //   `actor` ({id, email} or null; default null), the newest at occurredAt
 //   (default now) and each next a millisecond earlier: the token history's
-//   paging (D17b-2 decision 21);
+//   paging;
 // - a helper's refusal (a fleet, group, token or collector the organization
 //   doesn't hold, a dead token, an archived fleet, a taken name, a served
 //   target it doesn't hold, a message empty once bounded) is 409 with the
@@ -170,8 +169,7 @@ export async function fakeSnapshots(organizationId: string, configurationId: str
 //   0001 to 9999 UTC, whose first and last instants are taken, a sha256
 //   not 64 lowercase hex digits, a served kind other than publication or
 //   null, more than 64 KiB, read to its end before the 400), is 400;
-//   anything else is 404 (the imports path among them: D16c removed
-//   importing).
+//   anything else is 404 (the imports path among them).
 // Every answer but a 204 is JSON, `{"error": "..."}` when refused, and
 // names a field, never a value it was sent. Assignments and pins stay on the contract's
 // routes (the platform's group and collector PATCH). It isn't a route of the
@@ -288,7 +286,7 @@ async function answerControl(fakeStarted: Promise<FakeOpampServer>, request: Inc
  * larger than MAX_CONTROL_BODY_BYTES. An oversized body stops being kept but
  * is read to its end (drained), so the 400 reaches the client: leaving a
  * `for await` loop mid-body destroyed the request, and a far-oversized body
- * (256 KiB, 8 MiB) met a reset connection instead (Task 4 review).
+ * (256 KiB, 8 MiB) met a reset connection instead.
  */
 function readControlBody(request: IncomingMessage): Promise<string> {
   return new Promise((done, fail) => {
@@ -359,8 +357,8 @@ const ISO_8601 = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,9})?(Z|[+-]\d{2}:\
 
 /**
  * An ISO 8601 date the server could store: an instant, once its offset is
- * applied, in the years 0001 to 9999 UTC (D11a Ruling 30), so the fake's
- * replies stay within the contract's date-time.
+ * applied, in the years 0001 to 9999 UTC, so the fake's replies stay
+ * within the contract's date-time.
  */
 function dateOf(value: unknown, field: string): Date {
   const text = stringOf(value, field);
@@ -372,7 +370,7 @@ function dateOf(value: unknown, field: string): Date {
   return date;
 }
 
-/** A SHA-256 the contract would carry, or a fixed 400 naming the field, never the value (Task 2 review, Minor 1). */
+/** A SHA-256 the contract would carry, or a fixed 400 naming the field, never the value. */
 function sha256Of(value: unknown, field: string): string {
   const text = stringOf(value, field);
   if (!SHA256.test(text)) throw new ControlRefusal(400, `${field} isn't a SHA-256`);

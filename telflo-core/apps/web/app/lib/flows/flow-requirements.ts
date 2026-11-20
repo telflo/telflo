@@ -3,14 +3,14 @@ import { PARSE_OPTIONS, isPlainObject } from "~/lib/graph/parse.js";
 import { orgVariableReferences } from "~/lib/org-variables.js";
 
 /*
- * A flow's requirements (D12 Preflight rulings 12 and 18): what someone needs
- * to know before using a flow, for its page's "Before you use this" box. Not
- * a security check (that is the product admin's `flow_lint`): which backends
- * it sends to, and what has to be set before it runs.
+ * A flow's requirements: what someone needs to know before using a flow, for
+ * its page's "Before you use this" box. Not a security check (that is the
+ * product admin's `flow_lint`): which backends it sends to, and what has to
+ * be set before it runs.
  *
- * The text is read as the editor reads it
- * (D9a's options: YAML 1.2, merge keys, duplicate keys refused, at most 100
- * aliases). A text that can't be read lists nothing.
+ * The text is read as the editor reads it (the parser's options: YAML 1.2,
+ * merge keys, duplicate keys refused, at most 100 aliases). A text that can't
+ * be read lists nothing.
  */
 
 export interface FlowRequirements {
@@ -20,10 +20,10 @@ export interface FlowRequirements {
   envVars: string[];
   /**
    * Organization variables the text references (`${org:NAME}`, its live
-   * references only: the opamp-server's scan, D20 decision 36), sorted. Set
-   * in the organization's variables, not the collector's environment; an
-   * unset one is delivered as written. The legacy `$orgvar:NAME` is plain
-   * text since D20 (Q95), so it lists nothing.
+   * references only: the opamp-server's scan), sorted. Set in the
+   * organization's variables, not the collector's environment; an unset
+   * one is delivered as written. The legacy `$orgvar:NAME` is plain text,
+   * so it lists nothing.
    */
   orgVars: string[];
 }

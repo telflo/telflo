@@ -24,25 +24,25 @@ import { canaryVariableValue } from "./support/privacy.js";
 import { signInThroughApi, skipEditorTour } from "./support/session.js";
 import { createVariableThroughApi, uniqueVariableName } from "./support/variables.js";
 
-// The collector validator's feedback (D13b decisions 1–4, 7, 13–15), in the
-// browser: the status bar under the YAML editor, its rows that jump, the
-// requirements row, Apply's gate and its tooltips, manual edit mode's chip
-// on the canvas, a retired pin, and publishing a text the collector refuses.
+// The collector validator's feedback, in the browser: the status bar under
+// the YAML editor, its rows that jump, the requirements row, Apply's gate
+// and its tooltips, manual edit mode's chip on the canvas, a retired pin,
+// and publishing a text the collector refuses.
 //
 // The E2E API's validator is the OpenAPI-checked fake on 127.0.0.1:28086
 // (support/fake-otelcol-validator.ts), shared by every test and browser, so
-// each test's own text asks for its answer (Preflight ruling 20): valid by
-// default; an error per component whose type starts with `unknown_`; an
-// env_var requirement per `${env:NAME}`; 503 (validation unavailable) when
-// the text holds `# fake-otelcol-validator: unavailable`. A retired pin
-// never reaches the validator: the API answers it from the catalogue
-// (decision 12). The catalogue is read, never written (Ruling 51): the
-// retired pin is the first deprecated row the query returns and the checked
-// version the distribution's default, never a hard-coded release.
+// each test's own text asks for its answer: valid by default; an error per
+// component whose type starts with `unknown_`; an env_var requirement per
+// `${env:NAME}`; 503 (validation unavailable) when the text holds
+// `# fake-otelcol-validator: unavailable`. A retired pin never reaches the
+// validator: the API answers it from the catalogue. The catalogue is read,
+// never written: the retired pin is the first deprecated row the query returns
+// and the checked version the distribution's default, never a hard-coded
+// release.
 //
 // Each test works in an organization of its own, so tests and browsers run
-// in parallel. The words are the spec's, written out here: the browser
-// tests don't import the web app's modules.
+// in parallel. The words are written out here: the browser tests don't
+// import the web app's modules.
 
 const PASSWORD = "correct horse battery staple";
 
@@ -71,8 +71,7 @@ const PUBLISHED_MESSAGE = "Configuration published successfully";
 
 /**
  * In every browser the editor's tour is marked done (`skipEditorTour`):
- * these tests aren't about it, and it would cover the page on a first visit
- * (D9a decision 14).
+ * these tests aren't about it, and it would cover the page on a first visit.
  */
 const test = base.extend({
   context: async ({ context }, use) => {
@@ -234,7 +233,7 @@ function drawnCursor(page: Page): Promise<{ line: string; column: number } | nul
 
 /**
  * The attributes, anywhere in the document (shadow roots included), whose
- * value holds `text`: replay records attributes unmasked (ADR 0024).
+ * value holds `text`: replay records attributes unmasked.
  */
 function attributesHolding(page: Page, text: string): Promise<string[]> {
   return page.evaluate<string[]>(`(() => {
@@ -329,7 +328,7 @@ test("an unknown component typed in the YAML tab: 1 error, its row jumps to its 
   });
   await expect(row).toBeVisible();
   await expectReplayBlocked(page, row);
-  // ADR 0024: no attribute holds the message or the path (the id is in both).
+  // No attribute holds the message or the path (the id is in both).
   expect(await attributesHolding(page, word)).toEqual([]);
   expect(await attributesHolding(page, "unknown type")).toEqual([]);
 
@@ -342,7 +341,7 @@ test("an unknown component typed in the YAML tab: 1 error, its row jumps to its 
   // Fixed: `unknown_` deleted from the key, where the jump left the cursor.
   // Until the answer for the new text, the bar, Apply's tooltip and the chip
   // say it is being checked; the check is held (registered before the
-  // first key), so its answer can't come before they are read (Ruling 69).
+  // first key), so its answer can't come before they are read.
   const hold = await holdValidation(page);
   for (let deleted = 0; deleted < "unknown_".length; deleted += 1) await page.keyboard.press("Delete");
   await expect(bar(page, VALIDATING_TEXT)).toBeVisible();
@@ -433,9 +432,9 @@ test("a version pinned to a retired collector is not checked, Apply stays allowe
   await expectApplyTooltip(page, APPLY_UNCHECKED_TOOLTIP);
 
   // The toolbar's collector version picker: an offered version is checked
-  // (decision 4) by exactly one request about that version. That a pick is
-  // checked at once, not after the debounce, is proven by the hook's unit
-  // test ("checks a pin change at once, without the debounce").
+  // by exactly one request about that version. That a pick is checked at
+  // once, not after the debounce, is proven by the hook's unit test
+  // ("checks a pin change at once, without the debounce").
   const askedAbout: string[] = [];
   page.on("request", (request) => {
     if (isValidation(request)) askedAbout.push(askedVersion(request) ?? "");
@@ -454,10 +453,10 @@ test("a version pinned to a retired collector is not checked, Apply stays allowe
   expect(askedAbout).toEqual([defaultVersion]);
 });
 
-test("a version whose text the collector refuses is published all the same (decision 1), and the bar still shows its error", async ({
+test("a version whose text the collector refuses is published all the same, and the bar still shows its error", async ({
   page,
 }) => {
-  // The API's side of decision 1 is proven where the browser can't see it:
+  // The API's side of this is proven where the browser can't see it:
   // apps/api/src/modules/configurations/publishing.integration.test.ts builds
   // its server with UNCALLED_OTELCOL_VALIDATOR, whose every check rejects,
   // so a publish that called the validator would fail there with a 500.
@@ -480,7 +479,7 @@ test("a version whose text the collector refuses is published all the same (deci
   await expect(bar(page, errorsText(1, defaultVersion))).toBeVisible();
 });
 
-// ── Organization variables (D20 default 27; decision 13; Preflight ruling 30) ──
+// ── Organization variables ──
 
 test("a ${org:NAME} the organization defines: one 'Organization variables filled in' requirement naming it, beside a valid answer; the browser sends no value", async ({
   page,
@@ -523,8 +522,8 @@ test("Validate with the organization's variables unreadable: amber 'validation u
   const name = uniqueVariableName("E2E_ENDPOINT");
   const yaml = configurationLines({ exporters: ["  otlp_http:", `    endpoint: \${org:${name}}`] }).join("\n");
   const { configurationId } = await seedSignedIn(page, yaml);
-  // The API's answer when the opamp-server can't give the values (D20 platform choice P2), from the route: the
-  // browser tests' opamp-server is shared, and can't be made unreachable for one test.
+  // The API's answer when the opamp-server can't give the values, from the route: the browser tests'
+  // opamp-server is shared, and can't be made unreachable for one test.
   await page.route(VALIDATION_URL, async (route) => {
     if (route.request().method() !== "POST") return route.fallback();
     return route.fulfill({

@@ -1,15 +1,14 @@
 import type { CollectorDistribution } from "@telflo/contracts";
 
 /*
- * The collector catalogue as the web was built with it (D31-1 decision 11,
- * Ruling 277): each `catalog/distributions/<distribution>.json`, bundled by
- * Vite, never fetched (the playground calls no catalogue route), in the
- * shape `GET /api/v1/collector-distributions` answers, with its deprecated
- * versions left out as the API leaves them out. What the playground's
- * pickers list and its configurations' distribution tags name
- * (`useCollectorDistributions()` answers it inside the playground). The
- * same files give the editor's schemas (`SCHEMA_CATALOGUE`), so the pins it
- * offers are exactly those with a schema.
+ * The collector catalogue as the web was built with it: each
+ * `catalog/distributions/<distribution>.json`, bundled by Vite, never fetched
+ * (the playground calls no catalogue route), in the shape
+ * `GET /api/v1/collector-distributions` answers, with its deprecated versions
+ * left out as the API leaves them out. What the playground's pickers list and
+ * its configurations' distribution tags name (`useCollectorDistributions()`
+ * answers it inside the playground). The same files give the editor's schemas
+ * (`SCHEMA_CATALOGUE`), so the pins it offers are exactly those with a schema.
  */
 
 const CATALOGUE_FILES = import.meta.glob<unknown>("../../../../../../catalog/distributions/*.json", {

@@ -23,7 +23,7 @@ describe("formatDateTime", () => {
   });
 });
 
-describe("formatDateTimeToTheSecond (D17c-2 Ruling 39)", () => {
+describe("formatDateTimeToTheSecond", () => {
   it("writes a timestamp out as formatDateTime does, with its seconds: two times in one minute read apart", () => {
     expect(formatDateTimeToTheSecond(new Date(2026, 9, 9, 7, 58, 30).toISOString())).toBe("Oct 9, 2026, 7:58:30 AM");
     expect(formatDateTimeToTheSecond(new Date(2026, 9, 9, 7, 58, 5).toISOString())).toBe("Oct 9, 2026, 7:58:05 AM");
@@ -37,7 +37,7 @@ describe("formatDateTimeToTheSecond (D17c-2 Ruling 39)", () => {
   });
 });
 
-describe("formatRelativeTime (D17a decision 22, Preflight ruling 12)", () => {
+describe("formatRelativeTime", () => {
   const NOW = Date.parse("2026-10-14T12:00:00.000Z");
   const SECOND = 1000;
   const MINUTE = 60 * SECOND;
@@ -86,7 +86,7 @@ describe("formatRelativeTime (D17a decision 22, Preflight ruling 12)", () => {
   });
 });
 
-describe("formatRelativeFuture (D17b-2 decision 28, Preflight ruling 13)", () => {
+describe("formatRelativeFuture", () => {
   const NOW = Date.parse("2026-10-14T12:00:00.000Z");
   const SECOND = 1000;
   const MINUTE = 60 * SECOND;

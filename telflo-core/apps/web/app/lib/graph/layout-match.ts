@@ -3,17 +3,17 @@ import { componentKey } from "./node-operations.js";
 import type { Graph, OTelNode } from "./types.js";
 
 /*
- * A saved layout onto a graph parsed from the text (D9a decision 5): the
- * text gives the components, pipelines and edges; the layout gives only
- * positions, the pipelines' group sizes and their colours.
+ * A saved layout onto a graph parsed from the text: the text gives the
+ * components, pipelines and edges; the layout gives only positions, the
+ * pipelines' group sizes and their colours.
  *
  * Matching is by what the text names, never by stored ids: a pipeline's group
  * by the pipeline's name, a component by its pipeline's name and its key
  * (`receivers.otlp/2`). What matches keeps its saved position (a component in
  * a group relative to it, as React Flow keeps it). What doesn't keeps the
  * place the parser's layout gave it, and a pipeline new to the layout goes
- * below the groups that matched. With no layout at all (every version D8
- * wrote), the parser's whole layout stands.
+ * below the groups that matched. With no layout at all (a version saved
+ * without one), the parser's whole layout stands.
  *
  * Stored entries the text no longer names are dropped, and so is any edge
  * whose end is gone.
@@ -115,8 +115,8 @@ export function matchLayout(parsed: Graph, layout: Graph | null | undefined): Gr
   // A component dragged out of its pipelines onto the canvas, while other
   // pipelines still use it, has no place of its own in the text: the text
   // only lists it where it is used. Its stored copy comes back where it was
-  // left, a node of the same component (D9a walkthrough, Ruling 40). A copy of a component
-  // the text no longer declares stays dropped.
+  // left, a node of the same component. A copy of a component the text no
+  // longer declares stays dropped.
   const byKey = new Map<string, OTelNode>();
   for (const node of nodes) {
     const key = componentKey(node.data);

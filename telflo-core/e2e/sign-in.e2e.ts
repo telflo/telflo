@@ -16,7 +16,7 @@ test("signing in through the form lands on /app inside the shell, and the sideba
   await expect(page.getByTitle("Switch organization")).toContainText(user.organizationName);
 });
 
-test("a new sign-in lands in the organization joined most recently, then where the person last was (D36-1 decision 56, Q265)", async ({
+test("a new sign-in lands in the organization joined most recently, then where the person last was", async ({
   page,
 }) => {
   const user = await seedUser({ password: PASSWORD });
@@ -70,7 +70,7 @@ function toastsSeen(page: Page): Promise<string[]> {
   return page.evaluate<string[]>("window.__toastsSeen");
 }
 
-/** Logout's toast, and no other: no failure toast at any point (D12 Ruling 39). */
+/** Logout's toast, and no other: no failure toast at any point. */
 const ONLY_LOGOUTS_TOAST = ["success: Logged out successfully"];
 
 test("Logout lands on /login with 'Logged out successfully', and the session row is revoked with reason logout", async ({
@@ -80,8 +80,7 @@ test("Logout lands on /login with 'Logged out successfully', and the session row
   await signInThroughApi(page, user);
   await watchToasts(page);
   // No wait for the page's reads to finish first: one still in flight when
-  // Logout signs out is the next tests' subject, and Logout handles it (D12
-  // Ruling 33).
+  // Logout signs out is the next tests' subject, and Logout handles it.
   await page.goto("/app");
   await waitForHydration(page);
   await expect(page.getByText("No configurations yet.")).toBeVisible();
@@ -110,17 +109,16 @@ function isLogout(request: Request): boolean {
 
 /**
  * Logout with the page's first configurations read held in flight until the
- * DELETE has been answered (D12 Rulings 33 and 39). The read then goes on,
- * and the API refuses it: a stray 401 from the session Logout ended. With
- * `holdLoginData`, `/login`'s data (`/login.data`, the navigation's server
- * loader) is held until that 401 has answered, so the `/app` page is
- * certainly still mounted when the list handles it; without, the two race,
- * as they do for a person.
+ * DELETE has been answered. The read then goes on, and the API refuses it:
+ * a stray 401 from the session Logout ended. With `holdLoginData`,
+ * `/login`'s data (`/login.data`, the navigation's server loader) is held
+ * until that 401 has answered, so the `/app` page is certainly still
+ * mounted when the list handles it; without, the two race, as they do for a
+ * person.
  *
  * Logout must land on `/login` exactly, its toast shown and no other toast
- * at any point: no hard load to `/login?redirectTo=…` (Ruling 33), and no
- * "Failed to load configuration" following the browser onto `/login`
- * (Ruling 39).
+ * at any point: no hard load to `/login?redirectTo=…`, and no
+ * "Failed to load configuration" following the browser onto `/login`.
  */
 async function logoutWithAReadInFlight(page: Page, { holdLoginData }: { holdLoginData: boolean }): Promise<void> {
   const user = await seedUser({ password: PASSWORD });
@@ -208,13 +206,13 @@ async function logoutWithAReadInFlight(page: Page, { holdLoginData }: { holdLogi
   expect(sessions.map((session) => session.revoked_reason)).toEqual(["logout"]);
 }
 
-test("Logout while a configurations read is held in flight lands on /login exactly, with its toast and no other: the read's 401 after the sign-out neither sends the page to /login?redirectTo nor toasts a failure (D12 Rulings 33 and 39)", async ({
+test("Logout while a configurations read is held in flight lands on /login exactly, with its toast and no other: the read's 401 after the sign-out neither sends the page to /login?redirectTo nor toasts a failure", async ({
   page,
 }) => {
   await logoutWithAReadInFlight(page, { holdLoginData: false });
 });
 
-test("Logout with a configurations read in flight and /login's data held until the read's 401 has answered: /login exactly, with its toast and no other (D12 Ruling 39)", async ({
+test("Logout with a configurations read in flight and /login's data held until the read's 401 has answered: /login exactly, with its toast and no other", async ({
   page,
 }) => {
   await logoutWithAReadInFlight(page, { holdLoginData: true });

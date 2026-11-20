@@ -3,9 +3,9 @@ import { describe, expect, it } from "vitest";
 import { componentPositions } from "./component-position.js";
 
 /*
- * Where a collector's component path is in the text on screen (D13b
- * decision 3, Preflight ruling 6): walked through the mappings by exact
- * key, the deepest prefix that names one, at least `<section>::<id>`.
+ * Where a collector's component path is in the text on screen: walked through
+ * the mappings by exact key, the deepest prefix that names one, at least
+ * `<section>::<id>`.
  */
 
 const TEXT = [

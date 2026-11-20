@@ -1,11 +1,10 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 
-// The editor's version picker (D10 decision 10) and its dialogs, for the
-// versions' browser tests. The Monaco helpers those tests type with are
-// editor-page.ts's, shared with the editor's and the builder's (D9d Ruling
-// 57).
+// The editor's version picker and its dialogs, for the versions' browser
+// tests. The Monaco helpers those tests type with are editor-page.ts's,
+// shared with the editor's and the builder's.
 
-/** The editor's address at a version (D10 decision 9). */
+/** The editor's address at a version. */
 export function versionPath(configurationId: string, versionId: string): string {
   return `/editor/${configurationId}/${versionId}`;
 }
@@ -47,7 +46,7 @@ export async function createVersionFromPicker(page: Page, label = ""): Promise<v
   await versionList(page).getByRole("button", { name: "Create New Version" }).click();
   const dialog = page.getByRole("dialog", { name: "Copy Version" });
   const field = dialog.getByLabel("Version name (optional)");
-  // Focused when it opens, by the pointer too (D10 Ruling 34): `fill` would focus it regardless.
+  // Focused when it opens, by the pointer too: `fill` would focus it regardless.
   await expect(field).toBeFocused();
   if (label !== "") await field.fill(label);
   await dialog.getByRole("button", { name: "Continue" }).click();
@@ -56,8 +55,8 @@ export async function createVersionFromPicker(page: Page, label = ""): Promise<v
 
 /**
  * A "last saved" date as the picker shows it: `toLocaleDateString()` in the
- * page, from the stored row's time (D10 Preflight ruling 19), never Node's
- * "today", whose time zone and locale may differ from the browser's.
+ * page, from the stored row's time, never Node's "today", whose time zone
+ * and locale may differ from the browser's.
  */
 export function shownDate(page: Page, updatedAt: Date): Promise<string> {
   // A string, evaluated in the page: the E2E code is typechecked without DOM types.

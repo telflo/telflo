@@ -12,9 +12,9 @@ import type { OTelEdge, OTelNode, Pipeline } from "./types.js";
  * (derived route edges) all share them. Forward/spanmetrics/count keep
  * ordinary drawn edges — their targets genuinely are edge-decided.
  *
- * D9a reads the config defensively,
- * since it is whatever the text holds (a `table` that isn't a list is no
- * targets), and finds a pipeline's group by its opaque id (decision 7).
+ * The config is read defensively, since it is whatever the text holds (a
+ * `table` that isn't a list is no targets), and finds a pipeline's group by
+ * its opaque id.
  */
 
 const CONFIG_TARGETED_CONNECTORS: ReadonlySet<string> = new Set(["routing", "failover"]);
@@ -156,8 +156,7 @@ export function getConfigTargetNames(node: OTelNode): Set<string> {
 
 /**
  * The pipelines a config-targeted connector's config names, by its type
- * (`routing`, `failover`; D9d Task 3): the readers above. Nothing for any
- * other type.
+ * (`routing`, `failover`): the readers above. Nothing for any other type.
  */
 export function targetNamesOf(subType: string, value: unknown): Set<string> {
   if (subType === "routing") return getRoutingTargetNames(value);
@@ -165,7 +164,7 @@ export function targetNamesOf(subType: string, value: unknown): Set<string> {
   return new Set();
 }
 
-// ── Wiring the targets into receivers (D9d decision 8) ───────────────────
+// ── Wiring the targets into receivers ────────────────────────────────────
 
 export interface ConnectorWiring {
   /** `model` with the connector added to, or removed from, the pipelines below. */
@@ -179,9 +178,9 @@ export interface ConnectorWiring {
 }
 
 /**
- * The receivers a form's target choice wires (D9d decision 8; Preflight
- * ruling 1). `before` and `after` are the pipelines the connector's config
- * named before the change and after it (`targetNamesOf`):
+ * The receivers a form's target choice wires. `before` and `after` are the
+ * pipelines the connector's config named before the change and after it
+ * (`targetNamesOf`):
  * - each pipeline in `after` but not `before` whose receivers lack the
  *   connector gets it, last;
  * - each in `before` but not `after` whose receivers list it loses it,
@@ -316,7 +315,7 @@ export function pushConfigTargetsRight(nodes: OTelNode[], pipelines: readonly Pi
  * target. Computed from config at render time — never stored, saved, or
  * undoable — so they cannot drift from what the connector actually does.
  * Targets naming a pipeline that doesn't exist yield no edge. Their ids are
- * built from the two opaque node ids (decision 7).
+ * built from the two opaque node ids.
  */
 export function buildRouteEdges(nodes: readonly OTelNode[], pipelines: readonly Pipeline[]): OTelEdge[] {
   const routeEdges: OTelEdge[] = [];

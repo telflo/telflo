@@ -10,8 +10,8 @@ import { TEST_RUN_OUTPUT_NOT_FOUND_MESSAGE, TESTING_ERROR_CODES } from "../test-
 import { VALIDATION_RULES_ERROR_CODES } from "../validation-rules.js";
 import { PUBLIC_API_ERROR_CODES, PUBLIC_API_ERROR_MESSAGES } from "./errors.js";
 
-describe("the public surface's new codes (D25 decision 20, Preflight ruling 7)", () => {
-  it("are the five the ruling names, each in one union, with decision 20's words", () => {
+describe("the public surface's new codes", () => {
+  it("are the five codes, each in one union, with their fixed words", () => {
     expect(PUBLIC_API_ERROR_CODES).toEqual(["insufficient_access", "organization_required", "ottl_lint_unavailable"]);
     expect(PUBLIC_API_ERROR_MESSAGES).toEqual({
       insufficient_access: "This token can't make changes.",

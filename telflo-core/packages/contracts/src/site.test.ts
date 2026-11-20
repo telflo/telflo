@@ -24,7 +24,7 @@ function refusal(env: Record<string, string | undefined>): string | null {
   }
 }
 
-describe("parseSiteSettings (D36-1 decision 27)", () => {
+describe("parseSiteSettings", () => {
   it("is the open source's defaults with nothing set", () => {
     expect(parseSiteSettings({})).toEqual({
       registration: "invite-only",

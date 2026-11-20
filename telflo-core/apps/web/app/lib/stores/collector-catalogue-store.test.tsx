@@ -29,7 +29,7 @@ beforeEach(() => {
   resetCollectorCatalogue();
 });
 
-describe("the collector catalogue store (D13a decision 11)", () => {
+describe("the collector catalogue store", () => {
   it("is read once, however many components read it, and stays read for the page", async () => {
     const read = vi.spyOn(apiClient, "getCollectorDistributions").mockResolvedValue({ distributions: CATALOGUE });
 

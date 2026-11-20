@@ -3,10 +3,10 @@ import { ACCESS_COOKIE_NAME } from "../apps/api/src/modules/sessions/cookies.js"
 import { findSessions, seedUser } from "./support/database.js";
 import { expireAccessToken, signInThroughApi, signInThroughForm, waitForHydration } from "./support/session.js";
 
-// The access cookie outlives its token (D2b decision 2): the browser keeps
-// it for the refresh token's lifetime, so an idle browser still presents the
-// expired token and the API can answer access_token_expired, or name the
-// session to revoke on logout.
+// The access cookie outlives its token: the browser keeps it for the refresh
+// token's lifetime, so an idle browser still presents the expired token and
+// the API can answer access_token_expired, or name the session to revoke on
+// logout.
 
 const PASSWORD = "correct horse battery staple";
 

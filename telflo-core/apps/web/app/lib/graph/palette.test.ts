@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import { componentPalette, findPaletteEntry, paletteDefaultConfig } from "./palette.js";
 
-describe("the palette (D9a decision 10)", () => {
+describe("the palette", () => {
   it("has 57 entries: 18 receivers, 16 processors, 11 exporters, 8 extensions, 4 connectors", () => {
     expect(componentPalette).toHaveLength(57);
     const count = (type: string) => componentPalette.filter((entry) => entry.type === type).length;
@@ -52,7 +52,7 @@ describe("the palette (D9a decision 10)", () => {
   });
 });
 
-describe("the three seeds D9d fixed (D9d decision 9)", () => {
+describe("the three corrected seeds", () => {
   // contrib CHANGELOG.md:3911-3912 (v0.149.0): `report_extra_scrape_metrics` removed and refused; it is not in
   // receiver/prometheusreceiver/config.go's Config at v0.162.0.
   it("the prometheus receiver's has no report_extra_scrape_metrics", () => {
@@ -93,7 +93,7 @@ describe("the three seeds D9d fixed (D9d decision 9)", () => {
   });
 });
 
-describe("the test templates' receiver types (D14b Preflight ruling 12)", () => {
+describe("the test templates' receiver types", () => {
   it("are the palette's 18 receivers, in its order, so every type has the palette's label", () => {
     const receivers = componentPalette.filter((entry) => entry.type === "receiver").map((entry) => entry.subType);
     expect([...TEST_TEMPLATE_RECEIVER_TYPES]).toEqual(receivers);

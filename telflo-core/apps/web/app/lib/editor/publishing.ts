@@ -3,10 +3,9 @@ import { ApiError, getConfigurationVersion } from "~/lib/api-client.js";
 import { selectIsDirty, useEditorStore } from "~/lib/stores/editor-store.js";
 
 /*
- * Publishing's words (D11b decision 13; Preflight rulings 8, 9 and 15) and
- * what the editor's publish and save share. Every message names the version
- * by its number only, never its label or the configuration's name (ADR
- * 0024; decision 14). The toasts follow the refusal's code, never the
+ * Publishing's words and what the editor's publish and save share. Every
+ * message names the version by its number only, never its label or the
+ * configuration's name. The toasts follow the refusal's code, never the
  * server's message.
  */
 
@@ -15,15 +14,15 @@ export const PUBLISH_TOOLTIP = "Publish this version so fleets can deploy it.";
 /** The Publish button's tooltip on a published version (disabled). */
 export const ALREADY_PUBLISHED_TOOLTIP = "Already published";
 /**
- * The Publish button's tooltip while the editor's text is empty (disabled;
- * Preflight ruling 9 as Ruling 31 corrects it), and the toast of a 409
- * `configuration_version_empty` or of a save first that left it empty.
+ * The Publish button's tooltip while the editor's text is empty (disabled),
+ * and the toast of a 409 `configuration_version_empty` or of a save first
+ * that left it empty.
  */
 export const EMPTY_VERSION_MESSAGE = "An empty version can't be published.";
 
 /** The dialog's title. */
 export const PUBLISH_DIALOG_TITLE = "Publish Configuration";
-/** The dialog's line when the editor holds unsaved changes (decision 5). */
+/** The dialog's line when the editor holds unsaved changes. */
 export const SAVED_FIRST_MESSAGE = "Your unsaved changes will be saved first.";
 
 /** The dialog's body. */
@@ -35,27 +34,26 @@ export const PUBLISHED_MESSAGE = "Configuration published successfully";
 /**
  * A publish refused with 409 `configuration_version_changed`: the version was
  * saved since the tab loaded or saved it, or between the publish's checks and
- * its record (Ruling 30, the owner's; Preflight ruling 8). The editor then
- * reloads it (`reloadOpenVersion`).
+ * its record. The editor then reloads it (`reloadOpenVersion`).
  */
 export const PUBLISH_CHANGED_MESSAGE = "This version changed while it was being published. Try again.";
 export const PUBLISHING_UNAVAILABLE_MESSAGE = "Publishing is unavailable right now. Try again.";
 export const PUBLISH_FAILED_MESSAGE = "An error occurred while publishing.";
 
-/** A publish refused with 409 `configuration_version_published` (decision 9). */
+/** A publish refused with 409 `configuration_version_published`. */
 export function alreadyPublishedMessage(versionNumber: number): string {
   return `Version ${versionNumber} is already published.`;
 }
 
-/** The banner over a published version, and a save's refusal of one (decision 4; Preflight ruling 12). */
+/** The banner over a published version, and a save's refusal of one. */
 export function publishedVersionMessage(versionNumber: number): string {
   return `Version ${versionNumber} is published and can't be changed.`;
 }
 
-/** The banner's one button (decision 4). */
+/** The banner's one button. */
 export const CREATE_FROM_PUBLISHED_LABEL = "Create a new version from it";
 
-/** The picker's lock, on a published row, as its `aria-label` and its tooltip: fixed text (ADR 0024). */
+/** The picker's lock, on a published row, as its `aria-label` and its tooltip: fixed text. */
 export const PUBLISHED_IMMUTABLE_LABEL = "Published versions are immutable";
 
 const VERSION_PUBLISHED: ConfigurationErrorCode = "configuration_version_published";
@@ -68,12 +66,12 @@ export function isVersionPublishedRefusal(error: unknown): error is ApiError {
 /**
  * Reads the version again and puts it in the store whole
  * (`replaceVersion`), so a version published elsewhere locks the editor
- * (Preflight ruling 12) without a reload, and its published content becomes
- * the saved baseline (Ruling 35): what this tab last loaded or saved may not
- * be what a teammate published. A clean editor shows that content; unsaved
- * changes stay on screen, dirty against it; the history stays. Best effort:
- * a failure changes nothing, and so does an answer for a version no longer
- * open (`stillOpen`, the caller's).
+ * without a reload, and its published content becomes the saved baseline:
+ * what this tab last loaded or saved may not be what a teammate published.
+ * A clean editor shows that content; unsaved changes stay on screen, dirty
+ * against it; the history stays. Best effort: a failure changes nothing,
+ * and so does an answer for a version no longer open (`stillOpen`, the
+ * caller's).
  */
 export async function rereadVersion(
   organizationId: string,
@@ -92,14 +90,13 @@ export async function rereadVersion(
 /**
  * Opens the version again, as the page's load does (`getConfigurationVersion`,
  * then the store's `load`), so the editor shows the text a teammate saved
- * since this tab loaded or saved it (Ruling 30, the owner's: refuse, then
- * reload). The same version stays open, in the organization it was loaded in;
- * the undo history, manual edit mode and the selection go, as for any load.
- * Only a clean editor is reloaded: the publish that asks for it began clean,
- * or its own save had just landed, so nothing typed is lost; text typed since
- * stays, and a reload never goes over it. Best effort: a failure changes
- * nothing, and so does an answer for a version no longer open (`stillOpen`,
- * the caller's).
+ * since this tab loaded or saved it (refuse, then reload). The same version
+ * stays open, in the organization it was loaded in; the undo history, manual
+ * edit mode and the selection go, as for any load. Only a clean editor is
+ * reloaded: the publish that asks for it began clean, or its own save had just
+ * landed, so nothing typed is lost; text typed since stays, and a reload never
+ * goes over it. Best effort: a failure changes nothing, and so does an answer
+ * for a version no longer open (`stillOpen`, the caller's).
  */
 export async function reloadOpenVersion(
   organizationId: string,

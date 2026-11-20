@@ -14,10 +14,9 @@ import { SAVE_REFUSED_MESSAGE, UNTITLED_CONFIGURATION_NAME, useStagePlaygroundSa
 import { readStagedEdit, STAGED_EDIT_KEY } from "./staged-edit.js";
 
 /*
- * The playground's Save (D31-1 decisions 4, 27 and 36; Ruling 278): it
- * stages the edit, then a signed-out visitor sees "Sign in to save" and a
- * signed-in one goes to `/app`. The visitor's text is checked with boolean
- * canaries only.
+ * The playground's Save: it stages the edit, then a signed-out visitor
+ * sees "Sign in to save" and a signed-in one goes to `/app`. The visitor's
+ * text is checked with boolean canaries only.
  */
 
 const CANARY = `canary-${Math.random().toString(36).slice(2)}`;
@@ -87,7 +86,7 @@ describe("Save in the playground", () => {
     expect(within(dialog).queryByRole("link", { name: "Sign in to save" })).toBeNull();
   });
 
-  it("signed out: stages the edit, then asks to sign in (no account to create under invitation-only, Ruling 352)", async () => {
+  it("signed out: stages the edit, then asks to sign in (no account to create under invitation-only)", async () => {
     const user = userEvent.setup();
     renderSave();
     await user.click(screen.getByRole("button", { name: "Save" }));
@@ -98,7 +97,7 @@ describe("Save in the playground", () => {
     expect(staged!.content.yamlContent.includes(CANARY)).toBe(true);
     expect(staged!.content.collectorVersion).toBe("0.161.0");
     expect(staged!.content.collectorDistribution).toBe(MINE.collectorDistribution);
-    // One way on: "Sign in to save", the same sign-in; no "Create free account" (D36-1 decision 23, Ruling 352).
+    // One way on: "Sign in to save", the same sign-in; no "Create free account".
     expect(within(dialog).getByRole("link", { name: "Sign in to save" })).toHaveAttribute("href", SIGN_IN_TO_SAVE_LOGIN_PATH);
     expect(within(dialog).queryByRole("link", { name: "Create free account" })).toBeNull();
     expect(within(dialog).getAllByRole("link")).toHaveLength(1);

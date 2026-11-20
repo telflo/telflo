@@ -30,7 +30,7 @@ const TEMPLATE_ID = "0190a1b2-c3d4-7e5f-8a9b-0c1d2e3f4a65";
 const DEFINITION_ID = "0190a1b2-c3d4-7e5f-8a9b-0c1d2e3f4a66";
 
 describe("the limits", () => {
-  it("are migration 029's bounds and the owner's caps, with decision 25's words", () => {
+  it("are migration 029's bounds and the caps, with their words", () => {
     expect(TEST_SUITE_NAME_MAXIMUM_LENGTH).toBe(200);
     expect(TEST_SUITE_DESCRIPTION_MAXIMUM_LENGTH).toBe(2_000);
     expect(TEST_DEFINITION_NAME_MAXIMUM_LENGTH).toBe(200);
@@ -41,7 +41,7 @@ describe("the limits", () => {
     expect(TEST_DEFINITION_LIMIT_MESSAGE).toBe("A test suite can have at most 100 test configurations.");
   });
 
-  it("bound a run's breadcrumb too: test-runs.ts's own 200 (it can't import these) is the suites' and the definitions' (D14b Ruling 34)", () => {
+  it("bound a run's breadcrumb too: test-runs.ts's own 200 (it can't import these) is the suites' and the definitions'", () => {
     const summary = {
       id: DEFINITION_ID,
       status: "queued",

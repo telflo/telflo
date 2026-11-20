@@ -2,12 +2,12 @@ import { createServer, type IncomingMessage, type Server, type ServerResponse } 
 import { gunzipSync } from "node:zlib";
 import { E2E_POSTHOG_STUB_URL } from "./environment.js";
 
-// A stand-in for PostHog's host (D4 Preflight ruling 8), so nothing the
-// analytics tests do leaves the machine. The analytics web server's
-// TELFLO_POSTHOG_HOST points here (e2eAnalyticsWebEnv). It records every
-// request it is sent, and answers `{}` to PostHog's JSON endpoints and empty
-// JavaScript to its scripts: posthog-js then runs with no flags, no remote
-// configuration and no recorder, and still captures once the visitor accepts.
+// A stand-in for PostHog's host, so nothing the analytics tests do leaves the
+// machine. The analytics web server's TELFLO_POSTHOG_HOST points here
+// (e2eAnalyticsWebEnv). It records every request it is sent, and answers `{}`
+// to PostHog's JSON endpoints and empty JavaScript to its scripts: posthog-js
+// then runs with no flags, no remote configuration and no recorder, and still
+// captures once the visitor accepts.
 //
 // The browser tests read the record back over HTTP, from another process,
 // each by its own tag (analytics.ts): every request an analytics test's

@@ -2,8 +2,8 @@ import type { ComponentType, PaletteComponent } from "./types.js";
 
 /*
  * The component palette: 57 entries, each with its id, label, icon name, help
- * text, default config and connector signals, in the toolbox's order (D9a
- * decision 10). The entries are frozen, so a node takes a copy of a default
+ * text, default config and connector signals, in the toolbox's order. The
+ * entries are frozen, so a node takes a copy of a default
  * (`paletteDefaultConfig`).
  */
 
@@ -33,8 +33,8 @@ const entries: PaletteComponent[] = [
     icon: "Activity",
     helpText:
       "Scrapes Prometheus-format `/metrics` endpoints on a configured interval. Use this to pull metrics from existing Prometheus targets into the collector.",
-    // D9d decision 9: no `report_extra_scrape_metrics`; the collector removed it in v0.149.0 and refuses it
-    // (contrib CHANGELOG.md:3911-3912 at v0.162.0; not in receiver/prometheusreceiver/config.go).
+    // No `report_extra_scrape_metrics`; the collector removed it in v0.149.0 and refuses it (contrib
+    // CHANGELOG.md:3911-3912 at v0.162.0; not in receiver/prometheusreceiver/config.go).
     defaultConfig: {
       trim_metric_suffixes: false,
       config: {
@@ -647,9 +647,9 @@ const entries: PaletteComponent[] = [
     icon: "Network",
     helpText:
       "Spreads traces across a backend pool by hashing on trace ID so all spans of a trace land on the same instance. Required upstream of tail sampling when running it at scale.",
-    // D9d decision 9: no `routing_key`; `traceID` is refused in a metrics pipeline, and unset is each
-    // signal's own default: traceID for traces (exporter/loadbalancingexporter/trace_exporter.go:70, 83),
-    // service for metrics (metrics_exporter.go:70-72) and logs (log_exporter.go:74-75), at v0.162.0.
+    // No `routing_key`; `traceID` is refused in a metrics pipeline, and unset is each signal's own
+    // default: traceID for traces (exporter/loadbalancingexporter/trace_exporter.go:70, 83), service for
+    // metrics (metrics_exporter.go:70-72) and logs (log_exporter.go:74-75), at v0.162.0.
     defaultConfig: {
       protocol: {
         otlp: {
@@ -925,8 +925,8 @@ const entries: PaletteComponent[] = [
       histogram: {
         unit: 'ms',
         explicit: {
-          // D9d decision 9: durations, the collector's own defaults (connector/spanmetricsconnector/config.go:25-27);
-          // the buckets are `[]time.Duration` (config.go:139-144), so a bare number is nanoseconds.
+          // Durations, the collector's own defaults (connector/spanmetricsconnector/config.go:25-27); the buckets are
+          // `[]time.Duration` (config.go:139-144), so a bare number is nanoseconds.
           buckets: ["2ms", "4ms", "6ms", "8ms", "10ms", "50ms", "100ms", "200ms", "400ms", "800ms", "1s", "1400ms", "2s", "5s", "10s", "15s"],
         },
       },
@@ -998,7 +998,7 @@ export function findPaletteEntry(type: ComponentType, subType: string): PaletteC
   return componentPalette.find((entry) => entry.type === type && entry.subType === subType);
 }
 
-/** A copy of an entry's default config, for a new node to own (decision 8). */
+/** A copy of an entry's default config, for a new node to own. */
 export function paletteDefaultConfig(entry: PaletteComponent): unknown {
   return structuredClone(entry.defaultConfig);
 }

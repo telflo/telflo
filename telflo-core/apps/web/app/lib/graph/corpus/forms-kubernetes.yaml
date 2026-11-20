@@ -1,4 +1,4 @@
-# The Kubernetes forms' components (D9c Task 1): comments, an anchor and
+# The Kubernetes forms' components: comments, an anchor and
 # merges, a flow mapping and `0750`, as a person writes them.
 x-k8s-auth: &k8s-auth
   auth_type: serviceAccount

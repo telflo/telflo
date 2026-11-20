@@ -26,21 +26,20 @@ import { readsFor } from "~/lib/workspace-reads.js";
 import type { AppLayoutData } from "~/routes/app-layout.js";
 
 /*
- * The fleet screens' data (D17a decisions 13, 20 and 28; Preflight rulings
- * 10 and 15): which refusals they show, and the two hooks that read the
- * fleet list and one fleet, each polled every 15 seconds while the tab is
- * visible. Nothing here puts a fleet's label anywhere but the data it
- * returns: no toast, log or attribute carries one (ADR 0024).
+ * The fleet screens' data: which refusals they show, and the two hooks that
+ * read the fleet list and one fleet, each polled every 15 seconds while the
+ * tab is visible. Nothing here puts a fleet's label anywhere but the data it
+ * returns: no toast, log or attribute carries one.
  */
 
-/** How often the list and a fleet's page read again (D17a decision 8). */
+/** How often the list and a fleet's page read again. */
 export const FLEETS_POLL_INTERVAL_MS = 15_000;
 
 /**
- * Each read's hang guard (Preflight ruling 10): the browser's client has no
- * timeout, and a read that never answers would stop the polling for good (a
- * poll never starts while one is in flight). The person's reads carry it
- * too, since a poll waits on them as well.
+ * Each read's hang guard: the browser's client has no timeout, and a read
+ * that never answers would stop the polling for good (a poll never starts
+ * while one is in flight). The person's reads carry it too, since a poll
+ * waits on them as well.
  */
 export const FLEET_READ_TIMEOUT_MS = 10_000;
 
@@ -57,29 +56,26 @@ const INSTALL_UNAVAILABLE: FleetErrorCode = "install_unavailable";
 const CONFIGURATION_VERSION_NOT_FOUND: ConfigurationErrorCode = "configuration_version_not_found";
 const CONFIGURATION_NOT_FOUND: ConfigurationErrorCode = "configuration_not_found";
 
-/** The variables codes the fleet routes answer (D20 Preflight ruling 39), taken from the contracts' list, never added to it. */
+/** The variables codes the fleet routes answer, taken from the contracts' list, never added to it. */
 const FLEET_VARIABLE_CODE_NAMES: ReadonlySet<VariableErrorCode> = new Set<VariableErrorCode>(["variable_group_not_found", "variables_undefined"]);
 const FLEET_VARIABLE_CODES: readonly VariableErrorCode[] = VARIABLE_ERROR_CODES.filter((code) => FLEET_VARIABLE_CODE_NAMES.has(code));
 
 /**
- * The refusals whose message a fleet screen shows as it is (D17a decisions
- * 13 and 28, Preflight ruling 15): the fleets' own codes (the one 503
- * `fleets_unavailable` among them), the organization's, the person's fleet
- * limits, and the two configuration codes a collector's pin and the pin
- * picker's versions read answer (D17b-1 decision 16):
- * `configuration_version_not_found` and `configuration_not_found`, and the
- * quick-deploy links' own (D17c-2 decision 33, Preflight ruling 15:
- * `quick_deploy_link_not_found`, `quick_deploy_link_revoked`,
+ * The refusals whose message a fleet screen shows as it is: the fleets' own
+ * codes (the one 503 `fleets_unavailable` among them), the organization's, the
+ * person's fleet limits, and the two configuration codes a collector's pin and
+ * the pin picker's versions read answer: `configuration_version_not_found` and
+ * `configuration_not_found`, and the quick-deploy links' own
+ * (`quick_deploy_link_not_found`, `quick_deploy_link_revoked`,
  * `quick_deploy_link_limit_reached`, `enrollment_token_default_missing`,
- * `collector_group_variables_changed`), and the two variables codes a
- * group's assignment and variable group, a collector's pin and the bulk pin
- * answer (D20 decision 7; Preflight ruling 39): `variable_group_not_found`
- * (404) and `variables_undefined` (422, whose details the dialogs list),
- * each taken from the contracts' `VARIABLE_ERROR_CODES` by its typed name.
- * An allow-list, so
+ * `collector_group_variables_changed`), and the two variables codes a group's
+ * assignment and variable group, a collector's pin and the bulk pin answer:
+ * `variable_group_not_found` (404) and `variables_undefined` (422, whose
+ * details the dialogs list), each taken from the contracts'
+ * `VARIABLE_ERROR_CODES` by its typed name. An allow-list, so
  * `invalid_request`'s own message ("The request was not valid."), a server
- * error's or `terms_acceptance_required`'s (which closes the dialog and
- * opens the terms instead) never reaches the person.
+ * error's or `terms_acceptance_required`'s (which closes the dialog and opens
+ * the terms instead) never reaches the person.
  */
 export const FLEET_REFUSAL_CODES: readonly string[] = [
   ...FLEET_ERROR_CODES,
@@ -120,27 +116,27 @@ export function isFleetGone(error: unknown): error is ApiError {
 
 /**
  * The hang guard of a fleet's create, rename and archive, and of the create's
- * reads and reveals when a retry finds the fleet made (Preflight rulings 13
- * and 14): above the platform's usual worst case (up to three 5 s
- * opamp-server calls and its own database reads and audit write, which have
- * no timeout of their own), since every way out of the dialog is blocked
- * while it works and the browser's client has no timeout.
+ * reads and reveals when a retry finds the fleet made: above the platform's
+ * usual worst case (up to three 5 s opamp-server calls and its own database
+ * reads and audit write, which have no timeout of their own), since every way
+ * out of the dialog is blocked while it works and the browser's client has no
+ * timeout.
  */
 export const FLEET_WRITE_TIMEOUT_MS = 30_000;
 
 /**
- * Whether a write's failure leaves its outcome unknown (Preflight ruling 13):
- * any 5xx (the 503 `fleets_unavailable` among them), no connection
- * (`network_error`), a reply that doesn't parse (`unexpected_response`,
- * whatever its status: a gateway's HTML page, or a success the contract
- * doesn't know), or the request aborted (the hang guard's abort). The write
- * may or may not have been made. Any other refusal is the API saying, in its
- * own words, that it made nothing this time.
+ * Whether a write's failure leaves its outcome unknown: any 5xx (the 503
+ * `fleets_unavailable` among them), no connection (`network_error`), a reply
+ * that doesn't parse (`unexpected_response`, whatever its status: a
+ * gateway's HTML page, or a success the contract doesn't know), or the
+ * request aborted (the hang guard's abort). The write may or may not have
+ * been made. Any other refusal is the API saying, in its own words, that it
+ * made nothing this time.
  *
- * `install_unavailable` (503, D17c-1 decision 36; Preflight ruling 27) is
- * checked first and is known: the API read the install templates and
- * couldn't, before it rendered or sent anything, and says so in its own
- * words ("Ask your administrator."), which the install dialog shows.
+ * `install_unavailable` (503) is checked first and is known: the API read the
+ * install templates and couldn't, before it rendered or sent anything, and
+ * says so in its own words ("Ask your administrator."), which the install
+ * dialog shows.
  */
 export function isUnknownOutcome(error: unknown): boolean {
   if (!(error instanceof ApiError)) return true;
@@ -150,15 +146,14 @@ export function isUnknownOutcome(error: unknown): boolean {
 }
 
 /**
- * A 400 `invalid_request`'s problems, keyed by the caller's fields
- * (D17c-1 Preflight ruling 27): each of its `details` whose path
- * (`issuePathOf`, "env.0.value", "annotations.telflo.dockerMounts.1.hostPath")
- * `pathToKey` maps to a key, with its own words; the first detail on a key
- * is the one kept. `pathToKey` answers undefined for a path the caller
- * shows nothing for. Empty for any other failure, or for details naming
- * none of the caller's fields; the dialog then shows its fallback. The
- * details' words are the platform's or the contract's, never a value of the
- * request's (`modules/fleets/errors.ts`).
+ * A 400 `invalid_request`'s problems, keyed by the caller's fields: each of
+ * its `details` whose path (`issuePathOf`, "env.0.value",
+ * "annotations.telflo.dockerMounts.1.hostPath") `pathToKey` maps to a key,
+ * with its own words; the first detail on a key is the one kept. `pathToKey`
+ * answers undefined for a path the caller shows nothing for. Empty for any
+ * other failure, or for details naming none of the caller's fields; the dialog
+ * then shows its fallback. The details' words are the platform's or the
+ * contract's, never a value of the request's (`modules/fleets/errors.ts`).
  */
 export function fieldProblemsOf<Key extends string>(
   error: unknown,
@@ -178,8 +173,7 @@ export function fieldProblemsOf<Key extends string>(
 
 /**
  * A Linux install's fields a 400 `invalid_request` can name, the bundle's
- * download and the quick-deploy link's create alike (D17c-1 Preflight
- * ruling 27; D17c-2 decision 33 and Preflight ruling 18): the root path,
+ * download and the quick-deploy link's create alike: the root path,
  * the executable path, and an included variable by its name
  * (`env:{NAME}`, a key `fieldProblemsOf` keeps on an object without a
  * prototype).
@@ -213,30 +207,28 @@ export function bundleFieldProblemsOf(
 /**
  * The fields a 400 `invalid_request` can name: a fleet's create or rename's
  * Name (`label`) and Token expiry, a collector's edit's and a group's
- * dialog's Name (`name`, D17b-1 Preflight ruling 12), and a rotation's new
- * expiry and grace end (`expiresAt`, `graceEndsAt`: D17b-2 decision 16).
+ * dialog's Name (`name`), and a rotation's new expiry and grace end
+ * (`expiresAt`, `graceEndsAt`).
  */
 export type FleetField = "label" | "rotateExpiresAt" | "name" | "expiresAt" | "graceEndsAt";
 
 const FLEET_FIELDS: readonly FleetField[] = ["label", "rotateExpiresAt", "name", "expiresAt", "graceEndsAt"];
 
 /**
- * A 400 `invalid_request`'s problems with the fleet's fields (Preflight ruling
- * 15): each of its `details` whose path is one of `FleetField`'s, with its
- * own words, keyed by that field (`fieldProblemsOf`). It maps nothing: each
- * dialog decides what it shows (the rotate dialog maps the grace end's to
- * its own words, D17b-2 decision 29).
+ * A 400 `invalid_request`'s problems with the fleet's fields: each of its
+ * `details` whose path is one of `FleetField`'s, with its own words, keyed by
+ * that field (`fieldProblemsOf`). It maps nothing: each dialog decides what it
+ * shows (the rotate dialog maps the grace end's to its own words).
  */
 export function fleetFieldProblemsOf(error: unknown): Partial<Record<FleetField, string>> {
   return fieldProblemsOf(error, (path) => FLEET_FIELDS.find((each) => each === path));
 }
 
 /**
- * Whether a list's read was refused for its cursor (D17b-1 decision 16;
- * D17b-2 decision 16): 400 `invalid_request` whose details name `cursor`
- * (`modules/fleets/errors.ts`'s `invalidCursor`; the fake answers the same),
- * a cursor the opamp-server no longer takes. The collectors' pages and the
- * token history read from the top again.
+ * Whether a list's read was refused for its cursor: 400 `invalid_request`
+ * whose details name `cursor` (`modules/fleets/errors.ts`'s `invalidCursor`;
+ * the fake answers the same), a cursor the opamp-server no longer takes. The
+ * collectors' pages and the token history read from the top again.
  */
 export function isStaleCursor(error: unknown): boolean {
   return (
@@ -254,13 +246,13 @@ type ReadGuard = ReturnType<typeof abortAfter>;
 
 /**
  * The list's pages from the first, until `target` fleets have answered or the
- * list ends (Preflight ruling 11): each page asks for at most what is still
- * missing (`min(100, target - have)`), so the last page's `nextCursor`
- * continues exactly after the last fleet read, and "Load more" after it
- * skips nothing. A fleet read twice (the list moved between pages) is kept
- * once. Each page carries its own hang guard, handed to `track` so that a
- * load that supersedes this one, or an unmount, aborts it. Null when
- * `isCurrent` says a newer load has superseded this one.
+ * list ends: each page asks for at most what is still missing
+ * (`min(100, target - have)`), so the last page's `nextCursor` continues
+ * exactly after the last fleet read, and "Load more" after it skips nothing.
+ * A fleet read twice (the list moved between pages) is kept once. Each page
+ * carries its own hang guard, handed to `track` so that a load that
+ * supersedes this one, or an unmount, aborts it. Null when `isCurrent` says a
+ * newer load has superseded this one.
  */
 async function readFirstPages(
   organizationId: string,
@@ -298,7 +290,7 @@ async function readFirstPages(
 /**
  * Whether the layout's `/me` says the current terms need accepting: nothing
  * loads until they are. Shared with the collectors page's hook
- * (`lib/collectors.ts`, D17b-1 Preflight ruling 9).
+ * (`lib/collectors.ts`).
  */
 export function useTermsRequired(): boolean {
   const layoutData = useRouteLoaderData<AppLayoutData>("routes/app-layout");
@@ -307,17 +299,17 @@ export function useTermsRequired(): boolean {
 
 /**
  * The bookkeeping the fleet screens' hooks share (these two, and the
- * collectors page's, D17b-1 Preflight ruling 9): the latest-load counter,
- * the request under way (to abort it), and how long a 429 holds the polls.
- * Each hook holds its own: one hook's 429 holds only its own polls.
+ * collectors page's): the latest-load counter, the request under way (to
+ * abort it), and how long a 429 holds the polls. Each hook holds its own:
+ * one hook's 429 holds only its own polls.
  *
  * Every read, the person's and the poll's, takes the next number from the
  * counter as it starts, and aborts the read under way; an answer is used
  * only while its number is still the latest, so a late answer, an answer
  * superseded by a newer read, or one for an organization left meanwhile is
- * dropped (decision 20). An unmount aborts the read under way. The number
- * (`begin`'s, and `latestRead` for the latest begun) also tells
- * `useReturnFocus` whether rows came from a read begun after a write.
+ * dropped. An unmount aborts the read under way. The number (`begin`'s,
+ * and `latestRead` for the latest begun) also tells `useReturnFocus`
+ * whether rows came from a read begun after a write.
  */
 export function useReadOrder() {
   const latest = useRef(0);
@@ -342,7 +334,7 @@ export function useReadOrder() {
   }, []);
 
   /**
-   * A 429 holds the polls until its `Retry-After` has passed (decision 20),
+   * A 429 holds the polls until its `Retry-After` has passed,
    * the person's reads' as the polls'. A 429 without `Retry-After` (one the
    * client couldn't read, or a proxy's) holds nothing: the next poll comes
    * at its usual tick, 15 s on, which is pause enough.
@@ -410,9 +402,8 @@ export interface FleetsList {
 }
 
 /**
- * The active organization's fleets, a page at a time (D17a decisions 18 and
- * 20; Preflight rulings 10 and 11), through the browser client in effects,
- * as `useConfigurationsList`.
+ * The active organization's fleets, a page at a time, through the browser
+ * client in effects, as `useConfigurationsList`.
  *
  * - The first page (50) loads for the active organization (`useCurrentUser`'s,
  *   so a switch elsewhere starts over) and `status`; a change of either
@@ -499,7 +490,7 @@ export function useFleetsList({ status }: { status: FleetStatus | undefined }): 
           void revalidate();
           return;
         }
-        // The session is over: the session-ended handler, or Logout, has the page (D12 Ruling 39).
+        // The session is over: the session-ended handler, or Logout, has the page.
         if (isSessionEnded(error)) return;
         if (isShownFor(shownRef.current, organizationId, status)) {
           toast.error(FLEETS_LOAD_FAILED_MESSAGE);
@@ -611,7 +602,7 @@ export interface FleetRead {
   /**
    * The number of the read `fleet` came from (`useReadOrder`'s), 0 with
    * none shown: a tab's focus after its write follows only a fleet read
-   * begun after it (the Tokens tab's banner, Ruling 28).
+   * begun after it (the Tokens tab's banner).
    */
   fleetRead: number;
   /** The latest read's number, begun or not yet answered: taken by a tab's write before it calls `reload`. */
@@ -621,9 +612,9 @@ export interface FleetRead {
 }
 
 /**
- * One fleet of the active organization, for its page (D17a decision 19;
- * Preflight rulings 9, 10 and 17), polled every 15 s while the tab is
- * visible so its header follows a rename or an archive made elsewhere.
+ * One fleet of the active organization, for its page, polled every 15 s while
+ * the tab is visible so its header follows a rename or an archive made
+ * elsewhere.
  *
  * - An id that isn't a canonical UUID is `not_found` with no request.
  * - The read orders as the list's (`useReadOrder`): only the latest read's
@@ -640,9 +631,8 @@ export interface FleetRead {
  *   `failed` with none.
  * - Nothing loads while the layout says the terms need accepting.
  * - The fleet carries the number of the read it came from (`fleetRead`),
- *   beside `latestRead`, as the list's rows do (D17b-1 Ruling 42): the
- *   Tokens tab's focus after a write follows only a fleet from a read begun
- *   after it (Ruling 28).
+ *   beside `latestRead`, as the list's rows do: the Tokens tab's focus
+ *   after a write follows only a fleet from a read begun after it.
  */
 export function useFleet(fleetId: string): FleetRead {
   const organizationId = useCurrentUser()?.organization.id ?? null;

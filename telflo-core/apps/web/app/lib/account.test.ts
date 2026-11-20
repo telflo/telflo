@@ -4,10 +4,9 @@ import { ACCOUNT_READ_TIMEOUT_MS, useAccountRead } from "./account.js";
 import { ApiError } from "./api-client.js";
 
 /*
- * The Account cards' read (D21 Task 10, Ruling 89): the 10 s hang guard, a
- * later read winning over an earlier one's late answer, an unmounted card
- * taking none, and a session that ended saying nothing. The reviewer's
- * probes P1-P3, kept as tests.
+ * The Account cards' read: the 10 s hang guard, a later read winning over an
+ * earlier one's late answer, an unmounted card taking none, and a session
+ * that ended saying nothing.
  */
 
 /** A load whose answers the test gives, one per call, and the signals it was handed. */

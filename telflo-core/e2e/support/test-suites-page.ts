@@ -2,12 +2,11 @@ import { expect, type Locator, type Page } from "@playwright/test";
 import { CSRF_HEADER_NAME, CSRF_HEADER_VALUE, type TestDefinition, type TestRunDetail, type TestSuite } from "@telflo/contracts";
 import { runRows, type PickedFile } from "./test-runs-page.js";
 
-// The Testing tab's Suites subtab (D14b Tasks 6 and 7) in the browser: its
-// suites' cards, their definitions, the definition dialog ("New test
-// configuration", which shares the run dialog's panel), Play one and the
-// Play alls; and the suites' API, for tests about something after creating.
-// Shared by test-suites.e2e.ts, test-templates.e2e.ts and the privacy
-// reviews' scratch specs.
+// The Testing tab's Suites subtab in the browser: its suites' cards, their
+// definitions, the definition dialog ("New test configuration", which shares
+// the run dialog's panel), Play one and the Play alls; and the suites' API,
+// for tests about something after creating. Shared by test-suites.e2e.ts,
+// test-templates.e2e.ts and the other Testing tab specs.
 //
 // The definition dialog slides between three slots, as the run dialog does
 // (support/test-runs-page.ts); the ones slid away are inert and hidden from

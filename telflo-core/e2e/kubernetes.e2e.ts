@@ -14,20 +14,18 @@ import { attributeHoldersOf, placesOf } from "./support/privacy.js";
 import { signInThroughApi, waitForHydration } from "./support/session.js";
 import { createVariableGroupThroughApi } from "./support/variables.js";
 
-// A Kubernetes-supervisor fleet's page (D17d-1 decision 29's browser part;
-// Preflight ruling 38), in the browser, against the E2E API and its fake
-// opamp-server. Each test works in an organization of its own (a new
-// user's), so tests and browsers run in parallel. Fleets, groups and
+// A Kubernetes-supervisor fleet's page, in the browser, against the E2E API
+// and its fake opamp-server. Each test works in an organization of its own (a
+// new user's), so tests and browsers run in parallel. Fleets, groups and
 // published versions are made through the API as the page's session
 // (support/collectors.ts), collectors through the fake's control port with
 // their group and the attributes the collector image reports
-// (`enrollKubernetesPod`), before the page reads them. What the page sends
-// is read from its requests; what the fake then holds, through the API.
+// (`enrollKubernetesPod`), before the page reads them. What the page sends is
+// read from its requests; what the fake then holds, through the API.
 //
-// Privacy (D17d-1's paragraph of ADR 0024): a group's namespace, a gateway's
-// name, a volume's paths and a collector's node name are configuration text:
-// never in an attribute but a dialog's own input's value, inside
-// `ph-no-capture` (support/privacy.ts).
+// Privacy: a group's namespace, a gateway's name, a volume's paths and a
+// collector's node name are configuration text: never in an attribute but a
+// dialog's own input's value, inside `ph-no-capture` (support/privacy.ts).
 
 const PASSWORD = "correct horse battery staple";
 /** The fleet's groups: the tab's reads and polls (GET) and the create (POST). */
@@ -40,21 +38,21 @@ const isGroupsRead = isGetOf(GROUPS_PATH);
 const isCollectorsRead = isGetOf(COLLECTORS_PATH);
 /** The namespace a group's dialog starts from (the contracts' KUBERNETES_DEFAULT_NAMESPACE). */
 const DEFAULT_NAMESPACE = "telflo-collectors";
-/** D17d-1 decision 25's words (conditional since Ruling 56), and a Kubernetes fleet's Helm line (Preflight ruling 30). */
+/** The delete dialog's consequences, and a Kubernetes fleet's Helm line. */
 const DELETE_CONSEQUENCES =
   "This deletes the group and its collectors' records. A collector installed into it that is still running keeps the configuration it has, but the fleet refuses its connections from then on: uninstall it, or reinstall it into another group. A collector moved into it from another group rejoins the group it was installed into.";
 const DELETE_HELM = "Uninstall the group's Helm release in your cluster.";
-/** The typed-name input's label: the group's name, bold, between the words (Ruling 70, the owner's Q50). */
+/** The typed-name input's label: the group's name, bold, between the words. */
 const deleteConfirmLabel = (name: string) => `Type ${name} to confirm`;
-/** The canary note under a Kubernetes fleet's Pin selects (Preflight ruling 27). */
+/** The canary note under a Kubernetes fleet's Pin selects. */
 const PIN_NOTE = "A rescheduled pod is a new collector: it follows its group again.";
-/** The only attribute a dialog's field may hold its text in: its input's value, inside ph-no-capture (Preflight ruling 37). */
+/** The only attribute a dialog's field may hold its text in: its input's value, inside ph-no-capture. */
 const INPUT_VALUE = "INPUT value true";
 
 /** A suffix no other test uses: lowercase hex, so a gateway's name and a namespace stay DNS labels. */
 const unique = () => randomUUID().slice(0, 8);
 
-/** The settings the API requires in a Kubernetes group's annotations (Preflight ruling 13), as the page writes them. */
+/** The settings the API requires in a Kubernetes group's annotations, as the page writes them. */
 function kubernetesAnnotations(settings: KubernetesAnnotations): Record<string, unknown> {
   return { telflo: { kubernetes: settings } };
 }
@@ -156,7 +154,7 @@ test("a new Kubernetes fleet shows the Agent and the Cluster, neither deletable;
 
   // Both rows at once, the Cluster before its group exists; nothing deletable, nothing assigned.
   await expectShownRows(page, ["Agent", "Cluster"]);
-  // One Group column (Ruling 66): the Agent and the Cluster their badge alone.
+  // One Group column: the Agent and the Cluster their badge alone.
   await expect(groupCell(page, "Agent", 0)).toHaveText("Agent");
   await expect(groupCell(page, "Cluster", 0)).toHaveText("Cluster");
   for (const role of ["Agent", "Cluster"]) {
@@ -174,7 +172,7 @@ test("a new Kubernetes fleet shows the Agent and the Cluster, neither deletable;
   await expect(cluster.getByLabel("Gateway name", { exact: true })).toHaveCount(0);
   await expect(cluster.getByRole("button", { name: "Assign", exact: true })).toBeDisabled();
   await pickVersion(page, cluster, configurationName);
-  // A recipe: the node's path at the same path, read-only; the common paths a disclosure, closed at the opening (Ruling 67).
+  // A recipe: the node's path at the same path, read-only; the common paths a disclosure, closed at the opening.
   const recipesToggle = cluster.getByRole("button", { name: "Common Volume Paths", exact: true });
   await expect(recipesToggle).toHaveAttribute("aria-expanded", "false");
   // The panel by the toggle's aria-controls (a role query skips hidden elements, so it couldn't show it hidden): there, hidden.
@@ -219,7 +217,7 @@ test("a new Kubernetes fleet shows the Agent and the Cluster, neither deletable;
   await expect(page.getByText("Group created")).toBeHidden();
   await panel.getByRole("button", { name: "Assign Agent", exact: true }).click();
   const agent = page.getByRole("dialog", { name: "Assign a published version to Agent" });
-  // The Agent's recipes leave out the path its chart mounts itself (Preflight ruling 11).
+  // The Agent's recipes leave out the path its chart mounts itself.
   await agent.getByRole("button", { name: "Common Volume Paths", exact: true }).click();
   const agentRecipes = agent.getByRole("group", { name: "Common Volume Paths" });
   await expect(agentRecipes.getByRole("button", { name: /^\/var\/log\/journal / })).toBeVisible();
@@ -229,9 +227,9 @@ test("a new Kubernetes fleet shows the Agent and the Cluster, neither deletable;
   const mountPath = `/mnt/mount-${canary}`;
   await pickVersion(page, agent, configurationName);
   await agent.getByLabel("Namespace", { exact: true }).fill(namespace);
-  // A first save, nothing saved before: the Agent installs into the default namespace until then (the facts'), so the
-  // warning names it, with telflo-node's uninstall there (D17d-2 Ruling 44); the Agent's in the order Helm accepts,
-  // uninstall first (D18 Ruling 27: its release owns the cluster-wide ClusterRole).
+  // A first save, nothing saved before: the Agent installs into the default namespace until then (the facts'), so
+  // the warning names it, with telflo-node's uninstall there; the Agent's in the order Helm accepts, uninstall
+  // first (its release owns the cluster-wide ClusterRole).
   await expect(
     agent.getByText(
       `A Helm release already installed keeps running in ${DEFAULT_NAMESPACE}: uninstall it there first, then install into ${namespace}. Helm refuses the new install while that release exists: it owns the Agent's cluster-wide role. The Agent's state is kept on each node, outside any namespace, so its collectors stay the same.`,
@@ -278,9 +276,9 @@ test("a new Kubernetes fleet shows the Agent and the Cluster, neither deletable;
     { inside: 0, outside: 0, inAttributes: 0 },
   ]);
 
-  // The Cluster's Edit (its group has the published version its Assign gave it): a new namespace warns in the order Helm
-  // accepts (D18 Ruling 27: uninstall first, its release owns the cluster-wide role) and what happens to its collector
-  // (Ruling 42: its state stays on its volume in the old namespace), with telflo-cluster's uninstall there (Ruling 43).
+  // The Cluster's Edit (its group has the published version its Assign gave it): a new namespace warns in the order
+  // Helm accepts (uninstall first, its release owns the cluster-wide role) and what happens to its collector (its state
+  // stays on its volume in the old namespace), with telflo-cluster's uninstall there.
   await expect(page.getByText("Group updated")).toBeHidden();
   await panel.getByRole("button", { name: "Edit Cluster", exact: true }).click();
   const clusterEdit = page.getByRole("dialog", { name: "Edit Cluster" });
@@ -415,7 +413,7 @@ test("adds a gateway with replicas and its address; its Edit warns of a namespac
   // The typed text in no attribute: the input is uncontrolled, inside ph-no-capture.
   await expect(confirm).not.toHaveAttribute("value");
   await expect(dialog.locator(".ph-no-capture").getByLabel(deleteConfirmLabel(name), { exact: true })).toBeVisible();
-  // The name shown bold in the label, inside ph-no-capture with the input; no placeholder (Ruling 70).
+  // The name shown bold in the label, inside ph-no-capture with the input; no placeholder.
   await expect(dialog.locator(".ph-no-capture label .font-bold")).toHaveText(name);
   await expect(confirm).not.toHaveAttribute("placeholder");
   // Nor the namespace, nor the name the typed text matches (the row's, the title's text).
@@ -459,7 +457,7 @@ test("collectors of each role: the one Group column, the Node row in the details
   }
   await openCollectors(page, fleetId);
 
-  // One Group column (Ruling 66), where a server fleet's is: the role's badge, then a gateway's name.
+  // One Group column, where a server fleet's is: the role's badge, then a gateway's name.
   await expect(page.getByRole("columnheader")).toHaveText([
     "",
     "Name",
@@ -475,7 +473,7 @@ test("collectors of each role: the one Group column, the Node row in the details
   await expect(collectorCell(page, agentPod, 3)).toHaveText("Agent");
   await expect(collectorCell(page, clusterPod, 3)).toHaveText("Cluster");
   await expect(collectorCell(page, gatewayPod, 3)).toHaveText(`Gateway ${gatewayName}`);
-  // Ruling 55: Status the pod's liveness (just enrolled: Online), Configuration its sync (nothing assigned), Last seen plain text, no dot.
+  // Status the pod's liveness (just enrolled: Online), Configuration its sync (nothing assigned), Last seen plain text, no dot.
   for (const pod of [agentPod, clusterPod, gatewayPod]) {
     await expect(collectorCell(page, pod, 5)).toHaveText("Online (online: seen in the last minute)");
     await expect(collectorCell(page, pod, 6)).toHaveText(/^Nothing assigned \(nothing assigned: /);
@@ -522,7 +520,7 @@ test("collectors of each role: the one Group column, the Node row in the details
   await page.keyboard.press("Escape");
   await expect(edit).toBeHidden();
 
-  // Bulk pin: the same note under its Published version select (D20 Q103: the Version choice).
+  // Bulk pin: the same note under its Published version select (the Version choice).
   await page.getByRole("checkbox", { name: `Select ${clusterPod}` }).click();
   await page.getByRole("checkbox", { name: `Select ${gatewayPod}` }).click();
   await expect(page.getByText("2 selected")).toBeVisible();
@@ -535,7 +533,7 @@ test("collectors of each role: the one Group column, the Node row in the details
   await expect(bulk).toBeHidden();
 });
 
-// D20 default 23 on a Kubernetes-supervisor fleet: the group dialog's Variable group, created with the group and cleared.
+// On a Kubernetes-supervisor fleet: the group dialog's Variable group, created with the group and cleared.
 test("the Cluster's Assign creates its group with the variable group chosen; its column names it; its Edit's None sends null", async ({ page }) => {
   const { user, organizationId, fleetId } = await signedInWithKubernetesFleet(page);
   const canary = unique();

@@ -71,8 +71,8 @@ const FLEET_GONE = () => refusal("fleet_not_found", "Fleet not found.", { status
 const RATE_LIMITED = (retryAfterSeconds: number) =>
   refusal("rate_limited", RATE_LIMITED_MESSAGE, { status: 429, retryAfterSeconds });
 
-describe("fleetRefusalMessage (D17a decisions 13 and 28, Preflight ruling 15; D17b-1 decision 16)", () => {
-  it("allows the fleets' codes, the quick-deploy links', the organization's, the person's fleet limits, the pin's two configuration codes and D20's two variables codes, and nothing else", () => {
+describe("fleetRefusalMessage", () => {
+  it("allows the fleets' codes, the quick-deploy links', the organization's, the person's fleet limits, the pin's two configuration codes and the two variables codes, and nothing else", () => {
     expect([...FLEET_REFUSAL_CODES].sort()).toEqual(
       [
         ...FLEET_ERROR_CODES,
@@ -92,7 +92,7 @@ describe("fleetRefusalMessage (D17a decisions 13 and 28, Preflight ruling 15; D1
     );
   });
 
-  it("takes D20's two codes from the contracts' VARIABLE_ERROR_CODES, and no other variables code (Preflight ruling 39)", () => {
+  it("takes the two variables codes from the contracts' VARIABLE_ERROR_CODES, and no other variables code", () => {
     const variables = FLEET_REFUSAL_CODES.filter((code) => (VARIABLE_ERROR_CODES as readonly string[]).includes(code));
     expect(variables.sort()).toEqual(["variable_group_not_found", "variables_undefined"]);
     // The variables routes' 503 is theirs: a fleet route answers fleets_unavailable.
@@ -133,24 +133,24 @@ describe("fleetRefusalMessage (D17a decisions 13 and 28, Preflight ruling 15; D1
     expect(fleetRefusalMessage(error, FALLBACK)).toBe(FALLBACK);
   });
 
-  // D17c-1 decision 47: the install's refusals and the new default token's, through the contracts' FLEET_ERROR_CODES.
+  // The install's refusals and the new default token's, through the contracts' FLEET_ERROR_CODES.
   it.each([
     ["install_unavailable", INSTALL_UNAVAILABLE_MESSAGE, 503],
     ["collector_group_unassigned", COLLECTOR_GROUP_UNASSIGNED_MESSAGE, 409],
     ["collector_version_not_offered", collectorVersionNotOfferedMessage("0.150.0"), 409],
     ["collector_group_assignment_deleted", COLLECTOR_GROUP_ASSIGNMENT_DELETED_MESSAGE, 409],
     ["fleet_type_not_installable", FLEET_TYPE_NOT_INSTALLABLE_MESSAGE, 409],
-    // D17d-2 decision 27: a Kubernetes group's settings the platform can't read, and the Helm direction's words.
+    // A Kubernetes group's settings the platform can't read, and the Helm direction's words.
     ["collector_group_settings_unreadable", COLLECTOR_GROUP_SETTINGS_UNREADABLE_MESSAGE, 409],
     ["fleet_type_not_installable", FLEET_TYPE_NOT_HELM_INSTALLABLE_MESSAGE, 409],
     ["enrollment_token_default_exists", "The fleet already has a valid default token.", 409],
-  ])("allows D17c-1's %s, showing its own words", (code, message, status) => {
+  ])("allows the install's %s, showing its own words", (code, message, status) => {
     expect(FLEET_REFUSAL_CODES).toContain(code);
     expect(isFleetRefusal(refusal(code, message, { status }))).toBe(true);
     expect(fleetRefusalMessage(refusal(code, message, { status }), FALLBACK)).toBe(message);
   });
 
-  // D17c-2 decision 33, Preflight ruling 15: the quick-deploy links' refusals, through the contracts' QUICK_DEPLOY_LINK_ERROR_CODES.
+  // The quick-deploy links' refusals, through the contracts' QUICK_DEPLOY_LINK_ERROR_CODES.
   it.each([
     ["quick_deploy_link_not_found", "Install link not found.", 404],
     ["quick_deploy_link_revoked", "This install link is revoked: make a new one.", 409],
@@ -161,13 +161,13 @@ describe("fleetRefusalMessage (D17a decisions 13 and 28, Preflight ruling 15; D1
       "This group's published version no longer reads the variables this link was made with: make a new link.",
       409,
     ],
-    // D17d-2 decision 27: the organization's switch off.
+    // The organization's switch off.
     [
       "public_install_links_disabled",
       "Public install links are turned off for this organization: an admin can turn them on in Settings → Organization.",
       409,
     ],
-  ] as const)("allows D17c-2's %s, showing its own words", (code, message, status) => {
+  ] as const)("allows the quick-deploy links' %s, showing its own words", (code, message, status) => {
     expect(QUICK_DEPLOY_LINK_ERROR_MESSAGES[code]).toBe(message);
     expect(FLEET_REFUSAL_CODES).toContain(code);
     expect(isFleetRefusal(refusal(code, message, { status }))).toBe(true);
@@ -180,7 +180,7 @@ describe("fleetRefusalMessage (D17a decisions 13 and 28, Preflight ruling 15; D1
   });
 });
 
-describe("isUnknownOutcome (Preflight ruling 13)", () => {
+describe("isUnknownOutcome", () => {
   it.each([
     ["a 503 fleets_unavailable", UNAVAILABLE()],
     ["a 500", refusal("internal_error", "Something went wrong.", { status: 500 })],
@@ -201,14 +201,14 @@ describe("isUnknownOutcome (Preflight ruling 13)", () => {
     ["a 403 terms_acceptance_required", TERMS()],
     ["a 404 organization_not_found", ORGANIZATION_GONE()],
     ["a 401", SESSION_ENDED()],
-    // D17c-1 Preflight ruling 27: checked before the 5xx rule; the templates couldn't be read, nothing was rendered.
+    // Checked before the 5xx rule; the templates couldn't be read, nothing was rendered.
     ["a 503 install_unavailable", refusal("install_unavailable", INSTALL_UNAVAILABLE_MESSAGE, { status: 503 })],
   ])("is known for %s: the API made nothing this time", (_name, error) => {
     expect(isUnknownOutcome(error)).toBe(false);
   });
 });
 
-describe("fieldProblemsOf (D17c-1 Preflight ruling 27)", () => {
+describe("fieldProblemsOf", () => {
   const invalid = (details: unknown) => refusal("invalid_request", "The request was not valid.", { status: 400, details });
   /** The install dialog's mapper: a variable's value by its index, the paths by name. */
   const installKey = (path: string): string | undefined => {
@@ -300,7 +300,7 @@ describe("fieldProblemsOf (D17c-1 Preflight ruling 27)", () => {
   });
 });
 
-describe("bundleFieldOf and bundleFieldProblemsOf (D17c-2 decision 33, Preflight ruling 18)", () => {
+describe("bundleFieldOf and bundleFieldProblemsOf", () => {
   const invalid = (details: unknown) => refusal("invalid_request", "The request was not valid.", { status: 400, details });
   /** A quick-deploy link's create, as the Linux form sends it. */
   const request = {
@@ -357,7 +357,7 @@ describe("bundleFieldOf and bundleFieldProblemsOf (D17c-2 decision 33, Preflight
   });
 });
 
-describe("fleetFieldProblemsOf (Preflight ruling 15)", () => {
+describe("fleetFieldProblemsOf", () => {
   /** A detail as the platform's fleet routes and the contract's 400s write one. */
   const detail = (field: string, message: string) => ({
     keyword: "custom",
@@ -386,7 +386,7 @@ describe("fleetFieldProblemsOf (Preflight ruling 15)", () => {
     });
   });
 
-  it("maps a collector's name to its Name field (D17b-1 Preflight ruling 12)", () => {
+  it("maps a collector's name to its Name field", () => {
     expect(fleetFieldProblemsOf(invalid([detail("name", "Must be 1 to 200 characters.")]))).toEqual({
       name: "Must be 1 to 200 characters.",
     });
@@ -395,7 +395,7 @@ describe("fleetFieldProblemsOf (Preflight ruling 15)", () => {
     });
   });
 
-  it("maps a rotation's expiresAt and graceEndsAt to the rotate dialog's fields (D17b-2 decision 16)", () => {
+  it("maps a rotation's expiresAt and graceEndsAt to the rotate dialog's fields", () => {
     expect(
       fleetFieldProblemsOf(invalid([detail("graceEndsAt", "Must not be after expiresAt."), detail("expiresAt", "Must be a time in the future.")])),
     ).toEqual({ graceEndsAt: "Must not be after expiresAt.", expiresAt: "Must be a time in the future." });
@@ -419,7 +419,7 @@ describe("fleetFieldProblemsOf (Preflight ruling 15)", () => {
   });
 });
 
-describe("isStaleCursor (D17b-1 decision 16, D17b-2 decision 16)", () => {
+describe("isStaleCursor", () => {
   /** The platform's stale cursor (`modules/fleets/errors.ts`'s `invalidCursor`). */
   const stale = (details: unknown) =>
     refusal("invalid_request", "The list's cursor isn't valid: reload the list.", { status: 400, details });
@@ -505,22 +505,22 @@ function tearDown(): void {
 
 // The fleet screens' timings, pinned as DeleteFleetDialog's tests pin its
 // 35 s: the other tests advance by these constants, so a changed value
-// would pass them all (the final review's Minor).
+// would pass them all.
 describe("the fleet screens' timings", () => {
-  it("polls every 15 s (D17a decision 8, Preflight ruling 10's useVisiblePolling(poll, 15_000))", () => {
+  it("polls every 15 s (useVisiblePolling(poll, 15_000))", () => {
     expect(FLEETS_POLL_INTERVAL_MS).toBe(15_000);
   });
 
-  it("ends a read that never answers at 10 s (Preflight ruling 10's abortAfter(10_000))", () => {
+  it("ends a read that never answers at 10 s (abortAfter(10_000))", () => {
     expect(FLEET_READ_TIMEOUT_MS).toBe(10_000);
   });
 
-  it("ends a create, rename or archive that never answers at 30 s (Preflight rulings 13 and 14's abortAfter(30_000))", () => {
+  it("ends a create, rename or archive that never answers at 30 s (abortAfter(30_000))", () => {
     expect(FLEET_WRITE_TIMEOUT_MS).toBe(30_000);
   });
 });
 
-describe("useFleetsList (D17a decision 20, Preflight rulings 10 and 11)", () => {
+describe("useFleetsList", () => {
   beforeEach(setUp);
   afterEach(tearDown);
 
@@ -1014,7 +1014,7 @@ function serveFleet({ honourAbort = false } = {}) {
   return { calls, spy, last: () => calls.at(-1)! };
 }
 
-describe("useFleet (D17a decision 19, Preflight rulings 9, 10 and 17)", () => {
+describe("useFleet", () => {
   beforeEach(setUp);
   afterEach(tearDown);
 
@@ -1197,7 +1197,7 @@ describe("useFleet (D17a decision 19, Preflight rulings 9, 10 and 17)", () => {
     expect(result.current.state).toBe("not_found");
   });
 
-  // Ruling 28: the Tokens tab's focus after a write follows only a fleet from a read begun after it.
+  // The Tokens tab's focus after a write follows only a fleet from a read begun after it.
   it("numbers its fleet by the read it came from (the first, a poll's, a reload's) and gives the latest read begun", async () => {
     const { result, served } = await loaded();
     const first = result.current.fleetRead;

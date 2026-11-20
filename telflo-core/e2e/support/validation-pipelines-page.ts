@@ -9,11 +9,11 @@ import {
 import { fakeOttlEvaluatorMarker, type FakeOttlEvaluatorMarker } from "../../apps/api/src/testing/fake-ottl-evaluator.js";
 import { subtab, versionApiPath, type VersionPath } from "./test-suites-page.js";
 
-// The Testing tab's Validation subtab (D15a Tasks 8 and 9) in the browser:
-// its validation pipelines' cards, their rules, "New validation pipeline",
-// the rule editor's four modes, the delete confirmations; and the validation
-// pipelines' API, for tests about something after creating. Shared by
-// validation-rules.e2e.ts and the privacy review's scratch specs.
+// The Testing tab's Validation subtab in the browser: its validation
+// pipelines' cards, their rules, "New validation pipeline", the rule editor's
+// four modes, the delete confirmations; and the validation pipelines' API,
+// for tests about something after creating. Shared by validation-rules.e2e.ts
+// and the other specs that import it.
 //
 // The E2E API's evaluator is the OpenAPI-checked fake (start-fake-ottl-evaluator.ts):
 // a rule passes unless its pattern or an OTTL string literal carries a

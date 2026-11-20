@@ -82,7 +82,7 @@ describe("starting", () => {
     });
   });
 
-  it("pins replay's masking and turns off network and console capture, whatever PostHog's project says (Ruling 14)", async () => {
+  it("pins replay's masking and turns off network and console capture, whatever PostHog's project says", async () => {
     await start();
     const options = posthog.client.init.mock.calls[0]?.[1] as Record<string, unknown>;
 
@@ -114,7 +114,7 @@ describe("starting", () => {
   });
 });
 
-describe("before the visitor chooses (Preflight ruling 3)", () => {
+describe("before the visitor chooses", () => {
   it("never opts in and never starts replay", async () => {
     await start();
 
@@ -204,7 +204,7 @@ describe("rejecting", () => {
   });
 });
 
-describe("identifying the signed-in user (Preflight ruling 2)", () => {
+describe("identifying the signed-in user", () => {
   it("never identifies before the visitor chooses", async () => {
     const analytics = await start();
     analytics.identifyUser(USER.id, USER.email);
@@ -288,7 +288,7 @@ describe("identifying the signed-in user (Preflight ruling 2)", () => {
   });
 });
 
-describe("signing out (Ruling 14)", () => {
+describe("signing out", () => {
   it("resets PostHog with a new device id, and identifies whoever signs in next afresh", async () => {
     localStorage.setItem("telflo_cookie_consent", "accepted");
     const analytics = await start();
@@ -337,7 +337,7 @@ describe("signing out (Ruling 14)", () => {
     expect(posthog.client.opt_in_capturing).not.toHaveBeenCalled();
   });
 
-  it("resets once, right after the init, however many sign-outs came before PostHog started (Ruling 16)", async () => {
+  it("resets once, right after the init, however many sign-outs came before PostHog started", async () => {
     localStorage.setItem("telflo_cookie_consent", "accepted");
     const analytics = await import("./analytics.js");
     analytics.signedOutLocally();
@@ -370,7 +370,7 @@ describe("signing out (Ruling 14)", () => {
   });
 });
 
-describe("no emailed link's token reaches PostHog (Ruling 14)", () => {
+describe("no emailed link's token reaches PostHog", () => {
   it("drops the fragment and any token parameter from a URL, and keeps the rest", async () => {
     const { withoutTokens } = await import("./analytics.js");
 
@@ -458,7 +458,7 @@ describe("no emailed link's token reaches PostHog (Ruling 14)", () => {
     expect(cleaned?.properties.$session_id).toBe("a-session");
   });
 
-  it("before_send cleans nested events' URLs, and heatmap data keyed by URL (Ruling 16)", async () => {
+  it("before_send cleans nested events' URLs, and heatmap data keyed by URL", async () => {
     const { stripTokens } = await import("./analytics.js");
     const point = { x: 10, y: 20, target_fixed: false, type: "click" };
     const later = { x: 30, y: 40, target_fixed: false, type: "click" };
@@ -520,7 +520,7 @@ describe("no emailed link's token reaches PostHog (Ruling 14)", () => {
     ["an absolute", "https://telflo.example/api/v1/organizations/x/configurations?q=secret&filter=mine#part"],
     ["a relative", "/api/v1/organizations/x/configurations?q=secret&filter=mine"],
     ["a path-prefixed", "https://host/telflo/api/v1/organizations/x/configurations?q=secret"],
-  ])("replay's recorded requests to the API lose their whole query, for %s URL (ADR 0024; D7)", async (_kind, url) => {
+  ])("replay's recorded requests to the API lose their whole query, for %s URL", async (_kind, url) => {
     const { initOptions } = await import("./analytics.js");
     const mask = initOptions(SETTINGS).session_recording?.maskCapturedNetworkRequestFn;
     const request = { name: url, entryType: "resource", startTime: 1, duration: 2 };
@@ -553,7 +553,7 @@ describe("no emailed link's token reaches PostHog (Ruling 14)", () => {
   });
 });
 
-describe("the flows library's search never reaches PostHog (D12 Ruling 35)", () => {
+describe("the flows library's search never reaches PostHog", () => {
   const LIBRARY = "https://telflo.example/flows";
 
   it("drops q from the library's address, absolute or relative, and keeps its chips and every other parameter", async () => {
@@ -693,11 +693,11 @@ describe("the flows library's search never reaches PostHog (D12 Ruling 35)", () 
   });
 });
 
-describe("a quick-deploy link's secret never reaches PostHog (D17c-2 decision 32)", () => {
+describe("a quick-deploy link's secret never reaches PostHog", () => {
   const ORIGIN = "https://telflo.example";
   const BODY = QUICK_DEPLOY_SECRET.slice("tqd_".length);
   const REDACTED = `${ORIGIN}/quick-deploy/[redacted]`;
-  // A link typed without /api/: behind the gateway nginx's own 404 (Ruling 44), on the dev server root's ErrorBoundary
+  // A link typed without /api/: behind the gateway nginx's own 404, on the dev server root's ErrorBoundary
   // (PostHog never imported); the check is the backstop for a page whose address is the link anyway.
   const TYPED = `${ORIGIN}/quick-deploy/${QUICK_DEPLOY_SECRET}`;
 
@@ -993,14 +993,14 @@ describe("a quick-deploy link's secret never reaches PostHog (D17c-2 decision 32
   });
 });
 
-describe("a library link never reaches PostHog (D23-2 decision 55; Preflight ruling 23)", () => {
-  // A hand-written fixture, visibly fake (decision 59): nothing here is signed, so it may be compared directly.
+describe("a library link never reaches PostHog", () => {
+  // A hand-written fixture, visibly fake: nothing here is signed, so it may be compared directly.
   const ORIGIN = "https://telflo.example";
   const LINK = `tll_${"FAKE".repeat(17)}FAK`;
   const BODY = LINK.slice("tll_".length);
   const REDACTED = `${ORIGIN}/library-links/[redacted]`;
   const PATH = "/library-links/[redacted]";
-  // The link itself, as Copy curl's command names it (Q162: the page's own origin), opened in the browser.
+  // The link itself, as Copy curl's command names it (with the page's own origin), opened in the browser.
   const OPENED = `${ORIGIN}/api/v1/library-links/${LINK}`;
 
   it.each([
@@ -1310,9 +1310,9 @@ describe("a library link never reaches PostHog (D23-2 decision 55; Preflight rul
   });
 });
 
-describe("an organization's logo address never reaches replay's network entries (D23-2 Ruling 145)", () => {
+describe("an organization's logo address never reaches replay's network entries", () => {
   // Fake ids: a logo's address names the organization and its logo, and appears only as an <img>'s src
-  // inside ph-no-capture (Ruling 137); its load is a request replay records once the PostHog project turns
+  // inside ph-no-capture; its load is a request replay records once the PostHog project turns
   // network capture on.
   const ORIGIN = "https://telflo.example";
   const ORGANIZATION = "00000000-0000-4000-8000-0000000000a1";
@@ -1350,8 +1350,8 @@ describe("an organization's logo address never reaches replay's network entries 
   });
 });
 
-describe("no event property names a logo or holds a library link, at any depth, arrays included (D23-2 Ruling 148)", () => {
-  // Fake ids and a visibly fake link (decision 59): nothing here is signed, so it may be compared directly.
+describe("no event property names a logo or holds a library link, at any depth, arrays included", () => {
+  // Fake ids and a visibly fake link: nothing here is signed, so it may be compared directly.
   const ORIGIN = "https://telflo.example";
   const ORGANIZATION = "00000000-0000-4000-8000-0000000000a1";
   const LOGO = "00000000-0000-4000-8000-0000000000b2";
@@ -1489,7 +1489,7 @@ describe("no event property names a logo or holds a library link, at any depth, 
     expect(namesLogoOrLink(cleaned)).toBe(false);
   });
 
-  it("costs a string of percentages with no keyword no URL parse and no decodeURIComponent, however long (Ruling 153)", async () => {
+  it("costs a string of percentages with no keyword no URL parse and no decodeURIComponent, however long", async () => {
     const { stripTokens } = await import("./analytics.js");
     let parsed = 0;
     const RealUrl = URL;
@@ -1574,8 +1574,8 @@ describe("no event property names a logo or holds a library link, at any depth, 
   });
 });
 
-describe("an API token never reaches PostHog (D22 decision 40; Ruling 106)", () => {
-  // A token is built at run time and never printed (decision 48; Rulings 99 and 102): every result is checked
+describe("an API token never reaches PostHog", () => {
+  // A token is built at run time and never printed: every result is checked
   // with a boolean canary before it is compared, each expected value is written without it, and the tables'
   // titles name the case only.
   const ORIGIN = "https://telflo.example";
@@ -1797,7 +1797,7 @@ describe("an API token never reaches PostHog (D22 decision 40; Ruling 106)", () 
   });
 });
 
-describe("PostHog never starts on the CLI's sign-in page (D27 decision 22; Preflight ruling 14)", () => {
+describe("PostHog never starts on the CLI's sign-in page", () => {
   const ORIGIN = "https://telflo.example";
   const STATE = `${"S".repeat(20)}-_${"t".repeat(21)}`;
   const FRAGMENT = `#state=${STATE}&port=54321&host=ada-laptop`;
@@ -1843,7 +1843,7 @@ describe("PostHog never starts on the CLI's sign-in page (D27 decision 22; Prefl
   });
 });
 
-describe("masking autocapture while a surface with private data is shown (Ruling 16)", () => {
+describe("masking autocapture while a surface with private data is shown", () => {
   /** The masking posthog-js was last told, by its init or a set_config since. */
   function lastMasking(): unknown {
     const lastSet = posthog.client.set_config.mock.calls.at(-1)?.[0];

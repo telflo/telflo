@@ -3,15 +3,15 @@ import { open } from "./editor-page.js";
 import { E2E_WEB_URL } from "./environment.js";
 import { adminNavItems } from "./test-templates-page.js";
 
-// The Product admins page (D29 decisions 5, 39 and 45) for the browser
-// tests: `/product-admin/product-admins`, its list, "Add product admin" and
-// the Remove confirmation.
+// The Product admins page for the browser tests:
+// `/product-admin/product-admins`, its list, "Add product admin" and the
+// Remove confirmation.
 //
 // The product-admin flag is global: every parallel worker's admins are on
 // the list. So each test finds only its own rows, by its own seeded
 // addresses (never a count, the list's order or "the whole list"), makes a
 // throwaway second admin so the one it removes is never the last, and
-// revokes every admin it made when it ends (D29 Preflight ruling 18).
+// revokes every admin it made when it ends.
 
 /** Opens product admin from the sidebar's Product Admin item (Flows, its home), then Product admins from its nav. */
 export async function openProductAdmins(page: Page): Promise<void> {

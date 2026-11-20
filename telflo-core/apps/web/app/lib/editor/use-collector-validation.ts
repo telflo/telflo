@@ -5,7 +5,7 @@ import { ApiError, validateAnonymously, validateVersion } from "~/lib/api-client
 import { readText } from "~/lib/graph/parse.js";
 import { isBlank, useEditorStore, type CollectorValidationOutcome, type EditorState } from "~/lib/stores/editor-store.js";
 
-/** How long after the last change to the text a check is sent (D13b decision 13). */
+/** How long after the last change to the text a check is sent. */
 export const VALIDATION_DEBOUNCE_MS = 2000;
 
 /** The words when the API couldn't be reached at all. */
@@ -19,9 +19,9 @@ export const VALIDATION_UNREACHABLE_MESSAGE = "Couldn't reach the validation ser
 const MIN_RETRY_AFTER_SECONDS = 1;
 
 /**
- * How long one text is asked about again while the API answers 429 (Ruling
- * 58): a retry is sent after each `Retry-After` only while it falls within
- * this long after the first refusal. Then it stays unavailable, with
+ * How long one text is asked about again while the API answers 429: a retry is
+ * sent after each `Retry-After` only while it falls within this long after the
+ * first refusal. Then it stays unavailable, with
  * `VALIDATION_RATE_LIMIT_GAVE_UP_MESSAGE`, until something changes.
  */
 export const RATE_LIMIT_RETRY_WINDOW_MS = 60_000;
@@ -32,20 +32,20 @@ export const RATE_LIMIT_RETRY_WINDOW_MS = 60_000;
  */
 const MAX_RATE_LIMITED_ASKS = 100;
 
-/** What the bar says once a rate-limited text is no longer asked about again (Ruling 58). */
+/** What the bar says once a rate-limited text is no longer asked about again. */
 export const VALIDATION_RATE_LIMIT_GAVE_UP_MESSAGE =
   "Too many checks. Your YAML was not checked — make a change to check it again.";
 
 /** An answer the contract doesn't allow, or one about another pin than the one asked about. */
 export const VALIDATION_UNEXPECTED_MESSAGE = "The server returned an unexpected response.";
 
-/** Text holding a C0 control character YAML can't hold, which the API refuses (Ruling 55), is never sent (Ruling 57). */
+/** Text holding a C0 control character YAML can't hold, which the API refuses, is never sent. */
 export const VALIDATION_CONTROL_CHARACTER_MESSAGE = "Your YAML holds a control character, so it was not checked.";
 
 /**
  * What a check is for: the version, the text and the pin on screen, and the
  * load that put them there (`loadCount`), so a version opened again, even
- * with the same text and pin, is a new opening (Ruling 57).
+ * with the same text and pin, is a new opening.
  */
 interface Subject {
   loadCount: number;
@@ -98,20 +98,20 @@ function outcomeOf(answer: ConfigurationValidationResponse, collectorVersion: st
   }
 }
 
-/** What the bar says when the anonymous validate refused a text as too large (413; D31-1 Preflight ruling 7). */
+/** What the bar says when the anonymous validate refused a text as too large (413). */
 export const VALIDATION_TOO_LARGE_MESSAGE = "This YAML is too large to check here, so it was not checked.";
 
 /** What a check is sent with: the version, the text and the pin on screen. */
 export type ValidationSubject = Pick<Subject, "versionId" | "text" | "collectorVersion">;
 
 /**
- * Where a check goes, and how (D31-1 decision 29, Preflight ruling 11):
+ * Where a check goes, and how:
  * - `debounceMs`: how long after the last change to the text it is sent;
  * - `checkOpenedAtOnce`: whether a version just opened is checked at once,
  *   or after the debounce too;
  * - `rateLimitedCode`: the 429's code, asked again after `Retry-After`;
  * - `showsCountdown`: whether a rate-limited outcome carries `retryAt`, for
- *   the status bar's countdown (decision 3);
+ *   the status bar's countdown;
  * - `send`: the request, its answer in the contract's response.
  */
 export interface ValidationSource {
@@ -122,7 +122,7 @@ export interface ValidationSource {
   send: (state: EditorState, subject: ValidationSubject, signal: AbortSignal) => Promise<ConfigurationValidationResponse>;
 }
 
-/** The signed-in editor's: its configuration's version's validation route, 2 s, an opened version at once (D13b decision 13). */
+/** The signed-in editor's: its configuration's version's validation route, 2 s, an opened version at once. */
 export const SIGNED_IN_VALIDATION: ValidationSource = {
   debounceMs: VALIDATION_DEBOUNCE_MS,
   checkOpenedAtOnce: true,
@@ -138,20 +138,18 @@ export const SIGNED_IN_VALIDATION: ValidationSource = {
     ),
 };
 
-/** How long after an opening or a change the playground checks (D31-1 decision 3: a 1.5 s pause). */
+/** How long after an opening or a change the playground checks: a 1.5 s pause. */
 export const ANONYMOUS_VALIDATION_DEBOUNCE_MS = 1500;
 
 /**
- * The playground's and the blank public editor's (D31-1 decisions 3 and
- * 29): D27's anonymous validate, `{ yaml, distribution, collectorVersion }`,
- * 1.5 s after an opening or a change (an opened text is checked after the
- * pause too), its 429 `rate_limited` counted down. Its
- * verdict is read as the contract's response with no requirements (the
- * anonymous route reports none); a retired pin (400
- * `collector_version_retired`) as `retired`, as the signed-in editor shows
- * it; a 413 (the API's, or the gateway's own page) as too large to check.
- * Organization variables don't exist there
- * (`${org:NAME}` stays as written; D27).
+ * The playground's and the blank public editor's: the anonymous validate,
+ * `{ yaml, distribution, collectorVersion }`, 1.5 s after an opening or a
+ * change (an opened text is checked after the pause too), its 429
+ * `rate_limited` counted down. Its verdict is read as the contract's response
+ * with no requirements (the anonymous route reports none); a retired pin (400
+ * `collector_version_retired`) as `retired`, as the signed-in editor shows it;
+ * a 413 (the API's, or the gateway's own page) as too large to check.
+ * Organization variables don't exist there (`${org:NAME}` stays as written).
  */
 export const ANONYMOUS_VALIDATION: ValidationSource = {
   debounceMs: ANONYMOUS_VALIDATION_DEBOUNCE_MS,
@@ -173,7 +171,7 @@ export const ANONYMOUS_VALIDATION: ValidationSource = {
       }
       // The API's 413 is `payload_too_large`; behind the gateway, nginx's own
       // 1 MiB 413 is an HTML page, read as `unexpected_response` with the
-      // status (Ruling 282): any 413 is too large to check.
+      // status: any 413 is too large to check.
       if (error instanceof ApiError && (error.code === "payload_too_large" || error.status === 413)) {
         throw new ApiError("payload_too_large", VALIDATION_TOO_LARGE_MESSAGE, { status: 413 });
       }
@@ -187,15 +185,14 @@ export const ANONYMOUS_VALIDATION: ValidationSource = {
  * editor page is mounted): it watches the store's version, text and pin on
  * screen and asks the API (`validateVersion`), keeping each answer in the
  * store with what it was for (`setValidation`; `selectCollectorValidation`
- * shows it only while exactly that is on screen). D13b decision 13, with
- * decision 2's fixes:
+ * shows it only while exactly that is on screen). The rules:
  * - a version opened (every load, the same version opened again included:
  *   a re-read after a refused publish, a reload in another organization),
  *   or a pin changed, is checked at once; a change to the text alone, typed
  *   or from the canvas, 2 s after the last one;
  * - empty or whitespace-only text and text that doesn't parse (`readText`)
  *   send nothing: idle. Text that parses but holds a C0 control character
- *   YAML can't hold (the API refuses it; Ruling 55) sends nothing either,
+ *   YAML can't hold (the API refuses it) sends nothing either,
  *   and shows unavailable, so Apply says it applies unchecked YAML;
  * - only the latest check's answer is kept (a sequence number, taken before
  *   any wait), so an older text's or pin's answer never lands; and a text
@@ -203,27 +200,27 @@ export const ANONYMOUS_VALIDATION: ValidationSource = {
  *   that answer at once, with nothing sent, so the status never sticks at
  *   validating;
  * - a published version is checked too;
- * - the pin on screen is always sent as `collectorVersion` (Ruling 57), so
+ * - the pin on screen is always sent as `collectorVersion`, so
  *   the answer is about it whatever the version's saved pin is meanwhile (a
  *   save under way, another tab's); an answer about another version is
  *   unavailable;
  * - 429 shows unavailable with the API's message, and is asked again after
  *   each `Retry-After` (at least 1 s) while nothing changes, as long as the
- *   retry falls within `RATE_LIMIT_RETRY_WINDOW_MS` of the first refusal
- *   (Ruling 58: a slot can be held 20 s, a per-minute limit lifts within
- *   the minute); then unavailable with
- *   `VALIDATION_RATE_LIMIT_GAVE_UP_MESSAGE` until a change; 503 and every other refusal
- *   show unavailable with the API's message; no answer at all,
- *   "Couldn't reach the validation service. Your YAML was not checked.";
+ *   retry falls within `RATE_LIMIT_RETRY_WINDOW_MS` of the first refusal (a
+ *   slot can be held 20 s, a per-minute limit lifts within the minute); then
+ *   unavailable with `VALIDATION_RATE_LIMIT_GAVE_UP_MESSAGE` until a change;
+ *   503 and every other refusal show unavailable with the API's message; no
+ *   answer at all, "Couldn't reach the validation service. Your YAML was not
+ *   checked.";
  * - a check another supersedes (anything that drops its answer: a change,
- *   a newer check, the stop) is aborted (Ruling 69), in the browser only:
- *   the API keeps the person's in-flight slot until the validator answers
- *   (Ruling 70), so a quick re-pick may still meet "Too many checks at
- *   once" and retry about a second later. An aborted check shows nothing
- *   and is never asked again;
+ *   a newer check, the stop) is aborted, in the browser only: the API
+ *   keeps the person's in-flight slot until the validator answers, so a
+ *   quick re-pick may still meet "Too many checks at once" and retry
+ *   about a second later. An aborted check shows nothing and is never
+ *   asked again;
  * - stopping cancels the timers, and drops any answer still to come.
  * Returns the stop. `source` says where the checks go (`SIGNED_IN_VALIDATION`
- * unless given; the playground's is `ANONYMOUS_VALIDATION`, D31-1): its
+ * unless given; the playground's is `ANONYMOUS_VALIDATION`): its
  * debounce, whether an opening is checked at once, its 429's code, and
  * whether a rate-limited outcome carries `retryAt` for the countdown.
  */
@@ -364,11 +361,10 @@ export function startCollectorValidation(source: ValidationSource = SIGNED_IN_VA
 
 /**
  * The collector validation of the open version, while the editor page is
- * mounted (`routes/editor.tsx`; D13b Preflight ruling 21): see
- * `startCollectorValidation`. Its answers are in the editor store, read by
- * the YAML tab's status bar and Apply, and by the canvas's overlay. The
- * playground's editors pass `ANONYMOUS_VALIDATION` (D31-1 decision 29); a
- * source is read once, when the page mounts.
+ * mounted (`routes/editor.tsx`): see `startCollectorValidation`. Its
+ * answers are in the editor store, read by the YAML tab's status bar and
+ * Apply, and by the canvas's overlay. The playground's editors pass
+ * `ANONYMOUS_VALIDATION`; a source is read once, when the page mounts.
  */
 export function useCollectorValidation(source: ValidationSource = SIGNED_IN_VALIDATION): void {
   // A page's source is one of the two constants: read once, as the page mounts.

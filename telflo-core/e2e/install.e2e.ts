@@ -24,12 +24,11 @@ import { E2E_OPAMP_AGENT_PUBLIC_URL } from "./support/environment.js";
 import { enrollFakeCollector, fakeSnapshots, setFakeCollectorState } from "./support/fake-opamp-server.js";
 import { signInThroughApi, waitForHydration } from "./support/session.js";
 
-// Installing collectors into a server fleet (D17c-1 decision 52; Preflight
-// rulings 17, 33 and 34), in the browser, against the E2E API and its fake
-// opamp-server. Each test works in an organization of its own (a new
-// user's), so tests and browsers run in parallel. Fleets, groups, published
-// versions, revokes and archives are made through the API as the page's
-// session (support/collectors.ts); collectors and what they were served
+// Installing collectors into a server fleet, in the browser, against the E2E
+// API and its fake opamp-server. Each test works in an organization of its own
+// (a new user's), so tests and browsers run in parallel. Fleets, groups,
+// published versions, revokes and archives are made through the API as the
+// page's session (support/collectors.ts); collectors and what they were served
 // through the fake's control port, before the page reads them.
 //
 // The E2E API names the agent endpoint E2E_OPAMP_AGENT_PUBLIC_URL (nothing
@@ -60,9 +59,9 @@ const NEEDS_VERSION = "Assign a published version first.";
  * holds none: its shape can.
  */
 const BEARER_SHAPED = /[A-Za-z0-9+/]{100,}/;
-/** The placeholder pattern a rendered template must hold none of (Preflight ruling 11). */
+/** The placeholder pattern a rendered template must hold none of. */
 const PLACEHOLDER = /\$\{[A-Z_][A-Z0-9_]*\}/;
-/** The Linux All In One bundle's files (decision 35). */
+/** The Linux All In One bundle's files. */
 const ALL_IN_ONE_FILES = ["README.md", "otelcol-config.yaml", "start_supervisor.sh", "supervisor-config.yaml"];
 
 /** A suffix no other test uses. */
@@ -115,7 +114,7 @@ function header(page: Page): Locator {
   return page.locator("header", { has: page.getByRole("heading", { level: 1 }) });
 }
 
-/** The setup checklist (decision 44). */
+/** The setup checklist. */
 function checklist(page: Page): Locator {
   return page.getByRole("region", { name: "Fleet setup" });
 }
@@ -142,7 +141,7 @@ async function openInstall(page: Page, opener: Locator): Promise<InstallFacts> {
     endpoint: E2E_OPAMP_AGENT_PUBLIC_URL,
     allowInsecureConnections: false,
     imageTag: `ghcr.io/telflo/telflo/collector:${facts.collector.version}`,
-    // Every group here has mounts Telflo wrote, or none (Ruling 62).
+    // Every group here has mounts Telflo wrote, or none.
     mountsReadable: true,
   });
   await expect(installDialog(page).getByRole("button", { name: "Reveal & copy command" })).toBeVisible();
@@ -154,7 +153,7 @@ function commandOf(lines: string[]): string {
   return lines.map((line, index) => (index === 0 ? line : `  ${line}`)).join(" \\\n");
 }
 
-/** The container command's lines (decision 40) for `facts` with the token `token`, `extra` before the token's line. */
+/** The container command's lines for `facts` with the token `token`, `extra` before the token's line. */
 function containerLines(facts: InstallFacts, token: string, { mounts = [], name, env = [] }: { mounts?: string[]; name?: string; env?: string[] } = {}) {
   return commandOf([
     "docker run -d --restart unless-stopped --name telflo-collector",
@@ -199,7 +198,7 @@ async function revealAndCopy(page: Page, browserName: string): Promise<string> {
   return ((await response.json()) as EnrollmentTokenRevealedResponse).token.bearer;
 }
 
-/** The copy's toast, and in Chromium the clipboard holding `text`; elsewhere either toast, recorded (Preflight ruling 34). */
+/** The copy's toast, and in Chromium the clipboard holding `text`; elsewhere either toast, recorded. */
 async function expectCopied(page: Page, browserName: string, text: string): Promise<void> {
   if (browserName === "chromium") {
     await expect(page.getByText(COPIED, { exact: true })).toBeVisible();
@@ -305,8 +304,8 @@ test("a Linux All In One download from the empty Collectors tab: the archive's f
   await choose(page, dialog, "Method", /^Linux All In One \(amd64\)/);
   const rootPath = dialog.getByRole("textbox", { name: "Root path", exact: true });
   await expect(rootPath).toHaveValue("/etc/otelcol");
-  // "Install as a systemd service" is ticked at each opening, and Download disabled while it is (D17c-2 decision 30):
-  // the bundle's own download is unticked.
+  // "Install as a systemd service" is ticked at each opening, and Download disabled while it is: the bundle's own
+  // download is unticked.
   const systemd = dialog.getByRole("checkbox", { name: "Install as a systemd service (starts on boot)" });
   await expect(systemd).toBeChecked();
   await expect(dialog.getByRole("button", { name: "Download", exact: true })).toBeDisabled();
@@ -405,7 +404,7 @@ test("environment variables: the version's ${env:…} names offered, a ticked on
     "  attributes:",
     "    actions:",
     "      - key: literal",
-    // The collector's escape: a literal, never offered (Preflight ruling 14).
+    // The collector's escape: a literal, never offered.
     "        value: $${env:ESCAPED_NAME}",
     "        action: insert",
     "",

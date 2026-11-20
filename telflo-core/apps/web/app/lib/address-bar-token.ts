@@ -1,10 +1,9 @@
 /**
- * An emailed link's single-use token, taken out of the address bar (D4
- * Ruling 14): the password reset's, in its fragment (`/reset-password#token=…`,
- * D3 decision 9), the email confirmation's, in its query
- * (`/verify-email?token=…`), and the invitation's, in its fragment
- * (`/accept-invitation#token=…`, D6 decision 2), whose page did this first
- * and now uses this too (D4 Ruling 16).
+ * An emailed link's single-use token, taken out of the address bar: the
+ * password reset's, in its fragment (`/reset-password#token=…`), the email
+ * confirmation's, in its query (`/verify-email?token=…`), and the
+ * invitation's, in its fragment (`/accept-invitation#token=…`), whose page
+ * did this first and now uses this too.
  *
  * Once the visitor accepts analytics, posthog-js records `location.href`
  * whole, and keeps the first one it saw for the person. So each page takes

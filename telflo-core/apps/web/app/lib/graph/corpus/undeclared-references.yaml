@@ -1,4 +1,4 @@
-# Decision 3: a component a pipeline names but nobody declares is shown,
+# A component a pipeline names but nobody declares is shown,
 # and never declared.
 receivers:
   otlp: {}

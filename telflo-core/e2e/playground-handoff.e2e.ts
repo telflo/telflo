@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { expect, type Page } from "@playwright/test";
-// The SaaS pair (D36-1 Preflight ruling 16): open registration, the Terms, the playground and the anonymous reads.
+// The SaaS pair: open registration, the Terms, the playground and the anonymous reads.
 import { test } from "./support/saas.js";
 import { findConfigurations, findConfigurationVersions, findMemberships, findUsersByEmail, seedUser } from "./support/database.js";
 import { openYamlTab, typeLineAtTop } from "./support/editor-page.js";
@@ -9,8 +9,7 @@ import { recordPlaygroundRequests, sampled } from "./support/playground.js";
 import { placesOf } from "./support/privacy.js";
 import { signInThroughForm, skipEditorTour, waitForHydration } from "./support/session.js";
 
-// The playground's handoff (D31-1 decisions 4, 27, 36, 37, 39 and 41;
-// Preflight rulings 4 and 14): Save in the playground editor or the blank
+// The playground's handoff: Save in the playground editor or the blank
 // public editor stages the edit in this browser; after registering (the
 // /register form and its email link) or signing in, `/app` asks "Save your
 // playground configuration?", and Save creates it in the person's
@@ -49,9 +48,9 @@ function saveDialog(page: Page) {
 /** Puts `line` (a YAML comment) before Monaco's first line, as typed. */
 async function insertLineAtTop(page: Page, line: string): Promise<void> {
   await openYamlTab(page);
-  // Typed once Monaco has the focus (the shared helper's: Ruling 310), as the signed-in specs do (an insertText
-  // holding a newline lands twice in Firefox: Ruling 306), and seen on screen before anything reads it (Ruling 304:
-  // a Save pressed before the insert landed staged the text without it, under --repeat-each).
+  // Typed once Monaco has the focus (the shared helper's), as the signed-in specs do (an insertText holding a
+  // newline lands twice in Firefox), and seen on screen before anything reads it (a Save pressed before the insert
+  // landed staged the text without it, under --repeat-each).
   await typeLineAtTop(page, line);
   const shown = `(document.querySelector(".monaco-editor .view-lines")?.textContent ?? "").replace(/\\u00a0/g, " ").includes(${JSON.stringify(line)})`;
   await expect.poll(() => page.evaluate<boolean>(shown)).toBe(true);
@@ -142,7 +141,7 @@ test.describe.configure({ mode: "serial" });
 
 test.beforeEach(async ({ context }) => {
   // The signed-in editor's own tour would cover the page the handoff opens, and
-  // the playground's welcome dialog a first desktop visit (Task 6): both seen.
+  // the playground's welcome dialog a first desktop visit: both seen.
   await skipEditorTour(context);
   await context.addInitScript({ content: `try { window.localStorage.setItem("telflo-playground-tour-completed", "true"); } catch {}` });
 });
@@ -159,7 +158,7 @@ test("from the playground editor: Save → register → the dialog → Save → 
   const signIn = await saveSignedOut(page);
   // Nothing left the browser while in the playground but the anonymous validate.
   expect(recorder.outside()).toEqual([]);
-  // Off the playground on purpose (Ruling 300): the recorder judges nothing from here.
+  // Off the playground on purpose: the recorder judges nothing from here.
   recorder.leave();
   await signIn.getByRole("link", { name: "Create free account" }).click();
 
@@ -242,9 +241,9 @@ test("Discard asks once, removes the staged edit, and creates nothing", async ({
   expect((await findConfigurations(user.organizationId)).length).toBe(before);
 });
 
-// Q211 (Ruling 317): signing out removes the staged edit. The dialog is modal, so the person closes it as one
-// would (Escape keeps the edit, to be asked again), then signs out from the sidebar's menu; signed in again,
-// nothing is asked and nothing is staged.
+// Signing out removes the staged edit. The dialog is modal, so the person closes it as one would (Escape
+// keeps the edit, to be asked again), then signs out from the sidebar's menu; signed in again, nothing is
+// asked and nothing is staged.
 test("signing out without answering the dialog removes the staged edit: signed in again, nothing is asked", async ({ page }) => {
   const user = await seedUser({ password: PASSWORD, email: anEmail() });
   const before = (await findConfigurations(user.organizationId)).length;

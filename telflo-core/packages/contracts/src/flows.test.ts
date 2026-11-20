@@ -72,7 +72,7 @@ const card = {
 const createAccepts = (field: string, value: unknown) =>
   CreateFlowRequestSchema.safeParse({ ...input, [field]: value }).success;
 
-describe("the flows' constants (D12 decisions 2 and 11)", () => {
+describe("the flows' constants", () => {
   it("has the signals and sources, and the admin dialog's limits", () => {
     expect(FLOW_SIGNALS).toEqual(["traces", "metrics", "logs"]);
     expect(FLOW_SOURCES).toEqual(["telflo", "community"]);
@@ -115,7 +115,7 @@ describe("the flows' constants (D12 decisions 2 and 11)", () => {
   });
 });
 
-describe("CreateFlowRequestSchema (D12 decision 11)", () => {
+describe("CreateFlowRequestSchema", () => {
   it("accepts the admin dialog's fields, published by default", () => {
     expect(CreateFlowRequestSchema.parse(input)).toEqual({ ...input, published: true });
     expect(CreateFlowRequestSchema.parse({ ...input, published: false }).published).toBe(false);
@@ -246,7 +246,7 @@ describe("CreateFlowRequestSchema (D12 decision 11)", () => {
   });
 });
 
-describe("UpdateFlowRequestSchema (D12 decision 11)", () => {
+describe("UpdateFlowRequestSchema", () => {
   it("takes any of the dialog's fields and published, none at all included", () => {
     expect(UpdateFlowRequestSchema.parse({})).toEqual({});
     expect(UpdateFlowRequestSchema.parse({ published: false })).toEqual({ published: false });
@@ -311,7 +311,7 @@ describe("the flows' responses", () => {
     expect(FlowResponseSchema.safeParse({ flow, extra: 1 }).success).toBe(false);
   });
 
-  it("PublishedFlowSchema is a flow without its id, published, sortOrder and createdAt, YAML included, strict (D31-1 decision 34)", () => {
+  it("PublishedFlowSchema is a flow without its id, published, sortOrder and createdAt, YAML included, strict", () => {
     const { id: _id, published: _published, sortOrder: _sortOrder, createdAt: _createdAt, ...published } = flow;
     expect(PublishedFlowSchema.parse(published)).toEqual(published);
     expect(Object.keys(PublishedFlowSchema.shape).sort()).toEqual(
@@ -350,7 +350,7 @@ describe("the flows' responses", () => {
   });
 });
 
-describe("the lint's request and answer (D12 decision 6, Preflight ruling 3)", () => {
+describe("the lint's request and answer", () => {
   const finding = {
     severity: "block",
     code: "literal-endpoint",

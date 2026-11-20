@@ -5,8 +5,7 @@ import { trimmedDescriptionSchema, trimmedNameSchema } from "./test-suites.js";
 import { ruleTextSchema, trimRuleText, VALIDATION_RULE_TEXT_MAXIMUM_BYTES } from "./validation-rules.js";
 
 /*
- * The regex library's endpoints (D15b decisions 7 and 8; details 16 to 18;
- * Preflight rulings 3 and 4): named regex patterns the validation-rule
+ * The regex library's endpoints: named regex patterns the validation-rule
  * picker offers, global as test templates are.
  *
  * - Members, signed in with the current terms (a product admin with or
@@ -19,15 +18,15 @@ import { ruleTextSchema, trimRuleText, VALIDATION_RULE_TEXT_MAXIMUM_BYTES } from
  *   differs from the stored one, is checked under the OTTL evaluator's RE2
  *   first, counted on the person's own checked saves
  *   (VALIDATION_RULE_CHECKS_PER_MINUTE_PER_USER a minute, apart from every
- *   organization's: Preflight ruling 4).
+ *   organization's).
  *
- * An entry's name, category, description and regex are configuration text
- * (ADR 0024): JSON bodies only, never a URL, a log line or an audit row.
- * Their bounds are migration 031's checks. The table trims ASCII's
- * whitespace only; these schemas trim and refuse whitespace as JavaScript
- * and Go's `unicode.IsSpace` both count it (as the rules' texts are judged
- * blank: D15a Preflight ruling 6), so nothing the evaluator or the web would
- * call blank is stored, and no write meets a check violation.
+ * An entry's name, category, description and regex are configuration text:
+ * JSON bodies only, never a URL, a log line or an audit row. Their bounds are
+ * migration 031's checks. The table trims ASCII's whitespace only; these
+ * schemas trim and refuse whitespace as JavaScript and Go's `unicode.IsSpace`
+ * both count it (as the rules' texts are judged blank), so nothing the
+ * evaluator or the web would call blank is stored, and no write meets a check
+ * violation.
  */
 
 /** An entry's name, after trimming: 1 to 200 characters, unique (ck_test_regex_name_length, uq_test_regex_name). */
@@ -42,7 +41,7 @@ export const TEST_REGEX_DESCRIPTION_MAXIMUM_LENGTH = 2_000;
 /** An entry's regex: at most 8,192 bytes of UTF-8, a rule's pattern's bound (ck_test_regex_regex_length). */
 export const TEST_REGEX_REGEX_MAXIMUM_BYTES = VALIDATION_RULE_TEXT_MAXIMUM_BYTES;
 
-/** Decision 8's words, exactly: 409 `test_regex_name_taken`. */
+/** The words, exactly, of 409 `test_regex_name_taken`. */
 export const TEST_REGEX_NAME_TAKEN_MESSAGE = "A regex with that name already exists.";
 
 /**
@@ -50,8 +49,7 @@ export const TEST_REGEX_NAME_TAKEN_MESSAGE = "A regex with that name already exi
  * `unicode.IsSpace` (trimRuleText) count it, until neither finds more:
  * U+0085 goes, which `trim` keeps, and U+FEFF, which Go keeps. What the
  * name, category and description schemas store; the web's dialog trims
- * with it too, so it judges blank, and compares, what the API will
- * (D15b Ruling 22).
+ * with it too, so it judges blank, and compares, what the API will.
  */
 export function trimLibraryText(text: string): string {
   let current = text;
@@ -169,17 +167,17 @@ export const TestRegexResponseSchema = z.object({ testRegex: TestRegexSchema }).
 export type TestRegexResponse = z.infer<typeof TestRegexResponseSchema>;
 
 /**
- * The regex library's own error codes (detail 17):
+ * The regex library's own error codes:
  * - `test_regex_not_found` (404): an id no entry has, or one that isn't a
  *   canonical UUID, alike;
  * - `test_regex_name_taken` (409, TEST_REGEX_NAME_TAKEN_MESSAGE);
  * - `test_regex_invalid` (400): the evaluator's words ("Invalid regex: …"),
  *   each problem in `details.problems` with its field, `regex`.
  *
- * Its check's refusals are the rules' check's (VALIDATION_RULES_ERROR_CODES,
- * Preflight ruling 4): 503 `rules_unavailable` and 429
- * `validation_rule_rate_limited`, in their words; a member's write is 403
- * `product_admin_required` (IDENTITY_ERROR_CODES).
+ * Its check's refusals are the rules' check's (VALIDATION_RULES_ERROR_CODES):
+ * 503 `rules_unavailable` and 429 `validation_rule_rate_limited`, in their
+ * words; a member's write is 403 `product_admin_required`
+ * (IDENTITY_ERROR_CODES).
  */
 export const TEST_REGEX_ERROR_CODES = ["test_regex_not_found", "test_regex_name_taken", "test_regex_invalid"] as const;
 

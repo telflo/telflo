@@ -1,4 +1,4 @@
-# Decision 3: an extension service.extensions lists but nobody declares
+# An extension service.extensions lists but nobody declares
 # stays listed, and is never declared.
 receivers:
   otlp:

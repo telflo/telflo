@@ -6,20 +6,20 @@ import { SAMPLE_TESTING_READS } from "./sample/testing-tab.js";
 import { SAMPLE_VISITOR_USER_ID, sampleNotFound } from "./sample/types.js";
 
 /*
- * The sample workspace's answers to every read in `WorkspaceReads` (D31-1
- * decision 23, Preflight ruling 8), in the API's shapes, rebuilt on every
- * call with times relative to now. `readsFor(SAMPLE_ORGANIZATION_ID)` loads
- * this module lazily, so the signed-in bundles never hold the sample. It
- * calls no API function: it imports the client only for `ApiError`
- * (through `sampleNotFound`), so an id the sample doesn't hold answers the
- * API's own "not found" and every page shows its own (decision 25).
+ * The sample workspace's answers to every read in `WorkspaceReads`, in the
+ * API's shapes, rebuilt on every call with times relative to now.
+ * `readsFor(SAMPLE_ORGANIZATION_ID)` loads this module lazily, so the
+ * signed-in bundles never hold the sample. It calls no API function: it
+ * imports the client only for `ApiError` (through `sampleNotFound`), so an id
+ * the sample doesn't hold answers the API's own "not found" and every page
+ * shows its own.
  *
  * The configurations' reads are here; the Testing tab's and fleet
- * management's are their sample modules' (`sample/testing-tab.ts`, Task 2;
- * `sample/fleets.ts`, Task 3).
+ * management's are their sample modules' (`sample/testing-tab.ts`,
+ * `sample/fleets.ts`).
  */
 
-/** The configurations list's search and filter, as the API applies them, in the browser (decision 32). */
+/** The configurations list's search and filter, as the API applies them, in the browser. */
 export function listedConfigurations(
   configurations: readonly Configuration[],
   { q, filter }: { q?: string; filter?: ConfigurationsListFilter },

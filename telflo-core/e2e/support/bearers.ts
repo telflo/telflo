@@ -1,18 +1,17 @@
 import { expect, type Page } from "@playwright/test";
 
-// Where a bearer may be on the page (D17a decision 24; D17b-2 decisions 12
-// and 34, Preflight ruling 15): only inside `ph-no-capture`, which session
-// replay records nothing of (`SecretCopyBox`), never in an attribute or the
-// page's title. Used by the create's tokens step (fleets.e2e.ts) and the
-// Tokens tab's reveal and rotation (tokens.e2e.ts). The DOM twin of the web
-// tests' `expectTextOnlyInsideNoCapture` (app/test/fleets.ts).
+// Where a bearer may be on the page: only inside `ph-no-capture`, which
+// session replay records nothing of (`SecretCopyBox`), never in an attribute
+// or the page's title. Used by the create's tokens step (fleets.e2e.ts) and
+// the Tokens tab's reveal and rotation (tokens.e2e.ts). The DOM twin of the
+// web tests' `expectTextOnlyInsideNoCapture` (app/test/fleets.ts).
 
 /**
  * Each bearer is on the page once, inside `ph-no-capture`, and in no
  * attribute and not in `document.title`; nor in the page's text with every
  * `ph-no-capture` subtree taken out (the text split across nodes outside,
- * which no single node holds: Ruling 22's check, Ruling 28). Evaluated as a
- * string, as the E2E code has no DOM types.
+ * which no single node holds). Evaluated as a string, as the E2E code has
+ * no DOM types.
  */
 export async function expectBearersOnlyInNoCapture(page: Page, bearers: string[]): Promise<void> {
   const placed = await page.evaluate<

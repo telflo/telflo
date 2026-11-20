@@ -31,15 +31,14 @@ import {
 } from "./types.js";
 
 /*
- * The sample's Testing tab (D31-1 decisions 10, 12 and 31; Preflight rulings
- * 6 and 8): the sample input library (six templates), and per
+ * The sample's Testing tab: the sample input library (six templates), and per
  * configuration its test runs (their summaries, details and files), its
- * validation pipelines and rules (D15a's "seeded rules") and its suites and
- * definitions, in the platform's shapes, rebuilt on every call with times
- * relative to now. Everything is the open draft's (the playground editor
- * opens only that version); the tenth configuration, freshly imported, has
- * none, and so does any configuration the sample holds no testing for (the
- * blank playground editor's): its lists are empty.
+ * validation pipelines and rules and its suites and definitions, in the
+ * platform's shapes, rebuilt on every call with times relative to now.
+ * Everything is the open draft's (the playground editor opens only that
+ * version); the tenth configuration, freshly imported, has none, and so does
+ * any configuration the sample holds no testing for (the blank playground
+ * editor's): its lists are empty.
  *
  * Ids are fixed lowercase v4-shaped UUIDs; a run's collector version is its
  * configuration's pin; the gateway's validation pipeline is its logs
@@ -47,10 +46,10 @@ import {
  * it took of its pipeline's, matched to its results by the rules' own ids;
  * statuses are the platform's (succeeded, validation_failed and failed);
  * every run was fed a template, whose bytes (a small OTLP/JSON document
- * each) are the run's input and decoded input, with an output per run, so
- * a run's input and output open (Ruling 280). The visitor has no files of
- * their own. OTLP ids are left out of the documents, so nothing in them is
- * shaped like a secret (sample.test.ts).
+ * each) are the run's input and decoded input, with an output per run, so a
+ * run's input and output open. The visitor has no files of their own. OTLP
+ * ids are left out of the documents, so nothing in them is shaped like a
+ * secret (sample.test.ts).
  */
 
 /** The run, as the API keeps it, with its files' bytes. */

@@ -10,9 +10,8 @@ import {
 import { GROUP_ID, MINE, versionFixture } from "~/test/configurations.js";
 
 /*
- * The validator's answer in the store (D13b Preflight ruling 21): kept with
- * the version, text and pin it is for, and shown only while exactly those
- * are on screen.
+ * The validator's answer in the store: kept with the version, text and
+ * pin it is for, and shown only while exactly those are on screen.
  */
 
 const TEXT = "receivers:\n  otlp: {}\n";
@@ -45,7 +44,7 @@ describe("selectCollectorValidation", () => {
     expect(selectCollectorValidation(store())).toBe(VALIDATION_IDLE);
   });
 
-  it("is idle for whitespace-only text, which counts as empty (Ruling 57), whatever was kept for it", () => {
+  it("is idle for whitespace-only text, which counts as empty, whatever was kept for it", () => {
     open();
     for (const blank of [" ", "\n", "  \t\r\n  \n"]) {
       store().setText(blank);

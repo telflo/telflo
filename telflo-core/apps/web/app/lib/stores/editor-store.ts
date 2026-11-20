@@ -74,18 +74,18 @@ import { nodeAt } from "~/lib/graph/value-view.js";
 import { HISTORY_THROTTLE_MS } from "~/lib/stores/history-throttle.js";
 
 /**
- * The panel's width when the editor opens: 400 px, now that the canvas
- * shares the page (D9a decision 9; D8 used 640 until it came).
+ * The panel's width when the editor opens: 400 px, as the canvas shares the
+ * page.
  */
 export const DEFAULT_PANEL_WIDTH = 400;
 
-/** How many undo entries are kept (D9a decision 11). */
+/** How many undo entries are kept. */
 export const HISTORY_DEPTH = 50;
 
 /** A run of changes to one node within this many milliseconds is one undo entry. */
 export { HISTORY_THROTTLE_MS };
 
-/** A change the text edits can't write (D9a decision 4). */
+/** A change the text edits can't write. */
 export const CANT_EDIT_ON_CANVAS_MESSAGE = "This change can't be made on the canvas. Edit the YAML directly.";
 /** The toasts for manual edit mode. */
 export const ENTERED_MANUAL_EDIT_MESSAGE = "Entered manual edit mode";
@@ -93,9 +93,8 @@ export const CHANGES_APPLIED_MESSAGE = "Changes applied";
 export const CHANGES_REVERTED_MESSAGE = "Changes reverted";
 
 /**
- * What a routing or failover target choice did to the pipelines' receivers
- * (D9d decision 8; the plan's toasts), one message each: shown in one toast,
- * as text, never an attribute.
+ * What a routing or failover target choice did to the pipelines' receivers,
+ * one message each: shown in one toast, as text, never an attribute.
  */
 export function receiverWiringMessages(connector: string, wiring: Pick<ConnectorWiring, "added" | "removed" | "kept">): string[] {
   return [
@@ -105,13 +104,13 @@ export function receiverWiringMessages(connector: string, wiring: Pick<Connector
   ];
 }
 
-/** Whether the canvas can show the text: `ready`, or why not (D9a decision 3). The reason is text, never an attribute. */
+/** Whether the canvas can show the text: `ready`, or why not. The reason is text, never an attribute. */
 export type GraphStatus = "ready" | { unreadable: string };
 
 /**
- * An undo entry (D9a decision 11): the text and the graph together, so
- * undoing restores both, and what it undoes ("Add OTLP"), shown in the undo
- * toast, never in an attribute.
+ * An undo entry: the text and the graph together, so undoing restores both,
+ * and what it undoes ("Add OTLP"), shown in the undo toast, never in an
+ * attribute.
  */
 export interface HistoryEntry {
   text: string;
@@ -124,7 +123,7 @@ export interface History {
   future: HistoryEntry[];
 }
 
-/** What the delete dialog asks about (D9a decision 8): components, or a pipeline with its components. */
+/** What the delete dialog asks about: components, or a pipeline with its components. */
 export type DeleteTarget = { kind: "nodes"; nodeIds: string[] } | { kind: "pipeline"; pipelineId: string };
 
 /** A connection drawn on the canvas: made, or refused, with a warning for the canvas to toast. */
@@ -141,14 +140,14 @@ export type ApplyResult = { ok: true } | { ok: false; reason: string };
 export type ComponentValueResult = "written" | "refused" | "anchor-clash";
 
 /**
- * What became of a form's changes (D9b decision 2): written; unchanged (the
- * text would read the same: no entry, not dirty; Preflight ruling 12); or
- * refused (a locked canvas, a group, an undeclared component, or a change
- * the text edits can't write, which toasts).
+ * What became of a form's changes: written; unchanged (the text would
+ * read the same: no entry, not dirty); or refused (a locked canvas, a
+ * group, an undeclared component, or a change the text edits can't write,
+ * which toasts).
  */
 export type ValuesResult = "written" | "unchanged" | "refused";
 
-/** Where self-monitoring lives in the text (D9b decision 7). */
+/** Where self-monitoring lives in the text. */
 export const TELEMETRY_BASE: ValuePath = ["service", "telemetry"];
 
 /** The undo entry of the Self-monitoring dialog's Apply and Remove Section. */
@@ -158,9 +157,9 @@ export const EDIT_SELF_MONITORING = "Edit self-monitoring";
 export const EMPTY_GRAPH: Graph = { nodes: [], edges: [], pipelines: [] };
 
 /**
- * A version's summary, as the picker lists it (D10 decision 4): the version
- * without its content, with whether it is published (D11b decision 10) and
- * its collector version, deprecated or not (D13a decisions 4 and 8).
+ * A version's summary, as the picker lists it: the version without its
+ * content, with whether it is published and its collector version, deprecated
+ * or not.
  */
 export function summaryOf({
   id,
@@ -191,9 +190,8 @@ export function summaryOf({
 }
 
 /**
- * What the collector validator said about a text (D13b decisions 2, 4, 12
- * and 14), as the status bar, Apply's gate and the overlay's chip read it
- * (`selectCollectorValidation`):
+ * What the collector validator said about a text, as the status bar, Apply's
+ * gate and the overlay's chip read it (`selectCollectorValidation`):
  * - `idle`: nothing to check (no version, empty text, or text that doesn't
  *   parse), and nothing shown;
  * - `validating`: a check is due or under way for the text on screen;
@@ -203,10 +201,10 @@ export function summaryOf({
  * - `unavailable`: it wasn't checked; `message` says why (the API's words,
  *   or the editor's own when the API couldn't be reached). `retryAt`, when
  *   set, is when a rate-limited text is asked about again (epoch ms): the
- *   anonymous validate's 429, which the status bar shows as a countdown
- *   (D31-1 decision 3); the signed-in editor never sets it.
+ *   anonymous validate's 429, which the status bar shows as a countdown;
+ *   the signed-in editor never sets it.
  * The messages and paths echo the configuration: text only, never an
- * attribute (ADR 0024).
+ * attribute.
  */
 export type CollectorValidationOutcome =
   | { status: "idle" }
@@ -240,13 +238,13 @@ export type EditorState = {
   version: ConfigurationVersion | null;
   /**
    * Every version of the configuration, highest number first, as the picker
-   * lists them (D10 decisions 4 and 10); empty until one is loaded.
+   * lists them; empty until one is loaded.
    */
   versions: ConfigurationVersionSummary[];
   /**
    * The organization the configuration was loaded in. Saves name it, never
-   * the session's current active organization, which another tab can switch
-   * (Preflight ruling 4); the API then refuses the save and the text stays.
+   * the session's current active organization, which another tab can switch;
+   * the API then refuses the save and the text stays.
    */
   organizationId: string | null;
   /**
@@ -256,23 +254,23 @@ export type EditorState = {
    * in the same organization, but not the same load.
    */
   loadCount: number;
-  /** The YAML as it is in the editor now: the content (D9a decision 2). */
+  /** The YAML as it is in the editor now: the content. */
   text: string;
   /**
    * The YAML as last loaded or saved, or as a re-read found it
-   * (`replaceVersion`). On a published version it is what was published:
-   * this tab's own publish published its save (Ruling 30), and a re-read
-   * after a teammate's publish takes the version's content (Ruling 35).
+   * (`replaceVersion`). On a published version it is what was published: this
+   * tab's own publish published its save, and a re-read after a teammate's
+   * publish takes the version's content.
    */
   savedText: string;
   /**
-   * The open version's collector version as it is on screen (D13a decision
-   * 8): the toolbar's pick, which Save stores with the text; null until a
-   * version is loaded. A pick differing from `savedCollectorVersion` is an
-   * unsaved change (`selectIsDirty`), and is what "this tab picked one"
-   * means (Ruling 37): only then does a save or a create send it. Otherwise
-   * the picker is untouched, and it follows the server's pin: a save's
-   * answer's (`markSaved`) and a re-read's (`replaceVersion`).
+   * The open version's collector version as it is on screen: the toolbar's
+   * pick, which Save stores with the text; null until a version is loaded. A
+   * pick differing from `savedCollectorVersion` is an unsaved change
+   * (`selectIsDirty`), and is what "this tab picked one" means: only then does
+   * a save or a create send it. Otherwise the picker is untouched, and it
+   * follows the server's pin: a save's answer's (`markSaved`) and a re-read's
+   * (`replaceVersion`).
    */
   collectorVersion: string | null;
   /**
@@ -284,21 +282,20 @@ export type EditorState = {
    * How many picks this load has seen (`setCollectorVersion`). A save
    * notes it when it sends, so its answer can tell a pick made meanwhile,
    * even one that picked the old saved pin back, from an untouched picker
-   * (`markSaved`; Ruling 37). A load starts it again at 0.
+   * (`markSaved`). A load starts it again at 0.
    */
   collectorVersionPicks: number;
   isSaving: boolean;
   /**
    * Whether the picker's create is under way (`useCreateVersion`): a save
-   * meanwhile does nothing, as a create does while a save is under way (D10
-   * decision 10, Ruling 30). A load clears it, as it clears `isSaving`.
+   * meanwhile does nothing, as a create does while a save is under way.
+   * A load clears it, as it clears `isSaving`.
    */
   isCreatingVersion: boolean;
   /**
-   * Whether a publish is under way (`usePublishVersion`; D11b decision 5): a
-   * save or a create meanwhile does nothing, as one does while the other is
-   * under way, except the save the publish itself makes first. A load
-   * clears it.
+   * Whether a publish is under way (`usePublishVersion`): a save or a
+   * create meanwhile does nothing, as one does while the other is under
+   * way, except the save the publish itself makes first. A load clears it.
    */
   isPublishing: boolean;
   /** The panel's tab, by id; null for the layout's first. */
@@ -306,7 +303,7 @@ export type EditorState = {
   panelCollapsed: boolean;
   panelWidth: number;
 
-  // ── The builder (D9a) ──
+  // ── The builder ──
   /** The canvas's nodes, edges and pipelines: a view of the text, with the layout. */
   graph: Graph;
   /**
@@ -339,18 +336,18 @@ export type EditorState = {
   /** What the delete dialog is asking about; null while it's closed. */
   pendingDelete: DeleteTarget | null;
   /**
-   * The collector validator's last answer kept (D13b decision 13), for the
-   * text, pin and version it was asked about; null before any. Written by
-   * `useCollectorValidation` alone; read through `selectCollectorValidation`,
-   * which shows it only while exactly that text and pin are on screen.
+   * The collector validator's last answer kept, for the text, pin and version
+   * it was asked about; null before any. Written by `useCollectorValidation`
+   * alone; read through `selectCollectorValidation`, which shows it only
+   * while exactly that text and pin are on screen.
    */
   validation: CollectorValidation | null;
 
   /**
    * Opens a version: the text and layout are its own, and everything about
    * the one open before goes (the undo history, manual edit mode, the
-   * selection; D10 decision 13); the panel stays. `versions` is the list to
-   * show, the version's own summary alone when not given.
+   * selection); the panel stays. `versions` is the list to show, the
+   * version's own summary alone when not given.
    */
   load: (loaded: {
     organizationId: string;
@@ -359,16 +356,15 @@ export type EditorState = {
     versions?: ConfigurationVersionSummary[];
   }) => void;
   /**
-   * Opens a version the page itself just created from the open one (D10
-   * decision 11), as a load in the same configuration and organization: its
-   * saved text and layout are what was sent, so it is clean; the undo
-   * history is cleared and the canvas mounts afresh. Its summary goes first
-   * in `versions`. A save still under way is forgotten: its answer is for
-   * the source (Preflight ruling 14). Does nothing with no configuration
-   * open.
+   * Opens a version the page itself just created from the open one, as a
+   * load in the same configuration and organization: its saved text and
+   * layout are what was sent, so it is clean; the undo history is cleared
+   * and the canvas mounts afresh. Its summary goes first in `versions`. A
+   * save still under way is forgotten: its answer is for the source. Does
+   * nothing with no configuration open.
    */
   adoptCreatedVersion: (version: ConfigurationVersion) => void;
-  /** A rename's label (D10 decision 12): in the version's summary, and in the open version when it is that one. */
+  /** A rename's label: in the version's summary, and in the open version when it is that one. */
   setVersionLabel: (versionId: string, label: string | null) => void;
   /**
    * Typing in the YAML tab (Monaco's own changes, never a value the store
@@ -376,74 +372,73 @@ export type EditorState = {
    */
   setText: (text: string) => void;
   /**
-   * The toolbar's collector version pick (D13a decision 8): on screen, an
-   * unsaved change until Save stores it. Refused (nothing changes) on a
-   * published version, which is read-only (D11b decision 4), and with no
-   * version open. It isn't an undo entry, and changes neither the text nor
-   * the canvas. Each pick counts (`collectorVersionPicks`).
+   * The toolbar's collector version pick: on screen, an unsaved change
+   * until Save stores it. Refused (nothing changes) on a published
+   * version, which is read-only, and with no version open. It isn't an
+   * undo entry, and changes neither the text nor the canvas. Each pick
+   * counts (`collectorVersionPicks`).
    */
   setCollectorVersion: (collectorVersion: string) => void;
   /**
    * Records a save. `text` is the text that was sent, not the editor's text
-   * now: typing during the save leaves the editor dirty (D8 decision 5).
-   * `graph` is the graph that was sent (the editor's now when not given).
-   * The open version's summary takes the save's time (the picker's "last
-   * saved"; D10 decision 10). The open version keeps the label it shows: a
-   * rename answered before the save's answer must not be undone by it.
-   * The saved collector version is the answer's: the pin that was sent, or,
-   * when none was (an untouched picker), the one the server kept, which may
-   * be a teammate's (Ruling 37). An untouched picker then shows it; a pick
-   * made during the save (`collectorVersionPicks` moved past `picks`, the
-   * count when the save was sent; by default no pick) stays on screen,
-   * unsaved, as typing does, even one that picked the old saved pin back.
+   * now: typing during the save leaves the editor dirty. `graph` is the
+   * graph that was sent (the editor's now when not given). The open
+   * version's summary takes the save's time (the picker's "last saved").
+   * The open version keeps the label it shows: a rename answered before the
+   * save's answer must not be undone by it. The saved collector version is
+   * the answer's: the pin that was sent, or, when none was (an untouched
+   * picker), the one the server kept, which may be a teammate's. An
+   * untouched picker then shows it; a pick made during the save
+   * (`collectorVersionPicks` moved past `picks`, the count when the save
+   * was sent; by default no pick) stays on screen, unsaved, as typing does,
+   * even one that picked the old saved pin back.
    */
   markSaved: (text: string, version: ConfigurationVersion, graph?: Graph, picks?: number) => void;
   setSaving: (isSaving: boolean) => void;
   setCreatingVersion: (isCreatingVersion: boolean) => void;
   setPublishing: (isPublishing: boolean) => void;
   /**
-   * A version's summary as the API answered it since (a publish's 200; D11b
-   * Preflight rulings 11 and 12): in `versions`, and in the open version
-   * when it is that one, whose text, graph, history and canvas stay as they
-   * are (no reload). The saved text stays the baseline: this tab's publish
-   * published exactly its save (Ruling 30). A version it makes published
-   * locks the editor (`selectIsVersionPublished`). If the editor is clean
-   * and in manual edit mode then (a save in the mode, then the publish), the
-   * mode ends with the saved text on the canvas, as opening the version
-   * would show it; text typed since is kept, as it is.
+   * A version's summary as the API answered it since (a publish's 200): in
+   * `versions`, and in the open version when it is that one, whose text,
+   * graph, history and canvas stay as they are (no reload). The saved text
+   * stays the baseline: this tab's publish published exactly its save. A
+   * version it makes published locks the editor
+   * (`selectIsVersionPublished`). If the editor is clean and in manual edit
+   * mode then (a save in the mode, then the publish), the mode ends with the
+   * saved text on the canvas, as opening the version would show it; text
+   * typed since is kept, as it is.
    */
   replaceVersionSummary: (summary: ConfigurationVersionSummary) => void;
   /**
    * A version as a re-read answered it whole (`rereadVersion`, after a 409
-   * `configuration_version_published`: a teammate published it; Ruling 35).
-   * Its summary goes in `versions`. When it is the open version, it becomes
-   * the open version and its content the saved baseline (`savedText`, the
-   * saved graph and layout, and its collector version), read as opening it
-   * reads them, since what this
-   * tab last loaded or saved may not be what was published. The text and
-   * layout are decided apart from the pin (D13a Ruling 41). Clean text and
+   * `configuration_version_published`: a teammate published it). Its summary
+   * goes in `versions`. When it is the open version, it becomes the open
+   * version and its content the saved baseline (`savedText`, the saved graph
+   * and layout, and its collector version), read as opening it reads them,
+   * since what this tab last loaded or saved may not be what was published.
+   * The text and layout are decided apart from the pin. Clean text and
    * layout then show that content, as a clean load would (out of manual edit
    * mode, nothing selected), whatever the pin; unsaved text or layout (a
-   * stale tab, Preflight ruling 12) stays on screen, dirty against it, for
-   * the banner's create to carry, and Undo All and Discard put back the
-   * published content. The collector version follows whoever last picked it
-   * (D13a Rulings 35 and 37): a pick this tab made stays on screen, with the
-   * unsaved text or with the version's, while an untouched picker takes the
-   * version's pin, even with unsaved text (a teammate's pick, which the
-   * banner's create then carries). So a tab that only picked shows a
-   * teammate's published text with its pick, which the banner's create
-   * carries together. Either way the undo history stays, inert while the
-   * version is published, and the canvas isn't mounted afresh (no reload).
+   * stale tab) stays on screen, dirty against it, for the banner's create to
+   * carry, and Undo All and Discard put back the published content. The
+   * collector version follows whoever last picked it: a pick this tab made
+   * stays on screen, with the unsaved text or with the version's, while an
+   * untouched picker takes the version's pin, even with unsaved text (a
+   * teammate's pick, which the banner's create then carries). So a tab that
+   * only picked shows a teammate's published text with its pick, which the
+   * banner's create carries together. Either way the undo history stays,
+   * inert while the version is published, and the canvas isn't mounted
+   * afresh (no reload).
    */
   replaceVersion: (version: ConfigurationVersion) => void;
   renameConfiguration: (name: string) => void;
   /**
    * Shows another tab of the panel. Every held edit is written first
-   * (`flushHeldEdits`; Rulings 86 and 89), whoever switches (the tab list,
-   * the rail, a selection, the tour): the Configuration tab stays mounted
-   * while hidden, so its fields no longer write by going, and the YAML tab
-   * never shows text missing an edit a field holds. Naming the tab already
-   * named does nothing. A flush that throws holds the switch.
+   * (`flushHeldEdits`), whoever switches (the tab list, the rail, a
+   * selection, the tour): the Configuration tab stays mounted while
+   * hidden, so its fields no longer write by going, and the YAML tab never
+   * shows text missing an edit a field holds. Naming the tab already named
+   * does nothing. A flush that throws holds the switch.
    */
   setActiveTab: (activeTab: string | null) => void;
   setPanelCollapsed: (collapsed: boolean) => void;
@@ -457,9 +452,9 @@ export type EditorState = {
   apply: () => ApplyResult;
   /**
    * Manual edit mode's Undo All: the text from before the typing, and out of
-   * the mode. A published version takes it too (Ruling 31), so a stale tab
+   * the mode. A published version takes it too, so a stale tab
    * locked in the mode can leave it: there it puts back the published text
-   * and graph, clean (Ruling 34). It changes only what is on screen.
+   * and graph, clean. It changes only what is on screen.
    */
   undoAll: () => void;
   /** Undoes the last change, text and graph together. False when there was nothing to undo, or in manual edit mode. */
@@ -507,28 +502,28 @@ export type EditorState = {
   /** The Configuration tab's YAML box: the component's value becomes the box's. */
   setComponentValue: (nodeId: string, boxText: string) => ComponentValueResult;
   /**
-   * A component's form: `changes` written by key path under the
-   * component's value, in place (D9b decision 2). One entry per run of
-   * changes to the node within 800 ms, shared with the YAML box.
+   * A component's form: `changes` written by key path under the component's
+   * value, in place. One entry per run of changes to the node within 800 ms,
+   * shared with the YAML box.
    *
    * A routing or failover connector's target choices are wired into the
-   * pipelines' receivers in the same write (D9d decision 8;
-   * `wireConnectorReceivers`), with a toast; a wiring the text edits can't
-   * write refuses the whole change. The YAML box doesn't wire.
+   * pipelines' receivers in the same write (`wireConnectorReceivers`), with
+   * a toast; a wiring the text edits can't write refuses the whole change.
+   * The YAML box doesn't wire.
    */
   setComponentValues: (nodeId: string, changes: readonly ValueChange[]) => ValuesResult;
   /**
    * The Self-monitoring dialog's Apply: `changes` written by key path under
-   * `service.telemetry` (D9b decision 7), one entry. False when nothing was
-   * written: no changes, a text that would read the same, a locked canvas,
-   * or a change the text edits can't write (which toasts).
+   * `service.telemetry`, one entry. False when nothing was written: no
+   * changes, a text that would read the same, a locked canvas, or a change
+   * the text edits can't write (which toasts).
    */
   setTelemetryValues: (changes: readonly ValueChange[], description?: string) => boolean;
   /** Remove Section: `service.telemetry`'s lines removed, one entry. False when there is none, or locked. */
   removeTelemetry: () => boolean;
   /** Lays the canvas out again; the text isn't touched. */
   tidyUp: () => boolean;
-  /** Removes every component and pipeline, leaving the three empty defaults (D9a decision 15). */
+  /** Removes every component and pipeline, leaving the three empty defaults. */
   clearCanvas: () => boolean;
   /** The validator's answer for a text (`useCollectorValidation`'s); nothing else changes. */
   setValidation: (validation: CollectorValidation) => void;
@@ -633,7 +628,7 @@ function savedFrom({
 
 /**
  * Whether the text or the layout on screen differs from a baseline's
- * (`selectIsDirty` without the pin; Ruling 41).
+ * (`selectIsDirty` without the pin).
  */
 function textOrLayoutDiffers(
   { text, graph }: Pick<EditorState, "text" | "graph">,
@@ -642,17 +637,17 @@ function textOrLayoutDiffers(
   return text !== savedText || layoutSignature(graph) !== savedLayout;
 }
 
-/** A version's collector version, on screen and as its saved baseline (D13a decision 8). */
+/** A version's collector version, on screen and as its saved baseline. */
 function pinnedFrom(version: ConfigurationVersion): Pick<EditorState, "collectorVersion" | "savedCollectorVersion"> {
   return { collectorVersion: version.collectorVersion, savedCollectorVersion: version.collectorVersion };
 }
 
 /**
- * A published version out of manual edit mode: the saved text on the
- * canvas, arranged by the saved layout, as opening the version would show it
+ * A published version out of manual edit mode: the saved text on the canvas,
+ * arranged by the saved layout, as opening the version would show it
  * (`discardChanges`' reading), so the editor is clean. The saved text is
- * what was published (`savedText`; Rulings 30 and 35). The undo history
- * stays, inert while the version is read-only.
+ * what was published (`savedText`). The undo history stays, inert while the
+ * version is read-only.
  */
 function backToPublished(state: EditorState): Partial<EditorState> {
   const parsed = parse(state.savedText);
@@ -697,20 +692,19 @@ interface Change {
 }
 
 /**
- * The editor's shared memory (D8 decision 8): the YAML tab, the toolbar, the
- * page and the canvas read and write it, and no editor state is threaded
- * through props between them.
+ * The editor's shared memory: the YAML tab, the toolbar, the page and the
+ * canvas read and write it, and no editor state is threaded through props
+ * between them.
  *
- * The builder's half (D9a decisions 2, 4, 5, 8, 11, 15): every change to the
- * graph runs in one place (`commit`): it takes an undo entry holding the
- * text and the graph from before (one per run of changes to one node within
- * 800 ms), applies the change to the graph, and writes it into the text as a
- * targeted edit, from the text's own model (Preflight ruling 5). A change
- * the edits can't write is refused whole: the graph and the text stay as
- * they were, no entry is kept, and a toast says to edit the YAML. Layout
- * changes (moves, resizes, colours, Tidy up) don't touch the text. Nothing
- * else writes the text but typing, Apply, Undo All, undo and redo; opening a
- * version never does.
+ * The builder's half: every change to the graph runs in one place
+ * (`commit`): it takes an undo entry holding the text and the graph from
+ * before (one per run of changes to one node within 800 ms), applies the
+ * change to the graph, and writes it into the text as a targeted edit, from
+ * the text's own model. A change the edits can't write is refused whole: the
+ * graph and the text stay as they were, no entry is kept, and a toast says
+ * to edit the YAML. Layout changes (moves, resizes, colours, Tidy up) don't
+ * touch the text. Nothing else writes the text but typing, Apply, Undo All,
+ * undo and redo; opening a version never does.
  *
  * Deliberately not persisted, like the UI state store. It is written only
  * from effects and event handlers, so a server render never writes it.
@@ -722,8 +716,8 @@ interface Change {
 export const useEditorStore = create<EditorState>()((set, get) => {
   /**
    * Every change is refused: manual edit mode, text the canvas can't show, or
-   * a published version, which is read-only (D11b decision 4; Preflight
-   * ruling 11): its selection, focus, pan and zoom still work.
+   * a published version, which is read-only: its selection, focus, pan and
+   * zoom still work.
    */
   const locked = (state: EditorState) =>
     state.isYamlEditing || state.document === null || selectIsVersionPublished(state);
@@ -816,9 +810,8 @@ export const useEditorStore = create<EditorState>()((set, get) => {
   /**
    * `changes` written under `base` in the text, for a form or the dialog:
    * the edited text, or "unchanged" when there are none or the text would
-   * read the same (Preflight ruling 12), or "refused" when the text edits
-   * can't write them (the toast; D9a decision 4). The caller has checked
-   * that the canvas isn't locked.
+   * read the same, or "refused" when the text edits can't write them (the
+   * toast). The caller has checked that the canvas isn't locked.
    */
   const writeUnder = (
     state: EditorState,
@@ -850,7 +843,7 @@ export const useEditorStore = create<EditorState>()((set, get) => {
   /**
    * Deleting nodes: a group takes its pipeline and its components with it;
    * a processor in a pipeline's chain closes it, its neighbours joined in
-   * the same change (D9d Ruling 36).
+   * the same change.
    */
   const withoutNodes = (graph: Graph, nodeIds: ReadonlySet<string>): Graph => {
     let { nodes, pipelines } = graph;
@@ -936,10 +929,10 @@ export const useEditorStore = create<EditorState>()((set, get) => {
       set(({ versions, version: open, collectorVersion, collectorVersionPicks }) => ({
         savedText: text,
         savedCollectorVersion: version.collectorVersion,
-        // Untouched during the save: the server's pin (Ruling 37); a pick made meanwhile stays.
+        // Untouched during the save: the server's pin; a pick made meanwhile stays.
         collectorVersion: collectorVersionPicks === (picks ?? collectorVersionPicks) ? version.collectorVersion : collectorVersion,
         // The label shown now: a rename answered before this save's answer
-        // is newer than the label the save read (D10 Ruling 25).
+        // is newer than the label the save read.
         version: open?.id === version.id ? { ...version, label: open.label } : version,
         versions: versions.map((summary) =>
           summary.id === version.id ? { ...summary, updatedAt: version.updatedAt } : summary,
@@ -972,11 +965,11 @@ export const useEditorStore = create<EditorState>()((set, get) => {
       const opened = openedFrom(version);
       const saved = { ...savedFrom(opened), savedCollectorVersion: version.collectorVersion };
       // A pick (the pin on screen isn't the saved one) stays on screen, for
-      // the banner's create to carry (Ruling 30); an untouched picker takes
-      // the version's pin, whoever picked it (Rulings 35 and 37).
+      // the banner's create to carry; an untouched picker takes
+      // the version's pin, whoever picked it.
       const picked = state.collectorVersion !== state.savedCollectorVersion;
       const collectorVersion = picked ? state.collectorVersion : version.collectorVersion;
-      // The text and layout apart from the pin (Ruling 41): clean before, or
+      // The text and layout apart from the pin: clean before, or
       // what is on screen is the version's content anyway, the screen shows
       // the version's, as a clean load would, a pick or not.
       const showsIt = !textOrLayoutDiffers(state, state) || !textOrLayoutDiffers(state, saved);
@@ -1044,7 +1037,7 @@ export const useEditorStore = create<EditorState>()((set, get) => {
       if (!parsed.ok) return { ok: false, reason: parsed.reason };
       const graph = matchLayout(parsed.graph, state.graph);
       // The entry holds the text from before the typing with the graph from
-      // before Apply, so undoing Apply restores both (decision 11), never the
+      // before Apply, so undoing Apply restores both, never the
       // old graph with the new text.
       const entry: HistoryEntry = { text: state.preEditText ?? state.text, graph: state.graph, description: "Edit YAML" };
       set({
@@ -1065,12 +1058,12 @@ export const useEditorStore = create<EditorState>()((set, get) => {
       const state = get();
       if (!state.isYamlEditing) return;
       if (selectIsVersionPublished(state)) {
-        // Allowed on a published version too (Ruling 31), so a stale tab
-        // locked in manual edit mode (Preflight ruling 12) can leave it and
-        // inspect the canvas. It puts back what was published, text and
-        // graph, not the text from before the typing, which may hold canvas
-        // changes never saved: those could never be saved now, and would
-        // leave the editor dirty for good (Ruling 34). Nothing stored changes.
+        // Allowed on a published version too, so a stale tab locked in
+        // manual edit mode can leave it and inspect the canvas. It puts
+        // back what was published, text and graph, not the text from before
+        // the typing, which may hold canvas changes never saved: those
+        // could never be saved now, and would leave the editor dirty for
+        // good. Nothing stored changes.
         set(backToPublished(state));
       } else {
         // The document is still the one from before the typing.
@@ -1174,7 +1167,7 @@ export const useEditorStore = create<EditorState>()((set, get) => {
       const description = moved.length === 1 ? `Move ${labelOf(moved[0]!)}` : `Move ${plural(moved.length, "node")}`;
       const key = `layout:${[...nodeIds].sort().join(",")}`;
       if (commit(description, key, { graph })) return true;
-      // Refused: the whole drag is undone, and its entry dropped (decision 4).
+      // Refused: the whole drag is undone, and its entry dropped.
       const after = get();
       const run = after.historyRun;
       const entry = after.history.past.at(-1);
@@ -1214,7 +1207,7 @@ export const useEditorStore = create<EditorState>()((set, get) => {
       const entry = componentPalette.find((candidate) => candidate.id === paletteId);
       const { graph, configuration, collectorVersion } = get();
       if (!entry) return null;
-      // The spelling the pin on screen knows (D13b decision 5); a later pin change rewrites nothing.
+      // The spelling the pin on screen knows; a later pin change rewrites nothing.
       const spelledAs = spelledType(entry.type, entry.subType, configuration?.collectorDistribution ?? null, collectorVersion);
       const node = droppedNode(entry, position, graph.nodes, spelledAs);
       const done = commit(`Add ${node.data.label}`, undefined, {
@@ -1251,7 +1244,7 @@ export const useEditorStore = create<EditorState>()((set, get) => {
         : { ok: false };
     },
 
-    // ── Deleting: one path, through the dialog (decision 8) ──
+    // ── Deleting: one path, through the dialog ──
 
     requestDelete: (target) => {
       const state = get();
@@ -1475,9 +1468,9 @@ export const useEditorStore = create<EditorState>()((set, get) => {
       if (isConfigTargetedConnectorNode(node)) {
         // Routing and failover pick their targets in config: keep them to the connector's right.
         nodes = pushConfigTargetsRight(nodes, state.graph.pipelines);
-        // The pipelines a choice names or no longer names: the connector in their
-        // receivers, in the same write (decision 8). `deriveModel` keeps the
-        // text's membership, so the next canvas change keeps this one.
+        // The pipelines a choice names or no longer names: the connector in
+        // their receivers, in the same write. `deriveModel` keeps the text's
+        // membership, so the next canvas change keeps this one.
         const subType = node.data.componentSubType;
         const connector = base[1];
         const wiring = wireConnectorReceivers(
@@ -1501,7 +1494,7 @@ export const useEditorStore = create<EditorState>()((set, get) => {
         graph: { ...state.graph, nodes },
         written,
       });
-      // The messages name pipelines (configuration text): never recorded by replay (Ruling 301).
+      // The messages name pipelines (configuration text): never recorded by replay.
       if (done && wired.length > 0) toast.info(wired.join(" "), { className: "ph-no-capture" });
       return done ? "written" : "refused";
     },
@@ -1561,9 +1554,9 @@ export const useEditorStore = create<EditorState>()((set, get) => {
 });
 
 /**
- * Whether the editor differs from what was last loaded or saved: the text
- * (D8 decision 5), the layout (D9a decision 2), or the collector version
- * (D13a decision 8). Selection, measurement and the viewport never count.
+ * Whether the editor differs from what was last loaded or saved: the text,
+ * the layout, or the collector version. Selection, measurement and the
+ * viewport never count.
  */
 export function selectIsDirty(
   state: Pick<EditorState, "text" | "savedText" | "graph" | "savedLayout" | "collectorVersion" | "savedCollectorVersion">,
@@ -1571,20 +1564,18 @@ export function selectIsDirty(
   return state.collectorVersion !== state.savedCollectorVersion || textOrLayoutDiffers(state, state);
 }
 
-/** Whether `text` is empty or only YAML's whitespace (spaces, tabs, line breaks): never checked (Ruling 57). */
+/** Whether `text` is empty or only YAML's whitespace (spaces, tabs, line breaks): never checked. */
 export function isBlank(text: string): boolean {
   return /^[ \t\r\n]*$/.test(text);
 }
 
 /**
- * The validator's outcome for the text and pin on screen (D13b decisions 2,
- * 13 and 14): idle with no version open or with empty or whitespace-only
- * text (never checked);
- * the kept answer when it is for exactly this version, text and pin; else
- * validating, a check being due (the 2 s after typing) or under way. So an
- * answer for another text or pin is never shown, and a text typed back to
- * the checked one (an undo inside the debounce) shows its answer again, never
- * a stuck "validating".
+ * The validator's outcome for the text and pin on screen: idle with no version
+ * open or with empty or whitespace-only text (never checked); the kept answer
+ * when it is for exactly this version, text and pin; else validating, a check
+ * being due (the 2 s after typing) or under way. So an answer for another text
+ * or pin is never shown, and a text typed back to the checked one (an undo
+ * inside the debounce) shows its answer again, never a stuck "validating".
  */
 export function selectCollectorValidation(
   state: Pick<EditorState, "version" | "text" | "collectorVersion" | "validation">,
@@ -1610,7 +1601,7 @@ export function selectCanRedo(state: Pick<EditorState, "history" | "isYamlEditin
   return !state.isYamlEditing && !selectIsVersionPublished(state) && state.history.future.length > 0;
 }
 
-/** What the next undo undoes, for the toolbar (its toast; never its title, decision 7). */
+/** What the next undo undoes, for the toolbar (its toast; never its title). */
 export function selectUndoDescription(state: Pick<EditorState, "history">): string | null {
   return state.history.past.at(-1)?.description ?? null;
 }
@@ -1631,12 +1622,12 @@ export function selectIsCanvasLocked(state: Pick<EditorState, "isYamlEditing" | 
 }
 
 /**
- * Whether the open version is published, and so read-only for everyone (D11b
- * decision 4; Preflight ruling 11): the one selector the read-only mode
- * follows. Monaco takes no typing; the canvas can be selected, focused,
- * panned and zoomed, never changed; the toolbox, the canvas actions and the
- * Configuration tab's forms are disabled (the tab itself opens); undo, redo,
- * Save and Publish are off; the store refuses every change.
+ * Whether the open version is published, and so read-only for everyone: the
+ * one selector the read-only mode follows. Monaco takes no typing; the
+ * canvas can be selected, focused, panned and zoomed, never changed; the
+ * toolbox, the canvas actions and the Configuration tab's forms are disabled
+ * (the tab itself opens); undo, redo, Save and Publish are off; the store
+ * refuses every change.
  */
 export function selectIsVersionPublished(state: Pick<EditorState, "version">): boolean {
   return state.version !== null && state.version.publishedAt !== null;

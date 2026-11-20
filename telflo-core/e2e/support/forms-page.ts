@@ -5,16 +5,16 @@ import { seedConfiguration, seedUser } from "./database.js";
 import { editorText, linesOf, open, tab, undoButton, unsavedBadge, waitForCanvas } from "./editor-page.js";
 import { signInThroughApi } from "./session.js";
 
-// The component forms' browser tests (D9d, after D9c's
-// forms-kubernetes-logs.e2e.ts): a seeded configuration opened in the
-// editor, a component's form shown with a section open, the text read and
-// waited for, a toast, and Undo.
+// The component forms' browser tests (forms-kubernetes-logs.e2e.ts,
+// forms-metrics-traces.e2e.ts, forms-routing-vendors.e2e.ts): a seeded
+// configuration opened in the editor, a component's form shown with a section
+// open, the text read and waited for, a toast, and Undo.
 //
 // The text is read by the YAML tab's Download and always polled (a form's
 // typing is written 300 ms after the last keystroke or on blur, and Monaco's
-// model can trail it; D9a Ruling 42). Reading it opens the YAML tab, which
-// hides the form; the Configuration tab keeps it, its open sections and its
-// cards' expansion (D9c Ruling 86), so each step shows the component again.
+// model can trail it). Reading it opens the YAML tab, which hides the form;
+// the Configuration tab keeps it, its open sections and its cards'
+// expansion, so each step shows the component again.
 
 const PASSWORD = "correct horse battery staple";
 
@@ -51,7 +51,7 @@ export function sectionHeader(page: Page, title: string): Locator {
  * Selects a component and shows its form in the Configuration tab (clicking
  * the node already selected doesn't switch tabs, so the tab is clicked too),
  * then opens the form's `section` if it isn't open: sections stay open
- * across a look at the YAML tab (D9c Ruling 86).
+ * across a look at the YAML tab.
  */
 export async function showComponent(page: Page, type: NodeType, label: string, section?: string): Promise<void> {
   await componentNode(page, type, label).click();
@@ -117,7 +117,7 @@ export function rightPanel(page: Page): Locator {
   return page.locator('[data-tour-step="editor-right-panel"]');
 }
 
-/** A cascade's toast (D9d decision 7), once; no inline alert in the panel holds the message. */
+/** A cascade's toast, once; no inline alert in the panel holds the message. */
 export async function expectAdjusted(page: Page, message: string): Promise<void> {
   await expect(toastWith(page, message)).toHaveCount(1);
   await expect(rightPanel(page).getByText(message, { exact: true })).toHaveCount(0);

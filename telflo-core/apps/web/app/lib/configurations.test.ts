@@ -27,16 +27,16 @@ vi.mock("react-router", async (importOriginal) => ({
 
 const FALLBACK = "Failed to create configuration";
 
-describe("configurationRefusalMessage (D7 Preflight ruling 2)", () => {
+describe("configurationRefusalMessage", () => {
   it.each([
     ["configuration_not_found", "Configuration not found"],
     ["organization_not_found", "Organization not found"],
     ["terms_acceptance_required", "Accept the current Terms of Service to continue."],
-    // D11b's, which join through CONFIGURATION_ERROR_CODES (Preflight ruling 4).
+    // The configuration's own codes, which join through CONFIGURATION_ERROR_CODES.
     ["configuration_delete_forbidden", "Only the configuration's author or an organization admin can delete it."],
     ["configuration_version_published", "This version is published and can't be changed."],
     ["publishing_unavailable", "Publishing is unavailable right now. Try again."],
-    // D16b's, a delete's (Preflight ruling 6): the in-use 409 through CONFIGURATION_ERROR_CODES, the two others by name.
+    // A delete's: the in-use 409 through CONFIGURATION_ERROR_CODES, the two others by name.
     [
       "configuration_in_use",
       "A collector group or a collector uses a published version of this configuration. Remove it from them first.",
@@ -80,7 +80,7 @@ describe("the refusals the page acts on", () => {
   });
 });
 
-describe("canDeleteConfiguration (D11b decision 2)", () => {
+describe("canDeleteConfiguration", () => {
   it("lets the author delete, a contributor, their draft or their published configuration", () => {
     expect(canDeleteConfiguration(MINE, MEMBER_ID, "contributor")).toBe(true);
     expect(canDeleteConfiguration({ ...MINE, published: true }, MEMBER_ID, "contributor")).toBe(true);

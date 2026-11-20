@@ -1,5 +1,5 @@
 import { expect, type BrowserContext, type Locator, type Page } from "@playwright/test";
-// The SaaS pair (D36-1 Preflight ruling 16): open registration, the Terms, the playground and the anonymous reads.
+// The SaaS pair: open registration, the Terms, the playground and the anonymous reads.
 import { test } from "./support/saas.js";
 import { THEME_COOKIE_NAME } from "@telflo/contracts";
 import { test as analyticsTest } from "./support/analytics.js";
@@ -9,16 +9,13 @@ import { maskedPlacesOf, unmaskedFieldsOf, within } from "./support/privacy.js";
 import { decodedPath, isWithinPlaygroundInvariant, recordPlaygroundRequests, type RecordedPlaygroundRequest } from "./support/playground.js";
 import { signInThroughApi, waitForHydration } from "./support/session.js";
 
-// The playground with NO account (D31-1 decisions 9, 13, 14, 22, 26, 32 and
-// 44; Preflight rulings 12, 13 and 17): the shell, the configurations page
-// on the sample, a locked action's sign-up prompt, the masking, the theme
-// (Navy), the phone layout, and decision 22's request allowlist over every
-// page. Each test opens a fresh context, signed out (the walk's signed-in
-// visitor aside). Task 7's walk, at the end, covers every page and every
-// locked action.
-// The tour and its welcome dialog (decision 15, Preflight ruling 16): the
-// tests that aren't about it open the playground as a returning visitor,
-// the tour already seen.
+// The playground with NO account: the shell, the configurations page on the
+// sample, a locked action's sign-up prompt, the masking, the theme (Navy),
+// the phone layout, and the playground's request allowlist over every page.
+// Each test opens a fresh context, signed out (the walk's signed-in visitor
+// aside). The walk, at the end, covers every page and every locked action.
+// The tour and its welcome dialog: the tests that aren't about it open the
+// playground as a returning visitor, the tour already seen.
 
 const GATEWAY_ID = "11111111-0000-4000-8000-000000000001";
 const A_FLEET_ID = "0199a000-0000-7000-8000-000000000001";
@@ -82,7 +79,7 @@ function welcomeDialog(page: Page) {
  * No welcome dialog, said only after the list has arrived and the page has
  * had ten samples (about a second) to open it: the offer opens in an effect
  * after the list arrives, so a check made at once could pass before it would
- * show (Ruling 294).
+ * show.
  */
 async function expectNoWelcomeDialog(page: Page): Promise<void> {
   await expect(cards(page)).toHaveCount(10);
@@ -135,7 +132,7 @@ test("the shell and the configurations page on the sample, with no account", asy
   await cards(page).filter({ hasText: "K8s Production Gateway" }).click();
   await page.waitForURL(`**/playground/editor/${GATEWAY_ID}`);
   await expect(page).toHaveTitle("Playground Editor - Telflo");
-  // The sample's check sent before the editor is left, so the set below is exact whatever the timing (Ruling 304).
+  // The sample's check sent before the editor is left, so the set below is exact whatever the timing.
   await expect.poll(() => recorder.apiRequests().includes(VALIDATE)).toBe(true);
   await page.goBack();
   await expect(cards(page).first()).toBeVisible();
@@ -166,7 +163,7 @@ test("a locked action opens the sign-up prompt with its words: the sidebar's Var
   await expect(cards(page)).toHaveCount(10);
 });
 
-test("every page so far stays within decision 22's request allowlist", async ({ page, context }) => {
+test("every page so far stays within the playground's request allowlist", async ({ page, context }) => {
   test.slow();
   const recorder = recordPlaygroundRequests(context);
   for (const path of [
@@ -182,7 +179,7 @@ test("every page so far stays within decision 22's request allowlist", async ({ 
     "/public-editor",
   ]) {
     await openPlayground(page, path);
-    // A sample editor's check sent before it is left (Ruling 304); the blank editors, empty, send none.
+    // A sample editor's check sent before it is left; the blank editors, empty, send none.
     if (path === `/playground/editor/${GATEWAY_ID}`) await expect.poll(() => recorder.apiRequests().includes(VALIDATE)).toBe(true);
   }
   // The typed fleet paths land on the one fleet page.
@@ -209,7 +206,7 @@ test("every page so far stays within decision 22's request allowlist", async ({ 
   expect(new Set(recorder.apiRequests())).toEqual(new Set(["GET /api/v1/published-flows", "GET /api/v1/published-flows/:slug", VALIDATE]));
 });
 
-test("the recorder catches a request outside the allowlist, which is exact (the guard's own check; Ruling 282)", async ({ page, context }) => {
+test("the recorder catches a request outside the allowlist, which is exact (the guard's own check)", async ({ page, context }) => {
   const recorder = recordPlaygroundRequests(context);
   await openPlayground(page);
   // Strings, evaluated in the page: the E2E code is typechecked without DOM types.
@@ -231,17 +228,17 @@ test("the recorder catches a request outside the allowlist, which is exact (the 
   ].map((sending) => sending.catch(() => undefined)))`);
   for (const expected of [
     `GET ${E2E_SAAS_WEB_URL} /api/v1/auth/me`,
-    // Case aside, an /api/ request too (Ruling 284).
+    // Case aside, an /api/ request too.
     `GET ${E2E_SAAS_WEB_URL} /API/v1/auth/me`,
     `GET ${E2E_SAAS_WEB_URL} /api/public/v1/validate/anonymous`,
     `GET ${E2E_SAAS_WEB_URL} /api/v1/published-flows`,
-    // Encoded, an /api/ request still (Ruling 300).
+    // Encoded, an /api/ request still.
     `GET ${E2E_SAAS_WEB_URL} /%61pi/v1/auth/me`,
-    // Another page's data read: the visitor sent off the playground (Ruling 300).
+    // Another page's data read: the visitor sent off the playground.
     `GET ${E2E_SAAS_WEB_URL} /login.data`,
-    // Another page by fetch (Ruling 303).
+    // Another page by fetch.
     `GET ${E2E_SAAS_WEB_URL} /app`,
-    // A signed-in page's path ending in .js: a server render, not a file (Ruling 310).
+    // A signed-in page's path ending in .js: a server render, not a file.
     `GET ${E2E_SAAS_WEB_URL} /editor/abc.js`,
     `POST ${E2E_SAAS_WEB_URL} /playground`,
     `GET ${E2E_POSTHOG_STUB_URL} /`,
@@ -251,7 +248,7 @@ test("the recorder catches a request outside the allowlist, which is exact (the 
   expect(recorder.apiRequests()).toEqual([]);
 });
 
-test("the recorder's rules: decoded paths, the playground's own pages, assets, server renders, leaving (Rulings 300, 303, 310)", async ({
+test("the recorder's rules: decoded paths, the playground's own pages, assets, server renders, leaving", async ({
   context,
 }) => {
   const at = (
@@ -261,7 +258,7 @@ test("the recorder's rules: decoded paths, the playground's own pages, assets, s
     more: Partial<RecordedPlaygroundRequest> = {},
   ): RecordedPlaygroundRequest => ({ method, origin: E2E_SAAS_WEB_URL, path, kind, ...more });
   // `/api/` however it is spelled: encoded once or twice, in another case.
-  // One malformed escape leaves the rest decoded (Ruling 303).
+  // One malformed escape leaves the rest decoded.
   for (const path of ["/%61pi/v1/auth/me", "/%2561pi/v1/auth/me", "/%41PI/v1/auth/me", "/api%2Fv1/auth/me", "/%61pi/v1/auth/me%ZZ"]) {
     expect(isWithinPlaygroundInvariant(at(path, "other"), false), path).toBe(false);
   }
@@ -273,13 +270,13 @@ test("the recorder's rules: decoded paths, the playground's own pages, assets, s
     expect(isWithinPlaygroundInvariant(at(path, path.endsWith(".data") ? "data" : "document"), false), path).toBe(false);
   }
   // The web's own files, by resource type, are the web's own anywhere on its origin; Vite's development paths,
-  // React Router's route discovery and the static schemas too. Any other fetch only of a playground page (Ruling 303).
+  // React Router's route discovery and the static schemas too. Any other fetch only of a playground page.
   expect(isWithinPlaygroundInvariant(at("/assets/app.js", "asset", "GET", { type: "script" }), false)).toBe(true);
   for (const path of ["/@vite/client", "/node_modules/.vite/deps/react.js", "/__manifest", "/schemas/otelcol-contrib/v0.162.0.json"]) {
     expect(isWithinPlaygroundInvariant(at(path, "other", "GET", { type: "fetch" }), false), path).toBe(true);
   }
   // A script or style file by its extension only when loaded as one: a script, a style, or a worker's script
-  // (WebKit reports it as "xhr"; told by the context's workers) (Ruling 310).
+  // (WebKit reports it as "xhr"; told by the context's workers).
   expect(isWithinPlaygroundInvariant(at("/app/lib/editor/yaml.worker.ts", "other", "GET", { type: "xhr", worker: true }), false)).toBe(true);
   expect(isWithinPlaygroundInvariant(at("/assets/editor.worker-abc123.js", "other", "GET", { type: "xhr", worker: true }), false)).toBe(true);
   expect(isWithinPlaygroundInvariant(at("/app/lib/editor/yaml.worker.ts", "other", "GET", { type: "xhr" }), false)).toBe(false);
@@ -308,7 +305,7 @@ test("the recorder's rules: decoded paths, the playground's own pages, assets, s
   expect(decodedPath("/%61pi/v1/auth/me%ZZ")).toBe("/api/v1/auth/me%ZZ");
   expect(decodedPath("/%E2%9C%93%61")).toBe("/✓a");
 
-  // A request recorded before leave() is still listed (Ruling 303); after it, nothing is recorded.
+  // A request recorded before leave() is still listed; after it, nothing is recorded.
   const recorder = recordPlaygroundRequests(context);
   const page = await context.newPage();
   await page.goto("/playground");
@@ -476,9 +473,9 @@ test("the welcome dialog: I'll explore on my own is remembered; none on a phone"
 });
 
 analyticsTest.describe("with analytics on", () => {
-  // Note A (Ruling 301): on a first visit the cookie banner asks first; a
-  // modal Welcome dialog over it would leave neither answerable. A real
-  // mouse click on Allow all answers it, and the Welcome dialog opens then.
+  // On a first visit the cookie banner asks first; a modal Welcome dialog
+  // over it would leave neither answerable. A real mouse click on Allow all
+  // answers it, and the Welcome dialog opens then.
   analyticsTest("a first visit: the banner's Allow all takes a mouse click, then the playground's Welcome dialog opens", async ({ page }) => {
     await page.goto("/playground");
     await waitForHydration(page);
@@ -543,12 +540,11 @@ analyticsTest.describe("with analytics on", () => {
   });
 });
 
-// The walk (D31-1 decisions 22 and 44; Preflight rulings 5 and 17; Task 7;
-// Ruling 299): one walk per area, serial (the anonymous validate's one check
+// The walk: one walk per area, serial (the anonymous validate's one check
 // in flight per address is real in tests), each opening every page of its
 // area and EVERY locked action there, the install entries included — its
 // prompt seen with its own words, then closed — under the request recorder:
-// nothing outside decision 22's invariant, and exactly the area's
+// nothing outside the playground's request invariant, and exactly the area's
 // allowlisted `/api/` requests. A signed-in visitor, entering from /app in
 // the same tab (its user store filled), walks the server fleet too and sees
 // the same. Locked actions the sample can't offer (a visitor's own test
@@ -586,7 +582,7 @@ async function clickVisibleComponent(page: Page): Promise<void> {
   throw new Error("no component on the canvas is clear of the toolbox");
 }
 
-/** Every field holding a value is inside `ph-no-capture` (decision 39, Ruling 301): named by tag and id, never by value. */
+/** Every field holding a value is inside `ph-no-capture`: named by tag and id, never by value. */
 async function expectFieldsMasked(page: Page): Promise<void> {
   expect(await unmaskedFieldsOf(page)).toEqual([]);
 }
@@ -594,11 +590,11 @@ async function expectFieldsMasked(page: Page): Promise<void> {
 /**
  * Types a marker into every text field the page shows (Monaco aside: its
  * text is the YAML tab's, inside `ph-no-capture`), checks every field
- * holding a value is masked, then empties them again (Ruling 303: on every
- * page of the walk).
+ * holding a value is masked, then empties them again (on every page of the
+ * walk).
  */
 async function typeIntoFieldsAndExpectMasked(page: Page): Promise<void> {
-  // Every input type a visitor types into (Ruling 310), each with a value it takes.
+  // Every input type a visitor types into, each with a value it takes.
   const markers: Record<string, string> = {
     text: "zqwalk",
     search: "zqwalk",
@@ -816,7 +812,7 @@ test.describe("the walk: every page and every locked action, within the allowlis
     await expectLockedAt(page, selection.getByRole("button", { name: "Delete selected collectors" }), "delete collectors");
     await page.getByRole("checkbox", { name: "Select loving-tortoise" }).uncheck();
     await page.getByRole("checkbox", { name: "Select brave-falcon" }).uncheck();
-    // The collector search, typed into (never sent: a search goes on Enter), masked (Ruling 303).
+    // The collector search, typed into (never sent: a search goes on Enter), masked.
     await typeIntoFieldsAndExpectMasked(page);
 
     // Groups.
@@ -855,13 +851,13 @@ test.describe("the walk: every page and every locked action, within the allowlis
     await page.goto("/app");
     await waitForHydration(page);
     await expect(page.getByRole("heading", { level: 1, name: "Configurations" })).toBeVisible();
-    // Into the playground in this tab, so its user store holds the account's organization, as a link would (Ruling 299).
+    // Into the playground in this tab, so its user store holds the account's organization, as a link would.
     const recorder = recordPlaygroundRequests(context);
     await walkServerFleet(page, async () => {
       await page.evaluate(`window.__reactRouterDataRouter.navigate("/playground/fleet-management")`);
       await page.waitForURL("**/playground/fleet-management");
     });
-    // The banner still offers sign-up (parity), and nothing of the account's organization was read.
+    // The banner still offers sign-up, and nothing of the account's organization was read.
     await expect(page.getByRole("link", { name: "Create free account" }).first()).toBeVisible();
     expect(recorder.outside()).toEqual([]);
     expect(recorder.apiRequests()).toEqual([]);
@@ -945,9 +941,9 @@ test.describe("the walk: every page and every locked action, within the allowlis
     const signIn = page.getByRole("alertdialog", { name: "Sign in to save" });
     await expect(signIn).toBeVisible();
     await signIn.getByRole("button", { name: "Cancel" }).click();
-    // The Example's check sent before its text changes below (Ruling 304).
+    // The Example's check sent before its text changes below.
     await expect.poll(() => recorder.apiRequests().includes(VALIDATE)).toBe(true);
-    // A component's form: every field it shows, typed into, masked (Ruling 303).
+    // A component's form: every field it shows, typed into, masked.
     await clickVisibleComponent(page);
     await page.getByRole("button", { name: "Advanced: Instance & YAML" }).click();
     await typeIntoFieldsAndExpectMasked(page);

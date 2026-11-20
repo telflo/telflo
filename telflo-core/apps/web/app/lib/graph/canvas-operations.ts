@@ -13,11 +13,10 @@ import { isConfigTargetedConnectorNode } from "./routing-connector.js";
 import type { Graph, OTelNode, OTelNodeData, PaletteComponent } from "./types.js";
 
 /*
- * The canvas's changes to the graph, as pure functions (D9a decision 8;
- * Preflight ruling 17): the canvas's handlers (drop, connect, drag into and
- * out of groups, group resize) and the store's layout rules,
- * so the editor's store runs them in its one place and the tests reach them
- * without React Flow. Nothing here writes the text.
+ * The canvas's changes to the graph, as pure functions: the canvas's handlers
+ * (drop, connect, drag into and out of groups, group resize) and the store's
+ * layout rules, so the editor's store runs them in its one place and the tests
+ * reach them without React Flow. Nothing here writes the text.
  */
 
 export interface Point {
@@ -117,14 +116,14 @@ export function detachOutside(
 
 /**
  * The node a palette entry dropped at `position` (absolute) makes: in the
- * group under it (relative to it), with "Label (n)" naming when
- * its type is already on the canvas (either spelling of it: the palette's
- * subtype is the same), and its own copy of the entry's default config
- * (never the palette's object). `spelledAs` is the type the text
- * writes it with (D13b decision 5: the store's `spelledType` for the pin;
- * the palette's own spelling by default): carried in `data.key` only, the
- * node's `componentSubType` staying the palette's, so its label, icon and
- * form are the entry's. Its `sharedConfigId` is the parser's for that key.
+ * group under it (relative to it), with "Label (n)" naming when its type
+ * is already on the canvas (either spelling of it: the palette's subtype
+ * is the same), and its own copy of the entry's default config (never the
+ * palette's object). `spelledAs` is the type the text writes it with (the
+ * store's `spelledType` for the pin; the palette's own spelling by
+ * default): carried in `data.key` only, the node's `componentSubType`
+ * staying the palette's, so its label, icon and form are the entry's. Its
+ * `sharedConfigId` is the parser's for that key.
  */
 export function droppedNode(
   entry: PaletteComponent,
@@ -148,7 +147,7 @@ export function droppedNode(
   if (entry.connectorSignals) data.connectorSignals = { ...entry.connectorSignals };
   data.key = `${SECTION_OF_TYPE[entry.type]}.${buildYamlName(spelledAs, instanceName)}`;
   // As the parser sets it for the text's key: the stored graph reads the
-  // text's spelling back from it, so a renamed type keeps its place (Ruling 60).
+  // text's spelling back from it, so a renamed type keeps its place.
   data.sharedConfigId = sharedConfigIdOf(data);
   if (group) data.pipeline = group.data.label;
   return {
@@ -260,11 +259,11 @@ export function instanceLabel(label: string, instanceName: string | undefined): 
 const signatures = new WeakMap<Graph, string>();
 
 /**
- * What the layout is, for "dirty" (D9a decision 2): each node's position
- * (and a group's size), each pipeline's colour, rounded to whole pixels, by
- * what the text names (a group by its pipeline's name, a component by its
- * pipeline and key), so moving back is clean again and the ids a parse
- * gives don't count. Not selection, measurement or the viewport.
+ * What the layout is, for "dirty": each node's position (and a group's
+ * size), each pipeline's colour, rounded to whole pixels, by what the text
+ * names (a group by its pipeline's name, a component by its pipeline and
+ * key), so moving back is clean again and the ids a parse gives don't
+ * count. Not selection, measurement or the viewport.
  */
 export function layoutSignature(graph: Graph): string {
   const known = signatures.get(graph);

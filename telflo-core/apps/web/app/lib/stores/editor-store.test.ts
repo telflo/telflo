@@ -36,7 +36,7 @@ describe("useEditorStore", () => {
       panelWidth: 400,
     });
     expect(DEFAULT_PANEL_WIDTH).toBe(400);
-    // The editor's preferences are the person's, in the user store (D21 decision 28): none here.
+    // The editor's preferences are the person's, in the user store: none here.
     expect(state).not.toHaveProperty("editorOptions");
     expect(isDirty()).toBe(false);
   });
@@ -136,7 +136,7 @@ describe("useEditorStore", () => {
     expect(useEditorStore.getState()).toMatchObject({ activeTab: "yaml", panelCollapsed: true, panelWidth: 480 });
   });
 
-  it("writes every held edit before the active tab changes, whoever changes it; naming the tab already named writes nothing (Ruling 89)", () => {
+  it("writes every held edit before the active tab changes, whoever changes it; naming the tab already named writes nothing", () => {
     const flushes: (string | null)[] = [];
     const { unmount } = renderHook(() => useHeldEdit(true, () => flushes.push(useEditorStore.getState().activeTab)));
 
@@ -177,7 +177,7 @@ describe("useEditorStore", () => {
     expect(isDirty()).toBe(false);
   });
 
-  describe("versions (D10)", () => {
+  describe("versions", () => {
     const VERSION_2 = versionFixture({
       id: "0199c000-0000-7000-8000-000000000012",
       versionNumber: 2,
@@ -211,7 +211,7 @@ describe("useEditorStore", () => {
       });
     });
 
-    it("summaryOf copies the collector version and whether the catalogue deprecated it, with its note (D13a Preflight ruling 15)", () => {
+    it("summaryOf copies the collector version and whether the catalogue deprecated it, with its note", () => {
       const deprecated = {
         ...VERSION_2,
         collectorVersion: "0.155.0",
@@ -225,7 +225,7 @@ describe("useEditorStore", () => {
       });
     });
 
-    it("summaryOf copies a published version's time and publisher (D11b decision 10)", () => {
+    it("summaryOf copies a published version's time and publisher", () => {
       const published = {
         ...VERSION_2,
         publishedAt: "2026-04-21T12:00:00.000Z",
@@ -276,7 +276,7 @@ describe("useEditorStore", () => {
       expect(state.history).toEqual({ past: [], future: [] });
       expect(state.isYamlEditing).toBe(false);
       expect(state.selectedNode).toBeNull();
-      // A late answer of the save under way is the source's: the load count moved on (Preflight ruling 14).
+      // A late answer of the save under way is the source's: the load count moved on.
       expect(state.isSaving).toBe(false);
       expect(state.loadCount).toBe(before.loadCount + 1);
       expect(state.canvasKey).toBe(before.canvasKey + 1);
@@ -333,7 +333,7 @@ describe("useEditorStore", () => {
       ]);
     });
 
-    it("markSaved keeps the open version's label: a rename answered before an older save's answer stays (Ruling 25)", () => {
+    it("markSaved keeps the open version's label: a rename answered before an older save's answer stays", () => {
       useEditorStore.getState().load({ organizationId: GROUP_ID, configuration: MINE, version: VERSION, versions: LISTED });
       const sent = `${SAVED}exporters:\n`;
       useEditorStore.getState().setText(sent);

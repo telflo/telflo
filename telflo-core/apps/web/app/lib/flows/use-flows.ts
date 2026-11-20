@@ -14,14 +14,13 @@ export interface FlowsRead {
 const LOADING: FlowsRead = { flows: [], status: "loading" };
 
 /**
- * The flows for the create dialog's "Start from a flow" (D12 Preflight
- * ruling 8): read
- * once each time `open` becomes true, through the browser client, so a flow
- * a product admin has just hidden or shown is as the API now says. The
- * published ones only, for a product admin too (Ruling 42): the API lists the
- * hidden ones to a product admin (`published: false`), and they are left out
- * here, so the browse step and the start step's count never hold them.
- * An answer that arrives after the dialog closed is dropped.
+ * The flows for the create dialog's "Start from a flow": read once each time
+ * `open` becomes true, through the browser client, so a flow a product admin
+ * has just hidden or shown is as the API now says. The published ones only,
+ * for a product admin too: the API lists the hidden ones to a product admin
+ * (`published: false`), and they are left out here, so the browse step and
+ * the start step's count never hold them. An answer that arrives after the
+ * dialog closed is dropped.
  */
 export function useFlowsWhenOpen(open: boolean): FlowsRead {
   const [read, setRead] = useState<FlowsRead>(LOADING);

@@ -8,24 +8,21 @@ import { recordRequestUrls, urlsHolding } from "./support/privacy.js";
 import { createPersonalApiTokenThroughApi, PERSONAL_API_TOKENS_API_PATH, whoami } from "./support/service-accounts.js";
 import { signInThroughApi, waitForHydration } from "./support/session.js";
 
-// `/cli-auth`, `telflo login`'s browser side (D27 decisions 20-22 and 35;
-// Preflight rulings 11, 13, 15-17): the CLI's own listener, started here on
-// 127.0.0.1, receives the token the page mints on Approve; the machine's
-// earlier CLI token is revoked; with the listener down the page shows the
-// token to paste; a signed-out visitor signs in with a password and comes
-// back with the fragment.
+// `/cli-auth`, `telflo login`'s browser side: the CLI's own listener, started
+// here on 127.0.0.1, receives the token the page mints on Approve; the
+// machine's earlier CLI token is revoked; with the listener down the page
+// shows the token to paste; a signed-out visitor signs in with a password and
+// comes back with the fragment.
 //
-// A token is a secret (D22 decision 48, D27 decision 30): built by the API
-// at run time, read from the create's reply or the listener's answer, never
-// written here and never printed. No page that holds or shows one is open
-// when an assertion can fail (D23-2 Ruling 144): the tests COLLECT
-// booleans, go to about:blank, then assert. No token goes into a
-// page.evaluate's source or argument, and none comes back from one (a
-// trace would keep both, and traces are off here too): the page is searched for a token's
-// SHA-256 (whole, and its 43 characters after tf_) and answers counts and
-// booleans (Task 3's review, Nit 3; Ruling 244).
-// Chromium gets the clipboard and local network access granted together
-// (D17c-1 Ruling 68).
+// A token is a secret: built by the API at run time, read from the create's
+// reply or the listener's answer, never written here and never printed. No
+// page that holds or shows one is open when an assertion can fail: the tests
+// COLLECT booleans, go to about:blank, then assert. No token goes into a
+// page.evaluate's source or argument, and none comes back from one (a trace
+// would keep both, and traces are off here too): the page is searched for a
+// token's SHA-256 (whole, and its 43 characters after tf_) and answers counts
+// and booleans. Chromium gets the clipboard and local network access granted
+// together.
 
 const PASSWORD = "correct horse battery staple";
 const DONE_WORDS = "Done. Return to your terminal.";
@@ -153,7 +150,7 @@ async function clipboardHolds(page: Page, sought: Sought): Promise<boolean> {
 }
 
 // A failed run keeps no trace, screenshot or video: each would hold the
-// page's DOM or the create's reply, and so the token (Ruling 244).
+// page's DOM or the create's reply, and so the token.
 test.use({ trace: "off", screenshot: "off", video: "off" });
 
 let listener: StartedListener | undefined;
@@ -269,7 +266,7 @@ test("with the listener down, the page shows the token once inside ph-no-capture
   expect(answer.status).toBe(200);
 });
 
-test("a second telflo login's address opened in the same tab is read: a new session for the new listener (Ruling 250)", async ({
+test("a second telflo login's address opened in the same tab is read: a new session for the new listener", async ({
   page,
   context,
   browserName,

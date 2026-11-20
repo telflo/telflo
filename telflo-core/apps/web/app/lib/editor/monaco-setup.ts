@@ -5,56 +5,53 @@ import { monacoYamlOptions, type CollectorSchemaEntry } from "./collector-schema
 
 /*
  * Monaco from the app's own bundle, never a CDN, without otelbin's OTel
- * schema (D13c decision 1) and without the JSON worker.
+ * schema and without the JSON worker.
  *
- * The collector's schema (D13c decisions 2 and 11; Preflight rulings 12
- * and 13): the YAML tab's pin picks one (`schemaPathFor`), and
- * setMonacoSchema below fetches that file from the app's own origin, keeps
- * it for the tab, and gives it to monaco-yaml inline, with schema requests
- * off, so nothing is ever requested from anywhere else. With a schema,
- * completion, hover and the schema's Warning markers; without one (a null
- * or retired pin, a distribution without schemas, a fetch that failed),
- * YAML's syntax markers only.
+ * The collector's schema: the YAML tab's pin picks one (`schemaPathFor`), and
+ * setMonacoSchema below fetches that file from the app's own origin, keeps it
+ * for the tab, and gives it to monaco-yaml inline, with schema requests off,
+ * so nothing is ever requested from anywhere else. With a schema, completion,
+ * hover and the schema's Warning markers; without one (a null or retired pin,
+ * a distribution without schemas, a fetch that failed), YAML's syntax markers
+ * only.
  *
  * monaco-yaml only works with Monaco's ESM build. @monaco-editor/react loads
  * the UMD build from cdn.jsdelivr.net unless `loader.config({ monaco })` has
  * run first, so YamlEditor never mounts its `Editor` before initMonaco()
- * resolves (Preflight ruling 16): a mount before that fetches from the CDN.
+ * resolves: a mount before that fetches from the CDN.
  *
  * The three packages are pinned exactly in package.json, which can't carry a
- * comment, so the reason is here (Preflight ruling 1). From 0.56,
- * monaco-editor's exports map sends
- * `monaco-editor/esm/vs/editor/editor.worker.js` to `esm/vs/esm/vs/…`, which
- * doesn't exist. monaco-yaml's worker imports exactly that path through
- * monaco-worker-manager 2.0.1 (last published in 2022), so a build with a
- * newer monaco-editor fails. Before raising monaco-editor, a monaco-yaml (or
- * monaco-worker-manager) that imports a path 0.56's exports map allows must
- * exist. The production build (`npm run build --workspace=@telflo/web`) is
- * one test; the other is a YAML syntax error showing its marker in a
- * browser, since the worker manager also needs withPre055WebWorkers below.
+ * comment, so the reason is here. From 0.56, monaco-editor's exports map
+ * sends `monaco-editor/esm/vs/editor/editor.worker.js` to `esm/vs/esm/vs/…`,
+ * which doesn't exist. monaco-yaml's worker imports exactly that path
+ * through monaco-worker-manager 2.0.1 (last published in 2022), so a build
+ * with a newer monaco-editor fails. Before raising monaco-editor, a
+ * monaco-yaml (or monaco-worker-manager) that imports a path 0.56's exports
+ * map allows must exist. The production build
+ * (`npm run build --workspace=@telflo/web`) is one test; the other is a YAML
+ * syntax error showing its marker in a browser, since the worker manager
+ * also needs withPre055WebWorkers below.
  *
  * `import("monaco-editor")` also builds the CSS, HTML, JSON and TypeScript
  * workers into the bundle (Monaco's language contributions name them), but
  * nothing here starts them: getWorker below returns only the editor's and
  * YAML's. No CSS, HTML or TypeScript model is ever made.
  *
- * JSON models are (D14a Preflight ruling 14): the Testing tab's sample editor
- * and its viewers show test inputs and outputs as JSON. Monaco's JSON
- * language features run in the JSON worker, which isn't registered here
- * (`vite.config.ts` is untouched), and a JSON model with them on throws
- * uncaught page errors in every browser. So initMonaco switches them all off
- * before any model exists, but the tokenizer, which runs on the page:
- * colouring stays, folding falls back to indentation, and the side-by-side
- * DiffEditor works. No completion, hover, validation or formatting reaches
- * a JSON model.
+ * JSON models are: the Testing tab's sample editor and its viewers show test
+ * inputs and outputs as JSON. Monaco's JSON language features run in the
+ * JSON worker, which isn't registered here (`vite.config.ts` is untouched),
+ * and a JSON model with them on throws uncaught page errors in every
+ * browser. So initMonaco switches them all off before any model exists, but
+ * the tokenizer, which runs on the page: colouring stays, folding falls back
+ * to indentation, and the side-by-side DiffEditor works. No completion,
+ * hover, validation or formatting reaches a JSON model.
  */
 
 let initPromise: Promise<void> | null = null;
 
 /**
- * JSON's mode configuration (D14a Preflight ruling 14): every language
- * feature off, since each needs the JSON worker, which isn't registered;
- * the tokens on, for colouring.
+ * JSON's mode configuration: every language feature off, since each needs the
+ * JSON worker, which isn't registered; the tokens on, for colouring.
  */
 export const JSON_MODE_CONFIGURATION = {
   documentFormattingEdits: false,
@@ -77,7 +74,7 @@ let desiredPath: string | null = null;
 let appliedPath: string | null = null;
 /** Counts the schema changes asked for: an answer for an earlier one is stale, and dropped. */
 let sequence = 0;
-/** Each path's schema once it arrived, for this tab (Preflight ruling 12): a pin switched back reuses it. */
+/** Each path's schema once it arrived, for this tab: a pin switched back reuses it. */
 const fetched = new Map<string, JSONSchema>();
 /**
  * Each path's fetch while it runs, so a second ask shares it. Every fetch
@@ -100,7 +97,7 @@ export const SCHEMA_FETCH_TIMEOUT_MS = 15_000;
  * the import is dynamic, so no route's chunk and no server-rendered module
  * pulls monaco-editor in.
  *
- * The order, with the JSON mode's step (D14a Preflight ruling 14):
+ * The order, with the JSON mode's step:
  * 1. import the local ESM Monaco;
  * 2. set MonacoEnvironment.getWorker (after the import, before monaco-yaml);
  * 3. JSON's language features off but its tokens, before any model can
@@ -109,15 +106,14 @@ export const SCHEMA_FETCH_TIMEOUT_MS = 15_000;
  * 5. configure monaco-yaml.
  *
  * The schema setMonacoSchema last asked for is fetched alongside Monaco's
- * import (and a pin changed while it loads has its file asked for at once,
- * Ruling F-2), but never waited on: the editor mounts as soon as Monaco is
- * ready.
- * monaco-yaml is configured with that schema if it has arrived by then,
- * else with syntax only, and the schema is given to it with `update` when it
+ * import (and a pin changed while it loads has its file asked for at once),
+ * but never waited on: the editor mounts as soon as Monaco is ready.
+ * monaco-yaml is configured with that schema if it has arrived by then, else
+ * with syntax only, and the schema is given to it with `update` when it
  * arrives. No YAML worker exists before a model mounts, so a late schema
  * costs at most one worker restart. A schema for a pin changed meanwhile is
  * never applied; a pin whose fetch failed while Monaco loaded is asked for
- * again once Monaco is ready (Ruling 28).
+ * again once Monaco is ready.
  *
  * A failure (a chunk that didn't arrive, say) rejects, and is forgotten: the
  * next call loads again, so YamlEditor's "Try again" can work without a
@@ -133,7 +129,7 @@ export function initMonaco(): Promise<void> {
     const monaco = await import("monaco-editor");
 
     // The worker files sit next to this one; vite.config.ts lists them in
-    // optimizeDeps.entries (Preflight ruling 2).
+    // optimizeDeps.entries.
     self.MonacoEnvironment = {
       getWorker(_moduleId: string, label: string) {
         if (label === "yaml") {
@@ -170,17 +166,16 @@ export function initMonaco(): Promise<void> {
 }
 
 /**
- * The collector schema for the YAML tab: `path` is the pin's
- * (`schemaPathFor`: `/schemas/<distribution>/v<version>.json`), or null for
- * syntax only (D13c decisions 2 and 11). Recorded at once, and its file
- * asked for at once while Monaco loads; once monaco-yaml is configured,
- * applied when it differs from what monaco-yaml has: the file is fetched
- * from the app's own origin (a path naming any other origin is never
- * requested), kept for the tab, and given to monaco-yaml inline (Preflight
- * ruling 12). A pin change switches at once: to a schema already kept, or
- * to syntax only until the new one arrives, never keeping the previous
- * pin's. monaco-yaml's `update` restarts its worker, so it is called only
- * when what it has actually changes (Preflight ruling 13).
+ * The collector schema for the YAML tab: `path` is the pin's (`schemaPathFor`:
+ * `/schemas/<distribution>/v<version>.json`), or null for syntax only.
+ * Recorded at once, and its file asked for at once while Monaco loads; once
+ * monaco-yaml is configured, applied when it differs from what monaco-yaml
+ * has: the file is fetched from the app's own origin (a path naming any other
+ * origin is never requested), kept for the tab, and given to monaco-yaml
+ * inline. A pin change switches at once: to a schema already kept, or to
+ * syntax only until the new one arrives, never keeping the previous pin's.
+ * monaco-yaml's `update` restarts its worker, so it is called only when what
+ * it has actually changes.
  *
  * An answer for a path asked for before the last call is dropped (a pin
  * switched A → B while A's file was on its way ends on B). A fetch that
@@ -196,8 +191,8 @@ export function setMonacoSchema(path: string | null): void {
     void applyDesiredSchema();
   } else if (initPromise !== null && path !== null) {
     // Monaco still loading: initMonaco configures for this path when it is
-    // ready, and this path's file is asked for now, alongside the load
-    // (Ruling F-2). Nothing of Monaco's is touched, so no worker starts.
+    // ready, and this path's file is asked for now, alongside the load.
+    // Nothing of Monaco's is touched, so no worker starts.
     void loadSchema(path);
   }
 }
@@ -207,8 +202,7 @@ export function setMonacoSchema(path: string | null): void {
  * overtakes it. A schema already in memory (or none, for a null path) is
  * applied at once, in one update. One still to be fetched leaves syntax only
  * at once, so the previous pin's names are never offered for this one, and
- * is applied when it arrives (decision 11: a pin change switches it at once;
- * Ruling F-1).
+ * is applied when it arrives (a pin change switches it at once).
  */
 async function applyDesiredSchema(): Promise<void> {
   const ticket = ++sequence;
@@ -300,7 +294,7 @@ async function fetchSchema(path: string): Promise<JSONSchema | null> {
  * Remove this, and that override, once monaco-worker-manager (or
  * monaco-yaml without it) calls 0.55's `createWebWorker({ worker })`: then
  * pass monaco-yaml Monaco itself, and check that a YAML syntax error still
- * shows its marker in the browser tests (D8's Accepted residue).
+ * shows its marker in the browser tests.
  */
 export function withPre055WebWorkers(monaco: Monaco): Monaco {
   type CurrentOptions = Parameters<Monaco["editor"]["createWebWorker"]>[0];

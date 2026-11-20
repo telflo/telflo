@@ -1,12 +1,12 @@
-# The logs receivers' forms and their operators (D9c Task 1): comments,
-# an anchor and aliases, flow items, a literal two-character '\n', and
-# `0750`, as a person writes them. Task 5 adds operators of
-# the shapes the operator cards read: bracketed and body fields, an epoch
-# layout, a mapping keyed in upper case, a type outside the 26, and an item
-# that isn't a mapping. Task 6 adds `filelog/parsers`, the 12 parsers with
-# keys set, comments and flow items. Task 7 adds `filelog/transforms`, the
-# 14 transformers and flow operators, with comments, flow items and quoted
-# scalars. Task 8 adds the receivers' own keys: `journald/source`,
+# The logs receivers' forms and their operators: comments, an anchor
+# and aliases, flow items, a literal two-character '\n', and `0750`, as
+# a person writes them.
+# Operators of the shapes the operator cards read: bracketed and body
+# fields, an epoch layout, a mapping keyed in upper case, a type outside
+# the 26, and an item that isn't a mapping. `filelog/parsers`: the 12
+# parsers with keys set, comments and flow items. `filelog/transforms`:
+# the 14 transformers and flow operators, with comments, flow items and
+# quoted scalars. The receivers' own keys: `journald/source`,
 # `syslog/udp`, `syslog/tls` and `netflow/sflow`, and filelog's poll
 # interval and compression.
 x-retry: &retry

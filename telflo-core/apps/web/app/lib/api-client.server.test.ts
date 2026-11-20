@@ -214,7 +214,7 @@ describe("fetchOidcProviders", () => {
   });
 });
 
-describe("fetchFlows and fetchFlow (D12 Preflight rulings 5 and 18)", () => {
+describe("fetchFlows and fetchFlow", () => {
   it("lists the flows from TELFLO_API_INTERNAL_URL, forwarding the cookie and nothing else", async () => {
     vi.stubEnv("TELFLO_API_INTERNAL_URL", "http://api.internal:9000");
     const fetchMock = mockFetch(200, { flows: [TAIL_SAMPLING, HIDDEN] });
@@ -279,7 +279,7 @@ describe("fetchFlows and fetchFlow (D12 Preflight rulings 5 and 18)", () => {
   });
 });
 
-describe("fetchPendingFeedbackCount (D29 decision 37, Preflight ruling 14)", () => {
+describe("fetchPendingFeedbackCount", () => {
   it("reads the count from TELFLO_API_INTERNAL_URL, forwarding the cookie and nothing else", async () => {
     vi.stubEnv("TELFLO_API_INTERNAL_URL", "http://api.internal:9000");
     const fetchMock = mockFetch(200, { count: 5 });

@@ -25,11 +25,10 @@ import type { ComponentRename, ListDiffStats, Step, ValueChange, ValuePath } fro
 import { readValue } from "./value-view.js";
 
 /*
- * D9a Task 4: canvas changes are targeted edits of the text (decision 4;
- * Preflight rulings 1, 5, 8, 10). Each test states the lines a change
- * removes and adds; every other line is kept byte for byte. `edit` also
- * checks that the result reads back as the change's model, and that the
- * graph read from it derives that model again (the round-trip invariant).
+ * Canvas changes are targeted edits of the text. Each test states the lines a
+ * change removes and adds; every other line is kept byte for byte. `edit` also
+ * checks that the result reads back as the change's model, and that the graph
+ * read from it derives that model again (the round-trip invariant).
  */
 
 type Value = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -318,7 +317,7 @@ describe("each kind of change, on a commented text", () => {
   });
 });
 
-describe("layout outside the edit (Preflight ruling 1)", () => {
+describe("layout outside the edit", () => {
   const layout = corpusText("layout-preserved.yaml");
 
   it("keeps folded and literal blocks, plain multi-line scalars, 0750, a 20-digit integer and 1e3", () => {
@@ -362,7 +361,7 @@ describe("layout outside the edit (Preflight ruling 1)", () => {
     });
     expect(diff.removed).toContain("  # an indented comment");
     expect(diff.removed).not.toContain("# a column-0 comment after an indented one");
-    expect(text).toContain("# Layout every edit keeps outside itself (Preflight ruling 1).\nreceivers:\n");
+    expect(text).toContain("# Layout every edit keeps outside itself.\nreceivers:\n");
     expect(text).toContain("        endpoint: 0.0.0.0:4317   # spaced comment\n# a column-0 comment after an indented one\nexporters:\n");
   });
 
@@ -423,7 +422,7 @@ describe("layout outside the edit (Preflight ruling 1)", () => {
   });
 });
 
-describe("aliases and merge keys (Preflight ruling 8)", () => {
+describe("aliases and merge keys", () => {
   const anchors = corpusText("anchors-merges.yaml");
   const owned = corpusText("anchors-owned.yaml");
 
@@ -534,7 +533,7 @@ describe("aliases and merge keys (Preflight ruling 8)", () => {
   });
 });
 
-describe("renames, shared components and the text's own model (Preflight ruling 5)", () => {
+describe("renames, shared components and the text's own model", () => {
   it("renames a connector in every receivers and exporters list", () => {
     const forward = corpusText("forward-connector.yaml");
     const before = read(forward).model;
@@ -620,7 +619,7 @@ describe("renames, shared components and the text's own model (Preflight ruling 
   });
 });
 
-describe("service.telemetry, unknown keys and Clear (decisions 4 and 15)", () => {
+describe("service.telemetry, unknown keys and Clear", () => {
   const telemetryBlock = (text: string) => {
     const lines = text.split("\n");
     const start = lines.indexOf("  telemetry:");
@@ -684,7 +683,7 @@ describe("service.telemetry, unknown keys and Clear (decisions 4 and 15)", () =>
   });
 });
 
-describe("the YAML box (decision 4)", () => {
+describe("the YAML box", () => {
   it("shows a component's own text with its comments, and writes an edit back in place", () => {
     const shown = componentValueText(comments, "receivers.otlp");
     expect(shown).toBe("protocols:\n  grpc:\n    endpoint: 0.0.0.0:4317 # gRPC\n  http: # HTTP\n    endpoint: 0.0.0.0:4318");
@@ -758,7 +757,7 @@ describe("the YAML box (decision 4)", () => {
   });
 });
 
-describe("copies taken from the source text (Preflight ruling 8)", () => {
+describe("copies taken from the source text", () => {
   const defaults = [
     "x-defaults: &defaults",
     "  script: |",
@@ -906,7 +905,7 @@ describe("edges of the splices", () => {
   });
 });
 
-describe("long lists: a one-item change costs linear time (controller ruling)", () => {
+describe("long lists: a one-item change costs linear time", () => {
   const names = (count: number) => Array.from({ length: count }, (_, i) => `otlp/r${i}`);
   const stats = (): ListDiffStats => ({ cells: 0, fallbackItems: 0 });
   /** The list `steps` build from `a`, checking each old item is kept or deleted once, in order. */
@@ -1020,9 +1019,8 @@ describe("long lists: a one-item change costs linear time (controller ruling)", 
       }
       return { result, elapsed };
     };
-    // The bound is in parses of this text on this machine, not in milliseconds (as D9b's Ruling 86):
-    // CI's runner is slower than a laptop (PR #14's first run took 1.79 s against a bound of 1.5 s).
-    // The editor's re-parse is this call; the first is a warm-up.
+    // The bound is in parses of this text on this machine, not in milliseconds: CI's runner is
+    // slower than a laptop. The editor's re-parse is this call; the first is a warm-up.
     const parse = () => parseDocument(before, { ...PARSE_OPTIONS, uniqueKeys: false });
     parse();
     let parseTime = Infinity;
@@ -1084,8 +1082,7 @@ describe("helpers", () => {
 });
 
 /*
- * D9b Task 1: a form's changes written by key path (D9b decision 2;
- * Preflight rulings 1-3, 10, 11, 13, 14). Each test states the lines a
+ * A form's changes written by key path. Each test states the lines a
  * write removes and adds (so every other line is kept, byte for byte), or
  * the exact text around it. `write` also checks that the result is a text
  * the canvas reads, and that no other component, pipeline or extension
@@ -1108,7 +1105,7 @@ function write(text: string, base: ValuePath, changes: ValueChange[]) {
   return { text: result.text, diff: lineDiff(text, result.text), model: back.model };
 }
 
-describe("values written by key path: each kind of change keeps every other line (D9b decision 2)", () => {
+describe("values written by key path: each kind of change keeps every other line", () => {
   const items = corpusText("item-lists.yaml");
   const attributes = ["processors", "attributes"];
   const resource = ["processors", "resource"];
@@ -1251,7 +1248,7 @@ describe("values written by key path: each kind of change keeps every other line
     expect(statements([{ path: ["trace_statements", 2], remove: true }])).toBe("    trace_statements: [set(a), 'set(b)'] # flow");
     const emptied: ValueChange[] = [0, 1, 2].map(() => ({ path: ["trace_statements", 0], remove: true }));
     expect(statements(emptied)).toBe("    trace_statements: [] # flow");
-    // Ruling 85: an emptied list's first item comes back in block style, its comment on the key's line.
+    // An emptied list's first item comes back in block style, its comment on the key's line.
     expect(write(items, transform, [...emptied, { path: ["trace_statements", 0], value: "x" }]).text).toContain(
       "    trace_statements: # flow\n      - x\n    conditions:",
     );
@@ -1336,7 +1333,7 @@ describe("values written by key path: each kind of change keeps every other line
   });
 });
 
-describe("moving list items by their own lines (Preflight ruling 2)", () => {
+describe("moving list items by their own lines", () => {
   const items = corpusText("item-lists.yaml");
   const blockItems = [
     "      # about the first\n      - key: environment # keep me\n        value: production\n        action: insert\n",
@@ -1384,7 +1381,7 @@ describe("moving list items by their own lines (Preflight ruling 2)", () => {
     );
   });
 
-  it("leaves an alias its anchor's move keeps after it as it is, and copies only one the anchor moves past (ruling 32)", () => {
+  it("leaves an alias its anchor's move keeps after it as it is, and copies only one the anchor moves past", () => {
     const base = ["receivers", "otlp"];
     const anchored = "      - &x\n        k: 1\n";
     const same = `receivers:\n  otlp:\n    list:\n${anchored}      - other: 2\n      - alias: *x\n`;
@@ -1422,7 +1419,7 @@ describe("moving list items by their own lines (Preflight ruling 2)", () => {
     );
   });
 
-  it("removes an anchored item with its anchor and tag, in block and flow lists, its aliases copied first (ruling 38)", () => {
+  it("removes an anchored item with its anchor and tag, in block and flow lists, its aliases copied first", () => {
     const base = ["receivers", "otlp"];
     const block = "receivers:\n  otlp:\n    list:\n      - &x !!str a\n      - b\n      - *x\n";
     expect(write(block, base, [{ path: ["list", 0], remove: true }]).text).toBe(
@@ -1444,13 +1441,13 @@ describe("moving list items by their own lines (Preflight ruling 2)", () => {
     expect(write(only, base, [{ path: ["list", 0], remove: true }]).text).toBe("receivers:\n  otlp:\n    list: []\n");
   });
 
-  it("the line oracle excuses an alias whose anchor's value changes, not one a move keeps (ruling 32)", () => {
+  it("the line oracle excuses an alias whose anchor's value changes, not one a move keeps", () => {
     const text = "receivers:\n  otlp:\n    list:\n      - &x\n        k: 1\n      - other: 2\n  otlp/2:\n    alias: *x\n";
     const before = read(text).model;
     const moved = write(text, ["receivers", "otlp"], [{ path: ["list", 0], moveTo: 1 }]);
     const touchable = touchableLines(text, before, moved.model, ["receivers.otlp"]);
     expect(untouchedLinesLost(text, moved.text, touchable)).toEqual([]);
-    // What the move wrote before ruling 32: the alias expanded, which the oracle doesn't excuse.
+    // A move that expanded the alias, which the oracle doesn't excuse.
     const expanded = moved.text.replace("    alias: *x\n", "    alias:\n      k: 1\n");
     expect(untouchedLinesLost(text, expanded, touchable)).toEqual(["8:     alias: *x"]);
 
@@ -1460,7 +1457,7 @@ describe("moving list items by their own lines (Preflight ruling 2)", () => {
   });
 });
 
-describe("renaming a key in place (Preflight ruling 13)", () => {
+describe("renaming a key in place", () => {
   const headers = [
     "exporters:",
     "  otlphttp:",
@@ -1518,7 +1515,7 @@ describe("renaming a key in place (Preflight ruling 13)", () => {
   });
 });
 
-describe("numbers written as typed (Preflight ruling 14)", () => {
+describe("numbers written as typed", () => {
   it("writes { plain: '1e3' } as typed: in place, as a new key, and in a flow mapping", () => {
     const flow = corpusText("flow-style.yaml");
     expect(
@@ -1550,14 +1547,14 @@ describe("numbers written as typed (Preflight ruling 14)", () => {
     }
   });
 
-  it("writes a mapping { plain: '5' } set as a value as a mapping, not as the number 5 (ruling 26)", () => {
+  it("writes a mapping { plain: '5' } set as a value as a mapping, not as the number 5", () => {
     const { diff, model } = write(starter, ["processors", "batch"], [{ path: ["labels"], value: { plain: "5" } }]);
     expect(diff).toEqual({ removed: [], added: ["    labels:", '      plain: "5"'] });
     expect(value(model, "processors.batch")).toMatchObject({ labels: { plain: "5" } });
   });
 });
 
-describe("a missing key added under the deepest key that exists (Preflight ruling 3)", () => {
+describe("a missing key added under the deepest key that exists", () => {
   const level: ValueChange[] = [{ path: ["metrics", "level"], value: "detailed" }];
   const telemetry = ["service", "telemetry"];
   const added = "  telemetry:\n    metrics:\n      level: detailed\n";
@@ -1595,7 +1592,7 @@ describe("a missing key added under the deepest key that exists (Preflight rulin
   });
 });
 
-describe("aliases and merge keys under a form (D9a Preflight ruling 8)", () => {
+describe("aliases and merge keys under a form", () => {
   const owned = corpusText("anchors-owned.yaml");
   const anchors = corpusText("anchors-merges.yaml");
 
@@ -1671,7 +1668,7 @@ describe("what a write by key path refuses", () => {
     );
   });
 
-  it("a value set on base itself is refused, never written by reprinting the whole value (ruling 30)", () => {
+  it("a value set on base itself is refused, never written by reprinting the whole value", () => {
     const text = "receivers:\n  otlp:\n    protocols:\n      grpc:\n        endpoint: 0.0.0.0:4317 # keep me\n    mode: 0750\n";
     const whole = { protocols: { grpc: { endpoint: "0.0.0.0:4317" } }, mode: 750 };
     const refused: Array<[string, ValueChange]> = [
@@ -1738,7 +1735,7 @@ describe("edges of writes by key path", () => {
     );
   });
 
-  it("sets a key inside an empty flow mapping in block style, and in flow style inside a flow collection (Ruling 85)", () => {
+  it("sets a key inside an empty flow mapping in block style, and in flow style inside a flow collection", () => {
     const base = ["receivers", "otlp"];
     expect(write("receivers:\n  otlp:\n    sub: {}\n    other: 1\n", base, [{ path: ["sub", "deep"], value: 1 }]).text).toBe(
       "receivers:\n  otlp:\n    sub:\n      deep: 1\n    other: 1\n",
@@ -1760,8 +1757,8 @@ describe("edges of writes by key path", () => {
     );
   });
 
-  it("gives an emptied list or map its first entry in block style, keeping its comment (Ruling 85)", () => {
-    // The owner's reproducer: the only attribute removed, then Add Attribute.
+  it("gives an emptied list or map its first entry in block style, keeping its comment", () => {
+    // The only attribute removed, then Add Attribute.
     const resource = ["processors", "resource"];
     const one = "processors:\n  resource:\n    attributes:\n      - key: environment\n        value: production\n        action: insert\n";
     const emptied = write(one, resource, [{ path: ["attributes", 0], remove: true }]).text;
@@ -1823,7 +1820,7 @@ describe("edges of writes by key path", () => {
     });
   });
 
-  it("keeps flow style for an empty list or map inside a flow collection, and for one with items (Ruling 85)", () => {
+  it("keeps flow style for an empty list or map inside a flow collection, and for one with items", () => {
     const base = ["receivers", "otlp"];
     expect(write("receivers:\n  otlp: {list: [], other: 1}\n", base, [{ path: ["list", 0], value: "a" }]).text).toBe(
       "receivers:\n  otlp: {list: [a], other: 1}\n",
@@ -1864,7 +1861,7 @@ describe("edges of writes by key path", () => {
   });
 });
 
-describe("a write by key path on a large text (Preflight ruling 11)", () => {
+describe("a write by key path on a large text", () => {
   it("writes ten changes to one of 6,000 components in a few parses at most, the scalars in one parse", () => {
     const keys = ["endpoint", "a", "b", "c", "d", "e", "f", "g", "h", "i"];
     const component = (i: number, values: string[]) => [
@@ -1873,7 +1870,7 @@ describe("a write by key path on a large text (Preflight ruling 11)", () => {
       "      grpc:",
       ...values.map((value, index) => `        ${keys[index]!}: ${value} # ${keys[index]!}`),
     ];
-    // The preflight's shape (about 600k characters); only the last component has ten keys.
+    // A large text (about 600k characters); only the last component has ten keys.
     const lines = ["receivers:"];
     for (let i = 0; i < 5999; i++) lines.push(...component(i, ["0.0.0.0:4317", "0750"]));
     const tail = ["service:", "  pipelines:", "    traces:", "      receivers: [otlp/r0]", ""];
@@ -1901,14 +1898,14 @@ describe("a write by key path on a large text (Preflight ruling 11)", () => {
 });
 
 /*
- * D9c Task 1: strings with line breaks (D9c Preflight ruling 1) and values
- * written as typed (ruling 2). A string a literal block can't carry cleanly
- * is written double-quoted, set in place, added, or inside a new item, in
- * block and flow, before a blank line or a comment, on CRLF text; a `plain`
- * change writes a number, a boolean or a one-line flow collection as typed,
- * and `readValue` shows a one-line flow collection as written.
+ * Strings with line breaks and values written as typed. A string a literal
+ * block can't carry cleanly is written double-quoted, set in place, added, or
+ * inside a new item, in block and flow, before a blank line or a comment, on
+ * CRLF text; a `plain` change writes a number, a boolean or a one-line flow
+ * collection as typed, and `readValue` shows a one-line flow collection as
+ * written.
  */
-describe("strings with line breaks, written double-quoted where a block can't carry them (D9c Preflight ruling 1)", () => {
+describe("strings with line breaks, written double-quoted where a block can't carry them", () => {
   const RECOMBINE = [
     "receivers:",
     "  filelog:",
@@ -2013,7 +2010,7 @@ describe("strings with line breaks, written double-quoted where a block can't ca
   });
 });
 
-describe("values written as typed: numbers, booleans and one-line flow collections (D9c Preflight ruling 2)", () => {
+describe("values written as typed: numbers, booleans and one-line flow collections", () => {
   const ADD = [
     "receivers:",
     "  filelog:",
@@ -2129,13 +2126,13 @@ describe("values written as typed: numbers, booleans and one-line flow collectio
 });
 
 /*
- * D9c Task 1's review: a carriage return and the other control characters
- * are written escaped in double quotes, never raw (yaml.v3, the collector's
- * reader, refuses DEL and the C1 controls); a double-quoted string stays
- * double-quoted when set to one with a line break; and a flow mapping is
- * written as typed only when its keys are strings, each once.
+ * A carriage return and the other control characters are written escaped in
+ * double quotes, never raw (yaml.v3, the collector's reader, refuses DEL
+ * and the C1 controls); a double-quoted string stays double-quoted when set
+ * to one with a line break; and a flow mapping is written as typed only
+ * when its keys are strings, each once.
  */
-describe("the review's fixes to the text edits (D9c Task 1)", () => {
+describe("control characters, quoted strings with breaks and flow mapping keys", () => {
   const BASE = ["receivers", "r"];
   const text = (value: string) => `receivers:\n  r:\n    a: ${value}\nexporters:\n  debug: {}\nservice:\n  pipelines:\n    logs:\n      receivers: [r]\n      exporters: [debug]\n`;
 
@@ -2181,14 +2178,13 @@ describe("the review's fixes to the text edits (D9c Task 1)", () => {
 });
 
 /*
- * D9c Ruling 56: a comment at a block list's dash column after its last
- * item (a commented-out item) is kept by the parser as an item of its own,
- * with no dash and no value; list changes read it as none of the list's
- * items. Its lines stay where they are when an item is removed or moved,
- * and an item appended goes before them (Ruling 64, replacing Ruling 56's
- * "after"), as a mapping's appended key does.
+ * A comment at a block list's dash column after its last item (a
+ * commented-out item) is kept by the parser as an item of its own, with no
+ * dash and no value; list changes read it as none of the list's items. Its
+ * lines stay where they are when an item is removed or moved, and an item
+ * appended goes before them, as a mapping's appended key does.
  */
-describe("a list's trailing comment lines (D9c Ruling 56)", () => {
+describe("a list's trailing comment lines", () => {
   const BASE_PATH: ValuePath = ["receivers", "filelog"];
   const around = (ops: string) => `receivers:\n  filelog:\n${ops}    start_at: end\nexporters:\n  debug: {}\n`;
   const lists = [
@@ -2214,7 +2210,7 @@ describe("a list's trailing comment lines (D9c Ruling 56)", () => {
     expect(write(text, BASE_PATH, [{ path: ["operators", 2], value: { type: "noop" } }]).text).toBe(
       expectOps(`${first}${second}${dash}- type: noop\n${trailing}`),
     );
-    // A removed item's own comment above it stays, as D9a removes an entry (Preflight ruling 24).
+    // A removed item's own comment above it stays, as the canvas removes an entry.
     expect(write(text, BASE_PATH, [{ path: ["operators", 1], remove: true }]).text).toBe(expectOps(`${first}${dash}# between\n${trailing}`));
     expect(write(text, BASE_PATH, [{ path: ["operators", 0], remove: true }]).text).toBe(
       expectOps(`${dash}# about the first\n${second}${trailing}`),
@@ -2242,13 +2238,13 @@ describe("a list's trailing comment lines (D9c Ruling 56)", () => {
 });
 
 /*
- * D9c Ruling 64: an item appended to a block list goes after the last
- * item's own lines and before the comment-only lines that follow it, as a
- * mapping's appended key does: those comments may introduce what comes
- * after the list (a banner, the next key's comment, an outer list's
- * comment). Each result reads back (`write`).
+ * An item appended to a block list goes after the last item's own lines
+ * and before the comment-only lines that follow it, as a mapping's
+ * appended key does: those comments may introduce what comes after the
+ * list (a banner, the next key's comment, an outer list's comment). Each
+ * result reads back (`write`).
  */
-describe("an appended item goes before the comment lines after a list (D9c Ruling 64)", () => {
+describe("an appended item goes before the comment lines after a list", () => {
   const BASE_PATH: ValuePath = ["receivers", "filelog"];
   const append = (text: string, path: (string | number)[] = ["operators", 1]) => write(text, BASE_PATH, [{ path, value: { type: "b" } }]).text;
 
@@ -2300,16 +2296,16 @@ describe("an appended item goes before the comment lines after a list (D9c Rulin
 });
 
 /*
- * D9c Ruling 69: a string the collector's yaml.v3 (go.yaml.in/yaml/v3
- * v3.0.5, resolve.go) would read as another type is never written plain:
- * `1_000` and `0b101` are integers to it, `-0x1F` too, `2024-01-01` and
+ * A string the collector's yaml.v3 (go.yaml.in/yaml/v3 v3.0.5, resolve.go)
+ * would read as another type is never written plain: `1_000` and `0b101`
+ * are integers to it, `-0x1F` too, `2024-01-01` and
  * `2001-12-14t21:59:43.10-05:00` times. Set in place, added, appended as an
  * item and inside a new item, in block and flow, each is double-quoted and
  * reads back as the string; `plainValue` refuses them, alone or inside a
  * flow collection. A number typed as `0750` stays plain, octal to the
- * collector (D9b decision 3).
+ * collector.
  */
-describe("strings the collector would read as another type are quoted (Ruling 69)", () => {
+describe("strings the collector would read as another type are quoted", () => {
   const BASE = ["receivers", "r"];
   const TEXT = [
     "receivers:",
@@ -2366,7 +2362,7 @@ describe("strings the collector would read as another type are quoted (Ruling 69
     }
   });
 
-  it("plainValue refuses them alone, and quotes them inside a flow collection (Ruling 78); a number typed as 0750 stays plain", () => {
+  it("plainValue refuses them alone, and quotes them inside a flow collection; a number typed as 0750 stays plain", () => {
     for (const typed of ["1_000", "0b101", "-0x1F", "2024-01-01"]) expect(plainValue(typed), typed).toBeUndefined();
     expect(plainValue("{a: 2024-01-01}")).toEqual({ value: { a: "2024-01-01" }, source: '{a: "2024-01-01"}' });
     expect(plainValue("[1_000, x]")).toEqual({ value: ["1_000", "x"], source: '["1_000", x]' });
@@ -2382,12 +2378,12 @@ describe("strings the collector would read as another type are quoted (Ruling 69
 });
 
 /*
- * D9c Ruling 78: a flow collection typed as a value (add's Value) holding a
- * plain string the collector would read as another type is written as
- * typed with that string double-quoted, not as a whole string; readValue
- * then shows it as written, so the field stays editable.
+ * A flow collection typed as a value (add's Value) holding a plain string the
+ * collector would read as another type is written as typed with that string
+ * double-quoted, not as a whole string; readValue then shows it as written,
+ * so the field stays editable.
  */
-describe("a flow collection written as typed, its misread strings quoted (Ruling 78)", () => {
+describe("a flow collection written as typed, its misread strings quoted", () => {
   const TEXT = [
     "receivers:",
     "  r:",
@@ -2422,7 +2418,7 @@ function read_(text: string) {
 }
 
 /*
- * D9d Ruling 34: a flow sequence spread over lines is changed item by item,
+ * A flow sequence spread over lines is changed item by item,
  * not rebuilt on one line (which joined its lines and lost its comments):
  * an item appended goes `, x` after the last item's content, its comment
  * and the closing bracket's line staying; an item removed goes with its
@@ -2430,7 +2426,7 @@ function read_(text: string) {
  * written that way and is refused. One-line flow lists and block lists
  * are written as before.
  */
-describe("a flow list spread over lines keeps its lines and comments (D9d Ruling 34)", () => {
+describe("a flow list spread over lines keeps its lines and comments", () => {
   const SPREAD = ["      receivers: [", "        otlp, # c1", "        otlp/2, # c2", "        otlp/3 # c3", "      ]"];
   const pipelineText = (lines: readonly string[], eol = "\n") =>
     [
@@ -2549,12 +2545,12 @@ describe("a flow list spread over lines keeps its lines and comments (D9d Ruling
 });
 
 /*
- * D9d Ruling 38: the multi-line flow splice, polished. The only item of a
- * list with a trailing comma can be removed; a removed item takes its own
- * comment lines (the ones directly above it) and the next item keeps its;
- * no removal leaves a line of white space or trailing white space.
+ * The multi-line flow splice, polished. The only item of a list with a
+ * trailing comma can be removed; a removed item takes its own comment
+ * lines (the ones directly above it) and the next item keeps its; no
+ * removal leaves a line of white space or trailing white space.
  */
-describe("removing from a flow list spread over lines, polished (D9d Ruling 38)", () => {
+describe("removing from a flow list spread over lines, polished", () => {
   const component = (list: readonly string[], eol = "\n") =>
     ["processors:", "  attributes:", "    other: 1 # keep", ...list, "    after: 2 # keep", "exporters:", "  debug: {}", ""].join(eol);
   const listOf = (text: string, eol = "\n") => {
@@ -2630,16 +2626,15 @@ describe("removing from a flow list spread over lines, polished (D9d Ruling 38)"
 });
 
 /*
- * D9d Ruling 39: (a) an item's own comment lines are looked for only below
- * the previous item's comma (or the `[`), so a quoted item's line starting
- * with `#` isn't one; (b) the first items of an emptied list that kept its
- * comment go on a line of their own, the comment kept (after the `[` line
- * since Ruling 40); (c) an item
- * moved in a flow list spread over lines takes its comment lines and the
- * comment after it, or the move is refused. One-line flow lists and block
- * lists move as before.
+ * (a) An item's own comment lines are looked for only below the previous
+ * item's comma (or the `[`), so a quoted item's line starting with `#`
+ * isn't one; (b) the first items of an emptied list that kept its comment
+ * go on a line of their own, the comment kept (after the `[` line); (c) an
+ * item moved in a flow list spread over lines takes its comment lines and
+ * the comment after it, or the move is refused. One-line flow lists and
+ * block lists move as before.
  */
-describe("a flow list spread over lines keeps its comments through moves and appends (D9d Ruling 39)", () => {
+describe("a flow list spread over lines keeps its comments through moves and appends", () => {
   const component = (list: readonly string[], eol = "\n") =>
     ["processors:", "  attributes:", "    other: 1 # keep", ...list, "    after: 2 # keep", "exporters:", "  debug: {}", ""].join(eol);
   const listOf = (text: string, eol = "\n") => {
@@ -2672,7 +2667,7 @@ describe("a flow list spread over lines keeps its comments through moves and app
     expect(writing(commented, [{ path: ["list", 1], remove: true }]).lines).toEqual(["    list: [", '      "first', '      # still in string"', "    ]"]);
   });
 
-  it("(b) appends to an emptied list that kept its comment on a line of its own, the comment kept (after the `[` line, Ruling 40)", () => {
+  it("(b) appends to an emptied list that kept its comment on a line of its own, the comment kept (after the `[` line)", () => {
     for (const eol of ["\n", "\r\n"]) {
       // A form's append, a whole-list set, and the form's removal of the last item then an append.
       const open = ["    list: [ # open", "    ]"];
@@ -2698,7 +2693,7 @@ describe("a flow list spread over lines keeps its comments through moves and app
         ),
       ).toEqual({ lines: ["    list: [ # open", "      z", "    ]"], value: ["z"] });
     }
-    // An emptied list with nothing between its brackets is `[]`, and becomes a block list as before (Ruling 85).
+    // An emptied list with nothing between its brackets is `[]`, and becomes a block list as before.
     expect(writing(["    list: []"], [{ path: ["list", 0], value: "z" }]).lines).toEqual(["    list:", "      - z"]);
   });
 
@@ -2812,7 +2807,7 @@ describe("a flow list spread over lines keeps its comments through moves and app
   });
 });
 
-describe("a move in a long commented flow list spread over lines (D9d final ruling F10)", () => {
+describe("a move in a long commented flow list spread over lines", () => {
   it("moves an item of 6,000 with its comments in a few parses of the text, not a scan per comment", () => {
     const N = 6000;
     const names = Array.from({ length: N }, (_name, i) => `otlp/r${i}`);
@@ -2823,7 +2818,7 @@ describe("a move in a long commented flow list spread over lines (D9d final ruli
       ["processors:", "  filter:", "    traces:", "      span: [", ...itemLines(order), "      ]", "exporters:", "  debug: {}", ""].join("\n");
     const indexes = names.map((_name, i) => i);
     const before = text(indexes);
-    // The bound is in parses of this text on this machine, not in milliseconds (D9b Ruling 86, D9c Ruling 92).
+    // The bound is in parses of this text on this machine, not in milliseconds.
     const parse = () => parseDocument(before, { ...PARSE_OPTIONS, uniqueKeys: false });
     parse();
     let parseTime = Infinity;
@@ -2849,23 +2844,23 @@ describe("a move in a long commented flow list spread over lines (D9d final ruli
     order.splice(10, 0, ...order.splice(3000, 1));
     expect(up.result).toBe(text(order));
     // About two and a half parses (a laptop: 216 ms against an 87 ms parse); a scan of the items per
-    // comment (`nodes.find`) cost about 48 by the review's probe, and over 300 under this runner.
+    // comment (`nodes.find`) cost about 48 in one measurement, and over 300 under this runner.
     expect(up.elapsed).toBeLessThan(parseTime * 8);
   });
 });
 
 /*
- * D9d Ruling 40: (a) the first items of an emptied flow list spread over
- * lines go right after the `[` line, before the comment lines it kept, so
- * those stay no item's and removing the items gives back the text as it
- * was, by a form (an append, a removal) and by the canvas (the whole list
- * set); (d) at the larger of the comment lines' indentation and a unit past
- * the `]`'s; (b) a move's comment check counts each comment with its item,
- * so two comments with the same text don't refuse a right move; (c) a
- * write's read-back takes in the whole component apart from what it edits,
- * so a move that re-binds an alias elsewhere in the component is refused.
+ * (a) The first items of an emptied flow list spread over lines go right
+ * after the `[` line, before the comment lines it kept, so those stay no
+ * item's and removing the items gives back the text as it was, by a form
+ * (an append, a removal) and by the canvas (the whole list set); (d) at the
+ * larger of the comment lines' indentation and a unit past the `]`'s; (b) a
+ * move's comment check counts each comment with its item, so two comments
+ * with the same text don't refuse a right move; (c) a write's read-back
+ * takes in the whole component apart from what it edits, so a move that
+ * re-binds an alias elsewhere in the component is refused.
  */
-describe("emptied flow lists keep their comments; writes can't change other values in the component (D9d Ruling 40)", () => {
+describe("emptied flow lists keep their comments; writes can't change other values in the component", () => {
   const BASE = ["processors", "attributes"];
   const component = (list: readonly string[], eol = "\n", rest: readonly string[] = []) =>
     ["processors:", "  attributes:", "    other: 1 # keep", ...list, ...rest, "    after: 2 # keep", "exporters:", "  debug: {}", ""].join(eol);
@@ -2982,17 +2977,16 @@ describe("emptied flow lists keep their comments; writes can't change other valu
 });
 
 /*
- * D9d Ruling 42: (a) a remove, move or rename compares the component
- * before and after that change alone, its own paths taken out, so a later
- * change re-binding an alias inside a path an earlier one edited is
- * refused (the check of the whole write takes those paths out); (b)
- * `valuesEqual` compares what YAML's own tags read as (a Date by its time,
- * bytes, a Map's or a Set's entries), so a component or a document holding
- * them isn't refused on every write; (c) an emptied flow list's first item
- * stands at a column, in spaces, a tab before the `]` or a comment expanded
- * and never copied.
+ * (a) A remove, move or rename compares the component before and after that
+ * change alone, its own paths taken out, so a later change re-binding an
+ * alias inside a path an earlier one edited is refused (the check of the
+ * whole write takes those paths out); (b) `valuesEqual` compares what
+ * YAML's own tags read as (a Date by its time, bytes, a Map's or a Set's
+ * entries), so a component or a document holding them isn't refused on
+ * every write; (c) an emptied flow list's first item stands at a column, in
+ * spaces, a tab before the `]` or a comment expanded and never copied.
  */
-describe("writes compare each change; YAML's own types compare; tabs aren't copied (D9d Ruling 42)", () => {
+describe("writes compare each change; YAML's own types compare; tabs aren't copied", () => {
   const BASE = ["processors", "attributes"];
   const OUTSIDE = "A change reached a value outside the one it edits.";
   const component = (lines: readonly string[]) => ["processors:", "  attributes:", ...lines, "exporters:", "  debug: {}", ""].join("\n");

@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest";
 import { findPattern, getPatternsByCategory, groupPatternsByCategory, REGEX_LIBRARY, tryFindPattern } from "./regex-library.js";
 
 /*
- * The regex library's seeded entries (D15b decision 7, Preflight ruling 2):
+ * The regex library's seeded entries:
  * `services/ottl-evaluator/internal/rules/testdata/seeded-test-regexes.json`,
  * which the db workspace writes from migration 1700000000031's
  * `seededTestRegexes` and whose staleness its suite checks
@@ -61,7 +61,7 @@ describe("the regex library", () => {
     expect(groupPatternsByCategory([findPattern("UUID")])).toEqual({ Secrets: [findPattern("UUID")] });
   });
 
-  it("starts equal to the table's seed: every entry's name, category, description and pattern, in order (D15b decision 11)", () => {
+  it("starts equal to the table's seed: every entry's name, category, description and pattern, in order", () => {
     const { testRegexes } = JSON.parse(readFileSync(SEEDED_TEST_REGEXES, "utf8")) as {
       testRegexes: { name: string; category: string; description: string | null; regex: string }[];
     };

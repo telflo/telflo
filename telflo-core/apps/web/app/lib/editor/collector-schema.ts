@@ -2,21 +2,20 @@ import type { JSONSchema, MonacoYamlOptions } from "monaco-yaml";
 
 /*
  * Which collector schema the YAML tab's Monaco uses, and the options
- * monaco-yaml gets for it (D13c decisions 2 and 11; Preflight rulings 12 and
- * 13). Type imports only: nothing here loads Monaco or monaco-yaml, so the
- * schema tests (app/test/schema-worker.ts) build their worker from the same
- * options the editor gives (Ruling 26).
+ * monaco-yaml gets for it. Type imports only: nothing here loads Monaco or
+ * monaco-yaml, so the schema tests (app/test/schema-worker.ts) build their
+ * worker from the same options the editor gives.
  *
  * The pin on screen picks the schema: an offered version of a distribution
  * that has schemas gets `public/schemas/<distribution>/v<version>.json`, the
- * file the generator wrote for it (decision 6); a null pin, a retired one,
- * a version the catalogue doesn't list, or a distribution without schemas
- * gets syntax only (decision 2). The versions are read from the catalogue
- * when the web is built, as the renames are (`renamed-types.ts`), so the
- * choice is synchronous and never asks the API.
+ * file the generator wrote for it; a null pin, a retired one, a version the
+ * catalogue doesn't list, or a distribution without schemas gets syntax
+ * only. The versions are read from the catalogue when the web is built, as
+ * the renames are (`renamed-types.ts`), so the choice is synchronous and
+ * never asks the API.
  */
 
-/** The distributions whose offered versions each have a generated schema (D13c: contrib only). */
+/** The distributions whose offered versions each have a generated schema (contrib only). */
 export const SCHEMA_DISTRIBUTIONS: ReadonlySet<string> = new Set(["otelcol-contrib"]);
 
 /** The part of a catalogue file's version this reads. */
@@ -91,22 +90,22 @@ export interface CollectorSchemaEntry {
 
 /**
  * The options monaco-yaml gets for `entry`, or for syntax only when it is
- * null: the one place they are written (Ruling 26). The editor passes
- * exactly this to `configureMonacoYaml` and `update`; the schema tests build
- * their worker from it.
+ * null: the one place they are written. The editor passes exactly this to
+ * `configureMonacoYaml` and `update`; the schema tests build their worker
+ * from it.
  *
- * With a schema (Preflight rulings 12 and 13): completion and hover on,
- * hover without the "Source: v0.162.0.json" link, the schema inline and
- * matched to every model (`fileMatch: ["*"]`, since the model has no `path`:
- * it is `inmemory://model/N`). Schema requests are off in both: with them
- * on, a `# yaml-language-server: $schema=<url>` line in a text made every
- * viewer's browser fetch that URL.
+ * With a schema: completion and hover on, hover without the "Source:
+ * v0.162.0.json" link, the schema inline and matched to every model
+ * (`fileMatch: ["*"]`, since the model has no `path`: it is
+ * `inmemory://model/N`). Schema requests are off in both: with them on, a
+ * `# yaml-language-server: $schema=<url>` line in a text made every viewer's
+ * browser fetch that URL.
  *
- * Without one (D8 decision 9, D13c decision 2): YAML's syntax markers only;
- * completion and hover off, since the worker can echo a typed word when no
- * schema matches. `hoverSchemaSource` is written in both, as `update` merges
- * into what was there, so the options never depend on the pins before.
- * `format: {}` leaves monaco-yaml's formatter as it always was here.
+ * Without one: YAML's syntax markers only; completion and hover off, since
+ * the worker can echo a typed word when no schema matches.
+ * `hoverSchemaSource` is written in both, as `update` merges into what was
+ * there, so the options never depend on the pins before. `format: {}` leaves
+ * monaco-yaml's formatter as it always was here.
  */
 export function monacoYamlOptions(entry: CollectorSchemaEntry | null): MonacoYamlOptions {
   if (entry === null) {

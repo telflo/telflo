@@ -62,9 +62,8 @@ import { TEST_REGEX_ERROR_CODES } from "./test-regexes.js";
 import { TESTING_ERROR_CODES } from "./test-runs.js";
 import { VALIDATION_RULES_ERROR_CODES } from "./validation-rules.js";
 
-// The fleet routes' contracts (D16b decisions 13 to 18; Preflight rulings 8
-// and 19): the codes and the two 503 messages, pinned; each request
-// schema's accepted and refused shapes.
+// The fleet routes' contracts: the codes and the two 503 messages, pinned;
+// each request schema's accepted and refused shapes.
 
 const ID = "0190a1b2-c3d4-7e5f-8a9b-0c1d2e3f4a70";
 const NOW = "2026-10-13T09:00:00.000Z";
@@ -73,7 +72,7 @@ const NOW = "2026-10-13T09:00:00.000Z";
 const GO_SPACES = "\t\n\v\f\r \u0085\u00a0\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200a\u2028\u2029\u202f\u205f\u3000";
 
 describe("the codes and the messages", () => {
-  it("are Preflight ruling 8's codes, none another module's", () => {
+  it("are the fleet codes, none another module's", () => {
     expect(FLEET_ERROR_CODES).toEqual([
       "fleet_not_found",
       "fleet_conflict",
@@ -117,9 +116,9 @@ describe("the codes and the messages", () => {
     expect(SESSION_ERROR_CODES).toContain("rate_limited");
   });
 
-  it("are Preflight rulings 6's and 19's words, exactly, and D17d-1 decision 18's for a Kubernetes group's rename", () => {
+  it("are the refusals' words, exactly, a Kubernetes group's rename's among them", () => {
     expect(COLLECTOR_GROUP_NAME_FIXED_MESSAGE).toBe("A Kubernetes group's name can't change: its Helm release is named after it.");
-    // D17d-2 decision 15, Preflight ruling 3: a Kubernetes group's install with settings the platform can't read.
+    // A Kubernetes group's install with settings the platform can't read.
     expect(COLLECTOR_GROUP_SETTINGS_UNREADABLE_MESSAGE).toBe("This group's Kubernetes settings can't be read: save them in Edit first.");
     expect(FLEETS_UNAVAILABLE_MESSAGE).toBe(
       "Fleet management is unavailable right now. A change you were making may or may not have been made: reload before trying again.",
@@ -280,7 +279,7 @@ describe("the replies", () => {
     expect(FleetCreatedResponseSchema.shape.tokens.shape.default.shape).toHaveProperty("bearer");
   });
 
-  it("carry a fleet's last seen and its rotate token's state in its summary, each required, null or set (D17a decision 17)", () => {
+  it("carry a fleet's last seen and its rotate token's state in its summary, each required, null or set", () => {
     const counts = {
       collectors: 1,
       online: 1,
@@ -312,7 +311,7 @@ describe("the replies", () => {
     expect(FleetRotateTokenSchema.safeParse({ expiresAt: null, validCount: 1 }).success).toBe(false);
   });
 
-  it("carry a token event's ids, kind, actor ({userId, email} or null) and time, never a bearer or the token's kind; a page its events and next cursor (D17b-2 decision 20)", () => {
+  it("carry a token event's ids, kind, actor ({userId, email} or null) and time, never a bearer or the token's kind; a page its events and next cursor", () => {
     expect(ENROLLMENT_TOKEN_EVENT_KINDS).toEqual(["issued", "viewed", "rotated", "revoked"]);
     const event = { id: ID, tokenId: ID, event: "viewed", actor: { userId: ID, email: "sam@acme.io" }, occurredAt: NOW };
     for (const kind of ENROLLMENT_TOKEN_EVENT_KINDS) {
@@ -345,9 +344,9 @@ describe("the replies", () => {
   });
 });
 
-// D16b Task 4: collector groups, collectors and a configuration's fleet
-// usage. Published versions are configuration versions on the wire
-// (decision 14); the bounds are openapi.yaml's.
+// Collector groups, collectors and a configuration's fleet usage. Published
+// versions are configuration versions on the wire; the bounds are
+// openapi.yaml's.
 
 describe("a collector group's create and update", () => {
   it("takes a name, a configuration version to assign (or null) and annotations, each optional", () => {
@@ -357,7 +356,7 @@ describe("a collector group's create and update", () => {
     const cleared = { name: "x", assignedVersionId: null, annotations: null };
     expect(CreateCollectorGroupRequestSchema.parse(cleared)).toEqual(cleared);
     expect(UpdateCollectorGroupRequestSchema.parse({ assignedVersionId: null })).toEqual({ assignedVersionId: null });
-    // D17c-1 decision 30: annotations, an object (another client's keys kept as sent) or null.
+    // Annotations, an object (another client's keys kept as sent) or null.
     const annotations = { telflo: { dockerMounts: [{ hostPath: "/var/log", containerPath: "/logs", readOnly: true }] }, "acme.io/x": [1, { a: null }] };
     expect(CreateCollectorGroupRequestSchema.parse({ name: "x", annotations })).toEqual({ name: "x", annotations });
     expect(UpdateCollectorGroupRequestSchema.parse({ annotations })).toEqual({ annotations });
@@ -365,7 +364,7 @@ describe("a collector group's create and update", () => {
     expect(UpdateCollectorGroupRequestSchema.parse({ annotations: {} })).toEqual({ annotations: {} });
   });
 
-  it("takes a variable group's id, or null for none, on the create and the update alone (D20 decisions 4 and 5)", () => {
+  it("takes a variable group's id, or null for none, on the create and the update alone", () => {
     expect(CreateCollectorGroupRequestSchema.parse({ name: "x", variableGroupId: ID })).toEqual({ name: "x", variableGroupId: ID });
     expect(CreateCollectorGroupRequestSchema.parse({ name: "x", variableGroupId: null })).toEqual({ name: "x", variableGroupId: null });
     expect(UpdateCollectorGroupRequestSchema.parse({ variableGroupId: ID })).toEqual({ variableGroupId: ID });
@@ -382,7 +381,7 @@ describe("a collector group's create and update", () => {
     ["a name with an edge space", { name: "edge " }],
     ["a publication id (never the browser's)", { name: "x", assignedPublicationId: ID }],
     ["a malformed version id", { name: "x", assignedVersionId: "42" }],
-    // D17d-1 decision 2: the opamp-server's four Kubernetes fields are gone; they live in the annotations.
+    // The opamp-server's four Kubernetes fields are refused; they live in the annotations.
     ["a role", { name: "x", role: "gateway" }],
     ["a namespace", { name: "x", namespace: "telemetry" }],
     ["replicas", { name: "x", replicas: 1 }],
@@ -407,9 +406,7 @@ describe("a collector group's create and update", () => {
   });
 });
 
-// The walks the annotations' bounds use (D17c-1 decision 30; Rulings 23,
-// 25 m1 and 37 n5), once the volumes' (D16b) before D17d-1 moved a
-// Kubernetes group's volumes into the annotations.
+// The walks the annotations' bounds use.
 describe("the annotations' walks (annotationsTextBytes, jsonDepth)", () => {
   /** `{"n":"..."}`: 8 bytes around the text in the opamp-server's form, 9 in Postgres's (`{"n": "..."}`). */
   const annotationsOf = (text: string) => ({ n: text });
@@ -485,7 +482,7 @@ describe("the annotations' walks (annotationsTextBytes, jsonDepth)", () => {
       const deep = nested(depth);
       expect(() => CollectorGroupAnnotationsSchema.safeParse({ v: deep })).not.toThrow();
       expect(CollectorGroupAnnotationsSchema.safeParse({ v: deep }).success).toBe(false);
-      // The byte count stops once past the bound (Ruling 37 n5), each level at least 2 bytes.
+      // The byte count stops once past the bound, each level at least 2 bytes.
       const steps = { count: 0 };
       const bytes = annotationsTextBytes(deep, steps);
       expect(bytes?.canonical).toBeGreaterThan(COLLECTOR_GROUP_ANNOTATIONS_MAXIMUM_BYTES);
@@ -494,7 +491,7 @@ describe("the annotations' walks (annotationsTextBytes, jsonDepth)", () => {
     }
   });
 
-  describe("a very wide value: each walk stops once past its bound (Ruling 37 n5)", () => {
+  describe("a very wide value: each walk stops once past its bound", () => {
     /** At most the bound's steps per walk, plus one: each value and key read adds at least a byte. */
     const MOST_STEPS = 2 * (COLLECTOR_GROUP_ANNOTATIONS_MAXIMUM_BYTES + 1);
     const WIDE: [string, Record<string, unknown>][] = [
@@ -537,7 +534,7 @@ describe("the annotations' walks (annotationsTextBytes, jsonDepth)", () => {
   });
 });
 
-describe("a group's annotations (CollectorGroupAnnotationsSchema, D17c-1 decision 30)", () => {
+describe("a group's annotations (CollectorGroupAnnotationsSchema)", () => {
   /** An object of one key whose string value makes its canonical text `bytes` long ({"a":"…"}: 8 more). */
   const ofCanonicalBytes = (bytes: number) => ({ a: "v".repeat(bytes - 8) });
 
@@ -582,7 +579,7 @@ describe("a group's annotations (CollectorGroupAnnotationsSchema, D17c-1 decisio
   it("checks its telflo key as the platform's own shape, each problem at its path; other keys are another client's", () => {
     const mount = { hostPath: "/var/log", containerPath: "/logs", readOnly: false };
     expect(CollectorGroupAnnotationsSchema.safeParse({ telflo: { dockerMounts: [mount] }, other: { telflo: 1 } }).success).toBe(true);
-    // D17d-1 decision 17: each of the platform's keys optional, so an empty one too.
+    // Each of the platform's keys optional, so an empty one too.
     expect(CollectorGroupAnnotationsSchema.safeParse({ telflo: {} }).success).toBe(true);
     expect(CollectorGroupAnnotationsSchema.safeParse({ other: { mounts: "anything" } }).success).toBe(true);
     const issues = (value: unknown) => CollectorGroupAnnotationsSchema.safeParse(value).error?.issues.map((issue) => [issue.path.join("."), issue.message]);
@@ -603,7 +600,7 @@ describe("a group's annotations (CollectorGroupAnnotationsSchema, D17c-1 decisio
   });
 });
 
-describe("a server group's mounts (D17c-1 decision 31, Preflight ruling 15)", () => {
+describe("a server group's mounts", () => {
   const mount = { hostPath: "/var/log/nginx", containerPath: "/var/log/nginx", readOnly: true };
 
   it.each([
@@ -707,7 +704,7 @@ describe("a server group's mounts (D17c-1 decision 31, Preflight ruling 15)", ()
     expect(annotationsWithDockerMounts(null, [mount])).toEqual({ telflo: { dockerMounts: [mount] } });
     expect(annotationsWithDockerMounts({ ...other, telflo: { dockerMounts: [mount] } }, [])).toEqual(other);
     expect(annotationsWithDockerMounts({ telflo: { dockerMounts: [mount] } }, [])).toBeNull();
-    // Ruling 40: each mount rebuilt from its three fields, whatever else a caller's object holds.
+    // Each mount rebuilt from its three fields, whatever else a caller's object holds.
     const widened = { ...mount, hostPathType: "Directory", note: "theirs" } as typeof mount;
     expect(annotationsWithDockerMounts(null, [widened])).toEqual({ telflo: { dockerMounts: [mount] } });
     expect(annotationsWithDockerMounts(null, [])).toBeNull();
@@ -717,8 +714,8 @@ describe("a server group's mounts (D17c-1 decision 31, Preflight ruling 15)", ()
   });
 });
 
-// D17d-1 decisions 2, 17 and 18, Preflight rulings 11 and 12: a Kubernetes
-// group's settings under its annotations' telflo.kubernetes, and their words.
+// A Kubernetes group's settings under its annotations' telflo.kubernetes, and
+// their words.
 describe("a Kubernetes group's settings (KubernetesAnnotationsSchema)", () => {
   const volume = { hostPath: "/var/log/journal", hostPathType: "Directory", mountPath: "/var/log/journal", readOnly: true };
   const gateway = { role: "gateway", namespace: "observability", replicas: 3, volumes: [volume] };
@@ -878,7 +875,7 @@ describe("a Kubernetes group's settings (KubernetesAnnotationsSchema)", () => {
   });
 });
 
-describe("a Kubernetes fleet's group names and roles (Preflight rulings 11 and 12)", () => {
+describe("a Kubernetes fleet's group names and roles", () => {
   it.each([
     ["", "A gateway name is required."],
     ["a".repeat(53), "Gateway name must be 52 characters or fewer."],
@@ -1010,7 +1007,7 @@ describe("reading and writing a Kubernetes group's settings (kubernetesOf, annot
 });
 
 describe("a collector's pin, update and bulk pin", () => {
-  it("pins a configuration version, or unpins with null; never a raw publication id, nor an import (D16c)", () => {
+  it("pins a configuration version, or unpins with null; never a raw publication id, nor an import", () => {
     expect(CollectorPinRequestSchema.parse({ kind: "version", versionId: ID })).toEqual({ kind: "version", versionId: ID });
     expect(CollectorPinRequestSchema.parse(null)).toBeNull();
     for (const pin of [
@@ -1032,7 +1029,7 @@ describe("a collector's pin, update and bulk pin", () => {
     expect(PinCollectorsRequestSchema.safeParse({ collectorIds: [ID], pin: { kind: "import", importId: ID } }).success).toBe(false);
   });
 
-  it("takes a pin, a variable group, or both, and refuses neither: a field left out leaves each collector's as it is (Q103)", () => {
+  it("takes a pin, a variable group, or both, and refuses neither: a field left out leaves each collector's as it is", () => {
     const pin = { kind: "version", versionId: ID } as const;
     expect(PinCollectorsRequestSchema.parse({ collectorIds: [ID], pinnedVariableGroupId: ID })).toEqual({ collectorIds: [ID], pinnedVariableGroupId: ID });
     expect(PinCollectorsRequestSchema.parse({ collectorIds: [ID], pinnedVariableGroupId: null })).toEqual({ collectorIds: [ID], pinnedVariableGroupId: null });
@@ -1043,7 +1040,7 @@ describe("a collector's pin, update and bulk pin", () => {
     expect(PinCollectorsRequestSchema.safeParse({ collectorIds: [ID], variableGroupId: ID }).success).toBe(false);
   });
 
-  it("updates a collector's pinned variable group alone, or with the rest; null returns it to its group's (D20 decision 4)", () => {
+  it("updates a collector's pinned variable group alone, or with the rest; null returns it to its group's", () => {
     expect(UpdateCollectorRequestSchema.parse({ pinnedVariableGroupId: ID })).toEqual({ pinnedVariableGroupId: ID });
     expect(UpdateCollectorRequestSchema.parse({ pinnedVariableGroupId: null })).toEqual({ pinnedVariableGroupId: null });
     expect(UpdateCollectorRequestSchema.parse({ pin: null, pinnedVariableGroupId: ID })).toEqual({ pin: null, pinnedVariableGroupId: ID });
@@ -1076,8 +1073,8 @@ describe("the collector list's and the pages' queries", () => {
 });
 
 describe("the collectors' replies", () => {
-  // Ruling 31 m5: the platform's names say "published version", and a
-  // reply's pin is named as a pin's request is.
+  // The platform's names say "published version", and a reply's pin is named
+  // as a pin's request is.
   const VERSION = {
     configurationId: ID,
     configurationName: "c",
@@ -1089,7 +1086,7 @@ describe("the collectors' replies", () => {
   };
   const SHA = "a".repeat(64);
 
-  it("answers a collector's pinned variable group, required and nullable (D20, Preflight ruling 23)", () => {
+  it("answers a collector's pinned variable group, required and nullable", () => {
     const collector = {
       id: ID,
       instanceUid: ID,
@@ -1181,14 +1178,14 @@ describe("the collectors' replies", () => {
       updatedAt: NOW,
     };
     expect(CollectorGroupSchema.parse(group)).toEqual(group);
-    // D20 (Preflight ruling 23): the variable group it uses, required and nullable.
+    // The variable group it uses, required and nullable.
     expect(CollectorGroupSchema.parse({ ...group, variableGroupId: ID })).toMatchObject({ variableGroupId: ID });
     const { variableGroupId: _variableGroupId, ...withoutVariableGroup } = group;
     expect(CollectorGroupSchema.safeParse(withoutVariableGroup).success).toBe(false);
-    // D17c-1 decision 30: the annotations passed through, whatever they hold.
+    // The annotations passed through, whatever they hold.
     const annotated = { ...group, annotations: { telflo: { dockerMounts: [] }, "acme.io/owner": ["ops", { n: 1 }] } };
     expect(CollectorGroupSchema.parse(annotated)).toEqual(annotated);
-    // D17d-1 decision 2: no Kubernetes field beside them; an unreadable telflo key still passes through.
+    // No Kubernetes field beside them; an unreadable telflo key still passes through.
     expect(CollectorGroupSchema.safeParse({ ...group, role: null }).success).toBe(false);
     expect(CollectorGroupSchema.safeParse({ ...group, volumes: null }).success).toBe(false);
     const unreadable = { ...group, annotations: { telflo: { kubernetes: { role: "sidecar" } } } };
@@ -1196,7 +1193,7 @@ describe("the collectors' replies", () => {
     const { annotations: _annotations, ...withoutAnnotations } = group;
     expect(CollectorGroupSchema.safeParse(withoutAnnotations).success).toBe(false);
     expect(CollectorGroupSchema.safeParse({ ...group, annotations: [] }).success).toBe(false);
-    // D17c-1 decision 33: a published version names its collector.
+    // A published version names its collector.
     const { collectorVersion: _collectorVersion, ...withoutCollector } = VERSION;
     expect(CollectorGroupSchema.safeParse({ ...group, assignedVersion: withoutCollector }).success).toBe(false);
     const { assignedPublishedVersionId: _renamed, ...rest } = group;

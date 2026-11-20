@@ -11,12 +11,10 @@ import {
 import { createOrgVariableReference, type OrgVariableName } from "~/lib/org-variables.js";
 
 /*
- * The `$` picker of organization variables (ADR 0018; D9b decision 5),
- * with the pinned `${env:}` row. Its rows come from `lib/org-variables.ts`'s
- * one shared read (D20 Preflight ruling 34): each a name and its
- * description, never a value. The typed filter matches either, and a pick
- * inserts `${org:NAME}` (default 26). A row is one name and a description
- * (Q81).
+ * The `$` picker of organization variables, with the pinned `${env:}` row.
+ * Its rows come from `lib/org-variables.ts`'s one shared read: each a name
+ * and its description, never a value. The typed filter matches either, and a
+ * pick inserts `${org:NAME}`. A row is one name and a description.
  */
 
 interface UseOrgVariableAutocompleteOptions {

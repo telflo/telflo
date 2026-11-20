@@ -89,9 +89,9 @@ describe("the corpus", () => {
   });
 });
 
-// D9d Task 1: each of D9d's form families has its corpus text, with comments, an anchor, CRLF or `0750`, and
-// pipelines; each D9d component is in one of them (the collector's current spellings too).
-describe("D9d's corpus texts", () => {
+// Each of these form families has its corpus text, with comments, an anchor, CRLF or `0750`, and pipelines;
+// each of their components is in one of them (the collector's current spellings too).
+describe("the metrics, traces, OTTL, routing, storage and vendor forms' corpus texts", () => {
   const D9D = ["forms-metrics.yaml", "forms-traces.yaml", "forms-ottl.yaml", "forms-routing.yaml", "forms-storage.yaml", "forms-vendors.yaml"];
 
   it.each(D9D)("%s has comments, an anchor, CRLF or 0750, and service.pipelines", (name) => {
@@ -102,7 +102,7 @@ describe("D9d's corpus texts", () => {
     expect(readTextModel(parsed(text).document).pipelines.size).toBeGreaterThan(0);
   });
 
-  it("holds every D9d component", () => {
+  it("holds every component of those forms", () => {
     const types = new Set(
       D9D.flatMap((name) => [...readTextModel(parsed(corpusText(name)).document).components.keys()]).map((key) => {
         const [section, name] = key.split(".") as [string, string];
@@ -149,9 +149,9 @@ describe("D9d's corpus texts", () => {
 
 /*
  * Texts whose routing or failover receivers disagree with the connector's
- * config (D9d spec decision 8): with the text's order, the canvas keeps the
- * receivers as the text lists them, so the invariant holds; D9a's
- * derivation without an order reads them from the config, so they differ.
+ * config: with the text's order, the canvas keeps the receivers as the text
+ * lists them, so the invariant holds; the derivation without an order reads
+ * them from the config, so they differ.
  */
 const INCONSISTENT_CONNECTOR_TEXTS: readonly string[] = ["routing-inconsistent.yaml"];
 
@@ -182,7 +182,7 @@ describe("the round-trip invariant: deriveModel(parse(text).graph) is the text's
     const textModel = readTextModel(document);
     const fromConfig = deriveModel(graph);
 
-    // D9a's derivation would rewrite the receivers; the text's order keeps them, with the processors.
+    // The config's derivation would rewrite the receivers; the text's order keeps them, with the processors.
     expect(fromConfig.pipelines.get("traces/listed")?.receivers).toEqual([]);
     expect(fromConfig.pipelines.get("traces/named")?.receivers).toContain("routing");
     expect(fromConfig.pipelines.get("traces/backup")?.receivers).toContain("failover");
@@ -219,7 +219,7 @@ describe("the round-trip invariant: deriveModel(parse(text).graph) is the text's
   );
 });
 
-describe("ids never carry a name (decision 7)", () => {
+describe("ids never carry a name", () => {
   it.each(CORPUS.map((entry) => [entry.name, entry.text] as const))("%s", (_name, text) => {
     const { graph } = parsed(text);
     const names = new Set<string>();

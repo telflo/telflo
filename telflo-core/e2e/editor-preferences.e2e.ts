@@ -4,18 +4,17 @@ import { seedConfiguration, seedUser, type SeededUser } from "./support/database
 import { expectShownFromTop, goToLine, open, openYamlTab, platformKeys, shownLines } from "./support/editor-page.js";
 import { navigateToSearch, savePreferencesThroughApi, signInThroughApi, skipEditorTour } from "./support/session.js";
 
-// The editor preferences (D21 decisions 6, 28 and 31): set in Settings ›
-// Editor, they reach every open Monaco without a reload. Monaco is read from
-// the DOM (Preflight ruling 39): the font size from the drawn lines' computed
-// style, the minimap from its width, and the tab size by pressing Tab, since
-// the width a Tab inserts is the model's (Preflight rulings 30 and 31: the
+// The editor preferences: set in Settings › Editor, they reach every open
+// Monaco without a reload. Monaco is read from the DOM: the font size from
+// the drawn lines' computed style, the minimap from its width, and the tab
+// size by pressing Tab, since the width a Tab inserts is the model's (the
 // model's tabSize and indentSize are set explicitly; the text's own
 // indentation never decides them).
 //
 // The preference is changed in a SECOND tab while the editor's tab stays open;
 // the editor's tab then navigates to its own address with a search, which
 // revalidates the signed-in layout as any navigation does, and the same
-// `.monaco-editor` element is still there (Preflight ruling 51).
+// `.monaco-editor` element is still there.
 
 const PASSWORD = "correct horse battery staple";
 const PREFERENCES_PATH = "/api/v1/auth/me/preferences";

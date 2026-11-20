@@ -22,7 +22,7 @@ describe("isCanonicalUuid", () => {
 /** A version 4 UUID, in its canonical, lower-case form. */
 const V4 = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 
-describe("randomUuid (D17a Preflight ruling 13)", () => {
+describe("randomUuid", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
   });

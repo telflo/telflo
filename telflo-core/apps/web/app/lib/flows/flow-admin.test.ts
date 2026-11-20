@@ -51,7 +51,7 @@ describe("deriveSignals", () => {
   });
 });
 
-describe("isPinOffered (D12 decision 16)", () => {
+describe("isPinOffered", () => {
   it("is true for a pin the catalogue offers", () => {
     expect(isPinOffered(TAIL_SAMPLING, CATALOGUE)).toBe(true);
   });
@@ -67,7 +67,7 @@ describe("isPinOffered (D12 decision 16)", () => {
   });
 });
 
-describe("changedFields: an edit's PATCH (D12 Preflight ruling 19)", () => {
+describe("changedFields: an edit's PATCH", () => {
   it("is empty when nothing changed, the signals in another order included", () => {
     expect(changedFields(TAIL_SAMPLING, { ...fieldsOf(), signals: ["metrics", "traces"] })).toEqual({});
   });

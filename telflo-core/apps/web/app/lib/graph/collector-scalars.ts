@@ -1,10 +1,10 @@
 /*
- * How the collector reads a plain scalar (D9c Ruling 69). The text edits
- * decide what they may write plain by `yaml`'s reading (YAML 1.2's core
- * schema), but the collector decodes the text with yaml.v3, whose plain
- * scalars resolve more widely: `go.yaml.in/yaml/v3` v3.0.5, the module
- * core's `confmap` requires at v0.162.0 (`confmap/go.mod:17`; contrib's
- * receivers pull the same, e.g. `receiver/filelogreceiver/go.mod:74`), in
+ * How the collector reads a plain scalar. The text edits decide what they
+ * may write plain by `yaml`'s reading (YAML 1.2's core schema), but the
+ * collector decodes the text with yaml.v3, whose plain scalars resolve
+ * more widely: `go.yaml.in/yaml/v3` v3.0.5, the module core's `confmap`
+ * requires at v0.162.0 (`confmap/go.mod:17`; contrib's receivers pull the
+ * same, e.g. `receiver/filelogreceiver/go.mod:74`), in
  * `resolve.go:126-265`:
  * - a table of fixed spellings (`resolve.go:47-66`): `true`, `True`,
  *   `TRUE`, `false`, …, `~`, `null`, `Null`, `NULL`, `.nan`, `.inf` and

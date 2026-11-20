@@ -16,20 +16,19 @@ import {
 import { signInThroughApi } from "./support/session.js";
 import { toastWith } from "./support/validation-pipelines-page.js";
 
-// The Product admins page (D29 decisions 5, 39 and 45), in the browser: a
-// product admin adds another by exact email, removes another, removes
-// themselves (sent to `/app`), and sees the last-admin refusal's toast.
+// The Product admins page, in the browser: a product admin adds another by
+// exact email, removes another, removes themselves (sent to `/app`), and sees
+// the last-admin refusal's toast.
 //
-// - The flag is global and parallel workers make admins of their own, so
-//   the real last-admin rule is never reachable here: it is the
-//   integration suite's and the stack smoke's (Preflight ruling 7). Its UI
-//   is shown with a routed 409 only.
+// - The flag is global and parallel workers make admins of their own, so the
+//   real last-admin rule is never reachable here: it is the integration
+//   suite's and the stack smoke's. Its UI is shown with a routed 409 only.
 // - Each test makes a throwaway second admin, so the one it removes is never
 //   the last, finds only its own rows by its own addresses, and revokes
 //   every admin it made when it ends, however it ends (`admins`).
 // - The page shows other people's emails (synthetic `e2e-<uuid>@example.com`
 //   fixtures): the privacy check collects where its own addresses sit, goes
-//   to about:blank, then asserts (Preflight ruling 18).
+//   to about:blank, then asserts.
 
 const PASSWORD = "correct horse battery staple";
 
@@ -131,13 +130,13 @@ test("a product admin removes themselves while another remains: their own words,
   expect((await page.request.get("/api/v1/product-admin/product-admins")).status()).toBe(403);
 });
 
-test("the last-admin refusal (a routed 409 last_product_admin): decision 5's words in a toast, the confirmation closed, the admin kept", async ({
+test("the last-admin refusal (a routed 409 last_product_admin): its words in a toast, the confirmation closed, the admin kept", async ({
   page,
   admins,
 }) => {
   const admin = await productAdmin(admins, page);
   await openProductAdmins(page);
-  // The real rule is unreachable with other workers' admins on the list: the answer is routed (Preflight ruling 7).
+  // The real rule is unreachable with other workers' admins on the list: the answer is routed.
   await page.route(`**/api/v1/product-admin/product-admins/${admin.userId}`, async (route) => {
     if (route.request().method() !== "DELETE") return route.fallback();
     await route.fulfill({

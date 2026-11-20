@@ -1,35 +1,33 @@
 /**
- * The site's switches and links (D36-1 decisions 27 and 28): what this
- * install offers beyond the signed-in product, read by the API's settings
- * and the web's root loader alike from the same environment variables, so
- * the two pods can't disagree about a rule. Their defaults are the open
- * source's (Q248): invitation-only registration, the playground and the
- * anonymous reads off, Settings › Notifications hidden (Q270), no
- * Terms, the public docs.
+ * The site's switches and links: what this install offers beyond the
+ * signed-in product, read by the API's settings and the web's root loader
+ * alike from the same environment variables, so the two pods can't
+ * disagree about a rule. Their defaults are the open source's:
+ * invitation-only registration, the playground and the anonymous reads
+ * off, Settings › Notifications hidden, no Terms, the public docs.
  *
  * Nothing here is secret: the web sends the whole object to every browser.
  */
 
-/** TELFLO_REGISTRATION's values (decision 35): who may create an account. */
+/** TELFLO_REGISTRATION's values: who may create an account. */
 export const REGISTRATION_MODES = ["open", "invite-only", "closed"] as const;
 export type RegistrationMode = (typeof REGISTRATION_MODES)[number];
 
 export interface SiteTerms {
   /**
-   * TELFLO_TERMS_VERSION: "" asks for no Terms acceptance anywhere (decision
-   * 32). Otherwise the version a user must have accepted (D2c decision 6):
-   * `/me` compares a user's accepted version with it, and registration and
-   * the terms acceptance endpoint accept only it (Ruling 18). It names what
-   * a user accepts, the Terms of Service and the Privacy Policy together, so
-   * changing either document's text means changing it, which shows every
-   * user the terms dialog again.
+   * TELFLO_TERMS_VERSION: "" asks for no Terms acceptance anywhere.
+   * Otherwise the version a user must have accepted: `/me` compares a user's
+   * accepted version with it, and registration and the terms acceptance
+   * endpoint accept only it. It names what a user accepts, the Terms of
+   * Service and the Privacy Policy together, so changing either document's
+   * text means changing it, which shows every user the terms dialog again.
    */
   version: string;
   /** TELFLO_TERMS_URL: where the Terms of Service are read; "" for none. */
   termsUrl: string;
   /** TELFLO_PRIVACY_URL: where the Privacy Policy is read; "" for none. */
   privacyUrl: string;
-  /** TELFLO_COOKIE_POLICY_URL: the consent banner's policy link (decision 33); "" for none. */
+  /** TELFLO_COOKIE_POLICY_URL: the consent banner's policy link; "" for none. */
   cookiePolicyUrl: string;
 }
 
@@ -45,19 +43,19 @@ export interface SiteSettings {
   /** TELFLO_SALES_INQUIRY (default false): POST /api/v1/sales-inquiries. */
   salesInquiry: boolean;
   /**
-   * TELFLO_EMAIL_NOTIFICATIONS (default false; Q270): Settings › Notifications,
+   * TELFLO_EMAIL_NOTIFICATIONS (default false): Settings › Notifications,
    * its nav item and page. The preferences it shows stay in `/me` either way.
    */
   emailNotifications: boolean;
-  /** TELFLO_DOCS_URL (default the public docs): "" hides every docs link (decision 34). */
+  /** TELFLO_DOCS_URL (default the public docs): "" hides every docs link. */
   docsUrl: string;
   terms: SiteTerms;
 }
 
-/** The public docs, TELFLO_DOCS_URL's default (Q248). */
+/** The public docs, TELFLO_DOCS_URL's default. */
 export const DEFAULT_DOCS_URL = "https://docs.telflo.com/";
 
-/** The open source's defaults (Q248): what an install with none of the variables set runs. */
+/** The open source's defaults: what an install with none of the variables set runs. */
 export const OPEN_SOURCE_SITE: SiteSettings = Object.freeze({
   registration: "invite-only",
   playground: false,
@@ -70,12 +68,12 @@ export const OPEN_SOURCE_SITE: SiteSettings = Object.freeze({
 }) as SiteSettings;
 
 /**
- * A site URL (decision 27): an https URL with a host (letters, digits, `.`
- * and `-`), an optional port and an optional path, query or fragment; or a
- * path on this origin starting with one `/` (never `//`, another origin).
- * Only URL characters: no white space, quote, backslash, angle bracket,
- * brace or backquote, so the value is safe in an attribute, an env line and
- * nginx's text alike, and no user name or password gets through.
+ * A site URL: an https URL with a host (letters, digits, `.` and `-`), an
+ * optional port and an optional path, query or fragment; or a path on this
+ * origin starting with one `/` (never `//`, another origin). Only URL
+ * characters: no white space, quote, backslash, angle bracket, brace or
+ * backquote, so the value is safe in an attribute, an env line and nginx's
+ * text alike, and no user name or password gets through.
  */
 export const SITE_URL_PATTERN =
   /^(?:https:\/\/[A-Za-z0-9](?:[A-Za-z0-9.-]*[A-Za-z0-9])?(?::[0-9]{1,5})?(?:[/?#][A-Za-z0-9._~%!$&()*+,;=:@/?#-]*)?|\/(?:[A-Za-z0-9._~%!$&()*+,;=:@?#-][A-Za-z0-9._~%!$&()*+,;=:@/?#-]*)?)$/;
@@ -123,13 +121,13 @@ function siteUrl(env: Environment, name: string, fallback = ""): string {
 }
 
 /**
- * The site block from the environment (decision 27), with the open source's
- * defaults for whatever is unset. "" is unset for every variable but
- * TELFLO_DOCS_URL, where "" hides the docs links and only an absent variable
- * is the default. Refuses, with fixed words naming the variable and the rule
- * and never quoting a value: an unknown registration mode, a boolean other
- * than "true" or "false", a URL of another form, a Terms version of another
- * form, a Terms version without both the Terms and the privacy URL, and the
+ * The site block from the environment, with the open source's defaults for
+ * whatever is unset. "" is unset for every variable but TELFLO_DOCS_URL,
+ * where "" hides the docs links and only an absent variable is the default.
+ * Refuses, with fixed words naming the variable and the rule and never
+ * quoting a value: an unknown registration mode, a boolean other than "true"
+ * or "false", a URL of another form, a Terms version of another form, a
+ * Terms version without both the Terms and the privacy URL, and the
  * playground without anonymous validate and public flows (it needs both).
  */
 export function parseSiteSettings(env: Environment): SiteSettings {

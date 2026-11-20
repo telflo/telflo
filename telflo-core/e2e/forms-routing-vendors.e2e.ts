@@ -14,15 +14,14 @@ import {
 } from "./support/forms-page.js";
 import { skipEditorTour } from "./support/session.js";
 
-// The routing and vendor forms (D9d), in the browser: a routing connector's
-// target chosen writes the route's entry and the connector into the target
-// pipeline's receivers in one change, with its toast, and one Undo takes
-// both back (decision 8); Datadog's Only Metadata cascade, with its toast
-// (decision 7); an S3 receiver's ingest mode switched to SQS and back to a
-// time range, each with its toast, the time range held until a time is
-// typed (decisions 3, 7). Each test works in an organization of its own, so
-// tests and browsers run in parallel. See support/forms-page.ts for how the
-// text is read.
+// The routing and vendor forms, in the browser: a routing connector's target
+// chosen writes the route's entry and the connector into the target pipeline's
+// receivers in one change, with its toast, and one Undo takes both back;
+// Datadog's Only Metadata cascade, with its toast; an S3 receiver's ingest
+// mode switched to SQS and back to a time range, each with its toast, the time
+// range held until a time is typed. Each test works in an organization of its
+// own, so tests and browsers run in parallel. See support/forms-page.ts for
+// how the text is read.
 
 const test = base.extend({
   context: async ({ context }, use) => {
@@ -127,8 +126,8 @@ const S3_SQS = insertAfter(
 
 /**
  * S3_SQS back on a time range: the sqs block removed, the start time typed
- * (quoted: written plain, the collector's yaml.v3 would read it as a time,
- * D9c Ruling 69); the end time is still to type.
+ * (quoted: written plain, the collector's yaml.v3 would read it as a time);
+ * the end time is still to type.
  */
 const S3_TIMED = insertAfter(
   S3.filter((line) => line !== START_TIME && line !== END_TIME),
@@ -151,7 +150,7 @@ test("a routing target chosen writes the route's pipeline and the connector into
   const addPipeline = rightPanel(page).getByRole("button", { name: "Add Pipeline" });
   await expect(addPipeline).toHaveCount(1);
   await addPipeline.click();
-  // The held row: nothing written until a pipeline is chosen (decision 3).
+  // The held row: nothing written until a pipeline is chosen.
   await expect(page.locator("#route-0-targets-1")).toHaveText("Select pipeline");
   await expect(unsavedBadge(page)).toBeHidden();
   await choose(page, page.locator("#route-0-targets-1"), "traces/audit");
@@ -188,7 +187,7 @@ test("Datadog's Only Metadata ticked sets the hostname source and turns host met
   await expect(onlyMetadata).toBeChecked();
   const sentences = ["Hostname source set to first_resource: Only Metadata needs it.", "Turned Send Host Metadata on: Only Metadata needs it."];
   await expectAdjusted(page, sentences.join(" "));
-  // Nor either sentence alone in an inline alert (D9d decision 7; final ruling F9).
+  // Nor either sentence alone in an inline alert.
   for (const sentence of sentences) await expect(rightPanel(page).getByText(sentence)).toHaveCount(0);
   await expectLines(
     page,
@@ -236,7 +235,7 @@ test("an S3 receiver switched to SQS writes the queue and removes the times, wit
   await expect(page.locator("#awss3r-queue-url")).toHaveValue("${env:AWS_SQS_QUEUE_URL}");
   await afterHistoryRun(page);
 
-  // Time range is held, writing nothing, until a time is typed (decision 3).
+  // Time range is held, writing nothing, until a time is typed.
   await choose(page, page.locator("#awss3r-mode"), "Time range (one-shot replay)");
   await expect(page.locator("#awss3r-starttime")).toHaveValue("");
   await expectLines(page, S3_SQS);

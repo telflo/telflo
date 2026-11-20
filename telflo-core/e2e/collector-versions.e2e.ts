@@ -21,32 +21,30 @@ import { fakeSnapshots } from "./support/fake-opamp-server.js";
 import { signInThroughApi, skipEditorTour, waitForHydration } from "./support/session.js";
 import { createVersionFromPicker, versionPath, versionTrigger } from "./support/versions-page.js";
 
-// Collector versions and distributions (D13a), in the browser: the create
-// dialog's Distribution dropdown; the list's distribution tag on the cards
-// and in the Distribution column; the toolbar's locked distribution and its
-// collector version picker, whose pick is an unsaved change Save stores;
-// the picker read-only on a published version; a new version carrying the
-// pin on screen (an unsaved pick included, Preflight ruling 16), and the
-// published version's banner carrying the published pin (Ruling 30);
-// publishing sending the pin to the opamp-server (the OpenAPI-checked fake,
-// read back through fakeSnapshots); the pin following whoever last picked it
-// across two tabs (Rulings 35 and 37); and the toolbar fitting beside the
-// expanded sidebar at 1280 px, nothing over its neighbour (Rulings 34 and 42).
+// Collector versions and distributions, in the browser: the create dialog's
+// Distribution dropdown; the list's distribution tag on the cards and in the
+// Distribution column; the toolbar's locked distribution and its collector
+// version picker, whose pick is an unsaved change Save stores; the picker
+// read-only on a published version; a new version carrying the pin on screen
+// (an unsaved pick included), and the published version's banner carrying
+// the published pin; publishing sending the pin to the opamp-server (the
+// OpenAPI-checked fake, read back through fakeSnapshots); the pin following
+// whoever last picked it across two tabs; and the toolbar fitting beside the
+// expanded sidebar at 1280 px, nothing over its neighbour.
 //
 // The catalogue is the one the sync wrote into telflo_platform_e2e_test from
 // catalog/, read here (support/database.ts), never written: its tables are
 // global, so a fixture row would be every test's, and a row the files don't
 // list would make the next run's sync refuse to start the E2E API. A
 // deprecated pin's picker is covered by the web's component tests
-// (CollectorVersionSelect.test.tsx); validation.e2e.ts opens a version
-// pinned to the catalogue's first deprecated row, found by query (D13b
-// Ruling 51). The versions a test picks are the catalogue's, by position
-// (the default, and an older offered one), never a hard-coded release.
+// (CollectorVersionSelect.test.tsx); validation.e2e.ts opens a version pinned
+// to the catalogue's first deprecated row, found by query. The versions a test
+// picks are the catalogue's, by position (the default, and an older offered
+// one), never a hard-coded release.
 //
 // Configurations are seeded by SQL; each test works in an organization of
-// its own, so tests and browsers run in parallel. The words are the spec's
-// (decisions 5 and 10), written out here: the browser tests don't import the
-// web app's modules.
+// its own, so tests and browsers run in parallel. The words are written
+// out here: the browser tests don't import the web app's modules.
 
 const PASSWORD = "correct horse battery staple";
 const V1_YAML = "receivers:\n  otlp:\n    protocols:\n      grpc: {}\n";
@@ -64,8 +62,7 @@ const publishedVersionMessage = (versionNumber: number) => `Version ${versionNum
 
 /**
  * In every browser the editor's tour is marked done (`skipEditorTour`):
- * these tests aren't about it, and it would cover the page on a first visit
- * (D9a decision 14).
+ * these tests aren't about it, and it would cover the page on a first visit.
  */
 const test = base.extend({
   context: async ({ context }, use) => {
@@ -154,7 +151,7 @@ async function publishThroughDialog(page: Page): Promise<void> {
   await expect(toastWith(page, PUBLISHED_MESSAGE)).toBeVisible();
 }
 
-/** The card showing the configuration named `name`: a `div role="button"` (D7 Preflight ruling 11). */
+/** The card showing the configuration named `name`: a `div role="button"`. */
 function card(page: Page, name: string): Locator {
   return page.getByRole("button").filter({ has: page.getByRole("heading", { name, exact: true }) });
 }
@@ -196,7 +193,7 @@ test("creating a configuration: the dialog's Distribution shows Contrib, presele
   await open(page, "/app");
 
   await page.locator("#createNewConfigurationButton").click();
-  // The start step first (D12 Preflight ruling 8): a blank configuration.
+  // The start step first: a blank configuration.
   await page.getByRole("dialog", { name: "New configuration" }).getByRole("button", { name: /Blank configuration/ }).click();
   const dialog = page.getByRole("dialog", { name: "Name Your Configuration" });
   const distribution = dialog.getByRole("combobox", { name: "Distribution", exact: true });
@@ -389,7 +386,7 @@ test("publishing sends the pin: an unsaved pick is saved first, and the opamp-se
   ]);
 });
 
-// ── The pin follows whoever last picked it (Rulings 35 and 37) ─────────────
+// ── The pin follows whoever last picked it ─────────────────────────────────
 
 test("a tab that never touched the picker saves its text after a teammate picked and saved another version: no pin is sent, the teammate's stays, and the tab then shows it, clean", async ({
   page,
@@ -474,7 +471,7 @@ test("a tab with typed text and no pick, refused because a teammate picked anoth
   await expect(collectorVersionPicker(ana)).toBeEnabled();
 });
 
-// ── The toolbar fits (Ruling 34) ───────────────────────────────────────────
+// ── The toolbar fits ───────────────────────────────────────────────────────
 
 interface ToolbarMeasure {
   mainLeft: number;
@@ -528,7 +525,7 @@ async function sidesOf(locator: Locator): Promise<{ left: number; right: number 
 }
 
 /**
- * Nothing in the toolbar lies over its neighbour (Ruling 42): the collector
+ * Nothing in the toolbar lies over its neighbour: the collector
  * version picker ends before the version picker starts, and the Unsaved
  * badge, while the editor is dirty, before the locked distribution.
  */
@@ -578,7 +575,7 @@ for (const width of [1280, 1440]) {
     await expectToolbarFits(page);
     await expectNoOverlap(page, { dirty: true });
     expect((await measureToolbar(page)).nameTruncated).toBe(true);
-    // "Version:" gives way too (Ruling 42), still the version picker's name, which narrows to 10 rem.
+    // "Version:" gives way too, still the version picker's name, which narrows to 10 rem.
     await expect(versionTrigger(page)).toHaveAccessibleName(/^Version: v1: /);
     expect(Math.round((await sidesOf(versionTrigger(page))).right - (await sidesOf(versionTrigger(page))).left)).toBe(160);
   });

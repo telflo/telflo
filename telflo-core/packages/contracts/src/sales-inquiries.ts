@@ -1,20 +1,19 @@
 import { z } from "zod";
 import { emailSchema } from "./shared.js";
 
-/** The inquiry's limits, after trimming (D4 decision 4). */
+/** The inquiry's limits, after trimming. */
 export const SALES_INQUIRY_NAME_MAXIMUM_LENGTH = 200;
 export const SALES_INQUIRY_MESSAGE_MAXIMUM_LENGTH = 5000;
 export const SALES_INQUIRY_WEBSITE_MAXIMUM_LENGTH = 200;
 
 /**
  * `POST /api/v1/sales-inquiries`: a contact form's inquiry (switched by
- * TELFLO_SALES_INQUIRY, D36-1 decision 25; telflo-site's pages send it). The email
- * is the contract's, at most 254 characters and lowercased (D4 Preflight
- * ruling 10).
+ * TELFLO_SALES_INQUIRY). The email is the contract's, at most 254 characters
+ * and lowercased.
  *
  * `website` is a honeypot the form hides from people. The API answers a
  * filled one with 202 and sends nothing, before this schema runs, so a bot
- * learns nothing from a refusal (decision 4).
+ * learns nothing from a refusal.
  */
 export const SalesInquiryRequestSchema = z
   .object({

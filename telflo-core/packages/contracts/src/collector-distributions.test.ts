@@ -37,7 +37,7 @@ const SUPPORTED = {
   extensions: ["health_check"],
 };
 
-describe("CollectorDistributionsResponseSchema (D13a decision 11, Ruling 26)", () => {
+describe("CollectorDistributionsResponseSchema", () => {
   it("accepts { distributions }, each with its versions", () => {
     const response = { distributions: [distribution] };
     expect(CollectorDistributionsResponseSchema.parse(response)).toEqual(response);
@@ -109,7 +109,7 @@ describe("CollectorDistributionsResponseSchema (D13a decision 11, Ruling 26)", (
   });
 });
 
-describe("a distribution's renamed types (D13b decision 6, Preflight ruling 16)", () => {
+describe("a distribution's renamed types", () => {
   const withRenames = (renamedTypes: unknown[]) =>
     CollectorDistributionsResponseSchema.safeParse({ distributions: [{ ...distribution, renamedTypes }] }).success;
 
@@ -140,7 +140,7 @@ describe("a distribution's renamed types (D13b decision 6, Preflight ruling 16)"
   });
 });
 
-describe("the request formats (D13a Preflight ruling 5)", () => {
+describe("the request formats", () => {
   it("takes a distribution id as lowercase words joined by hyphens, at most 64 characters", () => {
     for (const id of ["otelcol-contrib", "clickstack", "a1-b2-c3", "a".repeat(64)]) {
       expect(CollectorDistributionIdSchema.safeParse(id).success).toBe(true);

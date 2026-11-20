@@ -31,7 +31,7 @@ function passes(stored: ReturnType<typeof toStored>) {
 const RUNTIME_FIELDS = ["measured", "selected", "dragging", "width", "height", "positionAbsolute", "resizing"];
 const D9A_FIELDS = ["key", "pipeline", "declared", "enabled"];
 
-describe("toStored: the graph's shapes without React Flow's runtime fields (decision 6)", () => {
+describe("toStored: the graph's shapes without React Flow's runtime fields", () => {
   it("stores the starter's graph as the contract's columns", () => {
     const graph = parsed(corpusText("starter.yaml"));
     const stored = toStored(graph);
@@ -76,7 +76,7 @@ describe("toStored: the graph's shapes without React Flow's runtime fields (deci
     expect(stored.edges[0]).toEqual({ id: "edge_0", source: expect.any(String), target: expect.any(String), type: "smoothstep" });
   });
 
-  it("never stores React Flow's runtime fields, or D9a's own", () => {
+  it("never stores React Flow's runtime fields, or the builder's own", () => {
     const graph = parsed(corpusText("extensions-undeclared.yaml"));
     const withRuntime: Graph = {
       ...graph,
@@ -118,7 +118,7 @@ describe("toStored: the graph's shapes without React Flow's runtime fields (deci
   });
 });
 
-describe("toStored is best effort: the graph never stops the text from saving (Preflight ruling 4)", () => {
+describe("toStored is best effort: the graph never stops the text from saving", () => {
   it('stores config: null for a node whose config holds "\\0", and the rest as they are', () => {
     const graph = parsed('receivers:\n  otlp:\n    note: "a\\0b"\n  jaeger: {}\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp, jaeger]\n');
     const stored = toStored(graph);
@@ -182,7 +182,7 @@ describe("toStored is best effort: the graph never stops the text from saving (P
   });
 });
 
-describe("fromStored reads back what it can (Preflight ruling 14)", () => {
+describe("fromStored reads back what it can", () => {
   it("reads toStored's columns back: positions, sizes, colours, keys and pipelines", () => {
     const graph = parsed(corpusText("renamed-types.yaml"));
     graph.pipelines[0]!.color = "#8b5cf6";

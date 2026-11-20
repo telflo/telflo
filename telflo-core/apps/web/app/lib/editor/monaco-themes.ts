@@ -4,15 +4,13 @@ import type { editor } from "monaco-editor";
 
 /*
  * The Dark and Navy Monaco themes, and the mapping from the app's theme:
- * Dark → telflo-dark, Navy → telflo-navy (D21 decisions 2 and 27). Light →
- * Monaco's own light theme, `vs`, unchanged: the owner's Q128 (2026-10-23,
- * during the walkthrough) amends Q124 for Light, so no dark-surfaced
- * telflo-light (#262d38) is defined here.
- * Monaco's theme is global, so every open editor switches together. Type
- * imports only: nothing here loads Monaco.
+ * Dark → telflo-dark, Navy → telflo-navy. Light → Monaco's own light theme,
+ * `vs`, unchanged, so no telflo-light is defined here. Monaco's theme is
+ * global, so every open editor switches together. Type imports only:
+ * nothing here loads Monaco.
  */
 
-/** Monaco's built-in light theme (Q128). */
+/** Monaco's built-in light theme. */
 export const MONACO_LIGHT_THEME = "vs";
 export const TELFLO_DARK_THEME = "telflo-dark";
 export const TELFLO_NAVY_THEME = "telflo-navy";
@@ -77,7 +75,7 @@ const telfloNavy: editor.IStandaloneThemeData = {
   },
 };
 
-/** The Monaco theme for the app's theme (Light → `vs`, Q128). */
+/** The Monaco theme for the app's theme (Light → `vs`). */
 export function monacoThemeFor(theme: Theme): TelfloMonacoTheme {
   switch (theme) {
     case "dark":

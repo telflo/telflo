@@ -49,7 +49,7 @@ const DAY = 86_400_000;
 const NOW = Date.parse("2026-10-15T12:00:00.000Z");
 const iso = (ms: number) => new Date(ms).toISOString();
 
-describe("a token's status (D17b-2 decisions 11 and 26, Preflight ruling 12)", () => {
+describe("a token's status", () => {
   const states = tokensInEveryState(NOW);
   const tokens = fleetTokens(NOW);
 
@@ -78,7 +78,7 @@ describe("a token's status (D17b-2 decisions 11 and 26, Preflight ruling 12)", (
     expect(currentRotateToken([states.expired, states.revoked, states.defaultToken], NOW)).toBeUndefined();
   });
 
-  it("gives each state its words and badge, in decision 26's order", () => {
+  it("gives each state its words and badge, in order", () => {
     expect(tokenStatus(states.defaultToken, tokens, NOW)).toEqual({ label: "Valid", variant: "secondary" });
     expect(tokenStatus(states.revokedDefaultToken, tokens, NOW)).toEqual({ label: "Revoked", variant: "secondary" });
     expect(tokenStatus(states.current, tokens, NOW)).toEqual({ label: "Current", variant: "success" });
@@ -100,7 +100,7 @@ describe("a token's status (D17b-2 decisions 11 and 26, Preflight ruling 12)", (
     expect(tokenStatus(expiredDefault, [expiredDefault], NOW).label).toBe("Expired");
   });
 
-  it("makes the token being replaced current once the current one is revoked (Preflight ruling 4e)", () => {
+  it("makes the token being replaced current once the current one is revoked", () => {
     const revokedCurrent = { ...states.current, revokedAt: iso(NOW) };
     const after = [revokedCurrent, states.beingReplaced, states.defaultToken];
     expect(tokenStatus(revokedCurrent, after, NOW).label).toBe("Revoked");
@@ -118,7 +118,7 @@ describe("a token's status (D17b-2 decisions 11 and 26, Preflight ruling 12)", (
 });
 
 // An install link's status: its own state, then its token's.
-describe("an install link's status (D17c-2 decision 31, Preflight ruling 22)", () => {
+describe("an install link's status", () => {
   const states = tokensInEveryState(NOW);
   const tokens = fleetTokens(NOW);
   const active = quickDeployLink({ createdAt: iso(NOW - DAY), expiresAt: iso(NOW + DAY), defaultTokenId: DEFAULT_TOKEN_ID });
@@ -161,7 +161,7 @@ describe("an install link's status (D17c-2 decision 31, Preflight ruling 22)", (
     expect(installLinkStatus({ ...active, expiresAt: iso(NOW - 1) }, null, NOW).label).toBe("Expired");
   });
 
-  it("tells whether the link's token is valid whatever its status (Ruling 39: no Extend without it); true while the tokens are unread", () => {
+  it("tells whether the link's token is valid whatever its status (no Extend without it); true while the tokens are unread", () => {
     expect(installLinkTokenValid(active, tokens, NOW)).toBe(true);
     expect(installLinkTokenValid(active, [states.current, states.revokedDefaultToken], NOW)).toBe(false);
     expect(installLinkTokenValid(active, [states.current], NOW)).toBe(false);
@@ -173,7 +173,7 @@ describe("an install link's status (D17c-2 decision 31, Preflight ruling 22)", (
     expect(installLinkTokenValid(active, null, NOW)).toBe(true);
   });
 
-  it("offers Extend only on a link not revoked, its group not deleted and its token valid, an expired one included (Rulings 39 and 47)", () => {
+  it("offers Extend only on a link not revoked, its group not deleted and its token valid, an expired one included", () => {
     const expired = { ...active, expiresAt: iso(NOW - DAY) };
     expect(installLinkExtendable(active, tokens, NOW)).toBe(true);
     expect(installLinkExtendable(expired, tokens, NOW)).toBe(true);
@@ -365,7 +365,7 @@ async function twoPages() {
   return hook;
 }
 
-describe("useTokensTab (D17b-2 decisions 10, 27 and 32, Preflight ruling 10)", () => {
+describe("useTokensTab", () => {
   it("reads the tokens and the history's first page together, under one hang guard, as a person's read", async () => {
     const served = serve();
     const { result } = render();
@@ -777,7 +777,7 @@ describe("useTokensTab (D17b-2 decisions 10, 27 and 32, Preflight ruling 10)", (
   });
 });
 
-describe("useTokensTab's history (D17b-2 decision 27, Preflight ruling 10)", () => {
+describe("useTokensTab's history", () => {
   it("'Load more' reads the next page after the shown one's cursor and appends it, each event once", async () => {
     const { result, served } = await loaded();
     act(() => result.current.history.loadMore());
@@ -938,7 +938,7 @@ describe("useTokensTab's history (D17b-2 decision 27, Preflight ruling 10)", () 
   });
 });
 
-describe("useTokensTab's install links (D17c-2 decisions 14 and 31, Preflight ruling 21)", () => {
+describe("useTokensTab's install links", () => {
   const LINKS_FIRST: PageQuery = { limit: INSTALL_LINKS_PAGE_SIZE };
   const linksAfter = (cursor: string): PageQuery => ({ limit: INSTALL_LINKS_PAGE_SIZE, cursor });
 

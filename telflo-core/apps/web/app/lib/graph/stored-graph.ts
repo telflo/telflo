@@ -26,21 +26,21 @@ import type {
 import { COMPONENT_TYPES, PIPELINE_SIGNAL_TYPES } from "./types.js";
 
 /*
- * The graph as the version's three columns store it (D9a decision 6):
- * the graph's shapes without React Flow's runtime fields (`measured`,
- * `selected`, `dragging`, `width`, `height`, `positionAbsolute`,
- * `resizing`) and without D9a's own node fields (`key`, `pipeline`,
- * `declared`, `enabled`), which the text gives back on every load.
+ * The graph as the version's three columns store it: the graph's shapes
+ * without React Flow's runtime fields (`measured`, `selected`, `dragging`,
+ * `width`, `height`, `positionAbsolute`, `resizing`) and without the
+ * builder's own node fields (`key`, `pipeline`, `declared`, `enabled`),
+ * which the text gives back on every load.
  *
- * `toStored` is best effort (Preflight ruling 4): the graph never stops the
- * text from saving. A node whose config Postgres can't store (U+0000, a lone
- * surrogate, a non-finite number, nesting too deep) keeps `config: null`;
- * when `nodes` would be over its bound, every node's config is `null`; and a
- * column the contract's own schema still refuses is stored as `[]`, to be
- * laid out on the next open.
+ * `toStored` is best effort: the graph never stops the text from saving. A
+ * node whose config Postgres can't store (U+0000, a lone surrogate, a
+ * non-finite number, nesting too deep) keeps `config: null`; when `nodes`
+ * would be over its bound, every node's config is `null`; and a column the
+ * contract's own schema still refuses is stored as `[]`, to be laid out on
+ * the next open.
  *
- * `fromStored` reads back whatever it can (Preflight ruling 14): an item it
- * can't read is dropped, never an error.
+ * `fromStored` reads back whatever it can: an item it can't read is dropped,
+ * never an error.
  */
 
 export interface StoredGraph {
@@ -108,7 +108,7 @@ function storedEdges(edges: readonly OTelEdge[]): GraphEdge[] {
   const stored: GraphEdge[] = edges
     // The contract's edges join components. An edge to or from a pipeline's
     // group (a connector with nothing else to join) and the derived route
-    // edges are left out: edges are never read back (decision 5); the text
+    // edges are left out: edges are never read back; the text
     // gives them on every load.
     .filter((edge) => GRAPH_NODE_ID_PATTERN.test(edge.source) && GRAPH_NODE_ID_PATTERN.test(edge.target))
     .filter((edge) => edge.type === undefined || edge.type === "smoothstep")
@@ -275,7 +275,7 @@ function readAll<Item>(column: unknown, read: (value: unknown) => Item | undefin
  * Flow's runtime fields or anything else unknown ignored, and items missing
  * what the layout needs dropped. Components get back their key (from their
  * `sharedConfigId` where it names them) and their pipeline's name, which
- * the layout is matched by (decision 5).
+ * the layout is matched by.
  */
 export function fromStored(stored: { nodes: unknown; edges: unknown; pipelines: unknown }): Graph {
   const nodes = readAll(stored.nodes, readNode);

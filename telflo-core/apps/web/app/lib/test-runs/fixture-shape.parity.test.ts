@@ -12,15 +12,14 @@ import {
 } from "./fixture-shape.js";
 
 /*
- * Parity with the tester (D14a decision 17): the one corpus the tester's
+ * Parity with the tester: the one corpus the tester's
  * `tests/test_fixture_shape_parity.py` reads
  * (`services/otelcol-testing/tests/fixtures/fixture-shape-corpus.json`,
  * through app/test/fixture-shape-corpus.ts). A drift in the shapes, the
  * messages or the strategy picking fails a row here and in pytest.
  *
- * The target_strategies section (D14a Task 9) adds the run's target
- * pipeline; the tester's own pick_strategy narrows to it, and so does this
- * module.
+ * The target_strategies section adds the run's target pipeline; the
+ * tester's own pick_strategy narrows to it, and so does this module.
  */
 
 const corpus = fixtureShapeCorpus();
@@ -82,15 +81,15 @@ describe("fixture-shape parity with the tester's corpus", () => {
     }
   });
 
-  it("reads cases that spell the receiver file_log, as well as filelog (Ruling 49)", () => {
+  it("reads cases that spell the receiver file_log, as well as filelog", () => {
     const spelled = [...corpus.strategies, ...corpus.target_strategies].filter((testCase) => /\bfile_log\b/.test(testCase.yaml));
     expect(spelled.length).toBe(6);
     expect(spelled.filter((testCase) => testCase.expected_kind === "filelog").length).toBe(4);
   });
 
   it("covers the corpus's every section, with the counts the tester's suite reads", () => {
-    // The detection corpus, the four target cases (Task 9), and file_log's
-    // three strategy and three target cases (Ruling 49).
+    // The detection corpus, the four target cases, and file_log's
+    // three strategy and three target cases.
     expect({
       detection: corpus.detection.length,
       signals: corpus.signals.length,

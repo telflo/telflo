@@ -23,8 +23,6 @@ import {
   QuickDeployLinksPageSchema,
 } from "./quick-deploy.js";
 
-// D17c-2 decisions 5, 22 to 25 and 33; Preflight rulings 8, 15, 20 and 25.
-
 const SECRET = `tqd_${"aZ09_-".repeat(7)}x`;
 const LINK = {
   id: "0192f1a4-7b3c-7d2e-8f10-1a2b3c4d5e60",
@@ -162,8 +160,8 @@ describe("CreateQuickDeployLinkRequestSchema", () => {
   });
 });
 
-// D17d-2 decision 21, Preflight rulings 11 and 12: the create's body by kind. D17c-2's Linux body (no kind) keeps
-// every one of its 400s above; a Helm values link's body is its kind and its variables.
+// The create's body by kind. A Linux body (no kind) keeps every one of its 400s above; a Helm values link's body
+// is its kind and its variables.
 describe("CreateQuickDeployLinkRequestSchema by kind", () => {
   const linux = { method: "all-in-one", arch: "amd64", rootPath: "/etc/otelcol", env: [{ name: "NGINX_ENV", value: "prod" }], systemd: true };
   const helm = { kind: "helm", env: [{ name: "LOKI_TENANT", value: "acme" }] };
@@ -190,7 +188,7 @@ describe("CreateQuickDeployLinkRequestSchema by kind", () => {
     ["a Helm body without env", { kind: "helm" }, "env"],
     ["a Helm variable twice", { kind: "helm", env: [{ name: "A", value: "1" }, { name: "A", value: "2" }] }, "env.1.name"],
     ["a Helm value with a line break", { kind: "helm", env: [{ name: "A", value: "1\n2" }] }, "env.0.value"],
-    ["a Helm value with a lone surrogate (Ruling 36)", { kind: "helm", env: [{ name: "A", value: "1\ud800" }] }, "env.0.value"],
+    ["a Helm value with a lone surrogate", { kind: "helm", env: [{ name: "A", value: "1\ud800" }] }, "env.0.value"],
     ["a Helm variable that isn't a shell name", { kind: "helm", env: [{ name: "1A", value: "1" }] }, "env.0.name"],
     ["51 Helm variables", { kind: "helm", env: Array.from({ length: 51 }, (_, index) => ({ name: `V${index}`, value: "x" })) }, "env"],
     ["a Linux body with kind helm", { ...linux, kind: "helm" }, ""],
@@ -200,7 +198,7 @@ describe("CreateQuickDeployLinkRequestSchema by kind", () => {
     expect(issues[0]!.path).toBe(path);
   });
 
-  it("keeps D17c-2's Linux 400s through the union: each variable once, the arch's enum", () => {
+  it("keeps the Linux body's 400s through the union: each variable once, the arch's enum", () => {
     expect(createIssuesOf({ ...linux, env: [{ name: "A", value: "1" }, { name: "A", value: "2" }] })).toEqual([
       { path: "env.1.name", message: "Each variable once." },
     ]);
@@ -209,7 +207,7 @@ describe("CreateQuickDeployLinkRequestSchema by kind", () => {
     ]);
   });
 
-  it("refuses a Linux link's value with a lone surrogate at env.0.value, its words fixed (Ruling 36; Ruling 37's Nit 1)", () => {
+  it("refuses a Linux link's value with a lone surrogate at env.0.value, its words fixed", () => {
     for (const value of ["1\ud800", "\udfff", "a\ud83d"]) {
       const parsed = CreateLinuxQuickDeployLinkRequestSchema.safeParse({ ...linux, env: [{ name: "A", value }] });
       expect(parsed.success).toBe(false);
@@ -225,7 +223,7 @@ describe("CreateQuickDeployLinkRequestSchema by kind", () => {
   });
 });
 
-describe("a link's choices by kind (Preflight ruling 11)", () => {
+describe("a link's choices by kind", () => {
   const helmChoices = { kind: "helm", role: "node", release: "telflo-node", namespace: "observability", envNames: ["LOKI_TENANT"] };
 
   it("reads a stored Linux row without kind as a Linux link's, adding no kind", () => {
@@ -298,7 +296,7 @@ describe("the link's replies", () => {
   });
 });
 
-describe("extending a link (decision 5, Preflight ruling 25)", () => {
+describe("extending a link", () => {
   const now = new Date("2026-10-17T10:30:00.000Z");
 
   it("offers the presets, in order, with their words", () => {
@@ -345,8 +343,8 @@ describe("extending a link (decision 5, Preflight ruling 25)", () => {
   });
 });
 
-describe("the refusals (Preflight ruling 15)", () => {
-  it("are the six codes, each with its words (D17d-2's public_install_links_disabled the sixth)", () => {
+describe("the refusals", () => {
+  it("are the six codes, each with its words (public_install_links_disabled the sixth)", () => {
     expect(QUICK_DEPLOY_LINK_ERROR_CODES).toEqual([
       "quick_deploy_link_not_found",
       "quick_deploy_link_revoked",

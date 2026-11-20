@@ -2,7 +2,7 @@ import { nextNodeId } from "./node-builders.js";
 import type { ComponentType, OTelEdge, OTelNode, OTelNodeData } from "./types.js";
 
 /*
- * The graph's node operations, with D9a's component keys: a node records
+ * The graph's node operations, with component keys: a node records
  * the key the text gives its component (`receivers.otlp/2`), and a copy
  * records its own.
  */
@@ -141,7 +141,7 @@ function copyData(
   };
   // The copy's key keeps the original's spelling of its type, and its
   // sharedConfigId is the parser's for that key: the stored graph reads the
-  // spelling back from it, so the copy keeps its place (Ruling 60).
+  // spelling back from it, so the copy keeps its place.
   const key = componentKey({ ...data, ...(original.key === undefined ? {} : { key: original.key }) });
   if (key !== undefined) {
     data.key = key;
@@ -234,8 +234,8 @@ export function buildLinkedNode(sourceNode: OTelNode, groupId: string, allNodes:
 }
 
 // Remove a group node's children, plus the group node itself, and prune any
-// edges that reference those children, or the group (D9a: a connector's
-// place in a pipeline with nothing else to join is an edge to its group).
+// edges that reference those children, or the group (a connector's place
+// in a pipeline with nothing else to join is an edge to its group).
 // Used for cascade-deleting a pipeline.
 export function pruneGroupChildren(
   nodes: readonly OTelNode[],
@@ -251,18 +251,18 @@ export function pruneGroupChildren(
 }
 
 /**
- * Edges once `processorIds`, deleted, leave their pipelines' chains (D9d
- * Ruling 36, the owner's): each processor in a group is spliced out, every
- * edge into it (from a receiver, connector, processor or the group) joined
- * to each node it fed, so the processors after it stay reachable and only
- * it leaves `processors`. Several are spliced one after another, so a run
- * of adjacent ones closes over all of them. An end outside the group (a
+ * Edges once `processorIds`, deleted, leave their pipelines' chains: each
+ * processor in a group is spliced out, every edge into it (from a
+ * receiver, connector, processor or the group) joined to each node it fed,
+ * so the processors after it stay reachable and only it leaves
+ * `processors`. Several are spliced one after another, so a run of
+ * adjacent ones closes over all of them. An end outside the group (a
  * connector) is joined through the group only when nothing in the group is
  * on the other side, as `parse` draws a connector's edge to its group only
- * when the pipeline has nothing else to feed it or be fed by (D9d Ruling
- * 37): a connector that fed the processor joins the group when it fed only
- * nodes outside it, the group joins a connector it fed when only nodes
- * outside it fed the processor. The processors' own edges go.
+ * when the pipeline has nothing else to feed it or be fed by: a connector
+ * that fed the processor joins the group when it fed only nodes outside
+ * it, the group joins a connector it fed when only nodes outside it fed
+ * the processor. The processors' own edges go.
  */
 export function closedChains(
   nodes: readonly OTelNode[],
@@ -270,8 +270,8 @@ export function closedChains(
   processorIds: ReadonlySet<string>,
 ): OTelEdge[] {
   const byId = new Map(nodes.map((node) => [node.id, node]));
-  // The edges in order (a Set keeps it: removed ones go, joined ones are added last), indexed by
-  // their ends once (D9d final ruling F11), so a splice doesn't scan every edge.
+  // The edges in order (a Set keeps it: removed ones go, joined ones are added
+  // last), indexed by their ends once, so a splice doesn't scan every edge.
   const result = new Set(edges);
   const bySource = new Map<string, Set<OTelEdge>>();
   const byTarget = new Map<string, Set<OTelEdge>>();

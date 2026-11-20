@@ -10,16 +10,15 @@ import { create } from "zustand";
 
 /**
  * `/me`'s answer without `termsAcceptanceRequired`. That flag belongs to the
- * layout's loader data alone (D2c Preflight minor): the store is seeded once
- * per user, so a copy of it would still say "required" after Accept.
- * `isProductAdmin` is kept (D12 decision 3): the layout re-seeds the store
- * when it changes, so a revocation shows on the next navigation. So are the
- * `preferences` (D21 decision 20): the theme and the editor and email
- * preferences, re-seeded when they change.
+ * layout's loader data alone: the store is seeded once per user, so a copy
+ * of it would still say "required" after Accept. `isProductAdmin` is kept:
+ * the layout re-seeds the store when it changes, so a revocation shows on
+ * the next navigation. So are the `preferences`: the theme and the editor
+ * and email preferences, re-seeded when they change.
  */
 export type StoredCurrentUser = Omit<CurrentUserResponse, "termsAcceptanceRequired">;
 
-/** The seven preferences Settings saves one at a time (D21 decision 33): the theme, then each group's keys. */
+/** The seven preferences Settings saves one at a time: the theme, then each group's keys. */
 export const PREFERENCE_KEYS = [
   "theme",
   "editor.tabSize",
@@ -65,8 +64,7 @@ export function withPreference<Key extends PreferenceKey>(
 type PerKey = Partial<Record<PreferenceKey, number>>;
 
 /*
- * The preferences' invariant (D21 decision 33, Preflight ruling 35, Ruling
- * 86):
+ * The preferences' invariant:
  * - `confirmedPreferences[key]` is the last value the server is known to
  *   hold for that key: every save's answer, taken or overtaken, and every
  *   `/me` answer update it, unless something newer already did (below).
@@ -81,23 +79,23 @@ type PerKey = Partial<Record<PreferenceKey, number>>;
  * - a save's answer confirms when its number is above that: a later save's
  *   answer that came back first stands, and an earlier save's answer that
  *   comes back after it doesn't undo it;
- * - a `/me` answer confirms a key when its read was sent after that save
- *   was: a read sent before the save can't know of it, so it never
- *   overwrites the save's answer (Ruling 86's item 4). A read sent after a
- *   save was sent but answered before it is taken until the save's own
- *   answer comes back and confirms the save's value: the read can't tell
- *   whether the server had applied the save yet, the save's answer can.
+ * - a `/me` answer confirms a key when its read was sent after that save was:
+ *   a read sent before the save can't know of it, so it never overwrites the
+ *   save's answer. A read sent after a save was sent but answered before it
+ *   is taken until the save's own answer comes back and confirms the save's
+ *   value: the read can't tell whether the server had applied the save yet,
+ *   the save's answer can.
  * - a `/me` answer is applied only when its read is the newest applied so
  *   far (`highestReadApplied`): an older read answered after a newer one
  *   never overwrites it. React Router aborts a stale navigation's loader
- *   today, so this is defence in depth (the Ruling 86 review's Nit 2).
+ *   today, so this is defence in depth.
  * A new person (or a first seed) starts every key's `confirmedBySave` at
  * its read's number, so no answer to a save sent before then is ever taken.
  *
- * The limits of numbering at sending (the Ruling 86 review's Minor 1). The
- * numbers say the order the browser SENT the requests in, not the order the
- * API applied them in, so two orders can leave the confirmed value stale
- * until a later `/me` read (sent after both) heals it:
+ * The limits of numbering at sending. The numbers say the order the browser
+ * SENT the requests in, not the order the API applied them in, so two
+ * orders can leave the confirmed value stale until a later `/me` read (sent
+ * after both) heals it:
  * - a `/me` read sent after a save but read by the API before the save's
  *   write, and answered after the save's answer: its number is the higher,
  *   so it confirms the value from before the save (the page still shows the
@@ -151,7 +149,7 @@ type UserState = {
    * belong to, with its type and their role, whether they are a product
    * admin, and their preferences; null when signed out. The preferences are
    * the ones the person sees: a choice made in Settings is here at once,
-   * before the API answers (decision 33).
+   * before the API answers.
    */
   current: StoredCurrentUser | null;
   /**
@@ -159,15 +157,15 @@ type UserState = {
    * save's answer): what a failed save shows again. Null when signed out.
    */
   confirmedPreferences: UserPreferences | null;
-  /** The keys whose latest choice is still being saved, each with that choice's number (Preflight ruling 35). */
+  /** The keys whose latest choice is still being saved, each with that choice's number. */
   pendingPreferences: PerKey;
-  /** Per key, the number of the save whose answer last confirmed it (Ruling 86). */
+  /** Per key, the number of the save whose answer last confirmed it. */
   confirmedBySave: PerKey;
   /** The number of the newest `/me` read whose answer was applied: an older one is ignored. 0 when signed out. */
   highestReadApplied: number;
   /**
    * True while a switch of the active organization is in flight: the
-   * signed-in shell shows a spinner in place of the page (D5 decision 11).
+   * signed-in shell shows a spinner in place of the page.
    */
   isSwitchingOrganization: boolean;
   /**
@@ -212,8 +210,7 @@ type UserState = {
   addOrganization: (organization: ActiveOrganization) => void;
   /**
    * Takes an organization's new name and logo wherever the store shows it
-   * (the active organization and the list), after the API changed them
-   * (D23-2 decision 52).
+   * (the active organization and the list), after the API changed them.
    */
   updateOrganization: (organizationId: string, change: { name: string; logoId: string | null }) => void;
   clear: () => void;

@@ -28,21 +28,21 @@ import { collectorOf, fakeSnapshots } from "./support/fake-opamp-server.js";
 import { signInThroughApi, skipEditorTour, switchOrganizationThroughApi } from "./support/session.js";
 import { openPicker, versionList, versionPath, versionRow, versionTrigger } from "./support/versions-page.js";
 
-// Publishing (D11b), in the browser: the editor's Publish and its dialog,
-// saving first; the published version locked, its banner and the new version
-// it makes; the picker's lock; the list's badges and filter; what a teammate
+// Publishing, in the browser: the editor's Publish and its dialog, saving
+// first; the published version locked, its banner and the new version it
+// makes; the picker's lock; the list's badges and filter; what a teammate
 // sees and may delete; a tab that didn't see a publish; and a clean tab that
-// didn't see a teammate's save (Ruling 30). The API is the
-// E2E API and the opamp-server the OpenAPI-checked fake (start-fake-opamp-
-// server.ts), whose snapshots are read back through its own management API
-// (fakeSnapshots). Configurations are seeded by SQL (support/database.ts);
-// one the fake must hold a snapshot of is published through the API or the
-// editor, never seeded as published. Each test works in organizations of its
-// own, so tests and browsers run in parallel; another person, or the same
-// person in another browser, is another context.
+// didn't see a teammate's save. The API is the E2E API and the opamp-server
+// the OpenAPI-checked fake (start-fake-opamp-server.ts), whose snapshots are
+// read back through its own management API (fakeSnapshots). Configurations
+// are seeded by SQL (support/database.ts); one the fake must hold a snapshot
+// of is published through the API or the editor, never seeded as published.
+// Each test works in organizations of its own, so tests and browsers run in
+// parallel; another person, or the same person in another browser, is
+// another context.
 //
-// The words are the spec's (decision 13), written out here: the browser
-// tests don't import the web app's modules.
+// The words are written out here: the browser tests don't import the web
+// app's modules.
 
 const PASSWORD = "correct horse battery staple";
 const V1_YAML = "receivers:\n  otlp:\n    protocols:\n      grpc: {}\n";
@@ -66,7 +66,7 @@ const publishedVersionMessage = (number: number) => `Version ${number} is publis
  * `newContext`: another browser with its own cookie jar, the tour marked
  * done, closed when the test ends. In every browser the editor's tour is
  * marked done (`skipEditorTour`): these tests aren't about it, and it would
- * cover the page on a first visit (D9a decision 14).
+ * cover the page on a first visit.
  */
 const test = base.extend<{ newContext: () => Promise<BrowserContext> }>({
   context: async ({ context }, use) => {
@@ -149,7 +149,7 @@ function cardNames(page: Page): Locator {
   return page.locator('[role="button"] h3');
 }
 
-/** The card showing the configuration named `name`: a `div role="button"` (D7 Preflight ruling 11). */
+/** The card showing the configuration named `name`: a `div role="button"`. */
 function card(page: Page, name: string): Locator {
   return page.getByRole("button").filter({ has: page.getByRole("heading", { name, exact: true }) });
 }
@@ -386,7 +386,7 @@ test("the list shows Published and Draft on cards and in the Status column, and 
   await signedInto(page, admin, group.organizationId);
   await open(page, "/app");
 
-  // Newest first; the teammate's draft is nobody else's to see (decision 1).
+  // Newest first; the teammate's draft is nobody else's to see.
   await expect(cardNames(page)).toHaveText([teammatesPublished, ownPublished, ownDraft]);
   for (const [name, status] of [
     [teammatesPublished, "Published"],
@@ -488,7 +488,7 @@ test("a teammate doesn't see the author's draft, sees and opens the published on
   await expect(cardNames(adminPage)).toHaveCount(0);
   const row = (await findConfigurations(group.organizationId)).find((candidate) => candidate.id === shared.id);
   expect(row?.deleted_at).toBeInstanceOf(Date);
-  // The clean-up runs after the response (decision 12).
+  // The clean-up runs after the response.
   await expect.poll(async () => (await fakeSnapshots(group.organizationId, shared.id)).length).toBe(0);
   // The draft is untouched, and still the author's alone.
   expect((await findConfigurations(group.organizationId)).find((candidate) => candidate.id === draft.id)?.deleted_at).toBeNull();
@@ -500,8 +500,8 @@ test("a tab that didn't see the publish: its Publish says the version is already
 }) => {
   // Three tabs, each opening the editor, then a publish, a refused publish, a
   // refused save and a create: 22–29 s on CI's WebKit, and once 31.6 s, past
-  // the 30 s per-test limit at its last step (D13c spec decision 16). Slow
-  // triples the limit, a hang guard; every wait inside keeps its own bound.
+  // the 30 s per-test limit at its last step. Slow triples the limit, a hang
+  // guard; every wait inside keeps its own bound.
   test.slow();
   const { user, configurationId, versionId } = await seedSignedInDraft(page);
   const path = versionPath(configurationId, versionId);
@@ -548,7 +548,7 @@ test("a tab that didn't see the publish: its Publish says the version is already
   await expect(bannerText(saveTab, 1)).toHaveCount(0);
 });
 
-test("a new configuration's empty version can't be published while its text is empty; text typed over it is saved first, then published (Ruling 31)", async ({
+test("a new configuration's empty version can't be published while its text is empty; text typed over it is saved first, then published", async ({
   page,
 }) => {
   const { user, configurationId, versionId } = await seedSignedInDraft(page, "");
@@ -577,7 +577,7 @@ test("a new configuration's empty version can't be published while its text is e
   ]);
 });
 
-test("a clean tab that didn't see a teammate's save: its Publish is refused, the editor shows the newer text, nothing is published, and Publish again publishes it (Ruling 30)", async ({
+test("a clean tab that didn't see a teammate's save: its Publish is refused, the editor shows the newer text, nothing is published, and Publish again publishes it", async ({
   page,
   newContext,
 }) => {
@@ -607,7 +607,7 @@ test("a clean tab that didn't see a teammate's save: its Publish is refused, the
     await expectShownFromTop(tabPage, ["exporters:"]);
   }
 
-  // The teammate saves v2 (decision 2: a published configuration's drafts are shared).
+  // The teammate saves v2 (a published configuration's drafts are shared).
   const typed = `# the teammate's save ${randomUUID()}`;
   await typeLineAtTop(teammatePage, typed);
   await saveButton(teammatePage).click();

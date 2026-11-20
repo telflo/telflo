@@ -63,7 +63,7 @@ import {
   type ConfigurationErrorCode,
 } from "./configurations.js";
 
-/** Collector versions a request may not name: not `major.minor.patch` in ASCII digits (D13a Preflight ruling 5). */
+/** Collector versions a request may not name: not `major.minor.patch` in ASCII digits. */
 const COLLECTOR_VERSIONS_REFUSED: Array<[string, unknown]> = [
   ["a v prefix", "v0.162.0"],
   ["two parts", "0.162"],
@@ -77,7 +77,7 @@ const COLLECTOR_VERSIONS_REFUSED: Array<[string, unknown]> = [
 ];
 
 describe("the limits", () => {
-  it("are decision 4's and decision 6's", () => {
+  it("are the name's, the description's, the search's and the page's", () => {
     expect(CONFIGURATION_NAME_MAXIMUM_LENGTH).toBe(200);
     expect(CONFIGURATION_DESCRIPTION_MAXIMUM_LENGTH).toBe(500);
     expect(CONFIGURATION_SEARCH_MAXIMUM_LENGTH).toBe(200);
@@ -85,12 +85,12 @@ describe("the limits", () => {
     expect(CONFIGURATIONS_PAGE_MAXIMUM_LIMIT).toBe(100);
   });
 
-  it("are D8 decision 7's for the YAML", () => {
+  it("are 256 Ki characters for the YAML", () => {
     expect(CONFIGURATION_YAML_MAXIMUM_LENGTH).toBe(262_144);
   });
 });
 
-/** Characters Postgres can't store exactly (D8 Preflight ruling 11): refused in a name, a description and a label (D10 Ruling 37). */
+/** Characters Postgres can't store exactly: refused in a name, a description and a label. */
 const UNSTORABLE = [
   ["U+0000", "a\u0000b"],
   ["a lone high surrogate", "a\ud800b"],
@@ -123,7 +123,7 @@ describe("ConfigurationNameSchema", () => {
     expect(ConfigurationNameSchema.safeParse(42).success).toBe(false);
   });
 
-  it.each(UNSTORABLE)("refuses %s, which Postgres can't store exactly (D10 Ruling 37)", (_label, name) => {
+  it.each(UNSTORABLE)("refuses %s, which Postgres can't store exactly", (_label, name) => {
     expect(ConfigurationNameSchema.safeParse(name).success).toBe(false);
     expect(CreateConfigurationRequestSchema.safeParse({ name }).success).toBe(false);
     expect(UpdateConfigurationRequestSchema.safeParse({ name }).success).toBe(false);
@@ -143,7 +143,7 @@ describe("ConfigurationDescriptionSchema", () => {
     expect(ConfigurationDescriptionSchema.safeParse("a".repeat(501)).success).toBe(false);
   });
 
-  it.each(UNSTORABLE)("refuses %s, as the name does (D10 Ruling 37)", (_label, description) => {
+  it.each(UNSTORABLE)("refuses %s, as the name does", (_label, description) => {
     expect(ConfigurationDescriptionSchema.safeParse(description).success).toBe(false);
     expect(CreateConfigurationRequestSchema.safeParse({ name: "A", description }).success).toBe(false);
     expect(UpdateConfigurationRequestSchema.safeParse({ description }).success).toBe(false);
@@ -175,7 +175,7 @@ describe("CreateConfigurationRequestSchema", () => {
     );
   });
 
-  it("accepts a collector distribution, left out meaning the catalogue's default (D13a Preflight ruling 14)", () => {
+  it("accepts a collector distribution, left out meaning the catalogue's default", () => {
     expect(CreateConfigurationRequestSchema.parse({ name: "Gateway", collectorDistribution: "otelcol-contrib" })).toEqual({
       name: "Gateway",
       description: "",
@@ -201,7 +201,7 @@ describe("CreateConfigurationRequestSchema", () => {
     expect(CreateConfigurationRequestSchema.safeParse({ name: "Gateway", collectorDistribution }).success).toBe(false);
   });
 
-  it("refuses an unknown field, telflo-api's yaml among them", () => {
+  it("refuses an unknown field, yaml among them", () => {
     expect(CreateConfigurationRequestSchema.safeParse({ name: "Gateway", yaml: "receivers: {}" }).success).toBe(false);
     expect(CreateConfigurationRequestSchema.safeParse({ name: "Gateway", distribution: "otelcol" }).success).toBe(
       false,
@@ -209,7 +209,7 @@ describe("CreateConfigurationRequestSchema", () => {
   });
 });
 
-describe("CreateConfigurationRequestSchema from a flow (D12 decision 12, Preflight ruling 7)", () => {
+describe("CreateConfigurationRequestSchema from a flow", () => {
   /** A flow's YAML as the seed holds it: a trailing newline and an env reference, kept as they are. */
   const yamlContent = "receivers:\n  otlp:\n    protocols:\n      grpc:\n        endpoint: ${env:OTLP_ENDPOINT}\n";
   /** A graph as `toStored` writes it: a pipeline's group, a component in it, and the pipeline. */
@@ -361,7 +361,7 @@ describe("CreateConfigurationRequestSchema from a flow (D12 decision 12, Preflig
     ["81 characters", "a".repeat(81)],
     ["null", null],
     ["a number", 42],
-  ])("refuses a source flow slug that is %s: the slug's format only (D12 decision 12)", (_label, sourceFlowSlug) => {
+  ])("refuses a source flow slug that is %s: the slug's format only", (_label, sourceFlowSlug) => {
     expect(CreateConfigurationRequestSchema.safeParse({ ...fromFlow, sourceFlowSlug }).success).toBe(false);
   });
 
@@ -393,7 +393,7 @@ describe("UpdateConfigurationRequestSchema", () => {
     expect(UpdateConfigurationRequestSchema.parse({ description: "" })).toEqual({ description: "" });
   });
 
-  it("refuses null for either field (decision 7)", () => {
+  it("refuses null for either field", () => {
     expect(UpdateConfigurationRequestSchema.safeParse({ description: null }).success).toBe(false);
     expect(UpdateConfigurationRequestSchema.safeParse({ name: null }).success).toBe(false);
   });
@@ -406,7 +406,7 @@ describe("UpdateConfigurationRequestSchema", () => {
     expect(UpdateConfigurationRequestSchema.safeParse({ description: "a".repeat(501) }).success).toBe(false);
   });
 
-  it("refuses an unknown field, telflo-api's yaml among them", () => {
+  it("refuses an unknown field in an update, yaml among them", () => {
     expect(UpdateConfigurationRequestSchema.safeParse({ yaml: "receivers: {}" }).success).toBe(false);
     expect(UpdateConfigurationRequestSchema.safeParse({ name: "A", createdBy: null }).success).toBe(false);
   });
@@ -429,7 +429,7 @@ describe("ConfigurationSchema", () => {
     expect(ConfigurationSchema.safeParse({ ...configuration, createdBy: null }).success).toBe(true);
   });
 
-  it("says whether it is published (D11b decision 1): a boolean, always there", () => {
+  it("says whether it is published: a boolean, always there", () => {
     expect(ConfigurationSchema.safeParse({ ...configuration, published: true }).success).toBe(true);
     const { published: _omitted, ...withoutPublished } = configuration;
     expect(ConfigurationSchema.safeParse(withoutPublished).success).toBe(false);
@@ -437,7 +437,7 @@ describe("ConfigurationSchema", () => {
     expect(ConfigurationSchema.safeParse({ ...configuration, published: "true" }).success).toBe(false);
   });
 
-  it("carries its collector distribution (D13a decision 5): a string, always there", () => {
+  it("carries its collector distribution: a string, always there", () => {
     expect(ConfigurationSchema.parse(configuration).collectorDistribution).toBe("otelcol-contrib");
     const { collectorDistribution: _omitted, ...withoutDistribution } = configuration;
     expect(ConfigurationSchema.safeParse(withoutDistribution).success).toBe(false);
@@ -501,7 +501,7 @@ describe("ConfigurationVersionSchema", () => {
     expect(ConfigurationVersionSchema.safeParse({ ...version, yamlContent: "" }).success).toBe(true);
   });
 
-  it("answers the graph's columns as arrays of anything, so another writer's rows still open (D9a Preflight ruling 14)", () => {
+  it("answers the graph's columns as arrays of anything, so another writer's rows still open", () => {
     const foreign = {
       ...version,
       nodes: [{ id: "group-pipeline-traces", measured: { width: 1 } }, 42, null],
@@ -528,12 +528,12 @@ describe("ConfigurationVersionSchema", () => {
     expect(ConfigurationVersionSchema.safeParse({ ...version, createdByUserId: null }).success).toBe(false);
   });
 
-  it("accepts an unnamed version, and one whose creator is gone (D10 decision 4)", () => {
+  it("accepts an unnamed version, and one whose creator is gone", () => {
     expect(ConfigurationVersionSchema.safeParse({ ...version, label: null }).success).toBe(true);
     expect(ConfigurationVersionSchema.safeParse({ ...version, createdBy: null }).success).toBe(true);
   });
 
-  it("accepts a draft (D11b decision 10): no publish time and no publisher, and a published version whose publisher is gone", () => {
+  it("accepts a draft: no publish time and no publisher, and a published version whose publisher is gone", () => {
     const draft = { ...version, publishedAt: null, publishedBy: null };
     expect(ConfigurationVersionSchema.safeParse(draft).success).toBe(true);
     expect(
@@ -554,7 +554,7 @@ describe("ConfigurationVersionSchema", () => {
     expect(ConfigurationVersionSchema.safeParse({ ...version, publishedByUserId: null }).success).toBe(false);
   });
 
-  it("carries its collector version and whether the catalogue deprecated it since, with the catalogue's note (D13a decisions 4 and 8, Preflight ruling 15)", () => {
+  it("carries its collector version and whether the catalogue deprecated it since, with the catalogue's note", () => {
     expect(ConfigurationVersionSummarySchema.parse(summary)).toMatchObject({
       collectorVersion: "0.162.0",
       collectorVersionDeprecated: false,
@@ -632,7 +632,7 @@ describe("ConfigurationVersionSchema", () => {
     );
   });
 
-  it("answers the versions route as { versions } of id, number, label and published date only (D17b-1 decision 31)", () => {
+  it("answers the versions route as { versions } of id, number, label and published date only", () => {
     const item = { id: summary.id, versionNumber: 1, label: summary.label, publishedAt: summary.publishedAt };
     expect(ConfigurationVersionListItemSchema.parse(item)).toEqual(item);
     expect(ConfigurationVersionListItemSchema.safeParse({ ...item, label: null, publishedAt: null }).success).toBe(true);
@@ -669,7 +669,7 @@ describe("ConfigurationVersionSchema", () => {
   });
 });
 
-describe("ConfigurationVersionsQuerySchema (D17b-1 decision 31)", () => {
+describe("ConfigurationVersionsQuerySchema", () => {
   it("defaults to every version (filter all)", () => {
     expect(ConfigurationVersionsQuerySchema.parse({})).toEqual({ filter: "all" });
   });
@@ -694,7 +694,7 @@ describe("ConfigurationVersionsQuerySchema (D17b-1 decision 31)", () => {
   });
 });
 
-describe("ConfigurationVersionLabelSchema (D10 decision 4)", () => {
+describe("ConfigurationVersionLabelSchema", () => {
   it("is 80 characters at most", () => {
     expect(CONFIGURATION_VERSION_LABEL_MAXIMUM_LENGTH).toBe(80);
   });
@@ -714,7 +714,7 @@ describe("ConfigurationVersionLabelSchema (D10 decision 4)", () => {
     expect(ConfigurationVersionLabelSchema.safeParse(label).success).toBe(false);
   });
 
-  it.each(UNSTORABLE)("refuses %s, which Postgres can't store exactly (Ruling 37)", (_label, label) => {
+  it.each(UNSTORABLE)("refuses %s, which Postgres can't store exactly, in a label", (_label, label) => {
     expect(ConfigurationVersionLabelSchema.safeParse(label).success).toBe(false);
   });
 
@@ -723,7 +723,7 @@ describe("ConfigurationVersionLabelSchema (D10 decision 4)", () => {
   });
 });
 
-describe("CreateConfigurationVersionRequestSchema (D10 decision 4)", () => {
+describe("CreateConfigurationVersionRequestSchema", () => {
   const SOURCE = "0192f1a4-7b3c-7d2e-8f10-6f5e4d3c2b1a";
   const content = { yamlContent: "receivers:\r\n  otlp: {} # 🚀\n", nodes: [], edges: [], pipelines: [] };
   const request = { sourceVersionId: SOURCE, ...content };
@@ -742,7 +742,7 @@ describe("CreateConfigurationVersionRequestSchema (D10 decision 4)", () => {
     );
   });
 
-  it.each(["", "   ", "\t \n"])("takes %j as no label (Preflight ruling 16)", (label) => {
+  it.each(["", "   ", "\t \n"])("takes %j as no label", (label) => {
     const parsed = CreateConfigurationVersionRequestSchema.parse({ ...request, label });
     expect(parsed.label).toBeUndefined();
   });
@@ -755,7 +755,7 @@ describe("CreateConfigurationVersionRequestSchema (D10 decision 4)", () => {
     expect(CreateConfigurationVersionRequestSchema.safeParse({ ...request, label: null }).success).toBe(false);
   });
 
-  it.each(UNSTORABLE)("refuses a label holding %s (Ruling 37)", (_label, label) => {
+  it.each(UNSTORABLE)("refuses a label holding %s on a create", (_label, label) => {
     expect(CreateConfigurationVersionRequestSchema.safeParse({ ...request, label }).success).toBe(false);
   });
 
@@ -763,7 +763,7 @@ describe("CreateConfigurationVersionRequestSchema (D10 decision 4)", () => {
     expect(CreateConfigurationVersionRequestSchema.safeParse(content).success).toBe(false);
   });
 
-  it("accepts a collector version, left out meaning the source's (D13a Preflight ruling 16)", () => {
+  it("accepts a collector version, left out meaning the source's", () => {
     expect(CreateConfigurationVersionRequestSchema.parse({ ...request, collectorVersion: "0.161.0" })).toEqual({
       ...request,
       collectorVersion: "0.161.0",
@@ -775,13 +775,13 @@ describe("CreateConfigurationVersionRequestSchema (D10 decision 4)", () => {
     expect(CreateConfigurationVersionRequestSchema.safeParse({ ...request, collectorVersion }).success).toBe(false);
   });
 
-  it("refuses a distribution: the server stamps the configuration's (D13a decision 5)", () => {
+  it("refuses a distribution: the server stamps the configuration's", () => {
     expect(
       CreateConfigurationVersionRequestSchema.safeParse({ ...request, collectorDistribution: "otelcol-contrib" }).success,
     ).toBe(false);
   });
 
-  it("takes any source id up to 64 characters, so the service answers a malformed one 404 (Preflight ruling 6)", () => {
+  it("takes any source id up to 64 characters, so the service answers a malformed one 404", () => {
     expect(CreateConfigurationVersionRequestSchema.safeParse({ ...request, sourceVersionId: "not-a-uuid" }).success).toBe(
       true,
     );
@@ -820,7 +820,7 @@ describe("CreateConfigurationVersionRequestSchema (D10 decision 4)", () => {
   });
 });
 
-describe("RenameConfigurationVersionRequestSchema (D10 decision 4)", () => {
+describe("RenameConfigurationVersionRequestSchema", () => {
   it("trims the label", () => {
     expect(RenameConfigurationVersionRequestSchema.parse({ label: "  Renamed  " })).toEqual({ label: "Renamed" });
   });
@@ -834,7 +834,7 @@ describe("RenameConfigurationVersionRequestSchema (D10 decision 4)", () => {
     expect(RenameConfigurationVersionRequestSchema.safeParse({ label }).success).toBe(false);
   });
 
-  it.each(UNSTORABLE)("refuses a label holding %s (Ruling 37)", (_label, label) => {
+  it.each(UNSTORABLE)("refuses a label holding %s on a rename", (_label, label) => {
     expect(RenameConfigurationVersionRequestSchema.safeParse({ label }).success).toBe(false);
   });
 
@@ -845,8 +845,8 @@ describe("RenameConfigurationVersionRequestSchema (D10 decision 4)", () => {
   });
 });
 
-describe("SelectConfigurationVersionRequestSchema (D10 decision 4)", () => {
-  it("takes a version id, any string up to 64 characters (Preflight ruling 6)", () => {
+describe("SelectConfigurationVersionRequestSchema", () => {
+  it("takes a version id, any string up to 64 characters", () => {
     const versionId = "0192f1a4-7b3c-7d2e-8f10-6f5e4d3c2b1a";
     expect(SelectConfigurationVersionRequestSchema.parse({ versionId })).toEqual({ versionId });
     expect(SelectConfigurationVersionRequestSchema.safeParse({ versionId: "42" }).success).toBe(true);
@@ -860,7 +860,7 @@ describe("SelectConfigurationVersionRequestSchema (D10 decision 4)", () => {
   });
 });
 
-describe("PublishConfigurationVersionRequestSchema (D11b Ruling 30)", () => {
+describe("PublishConfigurationVersionRequestSchema", () => {
   it("takes the version's updatedAt as a summary reports it: ISO 8601 in UTC with milliseconds", () => {
     const expectedUpdatedAt = new Date("2026-10-04T12:34:56.789Z").toISOString();
     expect(PublishConfigurationVersionRequestSchema.parse({ expectedUpdatedAt })).toEqual({ expectedUpdatedAt });
@@ -869,7 +869,7 @@ describe("PublishConfigurationVersionRequestSchema (D11b Ruling 30)", () => {
     });
   });
 
-  it("leaves it out for a caller with no tab (D25): an empty body publishes what is saved", () => {
+  it("leaves it out for a caller with no tab: an empty body publishes what is saved", () => {
     expect(PublishConfigurationVersionRequestSchema.parse({})).toEqual({});
   });
 
@@ -927,7 +927,7 @@ describe("SaveConfigurationVersionRequestSchema", () => {
     });
   });
 
-  it("accepts a collector version, left out meaning the one stored (D13a Preflight ruling 13)", () => {
+  it("accepts a collector version, left out meaning the one stored", () => {
     expect(
       SaveConfigurationVersionRequestSchema.parse({ yamlContent: "", ...EMPTY_GRAPH, collectorVersion: "0.161.0" }),
     ).toEqual({ yamlContent: "", ...EMPTY_GRAPH, collectorVersion: "0.161.0" });
@@ -960,7 +960,7 @@ describe("SaveConfigurationVersionRequestSchema", () => {
     expect(yamlOf(42).success).toBe(false);
   });
 
-  it("refuses U+0000, which Postgres can't store (Preflight ruling 11)", () => {
+  it("refuses U+0000, which Postgres can't store", () => {
     const result = yamlOf("receivers:\u0000\n");
     expect(result.success).toBe(false);
     expect(result.error?.issues[0]?.message).toBe("The YAML can't contain the character U+0000.");
@@ -971,7 +971,7 @@ describe("SaveConfigurationVersionRequestSchema", () => {
     ["a lone low surrogate", "a\ude80b"],
     ["a pair in the wrong order", "\ude80\ud83d"],
     ["a high surrogate at the end", "receivers:\ud83d"],
-  ])("refuses %s, which isn't well formed and would be stored as U+FFFD (Preflight ruling 11)", (_label, text) => {
+  ])("refuses %s, which isn't well formed and would be stored as U+FFFD", (_label, text) => {
     expect(isWellFormed(text)).toBe(false);
     const result = yamlOf(text);
     expect(result.success).toBe(false);
@@ -1018,7 +1018,7 @@ describe("ListConfigurationsQuerySchema", () => {
     });
   });
 
-  it.each(CONFIGURATIONS_LIST_FILTERS)("accepts filter=%s (D11b decision 6)", (filter) => {
+  it.each(CONFIGURATIONS_LIST_FILTERS)("accepts the list's filter=%s", (filter) => {
     expect(ListConfigurationsQuerySchema.parse({ filter }).filter).toBe(filter);
   });
 
@@ -1030,7 +1030,7 @@ describe("ListConfigurationsQuerySchema", () => {
     expect(ListConfigurationsQuerySchema.safeParse({ filter }).success).toBe(false);
   });
 
-  it("refuses D7's mine, which the filter replaced, whatever its value", () => {
+  it("refuses a mine parameter, whatever its value", () => {
     expect(ListConfigurationsQuerySchema.safeParse({ mine: "true" }).success).toBe(false);
     expect(ListConfigurationsQuerySchema.safeParse({ mine: "false" }).success).toBe(false);
   });
@@ -1062,7 +1062,7 @@ describe("ListConfigurationsQuerySchema", () => {
 });
 
 describe("CONFIGURATION_ERROR_CODES", () => {
-  it("is configuration_not_found, D10's configuration_version_not_found, D11b's five, D13a's two, D13b's two, D16b's one and D25's one", () => {
+  it("is the configuration endpoints' thirteen codes, in order", () => {
     expect(CONFIGURATION_ERROR_CODES).toEqual([
       "configuration_not_found",
       "configuration_version_not_found",
@@ -1095,7 +1095,7 @@ describe("CONFIGURATION_ERROR_CODES", () => {
   });
 });
 
-describe("a version's validation (D13b decision 12, Preflight ruling 17)", () => {
+describe("a version's validation", () => {
   describe("ValidateConfigurationVersionRequestSchema", () => {
     it("takes the text alone, or with a collector version", () => {
       expect(ValidateConfigurationVersionRequestSchema.parse({ yaml: "receivers: {}\n" })).toEqual({
@@ -1126,7 +1126,7 @@ describe("a version's validation (D13b decision 12, Preflight ruling 17)", () =>
       expect(ValidateConfigurationVersionRequestSchema.safeParse({ yaml: "a\ud800b" }).success).toBe(false);
     });
 
-    it("refuses every C0 control character but tab, line feed and carriage return (Ruling 55)", () => {
+    it("refuses every C0 control character but tab, line feed and carriage return", () => {
       const message = "The YAML can't contain a control character other than tab, line feed and carriage return.";
       for (let code = 0; code < 0x20; code += 1) {
         const yaml = `a: "${String.fromCharCode(code)}"\n`;
@@ -1226,10 +1226,9 @@ interface Changeable {
 }
 
 /*
- * The builder's graph (D9a decisions 6 and 7; Preflight rulings 3, 4 and 14).
- * The fixtures are hand-written in the shapes D9a stores:
- * a pipeline's group, components in it, a connector, an extension on its
- * own, and a group's optional extra fields.
+ * The builder's graph. The fixtures are hand-written in the shapes the
+ * builder stores: a pipeline's group, components in it, a connector, an
+ * extension on its own, and a group's optional extra fields.
  */
 describe("the graph's schemas", () => {
   const GROUP = {
@@ -1309,7 +1308,7 @@ describe("the graph's schemas", () => {
     return copy;
   };
 
-  it("are D9a decision 6's bounds and decision 7's id forms", () => {
+  it("are the graph's bounds and id forms", () => {
     expect([GRAPH_MAXIMUM_NODES, GRAPH_MAXIMUM_EDGES, GRAPH_MAXIMUM_PIPELINES]).toEqual([5_000, 10_000, 1_000]);
     expect(GRAPH_COLUMN_MAXIMUM_BYTES).toBe(1_048_576);
     expect([GRAPH_NODE_ID_PATTERN, GRAPH_GROUP_ID_PATTERN, GRAPH_EDGE_ID_PATTERN, GRAPH_PIPELINE_ID_PATTERN]).toEqual([
@@ -1320,7 +1319,7 @@ describe("the graph's schemas", () => {
     ]);
   });
 
-  it("accept the shapes D9a stores, unchanged", () => {
+  it("accept the shapes the builder stores, unchanged", () => {
     for (const node of NODES) expect(GraphNodeSchema.parse(node)).toEqual(node);
     for (const edge of EDGES) expect(GraphEdgeSchema.parse(edge)).toEqual(edge);
     for (const pipeline of PIPELINES) expect(GraphPipelineSchema.parse(pipeline)).toEqual(pipeline);
@@ -1349,7 +1348,7 @@ describe("the graph's schemas", () => {
     ).toBe(true);
   });
 
-  describe("ids (decision 7): a number, never a name", () => {
+  describe("ids: a number, never a name", () => {
     it.each([
       ["a derived group id", "group-pipeline-traces"],
       ["a named group", "group-pipeline-traces/production"],
@@ -1521,7 +1520,7 @@ describe("the graph's schemas", () => {
     );
   });
 
-  describe("characters Postgres can't store (Preflight ruling 4)", () => {
+  describe("characters Postgres can't store", () => {
     const deepConfig = (leaf: unknown, key = "key") => ({
       exporters: [{ headers: { [key]: { values: [1, { deeper: leaf }] } } }],
     });

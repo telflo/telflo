@@ -1,4 +1,4 @@
-# Decision 3: a connector in a pipeline with no processors keeps its place,
+# A connector in a pipeline with no processors keeps its place,
 # even where the pipeline has nothing else on that side to join it to.
 receivers:
   otlp:

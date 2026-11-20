@@ -9,12 +9,11 @@ import {
 } from "../validation-rules.js";
 
 /*
- * The public surface's request and response shapes for a version's
- * validation pipelines (routes 13–14) (D25 decisions 17, 18, 19 and 32;
- * Preflight ruling 8): strict Zod schemas, camelCase, in the platform's
- * pipeline and rule shapes (D15a's), which the Validation tab reads, plus
- * what the public API adds: each rule's `isApiOwned`, the pipeline's
- * version number, and the PUT's counts.
+ * The public surface's request and response shapes for a version's validation
+ * pipelines (routes 13–14): strict Zod schemas, camelCase, in the platform's
+ * pipeline and rule shapes, which the Validation tab reads, plus what the
+ * public API adds: each rule's `isApiOwned`, the pipeline's version number,
+ * and the PUT's counts.
  *
  * A rule is the platform's (`kind`, `target`, `pattern` or `ottl`, `name`,
  * `description`). A pipeline has no name of its own.
@@ -24,9 +23,9 @@ import {
 export const PUBLIC_VALIDATION_PIPELINE_RULES_MAXIMUM = 20;
 
 /**
- * The PUT's rule the evaluator refused (400 `validation_rule_invalid`):
- * fixed words (decision 20); `details` holds `ruleIndex` (the rule's place
- * in the body, from 0) and the evaluator's `problems`.
+ * The PUT's rule the evaluator refused (400 `validation_rule_invalid`): fixed
+ * words; `details` holds `ruleIndex` (the rule's place in the body, from 0)
+ * and the evaluator's `problems`.
  */
 export const PUBLIC_VALIDATION_RULE_INVALID_MESSAGE = "A rule is not valid: see the problems in details.";
 
@@ -67,7 +66,7 @@ export const PublicValidationPipelineSchema = ValidationPipelineFieldsSchema.ext
 
 export type PublicValidationPipeline = z.infer<typeof PublicValidationPipelineSchema>;
 
-/** `GET …/validation-pipelines`: every pipeline the caller can see on the version, oldest first; not paginated (decision 19). */
+/** `GET …/validation-pipelines`: every pipeline the caller can see on the version, oldest first; not paginated. */
 export const PublicValidationPipelinesSchema = z
   .object({ items: z.array(PublicValidationPipelineSchema), nextCursor: z.null() })
   .strict();

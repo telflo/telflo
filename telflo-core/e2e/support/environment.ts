@@ -10,14 +10,14 @@ import { FAKE_OTELCOL_TESTING_SECRET } from "../../apps/api/src/testing/fake-ote
 import { FAKE_OTELCOL_VALIDATOR_SECRET } from "../../apps/api/src/testing/fake-otelcol-validator.js";
 import { FAKE_OTTL_EVALUATOR_SECRET } from "../../apps/api/src/testing/fake-ottl-evaluator.js";
 
-// The browser tests' own servers and database (D2b decision 8). Never the
-// developer's: their dev servers listen on 53000 and 8080 against `telflo`,
-// and a browser run must neither reuse nor disturb them.
+// The browser tests' own servers and database. Never the developer's: their
+// dev servers listen on 53000 and 8080 against `telflo`, and a browser run
+// must neither reuse nor disturb them.
 //
 // Every port is below 32768, outside the range Linux (32768–60999) and macOS
 // (49152–65535) hand out for outgoing connections: in that range a CI
 // runner's own connection can hold one by chance, and the server then fails
-// to start ("Port 53100 is already in use", PR #18's first CI run).
+// to start ("Port 53100 is already in use").
 
 export const E2E_WEB_PORT = 23100;
 export const E2E_API_PORT = 28080;
@@ -26,13 +26,12 @@ export const E2E_WEB_URL = `http://localhost:${E2E_WEB_PORT}`;
 export const E2E_API_URL = `http://localhost:${E2E_API_PORT}`;
 
 /**
- * The second pair, the SaaS's (D36-1 decision 48, Preflight ruling 16): an
- * API and a web dev server with the SaaS's site values (open registration,
- * the playground and the anonymous reads on, the Terms asked), beside the
- * default pair (E2E_WEB_URL, E2E_API_URL), which runs the open source's
- * defaults. The specs of open registration, the Terms, the playground and
- * the anonymous reads run on it (support/saas.ts's `test`); both pairs share
- * the database, Mailpit, the fakes and the file store.
+ * The second pair, the SaaS's: an API and a web dev server with the SaaS's
+ * site values (open registration, the playground and the anonymous reads on,
+ * the Terms asked), beside the default pair (E2E_WEB_URL, E2E_API_URL), which
+ * runs the open source's defaults. The specs of open registration, the Terms,
+ * the playground and the anonymous reads run on it (support/saas.ts's `test`);
+ * both pairs share the database, Mailpit, the fakes and the file store.
  */
 export const E2E_SAAS_WEB_PORT = 23102;
 export const E2E_SAAS_API_PORT = 28081;
@@ -42,11 +41,11 @@ export const E2E_SAAS_API_URL = `http://localhost:${E2E_SAAS_API_PORT}`;
 export const E2E_SAAS_TERMS_VERSION = "2026-01-01";
 
 /**
- * The analytics web dev server, the only one with a PostHog key (D4
- * Preflight ruling 8): the analytics tests run against it, every other test
- * against E2E_WEB_URL or E2E_SAAS_WEB_URL, where analytics is off. It runs
- * the SaaS's values, against the SaaS pair's API (the playground's analytics
- * need the playground and PostHog on one server).
+ * The analytics web dev server, the only one with a PostHog key: the analytics
+ * tests run against it, every other test against E2E_WEB_URL or
+ * E2E_SAAS_WEB_URL, where analytics is off. It runs the SaaS's values, against
+ * the SaaS pair's API (the playground's analytics need the playground and
+ * PostHog on one server).
  */
 export const E2E_ANALYTICS_WEB_PORT = 23101;
 export const E2E_ANALYTICS_WEB_URL = `http://localhost:${E2E_ANALYTICS_WEB_PORT}`;
@@ -64,26 +63,25 @@ export const E2E_POSTHOG_KEY = "phc_e2e_only_fake_project_key";
  * The fake OpenID Provider (start-fake-oidc-provider.ts), behind the Google
  * button. On 127.0.0.1, not localhost: a different site from the web app on
  * localhost, as Google is, so the return from the provider is a cross-site
- * navigation and the SameSite=Lax flow cookie must survive it (D2c fix wave
- * M5).
+ * navigation and the SameSite=Lax flow cookie must survive it.
  */
 export const E2E_OIDC_HOSTNAME = "127.0.0.1";
 export const E2E_OIDC_ISSUER = `http://${E2E_OIDC_HOSTNAME}:${E2E_OIDC_PORT}`;
 
 /**
- * The E2E API's opamp-server (D11b decision 8): the OpenAPI-checked fake from
+ * The E2E API's opamp-server: the OpenAPI-checked fake from
  * apps/api/src/testing, run by start-fake-opamp-server.ts on 127.0.0.1:28085
- * (the fake listens on 127.0.0.1 only). No Go in the browser tests (D11a
- * decision 13). Its secret is the fake's public test one.
+ * (the fake listens on 127.0.0.1 only). No Go in the browser tests. Its
+ * secret is the fake's public test one.
  */
 export const E2E_OPAMP_PORT = 28085;
 export const E2E_OPAMP_URL = `http://127.0.0.1:${E2E_OPAMP_PORT}`;
 /**
- * That fake's control port (D17a decision 30, Preflight ruling 6), on
- * 127.0.0.1, test-only, as the collector tester's (D14a Ruling 36): the
- * browser tests enroll collectors in a fleet and set their last-seen time
- * and drift state through support/fake-opamp-server.ts's helpers. Not a
- * route of the contract, and no setting: the E2E API never calls it.
+ * That fake's control port, on 127.0.0.1, test-only, as the collector
+ * tester's: the browser tests enroll collectors in a fleet and set their
+ * last-seen time and drift state through support/fake-opamp-server.ts's
+ * helpers. Not a route of the contract, and no setting: the E2E API never
+ * calls it.
  */
 export const E2E_OPAMP_CONTROL_PORT = 28084;
 export const E2E_OPAMP_CONTROL_URL = `http://127.0.0.1:${E2E_OPAMP_CONTROL_PORT}`;
@@ -100,11 +98,10 @@ export const E2E_OPAMP_VIOLATIONS_PATH = resolve(
 );
 
 /**
- * The E2E API's collector validator (D13b decision 17, Preflight ruling 20):
- * the OpenAPI-checked fake from apps/api/src/testing, run by
- * start-fake-otelcol-validator.ts on 127.0.0.1:28086. No collector in the
- * browser tests: the fake answers by the text. Its secret is the fake's
- * public test one.
+ * The E2E API's collector validator: the OpenAPI-checked fake from
+ * apps/api/src/testing, run by start-fake-otelcol-validator.ts on
+ * 127.0.0.1:28086. No collector in the browser tests: the fake answers by
+ * the text. Its secret is the fake's public test one.
  */
 export const E2E_OTELCOL_VALIDATOR_PORT = 28086;
 export const E2E_OTELCOL_VALIDATOR_URL = `http://127.0.0.1:${E2E_OTELCOL_VALIDATOR_PORT}`;
@@ -119,8 +116,8 @@ export const E2E_OTELCOL_VALIDATOR_VIOLATIONS_PATH = resolve(
 );
 
 /**
- * The E2E API's collector tester (D14a Task 6): the OpenAPI-checked fake
- * from apps/api/src/testing, run by start-fake-otelcol-testing.ts on
+ * The E2E API's collector tester: the OpenAPI-checked fake from
+ * apps/api/src/testing, run by start-fake-otelcol-testing.ts on
  * 127.0.0.1:28087. No collector and no kwok in the browser tests: the fake
  * answers by markers in the text (support/fake-otelcol-testing.ts). Its
  * secret is the fake's public test one.
@@ -128,9 +125,9 @@ export const E2E_OTELCOL_VALIDATOR_VIOLATIONS_PATH = resolve(
 export const E2E_OTELCOL_TESTING_PORT = 28087;
 export const E2E_OTELCOL_TESTING_URL = `http://127.0.0.1:${E2E_OTELCOL_TESTING_PORT}`;
 /**
- * That fake's control route (D14a Ruling 36), on a port of its own on
- * 127.0.0.1, test-only: the browser tests count and release the `slow` runs
- * the fake holds, each test only its own (by a token in its text), through
+ * That fake's control route, on a port of its own on 127.0.0.1, test-only:
+ * the browser tests count and release the `slow` runs the fake holds, each
+ * test only its own (by a token in its text), through
  * support/fake-otelcol-testing.ts's helpers. The E2E API never calls it.
  */
 export const E2E_OTELCOL_TESTING_CONTROL_PORT = 28088;
@@ -145,12 +142,11 @@ export const E2E_OTELCOL_TESTING_VIOLATIONS_PATH = resolve(
   "../../test-results/fake-otelcol-testing-violations.log",
 );
 /**
- * The E2E API's OTTL evaluator (D15a Task 5, Preflight ruling 28): the
- * OpenAPI-checked fake from apps/api/src/testing, run by
- * start-fake-ottl-evaluator.ts on 127.0.0.1:28089. No OTTL in the browser
- * tests: the fake answers by a marker in a rule's pattern or OTTL string
- * literal (support/fake-ottl-evaluator.ts). Its secret is the fake's public
- * test one.
+ * The E2E API's OTTL evaluator: the OpenAPI-checked fake from
+ * apps/api/src/testing, run by start-fake-ottl-evaluator.ts on
+ * 127.0.0.1:28089. No OTTL in the browser tests: the fake answers by a marker
+ * in a rule's pattern or OTTL string literal
+ * (support/fake-ottl-evaluator.ts). Its secret is the fake's public test one.
  */
 export const E2E_OTTL_EVALUATOR_PORT = 28089;
 export const E2E_OTTL_EVALUATOR_URL = `http://127.0.0.1:${E2E_OTTL_EVALUATOR_PORT}`;
@@ -164,43 +160,40 @@ export const E2E_OTTL_EVALUATOR_VIOLATIONS_PATH = resolve(
   "../../test-results/fake-ottl-evaluator-violations.log",
 );
 /**
- * The E2E API's runs at once (Preflight ruling 20): large, so the browsers'
- * parallel workers never queue behind each other's runs. A queued run is
- * shown with the fake's slow marker; "n ahead" is the API suite's.
+ * The E2E API's runs at once: large, so the browsers' parallel workers never
+ * queue behind each other's runs. A queued run is shown with the fake's slow
+ * marker; "n ahead" is the API suite's.
  */
 export const E2E_TEST_RUNS_PER_TESTER = 16;
 
 /**
- * The E2E API's file store root (D14a decision 2): its own temporary
- * directory, never the developer's root. Under test-results/, which
- * Playwright clears before it starts the web servers, so each run starts
- * with no files, and which git ignores. start-api.ts creates it before the
- * E2E API starts.
+ * The E2E API's file store root: its own temporary directory, never the
+ * developer's root. Under test-results/, which Playwright clears before it
+ * starts the web servers, so each run starts with no files, and which git
+ * ignores. start-api.ts creates it before the E2E API starts.
  */
 export const E2E_FILE_STORE_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../../test-results/file-store");
 
 /**
- * Installing (D17c-1 decision 34, spec decision 52): the agent endpoint the
- * install dialog's command and the bundles name, which nothing connects to
- * in the browser tests (.invalid, RFC 2606), and the repository's own
- * install templates (install-templates/, beside the workspace).
+ * Installing: the agent endpoint the install dialog's command and the
+ * bundles name, which nothing connects to in the browser tests (.invalid,
+ * RFC 2606), and the repository's own install templates
+ * (install-templates/, beside the workspace).
  */
 export const E2E_OPAMP_AGENT_PUBLIC_URL = "https://opamp-agent.e2e.invalid/v1/opamp";
 export const E2E_INSTALL_TEMPLATES_DIR = resolve(dirname(fileURLToPath(import.meta.url)), "../../../install-templates");
 
 /**
- * Quick-deploy links (D17c-2 decision 24, Preflight ruling 8): the E2E API's
- * own origin, so a link a browser test makes downloads from the E2E API
- * itself, and a fixed key, public and e2e-only, which seals the values typed
- * in a test. It guards nothing.
+ * Quick-deploy links: the E2E API's own origin, so a link a browser test
+ * makes downloads from the E2E API itself, and a fixed key, public and
+ * e2e-only, which seals the values typed in a test. It guards nothing.
  */
 export const E2E_PUBLIC_API_URL = `http://localhost:${E2E_API_PORT}`;
 export const E2E_QUICK_DEPLOY_ENCRYPTION_KEY = "ZTJlLW9ubHktcXVpY2stZGVwbG95LWtleS1wdWJsaWM=";
 
 /**
- * The library's Copy curl links (D23-2 decision 46, Preflight ruling 12): a
- * fixed key, public and e2e-only, which signs the links a browser test
- * makes. It guards nothing.
+ * The library's Copy curl links: a fixed key, public and e2e-only, which
+ * signs the links a browser test makes. It guards nothing.
  */
 export const E2E_LIBRARY_LINK_SIGNING_KEY = "e2e-only-library-link-signing-key-not-for-production";
 
@@ -239,11 +232,11 @@ export function developerEnv(): NodeJS.ProcessEnv {
 /**
  * The developer's (or CI's) Postgres server, with the database renamed to
  * `telflo_platform_e2e_test`. Its own database rather than vitest's `telflo_platform_test`, so
- * a browser run and a vitest run can go at once without deadlocking (D2a
- * Ruling 15). testDatabaseUrl refuses a name that doesn't end in `_test`.
+ * a browser run and a vitest run can go at once without deadlocking. testDatabaseUrl refuses a
+ * name that doesn't end in `_test`.
  *
  * As the API's own login role (TELFLO_DATABASE_URL): what the E2E API
- * connects as, like the real one (D5 decision 1).
+ * connects as, like the real one.
  */
 export function e2eDatabaseUrl(): string {
   return e2eUrl("TELFLO_DATABASE_URL");
@@ -284,7 +277,7 @@ export function e2eApiEnv(): Record<string, string> {
     TELFLO_API_PORT: String(E2E_API_PORT),
     TELFLO_PUBLIC_WEB_URL: E2E_WEB_URL,
     TELFLO_WEB_ORIGIN: "",
-    // Safari/WebKit refuses Secure cookies on http://localhost (D2a Ruling 14).
+    // Safari/WebKit refuses Secure cookies on http://localhost.
     TELFLO_COOKIE_SECURE: "false",
     TELFLO_ACCESS_TOKEN_SECRET: E2E_ACCESS_TOKEN_SECRET,
     TELFLO_ACCESS_TOKEN_TTL_MINUTES: String(E2E_ACCESS_TOKEN_TTL_MINUTES),
@@ -299,70 +292,69 @@ export function e2eApiEnv(): Record<string, string> {
     TELFLO_SMTP_HOST: developer.TELFLO_SMTP_HOST ?? "localhost",
     TELFLO_SMTP_PORT: developer.TELFLO_SMTP_PORT ?? "51025",
     TELFLO_SMTP_ALLOW_INSECURE: "",
-    // Mailpit takes plain SMTP (D36-1 decision 30), with no login and no CA.
+    // Mailpit takes plain SMTP, with no login and no CA.
     TELFLO_SMTP_TLS: "none",
     TELFLO_SMTP_USERNAME: "",
     TELFLO_SMTP_PASSWORD: "",
     TELFLO_SMTP_CA_FILE: "",
-    // No sales inquiries, so no address (D36-1 decision 25).
+    // No sales inquiries, so no address.
     TELFLO_SALES_INQUIRY_TO: "",
-    // Google, pointed at the fake provider on loopback (D2c Ruling 6): the
-    // browser tests see the Google button, and the fake sits behind it.
-    // Never the developer's Google settings, and never the internet.
+    // Google, pointed at the fake provider on loopback: the browser tests see
+    // the Google button, and the fake sits behind it. Never the developer's
+    // Google settings, and never the internet.
     TELFLO_OIDC_GOOGLE_ISSUER: E2E_OIDC_ISSUER,
     TELFLO_OIDC_GOOGLE_CLIENT_ID: FAKE_OIDC_CLIENT_ID,
     TELFLO_OIDC_GOOGLE_CLIENT_SECRET: FAKE_OIDC_CLIENT_SECRET,
     // The fake opamp-server (start-fake-opamp-server.ts), never the
     // developer's: the API registers every organization the tests create
-    // there, and publishes there (D11b decision 8).
+    // there, and publishes there.
     TELFLO_OPAMP_MANAGEMENT_URL: E2E_OPAMP_URL,
     TELFLO_OPAMP_MANAGEMENT_SECRET: FAKE_OPAMP_SERVER_SECRET,
     // The fake collector validator (start-fake-otelcol-validator.ts), never
-    // the developer's: the editor's checks go there (D13b decision 12).
+    // the developer's: the editor's checks go there.
     TELFLO_OTELCOL_VALIDATOR_URL: E2E_OTELCOL_VALIDATOR_URL,
     TELFLO_OTELCOL_VALIDATOR_SECRET: FAKE_OTELCOL_VALIDATOR_SECRET,
-    // Its own temporary root, never the developer's (D14a decision 2), and
-    // on the local disk whatever the developer's TELFLO_FILE_STORE says
-    // (D23-1 decision 36; start-api.ts refuses any other kind).
+    // Its own temporary root, never the developer's, and on the local disk
+    // whatever the developer's TELFLO_FILE_STORE says (start-api.ts refuses
+    // any other kind).
     TELFLO_FILE_STORE: "local",
     TELFLO_FILE_STORE_ROOT: E2E_FILE_STORE_ROOT,
     // The fake collector tester (start-fake-otelcol-testing.ts), never the
-    // developer's: test runs go there (D14a decision 30).
+    // developer's: test runs go there.
     TELFLO_OTELCOL_TESTING_URL: E2E_OTELCOL_TESTING_URL,
     TELFLO_OTELCOL_TESTING_SECRET: FAKE_OTELCOL_TESTING_SECRET,
     TELFLO_TEST_RUNS_PER_TESTER: String(E2E_TEST_RUNS_PER_TESTER),
-    // The default down rule (decision 12); the browser tests show the
-    // tester down with page.route, never the real state (Preflight ruling 20).
+    // The default down rule; the browser tests show the tester down with
+    // page.route, never the real state.
     TELFLO_TESTING_DOWN_FAIL_AFTER_SECONDS: "",
     // The fake OTTL evaluator (start-fake-ottl-evaluator.ts), never the
-    // developer's: rules are checked and evaluated there (D15a detail 26).
+    // developer's: rules are checked and evaluated there.
     TELFLO_OTTL_EVALUATOR_URL: E2E_OTTL_EVALUATOR_URL,
     TELFLO_OTTL_EVALUATOR_SECRET: FAKE_OTTL_EVALUATOR_SECRET,
-    // Installing (D17c-1): never the developer's endpoint, image or templates.
+    // Installing: never the developer's endpoint, image or templates.
     TELFLO_OPAMP_AGENT_PUBLIC_URL: E2E_OPAMP_AGENT_PUBLIC_URL,
     TELFLO_COLLECTOR_IMAGE_REPOSITORY: "",
     TELFLO_OPAMP_ALLOW_INSECURE_CONNECTIONS: "",
     TELFLO_HELM_CHART_REFERENCE: "",
     TELFLO_HELM_CHART_VERSION: "",
     TELFLO_INSTALL_TEMPLATES_DIR: E2E_INSTALL_TEMPLATES_DIR,
-    // Quick-deploy links (D17c-2): never the developer's URL or keys.
+    // Quick-deploy links: never the developer's URL or keys.
     TELFLO_PUBLIC_API_URL: E2E_PUBLIC_API_URL,
     TELFLO_QUICK_DEPLOY_ENCRYPTION_KEY: E2E_QUICK_DEPLOY_ENCRYPTION_KEY,
     TELFLO_QUICK_DEPLOY_PREVIOUS_ENCRYPTION_KEYS: "",
-    // The library's links (D23-2): never the developer's keys.
+    // The library's links: never the developer's keys.
     TELFLO_LIBRARY_LINK_SIGNING_KEY: E2E_LIBRARY_LINK_SIGNING_KEY,
     TELFLO_LIBRARY_LINK_SIGNING_KEYS_PREVIOUS: "",
-    // The site's switches and links (D36-1 decision 27): the open source's
-    // defaults, whatever the developer's .env says.
+    // The site's switches and links: the open source's defaults, whatever
+    // the developer's .env says.
     ...E2E_OPEN_SOURCE_SITE_ENV,
     LOG_LEVEL: "warn",
   };
 }
 
 /**
- * The site's variables at the open source's defaults (D36-1 Preflight ruling
- * 16): each "" (its default), but the docs link, which "" would hide: its
- * default is given.
+ * The site's variables at the open source's defaults: each "" (its
+ * default), but the docs link, which "" would hide: its default is given.
  */
 const E2E_OPEN_SOURCE_SITE_ENV: Record<string, string> = {
   TELFLO_REGISTRATION: "",
@@ -379,11 +371,10 @@ const E2E_OPEN_SOURCE_SITE_ENV: Record<string, string> = {
 };
 
 /**
- * The SaaS's site values (D36-1 Preflight ruling 16): registration open; the
- * playground, anonymous validate and public flows on; Settings ›
- * Notifications shown (Q270); the Terms asked, at
- * E2E_SAAS_TERMS_VERSION, with telflo-site's three URLs (nothing serves them
- * in the browser tests); no sales inquiries.
+ * The SaaS pair's site values: registration open; the playground,
+ * anonymous validate and public flows on; Settings › Notifications shown;
+ * the Terms asked, at E2E_SAAS_TERMS_VERSION, with three legal-page URLs
+ * (nothing serves them in the browser tests); no sales inquiries.
  */
 const E2E_SAAS_SITE_ENV: Record<string, string> = {
   ...E2E_OPEN_SOURCE_SITE_ENV,
@@ -426,17 +417,17 @@ export function e2eWebEnv(): Record<string, string> {
     TELFLO_WEB_PORT: String(E2E_WEB_PORT),
     // Vite's /api proxy, for the browser's same-origin calls.
     TELFLO_API_PORT: String(E2E_API_PORT),
-    // Server loaders reach the API directly (D2a decision 11).
+    // Server loaders reach the API directly.
     TELFLO_API_INTERNAL_URL: E2E_API_URL,
     // Relative to apps/web. Never the developer's node_modules/.vite, which
     // their own dev server may be using (see vite.config.ts).
     TELFLO_VITE_CACHE_DIR: "node_modules/.vite-e2e",
-    // Canonical URLs (D4 decision 5).
+    // Canonical URLs.
     TELFLO_PUBLIC_WEB_URL: E2E_WEB_URL,
-    // Analytics off (D4 decision 8).
+    // Analytics off.
     TELFLO_POSTHOG_KEY: "",
     TELFLO_POSTHOG_HOST: "",
-    // The site's switches and links (D36-1 decision 28), as the API's.
+    // The site's switches and links, as the API's.
     ...E2E_OPEN_SOURCE_SITE_ENV,
   };
 }
@@ -463,7 +454,7 @@ export function e2eSaasWebEnv(): Record<string, string> {
  * values, its /api proxy and server loaders to the SaaS pair's API), on its
  * own port and Vite cache (two dev servers must not share one), with its own
  * public URL, and a PostHog key whose host is the local stub, so nothing
- * leaves the machine (D4 Preflight ruling 8).
+ * leaves the machine.
  */
 export function e2eAnalyticsWebEnv(): Record<string, string> {
   return {

@@ -6,16 +6,16 @@ import { open } from "./editor-page.js";
 import { E2E_WEB_URL } from "./environment.js";
 import { adminNavItems } from "./test-templates-page.js";
 
-// The regex library (D15b Tasks 3 and 4) for the browser tests: the product
-// admin's /product-admin/test-regex page and its dialogs, a validation
-// pipeline card's "Add from regex library" picker, and the library's API as
-// the page's session.
+// The regex library for the browser tests: the product admin's
+// /product-admin/test-regex page and its dialogs, a validation pipeline
+// card's "Add from regex library" picker, and the library's API as the
+// page's session.
 //
 // The library is global, as test templates are: every parallel test sees
 // what another wrote. So each test names its own entries `e2e-<uuid>…`,
 // asserts only on its own rows and the seeded ones it reads (never a count,
 // the empty state or the list's order), and deletes its own by id as the
-// tables' owner when it ends (deleteTestRegexes, D15b Preflight ruling 17).
+// tables' owner when it ends (deleteTestRegexes).
 
 /** A regex library entry name no other test uses, with the clean-up's prefix. */
 export function uniqueRegexName(): string {

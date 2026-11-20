@@ -110,7 +110,7 @@ describe("matchLayout", () => {
     expect(component(matchLayout(graph, layout), "connectors.forward").position).toEqual({ x: -400, y: 900 });
   });
 
-  it("brings back a component dragged out of a pipeline while others still use it, where it was left (Ruling 40)", () => {
+  it("brings back a component dragged out of a pipeline while others still use it, where it was left", () => {
     const before = parsed(STARTER);
     const otlp = component(before, "receivers.otlp", "traces");
     const { parentId: _parent, ...ungrouped } = { ...otlp, position: { x: 1500, y: 40 } };

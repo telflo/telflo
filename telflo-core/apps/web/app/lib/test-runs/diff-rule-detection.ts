@@ -4,13 +4,13 @@ import { ottlDoubleLiteral, ottlIntegerLiteral, ottlStringLiteral } from "~/comp
 import { parseJsonText, type ParsedJsonText } from "~/lib/test-runs/json-format.js";
 
 /*
- * Compare's "Create an OTTL rule" detection (D15b decisions 3 and 4; plan
- * Preflight rulings 8-10): the record attributes a run's pipeline added,
- * removed or changed, each written as the OTTL rule that asserts it:
+ * Compare's "Create an OTTL rule" detection: the record attributes a run's
+ * pipeline added, removed or changed, each written as the OTTL rule that
+ * asserts it:
  *
  * - record attributes only: each log record's, span's and metric data
  *   point's (every metric type), across every resource and scope; resource
- *   and scope attributes, span events and the body aren't read (decision 3);
+ *   and scope attributes, span events and the body aren't read;
  * - added: on no input record and on every output record → all
  *   `attributes["k"] != nil`; removed: on some input record and on no output
  *   record → none `attributes["k"] != nil`; changed: equal record counts,
@@ -25,25 +25,23 @@ import { parseJsonText, type ParsedJsonText } from "~/lib/test-runs/json-format.
  *   several batches, and an NDJSON input, give their records. A line that
  *   doesn't parse, or text that is neither form, gives nothing, silently;
  * - one pass over the records, each key's count, first value and whether
- *   every value since was the same kept in a Map (Preflight ruling 9), never
- *   a filter over every record per key (40,000 records of unique keys would
- *   take about 213 s); a Map never mistakes `constructor`, `__proto__` or
- *   `toString` for keys every record holds, and never puts a key like "1"
- *   first;
+ *   every value since was the same kept in a Map, never a filter over every
+ *   record per key (40,000 records of unique keys would take about 213 s);
+ *   a Map never mistakes `constructor`, `__proto__` or `toString` for keys
+ *   every record holds, and never puts a key like "1" first;
  * - the key and the value are escaped as the builders escape them, control
  *   characters included (ottlStringLiteral), and numbers are valid OTTL: an
  *   integer exactly, from OTLP's decimal string, a double with its decimal
- *   point (Preflight ruling 10). A raw key (`x"] != nil or attributes["y`
- *   would give a condition testing `y`) is never written, nor a number by
- *   `String` (`NaN`, `1e+21`, 5.0 as `5`), nor an integer past 2^53 rounded
- *   by `Number`;
+ *   point. A raw key (`x"] != nil or attributes["y` would give a condition
+ *   testing `y`) is never written, nor a number by `String` (`NaN`,
+ *   `1e+21`, 5.0 as `5`), nor an integer past 2^53 rounded by `Number`;
  * - a value is compared as OTTL compares it (v0.162.0's compare.go): numbers
  *   by value, an int and a double as the double the int converts to (an int
  *   5 and a double 5.0 are the same, so no "changed"; so are the int 2^53 + 1
  *   and the double 2^53), two ints exactly, other kinds never equal to each
  *   other. A key or value no literal can write (not well-formed UTF-16; NaN or
  *   ±Infinity; -9223372036854775808), or a condition past a rule's 8,192
- *   bytes, offers no chip (Ruling 24);
+ *   bytes, offers no chip;
  * - an attribute holding an array, a kvlist, bytes or nothing is present
  *   (it counts for added and removed) with no value a "changed" chip could
  *   assert;
@@ -51,9 +49,9 @@ import { parseJsonText, type ParsedJsonText } from "~/lib/test-runs/json-format.
  *
  * Truncation isn't handled here: when the run's output or decoded input was
  * cut at 10 MiB (`outputTruncated`, `decodedInputTruncated`), the caller
- * doesn't detect at all and says why (Preflight ruling 8). The context of a
- * candidate's rule is the caller's too: the run's signal's record context
- * (recordContextForSignal; decision 6).
+ * doesn't detect at all and says why. The context of a candidate's rule is
+ * the caller's too: the run's signal's record context
+ * (recordContextForSignal).
  */
 
 /** What a candidate asserts the run's pipeline did to a record attribute. */
@@ -85,12 +83,12 @@ export type AttributeChange =
   | { kind: "changed"; key: string; to: AttributeValue };
 
 /**
- * The OTTL that asserts a change, as the rule editor's prefill (Preflight
- * ruling 10): added → all `attributes["k"] != nil`; removed → none, the same
- * condition; changed → all `attributes["k"] == <value>`. Null when the key
- * or the value can't be written, or the condition is past a rule's 8,192
- * bytes of UTF-8 (VALIDATION_RULE_TEXT_MAXIMUM_BYTES; Ruling 24), so no chip
- * opens an editor whose rule can't be saved.
+ * The OTTL that asserts a change, as the rule editor's prefill: added → all
+ * `attributes["k"] != nil`; removed → none, the same condition; changed → all
+ * `attributes["k"] == <value>`. Null when the key or the value can't be
+ * written, or the condition is past a rule's 8,192 bytes of UTF-8
+ * (VALIDATION_RULE_TEXT_MAXIMUM_BYTES), so no chip opens an editor whose rule
+ * can't be saved.
  */
 export function candidatePrefill(change: AttributeChange): { quantifier: "all" | "none"; condition: string } | null {
   const key = ottlStringLiteral(change.key);
@@ -130,8 +128,8 @@ export function documentsOf(parsed: ParsedJsonText): unknown[] {
 }
 
 /**
- * The stored output's documents, as read once (Preflight ruling 8): the
- * tester's `{"records": […]}` (that one key) gives its elements; else one
+ * The stored output's documents, as read once: the tester's
+ * `{"records": […]}` (that one key) gives its elements; else one
  * document, a JSON array of them, or NDJSON's.
  */
 export function outputDocumentsOf(parsed: ParsedJsonText): unknown[] {
@@ -145,15 +143,15 @@ export function outputDocumentsOf(parsed: ParsedJsonText): unknown[] {
   return documents;
 }
 
-/** The decoded input's documents (Preflight ruling 8): one document, a JSON array of them, or NDJSON. */
+/** The decoded input's documents: one document, a JSON array of them, or NDJSON. */
 export function readInputDocuments(text: string): unknown[] {
   return documentsOf(parseJsonText(text));
 }
 
 /**
- * The stored output's documents (Preflight ruling 8): the tester's
- * `{"records": […]}` (that one key) gives its elements; else one document,
- * a JSON array of them, or NDJSON.
+ * The stored output's documents: the tester's `{"records": […]}` (that one
+ * key) gives its elements; else one document, a JSON array of them, or
+ * NDJSON.
  */
 export function readOutputDocuments(text: string): unknown[] {
   return outputDocumentsOf(parseJsonText(text));
@@ -243,13 +241,12 @@ function readDouble(raw: unknown): AttributeValue {
 }
 
 /**
- * Whether two values are the same, as OTTL's `==` (Preflight ruling 10;
- * Ruling 24): two ints exactly; an int and a double as compare.go's
- * `float64(int) == double`, the int rounded to the nearest double, ties to
- * even (`Number` of a BigInt rounds as Go's conversion does), so the int
- * 2^53 + 1 is the double 2^53; two doubles by value; other kinds never equal
- * each other. NaN is the same as NaN here: a side of NaNs is still one value,
- * and no literal can write it.
+ * Whether two values are the same, as OTTL's `==`: two ints exactly; an int
+ * and a double as compare.go's `float64(int) == double`, the int rounded to
+ * the nearest double, ties to even (`Number` of a BigInt rounds as Go's
+ * conversion does), so the int 2^53 + 1 is the double 2^53; two doubles by
+ * value; other kinds never equal each other. NaN is the same as NaN here: a
+ * side of NaNs is still one value, and no literal can write it.
  */
 function sameValue(a: AttributeValue, b: AttributeValue): boolean {
   if (a === null || b === null) return a === b;

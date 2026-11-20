@@ -1,12 +1,11 @@
 /**
- * The polling of a version's runs (D14a decision 18; Preflight ruling 15):
- * every second while any listed run, a teammate's included, is queued or
- * running; stopped when none is, by its stop function (the tab's unmount)
- * and by a version switch; each read aborted after 10 s; stopped after 30
- * failures in a row with "Failed to refresh test runs" and a retry, at once
- * on a refusal (a 4xx) or a failed first read (Ruling 48); a
- * selected run read in full once it has ended; an answer older than a
- * just-queued run never dropping it.
+ * The polling of a version's runs: every second while any listed run, a
+ * teammate's included, is queued or running; stopped when none is, by its
+ * stop function (the tab's unmount) and by a version switch; each read
+ * aborted after 10 s; stopped after 30 failures in a row with "Failed to
+ * refresh test runs" and a retry, at once on a refusal (a 4xx) or a failed
+ * first read; a selected run read in full once it has ended; an answer
+ * older than a just-queued run never dropping it.
  *
  * Every timer is fake (the poll's, the hang guard's), so nothing here waits
  * on the wall clock: each test advances the clock and counts the reads.
@@ -103,7 +102,7 @@ const watch = (target = TARGET) => {
   stop = useTestingStore.getState().watchRuns(target);
 };
 
-describe("the poll (Preflight ruling 15)", () => {
+describe("the poll", () => {
   it("reads the runs at once, again every second while any is queued or running, and stops when none is", async () => {
     const list = serveRuns([queued()], [running()], [succeeded()]);
 
@@ -216,7 +215,7 @@ describe("the poll (Preflight ruling 15)", () => {
   });
 });
 
-describe("the hang guard (Preflight ruling 15)", () => {
+describe("the hang guard", () => {
   it("aborts each read after 10 s, counts it a failure, and reads again a second later", async () => {
     const signals: AbortSignal[] = [];
     const list = vi.spyOn(apiClient, "getTestRuns").mockImplementation((_o, _c, _v, options) => {
@@ -285,7 +284,7 @@ describe("the hang guard (Preflight ruling 15)", () => {
     expect(useTestingStore.getState().runsError).toBeNull();
   });
 
-  it("says at once, with Retry, when the first read fails: nothing waits for 30 (Ruling 48)", async () => {
+  it("says at once, with Retry, when the first read fails: nothing waits for 30", async () => {
     expect(RUNS_LOAD_FAILED_MESSAGE).toBe("Failed to load test runs");
     const list = vi.spyOn(apiClient, "getTestRuns").mockRejectedValue(new ApiError("network_error", "Could not reach the server."));
 
@@ -315,7 +314,7 @@ describe("the hang guard (Preflight ruling 15)", () => {
   it.each([
     [404, "configuration_not_found", "Configuration not found"],
     [403, "forbidden", "You don't have access to this organization."],
-  ])("stops at once on a refusal (%d), with the API's words, though runs were shown (Ruling 48)", async (status, code, message) => {
+  ])("stops at once on a refusal (%d), with the API's words, though runs were shown", async (status, code, message) => {
     const list = vi
       .spyOn(apiClient, "getTestRuns")
       .mockResolvedValueOnce({ runs: [running()] })
@@ -332,7 +331,7 @@ describe("the hang guard (Preflight ruling 15)", () => {
   it.each([
     [408, "request_timeout", "The request timed out."],
     [429, "rate_limited", "Too many requests."],
-  ])("counts a %d as transient: it keeps the 30-in-a-row rule (Ruling 52)", async (status, code, message) => {
+  ])("counts a %d as transient: it keeps the 30-in-a-row rule", async (status, code, message) => {
     const list = vi
       .spyOn(apiClient, "getTestRuns")
       .mockResolvedValueOnce({ runs: [running()] })
@@ -379,7 +378,7 @@ describe("the hang guard (Preflight ruling 15)", () => {
   });
 });
 
-describe("a selected run's full read (Preflight ruling 15)", () => {
+describe("a selected run's full read", () => {
   it("happens once, when the selected run ends, however long the polling goes on", async () => {
     const teammate = running({ id: LATER_ID, queuedAt: "2026-10-09T12:01:00.000Z", queuedByUserId: COLLEAGUE_ID });
     serveRuns([running(), teammate], [succeeded(), teammate]);
@@ -429,7 +428,7 @@ describe("a selected run's full read (Preflight ruling 15)", () => {
   });
 });
 
-describe("a run just queued (Preflight ruling 15)", () => {
+describe("a run just queued", () => {
   it("survives an answer to a read sent before it was queued, and keeps the hold, until a later answer speaks for it", async () => {
     const reads: ReturnType<typeof deferred<{ runs: TestRunSummary[] }>>[] = [];
     vi.spyOn(apiClient, "getTestRuns").mockImplementation(() => {
@@ -506,7 +505,7 @@ describe("a run just queued (Preflight ruling 15)", () => {
     expect(useTestingStore.getState().runsError).toBeNull();
   });
 
-  it("touches nothing when it answers after the tab left its version: the version shown keeps its runs and its polling (D14a Ruling 46)", async () => {
+  it("touches nothing when it answers after the tab left its version: the version shown keeps its runs and its polling", async () => {
     const answer = deferred<{ run: TestRunDetail }>();
     vi.spyOn(apiClient, "queueTestRun").mockReturnValue(answer.promise);
     const newRun = running({ id: LATER_ID });

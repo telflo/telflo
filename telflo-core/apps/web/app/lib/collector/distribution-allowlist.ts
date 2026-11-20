@@ -3,11 +3,11 @@ import type { CollectorComponentSection, CollectorSupportedComponents } from "@t
 import type { ComponentType } from "~/lib/graph/types.js";
 
 /*
- * The distribution allowlist (D13a decision 6): the toolbox shows
- * only the components a distribution's version supports. A version's
- * `supportedComponents` (the catalogue's) lists them by section, in the
- * collector's names at that version; null (Contrib) means every component,
- * and the palette is returned unchanged.
+ * The distribution allowlist: the toolbox shows only the components a
+ * distribution's version supports. A version's `supportedComponents` (the
+ * catalogue's) lists them by section, in the collector's names at that
+ * version; null (Contrib) means every component, and the palette is
+ * returned unchanged.
  *
  * Matching ignores case and underscores, so the palette's spellings match
  * the collector's renamed types (`filelog` and `file_log`, `hostmetrics` and

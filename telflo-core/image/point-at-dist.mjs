@@ -1,6 +1,6 @@
-// The API image's build stage only (telflo-core/Dockerfile's api-build; D36-1
-// decision 43, Preflight ruling 22), run from the workspace's root after
-// `tsc -p <package>/tsconfig.build.json` has emitted each package's dist/:
+// The API image's build stage only (telflo-core/Dockerfile's api-build), run
+// from the workspace's root after `tsc -p <package>/tsconfig.build.json` has
+// emitted each package's dist/:
 //
 //   1. copies every file under each package's src/ that tsc doesn't emit (not
 //      a .ts file; nothing under testing/) to dist/ at the same path, so the

@@ -14,13 +14,12 @@ import type { ComponentType, OTelNode } from "~/lib/graph/types.js";
 import { GROUP_ID, MINE, versionFixture } from "~/test/configurations.js";
 
 /*
- * The palette writes the spelling the pin knows (D13b decision 5,
- * Preflight ruling 22): a component dropped from the palette is written
- * with the collector's current name when the version on screen is pinned
- * at or after the rename's `since`, with the palette's (deprecated) name
- * before it; the node's palette subtype, label, icon and form are the
- * entry's either way. Contrib's real renames here; a distribution with its
- * own `since` values is `spelledType`'s (renamed-types.test.ts).
+ * The palette writes the spelling the pin knows: a component dropped from the
+ * palette is written with the collector's current name when the version on
+ * screen is pinned at or after the rename's `since`, with the palette's
+ * (deprecated) name before it; the node's palette subtype, label, icon and
+ * form are the entry's either way. Contrib's real renames here; a distribution
+ * with its own `since` values is `spelledType`'s (renamed-types.test.ts).
  */
 
 const CONTRIB: readonly RenamedType[] = CATALOGUE_RENAMED_TYPES["otelcol-contrib"]!;
@@ -95,7 +94,7 @@ const PINS = (since: string) =>
     ["after", versionAfter(since), "current"],
   ] as const;
 
-describe("the palette writes the spelling the pin knows (D13b decision 5)", () => {
+describe("the palette writes the spelling the pin knows", () => {
   it("has Contrib's renames to check", () => {
     expect(CONTRIB.length).toBeGreaterThan(0);
   });
@@ -203,7 +202,7 @@ describe("the palette writes the spelling the pin knows (D13b decision 5)", () =
   });
 });
 
-describe("a duplicate keeps the spelling of the node it duplicates (D13b decision 5)", () => {
+describe("a duplicate keeps the spelling of the node it duplicates", () => {
   const OLD_SPELLING = BASE.replace("  debug: {}\n", "  debug: {}\n  otlp:\n    endpoint: collector:4317\n");
   const NEW_SPELLING = BASE.replace("  debug: {}\n", "  debug: {}\n  otlp_grpc:\n    endpoint: collector:4317\n");
 
@@ -241,7 +240,7 @@ describe("a duplicate keeps the spelling of the node it duplicates (D13b decisio
   });
 });
 
-describe("a dropped or duplicated node of a renamed type keeps its place after a save and reload (Ruling 60)", () => {
+describe("a dropped or duplicated node of a renamed type keeps its place after a save and reload", () => {
   /** Where a node is drawn on the canvas: its position, plus its group's. */
   function placeOf(nodeId: string): { x: number; y: number } {
     const { nodes } = store().graph;

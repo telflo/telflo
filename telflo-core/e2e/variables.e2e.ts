@@ -13,26 +13,25 @@ import {
   variablesThroughApi,
 } from "./support/variables.js";
 
-// The Variables pages (D20 decision 40; defaults 19–22; decision 39), in the
-// browser, against the E2E API and its fake opamp-server, which holds the
-// organization's variables, variable groups and overrides, and guards a
-// variable or a variable group in use (decision 6). Each test works in an
-// organization of its own (a new user's), so tests and browsers run in
-// parallel. Variables, groups, fleets and published versions the page
+// The Variables pages, in the browser, against the E2E API and its fake
+// opamp-server, which holds the organization's variables, variable groups
+// and overrides, and guards a variable or a variable group in use. Each test
+// works in an organization of its own (a new user's), so tests and browsers
+// run in parallel. Variables, groups, fleets and published versions the page
 // doesn't make itself are made through the API as the page's session
 // (support/variables.ts, support/collectors.ts), before the page reads them.
 //
-// Privacy (decision 39; Q88): a value is configuration text, shown only as
-// text inside `ph-no-capture`, in no attribute but a dialog's own input's
-// value; a name, a description and a group's name are text in the masked
-// shell, never in an attribute, a URL, a page title or browser storage; the
-// search is the page's state, never in the address (no `?q=`).
+// Privacy: a value is configuration text, shown only as text inside
+// `ph-no-capture`, in no attribute but a dialog's own input's value; a
+// name, a description and a group's name are text in the masked shell,
+// never in an attribute, a URL, a page title or browser storage; the search
+// is the page's state, never in the address (no `?q=`).
 //
 // The words are the web app's, written out here.
 
 const PASSWORD = "correct horse battery staple";
 const NOTE = "Referenced in configurations as ${org:NAME}.";
-/** Each page's warning (Q106, Ruling 80). */
+/** Each page's warning. */
 const VARIABLES_WARNING =
   "Not for secrets. Keep passwords, tokens and keys in environment variables (${env:NAME}), set when you install. Test runs use these values in place of ${org:NAME}, and each run keeps its Test YAML and the collector's logs, values included, with its results.";
 const VARIABLE_GROUPS_WARNING =
@@ -112,7 +111,7 @@ test("the Variables page: the note and the empty state; Add, Edit and the search
   await expect(page.getByRole("heading", { level: 1, name: "Variables" })).toBeVisible();
   await expect(page.getByText(NOTE, { exact: true })).toBeVisible();
   await expect(page.getByRole("note")).toHaveText(VARIABLES_WARNING);
-  // The left nav (Q106, Ruling 80): links, the page shown marked.
+  // The left nav: links, the page shown marked.
   const nav = page.getByRole("navigation", { name: "Variables pages" });
   await expect(nav.getByRole("link", { name: "Variables", exact: true })).toHaveAttribute("aria-current", "page");
   await expect(nav.getByRole("link", { name: "Variable groups", exact: true })).toHaveAttribute("href", "/variables/groups");
@@ -255,7 +254,7 @@ test("the Variable groups page: Add a group, listed by its counts; its page list
   await openPage(page, "/variables/groups", variableGroupsApiPath(organizationId));
   await expect(page).toHaveTitle("Variable groups - Telflo");
   await expect(page.getByText("No variable groups yet", { exact: true })).toBeVisible();
-  // The warning under the header, "How variable groups work" below the list (Q106, Ruling 80).
+  // The warning under the header, "How variable groups work" below the list.
   await expect(page.getByRole("note")).toHaveText(VARIABLE_GROUPS_WARNING);
   await expect(page.getByText("How variable groups work", { exact: true })).toBeVisible();
   await expect(page.getByText(HOW_VARIABLE_GROUPS_WORK, { exact: true })).toBeVisible();

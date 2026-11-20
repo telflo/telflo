@@ -21,8 +21,8 @@ import { selectIsDirty, useEditorStore } from "~/lib/stores/editor-store.js";
 import { GROUP_ID, MINE, THEIRS, versionFixture, versionSummaryOf } from "~/test/configurations.js";
 
 /*
- * The picker's create (D10 decisions 5 and 11): what it sends, what it does
- * with the answer, and the save's refusals.
+ * The picker's create: what it sends, what it does with the answer, and the
+ * save's refusals.
  */
 
 const SAVED_YAML = "receivers:\n  otlp:\n    protocols:\n      grpc: {}\n";
@@ -131,14 +131,14 @@ describe("useCreateVersion", () => {
       label: "Add tail sampling",
       yamlContent: EDITED_YAML,
       ...toStored(graph),
-      // No collectorVersion: nothing was picked, so the server takes the source's saved pin (D13a Ruling 37).
+      // No collectorVersion: nothing was picked, so the server takes the source's saved pin.
     });
   });
 
   it.each([
     ["trimmed", "  Add tail sampling  ", { label: "Add tail sampling" }],
     ["left out when empty", "", {}],
-    ["left out when only spaces (Preflight ruling 16)", "   ", {}],
+    ["left out when only spaces", "   ", {}],
   ])("sends the name %s", async (_why, typed, sent) => {
     const createConfigurationVersion = answering();
     loadAndEdit();
@@ -155,7 +155,7 @@ describe("useCreateVersion", () => {
     expect(body.label).toBe((sent as { label?: string }).label);
   });
 
-  it("writes an edit a field still holds first, and sends it (held-edits; D9b decision 2)", async () => {
+  it("writes an edit a field still holds first, and sends it (held-edits)", async () => {
     const createConfigurationVersion = answering();
     loadAndEdit();
     const held = `${EDITED_YAML}# held by a field\n`;
@@ -251,7 +251,7 @@ describe("useCreateVersion", () => {
     act(() => {
       first = create("one");
     });
-    // Set at once, before the request: the store is the only record (D10 Ruling 45).
+    // Set at once, before the request: the store is the only record.
     expect(isCreating()).toBe(true);
     let second!: boolean;
     await act(async () => {
@@ -267,7 +267,7 @@ describe("useCreateVersion", () => {
     expect(isCreating()).toBe(false);
   });
 
-  it("says in the store that a create is under way until it answers, so a save meanwhile does nothing (D10 Ruling 30)", async () => {
+  it("says in the store that a create is under way until it answers, so a save meanwhile does nothing", async () => {
     const { reject } = pendingCreate();
     loadAndEdit();
     const { create } = await renderCreate();
@@ -298,7 +298,7 @@ describe("useCreateVersion", () => {
     expect(useEditorStore.getState().isCreatingVersion).toBe(false);
   });
 
-  it("reads the store's flag alone: a create under way elsewhere (another hook) makes this one do nothing (D10 Ruling 45)", async () => {
+  it("reads the store's flag alone: a create under way elsewhere (another hook) makes this one do nothing", async () => {
     const createConfigurationVersion = answering();
     loadAndEdit();
     const { create } = await renderCreate();
@@ -310,7 +310,7 @@ describe("useCreateVersion", () => {
     expect(useEditorStore.getState().isCreatingVersion).toBe(true);
   });
 
-  it("leaves the flag alone when its answer comes after a load: a create begun since on the loaded version keeps it (D10 Ruling 35)", async () => {
+  it("leaves the flag alone when its answer comes after a load: a create begun since on the loaded version keeps it", async () => {
     const late = pendingCreate();
     loadAndEdit();
     const { create } = await renderCreate();
@@ -361,7 +361,7 @@ describe("useCreateVersion", () => {
     expect(createConfigurationVersion).not.toHaveBeenCalled();
   });
 
-  it("does nothing while a publish is under way (D11b): its save first would race the create", async () => {
+  it("does nothing while a publish is under way: its save first would race the create", async () => {
     const createConfigurationVersion = answering();
     const { create } = await renderCreate();
     loadAndEdit();
@@ -373,7 +373,7 @@ describe("useCreateVersion", () => {
     expect(useEditorStore.getState().isCreatingVersion).toBe(false);
   });
 
-  describe("refusals, which keep the editor's text (the save's; D8 decisions 5, 7 and 12)", () => {
+  describe("refusals, which keep the editor's text (the save's)", () => {
     it.each([
       ["text over the contract's limit", "x".repeat(262_145), TOO_LARGE_MESSAGE],
       ["a character that can't be stored", `${SAVED_YAML}# \u0000\n`, UNSTORABLE_CHARACTER_MESSAGE],
@@ -506,7 +506,7 @@ describe("useCreateVersion", () => {
   });
 });
 
-describe("the collector version a create carries (D13a decision 9; Preflight ruling 16; Ruling 37)", () => {
+describe("the collector version a create carries", () => {
   it("sends an unsaved pick, as the text is; the source keeps its own", async () => {
     // v2 saved at 0.162.0; the person picks 0.161.0 and types, then creates v3.
     const createConfigurationVersion = answering({ ...CREATED, collectorVersion: "0.161.0" });

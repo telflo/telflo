@@ -4,12 +4,11 @@ import { OrganizationRoleSchema } from "./organizations.js";
 import { emailSchema } from "./shared.js";
 
 /*
- * Product administration (D29 decisions 28, 31 to 34): the routes under
- * `/api/v1/product-admin/`, each `[authenticate, requireProductAdmin]`
- * (403 `product_admin_required` otherwise, and also when the caller lost
- * the flag while a write waited: Rulings 257 and 258), every answer
- * `Cache-Control: no-store`; and "Contact us"'s `POST /api/v1/feedback`
- * for any signed-in person with the current terms.
+ * Product administration: the routes under `/api/v1/product-admin/`, each
+ * `[authenticate, requireProductAdmin]` (403 `product_admin_required`
+ * otherwise, and also when the caller lost the flag while a write waited),
+ * every answer `Cache-Control: no-store`; and "Contact us"'s
+ * `POST /api/v1/feedback` for any signed-in person with the current terms.
  *
  *   GET    /api/v1/product-admin/product-admins                    → ProductAdminsResponseSchema
  *   POST   /api/v1/product-admin/product-admins                    GrantProductAdminRequestSchema → 201 ProductAdminSchema (granted), 200 (already one)
@@ -26,28 +25,28 @@ import { emailSchema } from "./shared.js";
  *
  * Every id in a path goes through the API's canonicalIdOf: one that isn't a
  * canonical UUID is the route's 404. Other people's emails, organization
- * names, roles, feedback text and the reply are personal data (decision
- * 41): JSON bodies only, never a URL but the Users search's `q` (which no
- * log keeps), never an error's message or `details`.
+ * names, roles, feedback text and the reply are personal data: JSON bodies
+ * only, never a URL but the Users search's `q` (which no log keeps), never
+ * an error's message or `details`.
  */
 
 /** The Users search's longest term, after trimming (an address's limit, RFC 5321). */
 export const ADMIN_USERS_SEARCH_MAXIMUM_LENGTH = 254;
 
-/** The Users page's page size (decision 9). */
+/** The Users page's page size. */
 export const ADMIN_USERS_PAGE_SIZE = 50;
 
-/** The User Feedback page's page size (decision 33). */
+/** The User Feedback page's page size. */
 export const USER_FEEDBACK_PAGE_SIZE = 25;
 
 /** The longest cursor the lists accept: base64url of a timestamp and an id is far shorter. */
 export const PRODUCT_ADMIN_CURSOR_MAXIMUM_LENGTH = 200;
 
-/** A feedback's text, and an acknowledgement's reply, after trimming (decisions 15 and 34; the table's check). */
+/** A feedback's text, and an acknowledgement's reply, after trimming (the table's check). */
 export const FEEDBACK_TEXT_MAXIMUM_LENGTH = 5000;
 export const FEEDBACK_REPLY_MAXIMUM_LENGTH = 5000;
 
-/** The default reply, which the acknowledge dialog starts from (decision 40). */
+/** The default reply, which the acknowledge dialog starts from. */
 export const FEEDBACK_DEFAULT_REPLY =
   "Thank you for your feedback. We sincerely appreciate you taking the time to help us improve.";
 
@@ -66,7 +65,7 @@ const personalTextSchema = (required: string, maximum: number) =>
     .max(maximum)
     .refine((text) => !hasUnstorableCharacter(text), "The text can't contain U+0000 or a lone surrogate.");
 
-// --- Product admins (decisions 27 and 28) -----------------------------------
+// --- Product admins ---------------------------------------------------------
 
 /** A product admin, as the page lists one. */
 export const ProductAdminSchema = z.object({ id: uuid, email: z.string() }).strict();
@@ -83,13 +82,13 @@ export const GrantProductAdminRequestSchema = z.object({ email: emailSchema }).s
 
 export type GrantProductAdminRequest = z.infer<typeof GrantProductAdminRequestSchema>;
 
-// --- Users (decisions 9, 30 and 31) -----------------------------------------
+// --- Users ------------------------------------------------------------------
 
 /**
- * Why a person can't be deleted (decision 30): a member of an organization
- * not theirs alone (with their role there), the owner of their personal
- * organization while it has another live member or a pending invitation,
- * or a product admin. Never a delete: the dialog explains it.
+ * Why a person can't be deleted: a member of an organization not theirs alone
+ * (with their role there), the owner of their personal organization while it
+ * has another live member or a pending invitation, or a product admin. Never
+ * a delete: the dialog explains it.
  */
 export const AdminUserBlockSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("member"), organizationName: z.string(), role: OrganizationRoleSchema }).strict(),
@@ -138,12 +137,12 @@ export const ListAdminUsersQuerySchema = z
 
 export type ListAdminUsersQuery = z.input<typeof ListAdminUsersQuerySchema>;
 
-/** `user_delete_blocked`'s `details`: the block's kind only, never a name (decision 31). */
+/** `user_delete_blocked`'s `details`: the block's kind only, never a name. */
 export const UserDeleteBlockedDetailsSchema = z.object({ kind: z.enum(ADMIN_USER_BLOCK_KINDS) }).strict();
 
 export type UserDeleteBlockedDetails = z.infer<typeof UserDeleteBlockedDetailsSchema>;
 
-// --- User Feedback (decisions 32 to 34) -------------------------------------
+// --- User Feedback ----------------------------------------------------------
 
 /** One pending feedback item: the sender's current email, and whether their account is deleted. */
 export const UserFeedbackItemSchema = z
@@ -172,19 +171,19 @@ export const ListUserFeedbackQuerySchema = z
 
 export type ListUserFeedbackQuery = z.input<typeof ListUserFeedbackQuerySchema>;
 
-/** How many feedback items are pending (decision 37): the nav's badge. */
+/** How many feedback items are pending: the nav's badge. */
 export const PendingFeedbackCountSchema = z.object({ count: z.number().int().min(0) }).strict();
 
 export type PendingFeedbackCount = z.infer<typeof PendingFeedbackCountSchema>;
 
-/** An acknowledgement's reply, emailed to the sender and never stored (decision 34). */
+/** An acknowledgement's reply, emailed to the sender and never stored. */
 export const AcknowledgeFeedbackRequestSchema = z
   .object({ reply: personalTextSchema("Enter a reply.", FEEDBACK_REPLY_MAXIMUM_LENGTH) })
   .strict();
 
 export type AcknowledgeFeedbackRequest = z.infer<typeof AcknowledgeFeedbackRequestSchema>;
 
-/** "Contact us" (decision 32): the message, trimmed, 1 to 5,000 characters. */
+/** "Contact us": the message, trimmed, 1 to 5,000 characters. */
 export const CreateFeedbackRequestSchema = z
   .object({ text: personalTextSchema("Enter a message.", FEEDBACK_TEXT_MAXIMUM_LENGTH) })
   .strict();
@@ -195,7 +194,7 @@ export const CreateFeedbackResponseSchema = z.object({ id: uuid }).strict();
 
 export type CreateFeedbackResponse = z.infer<typeof CreateFeedbackResponseSchema>;
 
-// --- The site's settings (D36-1 decision 51) ---------------------------------
+// --- The site's settings -----------------------------------------------------
 
 /**
  * Who may create a group organization: anyone signed in (`everyone`, the
@@ -221,9 +220,8 @@ export type ChangeProductAdminSettingsRequest = z.infer<typeof ChangeProductAdmi
 // --- Error codes -------------------------------------------------------------
 
 /**
- * The product-admin routes' own refusals for people (decisions 28 and 31;
- * Ruling 258's `user_delete_busy`). `product_admin_required` stays in
- * IDENTITY_ERROR_CODES (Preflight ruling 8). No message names a person.
+ * The product-admin routes' own refusals for people. `product_admin_required`
+ * stays in IDENTITY_ERROR_CODES. No message names a person.
  */
 export const PRODUCT_ADMIN_ERROR_CODES = [
   "product_admin_target_not_found",
@@ -237,12 +235,12 @@ export const PRODUCT_ADMIN_ERROR_CODES = [
 
 export type ProductAdminErrorCode = (typeof PRODUCT_ADMIN_ERROR_CODES)[number];
 
-/** Feedback's own refusals (decision 34): handling an item. */
+/** Feedback's own refusals: handling an item. */
 export const FEEDBACK_ERROR_CODES = ["feedback_not_found", "feedback_author_deleted"] as const;
 
 export type FeedbackErrorCode = (typeof FEEDBACK_ERROR_CODES)[number];
 
-/** Fixed words for each refusal (decisions 5, 28, 31 and 34). */
+/** Fixed words for each refusal. */
 export const PRODUCT_ADMIN_TARGET_NOT_FOUND_MESSAGE = "No verified account uses that email.";
 export const PRODUCT_ADMIN_NOT_FOUND_MESSAGE = "That account isn't a product admin.";
 export const LAST_PRODUCT_ADMIN_MESSAGE = "Telflo needs at least one product admin.";

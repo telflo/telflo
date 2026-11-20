@@ -47,7 +47,7 @@ describe("readTextModel: the text's own model", () => {
     expect(model.undeclared).toEqual(new Set());
   });
 
-  it("marks what a pipeline or service.extensions names but nobody declares (Preflight ruling 5)", () => {
+  it("marks what a pipeline or service.extensions names but nobody declares", () => {
     const model = readTextModel(parsed(corpusText("undeclared-references.yaml")).document);
     expect(model.undeclared).toEqual(
       new Set([
@@ -95,7 +95,7 @@ describe("deriveModel: the configuration the graph describes (yaml-generator.ts:
     });
   });
 
-  it("leaves out a processor no edge reaches, while declaring it (decision 4)", () => {
+  it("leaves out a processor no edge reaches, while declaring it", () => {
     const graph = tracesPipeline();
     graph.edges = graph.edges.filter((e) => e.target !== "t-processor-1");
 
@@ -104,7 +104,7 @@ describe("deriveModel: the configuration the graph describes (yaml-generator.ts:
     expect(model.components.has("processors.batch")).toBe(true);
   });
 
-  it("keeps the chain nothing feeds in a pipeline with no receivers (D9a)", () => {
+  it("keeps the chain nothing feeds in a pipeline with no receivers", () => {
     const graph = buildNamedPipeline({
       pipelineId: "pipeline_0",
       pipelineName: "logs",
@@ -117,7 +117,7 @@ describe("deriveModel: the configuration the graph describes (yaml-generator.ts:
     expect(deriveModel(graph).pipelines.get("logs")?.processors).toEqual(["batch", "memory_limiter"]);
   });
 
-  it("makes a connector a member through an edge to or from the pipeline's group (D9a)", () => {
+  it("makes a connector a member through an edge to or from the pipeline's group", () => {
     const empty = buildNamedPipeline({
       pipelineId: "pipeline_0",
       pipelineName: "traces/bridge",

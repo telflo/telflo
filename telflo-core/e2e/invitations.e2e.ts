@@ -14,7 +14,7 @@ import { emailSubjectsTo, linkFrom, waitForEmail } from "./support/mail.js";
 import { clickGoogle, signInAtProvider } from "./support/oidc.js";
 import { signInThroughApi, switchOrganizationThroughApi, waitForHydration } from "./support/session.js";
 
-// Organization invitations (D6), in the browser: an admin invites from the
+// Organization invitations, in the browser: an admin invites from the
 // Invited tab, the invitee follows the emailed link to /accept-invitation
 // and joins by whichever path fits them, and lands in the organization with
 // the welcome callout. The admin is a second browser context (`inviter`),
@@ -85,7 +85,7 @@ async function inviteThroughApi(adminPage: Page, organizationId: string, email: 
 
 /**
  * The accept link in the newest invitation email to `email`, once `count`
- * of them have arrived. Its token is in the fragment (decision 2).
+ * of them have arrived. Its token is in the fragment.
  */
 async function invitationLink(email: string, organizationName: string, count = 1): Promise<string> {
   const text = await waitForEmail({ to: email, subject: invitationSubject(organizationName), count });
@@ -144,8 +144,8 @@ async function expectMember(email: string, organizationId: string, role: "admin"
 
 /**
  * Creates the account from the "Join {organization} on Telflo" form already
- * open, on the default pair: the open source's defaults ask for no Terms
- * (D36-1 decision 32), so there is no checkbox to tick, nor a divider.
+ * open, on the default pair: the open source's defaults ask for no Terms,
+ * so there is no checkbox to tick, nor a divider.
  */
 async function createAccountAndJoin(page: Page, password: string): Promise<void> {
   await page.getByLabel("Password", { exact: true }).fill(password);
@@ -270,7 +270,7 @@ test("signed in as another address, the link refuses with the invited address; a
   ).toBe(false);
 });
 
-// The SaaS pair (D36-1 Preflight ruling 16): the Terms asked; the inviter on the same pair, so the emailed link is its web server's.
+// The SaaS pair: the Terms asked; the inviter on the same pair, so the emailed link is its web server's.
 test.describe("on the SaaS pair", () => {
   test.use({ baseURL: E2E_SAAS_WEB_URL });
 

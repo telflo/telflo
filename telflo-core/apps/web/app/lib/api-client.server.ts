@@ -16,23 +16,23 @@ const DEFAULT_API_INTERNAL_URL = "http://localhost:8080";
 
 /**
  * Server loaders have no origin for a relative `/api` URL to resolve against
- * (the browser's same-origin calls rely on one, ADR 0017), so they reach the
- * API directly at TELFLO_API_INTERNAL_URL (D2a decision 11). Read at call
- * time, not at import, so the process environment is always the one in force.
+ * (the browser's same-origin calls rely on one), so they reach the API
+ * directly at TELFLO_API_INTERNAL_URL. Read at call time, not at import, so
+ * the process environment is always the one in force.
  */
 function apiInternalUrl(): string {
   return process.env.TELFLO_API_INTERNAL_URL ?? DEFAULT_API_INTERNAL_URL;
 }
 
 /**
- * What the API said about the incoming request's session (D2b decision 6).
+ * What the API said about the incoming request's session.
  *
  * - `signed_in`: the access token is valid.
  * - `refresh_needed`: 401 `access_token_expired`. A server loader can't
  *   refresh (the refresh cookie never reaches a page request), so the browser
- *   does it during hydration (D2b decision 4).
+ *   does it during hydration.
  * - `signed_out`: any other 401, including one whose body isn't the error
- *   envelope. Only an expired token is worth a refresh (D2b decision 1).
+ *   envelope. Only an expired token is worth a refresh.
  */
 export type CurrentUserLookup =
   | { status: "signed_in"; currentUser: CurrentUserResponse }
@@ -42,8 +42,8 @@ export type CurrentUserLookup =
 const ACCESS_TOKEN_EXPIRED: SessionErrorCode = "access_token_expired";
 
 /**
- * Looks up the signed-in user for the incoming request. Never refreshes
- * (D2b decision 6): it uses `fetch`, not the browser client's interceptor.
+ * Looks up the signed-in user for the incoming request. Never refreshes: it
+ * uses `fetch`, not the browser client's interceptor.
  *
  * Only the `Cookie` header is forwarded. Nothing else from the browser's
  * request — its authorization, forwarding or host headers — is relayed to the
@@ -105,10 +105,10 @@ async function lookupFor401(response: Response): Promise<CurrentUserLookup> {
 }
 
 /**
- * The configured federated providers, for the sign-in and register buttons
- * (D2c). The list is public, so nothing from the browser's request is
- * forwarded; the request only lends its abort signal, so a visitor who
- * leaves doesn't keep the call running.
+ * The configured federated providers, for the sign-in and register buttons.
+ * The list is public, so nothing from the browser's request is forwarded;
+ * the request only lends its abort signal, so a visitor who leaves doesn't
+ * keep the call running.
  *
  * Any failure (unreachable, not 200, or not the schema) throws an ApiError.
  * The loaders catch it and render no buttons: the list is optional, and an
@@ -146,11 +146,11 @@ export async function fetchOidcProviders(request: Request): Promise<OidcProvider
 }
 
 /**
- * What a signed-in read from a server loader came back with (D12 Preflight
- * rulings 5 and 18), in `fetchCurrentUser`'s terms: `loaded` with the
- * answer; `refresh_needed` on a 401 `access_token_expired`, which only the
- * browser can refresh, so the route's client loader reads again through the
- * browser client; `signed_out` on any other 401.
+ * What a signed-in read from a server loader came back with, in
+ * `fetchCurrentUser`'s terms: `loaded` with the answer; `refresh_needed` on
+ * a 401 `access_token_expired`, which only the browser can refresh, so the
+ * route's client loader reads again through the browser client;
+ * `signed_out` on any other 401.
  */
 export type SignedInRead<Data> =
   | { status: "loaded"; data: Data }
@@ -208,9 +208,9 @@ async function readSignedIn<Data>(request: Request, path: string, schema: Respon
 }
 
 /**
- * The signed-in gallery's flows (`GET /api/v1/flows`, D12 decision 10), with
- * the visitor's cookie: the published ones, and the hidden ones too for a
- * product admin (the API decides), for `/app/flows`'s server loader.
+ * The signed-in gallery's flows (`GET /api/v1/flows`), with the visitor's
+ * cookie: the published ones, and the hidden ones too for a product admin
+ * (the API decides), for `/app/flows`'s server loader.
  */
 export async function fetchFlows(request: Request): Promise<SignedInRead<Flow[]>> {
   const read = await readSignedIn(request, "/api/v1/flows", FlowsResponseSchema);
@@ -230,10 +230,10 @@ export async function fetchFlow(request: Request, slug: string): Promise<SignedI
 
 /**
  * How many feedback items are pending (`GET
- * /api/v1/product-admin/feedback/pending-count`, D29 decision 37, Preflight
- * ruling 14), with the visitor's cookie, for the product-admin layout's
- * server loader after its gate: the nav's badge. A number, no personal
- * data. The loader turns every failure into no badge.
+ * /api/v1/product-admin/feedback/pending-count`), with the visitor's
+ * cookie, for the product-admin layout's server loader after its gate: the
+ * nav's badge. A number, no personal data. The loader turns every failure
+ * into no badge.
  */
 export async function fetchPendingFeedbackCount(request: Request): Promise<SignedInRead<number>> {
   const read = await readSignedIn(request, "/api/v1/product-admin/feedback/pending-count", PendingFeedbackCountSchema);

@@ -19,7 +19,7 @@ slug: "a-test-post"
 ---
 `;
 
-describe("a paragraph written as JSX (D4 Ruling 16)", () => {
+describe("a paragraph written as JSX", () => {
   it("holds its text, not a second paragraph MDX made of the lines inside it", async () => {
     const code = await compile(`${FRONTMATTER}
 <div>

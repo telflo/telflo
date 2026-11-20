@@ -18,25 +18,23 @@ import {
 import { failureMessage } from "~/lib/test-runs/messages.js";
 
 /*
- * Play all (D14b decisions 6, 7 and 10; Preflight rulings 13 to 15): a
- * suite's runs, in parallel or in serial order (following one run at a
- * time). The loops belong here, not to a component: collapsing the right
- * panel unmounts the Testing tab and must not stop them (Preflight ruling
- * 14).
+ * Play all: a suite's runs, in parallel or in serial order (following one run
+ * at a time). The loops belong here, not to a component: collapsing the right
+ * panel unmounts the Testing tab and must not stop them.
  *
  * - one hold for every Play (`selectIsPlayHeld`): a Play all holds every
  *   Play on its version from its click, set before anything is awaited, so
  *   a double click starts one; until its last queue answer (parallel) or
  *   until its loop ends or stops (serial);
- * - the API queues each run from its definition (`{definitionId, yaml,
- *   collectorVersion}`): the server takes the input, pipeline, signal,
- *   duration and breadcrumb, and doesn't count the run against the 20 a
- *   minute (decision 7); the text (raw), the pin, the version and the suite
- *   are captured at the click, and the definitions read afresh then (a read
- *   under way awaited), never whatever was read once before; a read that
- *   fails (aborted after RUNS_REQUEST_TIMEOUT_MS when it never
- *   answers, D14b Ruling 50) ends the Play all, its hold released, with the
- *   API's words for a refusal, else "Failed to load test configurations";
+ * - the API queues each run from its definition
+ *   (`{definitionId, yaml, collectorVersion}`): the server takes the input,
+ *   pipeline, signal, duration and breadcrumb, and doesn't count the run
+ *   against the 20 a minute; the text (raw), the pin, the version and the
+ *   suite are captured at the click, and the definitions read afresh then
+ *   (a read under way awaited), never whatever was read once before; a read
+ *   that fails (aborted after RUNS_REQUEST_TIMEOUT_MS when it never
+ *   answers) ends the Play all, its hold released, with the API's words for
+ *   a refusal, else "Failed to load test configurations";
  * - parallel keeps at most PLAY_ALL_REQUESTS_IN_FLIGHT queue requests in
  *   flight, never every one at once; it selects the run of
  *   the first definition in the card's order that was queued;
@@ -47,7 +45,7 @@ import { failureMessage } from "~/lib/test-runs/messages.js";
  *   followed at once by the next;
  * - a definition the API refuses to queue is counted and the rest go on;
  *   the refusals show as ONE error toast per Play all and message, updated
- *   in place ("3 of 5 test configurations weren't queued: …", decision 24),
+ *   in place ("3 of 5 test configurations weren't queued: …"),
  *   and no row is left stuck Queued;
  * - it stops when the editor leaves the version it was started on (another
  *   version or configuration, leaving the page) and on signing out (the
@@ -55,20 +53,19 @@ import { failureMessage } from "~/lib/test-runs/messages.js";
  *   queues for a version no longer open; 30 failed reads in a row
  *   stop it with "Failed to refresh test runs", a refusal (a 4xx but 408
  *   and 429) with the API's words, and a session that ended silently;
- * - no fixture-shape question (decision 6): each run whose input doesn't
- *   suit its receiver still carries the tester's advisory;
+ * - no fixture-shape question: each run whose input doesn't suit its receiver
+ *   still carries the tester's advisory;
  * - a Play all that queued nothing (every one refused, an empty suite, a
- *   failed read) says so (`onNothingQueued`): the tab gives the focus back
- *   (D14b Ruling 50); one stopped (another version or configuration, the
- *   page left, signing out, a session that ended) says nothing, though its
- *   definitions read answers or times out later: no late focus jump (D14b
- *   Ruling 52).
+ *   failed read) says so (`onNothingQueued`): the tab gives the focus back;
+ *   one stopped (another version or configuration, the page left, signing
+ *   out, a session that ended) says nothing, though its definitions read
+ *   answers or times out later: no late focus jump.
  *
  * Suite, definition and template names reach no toast here but the API's
- * own words, and no attribute or analytics event (Preflight ruling 19).
+ * own words, and no attribute or analytics event.
  */
 
-/** At most this many of a parallel Play all's queue requests are in flight at once (Preflight ruling 14). */
+/** At most this many of a parallel Play all's queue requests are in flight at once. */
 export const PLAY_ALL_REQUESTS_IN_FLIGHT = 4;
 
 /** What a Play all of an empty suite says (an info toast). */
@@ -94,16 +91,16 @@ export interface PlayAllRequest {
    * Called once the definitions are read and there is at least one, before
    * the first is queued: the tab shows the Tests subtab then (the empty
    * check comes before the switch to Tests), so an empty suite's toast or a
-   * failed read leaves the person on Suites (D14b Ruling 40).
+   * failed read leaves the person on Suites.
    */
   onDefinitionsKnown?: () => void;
   /**
    * Called once it has ended having queued nothing (every definition
    * refused, an empty suite, a failed read), after its hold is released:
-   * the tab gives the focus back to the button pressed (D14b Ruling 50).
-   * Never once it was stopped (the editor leaving its version, signing out,
-   * a session that ended), even when a read or request answers after: the
-   * person is elsewhere by then (D14b Ruling 52).
+   * the tab gives the focus back to the button pressed. Never once it was
+   * stopped (the editor leaving its version, signing out, a session that
+   * ended), even when a read or request answers after: the person is
+   * elsewhere by then.
    */
   onNothingQueued?: () => void;
 }
@@ -117,10 +114,9 @@ export function refusalsMessage(refused: number, total: number, words: string): 
 }
 
 /**
- * Starts a Play all of the suite (D14b decision 10): false, starting
- * nothing, when Play is held on its version (Preflight ruling 13);
- * otherwise the hold is set before this returns and the loop runs on in the
- * background.
+ * Starts a Play all of the suite: false, starting nothing, when Play is
+ * held on its version; otherwise the hold is set before this returns and
+ * the loop runs on in the background.
  */
 export function playAll(request: PlayAllRequest): boolean {
   const run = useTestingStore.getState().beginPlayAll(request.target, request.suiteId, request.mode, request.userId);
@@ -143,7 +139,7 @@ function stop(run: PlayAllRun): void {
   useTestingStore.getState().stopPlayAll(run);
 }
 
-/** One toast per message for this Play all, updated in place as its refusals are counted (Preflight ruling 15). */
+/** One toast per message for this Play all, updated in place as its refusals are counted. */
 function refusalsToast(total: number): (words: string) => void {
   const playAllNumber = ++played;
   const counts = new Map<string, { refused: number; index: number }>();
@@ -168,7 +164,7 @@ async function play(run: PlayAllRun, request: PlayAllRequest): Promise<void> {
       definitions = await useTestSuitesStore.getState().loadDefinitions(run.target, run.suiteId);
     } catch (error) {
       // A refusal in the API's words, else "Failed to load test configurations" (a timeout included), as the
-      // card's own read shows it; nothing when the session ended (D14b Ruling 50).
+      // card's own read shows it; nothing when the session ended.
       const message = readFailure(error, DEFINITIONS_LOAD_FAILED_MESSAGE);
       if (!run.stopped && message !== null) toast.error(message);
       return;

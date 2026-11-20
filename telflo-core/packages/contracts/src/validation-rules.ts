@@ -9,8 +9,7 @@ import {
 } from "./test-run-pipelines.js";
 
 /*
- * Validation pipelines and their rules (D15a decisions 6, 12, 13 and 16;
- * details 24 and 27; plan Preflight rulings 5, 16, 19 and 20), under
+ * Validation pipelines and their rules, under
  * /api/v1/organizations/:organizationId/configurations/:configurationId/
  * versions/:versionId:
  *
@@ -20,13 +19,12 @@ import {
  * - `GET …/:validationPipelineId/rules` (in position order) and
  *   `POST …/:validationPipelineId/rules`; `PATCH` and `DELETE
  *   …/rules/:ruleId`. A rule's `POST` and `PATCH` have the OTTL evaluator
- *   check its OTTL or regex first (decision 6).
+ *   check its OTTL or regex first.
  *
  * A validation pipeline is one YAML pipeline's (`logs/default`), one per
  * version and pipeline; its signal is its name's first part. It is created
- * and deleted, never changed (Preflight ruling 16). There is no cap on how
- * many a version has (the owner, decision 28), and at most
- * VALIDATION_RULES_PER_PIPELINE_MAXIMUM rules each.
+ * and deleted, never changed. There is no cap on how many a version has, and
+ * at most VALIDATION_RULES_PER_PIPELINE_MAXIMUM rules each.
  *
  * A rule is one of five kinds: text and regex rules hold a `pattern` and
  * search the run's output or the collector's log (`target`); an OTTL rule
@@ -37,14 +35,14 @@ import {
  * them, never characters.
  *
  * A rule's name, description, pattern and OTTL, and a result's snippets and
- * samples, are configuration text (ADR 0024): they travel only in these JSON
+ * samples, are configuration text: they travel only in these JSON
  * bodies, never in a URL, a log line or an audit row.
  */
 
-/** How many rules a validation pipeline may have (decision 13): the evaluator's per-request maximum. */
+/** How many rules a validation pipeline may have: the evaluator's per-request maximum. */
 export const VALIDATION_RULES_PER_PIPELINE_MAXIMUM = 200;
 
-/** A pattern's, a condition's or an expression's most bytes of UTF-8 (Preflight rulings 5 and 16). */
+/** A pattern's, a condition's or an expression's most bytes of UTF-8. */
 export const VALIDATION_RULE_TEXT_MAXIMUM_BYTES = 8_192;
 
 /** A rule's name, after trimming: at most 200 characters; `''` is none (ck_validation_rules_name_length). */
@@ -56,10 +54,10 @@ export const VALIDATION_RULE_DESCRIPTION_MAXIMUM_LENGTH = 2_000;
 /** A count's largest value: Postgres's `integer`, as the evaluator's contract bounds it. */
 export const VALIDATION_RULE_COUNT_MAXIMUM = 2_147_483_647;
 
-/** How many checked saves a person may make a minute in each organization (decision 16; D14b decision 23). */
+/** How many checked saves a person may make a minute in each organization. */
 export const VALIDATION_RULE_CHECKS_PER_MINUTE_PER_USER = 30;
 
-/** The five kinds of rule (decision 12). */
+/** The five kinds of rule. */
 export const VALIDATION_RULE_KINDS = ["contains_text", "not_contains_text", "contains_regex", "not_contains_regex", "ottl"] as const;
 
 export type ValidationRuleKind = (typeof VALIDATION_RULE_KINDS)[number];
@@ -78,10 +76,10 @@ export const OTTL_CONTEXTS = ["log", "span", "spanevent", "metric", "datapoint",
 export type OttlContext = (typeof OTTL_CONTEXTS)[number];
 
 /**
- * The contexts a pipeline's signal allows (Preflight ruling 16), as the
- * evaluator's own table has them (pkg/ottlassert's signalContexts): the API
- * checks a rule's context against its pipeline's signal (a wrong pair is 400
- * `invalid_request`), and the editor offers only these.
+ * The contexts a pipeline's signal allows, as the evaluator's own table has
+ * them (pkg/ottlassert's signalContexts): the API checks a rule's context
+ * against its pipeline's signal (a wrong pair is 400 `invalid_request`), and
+ * the editor offers only these.
  */
 export const OTTL_CONTEXTS_BY_SIGNAL: Readonly<Record<TestRunSignal, readonly OttlContext[]>> = {
   logs: ["log", "resource", "scope"],
@@ -111,9 +109,8 @@ export function signalOfPipeline(pipeline: string): TestRunSignal | undefined {
 }
 
 /**
- * Whitespace as the evaluator reads it (Preflight ruling 6): Go's
- * `unicode.IsSpace`, the no-break space included. A text, regex or OTTL
- * text of nothing else is blank.
+ * Whitespace as the evaluator reads it: Go's `unicode.IsSpace`, the no-break
+ * space included. A text, regex or OTTL text of nothing else is blank.
  */
 const ONLY_WHITESPACE = /^[\t\n\v\f\r \u0085\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000]*$/;
 
@@ -130,8 +127,8 @@ const WHITESPACE_UNITS: ReadonlySet<number> = new Set([
 
 /**
  * `text` without the whitespace at either end, whitespace being exactly
- * isBlankRuleText's (Go's `unicode.IsSpace`, D15a Ruling 56): U+0085 goes,
- * which JavaScript's `trim` keeps, and U+FEFF stays, which it strips. A text
+ * isBlankRuleText's (Go's `unicode.IsSpace`): U+0085 goes, which
+ * JavaScript's `trim` keeps, and U+FEFF stays, which it strips. A text
  * isBlankRuleText calls blank trims to `''`, and no other does.
  */
 export function trimRuleText(text: string): string {
@@ -153,8 +150,7 @@ export function ruleTextTooLongMessage(name: string): string {
  * of UTF-8 (a code point outside the BMP is 4), nothing Postgres can't store
  * exactly (U+0000, a lone surrogate). `name` is the text's in the refusals'
  * words ("The pattern is empty."). Also a regex library entry's regex
- * (test-regexes.ts, D15b Preflight ruling 3), so every entry is a pattern a
- * regex rule takes.
+ * (test-regexes.ts), so every entry is a pattern a regex rule takes.
  */
 export function ruleTextSchema(name: string) {
   return z
@@ -305,10 +301,9 @@ export type CreateValidationRuleRequest = z.input<typeof CreateValidationRuleReq
  * travels whole: naming any of `kind`, `target`, `pattern` and `ottl` needs
  * `kind` and `target`, and the kind's own fields, as a create does; a field
  * left out stays as it is. None at all (`{}`) changes nothing and answers
- * the rule as it is, as a suite's PATCH (D14b Ruling 30). A change of the
- * name, the description, the target or the OTTL's quantifier or count needs
- * no evaluator; a change of a pattern, context, condition or expression
- * does (Preflight ruling 20).
+ * the rule as it is, as a suite's PATCH. A change of the name, the
+ * description, the target or the OTTL's quantifier or count needs no
+ * evaluator; a change of a pattern, context, condition or expression does.
  */
 export const UpdateValidationRuleRequestSchema = z
   .object({
@@ -340,12 +335,12 @@ const StoredRuleTextSchema = z.string().refine((text) => utf8ByteLength(text) <=
 });
 
 /**
- * A rule (decision 12). `position` orders a pipeline's rules (from 1; gaps
- * after a delete are fine). `pattern` is null for an OTTL rule, `ottl` null
- * for the others. `createdByUserId` is null once that account is
- * hard-deleted. The timestamps are ISO 8601. Its name, description, pattern
- * and OTTL are configuration text. Its fields alone, which D25's public
- * shape extends (public-api/validation-pipelines.ts).
+ * A rule. `position` orders a pipeline's rules (from 1; gaps after a delete
+ * are fine). `pattern` is null for an OTTL rule, `ottl` null for the
+ * others. `createdByUserId` is null once that account is hard-deleted. The
+ * timestamps are ISO 8601. Its name, description, pattern and OTTL are
+ * configuration text. Its fields alone, which the public API's shape
+ * extends (public-api/validation-pipelines.ts).
  */
 export const ValidationRuleFieldsSchema = z
   .object({
@@ -386,7 +381,7 @@ export type ValidationRuleResponse = z.infer<typeof ValidationRuleResponseSchema
  * by its name as the text names it (`logs`, `logs/default`), whose first
  * part is a signal (ck_validation_pipelines_pipeline_signal). Whether the
  * text still has that pipeline isn't checked: the editor's text may be
- * unsaved (decision 18). A second for the same pipeline and version is 409
+ * unsaved. A second for the same pipeline and version is 409
  * `validation_pipeline_exists`. Strict.
  */
 export const CreateValidationPipelineRequestSchema = z
@@ -400,11 +395,11 @@ export const CreateValidationPipelineRequestSchema = z
 export type CreateValidationPipelineRequest = z.infer<typeof CreateValidationPipelineRequestSchema>;
 
 /**
- * A validation pipeline (decision 12; Preflight ruling 16): its YAML
- * pipeline's name and signal, created and deleted, never changed.
- * `createdByUserId` is null once that account is hard-deleted. Its pipeline
- * name is configuration text. Its fields alone, which D25's public shape
- * extends (public-api/validation-pipelines.ts).
+ * A validation pipeline: its YAML pipeline's name and signal, created and
+ * deleted, never changed. `createdByUserId` is null once that account is
+ * hard-deleted. Its pipeline name is configuration text. Its fields alone,
+ * which the public API's shape extends
+ * (public-api/validation-pipelines.ts).
  */
 export const ValidationPipelineFieldsSchema = z
   .object({
@@ -442,9 +437,9 @@ export const ValidationPipelineResponseSchema = z.object({ validationPipeline: V
 export type ValidationPipelineResponse = z.infer<typeof ValidationPipelineResponseSchema>;
 
 /**
- * A rule as a run copies it when it is queued (decision 14; Preflight ruling
- * 21): frozen on the run (test_runs.validation_rules, in position order),
- * what the evaluator checks after the tester answers. Configuration text.
+ * A rule as a run copies it when it is queued: frozen on the run
+ * (test_runs.validation_rules, in position order), what the evaluator
+ * checks after the tester answers. Configuration text.
  */
 export const ValidationRuleSnapshotSchema = z
   .object({
@@ -463,8 +458,8 @@ export const ValidationRuleSnapshotSchema = z
 export type ValidationRuleSnapshot = z.infer<typeof ValidationRuleSnapshotSchema>;
 
 /*
- * A rule's result (decision 15; Preflight ruling 5): the evaluator's answer
- * for one rule, matched by its id. Its bounds are the evaluator's contract's
+ * A rule's result: the evaluator's answer for one rule, matched by its id.
+ * Its bounds are the evaluator's contract's
  * (services/ottl-evaluator/openapi.yaml's Result), counted in code points as
  * JSON Schema's maxLength counts them; the evaluator's own (bytes) are
  * tighter. Snippets and samples are configuration text.
@@ -510,7 +505,7 @@ const MissSchema = z
 
 const nonNegativeInteger = z.number().int().min(0);
 
-/** Why a rule failed, by `kind` (Preflight ruling 5). */
+/** Why a rule failed, by `kind`. */
 export const ValidationRuleResultDetailSchema = z.discriminatedUnion("kind", [
   /** A contains rule found nothing in what it searched. */
   z
@@ -556,13 +551,12 @@ export const ValidationRuleResultDetailSchema = z.discriminatedUnion("kind", [
 export type ValidationRuleResultDetail = z.infer<typeof ValidationRuleResultDetailSchema>;
 
 /**
- * One rule's result. `passed` is strictly a boolean (the run's outcome
- * check reads it, D15a Ruling 32). A rule that erred on its own (an OTTL
- * type error, "Not checked: …") failed: `error` holds its message and
- * `detail` is null (decision 3). A rule that passed has no detail. The
- * advisory says why a pass may mislead (an `all` over zero records, a
- * truncated output), or explains a failure that has no detail (a
- * not-contains regex whose matches were all empty text, D15a Ruling 55).
+ * One rule's result. `passed` is strictly a boolean (the run's outcome check
+ * reads it). A rule that erred on its own (an OTTL type error, "Not checked:
+ * …") failed: `error` holds its message and `detail` is null. A rule that
+ * passed has no detail. The advisory says why a pass may mislead (an `all`
+ * over zero records, a truncated output), or explains a failure that has no
+ * detail (a not-contains regex whose matches were all empty text).
  */
 export const ValidationRuleResultSchema = z
   .object({
@@ -588,29 +582,29 @@ export const ValidationRuleResultSchema = z
 
 export type ValidationRuleResult = z.infer<typeof ValidationRuleResultSchema>;
 
-/** Decision 24's words, exactly: 409 `validation_pipeline_exists`. */
+/** The words, exactly, of 409 `validation_pipeline_exists`. */
 export function validationPipelineExistsMessage(pipeline: string): string {
   return `Pipeline "${pipeline}" already has a validation pipeline for this version.`;
 }
 
-/** Decision 24's words, exactly: a pipeline's 201st rule, 409 `validation_rule_limit_reached`. */
+/** The words, exactly, for a pipeline's 201st rule, 409 `validation_rule_limit_reached`. */
 export const VALIDATION_RULE_LIMIT_MESSAGE = `A validation pipeline can have at most ${VALIDATION_RULES_PER_PIPELINE_MAXIMUM} rules.`;
 
-/** Decision 6's words, exactly: saving a rule that needs checking while the evaluator can't be reached, 503 `rules_unavailable`. */
+/** The words, exactly, for saving a rule that needs checking while the evaluator can't be reached, 503 `rules_unavailable`. */
 export const RULES_UNAVAILABLE_AT_SAVE_MESSAGE = "Rules can't be checked right now. Try again shortly.";
 
-/** Detail 24's words, exactly: queuing a run with rules while the evaluator is known down, 503 `rules_unavailable`. */
+/** The words, exactly, for queuing a run with rules while the evaluator is known down, 503 `rules_unavailable`. */
 export const RULES_UNAVAILABLE_AT_QUEUE_MESSAGE = "Validation rules can't be checked right now. Try again later.";
 
-/** Decision 3's words, exactly: a run whose rules the evaluator couldn't check ends Error, its code `rules_unavailable`. */
+/** The words, exactly, when a run whose rules the evaluator couldn't check ends Error, its code `rules_unavailable`. */
 export const RULES_UNAVAILABLE_RUN_MESSAGE = "Validation rules couldn't be checked: the rule evaluator is unavailable.";
 
 /**
- * The validation rules' own codes (detail 24), none of them D13b's
- * `validation_unavailable` or `validation_rate_limited` (the collector
- * validator's). They also answer the organization's, the configurations'
- * and the envelope's shared ones (`invalid_request`, which a context its
- * pipeline's signal doesn't allow gets too):
+ * The validation rules' own codes, none of them `validation_unavailable` or
+ * `validation_rate_limited` (the collector validator's). They also answer the
+ * organization's, the configurations' and the envelope's shared ones
+ * (`invalid_request`, which a context its pipeline's signal doesn't allow
+ * gets too):
  * - `validation_pipeline_not_found`, `validation_rule_not_found` (404): one
  *   the caller can't see (another member's draft's, another version's,
  *   another organization's), or an id that isn't a canonical UUID, alike;
@@ -618,7 +612,7 @@ export const RULES_UNAVAILABLE_RUN_MESSAGE = "Validation rules couldn't be check
  * - `validation_rule_limit_reached` (409, VALIDATION_RULE_LIMIT_MESSAGE);
  * - `validation_rule_invalid` (400): the evaluator's message as it words it
  *   ("OTTL syntax error: …", "Invalid regex: …", or a problem in its own
- *   words; D15a Ruling 33);
+ *   words);
  * - `rules_unavailable` (503 at Save and at queue; and a run's error code
  *   when the evaluator couldn't check its rules);
  * - `validation_rule_rate_limited` (429): more than

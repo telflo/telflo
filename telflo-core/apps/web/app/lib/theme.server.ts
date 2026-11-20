@@ -1,13 +1,12 @@
 import { THEME_COOKIE_NAME, themeFromCookie, type Theme } from "@telflo/contracts";
 
 /**
- * The theme the request's `telflo_theme` cookie names (D21 decisions 5 and
- * 23), for root's loader: the seven auth screens render it on a full load.
- * The API sets the cookie, HttpOnly, to one word. Only that word can come
- * out of here: the value goes through contracts' `themeFromCookie`, so
- * anything but `light`, `dark` or `navy` (absent, another spelling, an
- * encoding, an oversized value) is Dark, and nothing else from the cookie
- * header is read or passed on.
+ * The theme the request's `telflo_theme` cookie names, for root's loader: the
+ * seven auth screens render it on a full load. The API sets the cookie,
+ * HttpOnly, to one word. Only that word can come out of here: the value goes
+ * through contracts' `themeFromCookie`, so anything but `light`, `dark` or
+ * `navy` (absent, another spelling, an encoding, an oversized value) is Dark,
+ * and nothing else from the cookie header is read or passed on.
  *
  * The first `telflo_theme` in the header is the one read, as browsers send
  * the most specific path's first; the API sets it only at `Path=/`.

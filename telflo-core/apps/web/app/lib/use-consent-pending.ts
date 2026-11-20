@@ -8,8 +8,8 @@ import { CONSENT_CHANGED_EVENT, getConsentStatus } from "./cookie-consent.js";
  * banner) and no choice is stored yet, until one is made. A modal opened
  * meanwhile would cover the banner, which is modal too, and leave neither
  * answerable, so the playground's and the public editor's welcome dialogs
- * wait for it (D31-1, Ruling 301). With no analytics configured it is
- * false at once: nothing waits.
+ * wait for it. With no analytics configured it is false at once: nothing
+ * waits.
  *
  * Until the stored choice is read (in an effect, as the banner reads it)
  * it answers true, so nothing opens before the banner could.

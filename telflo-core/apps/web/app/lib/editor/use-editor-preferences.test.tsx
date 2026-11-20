@@ -33,7 +33,7 @@ function choose(theme: Theme, editor: Partial<EditorPreferences> = {}) {
   });
 }
 
-describe("applyModelOptions (Preflight rulings 30 and 31)", () => {
+describe("applyModelOptions", () => {
   it("sets the tab size and the indent size on an open editor's model, and nothing else", () => {
     const model = fakeModel();
     applyModelOptions(codeEditor(model), 4);

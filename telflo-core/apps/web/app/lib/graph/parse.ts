@@ -26,10 +26,9 @@ import type {
 } from "./types.js";
 
 /*
- * The graph from the text (D9a decision 3), on the `yaml` package's YAML 1.2
- * core schema, with the spec's fixes:
- * - a text the canvas can't show is refused with a reason (Preflight
- *   ruling 9), never shown as empty default pipelines;
+ * The graph from the text, on the `yaml` package's YAML 1.2 core schema:
+ * - a text the canvas can't show is refused with a reason, never shown as
+ *   empty default pipelines;
  * - a connector in a pipeline with no processors keeps its place there: when
  *   the pipeline has nothing else on that side to join, its edge ends at the
  *   pipeline's group;
@@ -40,8 +39,8 @@ import type {
  *   it;
  * - renamed types (`otlp_grpc`) take their palette entry's label, icon and
  *   help, and the node's key keeps the text's spelling (the renames are the
- *   catalogue's, by kind: D13b decision 6);
- * - every id is opaque (decision 7): `node_<n>`, `group_<n>`, `pipeline_<n>`,
+ *   catalogue's, by kind);
+ * - every id is opaque: `node_<n>`, `group_<n>`, `pipeline_<n>`,
  *   `edge_<n>`, never a name.
  *
  * Pure: no store, no clock.
@@ -79,9 +78,9 @@ const CONNECTOR_SIGNALS: Readonly<Record<string, ConnectorSignalMapping>> = {
 /**
  * The palette's spelling of a type the text spells `type`, for a component
  * of `kind`: the deprecated name when the collector renamed that kind's
- * `type` (D13b decision 6: `RENAMED_TYPES`, read from the catalogue), else
- * `type` itself. Renames are kind-specific, so another kind keeps its
- * spelling (an `otlp_grpc` receiver has no palette entry).
+ * `type` (`RENAMED_TYPES`, read from the catalogue), else `type` itself.
+ * Renames are kind-specific, so another kind keeps its spelling (an
+ * `otlp_grpc` receiver has no palette entry).
  */
 export function paletteSubType(type: string, kind: ComponentType): string {
   const renames = RENAMED_TYPES[kind];
@@ -131,7 +130,7 @@ export function hasOwn(object: PlainObject, key: string): boolean {
   return Object.prototype.hasOwnProperty.call(object, key);
 }
 
-// ── Refusals (Preflight ruling 9) ──────────────────────────────────────────
+// ── Refusals ───────────────────────────────────────────────────────────────
 
 class Refusal extends Error {}
 

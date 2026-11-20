@@ -13,36 +13,34 @@ import { abortAfter, isRefusal, RUNS_REQUEST_TIMEOUT_MS, type RunTarget } from "
 import { readsFor } from "~/lib/workspace-reads.js";
 
 /*
- * The Suites subtab's memory (D14b decisions 1, 2, 5, 8 and 9; Preflight
- * rulings 14, 18 and 20): the suites and their definitions, in a store of
+ * The Suites subtab's memory: the suites and their definitions, in a store of
  * their own.
  * - the suites are read each time the Suites subtab shows and when the
- *   version changes, and a suite's definitions each time its card expands
- *   (Preflight ruling 18), so a teammate's edits show;
+ *   version changes, and a suite's definitions each time its card expands,
+ *   so a teammate's edits show;
  * - a failed read is kept, shown inline with Retry ("Failed to load test
  *   suites", "Failed to load test configurations"; a refusal, a 4xx but 408
  *   and 429, in the API's words); a read that never answers is aborted after
- *   RUNS_REQUEST_TIMEOUT_MS (10 s), as the runs' reads are, and fails so
- *   (D14b Ruling 50): its spinner ends, and a Play all awaiting it lets go
- *   of its hold;
+ *   RUNS_REQUEST_TIMEOUT_MS (10 s), as the runs' reads are, and fails so:
+ *   its spinner ends, and a Play all awaiting it lets go of its hold;
  * - each suite's definitions read under way is kept (`loadDefinitions`
  *   answers it rather than start another), so a Play all can await it
- *   (Preflight ruling 14) rather than find the suite empty; a read for a
- *   version the store doesn't hold is refused (`StaleSuitesTargetError`),
- *   never a switch to it: a late Play all can't empty the version shown;
+ *   rather than find the suite empty; a read for a version the store
+ *   doesn't hold is refused (`StaleSuitesTargetError`), never a switch to
+ *   it: a late Play all can't empty the version shown;
  * - everything is held for one version, in the organization it was loaded
  *   in (`target`): an answer for another version, or one that arrives after
  *   signing out (`reset`), adds nothing;
- * - a read under way never overwrites a write made here meanwhile (D14b
- *   Ruling 38): its answer, taken before the write, is dropped and the list
+ * - a read under way never overwrites a write made here meanwhile:
+ *   its answer, taken before the write, is dropped and the list
  *   read again; a suite created while the suites aren't shown (a failed
  *   first read) reads them again, so it shows;
  * - a delete the API answers "not found" (another tab deleted it) drops the
  *   suite or definition here too: it is gone either way.
  *
  * The suites' and definitions' names and descriptions are configuration
- * text (ADR 0024): they never reach an attribute, a log line or an
- * analytics event, and signing out forgets them (`reset`, from useLogout).
+ * text: they never reach an attribute, a log line or an analytics event,
+ * and signing out forgets them (`reset`, from useLogout).
  */
 
 /** What the subtab says when the suites can't be read. */
@@ -128,8 +126,7 @@ function sameTarget(left: RunTarget | null, right: RunTarget): boolean {
 /**
  * What a failed read shows: nothing when the session ended, the API's words
  * for a refusal (a 4xx but 408 and 429), else `fallback` (a timeout, the
- * network, a 5xx). A card's read and a Play all's say the same (D14b Ruling
- * 50).
+ * network, a 5xx). A card's read and a Play all's say the same.
  */
 export function readFailure(error: unknown, fallback: string): string | null {
   if (isSessionEnded(error)) return null;

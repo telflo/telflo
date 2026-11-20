@@ -1,4 +1,4 @@
-# The traces and sampling forms' components (D9d Task 1): comments, an
+# The traces and sampling forms' components: comments, an
 # anchor and its aliases, flow lists and mappings, and `0750`, as a person
 # writes them. span_metrics is the connector's own spelling at v0.162.0.
 x-slow: &slow

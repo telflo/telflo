@@ -58,7 +58,7 @@ describe("pruneGroupChildren", () => {
     expect(result.edges).toEqual(edges);
   });
 
-  it("removes a connector's edge to or from the group itself (D9a)", () => {
+  it("removes a connector's edge to or from the group itself", () => {
     const group = makeNode({ id: "group_0", type: "pipelineGroup" });
     const connector = makeNode({ id: "conn", type: "connector" });
     const edges = [edge("e1", "conn", "group_0"), edge("e2", "group_0", "conn")];
@@ -76,7 +76,7 @@ describe("existing node-operations exports remain callable", () => {
   });
 });
 
-describe("component names and keys (D9a)", () => {
+describe("component names and keys", () => {
   it("splits a name at its first slash, as the collector does", () => {
     expect(splitComponentName("otlp")).toEqual({ type: "otlp" });
     expect(splitComponentName("otlp/2")).toEqual({ type: "otlp", instanceName: "2" });
@@ -97,7 +97,7 @@ describe("component names and keys (D9a)", () => {
     expect(componentKey({ componentType: "pipelineGroup", componentSubType: "pipelineGroup" })).toBeUndefined();
   });
 
-  it("gives a duplicate its own key, config and pipeline, unlinked (its own sharedConfigId, the parser's for its key: Ruling 60) and declared", () => {
+  it("gives a duplicate its own key, config and pipeline, unlinked (its own sharedConfigId, the parser's for its key) and declared", () => {
     const original = makeNode({
       id: "node_0",
       parentId: "group_0",

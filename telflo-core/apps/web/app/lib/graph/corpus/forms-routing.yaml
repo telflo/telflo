@@ -1,4 +1,4 @@
-# The routing forms' components (D9d Task 1), with CRLF line endings:
+# The routing forms' components, with CRLF line endings:
 # comments, an anchor and its merges, flow and block lists, the routing and
 # failover READMEs' shapes, and every target pipeline listing its connector
 # in its receivers (a consistent text). load_balancing is the exporter's

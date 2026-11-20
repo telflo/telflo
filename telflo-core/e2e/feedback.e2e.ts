@@ -18,8 +18,7 @@ import { maskedPlacesOf, within } from "./support/privacy.js";
 import { signInThroughApi } from "./support/session.js";
 import { toastWith } from "./support/validation-pipelines-page.js";
 
-// User Feedback (D29 decisions 6, 32 to 35, 37, 40, 41 and 45; Preflight
-// ruling 18), in the browser: a member sends feedback from "Contact us"; a
+// User Feedback, in the browser: a member sends feedback from "Contact us"; a
 // product admin of the test's own finds it (by its marked text, "Load more"
 // until it shows), sees the nav's pending count as an integer ≥ 1, and
 // acknowledges it with an edited reply (the reply's email reaches the
@@ -32,10 +31,9 @@ import { toastWith } from "./support/validation-pipelines-page.js";
 //   Each test handles only its own rows, asserts the count as ≥ 1, never an
 //   exact count or the empty state.
 // - The member's email and the feedback's text are another person's data on
-//   the admin's page (decision 41): privacy checks collect, go to
-//   about:blank, then assert (counts only). Synthetic `e2e-<uuid>` addresses
-//   and markers in a failed run's messages are Preflight ruling 18's
-//   accepted residue.
+//   the admin's page: privacy checks collect, go to about:blank, then assert
+//   (counts only). Synthetic `e2e-<uuid>` addresses and markers in a failed
+//   run's messages are the accepted residue.
 // - Each test revokes the product admins it made, however it ends.
 
 const PASSWORD = "correct horse battery staple";
@@ -156,14 +154,14 @@ test("a product admin dismisses a member's feedback: \"Feedback dismissed\", the
 
   await openUserFeedbackAdmin(adminPage);
   const row = await findFeedbackRow(adminPage, text);
-  // From the keyboard (Ruling 273): WebKit, as Safari, doesn't focus a button on a mouse click, so only a
+  // From the keyboard: WebKit, as Safari, doesn't focus a button on a mouse click, so only a
   // keyboard press makes the row hold the focus in every browser; it pins the keyboard path too.
   const dismiss = row.getByRole("button", { name: /^Dismiss / });
   await dismiss.focus();
   await adminPage.keyboard.press("Enter");
   await expect(toastWith(adminPage, "Feedback dismissed")).toBeVisible();
   await expect(feedbackRow(adminPage, text)).toHaveCount(0);
-  // Where the focus went with the row (Ruling 272): another row's Acknowledge or Dismiss, or the heading, never the body.
+  // Where the focus went with the row: another row's Acknowledge or Dismiss, or the heading, never the body.
   // Collected as a boolean (the rows may be other workers' people), asserted on about:blank below.
   const focusFollowed = await adminPage.evaluate(`(() => {
     const active = document.activeElement;

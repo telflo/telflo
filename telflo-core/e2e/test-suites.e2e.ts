@@ -49,7 +49,7 @@ import {
 import { createTemplateThroughApi, productAdminSession, uniqueTemplateName } from "./support/test-templates-page.js";
 import { createVersionFromPicker, versionPath } from "./support/versions-page.js";
 
-// Test suites (D14b), in the browser: the Testing tab's Suites subtab, its
+// Test suites, in the browser: the Testing tab's Suites subtab, its
 // suites and their test configurations (definitions), Play one and both Play
 // alls, the runs' "Suite › Configuration" breadcrumb, a version copy, a
 // teammate's view of a draft's suites and of a published one's, a
@@ -57,17 +57,16 @@ import { createVersionFromPicker, versionPath } from "./support/versions-page.js
 // meet, against the E2E API's dispatcher and the OpenAPI-checked fake tester
 // (start-fake-otelcol-testing.ts).
 //
-// - Each test's text carries a token of its own; with the fake's `slow`
-//   marker its runs are held until the test releases them through the
-//   fake's control route (support/fake-otelcol-testing.ts), so a Play all's
-//   order shows: in parallel all at once, serially one at a time.
-//   `collector-failed` makes each run end Error, to show a serial Play all
-//   goes on past a failed step. Every test holds at most 3 runs (D14b
-//   Preflight ruling 27): the browsers' 5 workers stay under the E2E API's
-//   16 at once.
+// - Each test's text carries a token of its own; with the fake's `slow` marker
+//   its runs are held until the test releases them through the fake's control
+//   route (support/fake-otelcol-testing.ts), so a Play all's order shows: in
+//   parallel all at once, serially one at a time. `collector-failed` makes
+//   each run end Error, to show a serial Play all goes on past a failed step.
+//   Every test holds at most 3 runs: the browsers' 5 workers stay under the
+//   E2E API's 16 at once.
 // - The 50-waiting cap is the API suite's: here a page.route answers two of
 //   a Play all's three queue requests with the API's 429 and its words
-//   (Preflight ruling 27), and the person sees one toast.
+//   and the person sees one toast.
 // - Suites and definitions a test isn't about creating are created through
 //   the API, as the page's session; the ones it is, through the subtab.
 // - A test needing a template has a fresh product admin upload one through
@@ -219,7 +218,7 @@ test("a suite gets three test configurations, from an upload, a template and a p
   await expect(definitionRow(card, "From an upload")).toBeVisible();
 
   await card.getByRole("button", { name: "Add test configuration" }).click();
-  // No file is chosen when it opens (Preflight ruling 16).
+  // No file is chosen when it opens.
   await expect(dialog.getByText("Selected File: None")).toBeVisible();
   await pickTemplateIn(dialog, template.name);
   await nameAndSaveDefinition(dialog, "From a template");
@@ -282,9 +281,8 @@ test("Play one asks first, through the definition's head, when its input doesn't
   page,
 }) => {
   // Two head reads and their question, two runs, and the switch to Tests and
-  // back: 11.8-16.1 s in Task 9's full runs (five workers), 9.3-19.4 s in
-  // the final fix wave's runs of the four files it touched, up to 65% of the
-  // 30 s per-test limit. Slow triples the limit, a hang guard; every wait
+  // back: 9.3-19.4 s in measured runs (five workers), up to 65% of the 30 s
+  // per-test limit. Slow triples the limit, a hang guard; every wait
   // inside keeps its own bound.
   test.slow();
   const errors = pageErrors(page);
@@ -380,9 +378,8 @@ test("Play all serially queues one at a time, in the suite's order, each after t
   page,
 }) => {
   // Three runs released one by one, each step waiting for the page's next
-  // read of the runs (its poll) as well as the fake: 13.3-17.4 s in Task 9's
-  // full runs (five workers), 13.7-22.1 s in the final fix wave's runs of
-  // the four files it touched, up to 74% of the 30 s per-test limit. Slow
+  // read of the runs (its poll) as well as the fake: 13.3-22.1 s in measured
+  // runs (five workers), up to 74% of the 30 s per-test limit. Slow
   // triples the limit, a hang guard; every wait inside keeps its own bound.
   test.slow();
   const path = await seedWorkspace(page, { slow: true });
@@ -433,9 +430,8 @@ test("Play all serially queues one at a time, in the suite's order, each after t
 });
 
 test("Play all serially goes on past a step that ends Error: each next one is queued after the failed one ends", async ({ page }) => {
-  // Three runs released one by one, as the test above: up to 17.5 s in Task
-  // 9's full runs (five workers), 58% of the 30 s per-test limit (7.8-13.9 s
-  // in the final fix wave's runs of the four files it touched). Slow triples
+  // Three runs released one by one, as the test above: up to 17.5 s in
+  // measured runs (five workers), 58% of the 30 s per-test limit. Slow triples
   // the limit, a hang guard; every wait inside keeps its own bound.
   test.slow();
   const path = await seedWorkspace(page, { slow: true, failed: true });
@@ -477,8 +473,8 @@ test("a Play all whose queue requests meet the 50-waiting cap shows one toast fo
     { name: "Queued", file: logsFile() },
   ]);
   const refused = new Set([definitions[0]!.id, definitions[1]!.id]);
-  // The API's answer at the cap (Preflight ruling 21), for two of the three:
-  // the real cap is the API suite's.
+  // The API's answer at the cap, for two of the three: the real cap is the
+  // API suite's.
   await page.route(/\/test-runs$/, async (route) => {
     const request = route.request();
     if (request.method() !== "POST" || !refused.has((request.postDataJSON() as { definitionId?: string }).definitionId ?? "")) {
@@ -526,7 +522,7 @@ test("a version created from one with a suite carries the suite and its configur
   expect(copiedDefinition!.id).not.toBe(definitions[0]!.id);
 
   // The first version's suite deleted, its configuration with it: the input
-  // the copy shares stays while the copy's configuration uses it (decision 4).
+  // the copy shares stays while the copy's configuration uses it.
   const deleted = await page.request.delete(`${versionApiPath(path)}/test-suites/${suite.id}`, {
     headers: { [CSRF_HEADER_NAME]: CSRF_HEADER_VALUE },
   });
@@ -561,8 +557,7 @@ test("a teammate sees nothing of a draft's suites, and runs the author's once pu
   browser,
 }) => {
   // Two people, a draft's refusal, then two runs from the teammate's page:
-  // 10.4-17.5 s in Task 9's full runs (five workers), 9.4-14.3 s in the
-  // final fix wave's runs of the four files it touched, up to 58% of the 30 s
+  // 9.4-17.5 s in measured runs (five workers), up to 58% of the 30 s
   // per-test limit. Slow triples the limit, a hang guard; every wait inside
   // keeps its own bound.
   test.slow();
@@ -642,9 +637,9 @@ test("on a published version, a teammate creates a suite, renames and describes 
 }) => {
   // Two people, the teammate's page through the suite dialog twice, the
   // definition dialog's upload and a delete confirmation, each write checked
-  // through the API: 9.3-18.8 s in the final fix wave's runs of the four
-  // files it touched, up to 63% of the 30 s per-test limit. Slow triples the
-  // limit, a hang guard; every wait inside keeps its own bound.
+  // through the API: 9.3-18.8 s in measured runs, up to 63% of the 30 s
+  // per-test limit. Slow triples the limit, a hang guard; every wait inside
+  // keeps its own bound.
   test.slow();
   const author = await seedUser({ password: PASSWORD });
   const teammate = await seedUser({ password: PASSWORD });
@@ -727,7 +722,7 @@ test("on a published version, a teammate creates a suite, renames and describes 
     expect(await listSuitesThroughApi(page, path)).toEqual([]);
     expect((await page.request.get(`${versionApiPath(path)}/test-suites/${suite!.id}/definitions`)).status()).toBe(404);
 
-    // The version is still published: suites are test material, not its published content (decision 5).
+    // The version is still published: suites are test material, not its published content.
     const read = await page.request.get(versionApiPath(path));
     expect(read.status()).toBe(200);
     const { publishedAt } = ((await published.json()) as { version: { publishedAt: string | null } }).version;
@@ -751,7 +746,7 @@ test("deleting a suite asks first, naming the suite; Cancel keeps it, Delete rem
   await confirmation.getByRole("button", { name: "Cancel", exact: true }).click();
   await expect(confirmation).toBeHidden();
   await expect(card).toBeVisible();
-  // Focus back on the button that opened it (Ruling 51), not on <body>.
+  // Focus back on the button that opened it, not on <body>.
   await expect(card.getByRole("button", { name: "Delete suite", exact: true })).toBeFocused();
 
   await card.getByRole("button", { name: "Delete suite", exact: true }).click();

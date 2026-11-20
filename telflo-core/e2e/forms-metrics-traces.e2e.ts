@@ -15,17 +15,16 @@ import {
 } from "./support/forms-page.js";
 import { skipEditorTour } from "./support/session.js";
 
-// The metrics, traces and OTTL forms (D9d), in the browser: tail sampling's
-// Add Policy, its type switch (one change: the old block out, the new
-// type's seed in), and its cards reordered by pointer and by keyboard, each
+// The metrics, traces and OTTL forms, in the browser: tail sampling's Add
+// Policy, its type switch (one change: the old block out, the new type's
+// seed in), and its cards reordered by pointer and by keyboard, each
 // policy's lines moving with its comment; a transform template added as a
-// group of its own before the flat statements, with its toast
-// (decision 10); a prometheus scrape job's field and its TLS box; and one
-// field each on statsd, spanmetrics and redaction, written in place with
-// the line's comment kept (decision 2). Each change is undone with the
-// toolbar's Undo. Each test works in an organization of its own, so tests
-// and browsers run in parallel. See support/forms-page.ts for how the text
-// is read.
+// group of its own before the flat statements, with its toast; a prometheus
+// scrape job's field and its TLS box; and one field each on statsd,
+// spanmetrics and redaction, written in place with the line's comment kept.
+// Each change is undone with the toolbar's Undo. Each test works in an
+// organization of its own, so tests and browsers run in parallel. See
+// support/forms-page.ts for how the text is read.
 
 const test = base.extend({
   context: async ({ context }, use) => {

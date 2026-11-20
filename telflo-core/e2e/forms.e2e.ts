@@ -21,19 +21,18 @@ import {
 } from "./support/editor-page.js";
 import { signInThroughApi, skipEditorTour, waitForHydration } from "./support/session.js";
 
-// The component forms and Self-monitoring (D9b), in the browser: a form's
-// field writes its own key's line in place, every other line and comment
-// kept (decision 2); a sortable list reorders by pointer and by keyboard,
-// moving an item's own lines (decision 9); the `$` picker (decision 5); the
-// Self-monitoring dialog's Apply and Remove Section (decision 7); and the
-// YAML box under "Advanced: Instance & YAML" (decision 6). Each test works
-// in an organization of its own, so tests and browsers run in parallel.
+// The component forms and Self-monitoring, in the browser: a form's field
+// writes its own key's line in place, every other line and comment kept; a
+// sortable list reorders by pointer and by keyboard, moving an item's own
+// lines; the `$` picker; the Self-monitoring dialog's Apply and Remove
+// Section; and the YAML box under "Advanced: Instance & YAML". Each test
+// works in an organization of its own, so tests and browsers run in parallel.
 //
 // The text is read by the YAML tab's Download (as builder.e2e.ts does), and
-// always polled: a form's typing is written 300 ms after the last
-// keystroke or on blur, and Monaco's model can trail it (D9a Ruling 42).
-// Reading it opens the YAML tab, so each step goes back to the
-// Configuration tab first (`showComponent`).
+// always polled: a form's typing is written 300 ms after the last keystroke
+// or on blur, and Monaco's model can trail it. Reading it opens the YAML
+// tab, so each step goes back to the Configuration tab first
+// (`showComponent`).
 
 const PASSWORD = "correct horse battery staple";
 const STARTER_LINES = linesOf(STARTER_CONFIGURATION_YAML);
@@ -269,7 +268,7 @@ test("typing $ in a field opens the picker, and Environment variable inserts ${e
 
   await endpoint.selectText();
   await page.keyboard.type("$");
-  // No organization variables until D20: the empty list and the env row.
+  // No organization variables here: the empty list and the env row.
   await expect(page.getByText("No matching variables")).toBeVisible();
   await page.getByRole("button", { name: /Environment variable/ }).click();
 

@@ -66,7 +66,7 @@ describe("generatePipelineColor", () => {
   });
 });
 
-describe("ids (decision 7)", () => {
+describe("ids", () => {
   it("gives the lowest number no id holds, for nodes, edges and pipelines", () => {
     expect(nextNodeId([])).toBe("node_0");
     expect(nextNodeId(["node_0", "node_2"])).toBe("node_1");

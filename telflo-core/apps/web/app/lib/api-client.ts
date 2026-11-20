@@ -262,30 +262,30 @@ declare module "axios" {
 }
 
 /**
- * Same-origin by default: the browser calls `/api/...` on whatever host
- * served the page, and something in front of the web app routes it to the
- * API — Vite's dev proxy locally, the gateway in the container stack (ADR
- * 0017). So one built image works at any customer's hostname; nothing about
- * where the API lives is baked in at build time. VITE_TELFLO_API_URL remains
- * as an escape hatch for a deployment that serves the API from a different
- * origin, which then relies on the API's CORS configuration.
+ * Same-origin by default: the browser calls `/api/...` on whatever host served
+ * the page, and something in front of the web app routes it to the API —
+ * Vite's dev proxy locally, the gateway in the container stack. So one built
+ * image works at any customer's hostname; nothing about where the API lives is
+ * baked in at build time. VITE_TELFLO_API_URL remains as an escape hatch for a
+ * deployment that serves the API from a different origin, which then relies on
+ * the API's CORS configuration.
  */
 const API_BASE_URL = import.meta.env.VITE_TELFLO_API_URL ?? "";
 
 const REFRESH_PATH = "/api/v1/auth/refresh";
 
-/** The only code that triggers a refresh (D2b decision 1). */
+/** The only code that triggers a refresh. */
 const ACCESS_TOKEN_EXPIRED: SessionErrorCode = "access_token_expired";
 const UNAUTHENTICATED: SessionErrorCode = "unauthenticated";
 
 /**
  * An API failure with the server's machine-readable code attached, and, when
  * the server answered, its HTTP status. `retryAfterSeconds` is the answer's
- * `Retry-After` (D13b decision 12's 429), in whole seconds, when it gave one
- * the client could read (delta-seconds, or an HTTP date from now). `details`
- * is the envelope's `error.details` as the server sent it, unchecked (a
- * reader parses what it needs: 400 `validation_rule_invalid`'s problems, each
- * with its field, D15a Ruling 46); undefined when the envelope had none.
+ * `Retry-After` (on a 429), in whole seconds, when it gave one the client
+ * could read (delta-seconds, or an HTTP date from now). `details` is the
+ * envelope's `error.details` as the server sent it, unchecked (a reader
+ * parses what it needs: 400 `validation_rule_invalid`'s problems, each with
+ * its field); undefined when the envelope had none.
  */
 export class ApiError extends Error {
   readonly code: string;
@@ -309,11 +309,11 @@ export class ApiError extends Error {
 
 /**
  * Whether a request failed because the session is over: a 401
- * `unauthenticated`, a refused refresh's included (D3 decision 7). A read
- * that toasts its failures says nothing then (D12 Ruling 39): the
- * session-ended handler owns it, taking the browser to sign in, and while
- * Logout has the handler suspended the page is leaving for Logout's
- * `/login`, where a "Failed to load…" toast would follow it.
+ * `unauthenticated`, a refused refresh's included. A read that toasts its
+ * failures says nothing then: the session-ended handler owns it, taking the
+ * browser to sign in, and while Logout has the handler suspended the page is
+ * leaving for Logout's `/login`, where a "Failed to load…" toast would follow
+ * it.
  */
 export function isSessionEnded(error: unknown): error is ApiError {
   return error instanceof ApiError && error.code === UNAUTHENTICATED;
@@ -359,15 +359,15 @@ let sessionEndedNotified = false;
 /**
  * Whether PostHog has been told this session ended. The handler may be
  * suspended, and then every failing request notifies again; PostHog is
- * reset once per ended session all the same (D4 Ruling 16).
+ * reset once per ended session all the same.
  */
 let analyticsToldSessionEnded = false;
 
 /**
  * What happens when the session is over: a request failed with 401
- * `unauthenticated`, or a refresh was refused with 401 (D3 decision 7).
- * Called at most once until a later request, or refresh, succeeds, however
- * many requests failed together. The default sends the browser to
+ * `unauthenticated`, or a refresh was refused with 401. Called at most
+ * once until a later request, or refresh, succeeds, however many requests
+ * failed together. The default sends the browser to
  * `/login?redirectTo=<current path>`. Setting a handler re-arms it.
  */
 export function setSessionEndedHandler(handler: () => void): void {
@@ -381,11 +381,11 @@ let sessionEndedSuspensions = 0;
 
 /**
  * Keeps the session-ended handler from running until the returned release is
- * called, by every caller that suspended it. A session that ends meanwhile
- * is only the requests' ApiError. The accept page does this (D6 Preflight
- * ruling 3): a visitor whose session has ended is shown the page signed out,
- * not sent to `/login`. Suspended, a session ending doesn't count as
- * notified, so the first one after the release still calls the handler.
+ * called, by every caller that suspended it. A session that ends meanwhile is
+ * only the requests' ApiError. The accept page does this: a visitor whose
+ * session has ended is shown the page signed out, not sent to `/login`.
+ * Suspended, a session ending doesn't count as notified, so the first one
+ * after the release still calls the handler.
  */
 export function suspendSessionEndedHandler(): () => void {
   sessionEndedSuspensions += 1;
@@ -400,13 +400,12 @@ export function suspendSessionEndedHandler(): () => void {
 function notifySessionEnded(): void {
   if (sessionEndedNotified) return;
   // The user is gone, whether or not the handler is suspended, so PostHog
-  // forgets them as a sign-out does (D4 decision 8, Ruling 14): once per
-  // ended session, not on every request that fails while suspended, and only
-  // once PostHog has started (signedOutLocally waits for it, and without
-  // analytics does nothing; Ruling 16).
+  // forgets them as a sign-out does: once per ended session, not on every
+  // request that fails while suspended, and only once PostHog has started
+  // (signedOutLocally waits for it, and without analytics does nothing).
   if (!analyticsToldSessionEnded) {
     analyticsToldSessionEnded = true;
-    // And the staged playground edit goes, as at any sign-out (Q211, Ruling 317).
+    // And the staged playground edit goes, as at any sign-out.
     signedOutInThisBrowser();
   }
   if (sessionEndedSuspensions > 0) return;
@@ -416,8 +415,8 @@ function notifySessionEnded(): void {
 
 const client = axios.create({ baseURL: API_BASE_URL, withCredentials: true });
 
-// The API refuses any state-changing /api/v1 request without it (D2a
-// decision 6). The refresh call goes through here too.
+// The API refuses any state-changing /api/v1 request without it. The
+// refresh call goes through here too.
 client.interceptors.request.use((config) => {
   if (config.method?.toUpperCase() !== "GET") config.headers.set(CSRF_HEADER_NAME, CSRF_HEADER_VALUE);
   return config;
@@ -440,10 +439,10 @@ function errorCodeOf(error: AxiosError): string | undefined {
  * refresh's rejection, which set this; any later refresh needs a network
  * round trip before it can overwrite it, so every cancellation is mapped
  * before that. The only requests this client cancels are those whose caller
- * aborts them through a signal (`validateVersion`'s, D13b Ruling 69), and
- * `send` answers those itself, as `REQUEST_ABORTED`, before `toApiError`
- * runs, so there is no other cancellation to misreport. A successful refresh
- * clears it all the same.
+ * aborts them through a signal (`validateVersion`'s), and `send` answers
+ * those itself, as `REQUEST_ABORTED`, before `toApiError` runs, so there is
+ * no other cancellation to misreport. A successful refresh clears it all the
+ * same.
  */
 let lastRefreshFailure: ApiError | undefined;
 
@@ -480,7 +479,7 @@ function refreshAccessToken(): Promise<void> {
 
 createAuthRefresh(client, refreshAccessToken, {
   // Only an expired access token is worth a refresh; any other 401 means the
-  // session is over, and a 403 is a refusal (D2b decision 1).
+  // session is over, and a 403 is a refusal.
   shouldRefresh: (error) =>
     error.response?.status === 401 && errorCodeOf(error) === ACCESS_TOKEN_EXPIRED,
   // A request that is retried after the refresh, or that was sent while it
@@ -537,8 +536,8 @@ interface SendOptions {
   signal?: AbortSignal | undefined;
   /**
    * `bytes`: the answer is read as bytes, never decoded as text (a test run's
-   * files, D14a Preflight ruling 14: UTF-16 survives). A refusal's body is
-   * still the JSON envelope, decoded for its code (and so for the refresh).
+   * files: UTF-16 survives). A refusal's body is still the JSON envelope,
+   * decoded for its code (and so for the refresh).
    */
   read?: "bytes";
 }
@@ -602,12 +601,12 @@ export const REQUEST_ABORTED = "request_aborted";
  * An expired access token is refreshed and the request retried once, by the
  * interceptor above; nothing here knows about it.
  *
- * A 401 `unauthenticated` means the session is over, whether the request was
- * a first attempt or a retry, so it calls the session-ended handler (D3
- * decision 7). The status is read from the raw axios error, since ApiError
- * carries none: sign-in's 401 is `invalid_credentials`, and must not.
- * Requests held behind a refused refresh arrive as its ApiError or as a
- * CanceledError, not as a 401; the refresh has already called the handler.
+ * A 401 `unauthenticated` means the session is over, whether the request was a
+ * first attempt or a retry, so it calls the session-ended handler. The status
+ * is read from the raw axios error, since ApiError carries none: sign-in's 401
+ * is `invalid_credentials`, and must not. Requests held behind a refused
+ * refresh arrive as its ApiError or as a CanceledError, not as a 401; the
+ * refresh has already called the handler.
  */
 function send<Response>(
   method: HttpMethod,
@@ -654,9 +653,9 @@ function trackInFlight(sending: Promise<unknown>): void {
 /**
  * Resolves once every request in flight now has settled, however it
  * settled; requests made after the call don't count. Logout waits on it to
- * release the session-ended handler (use-logout.ts, D12 Ruling 33): a read
- * sent before the session was revoked can still answer 401 after it, and
- * that is the logout's doing, not a session that ended.
+ * release the session-ended handler (use-logout.ts): a read sent before
+ * the session was revoked can still answer 401 after it, and that is the
+ * logout's doing, not a session that ended.
  */
 export function whenRequestsInFlightSettle(): Promise<void> {
   return Promise.all([...requestsInFlight]).then(() => undefined);
@@ -729,16 +728,15 @@ export function getCurrentUser(): Promise<CurrentUserResponse> {
   return send("GET", "/api/v1/auth/me", undefined, CurrentUserResponseSchema);
 }
 
-/** The signed-in person's preferences (D21 decision 20): every key, defaults filled in. */
+/** The signed-in person's preferences: every key, defaults filled in. */
 export function getPreferences(options: { signal?: AbortSignal } = {}): Promise<UserPreferences> {
   return send("GET", "/api/v1/auth/me/preferences", undefined, UserPreferencesSchema, { signal: options.signal });
 }
 
 /**
- * Saves preferences (D21 decisions 20 and 33; a write, CSRF): Settings sends
- * one key at a time, and the API merges it onto the stored ones. Answers
- * every preference after the change. A change of the theme also sets the
- * `telflo_theme` cookie.
+ * Saves preferences (a write, CSRF): Settings sends one key at a time, and
+ * the API merges it onto the stored ones. Answers every preference after the
+ * change. A change of the theme also sets the `telflo_theme` cookie.
  */
 export function updatePreferences(
   request: UpdateUserPreferencesRequest,
@@ -748,7 +746,7 @@ export function updatePreferences(
 }
 
 /**
- * Changes the signed-in account's password (D21 decision 35; a write, CSRF):
+ * Changes the signed-in account's password (a write, CSRF):
  * `current_password_incorrect` for a wrong current password,
  * `password_not_set` for an account with none. Every session is kept.
  */
@@ -756,36 +754,36 @@ export function changePassword(request: ChangePasswordRequest): Promise<undefine
   return send("PUT", "/api/v1/auth/me/password", request, undefined);
 }
 
-/** How the signed-in account can sign in (D21 decision 37): its password, its identities, the configured providers. */
+/** How the signed-in account can sign in: its password, its identities, the configured providers. */
 export function getSignInMethods(options: { signal?: AbortSignal } = {}): Promise<SignInMethodsResponse> {
   return send("GET", "/api/v1/auth/me/sign-in-methods", undefined, SignInMethodsResponseSchema, { signal: options.signal });
 }
 
 /**
- * Starts linking a provider to the signed-in account (D21 decision 38; a
- * POST, so the CSRF header goes and the password stays out of the URL).
- * Answers the provider's authorization URL, where the browser goes next.
+ * Starts linking a provider to the signed-in account (a POST, so the CSRF
+ * header goes and the password stays out of the URL). Answers the provider's
+ * authorization URL, where the browser goes next.
  */
 export function createIdentityLinkRequest(request: IdentityLinkRequest): Promise<IdentityLinkResponse> {
   return send("POST", "/api/v1/auth/me/identity-link-requests", request, IdentityLinkResponseSchema);
 }
 
-/** Removes the account's sign-in with `provider` (D21 decision 39): a DELETE whose body carries the current password. */
+/** Removes the account's sign-in with `provider`: a DELETE whose body carries the current password. */
 export function unlinkIdentity(provider: string, request: UnlinkIdentityRequest): Promise<undefined> {
   return send("DELETE", `/api/v1/auth/me/identities/${encodeURIComponent(provider)}`, request, undefined);
 }
 
-/** The signed-in account's live sessions, the current one first (D21 decision 40). */
+/** The signed-in account's live sessions, the current one first. */
 export function listSessions(options: { signal?: AbortSignal } = {}): Promise<AccountSessionsResponse> {
   return send("GET", "/api/v1/auth/sessions", undefined, AccountSessionsResponseSchema, { signal: options.signal });
 }
 
-/** Signs out one of the account's other sessions (D21 decision 40). */
+/** Signs out one of the account's other sessions. */
 export function deleteSession(sessionId: string): Promise<undefined> {
   return send("DELETE", `/api/v1/auth/sessions/${encodeURIComponent(sessionId)}`, undefined, undefined);
 }
 
-/** Signs out every session of the account, this one included; the API clears the session cookies (D21 decision 40). */
+/** Signs out every session of the account, this one included; the API clears the session cookies. */
 export function deleteAllSessions(): Promise<undefined> {
   return send("DELETE", "/api/v1/auth/sessions", undefined, undefined);
 }
@@ -806,16 +804,16 @@ export function requestVerificationEmail(request: VerificationEmailRequest): Pro
 }
 
 /**
- * Accepts the current terms (D2c decision 6). Any version but the current
- * one is refused with `terms_version_not_current`.
+ * Accepts the current terms. Any version but the current one is refused with
+ * `terms_version_not_current`.
  */
 export function acceptTerms(request: TermsAcceptanceRequest): Promise<undefined> {
   return send("PUT", "/api/v1/auth/me/terms-acceptance", request, undefined);
 }
 
 /**
- * Makes another of the user's organizations this session's active one (D5
- * decision 10). The API sets a new access cookie naming it.
+ * Makes another of the user's organizations this session's active one.
+ * The API sets a new access cookie naming it.
  */
 export function switchOrganization(request: SwitchOrganizationRequest): Promise<SwitchOrganizationResponse> {
   return send("PUT", "/api/v1/auth/sessions/current/organization", request, SwitchOrganizationResponseSchema);
@@ -828,18 +826,18 @@ export function createOrganization(request: CreateOrganizationRequest): Promise<
 
 /**
  * Renames the active organization, and with `removeLogo: true` removes its
- * logo in the same request (D23-2 decision 9); the caller must be its admin.
+ * logo in the same request; the caller must be its admin.
  */
 export function renameOrganization(organizationId: string, request: ChangeOrganizationRequest): Promise<OrganizationResponse> {
   return send("PATCH", `/api/v1/organizations/${encodeURIComponent(organizationId)}`, request, OrganizationResponseSchema);
 }
 
 /**
- * An organization's multipart body (D23-2 decision 33): the parts `name`
- * then `file`, in the only order the API accepts (ORGANIZATION_PART_NAMES).
- * The content type is never set here: the browser writes it, with its
- * boundary. The file's name goes as the part's filename only (the API never
- * reads it: the logo's type comes from its bytes).
+ * An organization's multipart body: the parts `name` then `file`, in the
+ * only order the API accepts (ORGANIZATION_PART_NAMES). The content type is
+ * never set here: the browser writes it, with its boundary. The file's name
+ * goes as the part's filename only (the API never reads it: the logo's type
+ * comes from its bytes).
  */
 function organizationForm(name: string, file: File): FormData {
   const form = new FormData();
@@ -849,9 +847,10 @@ function organizationForm(name: string, file: File): FormData {
 }
 
 /**
- * Creates a group organization with its logo, in one request, all or nothing
- * (D23-2 decision 8). Refusals: 413 `organization_logo_too_large`, 415
- * `organization_logo_type_unsupported`, 400 `invalid_request`, and create's own.
+ * Creates a group organization with its logo, in one request, all or nothing.
+ * Refusals: 413 `organization_logo_too_large`, 415
+ * `organization_logo_type_unsupported`, 400 `invalid_request`, and create's
+ * own.
  */
 export function createOrganizationWithLogo(name: string, file: File): Promise<OrganizationResponse> {
   return send("POST", "/api/v1/organizations", organizationForm(name, file), OrganizationResponseSchema);
@@ -859,7 +858,7 @@ export function createOrganizationWithLogo(name: string, file: File): Promise<Or
 
 /**
  * Renames the active organization and sets its logo, in one request, all or
- * nothing (D23-2 decision 9); the caller must be its admin. Refusals as
+ * nothing; the caller must be its admin. Refusals as
  * createOrganizationWithLogo's, and the rename's own.
  */
 export function changeOrganizationWithLogo(organizationId: string, name: string, file: File): Promise<OrganizationResponse> {
@@ -871,23 +870,23 @@ export function changeOrganizationWithLogo(organizationId: string, name: string,
   );
 }
 
-/** The public address of an organization's logo (D23-2 decisions 3 and 13): ids only. */
+/** The public address of an organization's logo: ids only. */
 export function organizationLogoPath(organizationId: string, logoId: string): string {
   return `/api/v1/organization-logos/${encodeURIComponent(organizationId)}/${encodeURIComponent(logoId)}`;
 }
 
 /**
- * Deletes the active group organization (D5 decision 9); the caller must be
- * its admin. Its members' sessions move to their fallback organizations.
+ * Deletes the active group organization; the caller must be its admin. Its
+ * members' sessions move to their fallback organizations.
  */
 export function deleteOrganization(organizationId: string): Promise<undefined> {
   return send("DELETE", `/api/v1/organizations/${encodeURIComponent(organizationId)}`, undefined, undefined);
 }
 
 /**
- * The organization's settings (D17d-2 decision 20; a read, any member):
- * whether its public install links (Linux Quick Deploy and Helm values
- * links) are on. The install dialogs read it at their opening.
+ * The organization's settings (a read, any member): whether its public
+ * install links (Linux Quick Deploy and Helm values links) are on. The
+ * install dialogs read it at their opening.
  */
 export function getOrganizationSettings(organizationId: string, options: { signal?: AbortSignal } = {}): Promise<OrganizationSettings> {
   return send("GET", `/api/v1/organizations/${encodeURIComponent(organizationId)}/settings`, undefined, OrganizationSettingsSchema, {
@@ -896,9 +895,9 @@ export function getOrganizationSettings(organizationId: string, options: { signa
 }
 
 /**
- * Turns the organization's public install links on or off (D17d-2 decision
- * 20; a write, CSRF; an admin's: `organization_admin_required` otherwise).
- * Answers the settings as saved.
+ * Turns the organization's public install links on or off (a write, CSRF; an
+ * admin's: `organization_admin_required` otherwise). Answers the settings as
+ * saved.
  */
 export function updateOrganizationSettings(
   organizationId: string,
@@ -923,14 +922,14 @@ export function getMembers(organizationId: string): Promise<MembersResponse> {
   return send("GET", membersPath(organizationId), undefined, MembersResponseSchema);
 }
 
-/** Changes an active member's role in the active organization (D5 decision 8). */
+/** Changes an active member's role in the active organization. */
 export function changeMemberRole(organizationId: string, userId: string, request: ChangeMemberRoleRequest): Promise<undefined> {
   return send("PATCH", memberPath(organizationId, userId), request, undefined);
 }
 
 /**
- * Removes a member from the active organization (soft; D5 decision 9). Their
- * sessions acting in it move to their fallback organizations.
+ * Removes a member from the active organization (soft). Their sessions acting
+ * in it move to their fallback organizations.
  */
 export function removeMember(organizationId: string, userId: string): Promise<undefined> {
   return send("DELETE", memberPath(organizationId, userId), undefined, undefined);
@@ -954,7 +953,7 @@ export function getInvitations(organizationId: string): Promise<InvitationsRespo
   return send("GET", invitationsPath(organizationId), undefined, InvitationsResponseSchema);
 }
 
-/** Invites an address to the active organization, and emails it the link (D6 decision 8). */
+/** Invites an address to the active organization, and emails it the link. */
 export function inviteMember(organizationId: string, request: CreateInvitationRequest): Promise<InvitationResponse> {
   return send("POST", invitationsPath(organizationId), request, InvitationResponseSchema);
 }
@@ -982,9 +981,8 @@ function apiTokensPath(organizationId: string, serviceAccountId: string): string
 }
 
 /**
- * The active organization's live service accounts, newest first (D22
- * decision 26; an admin's: `organization_admin_required` otherwise, reads
- * included).
+ * The active organization's live service accounts, newest first (an admin's:
+ * `organization_admin_required` otherwise, reads included).
  */
 export function getServiceAccounts(organizationId: string, options: { signal?: AbortSignal } = {}): Promise<ServiceAccountsResponse> {
   return send("GET", serviceAccountsPath(organizationId), undefined, ServiceAccountsResponseSchema, { signal: options.signal });
@@ -1006,7 +1004,7 @@ export function createServiceAccount(organizationId: string, request: CreateServ
   return send("POST", serviceAccountsPath(organizationId), request, ServiceAccountResponseSchema);
 }
 
-/** Renames a service account; its address is kept (decision 29). */
+/** Renames a service account; its address is kept. */
 export function renameServiceAccount(
   organizationId: string,
   serviceAccountId: string,
@@ -1015,12 +1013,12 @@ export function renameServiceAccount(
   return send("PATCH", serviceAccountPath(organizationId, serviceAccountId), request, ServiceAccountResponseSchema);
 }
 
-/** Deletes a service account (decision 28): its membership removed and every token revoked, in one transaction. */
+/** Deletes a service account: its membership removed and every token revoked, in one transaction. */
 export function deleteServiceAccount(organizationId: string, serviceAccountId: string): Promise<undefined> {
   return send("DELETE", serviceAccountPath(organizationId, serviceAccountId), undefined, undefined);
 }
 
-/** A service account's tokens not revoked, live and expired, newest first: each by its prefix, never the token (decision 31). */
+/** A service account's tokens not revoked, live and expired, newest first: each by its prefix, never the token. */
 export function getApiTokens(
   organizationId: string,
   serviceAccountId: string,
@@ -1030,9 +1028,9 @@ export function getApiTokens(
 }
 
 /**
- * Creates a token on a service account (201, `Cache-Control: no-store`):
- * the only answer that carries the token (decision 48). The caller shows it
- * once and keeps it nowhere else.
+ * Creates a token on a service account (201, `Cache-Control: no-store`): the
+ * only answer that carries the token. The caller shows it once and keeps it
+ * nowhere else.
  */
 export function createApiToken(
   organizationId: string,
@@ -1047,7 +1045,7 @@ export function revokeApiToken(organizationId: string, serviceAccountId: string,
   return send("DELETE", `${apiTokensPath(organizationId, serviceAccountId)}/${encodeURIComponent(tokenId)}`, undefined, undefined);
 }
 
-/** A person's own API tokens' path (D25 decision 28): the session's person, no organization. */
+/** A person's own API tokens' path: the session's person, no organization. */
 const PERSONAL_API_TOKENS_PATH = "/api/v1/auth/me/api-tokens";
 
 /** The signed-in person's own tokens not revoked, live and expired, newest first: each by its prefix, never the token. */
@@ -1070,21 +1068,20 @@ export function revokePersonalApiToken(tokenId: string): Promise<undefined> {
 }
 
 /**
- * The collector catalogue (D13a decision 11): every distribution, in the
- * catalogue's order, each with the versions it offers, newest first
- * (deprecated ones are never listed). Signed in, but not an organization's:
- * the catalogue is global.
+ * The collector catalogue: every distribution, in the catalogue's order,
+ * each with the versions it offers, newest first (deprecated ones are never
+ * listed). Signed in, but not an organization's: the catalogue is global.
  */
 export function getCollectorDistributions(): Promise<CollectorDistributionsResponse> {
   return send("GET", "/api/v1/collector-distributions", undefined, CollectorDistributionsResponseSchema);
 }
 
 /**
- * Every flow the caller may see, in full, in the gallery's order (D12
- * decision 10): the published ones, and the hidden ones too for a product
- * admin (the API decides). Signed in, not an organization's: flows are
- * global. The YAML is in the list, so the create dialog's picker copies a
- * flow without a second read.
+ * Every flow the caller may see, in full, in the gallery's order: the
+ * published ones, and the hidden ones too for a product admin (the API
+ * decides). Signed in, not an organization's: flows are global. The YAML
+ * is in the list, so the create dialog's picker copies a flow without a
+ * second read.
  */
 export function getFlows(): Promise<FlowsResponse> {
   return send("GET", "/api/v1/flows", undefined, FlowsResponseSchema);
@@ -1096,11 +1093,10 @@ export function getFlow(slug: string): Promise<FlowResponse> {
 }
 
 /**
- * The open flow read (D31-1 decisions 5 and 34): every published flow, in
- * the gallery's order, YAML included, with no session, for the
- * playground's gallery. Called from the browser only, never a server
- * loader, so its per-address limit (60 a minute over both reads, 429
- * `rate_limited` with Retry-After) counts the visitor.
+ * The open flow read: every published flow, in the gallery's order, YAML
+ * included, with no session, for the playground's gallery. Called from the
+ * browser only, never a server loader, so its per-address limit (60 a minute
+ * over both reads, 429 `rate_limited` with Retry-After) counts the visitor.
  */
 export function getPublishedFlows(): Promise<PublishedFlowsResponse> {
   return send("GET", "/api/v1/published-flows", undefined, PublishedFlowsResponseSchema);
@@ -1112,9 +1108,9 @@ export function getPublishedFlow(slug: string): Promise<PublishedFlowResponse> {
 }
 
 /*
- * Product admin's flows writes (D12 decision 11), from `/product-admin/flows`:
+ * Product admin's flows writes, from `/product-admin/flows`:
  * each is refused with 403 `product_admin_required` for anyone without the
- * flag, read live on every request (decision 3).
+ * flag, read live on every request.
  */
 
 /**
@@ -1128,23 +1124,22 @@ export function createFlow(request: CreateFlowRequest): Promise<FlowResponse> {
 
 /**
  * Changes the fields `request` names, and only those: a pin it leaves out
- * stays, even one the catalogue no longer offers (D12 Preflight ruling 19).
- * The visibility switch sends `published` alone.
+ * stays, even one the catalogue no longer offers. The visibility switch
+ * sends `published` alone.
  */
 export function updateFlow(flowId: string, request: UpdateFlowRequest): Promise<FlowResponse> {
   return send("PATCH", `/api/v1/flows/${encodeURIComponent(flowId)}`, request, FlowResponseSchema);
 }
 
-/** Deletes a flow for good; configurations made from it keep their copy (D12 decision 2). */
+/** Deletes a flow for good; configurations made from it keep their copy. */
 export function deleteFlow(flowId: string): Promise<undefined> {
   return send("DELETE", `/api/v1/flows/${encodeURIComponent(flowId)}`, undefined, undefined);
 }
 
 /**
- * The security check over a configuration's text (D12 decision 6):
- * advisory, nothing stored. Its findings and destinations quote the text, so
- * they are configuration text (ADR 0024). 429 `rate_limited` past 20 a
- * minute.
+ * The security check over a configuration's text: advisory, nothing stored.
+ * Its findings and destinations quote the text, so they are configuration
+ * text. 429 `rate_limited` past 20 a minute.
  */
 export function lintFlow(yaml: string): Promise<FlowLintResponse> {
   return send("POST", "/api/v1/flows/lint", { yaml }, FlowLintResponseSchema);
@@ -1167,10 +1162,9 @@ function configurationVersionPath(organizationId: string, configurationId: strin
 }
 
 /**
- * What a page of the configurations list asks for (D7 decision 6): how many,
- * after which cursor, the search text, and which of D11b's filters
- * (decision 6): every configuration the caller sees, their own, or the
- * published ones.
+ * What a page of the configurations list asks for: how many, after which
+ * cursor, the search text, and which filter: every configuration the caller
+ * sees, their own, or the published ones.
  */
 export interface ConfigurationsQuery {
   limit?: number;
@@ -1196,8 +1190,8 @@ function configurationsQueryString({ limit, cursor, q, filter }: ConfigurationsQ
 
 /**
  * A page of the active organization's configurations, newest update first.
- * `options.signal` aborts it (`REQUEST_ABORTED`): the pin picker's hang guard
- * (D17b-1 Preflight ruling 6).
+ * `options.signal` aborts it (`REQUEST_ABORTED`): the pin picker's hang
+ * guard.
  */
 export function getConfigurations(
   organizationId: string,
@@ -1210,12 +1204,12 @@ export function getConfigurations(
 }
 
 /**
- * A configuration's versions without their content or layout (D17b-1
- * decisions 7 and 31): each its id, number, label and published date,
- * highest number first; `filter: "published"` leaves the drafts out (the pin
- * picker's), and the API's `all` is sent as no query at all. The same
- * visibility as the configuration's read: 404 `configuration_not_found` for
- * one the person can't see.
+ * A configuration's versions without their content or layout: each its id,
+ * number, label and published date, highest number first;
+ * `filter: "published"` leaves the drafts out (the pin picker's), and the
+ * API's `all` is sent as no query at all. The same visibility as the
+ * configuration's read: 404 `configuration_not_found` for one the person can't
+ * see.
  */
 export function getConfigurationVersions(
   organizationId: string,
@@ -1240,7 +1234,7 @@ export function createConfiguration(organizationId: string, request: CreateConfi
 /**
  * A configuration of the active organization, the version the editor opens
  * with its YAML (the caller's selection, else the newest), and every
- * version's summary, newest first (D8 decision 4, D10 decision 4).
+ * version's summary, newest first.
  */
 export function getConfiguration(organizationId: string, configurationId: string): Promise<ConfigurationWithVersionResponse> {
   return send("GET", configurationPath(organizationId, configurationId), undefined, ConfigurationWithVersionResponseSchema);
@@ -1248,10 +1242,10 @@ export function getConfiguration(organizationId: string, configurationId: string
 
 /**
  * A configuration of the active organization, that version of it with its
- * YAML, and every version's summary (D10 decision 4). A version that isn't
- * the configuration's is 404 `configuration_version_not_found`. `signal`
- * aborts it (the group dialogs' "Variables used" read, D20 Preflight ruling
- * 32: a new choice aborts the previous one).
+ * YAML, and every version's summary. A version that isn't the
+ * configuration's is 404 `configuration_version_not_found`. `signal` aborts
+ * it (the group dialogs' "Variables used" read: a new choice aborts the
+ * previous one).
  */
 export function getConfigurationVersion(
   organizationId: string,
@@ -1270,8 +1264,8 @@ export function getConfigurationVersion(
 
 /**
  * Creates the configuration's next version from `sourceVersionId`, holding
- * the text and graph sent (D10 decision 5): the open version with its
- * unsaved changes. The source is left as it was.
+ * the text and graph sent: the open version with its unsaved changes. The
+ * source is left as it was.
  */
 export function createConfigurationVersion(
   organizationId: string,
@@ -1286,7 +1280,7 @@ export function createConfigurationVersion(
   );
 }
 
-/** Renames a version (D10 decision 6); the answer is its summary. */
+/** Renames a version; the answer is its summary. */
 export function renameConfigurationVersion(
   organizationId: string,
   configurationId: string,
@@ -1302,15 +1296,15 @@ export function renameConfigurationVersion(
 }
 
 /**
- * Publishes a version (D11b decision 11). The body carries
- * `expectedUpdatedAt`, the open version's `updatedAt` as the tab last
- * loaded or saved it (Ruling 30, the owner's), so a version saved since is
- * refused rather than published unseen. The answer is its summary, now
- * published, as a rename's is. Refusals carry the configuration's codes: 409
- * `configuration_version_published` (already published),
- * `configuration_version_changed` (saved since the tab saw it, or meanwhile)
- * and `configuration_version_empty`; 503 `publishing_unavailable`; 404
- * `configuration_not_found` and `configuration_version_not_found`.
+ * Publishes a version. The body carries `expectedUpdatedAt`, the open
+ * version's `updatedAt` as the tab last loaded or saved it, so a version
+ * saved since is refused rather than published unseen. The answer is its
+ * summary, now published, as a rename's is. Refusals carry the
+ * configuration's codes: 409 `configuration_version_published` (already
+ * published), `configuration_version_changed` (saved since the tab saw it,
+ * or meanwhile) and `configuration_version_empty`; 503
+ * `publishing_unavailable`; 404 `configuration_not_found` and
+ * `configuration_version_not_found`.
  */
 export function publishConfigurationVersion(
   organizationId: string,
@@ -1327,17 +1321,17 @@ export function publishConfigurationVersion(
 }
 
 /**
- * Checks `yaml` with the collector the version is pinned to (D13b decision
- * 12): `collectorVersion` is the tab's unsaved pick, left out to use the
- * version's saved pin; the distribution is always the configuration's.
- * Nothing is stored. Refusals carry the configuration's codes: 503
+ * Checks `yaml` with the collector the version is pinned to:
+ * `collectorVersion` is the tab's unsaved pick, left out to use the version's
+ * saved pin; the distribution is always the configuration's. Nothing is
+ * stored. Refusals carry the configuration's codes: 503
  * `validation_unavailable` (the validator couldn't check it), 429
  * `validation_rate_limited` (with `retryAfterSeconds`), 400
  * `collector_version_unknown`; 404 `configuration_not_found` and
  * `configuration_version_not_found`. Aborted through `options.signal`, it
- * rejects with `REQUEST_ABORTED` (D13b Ruling 69: the editor aborts a
- * superseded check). The abort is the browser's only: the API still holds
- * the person's in-flight slot until the validator answers (Ruling 70).
+ * rejects with `REQUEST_ABORTED` (the editor aborts a superseded check). The
+ * abort is the browser's only: the API still holds the person's in-flight slot
+ * until the validator answers.
  */
 export function validateVersion(
   organizationId: string,
@@ -1357,7 +1351,7 @@ export function validateVersion(
 
 /**
  * Records the version as the caller's selection of the configuration, which
- * `/editor/{id}` opens next (D10 decisions 3 and 9).
+ * `/editor/{id}` opens next.
  */
 export function selectConfigurationVersion(
   organizationId: string,
@@ -1368,8 +1362,8 @@ export function selectConfigurationVersion(
 }
 
 /**
- * Saves the YAML over one of the configuration's versions, exactly as given
- * (D8 decision 5). There is no revision check: the last save wins.
+ * Saves the YAML over one of the configuration's versions, exactly as given.
+ * There is no revision check: the last save wins.
  */
 export function saveConfigurationVersion(
   organizationId: string,
@@ -1385,7 +1379,7 @@ export function saveConfigurationVersion(
   );
 }
 
-/** Renames a configuration or changes its description (D7 decision 7); the editor's toolbar renames with it (D8 decision 14). */
+/** Renames a configuration or changes its description; the editor's toolbar renames with it. */
 export function updateConfiguration(
   organizationId: string,
   configurationId: string,
@@ -1395,22 +1389,20 @@ export function updateConfiguration(
 }
 
 /**
- * Deletes a configuration (softly; D7 decision 8). A published one is first
- * checked against the fleets (D16b decision 19): 409 `configuration_in_use`
- * while a collector group or a collector uses one of its published
- * versions, 429 `rate_limited` past the person's fleet limits (with
- * `Retry-After`), 503 `fleets_unavailable` when that couldn't be checked;
- * each deletes nothing.
+ * Deletes a configuration (softly). A published one is first checked against
+ * the fleets: 409 `configuration_in_use` while a collector group or a
+ * collector uses one of its published versions, 429 `rate_limited` past the
+ * person's fleet limits (with `Retry-After`), 503 `fleets_unavailable` when
+ * that couldn't be checked; each deletes nothing.
  */
 export function deleteConfiguration(organizationId: string, configurationId: string): Promise<undefined> {
   return send("DELETE", configurationPath(organizationId, configurationId), undefined, undefined);
 }
 
 // ---------------------------------------------------------------------------
-// Fleets (D16b's routes; D17a decision 24, Preflight rulings 10 and 13). Every
-// member of the organization may call each. Each takes an optional
-// `{signal}`: the poll's 10 s hang guard on the reads, the dialogs' on the
-// writes (the client has no timeout of its own); an abort rejects with
+// Fleets. Every member of the organization may call each. Each takes an
+// optional `{signal}`: the poll's 10 s hang guard on the reads, the dialogs'
+// on the writes (the client has no timeout of its own); an abort rejects with
 // `REQUEST_ABORTED`. A fleet's label, a token's bearer and a cursor never go
 // in a path; the ids are encoded. Refusals carry the fleets' codes
 // (`FLEET_ERROR_CODES`), `organization_not_found`, `rate_limited` (429, with
@@ -1465,10 +1457,10 @@ export function getFleet(
 }
 
 /**
- * A create's answer (D16b decision 15): `created` (201) with the fleet, its
- * Default group and both tokens' bearers, given this once; `existing` (200),
- * a retry of a create that had already made the fleet (the same id, label
- * and type), with the fleet alone and no bearer.
+ * A create's answer: `created` (201) with the fleet, its Default group and
+ * both tokens' bearers, given this once; `existing` (200), a retry of a
+ * create that had already made the fleet (the same id, label and type), with
+ * the fleet alone and no bearer.
  */
 export type FleetCreateOutcome = ({ kind: "created" } & FleetCreatedResponse) | { kind: "existing"; fleet: Fleet };
 
@@ -1483,10 +1475,10 @@ const FLEET_CREATE_ANSWER: ResponseParser<FleetCreateOutcome> = {
 };
 
 /**
- * Creates a fleet (D17a decision 24). The request's `id` is the dialog's
- * own, so a retry after an unknown outcome is safe: the same id, label and
- * type answer `existing`. A reply that fits neither shape is
- * `unexpected_response`, an unknown outcome too.
+ * Creates a fleet. The request's `id` is the dialog's own, so a retry
+ * after an unknown outcome is safe: the same id, label and type answer
+ * `existing`. A reply that fits neither shape is `unexpected_response`, an
+ * unknown outcome too.
  */
 export function createFleet(
   organizationId: string,
@@ -1511,8 +1503,8 @@ export function updateFleet(
 /**
  * Deletes a fleet with its groups, collectors and tokens. The API
  * waits up to 25 s, then answers 503 `fleets_unavailable` while the
- * opamp-server finishes it (D16b Ruling 32); a repeat meanwhile answers the
- * same 503 at once (Ruling 36).
+ * opamp-server finishes it; a repeat meanwhile answers the same 503 at
+ * once.
  */
 export function deleteFleet(
   organizationId: string,
@@ -1554,13 +1546,12 @@ export function revealEnrollmentToken(
 }
 
 /**
- * Rotates the fleet's rotate token (D17b-2 decision 29; `no-store`; one of
- * the person's 10 bearer replies a minute): the new token's expiry (null
- * for never) and when the current one's grace ends. The answer (201) is
- * the new token with its bearer, given this once, and the token it
- * succeeds (`predecessorId`, null when none was valid: Preflight ruling 6).
- * 409 `fleet_archived` on an archived fleet; 400 `invalid_request` with
- * details on `expiresAt` or `graceEndsAt`.
+ * Rotates the fleet's rotate token (`no-store`; one of the person's 10 bearer
+ * replies a minute): the new token's expiry (null for never) and when the
+ * current one's grace ends. The answer (201) is the new token with its
+ * bearer, given this once, and the token it succeeds (`predecessorId`, null
+ * when none was valid). 409 `fleet_archived` on an archived fleet; 400
+ * `invalid_request` with details on `expiresAt` or `graceEndsAt`.
  */
 export function rotateEnrollmentToken(
   organizationId: string,
@@ -1574,9 +1565,9 @@ export function rotateEnrollmentToken(
 }
 
 /**
- * Revokes one of the fleet's tokens (D17b-2 decision 31): idempotent, an
- * already revoked token answers as it is. The answer is the token, without
- * a bearer; 404 `enrollment_token_not_found` for one the fleet doesn't hold.
+ * Revokes one of the fleet's tokens: idempotent, an already revoked token
+ * answers as it is. The answer is the token, without a bearer; 404
+ * `enrollment_token_not_found` for one the fleet doesn't hold.
  */
 export function revokeEnrollmentToken(
   organizationId: string,
@@ -1595,12 +1586,11 @@ export function revokeEnrollmentToken(
 
 /**
  * Issues the fleet a new default token once all its default tokens are
- * revoked (D17c-1 decisions 29 and 45; `no-store`; one of the person's
- * bearer replies a minute). No body: the actor is the session's. The answer
- * (201) is the token with its bearer, the reveal's shape. 409
- * `enrollment_token_default_exists` while a default token is valid (another
- * member issued one, or an earlier try landed), `fleet_archived` on an
- * archived fleet; 404 `fleet_not_found`.
+ * revoked (`no-store`; one of the person's bearer replies a minute). No
+ * body: the actor is the session's. The answer (201) is the token with its
+ * bearer, the reveal's shape. 409 `enrollment_token_default_exists` while a
+ * default token is valid (another member issued one, or an earlier try
+ * landed), `fleet_archived` on an archived fleet; 404 `fleet_not_found`.
  */
 export function issueDefaultEnrollmentToken(
   organizationId: string,
@@ -1628,14 +1618,13 @@ function groupPath(organizationId: string, fleetId: string, groupId: string): st
 }
 
 /**
- * Creates a group in the fleet (D17b-2 decision 24): its name (trimmed by
- * the caller) and, optionally, a published configuration version's id to
- * assign (`assignedVersionId`) and its `annotations` (D17c-1 decisions 30
- * and 31: a server group's mounts under `"telflo"`, made by
- * `annotationsWithDockerMounts`; the paths are configuration text, in the
- * body only). The answer (201) is the group. 409
- * `collector_group_name_taken`; 422 `configuration_version_not_published`;
- * 404 `configuration_version_not_found`.
+ * Creates a group in the fleet: its name (trimmed by the caller) and,
+ * optionally, a published configuration version's id to assign
+ * (`assignedVersionId`) and its `annotations` (a server group's mounts under
+ * `"telflo"`, made by `annotationsWithDockerMounts`; the paths are
+ * configuration text, in the body only). The answer (201) is the group. 409
+ * `collector_group_name_taken`; 422 `configuration_version_not_published`; 404
+ * `configuration_version_not_found`.
  */
 export function createCollectorGroup(
   organizationId: string,
@@ -1651,10 +1640,9 @@ export function createCollectorGroup(
 /**
  * Renames a group, assigns it a published version or clears its assignment
  * (`assignedVersionId: null`), or replaces its `annotations` (an object, the
- * whole of it: the one read with `"telflo"` replaced) or clears them
- * (`null`), in one write: only the fields sent change (D17b-2 decision 24;
- * D17c-1 decisions 30 and 31). The answer is the group as it now is. 409
- * `collector_group_is_default` for a rename of the Default group.
+ * whole of it: the one read with `"telflo"` replaced) or clears them (`null`),
+ * in one write: only the fields sent change. The answer is the group as it now
+ * is. 409 `collector_group_is_default` for a rename of the Default group.
  */
 export function updateCollectorGroup(
   organizationId: string,
@@ -1669,12 +1657,12 @@ export function updateCollectorGroup(
 }
 
 /**
- * A group's install facts (D17c-1 decision 38; `no-store`): the image its
- * published version's collector version picks, the agent endpoint, whether
- * insecure connections are allowed, the collector, the variables the
- * version's YAML reads (configuration text), the group's mounts and its id.
- * No bearer: the dialog reveals one itself. Refusals: 404
- * `fleet_not_found`, `collector_group_not_found`; 409 `fleet_archived`,
+ * A group's install facts (`no-store`): the image its published version's
+ * collector version picks, the agent endpoint, whether insecure connections
+ * are allowed, the collector, the variables the version's YAML reads
+ * (configuration text), the group's mounts and its id. No bearer: the
+ * dialog reveals one itself. Refusals: 404 `fleet_not_found`,
+ * `collector_group_not_found`; 409 `fleet_archived`,
  * `fleet_type_not_installable`, `collector_group_unassigned`,
  * `collector_group_assignment_deleted`, `collector_version_not_offered`;
  * 503 `install_unavailable` (the templates can't be read).
@@ -1691,17 +1679,16 @@ export function getInstallFacts(
 }
 
 /**
- * A Kubernetes group's install facts (D17d-2 decision 15; Preflight ruling
- * 1; `no-store`): the facts route's Kubernetes form, `HelmInstallFactsSchema`
- * (the image, the endpoint, the insecure flag, the collector, the variables
- * the chart can carry, the group's id, and its Helm install: the chart and
- * its version, the image's repository, the release, role, namespace,
- * replicas and volumes). No bearer: the dialog reveals one itself.
- * Refusals: the server facts' (404 `fleet_not_found`,
+ * A Kubernetes group's install facts (`no-store`): the facts route's
+ * Kubernetes form, `HelmInstallFactsSchema` (the image, the endpoint, the
+ * insecure flag, the collector, the variables the chart can carry, the group's
+ * id, and its Helm install: the chart and its version, the image's repository,
+ * the release, role, namespace, replicas and volumes). No bearer: the dialog
+ * reveals one itself. Refusals: the server facts' (404 `fleet_not_found`,
  * `collector_group_not_found`; 409 `fleet_archived`,
  * `fleet_type_not_installable`, `collector_group_unassigned`,
- * `collector_group_assignment_deleted`, `collector_version_not_offered`;
- * 503 `install_unavailable`) and 409 `collector_group_settings_unreadable`.
+ * `collector_group_assignment_deleted`, `collector_version_not_offered`; 503
+ * `install_unavailable`) and 409 `collector_group_settings_unreadable`.
  */
 export function getHelmInstallFacts(
   organizationId: string,
@@ -1721,15 +1708,14 @@ export interface InstallBundle {
 }
 
 /**
- * Downloads a group's Linux bundle (D17c-1 decision 39; Preflight ruling
- * 26): a POST whose body holds the method, the arch, the paths and the
- * included variables (configuration text: in the body, never the URL),
- * answered with the `.tar.gz` as its bytes, never decoded (`read: "bytes"`);
- * a refusal's envelope is still read for its code. The file name is the
- * contracts' `installBundleFileName`, the one the API names it with: a
- * cross-origin API's `Content-Disposition` isn't readable here. No bearer
- * in it. The facts' refusals, and 400 `invalid_request` with details on the
- * fields (`env.N.value`, `rootPath`, `executablePath`).
+ * Downloads a group's Linux bundle: a POST whose body holds the method, the
+ * arch, the paths and the included variables (configuration text: in the body,
+ * never the URL), answered with the `.tar.gz` as its bytes, never decoded
+ * (`read: "bytes"`); a refusal's envelope is still read for its code. The file
+ * name is the contracts' `installBundleFileName`, the one the API names it
+ * with: a cross-origin API's `Content-Disposition` isn't readable here. No
+ * bearer in it. The facts' refusals, and 400 `invalid_request` with details on
+ * the fields (`env.N.value`, `rootPath`, `executablePath`).
  */
 export function downloadInstallBundle(
   organizationId: string,
@@ -1745,18 +1731,16 @@ export function downloadInstallBundle(
 }
 
 /**
- * Deletes a group (204): its collectors (and their error history) are
- * deleted in the same transaction (D17d-1 decision 3). 409
- * `collector_group_is_default` for the Default group; 404
- * `collector_group_not_found`. A group of many collectors can take a
- * while: the platform's API waits up to 25 s for the opamp-server (its
- * opamp-server client's `LONG_DELETES`, as for a fleet's or an
- * organization's delete; D17d-1 Rulings 47 and 48), then answers 503
- * `fleets_unavailable`; the opamp-server finishes the delete after that
- * hang-up (it runs on its own deadline, not the request's): a later read
- * shows the group gone. The browser's write hang guard
- * (`FLEET_WRITE_TIMEOUT_MS`, 30 s) outlasts the 25 s, so the dialog sees
- * the 503 as an unknown outcome, closes and reloads.
+ * Deletes a group (204): its collectors (and their error history) are deleted
+ * in the same transaction. 409 `collector_group_is_default` for the Default
+ * group; 404 `collector_group_not_found`. A group of many collectors can take
+ * a while: the platform's API waits up to 25 s for the opamp-server (its
+ * opamp-server client's `LONG_DELETES`, as for a fleet's or an organization's
+ * delete), then answers 503 `fleets_unavailable`; the opamp-server finishes
+ * the delete after that hang-up (it runs on its own deadline, not the
+ * request's): a later read shows the group gone. The browser's write hang
+ * guard (`FLEET_WRITE_TIMEOUT_MS`, 30 s) outlasts the 25 s, so the dialog
+ * sees the 503 as an unknown outcome, closes and reloads.
  */
 export function deleteCollectorGroup(
   organizationId: string,
@@ -1776,11 +1760,11 @@ function collectorPath(organizationId: string, fleetId: string, collectorId: str
 }
 
 /**
- * A page of a fleet's collectors (D17b-1 decisions 2, 3 and 21): the search
- * text (a name or an address it must contain; trimmed, and none when empty),
- * one group's, the sort and its order (the API's newest first when there is
- * none), how many (50 by default, 100 at most) and after which cursor (one
- * of the same sort and order's, else 400 `invalid_request` naming `cursor`).
+ * A page of a fleet's collectors: the search text (a name or an address it
+ * must contain; trimmed, and none when empty), one group's, the sort and its
+ * order (the API's newest first when there is none), how many (50 by
+ * default, 100 at most) and after which cursor (one of the same sort and
+ * order's, else 400 `invalid_request` naming `cursor`).
  */
 export interface CollectorsQuery {
   q?: string | undefined;
@@ -1806,8 +1790,8 @@ function collectorsQueryString({ q, groupId, sort, order, limit, cursor }: Colle
 
 /**
  * A page of the fleet's collectors (`no-store`: each carries its reported
- * attributes and its last error, D17b-1 decision 30). No total: the page
- * counts on the fleet's summary.
+ * attributes and its last error). No total: the page counts on the
+ * fleet's summary.
  */
 export function getCollectors(
   organizationId: string,
@@ -1834,9 +1818,9 @@ export function getCollector(
 
 /**
  * Renames a collector, moves it to another of the fleet's groups, pins it
- * (by its `kind` and `versionId`) or unpins it (`pin: null`),
- * in one opamp-server transaction (D17b-1 decision 26): the fields sent land
- * together or not at all. The answer is the collector as it now is.
+ * (by its `kind` and `versionId`) or unpins it (`pin: null`), in one
+ * opamp-server transaction: the fields sent land together or not at all.
+ * The answer is the collector as it now is.
  */
 export function updateCollector(
   organizationId: string,
@@ -1864,8 +1848,8 @@ export function deleteCollector(
 
 /**
  * Pins, or unpins (`pin: null`), up to 500 of the fleet's collectors in one
- * transaction (D17b-1 decision 27): the ids now pinned as asked
- * (`updated`), and those the fleet no longer holds (`notFound`).
+ * transaction: the ids now pinned as asked (`updated`), and those the fleet
+ * no longer holds (`notFound`).
  */
 export function pinCollectors(
   organizationId: string,
@@ -1914,12 +1898,11 @@ export function getCollectorErrors(
 }
 
 /**
- * A page of the fleet's token history, newest first (D17b-2 decisions 20
- * and 27): each event's token id, kind of event, actor (`{userId, email}`,
- * or null) and time; never a bearer or the token's kind. 50 by default,
- * 100 at most; a cursor the API no longer takes answers 400
- * `invalid_request` naming `cursor`. Not `no-store`: ids, times and
- * members' emails.
+ * A page of the fleet's token history, newest first: each event's token id,
+ * kind of event, actor (`{userId, email}`, or null) and time; never a bearer
+ * or the token's kind. 50 by default, 100 at most; a cursor the API no longer
+ * takes answers 400 `invalid_request` naming `cursor`. Not `no-store`: ids,
+ * times and members' emails.
  */
 export function getEnrollmentTokenEvents(
   organizationId: string,
@@ -1937,10 +1920,10 @@ export function getEnrollmentTokenEvents(
 }
 
 /*
- * The quick-deploy links (D17c-2 decisions 25 and 33; Preflight rulings 15
- * and 20). A link's secret is a credential: it crosses the platform once,
- * inside the create's `url` (`no-store`), and never in a URL this client
- * requests; the list, an extend and a revoke answer links without it.
+ * The quick-deploy links. A link's secret is a credential: it crosses the
+ * platform once, inside the create's `url` (`no-store`), and never in a URL
+ * this client requests; the list, an extend and a revoke answer links without
+ * it.
  */
 
 function quickDeployLinkPath(organizationId: string, fleetId: string, linkId: string): string {
@@ -2028,13 +2011,12 @@ export function revokeQuickDeployLink(
 }
 
 // ---------------------------------------------------------------------------
-// The organization's variables and variable groups (D20 decision 37; Task 10's
-// routes). Every path names ids only: a variable's name, value or
-// description, and a variable group's name or description, are configuration
-// text (Q88) and travel in bodies alone, never in a URL, and no read takes a
-// query (the Variables page's search runs in the browser). Refusals carry the
-// variables' codes (`VARIABLE_ERROR_CODES`, the one 503
-// `variables_unavailable` among them), `organization_not_found`,
+// The organization's variables and variable groups. Every path names ids only:
+// a variable's name, value or description, and a variable group's name or
+// description, are configuration text and travel in bodies alone, never in a
+// URL, and no read takes a query (the Variables page's search runs in the
+// browser). Refusals carry the variables' codes (`VARIABLE_ERROR_CODES`, the
+// one 503 `variables_unavailable` among them), `organization_not_found`,
 // `rate_limited` and `invalid_request`.
 
 function variablesPath(organizationId: string): string {
@@ -2053,7 +2035,7 @@ function variableGroupPath(organizationId: string, variableGroupId: string): str
   return `${variableGroupsPath(organizationId)}/${encodeURIComponent(variableGroupId)}`;
 }
 
-/** Every variable of the organization, by name, each with its value (no secrets, Q88), who changed it and when. */
+/** Every variable of the organization, by name, each with its value (no secrets), who changed it and when. */
 export function getOrganizationVariables(
   organizationId: string,
   options: { signal?: AbortSignal } = {},
@@ -2064,7 +2046,7 @@ export function getOrganizationVariables(
 }
 
 /**
- * Creates a variable under the browser's own id (Q93): a retry with the same
+ * Creates a variable under the browser's own id: a retry with the same
  * id, name, value and description answers it again (200), as the first
  * answer did (201). 409 `variable_name_taken`, `variable_limit_reached`,
  * `variable_conflict` (the id holds another variable).
@@ -2130,7 +2112,7 @@ export function getVariableGroups(
   }).then(({ variableGroups }) => variableGroups);
 }
 
-/** Creates a variable group under the browser's own id (a retry is safe, Q93). 409 `variable_group_name_taken`, `variable_group_limit_reached`, `variable_group_conflict`. */
+/** Creates a variable group under the browser's own id (a retry is safe). 409 `variable_group_name_taken`, `variable_group_limit_reached`, `variable_group_conflict`. */
 export function createVariableGroup(
   organizationId: string,
   request: CreateVariableGroupRequest,
@@ -2207,9 +2189,9 @@ export function resetVariableGroupOverride(
 }
 
 /**
- * What the accept page shows for the link's token (D6 decision 9): the
- * organization, the address, the role, the status, and whether an account
- * holds the address. Needs no session.
+ * What the accept page shows for the link's token: the organization, the
+ * address, the role, the status, and whether an account holds the
+ * address. Needs no session.
  */
 export function previewInvitation(request: InvitationTokenRequest): Promise<InvitationPreviewResponse> {
   return send("POST", "/api/v1/invitation-previews", request, InvitationPreviewResponseSchema);
@@ -2232,11 +2214,10 @@ export function registerFromInvitation(request: InvitationRegistrationRequest): 
 }
 
 /*
- * Testing (D14a decision 28; Preflight rulings 10 and 15): the caller's own
- * test files in the active organization ("My Files"), and a version's test
- * runs. A file's names, its description, a run's text, its logs and its
- * input's name are private text (ADR 0024): they travel only in these
- * bodies, never in a URL.
+ * Testing: the caller's own test files in the active organization ("My
+ * Files"), and a version's test runs. A file's names, its description, a run's
+ * text, its logs and its input's name are private text: they travel only in
+ * these bodies, never in a URL.
  */
 
 function testFilesPath(organizationId: string): string {
@@ -2253,8 +2234,8 @@ function testRunPath(organizationId: string, configurationId: string, versionId:
 
 /**
  * A test file's multipart body: the parts `displayName`, `description` and
- * `file`, in the only order the API accepts (Preflight ruling 10). The
- * content type is never set here: the browser writes it, with its boundary.
+ * `file`, in the only order the API accepts. The content type is never set
+ * here: the browser writes it, with its boundary.
  */
 function testFileForm(displayName: string, description: string, file: Blob, fileName: string): FormData {
   const form = new FormData();
@@ -2264,7 +2245,7 @@ function testFileForm(displayName: string, description: string, file: Blob, file
   return form;
 }
 
-/** The caller's own test files in the organization, newest first (decision 7). */
+/** The caller's own test files in the organization, newest first. */
 export function getTestFiles(organizationId: string): Promise<TestFilesResponse> {
   return send("GET", testFilesPath(organizationId), undefined, TestFilesResponseSchema);
 }
@@ -2277,7 +2258,7 @@ export interface TestFileUpload {
 }
 
 /**
- * Uploads a test file (decision 16): up to 10 MiB, its type from its name's
+ * Uploads a test file: up to 10 MiB, its type from its name's
  * extension, one of the six. Refusals: 413 `test_file_too_large`, 415
  * `test_file_type_unsupported`, 429 `rate_limited`, 400 `invalid_request`.
  */
@@ -2294,7 +2275,7 @@ export interface TestSample {
 }
 
 /**
- * Saves a pasted sample to My Files (decision 16): up to 1 MiB of UTF-8. The
+ * Saves a pasted sample to My Files: up to 1 MiB of UTF-8. The
  * file part is typed by its format (`application/json` or `text/plain`),
  * which the API names it by (`testSampleFileName`). The same refusals as an
  * upload's.
@@ -2311,10 +2292,10 @@ export function saveTestSample(organizationId: string, sample: TestSample): Prom
 }
 
 /**
- * The first TEST_FILE_HEAD_MAXIMUM_BYTES (64 KiB) of one of the caller's
- * test files, as its bytes, never decoded (D14a Ruling 43): the run dialog's
- * fixture-shape check for a file from an earlier session. 404
- * `test_file_not_found` for anyone else's file.
+ * The first TEST_FILE_HEAD_MAXIMUM_BYTES (64 KiB) of one of the caller's test
+ * files, as its bytes, never decoded: the run dialog's fixture-shape check
+ * for a file from an earlier session. 404 `test_file_not_found` for anyone
+ * else's file.
  */
 export function getTestFileHead(organizationId: string, fileId: string, options: { signal?: AbortSignal } = {}): Promise<Uint8Array> {
   return send("GET", `${testFilesPath(organizationId)}/${encodeURIComponent(fileId)}/head`, undefined, BYTES, {
@@ -2329,10 +2310,10 @@ export function deleteTestFile(organizationId: string, fileId: string): Promise<
 }
 
 /**
- * Queues a run of the version (decision 28): the raw text the editor holds
- * (the API substitutes organization variables, Preflight ruling 12), the
- * pin on screen, the pipeline and its signal, the duration, and one input.
- * Refusals: 503 `testing_unavailable`; 429 `test_run_rate_limited` (with
+ * Queues a run of the version: the raw text the editor holds (the API
+ * substitutes organization variables), the pin on screen, the pipeline and
+ * its signal, the duration, and one input. Refusals: 503
+ * `testing_unavailable`; 429 `test_run_rate_limited` (with
  * `retryAfterSeconds`) and `test_run_queue_full`; 400
  * `collector_version_retired`, `collector_version_unknown` and
  * `invalid_request`; 404 `test_file_not_found`, `test_run_not_found`,
@@ -2347,7 +2328,7 @@ export function queueTestRun(
   return send("POST", testRunsPath(organizationId, configurationId, versionId), request, TestRunResponseSchema);
 }
 
-/** The version's runs the caller can see, newest first, each with its place in the queue (Preflight ruling 15). */
+/** The version's runs the caller can see, newest first, each with its place in the queue. */
 export function getTestRuns(
   organizationId: string,
   configurationId: string,
@@ -2374,7 +2355,7 @@ export function getTestRun(
 
 /**
  * The first TEST_FILE_HEAD_MAXIMUM_BYTES (64 KiB) of a run's input, as its
- * bytes, never decoded (D14a Ruling 46): the fixture-shape check before a
+ * bytes, never decoded: the fixture-shape check before a
  * re-run, without reading the whole input. 404 `test_run_not_found` for a
  * run the caller can't see.
  */
@@ -2392,9 +2373,8 @@ export function getTestRunInputHead(
 }
 
 /**
- * One of a run's files, as its bytes, never decoded (Preflight ruling 14:
- * a UTF-16 input survives). 404 `test_run_not_found` for a file the run
- * didn't store.
+ * One of a run's files, as its bytes, never decoded (a UTF-16 input
+ * survives). 404 `test_run_not_found` for a file the run didn't store.
  */
 export function getTestRunFile(
   organizationId: string,
@@ -2414,10 +2394,9 @@ export function getTestRunFile(
 }
 
 /*
- * Test suites and their definitions (D14b decisions 1, 2, 5, 8 and 9; detail
- * 19), under a configuration version. A suite's and a definition's names and
- * descriptions, and a definition's input's name, are configuration text (ADR
- * 0024): they travel only in these bodies, never in a URL.
+ * Test suites and their definitions, under a configuration version. A suite's
+ * and a definition's names and descriptions, and a definition's input's name,
+ * are configuration text: they travel only in these bodies, never in a URL.
  */
 
 function testSuitesPath(organizationId: string, configurationId: string, versionId: string): string {
@@ -2444,7 +2423,7 @@ export function getTestSuites(
   });
 }
 
-/** Creates a suite on the version (any version, published or not: decision 5). A version's 101st is 409 `test_suite_limit_reached`. */
+/** Creates a suite on the version (any version, published or not). A version's 101st is 409 `test_suite_limit_reached`. */
 export function createTestSuite(
   organizationId: string,
   configurationId: string,
@@ -2485,8 +2464,8 @@ export function getTestDefinitions(
 
 /**
  * Creates a definition in a suite, its input copied at once from one of the
- * caller's files (`inputFileId`) or a live template (`templateId`): decision
- * 1. Refusals: 409 `test_definition_limit_reached` (a suite's 101st); 404
+ * caller's files (`inputFileId`) or a live template (`templateId`).
+ * Refusals: 409 `test_definition_limit_reached` (a suite's 101st); 404
  * `test_suite_not_found`, `test_file_not_found`, `test_template_not_found`;
  * 429 `rate_limited` (counted with the uploads).
  */
@@ -2500,7 +2479,7 @@ export function createTestDefinition(
   return send("POST", testDefinitionsPath(organizationId, configurationId, versionId, suiteId), request, TestDefinitionResponseSchema);
 }
 
-/** Deletes a definition (decision 2: never edited). 404 `test_definition_not_found`. */
+/** Deletes a definition (never edited). 404 `test_definition_not_found`. */
 export function deleteTestDefinition(
   organizationId: string,
   configurationId: string,
@@ -2517,10 +2496,9 @@ export function deleteTestDefinition(
 }
 
 /*
- * Validation pipelines and their rules (D15a decisions 6, 12, 13 and 18;
- * detail 24), under a configuration version. A pipeline's name and a rule's
- * name, description, pattern and OTTL are configuration text (ADR 0024):
- * they travel only in these bodies, never in a URL.
+ * Validation pipelines and their rules, under a configuration version. A
+ * pipeline's name and a rule's name, description, pattern and OTTL are
+ * configuration text: they travel only in these bodies, never in a URL.
  */
 
 function validationPipelinesPath(organizationId: string, configurationId: string, versionId: string): string {
@@ -2549,8 +2527,8 @@ export function getValidationPipelines(
 
 /**
  * Creates a YAML pipeline's validation pipeline on the version (any version,
- * published or not: decision 13), by the pipeline's name; the API takes its
- * signal from the name. A second for the same pipeline is 409
+ * published or not), by the pipeline's name; the API takes its signal from
+ * the name. A second for the same pipeline is 409
  * `validation_pipeline_exists`.
  */
 export function createValidationPipeline(
@@ -2587,7 +2565,7 @@ export function getValidationRules(
 
 /**
  * Adds a rule at the end of a validation pipeline. Its OTTL or regex is
- * checked by the evaluator first (decision 6): 400 `validation_rule_invalid`
+ * checked by the evaluator first: 400 `validation_rule_invalid`
  * in the evaluator's words, 503 `rules_unavailable` while it can't be
  * reached, 429 `validation_rule_rate_limited`; a pipeline's 201st is 409
  * `validation_rule_limit_reached`.
@@ -2604,8 +2582,8 @@ export function createValidationRule(
 
 /**
  * Changes a rule: what it checks travels whole (its kind, target and pattern
- * or OTTL; D15a Ruling 38), its name and description with it. Refused as a
- * create is; 404 `validation_rule_not_found`.
+ * or OTTL), its name and description with it. Refused as a create is; 404
+ * `validation_rule_not_found`.
  */
 export function updateValidationRule(
   organizationId: string,
@@ -2641,8 +2619,7 @@ export function deleteValidationRule(
 
 /**
  * The first TEST_FILE_HEAD_MAXIMUM_BYTES (64 KiB) of a definition's input,
- * as its bytes, never decoded: Play one's fixture-shape check (D14b Preflight
- * ruling 14).
+ * as its bytes, never decoded: Play one's fixture-shape check.
  * 404 `test_definition_not_found`.
  */
 export function getTestDefinitionInputHead(
@@ -2663,11 +2640,10 @@ export function getTestDefinitionInputHead(
 }
 
 /*
- * Test templates (D14b decisions 3 and 13; detail 19): the product-wide
- * library of sample inputs, read by every member with the current terms.
- * A template's name, description and file name are configuration text (ADR
- * 0024): they travel only in these bodies, never in a URL, which names a
- * template by its id alone.
+ * Test templates: the product-wide library of sample inputs, read by every
+ * member with the current terms. A template's name, description and file name
+ * are configuration text: they travel only in these bodies, never in a URL,
+ * which names a template by its id alone.
  */
 
 function testTemplatePath(templateId: string): string {
@@ -2676,8 +2652,8 @@ function testTemplatePath(templateId: string): string {
 
 /**
  * The live templates, newest first, at most TEST_TEMPLATES_LIST_MAXIMUM.
- * Aborted through `options.signal` (its callers' 10 s hang guard, D14b
- * Ruling 50), it rejects with REQUEST_ABORTED.
+ * Aborted through `options.signal` (its callers' 10 s hang guard), it
+ * rejects with REQUEST_ABORTED.
  */
 export function getTestTemplates(options: { signal?: AbortSignal } = {}): Promise<TestTemplatesResponse> {
   return send("GET", "/api/v1/test-templates", undefined, TestTemplatesResponseSchema, { signal: options.signal });
@@ -2686,7 +2662,7 @@ export function getTestTemplates(options: { signal?: AbortSignal } = {}): Promis
 /**
  * A live template's bytes, whole and never decoded (the Templates step's
  * viewer and download). 404 `test_template_not_found` for a deleted one; 429
- * `rate_limited`, counted with the person's uploads (D14b Ruling 36).
+ * `rate_limited`, counted with the person's uploads.
  */
 export function getTestTemplateFile(templateId: string, options: { signal?: AbortSignal } = {}): Promise<Uint8Array> {
   return send("GET", `${testTemplatePath(templateId)}/file`, undefined, BYTES, { signal: options.signal, read: "bytes" });
@@ -2695,17 +2671,16 @@ export function getTestTemplateFile(templateId: string, options: { signal?: Abor
 /**
  * The first TEST_FILE_HEAD_MAXIMUM_BYTES (64 KiB) of a live template's
  * bytes, never decoded: the fixture-shape check before a one-off run from a
- * template (D14b Preflight ruling 17). 404 `test_template_not_found`.
+ * template. 404 `test_template_not_found`.
  */
 export function getTestTemplateFileHead(templateId: string, options: { signal?: AbortSignal } = {}): Promise<Uint8Array> {
   return send("GET", `${testTemplatePath(templateId)}/file/head`, undefined, BYTES, { signal: options.signal, read: "bytes" });
 }
 
 /*
- * Product admin's template writes (D14b decisions 3 and 13; Preflight
- * ruling 11), from `/product-admin/test-templates`: each is refused with 403
- * `product_admin_required` for anyone without the flag, read live on every
- * request, as flows' writes are.
+ * Product admin's template writes, from `/product-admin/test-templates`: each
+ * is refused with 403 `product_admin_required` for anyone without the flag,
+ * read live on every request, as flows' writes are.
  */
 
 /** A new template: a file from the admin's disk, with its name, description (`''` for none), receiver type and signal. */
@@ -2746,14 +2721,13 @@ export function deleteTestTemplate(templateId: string): Promise<undefined> {
 }
 
 /*
- * The library (D23-2 decisions 5, 42 and 54; Preflight ruling 19): the
- * global helper files the Learning Telflo tutorials use, read by every
- * member with the current terms (a product admin's list with or without
- * them). A file's name, description and file name are Telflo's own content:
- * they travel only in these bodies, never in a URL, which names a file by
- * its id alone. A library link (`POST …/:fileId/link`'s path) is a secret:
- * it lives only in that reply's body and, built into the curl command, on
- * the clipboard (decision 4).
+ * The library: the global helper files the Learning Telflo tutorials use,
+ * read by every member with the current terms (a product admin's list with
+ * or without them). A file's name, description and file name are Telflo's
+ * own content: they travel only in these bodies, never in a URL, which
+ * names a file by its id alone. A library link (`POST …/:fileId/link`'s
+ * path) is a secret: it lives only in that reply's body and, built into the
+ * curl command, on the clipboard.
  */
 
 function libraryFilePath(fileId: string): string {
@@ -2776,8 +2750,8 @@ export function getLibraryFileBytes(fileId: string, options: { signal?: AbortSig
 
 /**
  * A library link to the file, valid 24 hours: `{ path }`, the link's path
- * under the API's own origin (Q162: the caller puts `window.location.origin`
- * in front). A secret: handed straight to the clipboard, never kept, shown
+ * under the API's own origin (the caller puts `window.location.origin` in
+ * front). A secret: handed straight to the clipboard, never kept, shown
  * or logged. 404 `library_file_not_found`; 429 `rate_limited`.
  */
 export function createLibraryFileLink(fileId: string): Promise<LibraryFileLinkResponse> {
@@ -2785,9 +2759,9 @@ export function createLibraryFileLink(fileId: string): Promise<LibraryFileLinkRe
 }
 
 /*
- * Product admin's library writes (D23-2 decisions 42 to 44), from
- * `/product-admin/library`: each is refused with 403
- * `product_admin_required` for anyone without the flag, read live.
+ * Product admin's library writes, from `/product-admin/library`: each is
+ * refused with 403 `product_admin_required` for anyone without the flag, read
+ * live.
  */
 
 /** A new library file: a file from the admin's disk, with its name and description (`''` for none). */
@@ -2823,12 +2797,11 @@ export function deleteLibraryFile(fileId: string): Promise<undefined> {
 }
 
 /*
- * The regex library (D15b decisions 7 and 8; detail 17): the product-wide
- * named patterns the validation-rule picker offers, read by every member
- * with the current terms (a product admin without them, as the test
- * templates' list). An entry's name, category, description and regex are
- * configuration text (ADR 0024): they travel only in these bodies, never in
- * a URL, which names an entry by its id alone.
+ * The regex library: the product-wide named patterns the validation-rule
+ * picker offers, read by every member with the current terms (a product admin
+ * without them, as the test templates' list). An entry's name, category,
+ * description and regex are configuration text: they travel only in these
+ * bodies, never in a URL, which names an entry by its id alone.
  */
 
 function testRegexPath(testRegexId: string): string {
@@ -2838,19 +2811,18 @@ function testRegexPath(testRegexId: string): string {
 /**
  * Every entry, ordered by category, then name (the API's order, under the
  * database's collation). Aborted through `options.signal` (its callers' 10 s
- * hang guard, D14b Ruling 50), it rejects with REQUEST_ABORTED.
+ * hang guard), it rejects with REQUEST_ABORTED.
  */
 export function getTestRegexes(options: { signal?: AbortSignal } = {}): Promise<TestRegexesResponse> {
   return send("GET", "/api/v1/test-regexes", undefined, TestRegexesResponseSchema, { signal: options.signal });
 }
 
 /*
- * Product admin's regex library writes (D15b decision 8), from
- * `/product-admin/test-regex`: each is refused with 403
- * `product_admin_required` for anyone without the flag, read live. A create,
- * and a change of the regex, is checked by the OTTL evaluator's RE2 first:
- * 400 `test_regex_invalid` (its words, each problem under `regex` in
- * `details.problems`), 503 `rules_unavailable`, 429
+ * Product admin's regex library writes, from `/product-admin/test-regex`:
+ * each is refused with 403 `product_admin_required` for anyone without the
+ * flag, read live. A create, and a change of the regex, is checked by the
+ * OTTL evaluator's RE2 first: 400 `test_regex_invalid` (its words, each
+ * problem under `regex` in `details.problems`), 503 `rules_unavailable`, 429
  * `validation_rule_rate_limited`; a name another entry has is 409
  * `test_regex_name_taken`.
  */
@@ -2871,15 +2843,14 @@ export function deleteTestRegex(testRegexId: string): Promise<undefined> {
 }
 
 /*
- * Product administration (D29 decisions 28, 31, 33 and 34), from
- * `/product-admin/users`, `/product-admin/product-admins` and
- * `/product-admin/user-feedback`: each is refused with 403
- * `product_admin_required` for anyone without the flag, read live (and when
- * the flag was cleared while a write waited). Other people's emails,
- * organization names and feedback text travel only in these bodies; a path
- * names a person or an item by its id alone, and the Users search's term is
- * the query `q` only, which no log keeps (decision 41) and which never
- * reaches the address bar (the page holds it in state).
+ * Product administration, from `/product-admin/users`,
+ * `/product-admin/product-admins` and `/product-admin/user-feedback`: each
+ * is refused with 403 `product_admin_required` for anyone without the flag,
+ * read live (and when the flag was cleared while a write waited). Other
+ * people's emails, organization names and feedback text travel only in
+ * these bodies; a path names a person or an item by its id alone, and the
+ * Users search's term is the query `q` only, which no log keeps and which
+ * never reaches the address bar (the page holds it in state).
  */
 
 const PRODUCT_ADMIN_PATH = "/api/v1/product-admin";
@@ -2890,7 +2861,7 @@ export interface AdminUsersQuery {
   cursor?: string;
 }
 
-/** A page of live people, newest first, 50 at most, each with the block that stops a delete (decision 30). */
+/** A page of live people, newest first, 50 at most, each with the block that stops a delete. */
 export function getAdminUsers(query: AdminUsersQuery = {}, options: { signal?: AbortSignal } = {}): Promise<AdminUsersPage> {
   const parameters = new URLSearchParams();
   if (query.q !== undefined && query.q.trim() !== "") parameters.set("q", query.q.trim());
@@ -2902,9 +2873,9 @@ export function getAdminUsers(query: AdminUsersQuery = {}, options: { signal?: A
 }
 
 /**
- * Deletes a person (204, decision 29). 404 `user_not_found`; 409
- * `user_delete_blocked` (`details.kind`), `user_delete_self` or
- * `user_delete_busy`; 429 `rate_limited`.
+ * Deletes a person (204). 404 `user_not_found`; 409 `user_delete_blocked`
+ * (`details.kind`), `user_delete_self` or `user_delete_busy`; 429
+ * `rate_limited`.
  */
 export function deleteAdminUser(userId: string): Promise<undefined> {
   return send("DELETE", `${PRODUCT_ADMIN_PATH}/users/${encodeURIComponent(userId)}`, undefined, undefined);
@@ -2930,8 +2901,8 @@ export function removeProductAdmin(userId: string): Promise<undefined> {
 }
 
 /**
- * The site's settings a product admin changes (D36-1 decision 51): who may
- * create an organization. No personal data.
+ * The site's settings a product admin changes: who may create an
+ * organization. No personal data.
  */
 export function getProductAdminSettings(options: { signal?: AbortSignal } = {}): Promise<ProductAdminSettings> {
   return send("GET", `${PRODUCT_ADMIN_PATH}/settings`, undefined, ProductAdminSettingsSchema, { signal: options.signal });
@@ -2951,7 +2922,7 @@ export function getUserFeedback(query: { cursor?: string } = {}, options: { sign
   return send("GET", `${PRODUCT_ADMIN_PATH}/feedback${search}`, undefined, UserFeedbackPageSchema, { signal: options.signal });
 }
 
-/** How many feedback items are pending (decision 37): the nav's badge, after a refresh (the server loader reads it otherwise). */
+/** How many feedback items are pending: the nav's badge, after a refresh (the server loader reads it otherwise). */
 export async function getPendingFeedbackCount(options: { signal?: AbortSignal } = {}): Promise<number> {
   const { count } = await send("GET", `${PRODUCT_ADMIN_PATH}/feedback/pending-count`, undefined, PendingFeedbackCountSchema, {
     signal: options.signal,
@@ -2961,8 +2932,8 @@ export async function getPendingFeedbackCount(options: { signal?: AbortSignal } 
 
 /**
  * Acknowledges a pending item (204): the reply is emailed to its sender and
- * never stored (decision 34). 404 `feedback_not_found`; 409
- * `feedback_author_deleted`; 429 `rate_limited`.
+ * never stored. 404 `feedback_not_found`; 409 `feedback_author_deleted`;
+ * 429 `rate_limited`.
  */
 export function acknowledgeFeedback(feedbackId: string, request: AcknowledgeFeedbackRequest): Promise<undefined> {
   return send("POST", `${PRODUCT_ADMIN_PATH}/feedback/${encodeURIComponent(feedbackId)}/acknowledge`, request, undefined);
@@ -2974,25 +2945,23 @@ export function dismissFeedback(feedbackId: string): Promise<undefined> {
 }
 
 /**
- * "Contact us" (decision 32): sends the signed-in person's message, in
- * their active organization (201 `{ id }`). 429 `rate_limited` past 10 an
- * hour.
+ * "Contact us": sends the signed-in person's message, in their active
+ * organization (201 `{ id }`). 429 `rate_limited` past 10 an hour.
  */
 export function createFeedback(request: CreateFeedbackRequest): Promise<CreateFeedbackResponse> {
   return send("POST", "/api/v1/feedback", request, CreateFeedbackResponseSchema);
 }
 
 /**
- * D27's anonymous validate (`POST /api/public/v1/validate/anonymous`), for
- * the playground and the blank public editor (D31-1 decisions 3 and 29,
- * Preflight ruling 11): the text, the distribution and the pin, no session,
- * no organization. The answer is the validator's verdict; 429 `rate_limited`
- * with `Retry-After` past D27's limits (per address and overall, a minute's
- * count and checks in flight); 400 `collector_version_retired` or
- * `collector_version_unknown` for a pin it doesn't check; 413
- * `payload_too_large` past its 1 MiB body; 503 `validation_unavailable`.
- * Every reply is `no-store`, and the route logs the request line only: the
- * text goes into the request body alone, never the URL.
+ * The anonymous validate (`POST /api/public/v1/validate/anonymous`), for the
+ * playground and the blank public editor: the text, the distribution and the
+ * pin, no session, no organization. The answer is the validator's verdict; 429
+ * `rate_limited` with `Retry-After` past the route's limits (per address and
+ * overall, a minute's count and checks in flight); 400
+ * `collector_version_retired` or `collector_version_unknown` for a pin it
+ * doesn't check; 413 `payload_too_large` past its 1 MiB body; 503
+ * `validation_unavailable`. Every reply is `no-store`, and the route logs the
+ * request line only: the text goes into the request body alone, never the URL.
  */
 export function validateAnonymously(
   request: PublicValidateRequest,

@@ -2,8 +2,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { copyTextFromPromise } from "./clipboard.js";
 
 // The copy, with and without ClipboardItem, and a rejected text writing
-// nothing (D17c-1 Preflight ruling 24: a reveal answering after
-// the dialog closed never reaches the clipboard).
+// nothing (a reveal answering after the dialog closed never reaches the
+// clipboard).
 
 describe("copyTextFromPromise", () => {
   const originalClipboard = navigator.clipboard;

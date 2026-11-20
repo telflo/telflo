@@ -6,27 +6,25 @@ import { getOrganizationVariables } from "~/lib/api-client.js";
 import { useOrganizationForReads } from "~/lib/organization-for-reads.js";
 
 /*
- * The organization's variables' names, for VaultAwareInput's `$` picker (D9b
- * decision 5; D20 default 26 and decision 39), the flows page's marks
- * (default 28) and the group dialogs' "Variables used" (Task 14), and the
- * web's port of the opamp-server's reference scan (decision 36).
+ * The organization's variables' names, for VaultAwareInput's `$` picker, the
+ * flows page's marks and the group dialogs' "Variables used", and the web's
+ * port of the opamp-server's reference scan.
  *
- * One shared read per organization (D20 Preflight ruling 34): every input on
- * a page subscribes to the same names, read once from the API
- * (`GET …/variables`) when the first one mounts for the active organization,
- * never one read per input. The Variables page's own list read seeds them
- * (`seedOrgVariableNames`), so a variable added, renamed or deleted there is
- * in the picker after. A picker opened after the read failed, or a minute
- * after it answered, reads again (`refresh`); the rows shown stay meanwhile.
- * Another organization's names are never shown: an organization switch reads
- * the new one's.
+ * One shared read per organization: every input on a page subscribes to the
+ * same names, read once from the API (`GET …/variables`) when the first one
+ * mounts for the active organization, never one read per input. The
+ * Variables page's own list read seeds them (`seedOrgVariableNames`), so a
+ * variable added, renamed or deleted there is in the picker after. A picker
+ * opened after the read failed, or a minute after it answered, reads again
+ * (`refresh`); the rows shown stay meanwhile. Another organization's names
+ * are never shown: an organization switch reads the new one's.
  *
  * A picker row is `{id, name, description}`: no value ever reaches the
  * picker, its state or this store; the read's values are dropped as it
  * answers. The names live in memory only, never in browser storage (no
- * `localStorage`, `sessionStorage` or IndexedDB; decision 39). A name and a
- * description are configuration text (Q88): the picker shows them as text
- * inside the masked shell, never in an attribute.
+ * `localStorage`, `sessionStorage` or IndexedDB). A name and a description
+ * are configuration text: the picker shows them as text inside the masked
+ * shell, never in an attribute.
  */
 
 /** A variable as the picker lists it: its name, the reference `${org:NAME}`, over its description. */
@@ -150,7 +148,7 @@ export interface OrgVariableNames {
    * among them is known not to be defined. False with no organization yet
    * (a full page load seeds the user store in an effect, after the first
    * render), while they are read, and when they couldn't be: a mark of "not
-   * defined" waits for it (D20 final review side 2, Minor 2).
+   * defined" waits for it.
    */
   known: boolean;
   /** A picker opening: reads again after a failure, or once the names are a minute old. */
@@ -158,13 +156,13 @@ export interface OrgVariableNames {
 }
 
 /**
- * The active organization's variables' names (default 26), from the one
- * shared read. The organization comes from the user store, which the
- * signed-in layout seeds: with none (signed out, a test rendering a form
- * alone, a full page load's first render) nothing is read and the list is
- * empty, not loading, and not `known`. Inside the playground there is none
- * either (`useOrganizationForReads`, D31-1 Ruling 292): the sample has no
- * variables, and a signed-in visitor's own organization is never read.
+ * The active organization's variables' names, from the one shared read.
+ * The organization comes from the user store, which the signed-in layout
+ * seeds: with none (signed out, a test rendering a form alone, a full page
+ * load's first render) nothing is read and the list is empty, not loading,
+ * and not `known`. Inside the playground there is none either
+ * (`useOrganizationForReads`): the sample has no variables, and a
+ * signed-in visitor's own organization is never read.
  */
 export function useOrgVariables(): OrgVariableNames {
   const organizationId = useOrganizationForReads();
@@ -195,18 +193,17 @@ export function createOrgVariableReference(name: string): string {
 }
 
 // ---------------------------------------------------------------------------
-// The web's port of the opamp-server's `orgvariables.References` (D20
-// decisions 16 and 36; Preflight ruling 31), held to it by the shared corpus
-// (vendor/opamp-server/org-token-corpus.json, the opamp-server's
-// handlers/testdata/org-token-corpus.json at the pinned release), as the
-// API's and the validator's ports are.
+// The web's port of the opamp-server's `orgvariables.References`, held to it
+// by the shared corpus (vendor/opamp-server/org-token-corpus.json, the
+// opamp-server's handlers/testdata/org-token-corpus.json at the pinned
+// release), as the API's and the validator's ports are.
 //
 // A live reference is `${org:NAME}`, NAME the grammar [A-Za-z_][A-Za-z0-9_]*
 // of any length, opened by a `$` that an even run of `$` precedes (none
 // included): confmap collapses each `$$` to `$` in one left-to-right pass, so
 // `$${org:X}` is the literal text `${org:X}`, while `$$${org:X}` is a `$`
-// followed by a live reference. The legacy `$orgvar:NAME` is plain text
-// (Q95), and so is `${org:NAME:-default}`.
+// followed by a live reference. The legacy `$orgvar:NAME` is plain text,
+// and so is `${org:NAME:-default}`.
 
 const OPENER = "${org:";
 
@@ -232,7 +229,7 @@ function nameLength(text: string, from: number): number {
 /**
  * Every live reference's NAME in `text`, defined or not, each once, in the
  * order first seen: `orgvariables.References`. A name over 128 characters is
- * listed too (no variable can have it; Ruling 51).
+ * listed too (no variable can have it).
  */
 export function orgVariableReferences(text: string): string[] {
   const names: string[] = [];

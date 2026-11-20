@@ -17,7 +17,7 @@ function fakeMonacoYaml() {
 const fake = vi.hoisted(() => ({
   configureMonacoYaml: vi.fn(),
   loaderConfig: vi.fn(),
-  /** JSON's mode configuration, as Monaco's `json.jsonDefaults` takes it (D14a Preflight ruling 14). */
+  /** JSON's mode configuration, as Monaco's `json.jsonDefaults` takes it. */
   setModeConfiguration: vi.fn(),
   /** What Monaco's import waits on: at once, unless a test holds Monaco loading. */
   monacoLoaded: () => Promise.resolve(),
@@ -53,7 +53,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  // Whatever a test did, nothing was requested from another origin (Preflight ruling 12).
+  // Whatever a test did, nothing was requested from another origin.
   for (const [url] of fetchMock.mock.calls) {
     expect(new URL(String(url)).origin).toBe(window.location.origin);
   }
@@ -93,7 +93,7 @@ describe("initMonaco", () => {
   });
 });
 
-describe("initMonaco's JSON mode (D14a Preflight ruling 14)", () => {
+describe("initMonaco's JSON mode", () => {
   it("switches every JSON language feature off but the tokens, once, before the React wrapper can mount an editor", async () => {
     const initMonaco = await freshInitMonaco();
     const order: string[] = [];
@@ -182,7 +182,7 @@ describe("withPre055WebWorkers (the Monaco monaco-yaml gets)", () => {
   });
 });
 
-// ── The pin's schema (D13c decisions 2 and 11; Preflight rulings 12 and 13) ──
+// ── The pin's schema ──
 
 const A = "/schemas/otelcol-contrib/v0.161.0.json";
 const B = "/schemas/otelcol-contrib/v0.162.0.json";
@@ -368,7 +368,7 @@ describe("initMonaco and the pin's schema", () => {
     expect(fetchedPaths()).toEqual([A, B, A]);
   });
 
-  it("starts the fetch for a pin changed while Monaco loads at once, before Monaco is ready, touching nothing of Monaco's (Ruling F-2)", async () => {
+  it("starts the fetch for a pin changed while Monaco loads at once, before Monaco is ready, touching nothing of Monaco's", async () => {
     vi.useFakeTimers();
     const requests = { [A]: deferred(), [B]: deferred() };
     fetchMock.mockImplementation((url) => requests[new URL(String(url)).pathname as typeof A]!.promise);
@@ -583,7 +583,7 @@ describe("setMonacoSchema", () => {
     expect(monacoYaml.update.mock.calls).toEqual([[optionsFor(A, SCHEMA_A)], [SYNTAX_ONLY], [optionsFor(A, SCHEMA_A)]]);
   });
 
-  describe("a pin change switches at once (decision 11; Ruling F-1)", () => {
+  describe("a pin change switches at once", () => {
     it("picking a pin whose schema isn't fetched yet gives syntax only at once, never the previous pin's, then its schema when it arrives", async () => {
       vi.useFakeTimers();
       const later = deferred();

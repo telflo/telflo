@@ -5,12 +5,12 @@ import { expect } from "@playwright/test";
 import { startFakeOtelcolTesting, type FakeOtelcolTesting } from "../../apps/api/src/testing/fake-otelcol-testing.js";
 import { E2E_OTELCOL_TESTING_CONTROL_URL } from "./environment.js";
 
-// The browser tests' collector tester (D14a Task 6): the OpenAPI-checked
-// fake from apps/api/src/testing, which start-fake-otelcol-testing.ts runs
-// as a Playwright web server. It checks every request the E2E API sends it,
-// and every reply it sends, against services/otelcol-testing/openapi.yaml,
-// and answers by markers in the text, so tests running in parallel each get
-// the answer their own text asks for (fake-otelcol-testing.ts lists them).
+// The browser tests' collector tester: the OpenAPI-checked fake from
+// apps/api/src/testing, which start-fake-otelcol-testing.ts runs as a
+// Playwright web server. It checks every request the E2E API sends it, and
+// every reply it sends, against services/otelcol-testing/openapi.yaml, and
+// answers by markers in the text, so tests running in parallel each get the
+// answer their own text asks for (fake-otelcol-testing.ts lists them).
 //
 // As with the fake validator (support/fake-otelcol-validator.ts), it runs in
 // a process of its own, so each violation, as the fake sees it, is written
@@ -69,7 +69,7 @@ export function assertNoFakeOtelcolTestingViolations(violationsPath: string): vo
 }
 
 // ---------------------------------------------------------------------------
-// The control route (D14a Ruling 36): test-only, on a port of its own.
+// The control route: test-only, on a port of its own.
 //
 // A `slow` run (fakeOtelcolTestingMarker("slow") in its text) is held by the
 // fake, unanswered, so the browser shows it Running until the test releases

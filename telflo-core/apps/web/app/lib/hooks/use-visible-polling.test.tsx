@@ -4,9 +4,9 @@ import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover
 import { useVisiblePolling } from "./use-visible-polling.js";
 
 /*
- * The polling's basics, then D17a's (Preflight ruling 10). Time is
- * vitest's fake timers throughout: `advanceTimersByTimeAsync` also flushes
- * each tick's promise, so the in-flight guard has settled between ticks.
+ * The polling's basics, then its finer rules. Time is vitest's fake timers
+ * throughout: `advanceTimersByTimeAsync` also flushes each tick's promise,
+ * so the in-flight guard has settled between ticks.
  */
 
 let visibility: DocumentVisibilityState = "visible";
@@ -92,7 +92,7 @@ describe("useVisiblePolling", () => {
     expect(callback).toHaveBeenCalledTimes(1);
   });
 
-  // D17a's.
+  // The finer rules.
 
   it("skips ticks while an alert dialog is open too", async () => {
     const callback = vi.fn(() => Promise.resolve());

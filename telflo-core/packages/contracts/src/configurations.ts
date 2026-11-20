@@ -3,34 +3,31 @@ import { CollectorDistributionIdSchema, CollectorVersionNumberSchema } from "./c
 import { FlowSlugSchema } from "./flow-slug.js";
 
 /*
- * The configurations endpoints (D7 decisions 5 to 7): listing a page of the
- * active organization's configurations, creating one, changing its name or
- * description, and deleting it. D8 decisions 4 and 7 add reading one with
- * the version the editor opens, and saving that version's YAML. D10
- * decision 4 adds the version list, reading one version, creating, renaming
- * and selecting one. D11b adds whether a configuration and a version are
- * published, and the list's filter (decisions 1, 6 and 10). D13a adds a
- * configuration's distribution and each version's collector version
- * (decisions 5, 8 and 11). D12 lets a create carry a flow's content, its
- * collector version and the flow's slug (decision 12).
+ * The configurations endpoints: listing a page of the active organization's
+ * configurations, creating one, changing its name or description, and
+ * deleting it; reading one with the version the editor opens, and saving
+ * that version's YAML; the version list, reading one version, creating,
+ * renaming and selecting one. A configuration and a version say whether
+ * they are published, and the list has a filter. A configuration has a
+ * distribution and each version a collector version. A create may carry a
+ * flow's content, its collector version and the flow's slug.
  */
 
-/** Decision 4's limits, after trimming; the table's checks say the same. */
+/** The name's and the description's limits, after trimming; the table's checks say the same. */
 export const CONFIGURATION_NAME_MAXIMUM_LENGTH = 200;
 export const CONFIGURATION_DESCRIPTION_MAXIMUM_LENGTH = 500;
 
 /**
- * D8 decision 7's limit on a version's YAML: 256 Ki. It counts UTF-16 code
- * units, as a JavaScript string's length and the editor do; the table's
- * check counts code points, which are never more, so this is the stricter
- * (D8 Preflight ruling 11).
+ * The limit on a version's YAML: 256 Ki. It counts UTF-16 code units,
+ * as a JavaScript string's length and the editor do; the table's check
+ * counts code points, which are never more, so this is the stricter.
  */
 export const CONFIGURATION_YAML_MAXIMUM_LENGTH = 262_144;
 
-/** The list's search text, after trimming (decision 6). */
+/** The list's search text, after trimming. */
 export const CONFIGURATION_SEARCH_MAXIMUM_LENGTH = 200;
 
-/** A page of the list holds this many unless `limit` says otherwise, and never more than the maximum (decision 6). */
+/** A page of the list holds this many unless `limit` says otherwise, and never more than the maximum. */
 export const CONFIGURATIONS_PAGE_DEFAULT_LIMIT = 50;
 export const CONFIGURATIONS_PAGE_MAXIMUM_LIMIT = 100;
 
@@ -41,10 +38,9 @@ export const CONFIGURATIONS_PAGE_MAXIMUM_LIMIT = 100;
 const CONFIGURATIONS_CURSOR_MAXIMUM_LENGTH = 256;
 
 /**
- * Trimmed, then 1 to 200 characters.
- * Text Postgres can't store exactly is refused (`hasUnstorableCharacter`; D10
- * Ruling 37): U+0000 would fail the insert, and a lone surrogate would be
- * stored as U+FFFD.
+ * Trimmed, then 1 to 200 characters. Text Postgres can't store exactly is
+ * refused (`hasUnstorableCharacter`): U+0000 would fail the insert, and a
+ * lone surrogate would be stored as U+FFFD.
  */
 export const ConfigurationNameSchema = z
   .string()
@@ -62,8 +58,8 @@ export const ConfigurationDescriptionSchema = z
 
 /**
  * `PATCH /api/v1/organizations/:organizationId/configurations/:configurationId`:
- * the name, the description, both or neither (decision 7). `''` clears the
- * description; `null` is refused (telflo-api cleared it with `null`).
+ * the name, the description, both or neither. `''` clears the description;
+ * `null` is refused.
  */
 export const UpdateConfigurationRequestSchema = z
   .object({
@@ -74,7 +70,7 @@ export const UpdateConfigurationRequestSchema = z
 
 export type UpdateConfigurationRequest = z.infer<typeof UpdateConfigurationRequestSchema>;
 
-/** Who created a configuration. A soft-deleted account keeps its email here (decision 5). */
+/** Who created a configuration. A soft-deleted account keeps its email here. */
 export const ConfigurationCreatorSchema = z
   .object({
     userId: z.string().uuid(),
@@ -85,12 +81,11 @@ export const ConfigurationCreatorSchema = z
 export type ConfigurationCreator = z.infer<typeof ConfigurationCreatorSchema>;
 
 /**
- * A configuration in a response (decision 5). The timestamps are ISO 8601;
- * `createdBy` is null once the creator's account is hard-deleted.
- * `published` is true when at least one of its versions is (D11b decision
- * 1), else it is a draft, which only its creator sees.
- * `collectorDistribution` is the catalogue distribution it is built for,
- * chosen when it was created and never changed (D13a decision 5).
+ * A configuration in a response. The timestamps are ISO 8601; `createdBy` is
+ * null once the creator's account is hard-deleted. `published` is true when
+ * at least one of its versions is, else it is a draft, which only its creator
+ * sees. `collectorDistribution` is the catalogue distribution it is built
+ * for, chosen when it was created and never changed.
  */
 export const ConfigurationSchema = z
   .object({
@@ -114,8 +109,7 @@ export type ConfigurationResponse = z.infer<typeof ConfigurationResponseSchema>;
 
 /**
  * `GET /api/v1/organizations/:organizationId/configurations`: a page, newest
- * update first (decision 6). `nextCursor` is opaque, and null on the last
- * page.
+ * update first. `nextCursor` is opaque, and null on the last page.
  */
 export const ConfigurationsPageSchema = z
   .object({
@@ -127,23 +121,22 @@ export const ConfigurationsPageSchema = z
 export type ConfigurationsPage = z.infer<typeof ConfigurationsPageSchema>;
 
 /**
- * The list's filters (D11b decision 6): every configuration the caller can
- * see, only the ones they created, or only the published ones. The server
- * applies it, since the list is paged.
+ * The list's filters: every configuration the caller can see, only the
+ * ones they created, or only the published ones. The server applies it,
+ * since the list is paged.
  */
 export const CONFIGURATIONS_LIST_FILTERS = ["all", "mine", "published"] as const;
 
 export type ConfigurationsListFilter = (typeof CONFIGURATIONS_LIST_FILTERS)[number];
 
 /**
- * The list's query (decision 6), as the query string carries it: every
- * value a string, coerced here. `limit` 1 to 100, 50 when left out;
- * `cursor` a previous page's `nextCursor`; `q` the search text, trimmed,
- * empty meaning none; `filter` one of `CONFIGURATIONS_LIST_FILTERS`, `all`
- * when left out (D11b decision 6, which replaced D7's `mine`). The cursor is
- * positional and carries neither `q` nor `filter` (D11b Preflight ruling
- * 15): a client sends the same ones with every page. Strict: an unknown
- * parameter, `mine` included, is 400 `invalid_request`.
+ * The list's query, as the query string carries it: every value a string,
+ * coerced here. `limit` 1 to 100, 50 when left out; `cursor` a previous
+ * page's `nextCursor`; `q` the search text, trimmed, empty meaning none;
+ * `filter` one of `CONFIGURATIONS_LIST_FILTERS`, `all` when left out. The
+ * cursor is positional and carries neither `q` nor `filter`: a client sends
+ * the same ones with every page. Strict: an unknown parameter, `mine`
+ * included, is 400 `invalid_request`.
  */
 export const ListConfigurationsQuerySchema = z
   .object({
@@ -163,15 +156,15 @@ export const ListConfigurationsQuerySchema = z
 export type ListConfigurationsQuery = z.input<typeof ListConfigurationsQuerySchema>;
 
 /**
- * D10 decision 3's limit on a version's label, after trimming; the table's
- * check says the same (1 to 80 characters).
+ * The limit on a version's label, after trimming; the table's check says the
+ * same (1 to 80 characters).
  */
 export const CONFIGURATION_VERSION_LABEL_MAXIMUM_LENGTH = 80;
 
 /**
- * A version's label as a rename sends it (D10 decision 4): trimmed, then 1
- * to 80 characters, with no character Postgres can't store exactly (Ruling
- * 37). Labels are the user's text (ADR 0024).
+ * A version's label as a rename sends it: trimmed, then 1 to 80
+ * characters, with no character Postgres can't store exactly. Labels are
+ * the user's text.
  */
 export const ConfigurationVersionLabelSchema = z
   .string()
@@ -181,20 +174,18 @@ export const ConfigurationVersionLabelSchema = z
   .refine((label) => !hasUnstorableCharacter(label), "The label can't contain U+0000 or a lone surrogate.");
 
 /**
- * A version as the picker lists it (D10 decision 4): no content. `label` is
- * null for an unnamed version, shown as "Version N"; `createdBy` is null
- * once the creator's account is hard-deleted, as a configuration's is. The
+ * A version as the picker lists it: no content. `label` is null for an
+ * unnamed version, shown as "Version N"; `createdBy` is null once the
+ * creator's account is hard-deleted, as a configuration's is. The
  * timestamps are ISO 8601; `updatedAt` is the last save, which a rename
- * doesn't move (D10 decision 6). `publishedAt` is when it was published, null
- * on a draft; a published version can't be changed (D11b decision 4).
- * `publishedBy` is the member who published it, by `createdBy`'s rule: null
- * on a draft, and once the publisher's account is hard-deleted.
- * `collectorVersion` is the collector version it is pinned to, a version of
- * its configuration's distribution (D13a decision 8). The catalogue may have
- * deprecated it since; the pin is kept (decision 4), and
+ * doesn't move. `publishedAt` is when it was published, null on a draft; a
+ * published version can't be changed. `publishedBy` is the member who
+ * published it, by `createdBy`'s rule: null on a draft, and once the
+ * publisher's account is hard-deleted. `collectorVersion` is the collector
+ * version it is pinned to, a version of its configuration's distribution.
+ * The catalogue may have deprecated it since; the pin is kept, and
  * `collectorVersionDeprecated` says so, with the catalogue's
- * `collectorVersionDeprecatedNote` (null unless deprecated; Preflight ruling
- * 15).
+ * `collectorVersionDeprecatedNote` (null unless deprecated).
  */
 export const ConfigurationVersionSummarySchema = z
   .object({
@@ -215,12 +206,10 @@ export const ConfigurationVersionSummarySchema = z
 export type ConfigurationVersionSummary = z.infer<typeof ConfigurationVersionSummarySchema>;
 
 /**
- * A version of a configuration in a response (D8 decision 4): its summary
- * (D10 decision 4), its configuration, its YAML, and the builder's layout
- * (D9a decision 6). The three graph columns are arrays of anything on the
- * way out (D9a Preflight ruling 14): a row written by an older or another
- * writer never makes a configuration unopenable, and the editor reads what
- * it can.
+ * A version of a configuration in a response: its summary, its configuration,
+ * its YAML, and the builder's layout. The three graph columns are arrays of
+ * anything on the way out: a row written by an older or another writer never
+ * makes a configuration unopenable, and the editor reads what it can.
  */
 export const ConfigurationVersionSchema = ConfigurationVersionSummarySchema.extend({
   configurationId: z.string().uuid(),
@@ -237,7 +226,7 @@ export type ConfigurationVersion = z.infer<typeof ConfigurationVersionSchema>;
  * and `GET …/configurations/:configurationId/versions/:versionId`: the
  * configuration, the version the editor opens (the caller's selection, else
  * the highest; or the one the path names), and every version's summary,
- * highest number first (D10 decision 4).
+ * highest number first.
  */
 export const ConfigurationWithVersionResponseSchema = z
   .object({
@@ -249,12 +238,12 @@ export const ConfigurationWithVersionResponseSchema = z
 
 export type ConfigurationWithVersionResponse = z.infer<typeof ConfigurationWithVersionResponseSchema>;
 
-/** The answer of saving a version, and of creating one (D10 decision 4). */
+/** The answer of saving a version, and of creating one. */
 export const ConfigurationVersionResponseSchema = z.object({ version: ConfigurationVersionSchema }).strict();
 
 export type ConfigurationVersionResponse = z.infer<typeof ConfigurationVersionResponseSchema>;
 
-/** The answer of renaming a version (D10 decision 4): its summary. */
+/** The answer of renaming a version: its summary. */
 export const ConfigurationVersionSummaryResponseSchema = z
   .object({ version: ConfigurationVersionSummarySchema })
   .strict();
@@ -262,18 +251,16 @@ export const ConfigurationVersionSummaryResponseSchema = z
 export type ConfigurationVersionSummaryResponse = z.infer<typeof ConfigurationVersionSummaryResponseSchema>;
 
 /**
- * The versions list's filters (D17b-1 decision 31): every version, or only
- * the published ones.
+ * The versions list's filters: every version, or only the published ones.
  */
 export const CONFIGURATION_VERSIONS_FILTERS = ["all", "published"] as const;
 
 export type ConfigurationVersionsFilter = (typeof CONFIGURATION_VERSIONS_FILTERS)[number];
 
 /**
- * `GET …/configurations/:configurationId/versions`'s query (D17b-1 decisions
- * 7 and 31): `filter` one of `CONFIGURATION_VERSIONS_FILTERS`, `all` when left
- * out. Unpaged, as the editor's read. Strict: an unknown parameter is 400
- * `invalid_request`.
+ * `GET …/configurations/:configurationId/versions`'s query: `filter` one of
+ * `CONFIGURATION_VERSIONS_FILTERS`, `all` when left out. Unpaged, as the
+ * editor's read. Strict: an unknown parameter is 400 `invalid_request`.
  */
 export const ConfigurationVersionsQuerySchema = z
   .object({ filter: z.enum(CONFIGURATION_VERSIONS_FILTERS).default("all") })
@@ -283,11 +270,11 @@ export const ConfigurationVersionsQuerySchema = z
 export type ConfigurationVersionsQuery = z.input<typeof ConfigurationVersionsQuerySchema>;
 
 /**
- * A version as the versions route lists it (D17b-1 decisions 7 and 31):
- * only its id, number, label and published date (Q17's number, label and
- * published date, and the id a pin names). No content or layout, and none
- * of the summary's members, times or collector version.
- * `label` is null for an unnamed version; `publishedAt` null on a draft.
+ * A version as the versions route lists it: only its id, number, label
+ * and published date (what a picker shows, and the id a pin names). No
+ * content or layout, and none of the summary's members, times or
+ * collector version. `label` is null for an unnamed version;
+ * `publishedAt` null on a draft.
  */
 export const ConfigurationVersionListItemSchema = z
   .object({
@@ -301,9 +288,9 @@ export const ConfigurationVersionListItemSchema = z
 export type ConfigurationVersionListItem = z.infer<typeof ConfigurationVersionListItemSchema>;
 
 /**
- * `GET …/configurations/:configurationId/versions`'s answer (D17b-1 decision
- * 31): the configuration's versions, highest number first (the pickers'
- * read; the editor's carries the content and the layout).
+ * `GET …/configurations/:configurationId/versions`'s answer: the
+ * configuration's versions, highest number first (the pickers' read; the
+ * editor's carries the content and the layout).
  */
 export const ConfigurationVersionsResponseSchema = z
   .object({ versions: z.array(ConfigurationVersionListItemSchema) })
@@ -312,9 +299,9 @@ export const ConfigurationVersionsResponseSchema = z
 export type ConfigurationVersionsResponse = z.infer<typeof ConfigurationVersionsResponseSchema>;
 
 /**
- * A version id in a request body (D10 Preflight ruling 6): any string up to
- * 64 characters, so one that isn't a UUID reaches the service, which answers
- * it 404 `configuration_version_not_found` as it does an unknown one, never
+ * A version id in a request body: any string up to 64 characters, so one
+ * that isn't a UUID reaches the service, which answers it 404
+ * `configuration_version_not_found` as it does an unknown one, never
  * 400. A UUID is 36; 64 leaves room for the spellings the service refuses.
  */
 const VersionIdReferenceSchema = z.string().max(64);
@@ -329,19 +316,18 @@ const LONE_SURROGATE = /\p{Surrogate}/u;
 
 /**
  * Whether `text` holds a character Postgres can't store exactly: U+0000 or a
- * lone surrogate (D8 Preflight ruling 11). The save's schema refuses both;
- * the editor checks first, so it can say what to do (D8 decision 5).
+ * lone surrogate. The save's schema refuses both; the editor checks first,
+ * so it can say what to do.
  */
 export function hasUnstorableCharacter(text: string): boolean {
   return text.includes("\u0000") || LONE_SURROGATE.test(text);
 }
 
 /**
- * A version's YAML, exactly as sent (D8 decision 4): not trimmed, its line
- * endings as they are, `''` allowed, at most 262,144 characters. Text
- * Postgres can't store exactly is refused (D8 Preflight ruling 11): U+0000,
- * which a `text` column rejects, and a lone surrogate, which would be stored
- * as U+FFFD.
+ * A version's YAML, exactly as sent: not trimmed, its line endings as they
+ * are, `''` allowed, at most 262,144 characters. Text Postgres can't store
+ * exactly is refused: U+0000, which a `text` column rejects, and a lone
+ * surrogate, which would be stored as U+FFFD.
  */
 const ConfigurationYamlSchema = z
   .string()
@@ -350,40 +336,38 @@ const ConfigurationYamlSchema = z
   .refine((text) => !LONE_SURROGATE.test(text), "The YAML can't contain a lone surrogate.");
 
 /*
- * The builder's graph, as a save stores it (D9a decisions 6 and 7):
- * the nodes, edges and pipelines, without React Flow's runtime
- * fields. Strict, so `measured`, `selected`, `dragging`, `width`, `height`,
- * `positionAbsolute` and `resizing` are refused, as is anything unknown.
+ * The builder's graph, as a save stores it: the nodes, edges and pipelines,
+ * without React Flow's runtime fields. Strict, so `measured`, `selected`,
+ * `dragging`, `width`, `height`, `positionAbsolute` and `resizing` are
+ * refused, as is anything unknown.
  *
- * The bounds are what the editor's best-effort writer (`toStored`, D9a
- * Preflight ruling 4) guarantees: every check here is local to one value, so
- * the writer can run these very schemas on what it built and store `config:
- * null`, or a column as `[]`, where they refuse. Nothing here stops the
- * text's save.
+ * The bounds are what the editor's best-effort writer (`toStored`)
+ * guarantees: every check here is local to one value, so the writer can run
+ * these very schemas on what it built and store `config: null`, or a column
+ * as `[]`, where they refuse. Nothing here stops the text's save.
  *
  * A refusal says which rule, never what was refused: no issue carries a
  * value (`z.custom` rather than `z.enum`, whose issue echoes what it
  * received) and no path goes below a node's `config`, whose keys are the
- * text's. Labels, names and configs are private (D9a Global constraints).
+ * text's. Labels, names and configs are private.
  */
 
-/** D9a decision 7's id forms: a number, so no name can travel in an id. */
+/** The ids' forms: a number, so no name can travel in an id. */
 export const GRAPH_NODE_ID_PATTERN = /^node_\d{1,6}$/;
 export const GRAPH_GROUP_ID_PATTERN = /^group_\d{1,6}$/;
 export const GRAPH_EDGE_ID_PATTERN = /^edge_\d{1,6}$/;
 export const GRAPH_PIPELINE_ID_PATTERN = /^pipeline_\d{1,6}$/;
 
-/** D9a decision 6's (Preflight ruling 4's) bounds on each column. */
+/** The bounds on each column. */
 export const GRAPH_MAXIMUM_NODES = 5_000;
 export const GRAPH_MAXIMUM_EDGES = 10_000;
 export const GRAPH_MAXIMUM_PIPELINES = 1_000;
 
 /**
- * Each column's `JSON.stringify`, in UTF-8 bytes (Preflight ruling 3). The
- * table's check allows 4 MiB of `jsonb::text` behind it, a backstop:
- * Postgres prints jsonb with spaces and canonical numbers, so a column this
- * allows can still exceed it (`1e300` is 6 bytes here, 301 there), and the
- * save answers that 400 too.
+ * Each column's `JSON.stringify`, in UTF-8 bytes. The table's check allows
+ * 4 MiB of `jsonb::text` behind it, a backstop: Postgres prints jsonb with
+ * spaces and canonical numbers, so a column this allows can still exceed it
+ * (`1e300` is 6 bytes here, 301 there), and the save answers that 400 too.
  */
 export const GRAPH_COLUMN_MAXIMUM_BYTES = 1_048_576;
 
@@ -414,7 +398,7 @@ export const GRAPH_CONFIG_MAXIMUM_DEPTH = 64;
 
 /**
  * A pipeline's name: a lowercase word, or any `type[/name]` the text may
- * hold (D9a Task 2).
+ * hold.
  */
 const GRAPH_PIPELINE_NAME_PATTERN = /^[a-z]+(\/[^\s]{1,200})?$/u;
 
@@ -648,20 +632,19 @@ function graphColumn<Item extends z.ZodTypeAny>(item: Item, maximum: number) {
     });
 }
 
-/** The three columns a save writes (D9a decision 6). */
+/** The three columns a save writes. */
 export const GraphNodesSchema = graphColumn(GraphNodeSchema, GRAPH_MAXIMUM_NODES);
 export const GraphEdgesSchema = graphColumn(GraphEdgeSchema, GRAPH_MAXIMUM_EDGES);
 export const GraphPipelinesSchema = graphColumn(GraphPipelineSchema, GRAPH_MAXIMUM_PIPELINES);
 
 /**
  * `PATCH /api/v1/organizations/:organizationId/configurations/:configurationId/versions/:versionId`:
- * the YAML saved over the version (D8 decisions 4 and 5), with the builder's
- * graph (D9a decision 6). All four are required. `collectorVersion` is the
- * version's collector version (D13a decision 8), left out to keep the one
- * stored (Preflight ruling 13): the stored one is always accepted, even if
- * deprecated since; a change must name a non-deprecated version of the
- * configuration's distribution, else 400 `collector_version_unknown`.
- * Strict: an unknown field is 400 `invalid_request`.
+ * the YAML saved over the version, with the builder's graph. All four are
+ * required. `collectorVersion` is the version's collector version, left out to
+ * keep the one stored: the stored one is always accepted, even if deprecated
+ * since; a change must name a non-deprecated version of the configuration's
+ * distribution, else 400 `collector_version_unknown`. Strict: an unknown field
+ * is 400 `invalid_request`.
  */
 export const SaveConfigurationVersionRequestSchema = z
   .object({
@@ -675,29 +658,27 @@ export const SaveConfigurationVersionRequestSchema = z
 
 export type SaveConfigurationVersionRequest = z.infer<typeof SaveConfigurationVersionRequestSchema>;
 
-/** A create's content (D12 Preflight ruling 7): the save's four fields, which come together or not at all. */
+/** A create's content: the save's four fields, which come together or not at all. */
 const CREATE_CONTENT_FIELDS = ["yamlContent", "nodes", "edges", "pipelines"] as const;
 
 /**
  * `POST /api/v1/organizations/:organizationId/configurations`. A description
- * left out is `''` (decision 7). `collectorDistribution` is the distribution
- * it is built for, fixed for its life (D13a decision 5); left out, the
- * catalogue's default. One the catalogue doesn't offer is 400
- * `collector_distribution_unknown` (D13a Preflight ruling 14).
+ * left out is `''`. `collectorDistribution` is the distribution it is built
+ * for, fixed for its life; left out, the catalogue's default. One the
+ * catalogue doesn't offer is 400 `collector_distribution_unknown`.
  *
- * A create from a flow (D12 decisions 5 and 12, Preflight ruling 7) carries
- * its version 1's content as the browser parsed the flow: `yamlContent`,
- * `nodes`, `edges` and `pipelines`, with the save's schemas and limits, all
- * four or none (a subset is 400 `invalid_request`); left out, version 1
- * holds `''` and an empty graph, as before. `collectorVersion` is version
- * 1's collector version, which must be one the distribution (the one named,
- * else the catalogue's default) offers and hasn't deprecated, else 400
- * `collector_version_unknown`; left out, the distribution's default.
- * `sourceFlowSlug` names the flow it was made from, checked for the slug's
- * format only (a flow may be deleted later; the configuration keeps its
- * copy), stored and never answered (Preflight ruling 9). Each may come
- * without the others. Strict: an unknown field (telflo-api's `yaml`) is 400
- * `invalid_request`.
+ * A create from a flow carries its version 1's content as the browser
+ * parsed the flow: `yamlContent`, `nodes`, `edges` and `pipelines`, with
+ * the save's schemas and limits, all four or none (a subset is 400
+ * `invalid_request`); left out, version 1 holds `''` and an empty graph, as
+ * before. `collectorVersion` is version 1's collector version, which must
+ * be one the distribution (the one named, else the catalogue's default)
+ * offers and hasn't deprecated, else 400 `collector_version_unknown`; left
+ * out, the distribution's default. `sourceFlowSlug` names the flow it was
+ * made from, checked for the slug's format only (a flow may be deleted
+ * later; the configuration keeps its copy), stored and never answered. Each
+ * may come without the others. Strict: an unknown field (`yaml` among
+ * them) is 400 `invalid_request`.
  */
 export const CreateConfigurationRequestSchema = z
   .object({
@@ -724,9 +705,9 @@ export const CreateConfigurationRequestSchema = z
 export type CreateConfigurationRequest = z.input<typeof CreateConfigurationRequestSchema>;
 
 /**
- * A create's label (D10 decision 4, Preflight ruling 16): trimmed; left out,
- * `''` or whitespace only means none, parsed as undefined; else 1 to 80
- * characters, with no character Postgres can't store exactly (Ruling 37).
+ * A create's label: trimmed; left out, `''` or whitespace only means none,
+ * parsed as undefined; else 1 to 80 characters, with no character Postgres
+ * can't store exactly.
  */
 const CreatedVersionLabelSchema = z
   .string()
@@ -738,12 +719,11 @@ const CreatedVersionLabelSchema = z
 
 /**
  * `POST /api/v1/organizations/:organizationId/configurations/:configurationId/versions`:
- * a new version from `sourceVersionId`, holding the content the editor sends
- * (D10 decision 5), which has the save's limits. `collectorVersion` is the
- * new version's collector version (D13a decision 9, Preflight ruling 16):
- * left out, the source's saved one; else the save's rule against the
- * source's (equal is accepted even if deprecated; a change must name a
- * non-deprecated version of the configuration's distribution, else 400
+ * a new version from `sourceVersionId`, holding the content the editor sends,
+ * which has the save's limits. `collectorVersion` is the new version's
+ * collector version: left out, the source's saved one; else the save's rule
+ * against the source's (equal is accepted even if deprecated; a change must
+ * name a non-deprecated version of the configuration's distribution, else 400
  * `collector_version_unknown`). Strict: an unknown field is 400
  * `invalid_request`.
  */
@@ -764,7 +744,7 @@ export type CreateConfigurationVersionRequest = z.input<typeof CreateConfigurati
 
 /**
  * `PUT /api/v1/organizations/:organizationId/configurations/:configurationId/versions/:versionId/label`:
- * renames the version (D10 decision 6). Strict.
+ * renames the version. Strict.
  */
 export const RenameConfigurationVersionRequestSchema = z.object({ label: ConfigurationVersionLabelSchema }).strict();
 
@@ -772,8 +752,7 @@ export type RenameConfigurationVersionRequest = z.infer<typeof RenameConfigurati
 
 /**
  * `PUT /api/v1/organizations/:organizationId/configurations/:configurationId/selected-version`:
- * records the version as the caller's selection (D10 decisions 3 and 9).
- * Strict.
+ * records the version as the caller's selection. Strict.
  */
 export const SelectConfigurationVersionRequestSchema = z.object({ versionId: VersionIdReferenceSchema }).strict();
 
@@ -781,14 +760,13 @@ export type SelectConfigurationVersionRequest = z.infer<typeof SelectConfigurati
 
 /**
  * `POST /api/v1/organizations/:organizationId/configurations/:configurationId/versions/:versionId/publish`:
- * an optional body (D11b Ruling 30, the owner's). The editor sends
- * `expectedUpdatedAt`, the version's `updatedAt` as it last loaded or saved
- * it, exactly as a summary reports it (ISO 8601 in UTC, with milliseconds);
- * when the version has been saved since, the publish is refused with 409
- * `configuration_version_changed` before the opamp-server is asked, so a
- * clean tab never publishes a save it didn't see. A caller without a tab
- * (D25's public API) sends no body, or `{}`, and publishes what is saved.
- * Strict: an unknown field is 400 `invalid_request`.
+ * an optional body. The editor sends `expectedUpdatedAt`, the version's
+ * `updatedAt` as it last loaded or saved it, exactly as a summary reports it
+ * (ISO 8601 in UTC, with milliseconds); when the version has been saved since,
+ * the publish is refused with 409 `configuration_version_changed` before the
+ * opamp-server is asked, so a clean tab never publishes a save it didn't see.
+ * A caller without a tab (the public API) sends no body, or `{}`, and
+ * publishes what is saved. Strict: an unknown field is 400 `invalid_request`.
  */
 export const PublishConfigurationVersionRequestSchema = z
   .object({ expectedUpdatedAt: z.string().datetime({ precision: 3 }).optional() })
@@ -797,17 +775,17 @@ export const PublishConfigurationVersionRequestSchema = z
 export type PublishConfigurationVersionRequest = z.infer<typeof PublishConfigurationVersionRequestSchema>;
 
 /**
- * D13b decision 12: a validation's text, exactly as the editor holds it,
- * 1 to 262,144 characters (the save's limit, counted the same way). Empty
- * text is never checked (decision 2: the editor sends nothing for it), so
- * the API refuses it rather than ask the validator, which refuses it too.
- * A lone surrogate is refused as a save refuses it. So is every C0 control
- * character but tab, line feed and carriage return (Ruling 55), U+0000
- * among them: YAML can't hold one (its printable set leaves them out), and
- * each is six bytes once JSON escapes it, so a text of them could pass the
- * character limit and still exceed the validator's 1 MiB body. The save's
- * own schema (`ConfigurationYamlSchema`) is a separate one and keeps its
- * rules: a version may store such text, it just isn't sent to be checked.
+ * A validation's text, exactly as the editor holds it, 1 to 262,144
+ * characters (the save's limit, counted the same way). Empty text is never
+ * checked (the editor sends nothing for it), so the API refuses it rather
+ * than ask the validator, which refuses it too. A lone surrogate is
+ * refused as a save refuses it. So is every C0 control character but tab,
+ * line feed and carriage return, U+0000 among them: YAML can't hold one
+ * (its printable set leaves them out), and each is six bytes once JSON
+ * escapes it, so a text of them could pass the character limit and still
+ * exceed the validator's 1 MiB body. The save's own schema
+ * (`ConfigurationYamlSchema`) is a separate one and keeps its rules: a
+ * version may store such text, it just isn't sent to be checked.
  */
 const ValidationYamlSchema = z
   .string()
@@ -822,8 +800,8 @@ const ValidationYamlSchema = z
 /**
  * Whether `text` holds a C0 control character other than tab, line feed and
  * carriage return (all of U+0000–U+001F but U+0009, U+000A and U+000D),
- * which a validation refuses (Ruling 55). The editor checks first, so it
- * never sends such text.
+ * which a validation refuses. The editor checks first, so it never sends
+ * such text.
  */
 export function hasYamlControlCharacter(text: string): boolean {
   for (let index = 0; index < text.length; index += 1) {
@@ -834,14 +812,13 @@ export function hasYamlControlCharacter(text: string): boolean {
 }
 
 /**
- * `POST /api/v1/organizations/:organizationId/configurations/:configurationId/versions/:versionId/validation`
- * (D13b decision 12, Preflight ruling 17): checks `yaml` with the collector
- * the version is pinned to. `collectorVersion` is the tab's unsaved pick,
- * left out to use the version's saved pin; it must be a version of the
- * configuration's distribution in the catalogue, else 400
- * `collector_version_unknown`. There is no distribution: it is always the
- * configuration's. Strict: an unknown field (a `distribution` among them)
- * is 400 `invalid_request`. Nothing is stored.
+ * `POST /api/v1/organizations/:organizationId/configurations/:configurationId/versions/:versionId/validation`:
+ * checks `yaml` with the collector the version is pinned to.
+ * `collectorVersion` is the tab's unsaved pick, left out to use the version's
+ * saved pin; it must be a version of the configuration's distribution in the
+ * catalogue, else 400 `collector_version_unknown`. There is no distribution:
+ * it is always the configuration's. Strict: an unknown field (a
+ * `distribution` among them) is 400 `invalid_request`. Nothing is stored.
  */
 export const ValidateConfigurationVersionRequestSchema = z
   .object({
@@ -853,17 +830,17 @@ export const ValidateConfigurationVersionRequestSchema = z
 export type ValidateConfigurationVersionRequest = z.infer<typeof ValidateConfigurationVersionRequestSchema>;
 
 /**
- * A validation's outcome (D13b decisions 4 and 12): the collector accepted
- * the text, refused it, or wasn't asked because the version is retired
- * (deprecated in the catalogue; the validator holds only offered ones).
+ * A validation's outcome: the collector accepted the text, refused it, or
+ * wasn't asked because the version is retired (deprecated in the catalogue;
+ * the validator holds only offered ones).
  */
 export const CONFIGURATION_VALIDATION_STATUSES = ["valid", "invalid", "retired"] as const;
 
 export type ConfigurationValidationStatus = (typeof CONFIGURATION_VALIDATION_STATUSES)[number];
 
 /**
- * The nine deployment-requirement categories (D13b decision 7), as
- * the validator's `openapi.yaml` names them.
+ * The nine deployment-requirement categories, as the validator's
+ * `openapi.yaml` names them.
  */
 export const CONFIGURATION_VALIDATION_REQUIREMENT_CATEGORIES = [
   "env_var",
@@ -882,8 +859,8 @@ export type ConfigurationValidationRequirementCategory =
 
 /**
  * One error the collector reported: its message (which can echo the
- * configuration's values, so it goes only into a response body: ADR 0024)
- * and where it is, `::`-separated with the whole id kept
+ * configuration's values, so it goes only into a response body) and where it
+ * is, `::`-separated with the whole id kept
  * (`exporters::otlp_http/my-exp.v2`), or null when it names nothing.
  */
 export const ConfigurationValidationErrorSchema = z
@@ -895,7 +872,7 @@ export const ConfigurationValidationErrorSchema = z
 
 export type ConfigurationValidationError = z.infer<typeof ConfigurationValidationErrorSchema>;
 
-/** What a host must provide to run the configuration (D13b decision 7). Never an error. */
+/** What a host must provide to run the configuration. Never an error. */
 export const ConfigurationValidationRequirementSchema = z
   .object({
     category: z.enum(CONFIGURATION_VALIDATION_REQUIREMENT_CATEGORIES),
@@ -908,10 +885,10 @@ export const ConfigurationValidationRequirementSchema = z
 export type ConfigurationValidationRequirement = z.infer<typeof ConfigurationValidationRequirementSchema>;
 
 /**
- * A validation's answer (D13b decision 12). `collectorVersion` is the
- * version checked against: the one the request named, else the saved pin.
- * `valid` has no errors, `invalid` at least one; `retired` has neither
- * errors nor requirements, the validator having not been asked.
+ * A validation's answer. `collectorVersion` is the version checked
+ * against: the one the request named, else the saved pin. `valid` has no
+ * errors, `invalid` at least one; `retired` has neither errors nor
+ * requirements, the validator having not been asked.
  */
 export const ConfigurationValidationResponseSchema = z
   .object({
@@ -926,29 +903,26 @@ export type ConfigurationValidationResponse = z.infer<typeof ConfigurationValida
 
 /**
  * The configuration endpoints' own error codes, named once so a misspelled
- * code is a type error. `configuration_version_not_found` is D10 decision
- * 4's: a version that isn't one of the live configuration's, named in a
- * version's path, as a create's source or as a selection. D11b's (decisions
- * 2, 4 and 11; Preflight rulings 8 and 9): `configuration_version_published`,
- * a change to a published version, or publishing one again (409);
+ * code is a type error. `configuration_version_not_found` is a version that
+ * isn't one of the live configuration's, named in a version's path, as a
+ * create's source or as a selection. `configuration_version_published`, a
+ * change to a published version, or publishing one again (409);
  * `configuration_delete_forbidden`, a delete by a member who is neither the
  * configuration's author nor an admin (403); `publishing_unavailable`, the
  * opamp-server unreachable (503); `configuration_version_changed`, a version
  * saved while it was being published (409); `configuration_version_empty`,
- * publishing an empty version (409). D13a's (decision 11, Preflight rulings
- * 13, 14 and 16): `collector_version_unknown`, a save or a create naming a
- * collector version the configuration's distribution doesn't offer (400);
- * `collector_distribution_unknown`, a create naming a distribution the
- * catalogue doesn't offer (400). D13b's (decision 12, Ruling 37):
- * `validation_unavailable`, the collector validator couldn't check the text
- * (503); `validation_rate_limited`, too many checks by the caller in the
- * last minute, or too many at once (429, with `Retry-After`). D16b's
- * (decision 19, Preflight ruling 6): `configuration_in_use`, a delete of a
- * configuration whose published version a collector group or a collector
- * uses (409). Their other refusals are the organization's
- * (`organization_not_found`), the session's (`rate_limited`, a delete's
- * fleet limit), the terms', and the fleets' (`fleets_unavailable`, a
- * delete whose fleet usage couldn't be read).
+ * publishing an empty version (409). `collector_version_unknown`, a save or a
+ * create naming a collector version the configuration's distribution doesn't
+ * offer (400); `collector_distribution_unknown`, a create naming a
+ * distribution the catalogue doesn't offer (400). `validation_unavailable`,
+ * the collector validator couldn't check the text (503);
+ * `validation_rate_limited`, too many checks by the caller in the last minute,
+ * or too many at once (429, with `Retry-After`). `configuration_in_use`, a
+ * delete of a configuration whose published version a collector group or a
+ * collector uses (409). Their other refusals are the organization's
+ * (`organization_not_found`), the session's (`rate_limited`, a delete's fleet
+ * limit), the terms', and the fleets' (`fleets_unavailable`, a delete whose
+ * fleet usage couldn't be read).
  */
 export const CONFIGURATION_ERROR_CODES = [
   "configuration_not_found",
@@ -969,10 +943,9 @@ export const CONFIGURATION_ERROR_CODES = [
 export type ConfigurationErrorCode = (typeof CONFIGURATION_ERROR_CODES)[number];
 
 /**
- * D25's (decision 20, Preflight ruling 7): `configuration_invalid` (422), a
- * public route's YAML that doesn't validate (a version's PATCH with
- * `?validate=true`) or doesn't parse (OTTL lint), with
- * `details.errors: [{ message, componentPath }]`. Fixed words: never the
+ * `configuration_invalid` (422): a public route's YAML that doesn't validate
+ * (a version's PATCH with `?validate=true`) or doesn't parse (OTTL lint),
+ * with `details.errors: [{ message, componentPath }]`. Fixed words: never the
  * YAML.
  */
 export const CONFIGURATION_INVALID_MESSAGE = "The configuration is not valid.";

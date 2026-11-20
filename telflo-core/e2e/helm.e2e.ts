@@ -40,21 +40,20 @@ import { attributeHoldersOf, placesOf } from "./support/privacy.js";
 import { expectRefused, fetchedWithoutSession } from "./support/quick-deploy.js";
 import { signInThroughApi, switchOrganizationThroughApi, waitForHydration } from "./support/session.js";
 
-// A Kubernetes-supervisor fleet's Helm install (D17d-2 decision 30's browser
-// part; Preflight ruling 34), in the browser, against the E2E API and its
-// fake opamp-server: "Install with Helm"'s Download values.yaml (the file the
-// browser saves, compared with the contracts' render) and its command;
-// Quick Deploy's Helm values link, its public download with no session,
-// Install Links' Helm row, View and Revoke; the organization's "Public
-// install links" switch, for an admin and for a member; the Kubernetes setup
-// checklist, a row's Install and the `helm uninstall` lines; the platform's
-// chart's per-fleet `fullnameOverride` (D18 decision 21) and a variable named
-// by a YAML word (D18 decision 33); and no name, namespace, path, variable,
-// bearer or link secret in any attribute. Each
-// test works in an organization of its own (a new user's), so tests and
-// browsers run in parallel. Fleets, groups, published versions and the links
-// a test isn't about making go through the API as the page's session
-// (support/collectors.ts); collectors through the fake's control port.
+// A Kubernetes-supervisor fleet's Helm install, in the browser, against the
+// E2E API and its fake opamp-server: "Install with Helm"'s Download
+// values.yaml (the file the browser saves, compared with the contracts'
+// render) and its command; Quick Deploy's Helm values link, its public
+// download with no session, Install Links' Helm row, View and Revoke; the
+// organization's "Public install links" switch, for an admin and for a member;
+// the Kubernetes setup checklist, a row's Install and the `helm uninstall`
+// lines; the platform's chart's per-fleet `fullnameOverride` and a variable
+// named by a YAML word; and no name, namespace, path, variable, bearer or link
+// secret in any attribute. Each test works in an organization of its own (a
+// new user's), so tests and browsers run in parallel. Fleets, groups,
+// published versions and the links a test isn't about making go through the
+// API as the page's session (support/collectors.ts); collectors through the
+// fake's control port.
 //
 // The expected values file is the contracts' own render (`helmValuesYaml`)
 // of the facts the dialog read last and the bearer the reveal answered
@@ -87,7 +86,7 @@ const GROUPS_PATH = new RegExp(`^${FLEET_PATH}/groups$`);
 const COLLECTORS_PATH = new RegExp(`^${FLEET_PATH}/collectors$`);
 /** A link as the E2E API makes it: its public base, the route, `tqd_` and 43 base64url characters. */
 const LINK_URL = new RegExp(`^${E2E_PUBLIC_API_URL.replace(/[.]/g, "\\.")}/api/v1/quick-deploy/tqd_[A-Za-z0-9_-]{43}$`);
-/** A browser download's values file (D17d-2 Ruling 37): the release's, with 8 lowercase hex of its own. */
+/** A browser download's values file: the release's, with 8 lowercase hex of its own. */
 const AGENT_DOWNLOAD_NAME = /^telflo-node-values-[0-9a-f]{8}\.yaml$/;
 /** A bearer's shape: a run of 100 or more base64 characters (the opamp-server's, and the fake's, is 180). */
 const BEARER_SHAPED = /^[A-Za-z0-9+/]{100,}={0,2}$/;
@@ -138,19 +137,19 @@ const REVOKED_TEXT = "This install link is revoked: make a new one.\n";
 const LINKS_OFF_TEXT = `${PUBLIC_INSTALL_LINKS_DOWNLOAD_REFUSED_MESSAGE}\n`;
 /** The collector image's repository the E2E API offers: the platform's default (apps/api's DEFAULT_COLLECTOR_IMAGE_REPOSITORY). */
 const COLLECTOR_IMAGE_REPOSITORY = "ghcr.io/telflo/telflo/collector";
-/** The only attribute a dialog's field may hold its text in: its input's value, inside ph-no-capture (D17d-1 Preflight ruling 37). */
+/** The only attribute a dialog's field may hold its text in: its input's value, inside ph-no-capture. */
 const INPUT_VALUE = "INPUT value true";
 const CSRF = { [CSRF_HEADER_NAME]: CSRF_HEADER_VALUE };
 
 /** A suffix no other test uses: lowercase hex, so a gateway's name and a namespace stay DNS labels. */
 const unique = () => randomUUID().slice(0, 8);
 
-/** A version reading one variable, `name` (the install offers it, D17c-1 decision 43). */
+/** A version reading one variable, `name` (the install offers it). */
 function readingVariable(name: string): string {
   return ["receivers:", "  otlp:", "    protocols:", "      grpc:", `        endpoint: \${env:${name}}`, ""].join("\n");
 }
 
-/** A Kubernetes group's settings in its annotations, as the page writes them (D17d-1 Preflight ruling 13). */
+/** A Kubernetes group's settings in its annotations, as the page writes them. */
 function kubernetesAnnotations(settings: KubernetesAnnotations): Record<string, unknown> {
   return { telflo: { kubernetes: settings } };
 }
@@ -275,7 +274,7 @@ function firstDifferentLine(actual: string, expected: string): number {
   return -1;
 }
 
-/** `helm upgrade --install`'s lines (decision 18; Preflight ruling 8; Ruling 37): every value quoted once. */
+/** `helm upgrade --install`'s lines: every value quoted once. */
 function installLines(release: string, namespace: string, valuesFile: string): string[] {
   return [
     `helm upgrade --install '${release}' '${DEFAULT_HELM_CHART_REFERENCE}' \\`,
@@ -307,7 +306,7 @@ async function cellsOf(row: Locator): Promise<string[]> {
   return (await row.locator("td").allTextContents()).slice(0, 7);
 }
 
-/** A row's action by its whole accessible name: the verb and the link's creation to the second (D17c-2 Ruling 39). */
+/** A row's action by its whole accessible name: the verb and the link's creation to the second. */
 async function linkAction(page: Page, row: Locator, verb: "View" | "Revoke", link: { createdAt: string }): Promise<Locator> {
   return row.getByRole("button", { name: `${verb} the install link created ${await formatted(page, link.createdAt, { toTheSecond: true })}`, exact: true });
 }
@@ -366,10 +365,10 @@ test("Install with Helm from the header: Download values.yaml saves the file equ
   expect(opened.helm).toEqual({
     chartReference: DEFAULT_HELM_CHART_REFERENCE,
     chartVersion: DEFAULT_HELM_CHART_VERSION,
-    // The platform's image (D18 decision 29; the E2E API leaves TELFLO_COLLECTOR_IMAGE_REPOSITORY empty).
+    // The platform's image (the E2E API leaves TELFLO_COLLECTOR_IMAGE_REPOSITORY empty).
     imageRepository: COLLECTOR_IMAGE_REPOSITORY,
     release: HELM_AGENT_RELEASE,
-    // D18 decision 21: the Agent's objects named by this fleet's id.
+    // The Agent's objects named by this fleet's id.
     fullnameOverride: `${setup.fleetId.slice(0, 8)}-default`,
     role: "node",
     namespace,
@@ -400,8 +399,8 @@ test("Install with Helm from the header: Download values.yaml saves the file equ
   const saved = file.bytes.toString("utf8");
   expect(firstDifferentLine(saved, expected), "the first line of the file that differs from the render (-1: none)").toBe(-1);
   expect(saved === expected, "values.yaml is the contracts' render with the reveal's bearer").toBe(true);
-  // What the render holds, by the field (never the file printed): the Agent's fullnameOverride right after its group (D18
-  // decision 21), the typed value in collectorEnv, the volume, the group's id.
+  // What the render holds, by the field (never the file printed): the Agent's fullnameOverride right after its group,
+  // the typed value in collectorEnv, the volume, the group's id.
   expect(saved.includes(`\ngroup: "node"\nfullnameOverride: "${setup.fleetId.slice(0, 8)}-default"\n`), "the Agent's fullnameOverride follows group").toBe(true);
   expect(saved.includes(`  "${variable}": "prod's \\"${typed}\\" $(echo EXPANDED)"\n`), "collectorEnv holds the typed value").toBe(true);
   expect(saved.includes(`collectorGroupId: "${setup.defaultGroupId}"\n`), "the values name the Agent's group").toBe(true);
@@ -424,7 +423,7 @@ test("Install with Helm from the header: Download values.yaml saves the file equ
   await expect(dialog.getByRole("button", { name: "Copy install command", exact: true })).toBeFocused();
   await expect(dialog.getByText(HELM_RENAMED_FILE_WORDS, { exact: true })).toBeVisible();
   await expect(dialog.getByText(helmValuesWarning(file.name), { exact: true })).toBeVisible();
-  // The file's name (the release's) only inside ph-no-capture: the intro, the command and the warning (Ruling 40).
+  // The file's name (the release's) only inside ph-no-capture: the intro, the command and the warning.
   expect(await placesOf(page, [file.name])).toEqual([{ inside: 3, outside: 0, inAttributes: 0 }]);
   // The bearer and the typed value nowhere on the page: they went into the file only.
   await expectNowhere(page, [bearer, typed]);
@@ -582,10 +581,9 @@ test("Quick Deploy: the link's command shown once inside ph-no-capture; the publ
   expect([listed!.id, listed!.downloadCount, listed!.status]).toEqual([created.link.id, 1, "revoked"]);
 });
 
-// D18 decisions 5, 23 and 33: a variable named by a YAML 1.1 word (`ON`), which the platform refused while the chart
-// wrote collectorEnv's keys unquoted, is offered like any other. The canary is its typed value ("ON" itself is inside
-// "JSON"): in the downloaded values.yaml under the quoted key, in a Helm values link's public download, and on the page
-// only as its input's value, inside ph-no-capture.
+// A variable named by a YAML 1.1 word (`ON`) is offered like any other: the chart's collectorEnv keys are quoted. The
+// canary is its typed value ("ON" itself is inside "JSON"): in the downloaded values.yaml under the quoted key, in a
+// Helm values link's public download, and on the page only as its input's value, inside ph-no-capture.
 test("a YAML-word variable (ON): Include ON enabled; its typed value in the downloaded values.yaml under a quoted key and in a Helm values link's public download; the value in no other attribute and never outside ph-no-capture", async ({
   page,
   playwright,
@@ -804,7 +802,7 @@ test("the Kubernetes checklist, a row's Install, and the uninstall lines quoted"
   await expect(clusterInstall).toHaveAccessibleDescription(`(${NEEDS_VERSION})`);
   const rowInstall = panel.getByRole("button", { name: `Install ${gateway}`, exact: true });
   const gatewayFacts = await openHelm(page, rowInstall);
-  // A gateway's objects are named by its own name: no fullnameOverride (D18 decision 21).
+  // A gateway's objects are named by its own name: no fullnameOverride.
   expect(gatewayFacts.helm).toMatchObject({ release: gateway, fullnameOverride: null, role: "gateway", namespace, replicas: 2 });
   const dialog = helmDialog(page);
   await expect(dialog.getByRole("combobox", { name: "Group", exact: true })).toHaveText(gateway);
@@ -820,7 +818,7 @@ test("the Kubernetes checklist, a row's Install, and the uninstall lines quoted"
   await expect(dialog).toBeHidden();
   await expect(rowInstall).toBeFocused();
 
-  // The Cluster with a published version (D18 Ruling 30): its Install enabled, its objects named by this fleet's id.
+  // The Cluster with a published version: its Install enabled, its objects named by this fleet's id.
   await createGroupThroughApi(page, organizationId, fleetId, COLLECTOR_GROUP_CLUSTER_NAME, {
     assignedVersionId: versionId,
     annotations: kubernetesAnnotations({ role: "cluster", namespace, volumes: [] }),
@@ -961,13 +959,13 @@ test("no gateway name, namespace, variable name or value, path, bearer or link s
   const revealed = page.waitForResponse(isPostTo(REVEAL_PATH));
   const gatewayFile = await downloaded(page, () => dialog.getByRole("button", { name: "Download values.yaml", exact: true }).click());
   const { bearer } = ((await (await revealed).json()) as EnrollmentTokenRevealedResponse).token;
-  // A gateway's values name it by its group only: no fullnameOverride line (D18 decision 21).
+  // A gateway's values name it by its group only: no fullnameOverride line.
   const gatewayValues = gatewayFile.bytes.toString("utf8");
   expect(gatewayValues.includes(`\ngroup: "${gateway}"\ncollectorGroupId: "${gatewayGroup.id}"\n`), "the gateway's group, then its id").toBe(true);
   expect(gatewayValues.includes("fullnameOverride"), "the gateway's values hold no fullnameOverride").toBe(false);
   await expect(dialog.getByRole("button", { name: "Copy install command", exact: true })).toBeFocused();
   await expectAttributes();
-  // The file's name (the gateway's release) only inside ph-no-capture: the intro, the command and the warning (Ruling 40).
+  // The file's name (the gateway's release) only inside ph-no-capture: the intro, the command and the warning.
   expect(await placesOf(page, [`${gateway}-values-`])).toEqual([{ inside: 3, outside: 0, inAttributes: 0 }]);
   await expectNowhere(page, [bearer, value]);
   await dialog.getByRole("button", { name: "Done", exact: true }).click();

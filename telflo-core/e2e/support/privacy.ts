@@ -1,15 +1,13 @@
 import type { BrowserContext, Page } from "@playwright/test";
 
 // Where private text sits on a page, for the browser tests' privacy checks
-// (ADR 0024; D17a's paragraph: configuration text is shown only as text,
-// inside `ph-no-capture` where a dialog's fields hold it, and never in an
-// attribute). Moved from collectors.e2e.ts for D17d-1 (Preflight ruling 38).
-// Evaluated as strings, as the E2E code has no DOM types.
+// (configuration text is shown only as text, inside `ph-no-capture` where a
+// dialog's fields hold it, and never in an attribute). Evaluated as
+// strings, as the E2E code has no DOM types.
 //
 // The page's title (`document.title`) counts as an attribute holder: it is
 // no body text, yet analytics sends it with every page view and replay
-// records `<head>` (D17d-1 Ruling 54), so private text must never be there
-// either.
+// records `<head>`, so private text must never be there either.
 
 /** Where one text is: text nodes inside `ph-no-capture`, outside it, and attribute values holding it. */
 export interface TextPlaces {
@@ -54,12 +52,12 @@ export interface MaskedPlaces {
 }
 
 /**
- * Where each of `texts` is against the replay's masking (D29 decision 41,
- * Preflight ruling 17): other people's personal data is visible text only
- * inside `ph-mask` (or `ph-no-capture`), and never in an attribute. A
- * Radix portal renders into `<body>`, which the signed-in shell marks
- * `ph-mask` (AppLayout, D4 Ruling 14), so a dialog's text counts as masked
- * there. Collect, go to about:blank, then assert: the counts hold no text.
+ * Where each of `texts` is against the replay's masking: other people's
+ * personal data is visible text only inside `ph-mask` (or `ph-no-capture`),
+ * and never in an attribute. A Radix portal renders into `<body>`, which the
+ * signed-in shell marks `ph-mask` (AppLayout), so a dialog's text counts as
+ * masked there. Collect, go to about:blank, then assert: the counts hold no
+ * text.
  */
 export async function maskedPlacesOf(page: Page, texts: string[]): Promise<MaskedPlaces[]> {
   return page.evaluate(`(() => {
@@ -85,8 +83,7 @@ export async function maskedPlacesOf(page: Page, texts: string[]): Promise<Maske
 /**
  * `work`'s answer, or `fallback` when it fails or takes longer than `ms`:
  * a privacy check's collection, bounded so the test always reaches
- * about:blank before anything can fail (D25 Rulings 185 and 187). Moved
- * from api-reference.e2e.ts for D29's pages (Preflight ruling 17).
+ * about:blank before anything can fail.
  */
 export function within<T>(work: Promise<T>, ms: number, fallback: T): Promise<T> {
   let timer: ReturnType<typeof setTimeout> | undefined;
@@ -100,8 +97,7 @@ export function within<T>(work: Promise<T>, ms: number, fallback: T): Promise<T>
  * The attributes holding each of `texts`, each "{TAG} {attribute} {inside
  * ph-no-capture}" (e.g. "INPUT value true": a controlled input's value,
  * which React writes as the attribute; the only holder a dialog's fields
- * may be: D17d-1 Preflight ruling 37), and "document.title" when the page's
- * title holds it.
+ * may be), and "document.title" when the page's title holds it.
  */
 export async function attributeHoldersOf(page: Page, texts: string[]): Promise<string[][]> {
   return page.evaluate(`(() => {
@@ -119,22 +115,22 @@ export async function attributeHoldersOf(page: Page, texts: string[]): Promise<s
 }
 
 // ---------------------------------------------------------------------------
-// Organization variables (D20 decisions 35 and 39; Q88). A variable's value,
-// name and description, and a variable group's name and description, are
-// configuration text: shown as text (inside `ph-no-capture` where typed or
-// shown in a dialog's fields, and the values everywhere), never in an
-// attribute, a URL, a page title or browser storage.
+// Organization variables. A variable's value, name and description, and a
+// variable group's name and description, are configuration text: shown as
+// text (inside `ph-no-capture` where typed or shown in a dialog's fields, and
+// the values everywhere), never in an attribute, a URL, a page title or
+// browser storage.
 
 /**
  * A canary value for an organization variable: unique to `token`, and
  * holding a `$`, so a filled-in text holds it with its `$` doubled
- * (`filledInValue`), the opamp-server's literal fill-in (decision 8).
+ * (`filledInValue`), the opamp-server's literal fill-in.
  */
 export function canaryVariableValue(token: string): string {
   return `canary$value-${token}`;
 }
 
-/** `value` as a filled-in text holds it: each `$` doubled, so the collector reads it literally (decision 8). */
+/** `value` as a filled-in text holds it: each `$` doubled, so the collector reads it literally. */
 export function filledInValue(value: string): string {
   return value.split("$").join("$$");
 }
@@ -143,7 +139,7 @@ export function filledInValue(value: string): string {
  * The browser storage entries whose key or value holds any of `texts`
  * ("{store} {key}"): localStorage and sessionStorage, the cookies the page
  * can read ("cookie {name}"), and the names of its IndexedDB databases
- * ("indexedDB {name}"). Nothing about variables is kept there (decision 39).
+ * ("indexedDB {name}"). Nothing about variables is kept there.
  */
 export async function storageHolding(page: Page, texts: string[]): Promise<string[]> {
   return page.evaluate(`(async () => {
@@ -172,7 +168,7 @@ export async function storageHolding(page: Page, texts: string[]): Promise<strin
 /**
  * The URLs among `urls` holding any of `texts`, as sent or decoded (each
  * percent-escape read back, once): no name, value or search may be in an
- * address (decision 39).
+ * address.
  */
 export function urlsHolding(urls: readonly string[], texts: readonly string[]): string[] {
   return urls.filter((url) => {
@@ -187,12 +183,12 @@ export function urlsHolding(urls: readonly string[], texts: readonly string[]): 
 }
 
 // ---------------------------------------------------------------------------
-// The account's personal data (D21 decision 45; Q123): the account's email,
-// a linked identity's email, a session's IP address, browser and system and
-// times are visible text only, inside the masked shell; never in an
-// attribute, a URL, a toast, a page title or browser storage. The browser
-// tests record every URL a context requests and every toast a page shows,
-// and look for canaries in them.
+// The account's personal data: the account's email, a linked identity's
+// email, a session's IP address, browser and system and times are visible
+// text only, inside the masked shell; never in an attribute, a URL, a toast,
+// a page title or browser storage. The browser tests record every URL a
+// context requests and every toast a page shows, and look for canaries in
+// them.
 
 /**
  * Every URL `context` requests from now on (each redirect's too: Playwright
@@ -238,14 +234,13 @@ export function toastsHolding(toasts: readonly string[], texts: readonly string[
 }
 
 /**
- * The fields holding a value outside `ph-no-capture` (D31-1 decision 39,
- * Rulings 301 and 303): every text input, textarea, native select and
- * contenteditable (`true`, `""` or `plaintext-only`) whose value is not
- * empty and that has no `ph-no-capture` element at or above it.
- * Checkboxes, radios, buttons and the like hold no typed text and are
- * left out. Each is named by its tag, type and id (fixed words), never
- * its value. Shadow roots aren't searched: the playground's surfaces have
- * none (a component that adds one needs this widened).
+ * The fields holding a value outside `ph-no-capture`: every text input,
+ * textarea, native select and contenteditable (`true`, `""` or
+ * `plaintext-only`) whose value is not empty and that has no `ph-no-capture`
+ * element at or above it. Checkboxes, radios, buttons and the like hold no
+ * typed text and are left out. Each is named by its tag, type and id (fixed
+ * words), never its value. Shadow roots aren't searched: the playground's
+ * surfaces have none (a component that adds one needs this widened).
  */
 export async function unmaskedFieldsOf(page: Page): Promise<string[]> {
   return page.evaluate<string[]>(`(() => {

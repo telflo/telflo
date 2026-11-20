@@ -17,15 +17,15 @@ import { attributeHoldersOf, canaryVariableValue, placesOf } from "./support/pri
 import { signInThroughApi, waitForHydration } from "./support/session.js";
 import { createVariableGroupThroughApi, createVariableThroughApi, setOverrideThroughApi, uniqueVariableName } from "./support/variables.js";
 
-// A server fleet's Groups tab (D17b-2 decision 35; Preflight ruling 16), in
-// the browser, against the E2E API and its fake opamp-server. Each test works
-// in an organization of its own (a new user's), so tests and browsers run in
-// parallel. Fleets, groups and published versions are made through the API
-// as the page's session (support/collectors.ts), collectors through the
-// fake's control port, before the page reads them, but for the group made
-// while the page polls: that test drives the page's clock (`nextPoll`,
-// support/polling.ts). What reaches a collector is read back through the
-// API: its `resolution` (its pin, else its group's published version).
+// A server fleet's Groups tab, in the browser, against the E2E API and its
+// fake opamp-server. Each test works in an organization of its own (a new
+// user's), so tests and browsers run in parallel. Fleets, groups and
+// published versions are made through the API as the page's session
+// (support/collectors.ts), collectors through the fake's control port, before
+// the page reads them, but for the group made while the page polls: that test
+// drives the page's clock (`nextPoll`, support/polling.ts). What reaches a
+// collector is read back through the API: its `resolution` (its pin, else its
+// group's published version).
 
 const PASSWORD = "correct horse battery staple";
 /** The fleet's groups: the tab's reads and polls (GET) and the create (POST). */
@@ -39,10 +39,10 @@ const HINT_NOTHING =
   "Releases the published version (e.g. to delete its configuration). Collectors keep running what they have; new installs need a published version.";
 const DEFAULT_DESCRIPTION =
   "Change the group's published version, its variable group or its mounts. The group's collectors that aren't pinned follow a new version on their next poll; pinned ones keep their pin.";
-/** D17d-1 decision 25's words, conditional since Ruling 56 (both fleet types; a server fleet's without the Helm release's). */
+/** The delete dialog's consequences (both fleet types; a server fleet's without the Helm release's). */
 const DELETE_CONSEQUENCES =
   "This deletes the group and its collectors' records. A collector installed into it that is still running keeps the configuration it has, but the fleet refuses its connections from then on: uninstall it, or reinstall it into another group. A collector moved into it from another group rejoins the group it was installed into.";
-/** The typed-name input's label: the group's name, bold, between the words (Ruling 70, the owner's Q50). */
+/** The typed-name input's label: the group's name, bold, between the words. */
 const deleteConfirmLabel = (name: string) => `Type ${name} to confirm`;
 
 /** A suffix no other test uses. */
@@ -119,8 +119,8 @@ test("creates a group with a published version, which reaches a collector of the
   await expect(dialog).toContainText(
     "A group gives its collectors one published version. Collectors that aren't pinned are sent it on their next poll.",
   );
-  // A new group requires a published version (Ruling 34): the picker alone, no choice, no Nothing assigned,
-  // and no visible "Published version" heading (Ruling 36): its group keeps the name by aria-label.
+  // A new group requires a published version: the picker alone, no choice, no Nothing assigned,
+  // and no visible "Published version" heading: its group keeps the name by aria-label.
   await expect(dialog.getByRole("group", { name: "Published version", exact: true })).toBeVisible();
   await expect(dialog.getByText("Published version", { exact: true })).toHaveCount(0);
   await expect(dialog.getByRole("combobox", { name: "Published version", exact: true })).toHaveCount(0);
@@ -232,7 +232,7 @@ test("assigns a group a published version, which its unpinned collectors take an
   // Assign.
   await page.getByRole("button", { name: `Assign ${name}`, exact: true }).click();
   const assign = page.getByRole("dialog", { name: `Assign a published version to ${name}` });
-  // The picker alone, as New group's (Ruling 72, the owner's): no choice, no Nothing assigned, no visible heading.
+  // The picker alone, as New group's: no choice, no Nothing assigned, no visible heading.
   await expect(assign.getByRole("group", { name: "Published version", exact: true })).toBeVisible();
   await expect(assign.getByRole("combobox", { name: "Published version", exact: true })).toHaveCount(0);
   await expect(assign.getByText("Published version", { exact: true })).toHaveCount(0);
@@ -313,7 +313,7 @@ test("the Default group can't be renamed or deleted, and a group made elsewhere 
   await expect(page.getByRole("button", { name: `Delete ${name}`, exact: true })).toBeVisible();
 });
 
-// D17c-1 decision 32 (Preflight ruling 30): a group's mounts, written into its annotations through the API.
+// A group's mounts, written into its annotations through the API.
 test("adds a mount to the Default group in its dialog: the messages first, then annotations alone sent; it opens on its mounts, and removing them sends null", async ({
   page,
 }) => {
@@ -355,7 +355,7 @@ test("adds a mount to the Default group in its dialog: the messages first, then 
     })()`),
   ).toEqual(["INPUT value true", "INPUT value true"]);
 
-  // The tab's re-read after the save: the save's own read of the group (Ruling 61) answers before its PATCH is sent.
+  // The tab's re-read after the save: the save's own read of the group answers before its PATCH is sent.
   const reloaded = page.waitForResponse((response) => isGroupsRead(response.request()) && writes.length > 0);
   await dialog.getByRole("button", { name: "Assign" }).click();
   await expect(page.getByText("Group updated")).toBeVisible();
@@ -397,7 +397,7 @@ test("deletes a group once its name is typed: its collectors are deleted with it
   const dialog = page.getByRole("alertdialog", { name: `Delete ${name}` });
   await expect(dialog).toContainText(DELETE_CONSEQUENCES);
   await expect(dialog).not.toContainText("Helm");
-  // D17d-1 decision 3: Delete is disabled until the group's name is typed exactly (Preflight ruling 30).
+  // Delete is disabled until the group's name is typed exactly.
   const confirm = dialog.getByLabel(deleteConfirmLabel(name), { exact: true });
   const remove = dialog.getByRole("button", { name: "Delete", exact: true });
   await expect(confirm).toHaveValue("");
@@ -409,7 +409,7 @@ test("deletes a group once its name is typed: its collectors are deleted with it
   // The typed text is in no attribute: the input is uncontrolled, inside ph-no-capture.
   await expect(confirm).not.toHaveAttribute("value");
   await expect(dialog.locator(".ph-no-capture").getByLabel(deleteConfirmLabel(name), { exact: true })).toBeVisible();
-  // The name shown bold in the label, inside ph-no-capture with the input; no placeholder (Ruling 70).
+  // The name shown bold in the label, inside ph-no-capture with the input; no placeholder.
   await expect(dialog.locator(".ph-no-capture label .font-bold")).toHaveText(name);
   await expect(confirm).not.toHaveAttribute("placeholder");
   expect(await attributeHoldersOf(page, [name])).toEqual([[]]);
@@ -421,7 +421,7 @@ test("deletes a group once its name is typed: its collectors are deleted with it
   expect(writes.map((request) => request.method())).toEqual(["DELETE"]);
   expect(new URL(writes[0]!.url()).pathname).toMatch(new RegExp(`/groups/${group.id}$`));
 
-  // Its collectors are deleted with it (D17d-1 decision 3); the other group's stays.
+  // Its collectors are deleted with it; the other group's stays.
   const groupOf = new Map((await collectorsThroughApi(page, organizationId, fleetId)).map((each) => [each.id, each.groupId]));
   expect(doomed.map((each) => groupOf.has(each.id))).toEqual([false, false]);
   expect(groupOf.get(stays.id)).toBe(keptGroup.id);
@@ -434,7 +434,7 @@ function referencingYaml(names: readonly string[]): string {
   return `receivers:\n  otlp:\n    protocols:\n      grpc: {}\nprocessors:\n  attributes/e2e:\n    actions:\n${actions}exporters:\n  debug: {}\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      processors: [attributes/e2e]\n      exporters: [debug]\n`;
 }
 
-// D20 default 23 (the group dialog's choice) and default 25 (the column, the details' row, the values dialog).
+// A group's Variable group: the group dialog's choice, the column, the details' row and the values dialog.
 test("a group's Variable group: chosen in its dialog and sent alone, shown in its column and details and opening its values; Variables used and the 422 name an undefined variable; None clears it", async ({
   page,
 }) => {

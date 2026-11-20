@@ -40,7 +40,7 @@ import {
 } from "./support/validation-pipelines-page.js";
 import { versionPath } from "./support/versions-page.js";
 
-// The regex library (D15b), in the browser: product admin's Test Regex page
+// The regex library, in the browser: product admin's Test Regex page
 // (its nav, create, edit and delete, the API's refusals under the field
 // they are about, and its gate for everyone else), and a validation
 // pipeline card's "Add from regex library" picker (two entries added as
@@ -52,21 +52,20 @@ import { versionPath } from "./support/versions-page.js";
 //   Each test names its own entries `e2e-<uuid>…`, asserts only on its own
 //   rows and the seeded ones it reads (never a count, the empty state or
 //   the list's order), and deletes its own by id as the tables' owner when
-//   it ends, however it ends (`testRegexes`, D15b Preflight ruling 17). The
-//   seeded 35 are only read.
-// - The fake evaluator answers by the regex (Preflight ruling 28 of D15a):
-//   `fake-ottl-evaluator: invalid` is refused with its words, `busy` makes
-//   the request 503. The API's own check turns either away at create, so the
-//   picker's refused entries are written by SQL, as the tables' owner
-//   (insertTestRegex), in a category of their own that sorts between the
-//   seeded "PII / GDPR" and "Secrets", so they sit between the two seeded
-//   picks in the library's order (category, then name).
+//   it ends, however it ends (`testRegexes`). The seeded 35 are only read.
+// - The fake evaluator answers by the regex: `fake-ottl-evaluator: invalid`
+//   is refused with its words, `busy` makes the request 503. The API's own
+//   check turns either away at create, so the picker's refused entries are
+//   written by SQL, as the tables' owner (insertTestRegex), in a category of
+//   their own that sorts between the seeded "PII / GDPR" and "Secrets", so
+//   they sit between the two seeded picks in the library's order (category,
+//   then name).
 // Each admin is a fresh user, made one by the README's SQL; each member
 // works in an organization of their own.
 
 const PASSWORD = "correct horse battery staple";
 
-/** The picker's refused entries' category: after "PII / GDPR", before "Secrets" (the library's order, Preflight ruling 3). */
+/** The picker's refused entries' category: after "PII / GDPR", before "Secrets" (the library's order). */
 const BETWEEN_CATEGORY = "PII / GDPR e2e";
 
 /**
@@ -142,7 +141,7 @@ async function openMembersValidationCard(page: Page) {
   return { path, validationPipeline, card };
 }
 
-test("a product admin's nav lists User Feedback, Test Templates, Test Regex, Library, Flows, Users, then Product admins (D29 decision 36); a pattern is created, edited and deleted on Test Regex", async ({
+test("a product admin's nav lists User Feedback, Test Templates, Test Regex, Library, Flows, Users, then Product admins; a pattern is created, edited and deleted on Test Regex", async ({
   page,
   testRegexes,
 }) => {

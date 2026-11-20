@@ -13,12 +13,11 @@ import { abortAfter, RUNS_REQUEST_TIMEOUT_MS, type RunTarget } from "~/lib/store
 import { readsFor } from "~/lib/workspace-reads.js";
 
 /*
- * The Validation subtab's memory (D15a decisions 12, 13 and 18; Preflight
- * ruling 26): the validation pipelines and their rules, in a store of their
- * own, as the Suites subtab's (`test-suites-store.ts`).
+ * The Validation subtab's memory: the validation pipelines and their rules, in
+ * a store of their own, as the Suites subtab's (`test-suites-store.ts`).
  * - the pipelines are read each time the Validation subtab shows and when the
- *   version changes, and a card's rules each time it mounts (Preflight ruling
- *   26), so a teammate's edits show;
+ *   version changes, and a card's rules each time it mounts, so a teammate's
+ *   edits show;
  * - a failed read is kept, shown inline with Retry ("Failed to load
  *   validation pipelines", "Failed to load validation rules"; a refusal, a
  *   4xx but 408 and 429, in the API's words); a read that never answers is aborted after
@@ -39,29 +38,28 @@ import { readsFor } from "~/lib/workspace-reads.js";
  *   that pipeline's rules are read again instead, by a read sent after the
  *   answer, while the pipeline is listed, and the rule's hold is released
  *   once that read answers or fails; a pipeline not listed is not read, and
- *   the hold is released at once (D15a Rulings 59 and 61, 63);
+ *   the hold is released at once;
  * - a delete the API answers "not found" (another tab deleted it) drops the
  *   pipeline or rule here too: it is gone either way; so does a rule's change
- *   or create, or a pipeline's create, the API answers so (D15a Ruling 56):
- *   a rule's `validation_rule_not_found` drops the rule, a rule's
- *   `validation_pipeline_not_found` (its change, create or delete, Ruling
- *   59) its pipeline, and a pipeline's create answered 404 (the version
- *   itself gone) reads the pipelines again, so the list shows the API's
- *   refusal;
- * - a rule's change or delete under way is held here (`ruleWritesInFlight`,
- *   D15a Ruling 57) until the API answers, refused or not, whether or not the
- *   dialog that sent it is still open, and released once its answer is in
- *   the store (or, answered after its version was left and come back to,
- *   once its pipeline's rules are read again): the card holds that rule's
- *   Edit and Delete, so it can't be reopened on its old text mid-save (and a
- *   plain Save revert the change that lands);
+ *   or create, or a pipeline's create, the API answers so: a rule's
+ *   `validation_rule_not_found` drops the rule, a rule's
+ *   `validation_pipeline_not_found` (its change, create or delete) its
+ *   pipeline, and a pipeline's create answered 404 (the version itself gone)
+ *   reads the pipelines again, so the list shows the API's refusal;
+ * - a rule's change or delete under way is held here (`ruleWritesInFlight`)
+ *   until the API answers, refused or not, whether or not the dialog that
+ *   sent it is still open, and released once its answer is in the store (or,
+ *   answered after its version was left and come back to, once its
+ *   pipeline's rules are read again): the card holds that rule's Edit and
+ *   Delete, so it can't be reopened on its old text mid-save (and a plain
+ *   Save revert the change that lands);
  * - no rename of a validation pipeline (`updateValidationPipeline`): the API
- *   creates and deletes them, never changes one (Preflight ruling 16).
+ *   creates and deletes them, never changes one.
  *
  * A pipeline's name and a rule's name, description, pattern and OTTL are
- * configuration text (ADR 0024): they never reach an attribute outside
- * `ph-no-capture`, a log line or an analytics event, and signing out
- * forgets them (`reset`, from useLogout).
+ * configuration text: they never reach an attribute outside `ph-no-capture`,
+ * a log line or an analytics event, and signing out forgets them (`reset`,
+ * from useLogout).
  */
 
 /** What the subtab says when the validation pipelines can't be read. */
@@ -157,7 +155,7 @@ export function ruleWriteKey(target: RunTarget, ruleId: string): string {
   return `${target.organizationId}/${target.configurationId}/${target.versionId}/${ruleId}`;
 }
 
-/** Whether a change or delete of `target`'s rule `ruleId` is under way (D15a Ruling 57): its Edit and Delete are held until the API answers. */
+/** Whether a change or delete of `target`'s rule `ruleId` is under way: its Edit and Delete are held until the API answers. */
 export function isRuleWriteInFlight(writes: Record<string, string>, target: RunTarget, ruleId: string): boolean {
   const key = ruleWriteKey(target, ruleId);
   return Object.values(writes).includes(key);
@@ -216,21 +214,21 @@ export const useValidationPipelinesStore = create<ValidationPipelinesState>()((s
   /**
    * Whether a rule write's answer for `target`, sent before `signedOut`
    * sign-outs, still concerns the store: `target` is the version held, even
-   * when the store left it and came back meanwhile (D15a Ruling 59). Not left
-   * (`current`), the answer is placed; left and come back to, the rules read
-   * since may predate the write, so they are read again (`rereadRules`).
+   * when the store left it and came back meanwhile. Not left (`current`),
+   * the answer is placed; left and come back to, the rules read since may
+   * predate the write, so they are read again (`rereadRules`).
    */
   const holding = (target: RunTarget, signedOut: number) => signedOut === signOuts && sameTarget(get().target, target);
 
   /**
-   * A rule write answered after its version was left and come back to
-   * (D15a Ruling 61): the answer isn't placed, as a teammate may have
-   * written since; the pipeline's rules are read again instead, by a read
-   * sent after the answer (one under way reads again as it answers), so the
-   * store shows what the API holds now, the write's or a later one. Only
-   * while the pipeline is listed: one gone has nothing to read. Settles once
-   * that read answers or fails, never rejecting: the rule's hold is released
-   * then, and Edit opens on what was read.
+   * A rule write answered after its version was left and come back to: the
+   * answer isn't placed, as a teammate may have written since; the
+   * pipeline's rules are read again instead, by a read sent after the answer
+   * (one under way reads again as it answers), so the store shows what the
+   * API holds now, the write's or a later one. Only while the pipeline is
+   * listed: one gone has nothing to read. Settles once that read answers or
+   * fails, never rejecting: the rule's hold is released then, and Edit opens
+   * on what was read.
    */
   const rereadRules = async (target: RunTarget, validationPipelineId: string) => {
     if (!get().pipelines.some((listed) => listed.id === validationPipelineId)) return;
@@ -428,13 +426,13 @@ export const useValidationPipelinesStore = create<ValidationPipelinesState>()((s
       try {
         ({ rule } = await createValidationRule(target.organizationId, target.configurationId, target.versionId, validationPipelineId, request));
       } catch (error) {
-        // Rethrown straight after dropGone, no await between: RuleEditorDialog's and the regex library picker's unmount bumps,
-        // deferred a microtask, rely on it (D15b Rulings 26, 28, 32).
+        // Rethrown straight after dropGone, no await between: RuleEditorDialog's and the regex library picker's unmount
+        // bumps, deferred a microtask, rely on it.
         dropGone(target, signedOut, error, validationPipelineId, null);
         throw error;
       }
       if (!current(target, at)) {
-        // Answered after the version was left and come back to: read, not placed (Ruling 61).
+        // Answered after the version was left and come back to: read, not placed.
         if (holding(target, signedOut)) void rereadRules(target, validationPipelineId);
         return rule;
       }
@@ -466,7 +464,7 @@ export const useValidationPipelinesStore = create<ValidationPipelinesState>()((s
             request,
           ));
         } catch (error) {
-          // Rethrown straight after dropGone, no await between: RuleEditorDialog's unmount bump, deferred a microtask, relies on it (D15b Rulings 26, 28).
+          // Rethrown straight after dropGone, no await between: RuleEditorDialog's unmount bump, deferred a microtask, relies on it.
           dropGone(target, signedOut, error, validationPipelineId, ruleId);
           throw error;
         }
@@ -475,7 +473,7 @@ export const useValidationPipelinesStore = create<ValidationPipelinesState>()((s
           wroteRules(validationPipelineId);
           if (get().rulesByPipeline[validationPipelineId] !== undefined) placeRule(validationPipelineId, rule);
         } else if (holding(target, signedOut)) {
-          // Answered after the version was left and come back to: read, not placed (Ruling 61).
+          // Answered after the version was left and come back to: read, not placed.
           await rereadRules(target, validationPipelineId);
         }
         return rule;
@@ -493,12 +491,12 @@ export const useValidationPipelinesStore = create<ValidationPipelinesState>()((s
         try {
           await deleteValidationRule(target.organizationId, target.configurationId, target.versionId, validationPipelineId, ruleId);
         } catch (error) {
-          // Already gone (another tab deleted it, or its pipeline, Ruling 59): dropped here too, and the refusal still answered.
+          // Already gone (another tab deleted it, or its pipeline): dropped here too, and the refusal still answered.
           dropGone(target, signedOut, error, validationPipelineId, ruleId);
           throw error;
         }
         if (current(target, at)) dropRule(validationPipelineId, ruleId);
-        // Answered after the version was left and come back to: read, not dropped (Ruling 61).
+        // Answered after the version was left and come back to: read, not dropped.
         else if (holding(target, signedOut)) await rereadRules(target, validationPipelineId);
       } finally {
         written();

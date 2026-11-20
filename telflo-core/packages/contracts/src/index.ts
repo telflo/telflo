@@ -1049,7 +1049,7 @@ export type {
 } from "./product-admin.js";
 export { safeRedirectPath } from "./safe-redirect.js";
 // The one shared field schema the API needs outside a request body: it
-// validates TELFLO_SALES_INQUIRY_TO (D4 Preflight minor).
+// validates TELFLO_SALES_INQUIRY_TO.
 export { emailSchema } from "./shared.js";
 export {
   CreateOrganizationVariableRequestSchema,
@@ -1114,9 +1114,8 @@ export type {
   VariableUseGroup,
 } from "./variables.js";
 
-// D25's public surface (decisions 17 to 20): its own codes, then one file
-// per area, created empty by Task 1b and exported whole, so the tasks that
-// fill them never edit this index at once.
+// The public API's surface: its own codes, then one file per area, exported
+// whole.
 export {
   INSUFFICIENT_ACCESS_MESSAGE,
   ORGANIZATION_REQUIRED_MESSAGE,
@@ -1135,5 +1134,5 @@ export * from "./public-api/organizations.js";
 export * from "./public-api/test-runs.js";
 export * from "./install-commands.js";
 export * from "./personal-api-tokens.js";
-// The site's switches and links (D36-1 decision 27), read by the API and the web alike.
+// The site's switches and links, read by the API and the web alike.
 export * from "./site.js";

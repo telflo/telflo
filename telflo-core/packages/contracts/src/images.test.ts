@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { imageTypeOf, ORGANIZATION_LOGO_MAXIMUM_BYTES, ORGANIZATION_LOGO_TYPES } from "./images.js";
 
-// D23-2 decisions 32 and 61: a logo is typed from its bytes only. Built from
-// Uint8Array and TextEncoder (the package runs in the browser too); the
-// API's own tests cover a Node Buffer.
+// A logo is typed from its bytes only. Built from Uint8Array and TextEncoder
+// (the package runs in the browser too); the API's own tests cover a Node
+// Buffer.
 
 const text = (value: string): Uint8Array => new TextEncoder().encode(value);
 const bytes = (...values: number[]): Uint8Array => Uint8Array.from(values);
@@ -21,7 +21,7 @@ const PNG = bytes(0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a);
 const JPEG = bytes(0xff, 0xd8, 0xff);
 const WEBP = join(text("RIFF"), bytes(0x24, 0x00, 0x00, 0x00), text("WEBP"));
 
-describe("imageTypeOf (D23-2 decision 32)", () => {
+describe("imageTypeOf", () => {
   it.each([
     ["a PNG's signature", PNG, "image/png"],
     ["a PNG's signature and its IHDR", join(PNG, bytes(0, 0, 0, 13), text("IHDR")), "image/png"],
@@ -74,7 +74,7 @@ describe("imageTypeOf (D23-2 decision 32)", () => {
   });
 });
 
-describe("the logo's limits (D23-2 decision 32)", () => {
+describe("the logo's limits", () => {
   it("is 2 MiB, and the three types imageTypeOf names", () => {
     expect(ORGANIZATION_LOGO_MAXIMUM_BYTES).toBe(2 * 1024 * 1024);
     expect(ORGANIZATION_LOGO_TYPES).toEqual(["image/png", "image/jpeg", "image/webp"]);

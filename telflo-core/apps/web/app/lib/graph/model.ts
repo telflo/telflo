@@ -8,8 +8,7 @@ import type { Graph, OTelNode } from "./types.js";
 
 /*
  * The configuration a graph describes, and the one a text describes, in one
- * shape, so the text edits (Task 4) can write only their differences (D9a
- * decision 4; Preflight ruling 5).
+ * shape, so the text edits can write only their differences.
  *
  * `deriveModel` is the model half of a generator, without printing
  * anything: the rules for each pipeline's membership and for the order of
@@ -35,8 +34,8 @@ export interface Model {
   /** `service.extensions`: the enabled extensions' names. */
   extensions: string[];
   /**
-   * The keys a pipeline or `service.extensions` names that nobody declares
-   * (Preflight ruling 5): shown, never declared by an edit.
+   * The keys a pipeline or `service.extensions` names that nobody declares:
+   * shown, never declared by an edit.
    */
   undeclared: Set<string>;
 }
@@ -155,33 +154,31 @@ function isComponent(node: OTelNode): boolean {
 
 /**
  * The configuration the graph describes: the rules for membership and
- * processor order, and D9a's:
+ * processor order, and these:
  * - a component is keyed with the text's spelling of its type (its node's
- *   key), and its value is its config as it is (`null` stays `null`; the
- *   generator wrote `{}`);
+ *   key), and its value is its config as it is (`null` stays `null`);
  * - a node marked `declared: false` is undeclared, never a component;
  * - `service.extensions` is the enabled extensions (a node with no
  *   `enabled` is enabled);
  * - a connector's edge to or from a pipeline's group makes it a member
  *   (a pipeline with nothing else to join it to);
  * - a pipeline with no receivers at all keeps the processor chain nothing
- *   feeds, as a routed pipeline does (the generator dropped it, and the
- *   text's next edit would have removed the person's processors);
+ *   feeds, as a routed pipeline does (dropped, the text's next edit would
+ *   remove the person's processors);
  * - receivers, exporters and extensions keep `order`'s order where it
  *   has them (the text's own model, so an edit doesn't reorder a list).
  *
- * Routing and failover (D9d decision 8; Preflight rulings 1, 13): with
- * `order` (the text's model, as every change in the store passes), such a
- * connector is in a pipeline's receivers exactly when `order` lists it
- * there and it is still a node. An unrelated canvas change leaves those
- * receivers as the text has them, both ways: a pipeline the config names
- * without listing the connector, and one listing it unnamed. Only the
- * forms' target choices wire them (the store's `setComponentValues`). A
- * duplicated connector, and an added pipeline the config already names, are
- * not wired. Without `order`, D9a's derivation: the config's targets
- * (tests only). Either way, a pipeline with such a member, or with no
- * receivers, keeps the processor chain nothing feeds (parse stores no edge
- * from routing or failover into it).
+ * Routing and failover: with `order` (the text's model, as every change in
+ * the store passes), such a connector is in a pipeline's receivers exactly
+ * when `order` lists it there and it is still a node. An unrelated canvas
+ * change leaves those receivers as the text has them, both ways: a pipeline
+ * the config names without listing the connector, and one listing it
+ * unnamed. Only the forms' target choices wire them (the store's
+ * `setComponentValues`). A duplicated connector, and an added pipeline the
+ * config already names, are not wired. Without `order`, the config's
+ * targets (tests only). Either way, a pipeline with such a member, or with
+ * no receivers, keeps the processor chain nothing feeds (parse stores no
+ * edge from routing or failover into it).
  */
 export function deriveModel(graph: Graph, order?: Model): Model {
   const { nodes, edges, pipelines } = graph;
@@ -248,8 +245,8 @@ export function deriveModel(graph: Graph, order?: Model): Model {
       }
     }
 
-    // Routing and failover: the text's own membership with `order` (D9d
-    // decision 8), the config's targets without it (D9a).
+    // Routing and failover: the text's own membership with `order`, the
+    // config's targets without it.
     const listed = order?.pipelines.get(pipeline.name)?.receivers;
     let routedIn = false;
     for (const node of connectors) {

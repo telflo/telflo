@@ -4,21 +4,19 @@ import type { StoredGraph } from "~/lib/graph/stored-graph.js";
 import { STAGED_EDIT_KEY, clearStagedEdit } from "./staged-edit-key.js";
 
 /*
- * The playground's staged edit (D31-1 decisions 4 and 36, Preflight ruling
- * 4): what Save in the playground editor (and the blank public editor)
- * keeps for after the visitor signs in or registers, in this browser's
- * localStorage (registration's email link may open another tab). One key,
- * written only by Save (`stagePlaygroundEdit`), replaced by the next Save,
- * read only by the signed-in configurations page's handoff dialog (D31-1's
- * Task 5; `readStagedEdit`), removed by its Save or Discard
- * (`clearStagedEdit`) and by every sign-out (`lib/signed-out.ts`, Q211),
- * and ignored and removed when older than 7 days,
- * unreadable, or refused by the create's own schema
- * (`CreateConfigurationRequestSchema`). It never leaves the browser until
- * the person presses Save in that dialog.
+ * The playground's staged edit: what Save in the playground editor (and the
+ * blank public editor) keeps for after the visitor signs in or registers, in
+ * this browser's localStorage (registration's email link may open another
+ * tab). One key, written only by Save (`stagePlaygroundEdit`), replaced by the
+ * next Save, read only by the signed-in configurations page's handoff dialog
+ * (`readStagedEdit`), removed by its Save or Discard (`clearStagedEdit`) and
+ * by every sign-out (`lib/signed-out.ts`), and ignored and removed when older
+ * than 7 days, unreadable, or refused by the create's own schema
+ * (`CreateConfigurationRequestSchema`). It never leaves the browser until the
+ * person presses Save in that dialog.
  *
- * It holds the visitor's text (configuration text, ADR 0024): it is the one
- * storage entry the spec names for it, and nothing here logs it, puts it in
+ * It holds the visitor's text (configuration text): it is the one
+ * storage entry that holds it, and nothing here logs it, puts it in
  * an error's message, or prints it.
  */
 

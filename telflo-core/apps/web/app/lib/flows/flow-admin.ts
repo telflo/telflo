@@ -12,8 +12,8 @@ import { componentsOf, extractSignalType, readText } from "~/lib/graph/parse.js"
 import { findDistribution } from "~/lib/stores/collector-catalogue-store.js";
 
 /*
- * What product admin's flows page and its dialog share (D12 decisions 3, 6,
- * 11 and 16): the slug, the signals and the PATCH an edit sends.
+ * What product admin's flows page and its dialog share: the slug, the signals
+ * and the PATCH an edit sends.
  */
 
 /** The slug: the name, lowercased, words of letters and digits joined by hyphens, at most 80 characters. */
@@ -31,12 +31,11 @@ export function slugify(name: string): string {
  * traces, metrics, logs, derived rather than asked: a flow's signals are a
  * fact about its pipelines, and an author ticking boxes gets them wrong.
  *
- * Read as the editor reads the text (D9a's `readText`, which `parse` runs),
- * so a text the editor refuses has none. The pipelines are the text's own:
+ * Read as the editor reads the text (`readText`, which `parse` runs), so a
+ * text the editor refuses has none. The pipelines are the text's own:
  * `parse`'s graph shows a text without any as three empty default
- * pipelines, which would make every
- * signal look handled. A pipeline's signal is its name's type, so
- * `traces/sampled` counts as traces.
+ * pipelines, which would make every signal look handled. A pipeline's
+ * signal is its name's type, so `traces/sampled` counts as traces.
  */
 export function deriveSignals(yaml: string): FlowSignal[] {
   if (!yaml.trim()) return [];
@@ -48,9 +47,9 @@ export function deriveSignals(yaml: string): FlowSignal[] {
 }
 
 /**
- * Whether the catalogue offers a flow's pin (D12 decision 16): false for a
- * pin it has retired (deprecated) or never had; null when it can't say
- * (unread, its read failed, or a distribution it doesn't list).
+ * Whether the catalogue offers a flow's pin: false for a pin it has retired
+ * (deprecated) or never had; null when it can't say (unread, its read failed,
+ * or a distribution it doesn't list).
  */
 export function isPinOffered(
   flow: Pick<Flow, "collectorDistribution" | "collectorVersion">,
@@ -74,12 +73,11 @@ function sameList(left: readonly string[], right: readonly string[]): boolean {
 
 /**
  * The PATCH an edit sends: only the fields that differ from the flow as
- * read. So an edit that leaves the pin alone
- * doesn't send it, and the API keeps it even when the catalogue has retired
- * it since (D12 Preflight ruling 19): renaming an old-pinned flow doesn't
- * force a re-pin. A changed distribution or version sends both, so the API
- * checks them as a pair. The signals are compared as a set (the dialog
- * derives them in its own order); the tags as a list.
+ * read. So an edit that leaves the pin alone doesn't send it, and the API
+ * keeps it even when the catalogue has retired it since: renaming an
+ * old-pinned flow doesn't force a re-pin. A changed distribution or version
+ * sends both, so the API checks them as a pair. The signals are compared as
+ * a set (the dialog derives them in its own order); the tags as a list.
  */
 export function changedFields(flow: Flow, fields: FlowFields): UpdateFlowRequest {
   const changes: UpdateFlowRequest = {};
@@ -102,8 +100,8 @@ export function changedFields(flow: Flow, fields: FlowFields): UpdateFlowRequest
 
 /**
  * Whether an admin call was refused because the caller is no longer a
- * product admin (403 `product_admin_required`, the flag read live; D12
- * decision 3): the page then goes to `/app`, as the gate sends a non-admin.
+ * product admin (403 `product_admin_required`, the flag read live): the
+ * page then goes to `/app`, as the gate sends a non-admin.
  */
 export function isProductAdminRefusal(error: unknown): boolean {
   return error instanceof ApiError && error.code === "product_admin_required";

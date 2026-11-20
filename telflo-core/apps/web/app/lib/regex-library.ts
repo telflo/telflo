@@ -1,16 +1,14 @@
 /*
- * The regex catalog (ADR 0018; D9b plan Task 7): named regex patterns used
- * across the config forms (the attributes processor's placeholders and seeds,
- * the filter processor's examples). `findPattern` throws on a name the
- * catalog lacks, so a mistyped lookup fails loudly rather than rendering
- * "undefined".
+ * The regex catalog: named regex patterns used across the config forms (the
+ * attributes processor's placeholders and seeds, the filter processor's
+ * examples). `findPattern` throws on a name the catalog lacks, so a mistyped
+ * lookup fails loudly rather than rendering "undefined".
  *
- * Two lists (D15b decision 11): this file is the config
- * forms', and the `test_regex` table is the validation picker's ("Add from
- * regex library") and the Test Regex page's, which product admins edit.
- * Migration 1700000000031 seeds the table with these 35 entries, and
- * regex-library.test.ts pins this catalog's name, category, description and
- * pattern, in order, to the seed's fixture
+ * Two lists: this file is the config forms', and the `test_regex` table is
+ * the validation picker's ("Add from regex library") and the Test Regex
+ * page's, which product admins edit. Migration 1700000000031 seeds the table
+ * with these 35 entries, and regex-library.test.ts pins this catalog's name,
+ * category, description and pattern, in order, to the seed's fixture
  * (services/ottl-evaluator/internal/rules/testdata/seeded-test-regexes.json),
  * so the two start equal; an admin's edits to the table never reach this
  * file.

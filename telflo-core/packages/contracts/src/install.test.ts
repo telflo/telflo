@@ -11,8 +11,7 @@ import {
   RESERVED_INSTALL_ENV_NAMES,
 } from "./install.js";
 
-// D17c-1 decisions 38, 39 and 47, Preflight rulings 11 and 26: the install's
-// facts, the bundle's request and its file name.
+// The install's facts, the bundle's request and its file name.
 
 const GROUP_ID = "0192f1a4-7b3c-7d2e-8f10-1a2b3c4d5e6f";
 
@@ -29,7 +28,7 @@ describe("installBundleFileName", () => {
 });
 
 describe("the words", () => {
-  it("are decision 36's, and the five reserved names", () => {
+  it("are the install's words, and the five reserved names", () => {
     expect(INSTALL_UNAVAILABLE_MESSAGE).toBe(
       "Installing isn't available right now: the install templates can't be read. Ask your administrator.",
     );
@@ -43,7 +42,7 @@ describe("the words", () => {
   });
 });
 
-// D17d-2 decision 15, Preflight ruling 2: fleet_type_not_installable's words per direction.
+// fleet_type_not_installable's words per direction.
 describe("fleet_type_not_installable's words", () => {
   it("send a Kubernetes-supervisor fleet to Install with Helm, and a server fleet's group to Install collector", () => {
     expect(FLEET_TYPE_NOT_INSTALLABLE_MESSAGE).toBe("A Kubernetes-supervisor fleet's collectors are installed with Helm: use Install with Helm.");
@@ -84,8 +83,8 @@ describe("installEnvValueProblem", () => {
     expect(installEnvValueProblem(value)).not.toBeNull();
   });
 
-  // D17d-2 Ruling 36: a value no UTF-8 file, YAML parser or shell carries is refused at the request (400 at
-  // env.N.value), for every install, never stored for a download to fail on.
+  // A value no UTF-8 file, YAML parser or shell carries is refused at the request (400 at env.N.value), for every
+  // install, never stored for a download to fail on.
   const CANARY = "CANARY-7f3a";
   it.each([
     ["a lone high surrogate", `${CANARY}\ud83d end`],
@@ -166,7 +165,7 @@ describe("InstallFactsSchema", () => {
     expect(InstallFactsSchema.safeParse({ ...facts, bearer: "x" }).success).toBe(false);
   });
 
-  it("says whether the group's mounts could be read (Ruling 62): required, a boolean", () => {
+  it("says whether the group's mounts could be read: required, a boolean", () => {
     expect(InstallFactsSchema.parse({ ...facts, mounts: [], mountsReadable: false })).toEqual({ ...facts, mounts: [], mountsReadable: false });
     const { mountsReadable: _left, ...without } = facts;
     expect(InstallFactsSchema.safeParse(without).success).toBe(false);

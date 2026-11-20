@@ -2,10 +2,10 @@ import { describe, expect, it } from "vitest";
 import { resolveFlowVersion } from "./resolve-flow-version.js";
 
 /*
- * The version select's cases (D12 Preflight ruling 12). The fallback is the
- * catalogue's default version, so the cases that took the list's first give
- * the default, which here is not the first; one more case shows the first
- * standing in when none is flagged.
+ * The version select's cases. The fallback is the catalogue's default
+ * version, so the cases that took the list's first give the default, which
+ * here is not the first; one more case shows the first standing in when
+ * none is flagged.
  */
 
 /** Versions as the catalogue offers them, newest first; `defaultVersion` flagged. */
@@ -56,7 +56,7 @@ describe("resolveFlowVersion", () => {
     expect(resolveFlowVersion("", null, null, "otelcol-contrib", offers(["0.147.0", "0.140.0"]))).toBe("0.147.0");
   });
 
-  it("keeps a pin the catalogue no longer offers while the distribution is the flow's (D12 Preflight ruling 19)", () => {
+  it("keeps a pin the catalogue no longer offers while the distribution is the flow's", () => {
     expect(
       resolveFlowVersion("", "otelcol-contrib", "0.155.0", "otelcol-contrib", offers(["0.162.0", "0.161.0"], "0.162.0")),
     ).toBe("0.155.0");

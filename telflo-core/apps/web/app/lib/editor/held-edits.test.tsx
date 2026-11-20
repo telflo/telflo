@@ -6,7 +6,7 @@ import { flushHeldEdits, useHeldEdit } from "./held-edits.js";
 import { hasHeldEdits } from "~/test/held-edits.js";
 
 /*
- * Held edits (D9b decision 2; Preflight ruling 24): what a field holds that
+ * Held edits: what a field holds that
  * the store doesn't have yet is written before the page saves and when the
  * field goes, and closing the tab asks while any is held.
  */
@@ -68,7 +68,7 @@ describe("held edits", () => {
     expect(written).toEqual(["x"]);
   });
 
-  it("a flush that throws doesn't stop the others, is released, and its error surfaces after them (ruling 35)", () => {
+  it("a flush that throws doesn't stop the others, is released, and its error surfaces after them", () => {
     const written: string[] = [];
     const failure = new Error("the field's flush failed");
     const flushes: string[] = [];

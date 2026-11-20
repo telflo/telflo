@@ -1,9 +1,8 @@
 /**
- * The editor's collector validation (D13b decisions 2, 4, 12 and 13;
- * Preflight ruling 21), against a spied `validateVersion`, with fake timers
- * for the 2 s debounce and the 429's wait. The hook's basics come first; the
- * distribution is always the configuration's (decision 12), so the
- * distribution cases are the pin's.
+ * The editor's collector validation, against a spied `validateVersion`, with
+ * fake timers for the 2 s debounce and the 429's wait. The hook's basics come
+ * first; the distribution is always the configuration's, so the distribution
+ * cases are the pin's.
  */
 
 import type { ConfigurationValidationResponse, ConfigurationVersion } from "@telflo/contracts";
@@ -98,7 +97,7 @@ afterEach(() => {
 });
 
 describe("the basics", () => {
-  it("sends the open version's text with the pin on screen, the saved one when untouched (Ruling 57)", async () => {
+  it("sends the open version's text with the pin on screen, the saved one when untouched", async () => {
     mount();
     open();
     await flush();
@@ -113,7 +112,7 @@ describe("the basics", () => {
     );
   });
 
-  it("sends the tab's unsaved pick as collectorVersion (D13a Ruling 37)", async () => {
+  it("sends the tab's unsaved pick as collectorVersion", async () => {
     mount();
     open();
     await flush();
@@ -162,7 +161,7 @@ describe("the basics", () => {
   });
 });
 
-describe("when it checks (decision 13)", () => {
+describe("when it checks", () => {
   it("checks a version at once when it opens, and a published one too", async () => {
     mount();
     open(PUBLISHED_FIELDS);
@@ -257,7 +256,7 @@ describe("when it checks (decision 13)", () => {
     expect(status()).toEqual({ status: "idle" });
   });
 
-  it("sends nothing for text that parses but holds a C0 control character the API refuses: unavailable, so Apply applies it unchecked (Ruling 57)", async () => {
+  it("sends nothing for text that parses but holds a C0 control character the API refuses: unavailable, so Apply applies it unchecked", async () => {
     mount();
     open({ yamlContent: 'receivers:\n  otlp: {}\n# bell "\u0007"\n' });
     await flush();
@@ -277,7 +276,7 @@ describe("when it checks (decision 13)", () => {
     expect(status()).toEqual({ status: "unavailable", message: VALIDATION_CONTROL_CHARACTER_MESSAGE });
   });
 
-  it("sends nothing for whitespace-only text, which counts as empty: idle (Ruling 57)", async () => {
+  it("sends nothing for whitespace-only text, which counts as empty: idle", async () => {
     mount();
     open({ yamlContent: "  \n\t\n\r\n" });
     await flush();
@@ -294,7 +293,7 @@ describe("when it checks (decision 13)", () => {
   });
 });
 
-describe("every load is an opening (Ruling 57)", () => {
+describe("every load is an opening", () => {
   it("a load of the same version, with the same text and pin, checks at once and never sticks at validating", async () => {
     mount();
     open();
@@ -339,7 +338,7 @@ describe("every load is an opening (Ruling 57)", () => {
   });
 });
 
-describe("the pin on screen is always the one checked (Ruling 57)", () => {
+describe("the pin on screen is always the one checked", () => {
   /** The API: its own saved pin when none is sent, and an answer per pin (OTHER_PIN refuses the text). */
   function serverWithPin(saved: () => string) {
     validate.mockImplementation(async (_organizationId, _configurationId, _versionId, request) => {
@@ -398,7 +397,7 @@ describe("the pin on screen is always the one checked (Ruling 57)", () => {
   });
 });
 
-describe("only the newest answer (decision 2's fixes)", () => {
+describe("only the newest answer", () => {
   it("drops an older text's answer that arrives after a newer one", async () => {
     mount();
     open();
@@ -464,7 +463,7 @@ describe("only the newest answer (decision 2's fixes)", () => {
   });
 });
 
-describe("a superseded check is aborted (Ruling 69)", () => {
+describe("a superseded check is aborted", () => {
   it("a re-pick aborts the check still in flight, so only the newest waits", async () => {
     mount();
     open();
@@ -544,7 +543,7 @@ describe("a superseded check is aborted (Ruling 69)", () => {
   });
 });
 
-describe("the answers (decisions 4 and 12)", () => {
+describe("the answers", () => {
   it("retired: the pin is deprecated, not checked", async () => {
     validate.mockResolvedValue({ status: "retired", collectorVersion: "0.155.0", errors: [], requirements: [] });
     mount();
@@ -583,7 +582,7 @@ describe("the answers (decisions 4 and 12)", () => {
     expect(status()).toEqual({ status: "valid", collectorVersion: PIN, requirements: [] });
   });
 
-  it("an in-flight 429 (Retry-After 1) is asked again every second for 60 s after the first refusal, then gives up (Ruling 58)", async () => {
+  it("an in-flight 429 (Retry-After 1) is asked again every second for 60 s after the first refusal, then gives up", async () => {
     const IN_FLIGHT = "Too many checks at once. Checking again shortly.";
     validate.mockRejectedValue(new ApiError("validation_rate_limited", IN_FLIGHT, { status: 429, retryAfterSeconds: 1 }));
     mount();
@@ -607,7 +606,7 @@ describe("the answers (decisions 4 and 12)", () => {
     expect(status()).toEqual({ status: "unavailable", message: VALIDATION_RATE_LIMIT_GAVE_UP_MESSAGE });
   });
 
-  it("a per-minute 429 (Retry-After 45) is asked again once inside the window, then gives up (Ruling 58)", async () => {
+  it("a per-minute 429 (Retry-After 45) is asked again once inside the window, then gives up", async () => {
     validate.mockRejectedValue(new ApiError("validation_rate_limited", RATE_LIMITED, { status: 429, retryAfterSeconds: 45 }));
     mount();
     open();
@@ -624,7 +623,7 @@ describe("the answers (decisions 4 and 12)", () => {
     expect(validate).toHaveBeenCalledTimes(2);
   });
 
-  it("a retry landing exactly 60 s after the first refusal is still sent (Ruling 58)", async () => {
+  it("a retry landing exactly 60 s after the first refusal is still sent", async () => {
     validate
       .mockRejectedValueOnce(new ApiError("validation_rate_limited", RATE_LIMITED, { status: 429, retryAfterSeconds: 45 }))
       .mockRejectedValueOnce(new ApiError("validation_rate_limited", RATE_LIMITED, { status: 429, retryAfterSeconds: 15 }));
@@ -642,7 +641,7 @@ describe("the answers (decisions 4 and 12)", () => {
     expect(status()).toEqual({ status: "valid", collectorVersion: PIN, requirements: [] });
   });
 
-  it("gives up at once when the first refusal's Retry-After falls outside the window (Ruling 58)", async () => {
+  it("gives up at once when the first refusal's Retry-After falls outside the window", async () => {
     validate.mockRejectedValue(new ApiError("validation_rate_limited", RATE_LIMITED, { status: 429, retryAfterSeconds: 61 }));
     mount();
     open();
@@ -653,7 +652,7 @@ describe("the answers (decisions 4 and 12)", () => {
     expect(validate).toHaveBeenCalledTimes(1);
   });
 
-  it("a Retry-After of 0 still waits a second, never asking in a tight loop (Ruling 58)", async () => {
+  it("a Retry-After of 0 still waits a second, never asking in a tight loop", async () => {
     validate.mockRejectedValue(new ApiError("validation_rate_limited", RATE_LIMITED, { status: 429, retryAfterSeconds: 0 }));
     mount();
     open();
@@ -668,7 +667,7 @@ describe("the answers (decisions 4 and 12)", () => {
     expect(status()).toEqual({ status: "unavailable", message: VALIDATION_RATE_LIMIT_GAVE_UP_MESSAGE });
   });
 
-  it("after giving up, a change asks again with a fresh minute (Ruling 58)", async () => {
+  it("after giving up, a change asks again with a fresh minute", async () => {
     validate.mockRejectedValue(new ApiError("validation_rate_limited", RATE_LIMITED, { status: 429, retryAfterSeconds: 45 }));
     mount();
     open();
@@ -689,7 +688,7 @@ describe("the answers (decisions 4 and 12)", () => {
     expect(status().status).toBe("valid");
   });
 
-  it("a change while retrying starts a fresh minute: an earlier refusal doesn't count against it (Ruling 58)", async () => {
+  it("a change while retrying starts a fresh minute: an earlier refusal doesn't count against it", async () => {
     validate.mockRejectedValue(new ApiError("validation_rate_limited", RATE_LIMITED, { status: 429, retryAfterSeconds: 30 }));
     mount();
     open();

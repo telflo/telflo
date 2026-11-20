@@ -2,9 +2,9 @@ import type { CollectorVersionOffer } from "@telflo/contracts";
 
 /*
  * Which collector version the flow admin dialog's version select shows. Its
- * fallback is the catalogue's default version (D12 Preflight ruling 12),
- * not the list's first; the catalogue's default is never a deprecated one,
- * and with no default flagged the list's first (newest) stands in.
+ * fallback is the catalogue's default version, not the list's first; the
+ * catalogue's default is never a deprecated one, and with no default
+ * flagged the list's first (newest) stands in.
  */
 
 /**
@@ -21,8 +21,7 @@ import type { CollectorVersionOffer } from "@telflo/contracts";
  * selected distribution's default version wins.
  *
  * The flow's pin is kept even when the catalogue no longer offers it: an
- * edit that doesn't change the pin leaves it where it is (D12 Preflight
- * ruling 19).
+ * edit that doesn't change the pin leaves it where it is.
  */
 export function resolveFlowVersion(
   currentPick: string,

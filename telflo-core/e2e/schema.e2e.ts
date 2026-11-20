@@ -15,15 +15,14 @@ import {
 import { E2E_WEB_URL } from "./support/environment.js";
 import { signInThroughApi, skipEditorTour } from "./support/session.js";
 
-// The collector's schema in the YAML tab (D13c decisions 1–3, 5, 11, 12;
-// Preflight rulings 12–14), in the browser: completion offers the pin's
-// names and never an old one, hover shows upstream's description, a typo is
-// a Warning that gates nothing, a pin picked in the toolbar switches the
-// schema at once (syntax only while the new pin's file is on its way, never
-// the previous pin's names), a retired pin and a schema that can't be had leave syntax markers
-// only, the widgets stay inside replay's blocked container, a
-// `yaml-language-server` modeline in the text requests nothing, and each
-// pin's file is requested once per tab.
+// The collector's schema in the YAML tab, in the browser: completion offers
+// the pin's names and never an old one, hover shows upstream's description, a
+// typo is a Warning that gates nothing, a pin picked in the toolbar switches
+// the schema at once (syntax only while the new pin's file is on its way,
+// never the previous pin's names), a retired pin and a schema that can't be
+// had leave syntax markers only, the widgets stay inside replay's blocked
+// container, a `yaml-language-server` modeline in the text requests nothing,
+// and each pin's file is requested once per tab.
 //
 // The pins are the catalogue's offered 0.162.0 and 0.161.0, written out:
 // `awss3` became `aws_s3` in 0.162.0 (the catalogue's renamedTypes), so the
@@ -43,7 +42,7 @@ const PASSWORD = "correct horse battery staple";
 const NEW_PIN = "0.162.0";
 const OLD_PIN = "0.161.0";
 
-/** The schema file the editor fetches for `pin` (Preflight ruling 12). */
+/** The schema file the editor fetches for `pin`. */
 const schemaPath = (pin: string) => `/schemas/otelcol-contrib/v${pin}.json`;
 
 const validText = (version: string) => `config valid · v${version}`;
@@ -57,8 +56,7 @@ const ENDPOINT_DESCRIPTION = "Endpoint configures the address for this network c
 
 /**
  * In every browser the editor's tour is marked done (`skipEditorTour`):
- * these tests aren't about it, and it would cover the page on a first visit
- * (D9a decision 14).
+ * these tests aren't about it, and it would cover the page on a first visit.
  */
 const test = base.extend({
   context: async ({ context }, use) => {
@@ -284,7 +282,7 @@ function applyButton(page: Page) {
 /**
  * The attributes, anywhere in the document (shadow roots included) outside
  * the editor's replay-blocked container, whose value holds `text`, case
- * ignored: replay records attributes unmasked (ADR 0024).
+ * ignored: replay records attributes unmasked.
  */
 function attributesOutsideHolding(page: Page, text: string): Promise<string[]> {
   return page.evaluate<string[]>(`(() => {
@@ -310,8 +308,8 @@ function attributesOutsideHolding(page: Page, text: string): Promise<string[]> {
  * Monaco's own elements outside the replay-blocked areas: each widget with
  * whether it is inside one, and each element outside with its attributes'
  * names and its text. The areas are the editor's container and the app
- * shell's one host for every Monaco's screen-reader live region (D14a
- * Ruling 48), both `ph-no-capture`.
+ * shell's one host for every Monaco's screen-reader live region, both
+ * `ph-no-capture`.
  */
 function monacoPlacement(page: Page): Promise<{
   widgets: { part: string; blocked: boolean }[];
@@ -414,7 +412,7 @@ test("picking another offered version in the toolbar switches what completion of
   expect(navigations).toBe(0);
 });
 
-test("a pin picked while its schema file is on its way offers neither pin's names until the file arrives, then the new pin's (decision 11)", async ({
+test("a pin picked while its schema file is on its way offers neither pin's names until the file arrives, then the new pin's", async ({
   page,
 }) => {
   await readCatalogue();
@@ -468,7 +466,7 @@ test("a version pinned to a retired collector offers no completion, warns about 
   expect(requests.filter((request) => new URL(request.url()).pathname.startsWith("/schemas/"))).toEqual([]);
 });
 
-test("with completion and hover open, every widget is inside the editor's replay-blocked container, and nothing outside it holds the schema or the text (decision 12)", async ({
+test("with completion and hover open, every widget is inside the editor's replay-blocked container, and nothing outside it holds the schema or the text", async ({
   page,
 }) => {
   await readCatalogue();
@@ -516,10 +514,9 @@ test("with completion and hover open, every widget is inside the editor's replay
 /**
  * Every Monaco widget is inside the editor's replay-blocked container (the
  * live region inside the shell's blocked host), the `open` ones among them;
- * the only Monaco element outside them is Monaco's
- * empty `div.context-view` on `<body>` (class, style and aria-hidden only;
- * Preflight ruling 14); and no attribute outside the container holds any of
- * `forbidden`.
+ * the only Monaco element outside them is Monaco's empty `div.context-view`
+ * on `<body>` (class, style and aria-hidden only); and no attribute outside
+ * the container holds any of `forbidden`.
  */
 async function expectReplayPlacement(page: Page, open: string[], forbidden: string[]): Promise<void> {
   const { widgets, outside } = await monacoPlacement(page);
@@ -537,7 +534,7 @@ for (const [where, url] of [
   ["another origin", (port: number) => `http://127.0.0.1:${port}/x.json`],
   ["the app's own origin, absolute", () => "/api/v1/whatever"],
 ] as const) {
-  test(`a yaml-language-server modeline naming ${where} requests nothing (Preflight ruling 12)`, async ({ page }) => {
+  test(`a yaml-language-server modeline naming ${where} requests nothing`, async ({ page }) => {
     await readCatalogue();
     // A server of the test's own on a free port: a request to it would be heard here, whatever the browser reports.
     const heard: string[] = [];

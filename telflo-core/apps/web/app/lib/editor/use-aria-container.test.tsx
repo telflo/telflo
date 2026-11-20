@@ -1,10 +1,9 @@
 /**
- * Monaco's screen-reader live region (D14a Preflight ruling 14, Ruling 48):
- * one host, replay-blocked, put in the page by the app shell and never
- * removed, shared by every Monaco. Monaco keeps one live region for the
- * whole page and moves it into the `ariaContainerElement` of each editor it
- * creates, so a host that went with its viewer left every editor announcing
- * into a detached node.
+ * Monaco's screen-reader live region: one host, replay-blocked, put in the
+ * page by the app shell and never removed, shared by every Monaco. Monaco
+ * keeps one live region for the whole page and moves it into the
+ * `ariaContainerElement` of each editor it creates, so a host that went
+ * with its viewer left every editor announcing into a detached node.
  *
  * The editors here are stand-ins that do what Monaco's StandaloneCodeEditor
  * does with `ariaContainerElement` when it is created: Monaco's own aria
@@ -78,7 +77,7 @@ describe("the Monaco live region's host", () => {
     expect(monacoAriaHost()!.isConnected).toBe(true);
   });
 
-  it("keeps the YAML editor's announcements in an attached, replay-blocked node after a viewer closes (Ruling 48)", async () => {
+  it("keeps the YAML editor's announcements in an attached, replay-blocked node after a viewer closes", async () => {
     const user = userEvent.setup();
     render(<Page />);
 

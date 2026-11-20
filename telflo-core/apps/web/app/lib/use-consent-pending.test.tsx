@@ -5,8 +5,8 @@ import { setConsentStatus } from "./cookie-consent.js";
 import { useConsentPending } from "./use-consent-pending.js";
 
 /*
- * Whether the cookie banner still asks (Ruling 301): only with analytics
- * configured (root's loader), until a choice is stored or made.
+ * Whether the cookie banner still asks: only with analytics configured
+ * (root's loader), until a choice is stored or made.
  */
 
 function Probe() {
@@ -38,7 +38,7 @@ describe("useConsentPending", () => {
   it("is false with analytics configured once a choice is stored", async () => {
     window.localStorage.setItem("telflo_cookie_consent", "rejected");
     renderWith({ key: "phc_test", host: "https://posthog.example" });
-    // True until the effect has read the stored choice, then false (Ruling 303: waited for, not raced).
+    // True until the effect has read the stored choice, then false: waited for, not raced.
     await waitFor(() => expect(screen.getByTestId("pending")).toHaveTextContent("false"));
   });
 });

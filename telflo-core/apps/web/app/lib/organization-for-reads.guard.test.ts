@@ -5,8 +5,7 @@ import ts from "typescript";
 import { describe, expect, it } from "vitest";
 
 /*
- * One organization source for every read (D31-1 decisions 22 and 23,
- * Rulings 289, 292, 295, 297, 300 and 305). Inside the playground the user
+ * One organization source for every read. Inside the playground the user
  * store may still hold a signed-in visitor's real organization; a hook
  * reading it there would send that organization's reads from a playground
  * page. Every other reader takes the organization from `useCurrentUser()`
@@ -14,8 +13,8 @@ import { describe, expect, it } from "vitest";
  * (null inside the playground).
  *
  * Every non-test source file under apps/web/app is read with TypeScript's
- * own parser (Ruling 305: no regex over the text, which comments, newlines
- * and second declarators got past). Refused, outside the allowlists below:
+ * own parser (no regex over the text, which comments, newlines and second
+ * declarators get past). Refused, outside the allowlists below:
  * - an import of the store's module (any specifier naming `user-store`)
  *   other than its named, unaliased bindings: a default, namespace or
  *   aliased import; a dynamic `import(…)` (or `require`) naming it;
@@ -29,15 +28,14 @@ import { describe, expect, it } from "vitest";
  *   computed member. An entry no code uses any more is refused (stale).
  * - any `import.meta.glob` (or `globEager`) whose pattern could reach the
  *   store's module: one naming `user-store`, one starting inside
- *   `lib/stores/`, or one whose wildcards could descend into it (Ruling 309);
+ *   `lib/stores/`, or one whose wildcards could descend into it;
  *   a pattern that isn't a literal is refused outright;
  * - any import of `app/test/` (the test helpers) from a source file.
  * The store's own module isn't scanned for uses; its exports are pinned
  * instead (STORE_EXPORTS): its value exports as the module itself has them
  * at run time, its type exports as the parser reads them. A new export fails
- * until listed. Its body is read too (Ruling 309): no reference to
- * `useUserStore` but its declaration, and no write to `globalThis`,
- * `window` or `self`.
+ * until listed. Its body is read too: no reference to `useUserStore` but its
+ * declaration, and no write to `globalThis`, `window` or `self`.
  *
  * Every file Vite loads under app/ is read (`.ts .tsx .mts .cts .js .jsx
  * .mjs .cjs`; declaration files aside), but the tests (`*.test.*`) and the
@@ -47,7 +45,7 @@ import { describe, expect, it } from "vitest";
  * organization, a hook or a helper written as code is written here. A
  * deliberately obfuscated read (a run-time-built import path, a key put
  * together from strings, a store reached through some other object) is
- * accepted residue behind decision 22's e2e request allowlist
+ * accepted residue behind the playground's e2e request allowlist
  * (e2e/support/playground.ts, in every playground spec and every browser),
  * which fails on any request such a read would send: that holds the line.
  */
@@ -88,7 +86,7 @@ interface AllowedUse {
   only?: readonly string[];
 }
 
-/** Today's uses, exactly (D31-1 Ruling 295). */
+/** Today's uses, exactly. */
 const ALLOWED: readonly AllowedUse[] = [
   // The organization, in the two files that answer the playground's visitor first.
   { use: "useUserStore((state) => state.current)", reason: "useCurrentUser: the visitor first, then the store", only: ["lib/use-current-user.ts"] },
@@ -128,14 +126,14 @@ const ALLOWED: readonly AllowedUse[] = [
   { use: "getState().current !== null", reason: "whether anyone is signed in, nothing of whom" },
 ];
 
-/** The extensions Vite loads as modules (Ruling 309). */
+/** The extensions Vite loads as modules. */
 const SOURCE_EXTENSION = /\.(ts|tsx|mts|cts|js|jsx|mjs|cjs)$/;
 
 /**
  * Whether a file under apps/web/app (its path relative to it, `/`-separated)
  * is a source the guard reads: any module Vite loads, but declaration files,
- * the tests (`*.test.*`) and the top-level `test/` (Ruling 309: a `test`
- * folder anywhere else is source like any other).
+ * the tests (`*.test.*`) and the top-level `test/` (a `test` folder
+ * anywhere else is source like any other).
  */
 function isSource(path: string): boolean {
   const name = posix.basename(path);
@@ -193,7 +191,7 @@ function segmentPattern(segment: string): RegExp {
   return new RegExp(`^${pattern}$`);
 }
 
-/** Whether a glob pattern from `file` could match the store's module (Ruling 309). */
+/** Whether a glob pattern from `file` could match the store's module. */
 function globReachesStore(file: string, glob: string): boolean {
   if (namesStore(glob)) return true;
   const negated = glob.startsWith("!");
@@ -280,7 +278,7 @@ function refusedModuleUses(sourceFile: ts.SourceFile): string[] {
     if (ts.isExportAssignment(node) && ts.isIdentifier(node.expression) && fromStore.has(node.expression.text)) {
       refused.push(node.getText(sourceFile));
     }
-    // A glob that could reach the store's module (Ruling 309): its pattern, or each of its patterns, a literal.
+    // A glob that could reach the store's module: its pattern, or each of its patterns, a literal.
     if (ts.isCallExpression(node) && isImportMetaGlob(node.expression)) {
       const argument = node.arguments[0];
       const patterns =
@@ -333,7 +331,7 @@ function specifiersOf(sourceFile: ts.SourceFile): string[] {
   return specifiers;
 }
 
-/** The imports of `app/test/` (the test helpers) in `sourceFile`: none may be (Ruling 309). */
+/** The imports of `app/test/` (the test helpers) in `sourceFile`: none may be. */
 function testHelperImports(sourceFile: ts.SourceFile): string[] {
   return specifiersOf(sourceFile).filter((specifier) => {
     const resolved = resolvedFrom(sourceFile.fileName, specifier);
@@ -353,7 +351,7 @@ function rootOf(node: ts.Expression): string | null {
   return ts.isIdentifier(at) ? at.text : null;
 }
 
-/** What the store module's body may not hold (Ruling 309): a reference to `useUserStore` but its declaration, a write to the globals. */
+/** What the store module's body may not hold: a reference to `useUserStore` but its declaration, a write to the globals. */
 function refusedInStore(source: string): string[] {
   const sourceFile = parsed(STORE, source);
   const refused: string[] = [];
@@ -460,7 +458,7 @@ function exportsOf(file: string, source: string): { values: string[]; types: str
     ts.canHaveModifiers(node) && (ts.getModifiers(node) ?? []).some((modifier) => modifier.kind === ts.SyntaxKind.DefaultKeyword);
   for (const statement of sourceFile.statements) {
     if (ts.isVariableStatement(statement) && exported(statement)) {
-      // Every declarator: `export const a = 1, b = 2` exports both (Ruling 305, B1).
+      // Every declarator: `export const a = 1, b = 2` exports both.
       for (const declaration of statement.declarationList.declarations) {
         for (const node of nodesOf(declaration.name)) if (ts.isIdentifier(node)) values.push(node.text);
       }
@@ -489,7 +487,7 @@ const STORE_SOURCE = readFileSync(join(APP, STORE), "utf8");
 /** The store's source with `added` appended. */
 const storeWith = (added: string) => `${STORE_SOURCE}\n${added}\n`;
 
-describe("one organization source for every read: the user store's uses and exports, read by AST (Rulings 295 and 305)", () => {
+describe("one organization source for every read: the user store's uses and exports, read by AST", () => {
   const files = sourceFiles().filter((file) => file !== STORE);
 
   it("pins the store module's exports: its values as the module has them at run time, its types as the parser reads them", async () => {
@@ -500,12 +498,12 @@ describe("one organization source for every read: the user store's uses and expo
     expect(read.types).toEqual(listed("type"));
   });
 
-  it("refuses a new export of the store module, however it is written (Ruling 300; Ruling 305's B1 and B2)", () => {
+  it("refuses a new export of the store module, however it is written", () => {
     const hook = "useStoredOrganizationId";
     const shapes = [
-      // The reviewer's hook (Ruling 300).
+      // A hook reading the organization.
       `export function ${hook}() {\n  return useUserStore((s) => s.current?.organization.id ?? null);\n}`,
-      // B2: a comment between `export` and its keyword.
+      // A comment between `export` and its keyword.
       `export /* a note */ function ${hook}() {\n  return useUserStore((s) => s.current?.organization.id ?? null);\n}`,
       `export const selectOrganization = (s: UserState) => s.current?.organization;`,
       `const selectOrganization = 1;\nexport { selectOrganization };`,
@@ -522,7 +520,7 @@ describe("one organization source for every read: the user store's uses and expo
       const unlisted = [...read.values.filter((name) => !listed("value").includes(name)), ...read.types.filter((name) => !listed("type").includes(name))];
       expect(unlisted.length > 0, shape).toBe(true);
     }
-    // B1: a second declarator on a listed export's own statement.
+    // A second declarator on a listed export's own statement.
     const b1 = STORE_SOURCE.replace(
       /\] as const;/,
       `] as const, ${hook} = () => useUserStore((s) => s.current?.organization.id ?? null);`,
@@ -536,7 +534,7 @@ describe("one organization source for every read: the user store's uses and expo
     for (const entry of ALLOWED) for (const file of entry.only ?? []) expect(files, file).toContain(file);
   });
 
-  it("reads every file Vite loads under app/, but the tests and the top-level test/ (Ruling 309)", () => {
+  it("reads every file Vite loads under app/, but the tests and the top-level test/", () => {
     for (const path of [
       "lib/leak.mts",
       "lib/leak.cts",
@@ -560,7 +558,7 @@ describe("one organization source for every read: the user store's uses and expo
     expect(found).toEqual([]);
   });
 
-  it("refuses an import of app/test/ from a source, in any spelling (Ruling 309)", () => {
+  it("refuses an import of app/test/ from a source, in any spelling", () => {
     for (const [file, shape] of [
       ["components/fleets/TokensTab.tsx", 'import { leak } from "~/test/leak.js";'],
       ["components/fleets/TokensTab.tsx", 'import { leak } from "../../test/leak.js";'],
@@ -573,9 +571,9 @@ describe("one organization source for every read: the user store's uses and expo
     expect(refused("components/fleets/TokensTab.tsx", 'import { leak } from "./test/leak.js";')).toEqual([]);
   });
 
-  it("refuses an import.meta.glob that could reach the store's module (Ruling 309)", () => {
+  it("refuses an import.meta.glob that could reach the store's module", () => {
     for (const [file, shape] of [
-      // The reviewer's.
+      // The store's own file, named.
       ["lib/leak.ts", 'const m = import.meta.glob<typeof Store>("./stores/user-store.ts", { eager: true, import: "useUserStore" });'],
       ["lib/leak.ts", 'const m = import.meta.glob("./stores/*.ts", { eager: true });'],
       ["lib/leak.ts", 'const m = import.meta.glob("./*/*.ts", { eager: true });'],
@@ -601,9 +599,9 @@ describe("one organization source for every read: the user store's uses and expo
     }
   });
 
-  it("refuses, in the store module's body, a reference to useUserStore but its declaration and a write to the globals (Ruling 309)", () => {
+  it("refuses, in the store module's body, a reference to useUserStore but its declaration and a write to the globals", () => {
     for (const shape of [
-      // The reviewer's: a getter on a listed export, reading the organization.
+      // A getter on a listed export, reading the organization.
       'Object.defineProperty(readPreference, "organization", { get: () => useUserStore.getState().current?.organization.id });',
       "const handle = useUserStore;",
       "globalThis.telfloOrganization = () => 1;",
@@ -629,7 +627,7 @@ describe("one organization source for every read: the user store's uses and expo
   it("refuses every shape found so far (the guard's own check)", () => {
     const file = "components/some/Reader.tsx";
     const shapes = [
-      // The review's thirteen (Ruling 295).
+      // Reads of the organization, each its own way.
       "const id = useUserStore((state) => state.current?.organization.id ?? null);",
       "const id = useUserStore(\n  (s) => s.current?.organization.id,\n);",
       "const id = useUserStore.getState().current?.organization.id;",
@@ -656,17 +654,17 @@ describe("one organization source for every read: the user store's uses and expo
       'export * from "../stores/user-store";',
       // An allowed file's use, elsewhere.
       "const stored = useUserStore((state) => state.current);",
-      // Code followed by text holding ` from "…"` (Ruling 297).
+      // Code followed by text holding ` from "…"`.
       'export function A() {\n  const c = useUserStore((s) => s.current)\n  return <p>Sent from "here"</p>\n}',
-      // A dynamic import of the store's module, its key built from strings (Ruling 297); a require.
+      // A dynamic import of the store's module, its key built from strings; a require.
       'const m = await import("~/lib/stores/user-store.js");\nconst id = m["useUser" + "Store"].getState().current;',
       "const m = await import(`~/lib/stores/user-store.js`);",
       'const m = require("./user-store.js");',
-      // B7 (Ruling 305): a re-export under another name, followed by another export from a module.
+      // A re-export under another name, followed by another export from a module.
       'import { useUserStore } from "~/lib/stores/user-store.js";\nexport { useUserStore as useAccount }\nexport { isSampleOrganization } from "~/lib/workspace-reads.js";',
       'import { useUserStore } from "~/lib/stores/user-store.js";\nexport { useUserStore };',
       'import { useUserStore } from "~/lib/stores/user-store.js";\nexport default useUserStore;',
-      // A multi-line import without semicolons, followed by another import, then a refused use (Ruling 305).
+      // A multi-line import without semicolons, followed by another import, then a refused use.
       'import {\n  useUserStore\n} from "~/lib/stores/user-store.js"\nimport { other } from "~/lib/other.js"\nconst id = useUserStore((s) => s.current?.organization.id)',
     ];
     for (const shape of shapes) expect(refused(file, shape).length > 0, shape).toBe(true);

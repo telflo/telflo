@@ -1,4 +1,4 @@
-# The storage forms' components (D9d Task 1): S3 and ClickHouse fixtures
+# The storage forms' components: S3 and ClickHouse fixtures
 # (the exporter's and the receiver's forms, and the ClickHouse exporter's),
 # comments, an anchor and its merge, flow and block lists, and `0750`, as a
 # person writes them. aws_s3 is the

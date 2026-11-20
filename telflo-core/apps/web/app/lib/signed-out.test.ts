@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 /*
- * The one sign-out clean-up (Q211, Ruling 317): the staged playground edit
- * removed, PostHog reset.
+ * The one sign-out clean-up: the staged playground edit removed, PostHog
+ * reset.
  */
 
 const analytics = vi.hoisted(() => ({ signedOutLocally: vi.fn() }));

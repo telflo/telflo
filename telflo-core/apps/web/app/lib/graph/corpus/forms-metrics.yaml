@@ -1,4 +1,4 @@
-# The metrics forms' components (D9d Task 1): comments, an anchor and a
+# The metrics forms' components: comments, an anchor and a
 # merge, flow lists, a plain octal `0622` and `0750`, as a person writes
 # them. cumulative_to_delta and prometheus_remote_write are the collector's
 # own spellings at v0.162.0.

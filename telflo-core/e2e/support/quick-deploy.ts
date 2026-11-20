@@ -2,9 +2,8 @@ import { expect, type APIRequestContext, type APIResponse } from "@playwright/te
 
 // The public quick-deploy download in the browser tests, fetched as a host's
 // curl reaches it: by a request context of its own, made fresh with no
-// cookies, never the page's (which holds the session). Moved from
-// quick-deploy.e2e.ts for D17d-2's Helm values links (Preflight ruling 34):
-// quick-deploy.e2e.ts and helm.e2e.ts share them.
+// cookies, never the page's (which holds the session). quick-deploy.e2e.ts
+// and helm.e2e.ts share these helpers.
 //
 // No assertion here prints a body: a download holds a bearer (a Helm values
 // link's) or a bundle, and a broken refusal could hold the link's secret.
@@ -38,7 +37,7 @@ export async function fetchedWithoutSession(
   }
 }
 
-/** A refusal's answer (D17c-2 decision 26): the status, its plain text, and the public route's headers. */
+/** A refusal's answer: the status, its plain text, and the public route's headers. */
 export function expectRefused(answer: PublicAnswer, status: number, text: string): void {
   expect(answer.status).toBe(status);
   // Never printed on a failure: a broken refusal could hold the secret.

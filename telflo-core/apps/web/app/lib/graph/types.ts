@@ -1,9 +1,8 @@
 import type { Edge, Node } from "@xyflow/react";
 
 /*
- * The builder's graph and its undo history (D9a decisions 3, 5, 6 and 7).
- * The components' own config types come with their forms (D9b to D9d);
- * until then a config is whatever JSON value the text holds.
+ * The builder's graph and its undo history. A component's config is whatever
+ * JSON value the text holds.
  */
 
 export type ComponentType = "receiver" | "processor" | "exporter" | "extension" | "connector";
@@ -16,7 +15,7 @@ export const PIPELINE_SIGNAL_TYPES: readonly PipelineSignalType[] = ["traces", "
 
 /** A pipeline, one per `service.pipelines` entry. */
 export interface Pipeline {
-  /** Opaque: `pipeline_<n>` (decision 7), never derived from the name. */
+  /** Opaque: `pipeline_<n>`, never derived from the name. */
   id: string;
   /** The text's key: `traces`, `traces/production`. */
   name: string;
@@ -38,7 +37,7 @@ export type ComponentConfig = unknown;
 export type NodeKind = ComponentType | "pipelineGroup";
 
 /**
- * A node's data. A component's carries the builder's fields and D9a's own
+ * A node's data. A component's carries the builder's fields and its own
  * (its key, its pipeline, whether the text declares it, whether it is
  * enabled); a pipeline's group carries its pipeline's id, signal and colour.
  */
@@ -61,9 +60,9 @@ export interface OTelNodeData extends Record<string, unknown> {
   key?: string;
   /** The name of the pipeline whose group holds the node. */
   pipeline?: string;
-  /** False when a pipeline names the component but the text doesn't declare it (decision 3). */
+  /** False when a pipeline names the component but the text doesn't declare it. */
   declared?: boolean;
-  /** An extension's: whether `service.extensions` lists it (decision 3). */
+  /** An extension's: whether `service.extensions` lists it. */
   enabled?: boolean;
   /** A group's pipeline. */
   pipelineId?: string;
@@ -100,7 +99,7 @@ export interface PaletteComponent {
   connectorSignals?: ConnectorSignalMapping;
 }
 
-/** An undo entry's state (decision 11): the text and the graph, together. */
+/** An undo entry's state: the text and the graph, together. */
 export interface HistoryState {
   text: string;
   graph: Graph;

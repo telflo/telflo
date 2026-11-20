@@ -3,12 +3,11 @@ import { expect, type Locator, type Page } from "@playwright/test";
 import { findConfigurationVersions } from "./database.js";
 import { waitForHydration } from "./session.js";
 
-// The editor page (D9a, D9b), for the editor's, the builder's, the forms'
-// and the versions' browser tests: opening it, reading its text, the lines a
-// test expects, and typing in Monaco. One set of helpers for every file (D9d
-// Ruling 57).
+// The editor page, for the editor's, the builder's, the forms' and the
+// versions' browser tests: opening it, reading its text, the lines a test
+// expects, and typing in Monaco. One set of helpers for every file.
 //
-// Monaco in Playwright (D8 Preflight ruling 13):
+// Monaco in Playwright:
 // - Monaco closes quotes and brackets and indents after `:` as it is typed,
 //   so a test types a comment line at the top (`typeLineAtTop`).
 // - Monaco takes its platform from the user agent, not from the machine:
@@ -68,7 +67,7 @@ export async function centre(locator: Locator): Promise<{ x: number; y: number }
 
 /** Presses the mouse at `from`, moves to `to` in steps, and releases it. */
 export async function mouseDrag(page: Page, from: { x: number; y: number }, to: { x: number; y: number }): Promise<void> {
-  // Inside the window: Firefox mis-sizes a drag that leaves it (D9a Preflight ruling 15).
+  // Inside the window: Firefox mis-sizes a drag that leaves it.
   const size = page.viewportSize();
   for (const point of [from, to]) {
     if (size === null || point.x < 0 || point.y < 0 || point.x > size.width || point.y > size.height) {
@@ -131,13 +130,13 @@ export async function expectShownFromTop(page: Page, lines: string[]): Promise<v
 /**
  * Types `line` and a newline at the top of Monaco's text: Monaco then holds
  * `${line}\n` before what it held. Typed, never `keyboard.insertText` of
- * text holding a newline, which lands twice in Firefox (Ruling 306; the
- * paste helpers' samples are one line of JSON).
+ * text holding a newline, which lands twice in Firefox (the paste
+ * helpers' samples are one line of JSON).
  */
 export async function typeLineAtTop(page: Page, line: string): Promise<void> {
   // The model's first line, first column, by Go to Line, in every browser. In WebKit, with the focus given to
   // Monaco's textarea rather than by a click, Cmd+Up didn't reach the model's top (probed: a line typed after it
-  // landed on line 28 of the starter, while after Go to Line it landed on line 1; Ruling 313).
+  // landed on line 28 of the starter, while after Go to Line it landed on line 1).
   await goToLine(page, 1);
   await page.keyboard.type(line);
   await page.keyboard.press("Enter");
@@ -146,8 +145,8 @@ export async function typeLineAtTop(page: Page, line: string): Promise<void> {
 /**
  * Gives Monaco the keyboard focus through its input area, with no click
  * on its lines: a centre click retried after a scroll (sticky-scroll rows
- * on top) could land where nothing takes the focus (Ruling 310). The focus
- * and its check retry together until Monaco says it is focused.
+ * on top) could land where nothing takes the focus. The focus and its
+ * check retry together until Monaco says it is focused.
  */
 export async function focusMonaco(page: Page): Promise<void> {
   await expect(async () => {
@@ -175,7 +174,7 @@ export async function goToLine(page: Page, lineNumber: number): Promise<void> {
 /**
  * Puts Monaco's cursor at the end of line `lineNumber` (1-based): Go to Line,
  * then End. A click aimed at a line's drawn end missed it on CI's WebKit
- * (Linux), where Monaco was scrolled sideways after Undo All (D9a Ruling 42).
+ * (Linux), where Monaco was scrolled sideways after Undo All.
  */
 export async function cursorAtEndOfLine(page: Page, lineNumber: number): Promise<void> {
   await goToLine(page, lineNumber);
@@ -200,7 +199,7 @@ export async function storedVersion(configurationId: string) {
 
 /**
  * The editor's address at the configuration's only version: `/editor/{id}`
- * replaces itself with it (D10 decision 9).
+ * replaces itself with it.
  */
 export async function versionAddress(configurationId: string): Promise<string> {
   const { id } = await storedVersion(configurationId);

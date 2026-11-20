@@ -79,7 +79,7 @@ function run(items: readonly string[], served: ReturnType<typeof writes>, stopsO
   return { ...loop, progress, settled: () => settled };
 }
 
-describe("runPacedWrites (D17b-1 decision 12, Preflight ruling 13)", () => {
+describe("runPacedWrites", () => {
   it("sends one request at a time, in order, each with its own hang guard, and tells the progress", async () => {
     const served = writes();
     const loop = run(ITEMS, served);
@@ -205,7 +205,7 @@ describe("runPacedWrites (D17b-1 decision 12, Preflight ruling 13)", () => {
     expect(vi.getTimerCount()).toBe(0);
   });
 
-  // Task 3 review, Major: a Stop while a write is in flight that then answers 429 waits not at all.
+  // A Stop while a write is in flight that then answers 429 waits not at all.
   it("stops at once when the request in flight at a stop answers 429: no wait, that item and the rest not attempted", async () => {
     const served = writes();
     const loop = run(ITEMS, served);
@@ -229,7 +229,7 @@ describe("runPacedWrites (D17b-1 decision 12, Preflight ruling 13)", () => {
     expect(vi.getTimerCount()).toBe(0);
   });
 
-  // The follow-ups' review: a Stop made as a 429's wait is told (from onProgress) never starts the wait.
+  // A Stop made as a 429's wait is told (from onProgress) never starts the wait.
   it("stops at once when stopped as a 429's wait is told: no wait, that item and the rest not attempted", async () => {
     const served = writes();
     const progress: PacedProgress[] = [];

@@ -3,14 +3,13 @@ import { ThemeSchema, type Theme } from "@telflo/contracts";
 import { rememberTheme } from "~/lib/theme.js";
 
 /*
- * The playground's theme (D31-1 decision 14, Ruling 277, Preflight ruling
- * 13). Its routes' `handle` is `{ theme: "remembered" }`, so root renders
- * the theme this browser was last told, as the auth screens do: the
- * remembered value, else the `telflo_theme` cookie, else the signed-out
- * default. The playground's toggle (Light, Dark, Navy) remembers its choice
- * (`rememberTheme`) and keeps it as one word in one localStorage key of the
- * playground's, read on the playground's pages on arrival. It never writes
- * the `telflo_theme` cookie, which is the API's, for signed-in people.
+ * The playground's theme. Its routes' `handle` is `{ theme: "remembered" }`,
+ * so root renders the theme this browser was last told, as the auth screens
+ * do: the remembered value, else the `telflo_theme` cookie, else the
+ * signed-out default. The playground's toggle (Light, Dark, Navy) remembers
+ * its choice (`rememberTheme`) and keeps it as one word in one localStorage
+ * key of the playground's, read on the playground's pages on arrival. It never
+ * writes the `telflo_theme` cookie, which is the API's, for signed-in people.
  * Nothing forces `dark`.
  */
 

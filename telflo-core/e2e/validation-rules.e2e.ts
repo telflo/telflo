@@ -43,25 +43,25 @@ import {
 } from "./support/validation-pipelines-page.js";
 import { createVersionFromPicker, versionPath } from "./support/versions-page.js";
 
-// Validation rules (D15a), in the browser: the Testing tab's Validation
-// subtab, its validation pipelines and the rule editor's four modes, the
-// evaluator's refusal of a broken rule at Save and its absence there, a run
-// ending "Validation Failed" (the runs' list, the results' header, the grid,
-// the count line and "Show test details"), a run whose rules pass, a run
-// whose rules the evaluator can't check, a version copy, and a teammate's
-// view of a draft's validation pipelines and of a published one's, against
-// the E2E API's dispatcher, the OpenAPI-checked fake tester
+// Validation rules, in the browser: the Testing tab's Validation subtab, its
+// validation pipelines and the rule editor's four modes, the evaluator's
+// refusal of a broken rule at Save and its absence there, a run ending
+// "Validation Failed" (the runs' list, the results' header, the grid, the
+// count line and "Show test details"), a run whose rules pass, a run whose
+// rules the evaluator can't check, a version copy, and a teammate's view of
+// a draft's validation pipelines and of a published one's, against the E2E
+// API's dispatcher, the OpenAPI-checked fake tester
 // (start-fake-otelcol-testing.ts) and the OpenAPI-checked fake evaluator
 // (start-fake-ottl-evaluator.ts).
 //
-// - The fake evaluator answers by the rules (Preflight ruling 28): a rule
-//   passes unless its pattern or an OTTL string literal carries a marker,
+// - The fake evaluator answers by the rules: a rule passes unless its
+//   pattern or an OTTL string literal carries a marker,
 //   `fake-ottl-evaluator: <invalid|fail|error|busy|unavailable>`
 //   (support/validation-pipelines-page.ts's ottlMarker). `invalid` is
 //   refused at Save with the evaluator's words; `unavailable` makes the
 //   evaluator unanswerable for that request only, so the browsers' other
-//   workers never see it down. A plain text rule is never checked at Save
-//   (decision 6), which is how a run carries an `unavailable` rule here.
+//   workers never see it down. A plain text rule is never checked at Save,
+//   which is how a run carries an `unavailable` rule here.
 // - The fake tester answers every run's text with a success whose output is
 //   the input's own bytes.
 // - Rules a test isn't about creating are created through the API, as the
@@ -616,7 +616,7 @@ test("a teammate sees nothing of a draft's validation pipelines, and once it is 
 test("deleting a rule and a validation pipeline asks first; a pipeline the editor's text no longer has is flagged", async ({ page }) => {
   const path = await seedWorkspace(page);
   const logs = await createValidationPipelineThroughApi(page, path, "logs");
-  // The API can't check a name against the editor's text (decision 18): the text has no traces pipeline.
+  // The API can't check a name against the editor's text: the text has no traces pipeline.
   const traces = await createValidationPipelineThroughApi(page, path, "traces");
   await createRuleThroughApi(page, path, logs.id, { kind: "contains_text", target: "output", pattern: "hello", name: "First" });
   await createRuleThroughApi(page, path, logs.id, { kind: "not_contains_text", target: "stderr", pattern: "panic", name: "Second" });

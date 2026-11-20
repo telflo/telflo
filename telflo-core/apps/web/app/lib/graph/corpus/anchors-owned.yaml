@@ -1,4 +1,4 @@
-# Anchors components own, and merges of nested mappings (Preflight ruling 8).
+# Anchors components own, and merges of nested mappings.
 x-tls: &tls-defaults
   tls:
     insecure: false

@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 import { E2E_OPAMP_URL } from "./support/environment.js";
 import { assertNoFakeOpampServerViolations, startE2eFakeOpampServer } from "./support/fake-opamp-server.js";
 
-// The browser tests' opamp-server (D11b decision 8): the web server
+// The browser tests' opamp-server: the web server
 // start-fake-opamp-server.ts runs is up where the E2E API's settings point,
 // and its start helper and the teardown's check do what global-setup.ts
 // relies on: a violation is written down as it is seen, and fails the run.

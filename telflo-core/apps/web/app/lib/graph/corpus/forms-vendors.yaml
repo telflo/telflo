@@ -1,4 +1,4 @@
-# The vendor forms' components (D9d Task 1), with CRLF line endings: the
+# The vendor forms' components, with CRLF line endings: the
 # Datadog exporter and receiver, comments, an anchor and its merges, flow
 # lists and mappings, and `${env:…}` references, as a person writes them.
 x-dd-api: &dd-api

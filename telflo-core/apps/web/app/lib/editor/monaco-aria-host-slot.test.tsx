@@ -1,10 +1,10 @@
 /**
- * The shell's slot for Monaco's live region under a modal dialog (D14a
- * Ruling 52): Radix's Dialog hides every other part of the page from
- * assistive technology (aria-hidden's `hideOthers`) but keeps an element
- * carrying `aria-live`, without looking inside it. The slot carries
- * `aria-live="off"`, so the region Monaco puts in it stays audible whether
- * the dialog's own editor is the page's first Monaco or not.
+ * The shell's slot for Monaco's live region under a modal dialog: Radix's
+ * Dialog hides every other part of the page from assistive technology
+ * (aria-hidden's `hideOthers`) but keeps an element carrying `aria-live`,
+ * without looking inside it. The slot carries `aria-live="off"`, so the region
+ * Monaco puts in it stays audible whether the dialog's own editor is the
+ * page's first Monaco or not.
  *
  * Its own file: Monaco's aria module and the shared host are module
  * globals, and the first case needs a page with no Monaco region yet. The
@@ -60,7 +60,7 @@ function liveNodes(): Element[] {
   return [...monacoAriaHost()!.querySelectorAll(".monaco-alert, .monaco-status")];
 }
 
-describe("the shell's slot for Monaco's live region (Ruling 52)", () => {
+describe("the shell's slot for Monaco's live region", () => {
   it("is replay-blocked and carries aria-live=\"off\", the host inside it", () => {
     const { container } = render(<MonacoAriaHostSlot />);
     const slot = container.querySelector("[data-monaco-aria-host-slot]")!;

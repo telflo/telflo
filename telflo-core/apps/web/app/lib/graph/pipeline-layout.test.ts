@@ -17,9 +17,8 @@ import {
 import type { OTelNode } from "./types.js";
 
 /*
- * The layered re-layout (D9a Parity Notes). The fixture's pipelines take
- * opaque ids, so a group is `group_<n>` for its pipeline's `pipeline_<n>`
- * (decision 7).
+ * The layered re-layout. The fixture's pipelines take opaque ids, so a
+ * group is `group_<n>` for its pipeline's `pipeline_<n>`.
  */
 
 /** The nodes at `ids`, which the fixture guarantees. */

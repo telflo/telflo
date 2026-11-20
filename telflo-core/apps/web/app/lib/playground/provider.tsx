@@ -9,9 +9,9 @@ import { sampleVisitor } from "./sample/types.js";
 import { useStoredPlaygroundTheme } from "./theme.js";
 
 /*
- * The playground's provider (D31-1 decisions 22-24, Preflight rulings 8, 9,
- * 12 and 13), around each of the playground's pages: the shell's layout,
- * the full-screen editor and the blank public editor. It gives them:
+ * The playground's provider, around each of the playground's pages: the
+ * shell's layout, the full-screen editor and the blank public editor. It gives
+ * them:
  * - the sample's visitor (`useCurrentUser()` answers it first), its theme
  *   the one on screen (`usePageTheme`: the routes' handle remembers it), so
  *   `useAppTheme` and `useEditorPreferences` follow the playground's toggle;
@@ -20,7 +20,7 @@ import { useStoredPlaygroundTheme } from "./theme.js";
  *   passed (`from`), else to what had the focus when the lock was called:
  *   Radix's dialog returns it only to a `DialogTrigger`, which the prompt
  *   has none of, and Safari and Firefox on macOS never focus a button a
- *   mouse presses, so callers pass their opener (Ruling 299);
+ *   mouse presses, so callers pass their opener;
  * - "Sign in to save", which the Save action opens;
  * - the catalogue the web was built with (`useCollectorDistributions`).
  * While it is mounted the session-ended handler is suspended, as

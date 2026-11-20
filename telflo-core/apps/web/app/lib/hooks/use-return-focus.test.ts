@@ -3,14 +3,14 @@ import { afterEach, describe, expect, it } from "vitest";
 import { useReturnFocus } from "./use-return-focus.js";
 
 /*
- * useReturnFocus's orders the hosts can't fix in a test (D17b-1's last
- * reviews): Radix gives the focus back in a timeout after the dialog's
- * content unmounts (in a browser, after its exit animation), so a write's
- * reload usually renders its rows before the close's focus return; and a
- * read begun before the write (a poll's, or the person's "Load more" or
- * Refresh) may answer between the write and its reload. The host's calls
- * are made here in those orders. The numbers are the host's read counter:
- * the write is made with read 4 the latest begun, so its reload is read 5.
+ * useReturnFocus's orders the hosts can't fix in a test: Radix gives the focus
+ * back in a timeout after the dialog's content unmounts (in a browser, after
+ * its exit animation), so a write's reload usually renders its rows before the
+ * close's focus return; and a read begun before the write (a poll's, or the
+ * person's "Load more" or Refresh) may answer between the write and its
+ * reload. The host's calls are made here in those orders. The numbers are the
+ * host's read counter: the write is made with read 4 the latest begun, so its
+ * reload is read 5.
  */
 
 /** A button in the document, as a row's would be. */
@@ -47,7 +47,7 @@ describe("useReturnFocus", () => {
     expect(document.activeElement).toBe(document.body);
   });
 
-  it("still moves the focus on when the write's rows render after the close and take the row away (D14b Ruling 52)", () => {
+  it("still moves the focus on when the write's rows render after the close and take the row away", () => {
     const { result } = renderHook(() => useReturnFocus());
     const focus = result.current;
     const row = button("Delete collector-002");
@@ -64,7 +64,7 @@ describe("useReturnFocus", () => {
     expect(document.activeElement).toBe(fallback);
   });
 
-  // The review of 32f39ff: what counts is when the rows' read began, not who asked for it.
+  // What counts is when the rows' read began, not who asked for it.
   it("leaves a write to its reload when rows from a read begun before it (a poll's, or the person's \"Load more\" or Refresh) render before the close: the reload taking the row away moves the focus on", () => {
     const { result } = renderHook(() => useReturnFocus());
     const focus = result.current;

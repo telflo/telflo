@@ -12,14 +12,14 @@ import { versionAddress } from "./support/editor-page.js";
 import { E2E_SAAS_WEB_URL, E2E_WEB_URL } from "./support/environment.js";
 import { signInThroughApi, switchOrganizationThroughApi, skipEditorTour, waitForHydration } from "./support/session.js";
 
-// The configurations page at /app (D7), in the browser. Configurations the
+// The configurations page at /app, in the browser. Configurations the
 // test isn't about creating are seeded by SQL (support/database.ts's
 // seedConfiguration), and each test works in organizations of its own, so
 // tests and browsers run in parallel. A second person is a second browser
 // context, with their own cookie jar.
 //
-// The search goes to the API 300 ms after typing stops (decision 12): the
-// tests wait for that request or its result, never for the time itself.
+// The search goes to the API 300 ms after typing stops: the tests wait for
+// that request or its result, never for the time itself.
 
 const PASSWORD = "correct horse battery staple";
 const EMPTY_MESSAGE = "No configurations yet.";
@@ -31,7 +31,7 @@ const LIST_PATH = /^\/api\/v1\/organizations\/[^/]+\/configurations$/;
  * `secondContext`: a second browser, for a second person, with its own
  * cookie jar. Closed when the test ends. In both browsers the editor's tour
  * is marked done (`skipEditorTour`): these tests aren't about it, and it
- * would cover the page on a first visit (D9a decision 14).
+ * would cover the page on a first visit.
  */
 const test = base.extend<{ secondContext: BrowserContext }>({
   context: async ({ context }, use) => {
@@ -63,7 +63,7 @@ function cardNames(page: Page) {
   return page.locator('[role="button"] h3');
 }
 
-/** The card showing the configuration named `name`: a `div role="button"` (D7 Preflight ruling 11). */
+/** The card showing the configuration named `name`: a `div role="button"`. */
 function card(page: Page, name: string) {
   return page.getByRole("button").filter({ has: page.getByRole("heading", { name, exact: true }) });
 }
@@ -86,18 +86,18 @@ function listResponse(page: Page, matches: (search: URLSearchParams) => boolean)
 
 /**
  * Creates a configuration through the create dialog, opened by `opener`,
- * which then opens its editor (D8 decision 16).
+ * which then opens its editor.
  */
 async function createThroughDialog(page: Page, opener: Locator, name: string, description: string): Promise<void> {
   await opener.click();
-  // The start step first (D12 Preflight ruling 8): a blank configuration.
+  // The start step first: a blank configuration.
   await page.getByRole("dialog", { name: "New configuration" }).getByRole("button", { name: /Blank configuration/ }).click();
   const dialog = page.getByRole("dialog", { name: "Name Your Configuration" });
   await dialog.getByLabel("Configuration Name").fill(name);
   await dialog.getByLabel("Description").fill(description);
   await dialog.getByRole("button", { name: "Create", exact: true }).click();
   await expect(dialog).toBeHidden();
-  // At the new configuration's version (D10 decision 9).
+  // At the new configuration's version.
   await expect(page).toHaveURL(/\/editor\/[0-9a-f-]{36}\/[0-9a-f-]{36}$/);
   await expect(page.getByRole("heading", { level: 1, name, exact: true })).toBeVisible();
 }
@@ -174,7 +174,7 @@ test("search narrows the list to a match, or to nothing; Mine shows only the mem
   const others = `Staging gateway ${randomUUID()}`;
   const earlier = new Date(Date.now() - 1_000);
   await seedConfiguration({ organizationId: group.organizationId, createdByUserId: admin.userId, name: own, updatedAt: earlier });
-  // Published: the admin sees no other member's draft (D11b decision 1).
+  // Published: the admin sees no other member's draft.
   await seedConfiguration({
     organizationId: group.organizationId,
     createdByUserId: member.userId,
@@ -197,7 +197,7 @@ test("search narrows the list to a match, or to nothing; Mine shows only the mem
   await searchBox(page).fill("");
   await expect(cardNames(page)).toHaveText([others, own]);
 
-  // Mine asks the server for D11b's filter=mine (decision 6).
+  // Mine asks the server for filter=mine.
   const mine = listResponse(page, (search) => search.get("filter") === "mine");
   await page.getByRole("combobox").click();
   await page.getByRole("option", { name: "Mine" }).click();
@@ -272,8 +272,8 @@ test("a second member of the organization, an admin, sees the first's published 
   page,
   secondContext,
 }) => {
-  // The first member, a contributor, publishes; the admin sees it (D11b
-  // decision 1) and, as an admin, may delete it (decision 2). `page` is the admin's.
+  // The first member, a contributor, publishes; the admin sees it and, as
+  // an admin, may delete it. `page` is the admin's.
   const { member, group } = await seedGroupWithMember(page);
   const name = `Shared ${randomUUID()}`;
   const configuration = await seedConfiguration({
@@ -331,7 +331,7 @@ test("with 60 configurations, the first 50 show, and Load more brings the rest, 
 
 test("switching organization shows the other organization's configurations", async ({ page }) => {
   const user = await seedUser({ password: PASSWORD });
-  // Signed in before joining the group: the session starts in the personal organization (Q265).
+  // Signed in before joining the group: the session starts in the personal organization.
   await signInThroughApi(page, user);
   const group = await addMember({ userId: user.userId });
   const personal = `Personal ${randomUUID()}`;
@@ -348,7 +348,7 @@ test("switching organization shows the other organization's configurations", asy
   await expect(cardNames(page)).toHaveText([grouped]);
 });
 
-// The SaaS pair (D36-1 Preflight ruling 16): the Terms asked.
+// The SaaS pair: the Terms asked.
 test.describe("on the SaaS pair", () => {
   test.use({ baseURL: E2E_SAAS_WEB_URL });
 
@@ -366,7 +366,7 @@ test.describe("on the SaaS pair", () => {
     const dialog = page.getByRole("dialog", { name: "Updated Terms of Service" });
     await expect(dialog).toBeVisible();
     await expect(page.getByText("Loading configurations…")).toBeAttached();
-    // The page doesn't ask for the list while the dialog is open (decision 10).
+    // The page doesn't ask for the list while the dialog is open.
     expect(listRequests).toEqual([]);
 
     const listed = listResponse(page, () => true);
@@ -388,8 +388,8 @@ test("clicking a card goes to /editor/{id}, which names its version", async ({ p
 
   await card(page, name).getByRole("heading", { name, exact: true }).click();
 
-  // `/editor/{id}` replaces itself with the version's address (D10 decision 9).
+  // `/editor/{id}` replaces itself with the version's address.
   await expect(page).toHaveURL(await versionAddress(configuration.id));
-  // The seeded version 1 opens with it (D8 Preflight ruling 12).
+  // The seeded version 1 opens with it.
   await expect(page.getByRole("heading", { level: 1, name, exact: true })).toBeVisible();
 });

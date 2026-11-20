@@ -9,8 +9,7 @@ import {
 import { bundleRequestIssues, InstallArchSchema, InstallBundleFieldsSchema, InstallMethodSchema } from "./install.js";
 
 /*
- * Quick-deploy links (D17c-2 decisions 3, 5, 7, 22 to 25 and 33; Preflight
- * rulings 8, 15, 20 and 25), under
+ * Quick-deploy links, under
  * /api/v1/organizations/{organizationId}/fleets/{fleetId}:
  *
  *   POST …/groups/{groupId}/quick-deploy-links   CreateQuickDeployLinkRequestSchema
@@ -21,39 +20,38 @@ import { bundleRequestIssues, InstallArchSchema, InstallBundleFieldsSchema, Inst
  *   POST …/quick-deploy-links/{linkId}/revoke     → QuickDeployLinkResponseSchema
  *
  * and the public download, GET /api/v1/quick-deploy/{secret}, with no
- * session. Every member may use the links' routes (decision 4).
+ * session. Every member may use the links' routes.
  *
- * A link is of one of two kinds (D17d-2 decision 21; Preflight ruling 11):
- * D17c-2's Linux link (its choices and its create's body without `kind`, or
- * `kind: "linux"`), whose download is a tokenless bundle, and a Helm values
- * link (`kind: "helm"`), whose download is a `values.yaml` holding the
- * fleet's default token's bearer (D17d-2 decision 1). Both are made only
- * while the organization's "Public install links" switch is on.
+ * A link is of one of two kinds: a Linux link (its choices and its create's
+ * body without `kind`, or `kind: "linux"`), whose download is a tokenless
+ * bundle, and a Helm values link (`kind: "helm"`), whose download is a
+ * `values.yaml` holding the fleet's default token's bearer. Both are made
+ * only while the organization's "Public install links" switch is on.
  *
  * A link's secret is a credential (whoever holds it downloads the install):
  * it crosses the platform only inside the create's `url`, once, `no-store`,
  * and is stored only as its hash. A list item, a link and its choices hold
  * no secret, no hash and no value: the values typed for the variables are
  * sealed with the link, and only their names are listed. The paths and the
- * names are configuration text (ADR 0024): never logged, audited or put in
+ * names are configuration text: never logged, audited or put in
  * a URL.
  */
 
-/** A link's secret: `tqd_` (so secret scanners can match it) and 32 random bytes in base64url (decision 23). */
+/** A link's secret: `tqd_` (so secret scanners can match it) and 32 random bytes in base64url. */
 export const QUICK_DEPLOY_SECRET_PATTERN = /^tqd_[A-Za-z0-9_-]{43}$/;
 
-/** The secret as a masked preview shows it (decision 29): never a character of it. */
+/** The secret as a masked preview shows it: never a character of it. */
 export const QUICK_DEPLOY_MASKED_SECRET = "tqd_••••••••";
 
 /** The public download's path, before the secret. */
 export const QUICK_DEPLOY_PATH_PREFIX = "/api/v1/quick-deploy/";
 
 /**
- * TELFLO_PUBLIC_API_URL's form once its trailing `/` is removed (Preflight
- * ruling 8): `http` or `https`, a host name or a bracketed address, an
- * optional port, a path of plain segments; no user name, query, fragment or
- * `%`. Nothing in it is special inside a curl config's `"…"` or a shell's
- * `'…'`, where the command puts the link.
+ * TELFLO_PUBLIC_API_URL's form once its trailing `/` is removed: `http` or
+ * `https`, a host name or a bracketed address, an optional port, a path of
+ * plain segments; no user name, query, fragment or `%`. Nothing in it is
+ * special inside a curl config's `"…"` or a shell's `'…'`, where the
+ * command puts the link.
  */
 const PUBLIC_API_URL_SOURCE =
   String.raw`https?://(?:[A-Za-z0-9](?:[A-Za-z0-9.-]*[A-Za-z0-9])?|\[[0-9A-Fa-f:.]+\])(?::[0-9]{1,5})?(?:/[A-Za-z0-9._~+-]+)*`;
@@ -61,22 +59,20 @@ export const QUICK_DEPLOY_PUBLIC_API_URL_PATTERN = new RegExp(`^${PUBLIC_API_URL
 
 /**
  * A link as the create answers it, which the web checks before it builds a
- * command (Preflight ruling 8): the API's base URL and
- * `/api/v1/quick-deploy/{secret}`.
+ * command: the API's base URL and `/api/v1/quick-deploy/{secret}`.
  */
 export const QUICK_DEPLOY_URL_PATTERN = new RegExp(`^${PUBLIC_API_URL_SOURCE}/api/v1/quick-deploy/tqd_[A-Za-z0-9_-]{43}$`);
 
-/** How long a new link lasts (decision 5). */
+/** How long a new link lasts. */
 export const QUICK_DEPLOY_LINK_LIFETIME_HOURS = 24;
 
-/** The most links a fleet holds neither expired nor revoked (decision 22). */
+/** The most links a fleet holds neither expired nor revoked. */
 export const QUICK_DEPLOY_LINKS_ACTIVE_MAXIMUM = 100;
 
 /**
- * A Linux link's request's fields (decision 25, strict): a Linux bundle's
- * request's fields (D17c-1 decision 39), plus whether the command installs
- * the systemd service; `kind` absent (D17c-2's body) or `"linux"`. Its
- * checks across fields are the union's (below).
+ * A Linux link's request's fields (strict): a Linux bundle's request's
+ * fields, plus whether the command installs the systemd service; `kind`
+ * absent or `"linux"`. Its checks across fields are the union's (below).
  */
 const CreateLinuxQuickDeployLinkFieldsSchema = InstallBundleFieldsSchema.extend({
   kind: z.literal("linux").optional(),
@@ -84,12 +80,12 @@ const CreateLinuxQuickDeployLinkFieldsSchema = InstallBundleFieldsSchema.extend(
 }).strict();
 
 /**
- * A Helm values link's request's fields (D17d-2 decision 21, strict): the
- * kind and up to 50 typed variables, as a bundle's. The API refuses a name
- * the chart sets itself (`HELM_CHART_ENV_NAMES`, in
- * `HELM_CHART_ENV_NAME_MESSAGE`'s words) or one the group's Helm facts don't
- * offer (400, at `env.N.name`); a YAML 1.1 word is a name like any other
- * (the platform's chart quotes `collectorEnv`'s keys; D18 decision 23).
+ * A Helm values link's request's fields (strict): the kind and up to 50
+ * typed variables, as a bundle's. The API refuses a name the chart sets
+ * itself (`HELM_CHART_ENV_NAMES`, in `HELM_CHART_ENV_NAME_MESSAGE`'s words)
+ * or one the group's Helm facts don't offer (400, at `env.N.name`); a YAML
+ * 1.1 word is a name like any other (the platform's chart quotes
+ * `collectorEnv`'s keys).
  */
 const CreateHelmQuickDeployLinkFieldsSchema = z
   .object({ kind: z.literal("helm"), env: InstallBundleFieldsSchema.shape.env })
@@ -117,8 +113,7 @@ export const CreateLinuxQuickDeployLinkRequestSchema = CreateLinuxQuickDeployLin
 export const CreateHelmQuickDeployLinkRequestSchema = CreateHelmQuickDeployLinkFieldsSchema.superRefine(eachVariableOnce);
 
 /**
- * A quick-deploy link's request (D17c-2 decision 25; D17d-2 decision 21,
- * Preflight ruling 11): by `kind`, a Linux link's (D17c-2's body, `kind`
+ * A quick-deploy link's request: by `kind`, a Linux link's (`kind`
  * absent or `"linux"`, with the bundle's checks across fields) or a Helm
  * values link's (`kind: "helm"`, its variables each once). An unknown kind
  * is refused at `kind`.
@@ -146,8 +141,8 @@ const instant = z.string().datetime();
 
 /**
  * What a Linux link installs: the request's validated fields, the variables
- * by name only. A stored row and a reply carry no `kind` (D17c-2's rows);
- * `"linux"` is taken too.
+ * by name only. A stored row and a reply carry no `kind`; `"linux"` is
+ * taken too.
  */
 export const QuickDeployLinuxChoicesSchema = z
   .object({
@@ -164,10 +159,10 @@ export const QuickDeployLinuxChoicesSchema = z
   .strict();
 
 /**
- * What a Helm values link installs (D17d-2 decision 21; Preflight ruling
- * 11), from the server's state at the link's making: the group's role (so
- * Install Links names the Agent and the Cluster), its release and
- * namespace (for View), and the variables by name only. Strict.
+ * What a Helm values link installs, from the server's state at the link's
+ * making: the group's role (so Install Links names the Agent and the
+ * Cluster), its release and namespace (for View), and the variables by name
+ * only. Strict.
  */
 export const QuickDeployHelmChoicesSchema = z
   .object({
@@ -184,11 +179,11 @@ export const QuickDeployHelmChoicesSchema = z
 export const QuickDeployLinkChoicesSchema = z.discriminatedUnion("kind", [QuickDeployLinuxChoicesSchema, QuickDeployHelmChoicesSchema]);
 
 /**
- * A link, as the list, the create, an extend and a revoke answer it
- * (Preflight ruling 20): ids, its group's name (null once the group is
- * gone: "A deleted group"), its default token's id (the web marks a link
- * whose token is revoked), who made it, its choices, its times, its
- * downloads and its status. Never a secret, a hash or a value.
+ * A link, as the list, the create, an extend and a revoke answer it: ids, its
+ * group's name (null once the group is gone: "A deleted group"), its default
+ * token's id (the web marks a link whose token is revoked), who made it, its
+ * choices, its times, its downloads and its status. Never a secret, a hash or
+ * a value.
  */
 export const QuickDeployLinkSchema = z
   .object({
@@ -209,9 +204,8 @@ export const QuickDeployLinkSchema = z
   .strict();
 
 /**
- * The create's reply (`no-store`, Preflight ruling 20): the link, and its
- * `url`, the one copy of the secret, shown once in the command and never
- * again.
+ * The create's reply (`no-store`): the link, and its `url`, the one copy of
+ * the secret, shown once in the command and never again.
  */
 export const CreateQuickDeployLinkResponseSchema = z
   .object({ link: QuickDeployLinkSchema, url: z.string().regex(QUICK_DEPLOY_URL_PATTERN) })
@@ -244,11 +238,11 @@ export const ListQuickDeployLinksQuerySchema = z
 /** What a client puts in the query string. */
 export type ListQuickDeployLinksQuery = z.input<typeof ListQuickDeployLinksQuerySchema>;
 
-/** Extend's presets (decision 5): a day, a week, a month, 180 days, a year, or never. */
+/** Extend's presets: a day, a week, a month, 180 days, a year, or never. */
 export const QUICK_DEPLOY_LINK_EXTENSIONS = ["1d", "1w", "1mo", "180d", "1y", "never"] as const;
 export type QuickDeployLinkExtension = (typeof QUICK_DEPLOY_LINK_EXTENSIONS)[number];
 
-/** The presets' words in the Extend dialog (Preflight ruling 24), in their order. */
+/** The presets' words in the Extend dialog, in their order. */
 export const QUICK_DEPLOY_LINK_EXTENSION_LABELS: Readonly<Record<QuickDeployLinkExtension, string>> = {
   "1d": "1 day",
   "1w": "1 week",
@@ -277,10 +271,9 @@ function addUtcMonths(at: Date, months: number): Date {
 }
 
 /**
- * A new expiry for an extended link, counted from `now` (decision 5;
- * Preflight ruling 25, in UTC): `1d` 24 hours, `1w` 7 days, `1mo` one
- * calendar month, `180d` 180 days, `1y` one calendar year (Feb 29 + 1 year
- * is Feb 28), `never` null.
+ * A new expiry for an extended link, counted from `now` (in UTC): `1d` 24
+ * hours, `1w` 7 days, `1mo` one calendar month, `180d` 180 days, `1y` one
+ * calendar year (Feb 29 + 1 year is Feb 28), `never` null.
  */
 export function quickDeployLinkExpiryAfter(by: QuickDeployLinkExtension, now: Date): Date | null {
   switch (by) {
@@ -299,23 +292,22 @@ export function quickDeployLinkExpiryAfter(by: QuickDeployLinkExtension, now: Da
   }
 }
 
-/** A new link's expiry: 24 hours after its making (decision 5). */
+/** A new link's expiry: 24 hours after its making. */
 export function quickDeployLinkFirstExpiry(createdAt: Date): Date {
   return new Date(createdAt.getTime() + QUICK_DEPLOY_LINK_LIFETIME_HOURS * HOUR_MS);
 }
 
 /**
- * The links' own refusals (spec decision 33; Preflight ruling 15):
- * `quick_deploy_link_not_found` (404: another organization's or fleet's
- * link too), `quick_deploy_link_revoked` (409, an extend),
- * `quick_deploy_link_limit_reached` (409: a create, or any extend, in a
- * fleet whose other active links are at the cap, normally an expired
- * link's extend: Rulings 36 and 40),
- * `enrollment_token_default_missing` (409, a create with no valid default
- * token), `collector_group_variables_changed` (409, the public download:
- * a stored name the group's version no longer offers) and
- * `public_install_links_disabled` (D17d-2 decision 20: 409 a create while
- * the organization's switch is off; the public download's 403 says
+ * The links' own refusals: `quick_deploy_link_not_found` (404: another
+ * organization's or fleet's link too), `quick_deploy_link_revoked` (409,
+ * an extend), `quick_deploy_link_limit_reached` (409: a create, or any
+ * extend, in a fleet whose other active links are at the cap, normally an
+ * expired link's extend), `enrollment_token_default_missing` (409, a
+ * create with no valid default token),
+ * `collector_group_variables_changed` (409, the public download: a stored
+ * name the group's version no longer offers) and
+ * `public_install_links_disabled` (409 a create while the organization's
+ * switch is off; the public download's 403 says
  * PUBLIC_INSTALL_LINKS_DOWNLOAD_REFUSED_MESSAGE). The links' routes also
  * answer the fleet routes' codes (FLEET_ERROR_CODES).
  */
@@ -343,8 +335,7 @@ export const QUICK_DEPLOY_LINK_ERROR_MESSAGES: Readonly<Record<QuickDeployLinkEr
 };
 
 /**
- * The public download's words while the organization's switch is off
- * (D17d-2 decision 20; Preflight ruling 10): `403`
+ * The public download's words while the organization's switch is off: `403`
  * `public_install_links_disabled`, plain text.
  */
 export const PUBLIC_INSTALL_LINKS_DOWNLOAD_REFUSED_MESSAGE = "Install links are turned off for this organization.";

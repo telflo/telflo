@@ -2,44 +2,41 @@ import { z } from "zod";
 import { FLEET_NAME_PATTERN, FleetActorSchema } from "./fleets.js";
 
 /*
- * The platform's organization variables and variable groups (D20 decisions
- * 2, 3, 11, 15, 31 and 37), under /api/v1/organizations/{organizationId}:
- * `variables` and `variable-groups`, and a variable group's overrides. The
- * opamp-server holds them (Q80); the platform passes them through. Every
- * member of the organization reads and writes them (decision 37).
+ * The platform's organization variables and variable groups, under
+ * /api/v1/organizations/{organizationId}: `variables` and `variable-groups`,
+ * and a variable group's overrides. The opamp-server holds them; the platform
+ * passes them through. Every member of the organization reads and writes them.
  *
- * There are no secret variables (Q88): a value is configuration text like a
- * configuration's YAML (ADR 0024). A variable's value, name and
- * description, and a variable group's name and description, never reach a
- * log line, an error message, an audit row or a URL (decision 35).
+ * There are no secret variables: a value is configuration text like a
+ * configuration's YAML. A variable's value, name and description, and a
+ * variable group's name and description, never reach a log line, an error
+ * message, an audit row or a URL.
  *
  * The bounds are the opamp-server's (openapi.yaml's VariableName,
- * VariableValue, VariableDescription and VariableGroupName; Q90, as Q104
- * lowered the count and the value's length), every
- * length counted in code points as its `char_length` counts them (D20
- * Preflight ruling 23). A name has two patterns: the platform's screens
- * keep an UPPER_CASE rule for a name they create or rename
- * (VARIABLE_NAME_PATTERN, Q81), while a reply's name, and a name in the
- * `variables_undefined` details, follows the server's own grammar
+ * VariableValue, VariableDescription and VariableGroupName), every length
+ * counted in code points as its `char_length` counts them. A name has two
+ * patterns: the platform's screens keep an UPPER_CASE rule for a name they
+ * create or rename (VARIABLE_NAME_PATTERN), while a reply's name, and a name
+ * in the `variables_undefined` details, follows the server's own grammar
  * (VARIABLE_REFERENCE_NAME_PATTERN), which takes lowercase too.
  */
 
-/** The most variables an organization may have (Q104; Q90's 500 lowered). */
+/** The most variables an organization may have. */
 export const ORGANIZATION_VARIABLES_MAXIMUM = 150;
-/** The most variable groups an organization may have (Q90). */
+/** The most variable groups an organization may have. */
 export const VARIABLE_GROUPS_MAXIMUM = 100;
-/** A variable's name: at most 128 characters (Q81, Ruling 51). */
+/** A variable's name: at most 128 characters. */
 export const VARIABLE_NAME_MAXIMUM_LENGTH = 128;
-/** A value: 0 to 1,024 characters, on one line (Q87; Q104, Q90's 4,096 lowered). */
+/** A value: 0 to 1,024 characters, on one line. */
 export const VARIABLE_VALUE_MAXIMUM_LENGTH = 1024;
 /** A variable's or a variable group's description: 1 to 1,000 characters, or none. */
 export const VARIABLE_DESCRIPTION_MAXIMUM_LENGTH = 1000;
 /** A variable group's name: 1 to 200 characters. */
 export const VARIABLE_GROUP_NAME_MAXIMUM_LENGTH = 200;
-/** The most entries an in-use or undefined detail lists, each with its exact total (Q102). */
+/** The most entries an in-use or undefined detail lists, each with its exact total. */
 export const VARIABLE_DETAILS_MAXIMUM_LISTED = 100;
 
-/** A name the platform creates or renames to: UPPER_CASE (Q81). */
+/** A name the platform creates or renames to: UPPER_CASE. */
 export const VARIABLE_NAME_PATTERN = /^[A-Z][A-Z0-9_]*$/;
 
 /**
@@ -115,7 +112,7 @@ export const VariableGroupNameSchema = displayTextSchema(VARIABLE_GROUP_NAME_MAX
 
 /**
  * A variable's create: the browser's own id makes a retry safe (the same
- * id, name, value and description answers the variable again, Q93).
+ * id, name, value and description answers the variable again).
  */
 export const CreateOrganizationVariableRequestSchema = z
   .object({
@@ -170,7 +167,7 @@ export type VariableGroupOverrideRequest = z.infer<typeof VariableGroupOverrideR
 // ---------------------------------------------------------------------------
 // Responses.
 
-/** One of the organization's variables, its value included (no secrets, Q88); who changed it last and when (Q94). */
+/** One of the organization's variables, its value included (no secrets); who changed it last and when. */
 export const OrganizationVariableSchema = z
   .object({
     id: uuid,
@@ -196,10 +193,9 @@ export const OrganizationVariableResponseSchema = z.object({ variable: Organizat
 export type OrganizationVariableResponse = z.infer<typeof OrganizationVariableResponseSchema>;
 
 /**
- * One of the organization's variable groups (decision 3): its overrides
- * counted, what uses it (the collector groups bound to it and the
- * collectors it is pinned on), and who changed it, or an override in it,
- * last and when.
+ * One of the organization's variable groups: its overrides counted, what uses
+ * it (the collector groups bound to it and the collectors it is pinned on),
+ * and who changed it, or an override in it, last and when.
  */
 export const VariableGroupSchema = z
   .object({
@@ -271,10 +267,9 @@ export const VariableDraftsResponseSchema = z
 export type VariableDraftsResponse = z.infer<typeof VariableDraftsResponseSchema>;
 
 // ---------------------------------------------------------------------------
-// The refusals' details (Q102; Preflight rulings 26, 41 and 43): at most 100
-// entries each, with exact totals. Every name the platform looks up is
-// nullable: a lookup that fails or finds nothing leaves null, and the
-// refusal stands.
+// The refusals' details: at most 100 entries each, with exact totals. Every
+// name the platform looks up is nullable: a lookup that fails or finds
+// nothing leaves null, and the refusal stands.
 
 /** A collector group in a detail: its fleet and its id, with their names where the platform found them. */
 export const VariableUseGroupSchema = z
@@ -350,10 +345,10 @@ export const VariablesUndefinedDetailsSchema = z
 export type VariablesUndefinedDetails = z.infer<typeof VariablesUndefinedDetailsSchema>;
 
 /**
- * The variables routes' error codes (decision 37; platform choice P3: the
- * opamp-server's, plus `variables_unavailable` when it can't be reached).
- * `variables_undefined` and `variable_group_not_found` also answer the fleet
- * routes' assignments and pins.
+ * The variables routes' error codes (the opamp-server's, plus
+ * `variables_unavailable` when it can't be reached). `variables_undefined`
+ * and `variable_group_not_found` also answer the fleet routes' assignments
+ * and pins.
  */
 export const VARIABLE_ERROR_CODES = [
   "variable_not_found",
@@ -373,12 +368,12 @@ export const VARIABLE_ERROR_CODES = [
 export type VariableErrorCode = (typeof VARIABLE_ERROR_CODES)[number];
 
 /**
- * The words for "the organization's variables couldn't be reached" (D20
- * decision 1; one family, D20 Ruling 78): the opamp-server down,
- * slow or answering what its API doesn't document. Neutral, so they read
- * right after a read (a list, Validate, a test run's queue) and after a
- * write whose outcome is unknown alike: they claim neither that a change was
- * made nor that it wasn't (a dialog reloads what it shows behind them).
+ * The words for "the organization's variables couldn't be reached", one
+ * family: the opamp-server down, slow or answering what its API doesn't
+ * document. Neutral, so they read right after a read (a list, Validate, a
+ * test run's queue) and after a write whose outcome is unknown alike: they
+ * claim neither that a change was made nor that it wasn't (a dialog reloads
+ * what it shows behind them).
  *
  * VARIABLES_UNAVAILABLE_MESSAGE answers every 503 `variables_unavailable`:
  * the variables routes', Validate's and a test run's queue.
@@ -393,10 +388,9 @@ export const VARIABLES_UNAVAILABLE_MESSAGE = "The organization's variables could
 export const VARIABLES_UNAVAILABLE_RUN_MESSAGE = "The organization's variables couldn't be reached. Run it again.";
 
 /**
- * A publish's refusal (D20 Rulings 51, 55 and 71): 400 `invalid_request`,
- * its details naming `yaml`, for a text with a live `${org:NAME}` to a name
- * over 128 characters, which no variable can have. The editor shows the
- * same words.
+ * A publish's refusal: 400 `invalid_request`, its details naming `yaml`,
+ * for a text with a live `${org:NAME}` to a name over 128 characters, which
+ * no variable can have. The editor shows the same words.
  */
 export const VARIABLE_REFERENCE_TOO_LONG_MESSAGE =
   "This configuration references an organization variable name over 128 characters, which no variable can have.";

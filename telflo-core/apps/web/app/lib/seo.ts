@@ -4,9 +4,9 @@ import type { MetaDescriptor } from "react-router";
 type MetaMatchesLike = ReadonlyArray<{ id: string; loaderData?: unknown } | undefined>;
 
 /**
- * TELFLO_PUBLIC_WEB_URL as the root loader passed it on (D4 decision 5), or
- * undefined when it is unset. Undefined too when root's loader data is
- * missing, as it is when the loader itself failed.
+ * TELFLO_PUBLIC_WEB_URL as the root loader passed it on, or undefined when it
+ * is unset. Undefined too when root's loader data is missing, as it is when
+ * the loader itself failed.
  */
 export function publicWebUrlFrom(matches: MetaMatchesLike): string | undefined {
   const root = matches.find((match) => match?.id === "root")?.loaderData;
@@ -48,9 +48,9 @@ export function organizationJsonLd(publicWebUrl: string | undefined): Record<str
 /**
  * `value` as the text of a `<script type="application/ld+json">`. A browser
  * reads a script's text with no entities, so a `<` in a value (`</script>`
- * in TELFLO_PUBLIC_WEB_URL, say) could end the script early:
- * each is written `\u003c`, which JSON reads back as `<` (D4 Ruling 16).
- * React Router's meta escapes a page's own `script:ld+json` the same way.
+ * in TELFLO_PUBLIC_WEB_URL, say) could end the script early: each is
+ * written `\u003c`, which JSON reads back as `<`. React Router's meta
+ * escapes a page's own `script:ld+json` the same way.
  */
 export function jsonLdScriptText(value: unknown): string {
   return JSON.stringify(value).replace(/</g, "\\u003c");

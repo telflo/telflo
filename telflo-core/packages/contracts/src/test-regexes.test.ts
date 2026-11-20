@@ -23,15 +23,14 @@ import {
 } from "./test-regexes.js";
 import { CreateValidationRuleRequestSchema, VALIDATION_RULES_ERROR_CODES } from "./validation-rules.js";
 
-// The regex library's contracts (D15b decisions 7 and 8; details 16 and 17;
-// Preflight rulings 1 and 3): each schema's accepted and refused shapes,
+// The regex library's contracts: each schema's accepted and refused shapes,
 // migration 031's bounds, whitespace as JavaScript and Go both count it (the
 // table trims ASCII's only), and the error codes.
 
 const ID = "0190a1b2-c3d4-7e5f-8a9b-0c1d2e3f4a70";
 const NOW = "2026-10-11T10:00:00.000Z";
 
-/** Go's unicode.IsSpace, every one (D15a Ruling 56), and JavaScript's U+FEFF. */
+/** Go's unicode.IsSpace, every one, and JavaScript's U+FEFF. */
 const GO_SPACES = "\t\n\v\f\r \u0085\u00a0\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200a\u2028\u2029\u202f\u205f\u3000";
 
 /** A path and message per issue, for a refusal's assertions. */
@@ -43,7 +42,7 @@ function issuesOf(result: { success: boolean; error?: { issues: Array<{ path: Ar
 const valid = { name: "Email Address", category: "PII / GDPR", description: "Matches email addresses", regex: "[a-z]+@[a-z]+" };
 
 describe("the limits, the words and the codes", () => {
-  it("are migration 031's bounds, a rule's pattern's 8,192 bytes, and decision 8's words", () => {
+  it("are migration 031's bounds, a rule's pattern's 8,192 bytes, and the name-taken words", () => {
     expect(TEST_REGEX_NAME_MAXIMUM_LENGTH).toBe(200);
     expect(TEST_REGEX_CATEGORY_MAXIMUM_LENGTH).toBe(100);
     expect(TEST_REGEX_DESCRIPTION_MAXIMUM_LENGTH).toBe(2_000);
@@ -51,7 +50,7 @@ describe("the limits, the words and the codes", () => {
     expect(TEST_REGEX_NAME_TAKEN_MESSAGE).toBe("A regex with that name already exists.");
   });
 
-  it("detail 17's new codes, and none is another module's; the check's 429 and 503 are the rules' (Preflight ruling 4)", () => {
+  it("the library's three codes, and none is another module's; the check's 429 and 503 are the rules'", () => {
     expect(TEST_REGEX_ERROR_CODES).toEqual(["test_regex_not_found", "test_regex_name_taken", "test_regex_invalid"]);
     const others = new Set<string>([
       ...CONFIGURATION_ERROR_CODES,
@@ -105,7 +104,7 @@ describe("a create (CreateTestRegexRequestSchema)", () => {
     expect(CreateTestRegexRequestSchema.parse({ ...valid, name: "E\u0085mail \u00a0x" }).name).toBe("E\u0085mail \u00a0x");
   });
 
-  it("exports the schemas' trim (trimLibraryText) for the web's dialog: one JavaScript trim then one of Go's isn't enough (Ruling 22)", () => {
+  it("exports the schemas' trim (trimLibraryText) for the web's dialog: one JavaScript trim then one of Go's isn't enough", () => {
     // U+0085 hides U+FEFF from trim, and U+FEFF hides the inner U+0085 from Go's: only trimming again empties it.
     expect(trimLibraryText("\u0085\ufeff\u0085")).toBe("");
     expect(trimLibraryText(`${GO_SPACES}\ufeffEmail\u0085 \ufeff\u0085`)).toBe("Email");

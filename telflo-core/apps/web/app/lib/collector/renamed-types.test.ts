@@ -17,9 +17,9 @@ import { paletteSubType } from "~/lib/graph/parse.js";
 import { COMPONENT_TYPES } from "~/lib/graph/types.js";
 
 /*
- * The web's renames come from the catalogue (D13b decision 6, Preflight
- * ruling 15): what Vite bundled is what the files say, read here again
- * from the disk, and every rename is kind-specific.
+ * The web's renames come from the catalogue: what Vite bundled is what the
+ * files say, read here again from the disk, and every rename is
+ * kind-specific.
  */
 
 /** The repository's catalogue folder, read from the disk, not through Vite. */
@@ -66,7 +66,7 @@ describe("the renames the web is built with", () => {
   });
 });
 
-describe("paletteSubType: renames are kind-specific (Preflight ruling 15, D9d's final ruling F8 generalised)", () => {
+describe("paletteSubType: renames are kind-specific", () => {
   it("maps a current name to its palette spelling in its own kind, and keeps it in every other", () => {
     for (const kind of COMPONENT_TYPES) {
       for (const [name, deprecatedName] of Object.entries(RENAMED_TYPES[kind])) {
@@ -76,7 +76,7 @@ describe("paletteSubType: renames are kind-specific (Preflight ruling 15, D9d's 
         }
       }
     }
-    // The cases D13b changed: before, every rename but aws_s3's applied to every kind.
+    // A rename applies to its own kind only.
     expect(paletteSubType("otlp_grpc", "exporter")).toBe("otlp");
     expect(paletteSubType("otlp_grpc", "receiver")).toBe("otlp_grpc");
     expect(paletteSubType("file_log", "exporter")).toBe("file_log");
@@ -102,7 +102,7 @@ describe("reading the catalogue's renames", () => {
     ).toEqual({ "otelcol-contrib": [FILE_LOG], zeta: [] });
   });
 
-  it("refuses no file at all: the glob matched nothing (catalog/ missing where the web is built; Ruling 53)", () => {
+  it("refuses no file at all: the glob matched nothing (catalog/ missing where the web is built)", () => {
     expect(() => readRenamedTypes({})).toThrow(
       "The collector catalogue's distribution files weren't found: catalog/distributions/*.json matched nothing.",
     );
@@ -181,7 +181,7 @@ describe("isAtOrAfter: collector versions compared as numbers", () => {
   });
 });
 
-describe("spelledType: what the palette writes for the pin (D13b decision 5)", () => {
+describe("spelledType: what the palette writes for the pin", () => {
   /** A distribution with its own since values, unlike Contrib's, and a rename Contrib doesn't have. */
   const ACME_RENAMES: readonly RenamedType[] = [
     { kind: "receiver", name: "file_log", deprecatedName: "filelog", since: "1.4.0" },
@@ -244,7 +244,7 @@ describe("spelledType: what the palette writes for the pin (D13b decision 5)", (
         expect(written, `${kind} ${deprecatedName} on ${version}`).toBe(isAtOrAfter(version, since) ? name : deprecatedName);
       }
     }
-    // Contrib when D13b was built: aws_s3 (0.162.0) was the only rename an offered version predated.
+    // Contrib: aws_s3 (0.162.0), a rename an offered version predates.
     expect(spelledType("receiver", "awss3", "otelcol-contrib", "0.161.0")).toBe("awss3");
     expect(spelledType("receiver", "awss3", "otelcol-contrib", "0.162.0")).toBe("aws_s3");
   });

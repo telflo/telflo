@@ -11,14 +11,13 @@ import { useCurrentUser } from "~/lib/use-current-user.js";
 import { readsFor } from "~/lib/workspace-reads.js";
 
 /*
- * A server fleet's Groups tab's data (D17b-2 decisions 10, 23 and 32;
- * Preflight ruling 10): the fleet's groups, the Default group first, then by
- * name, polled every 15 seconds while the tab is visible. Nothing here puts
- * a group's or a configuration's name anywhere but the data it returns: no
- * toast, log or attribute carries one (ADR 0024).
+ * A server fleet's Groups tab's data: the fleet's groups, the Default group
+ * first, then by name, polled every 15 seconds while the tab is visible.
+ * Nothing here puts a group's or a configuration's name anywhere but the data
+ * it returns: no toast, log or attribute carries one.
  */
 
-/** The toast of a person's read that failed over rows shown, and the failed state's words (decision 23). */
+/** The toast of a person's read that failed over rows shown, and the failed state's words. */
 export const GROUPS_LOAD_FAILED_MESSAGE = "Failed to load groups";
 
 /** What the tab shows: the fleet's groups, for the organization and fleet they were read in. */
@@ -37,9 +36,10 @@ export interface GroupsTabOptions {
   /** Called when a read finds the fleet gone (404 `fleet_not_found`): the route's `useFleet().reload`, so the page shows "Fleet not found". */
   onFleetGone: () => void;
   /**
-   * A second reader of the same groups (the setup checklist, D17c-1 Ruling 61): a person's read that fails over rows
-   * shown says nothing (the Groups tab's own read toasts it), so the page never shows the toast twice; with none
-   * shown it is still `failed`.
+   * A second reader of the same groups (the setup checklist): a person's read
+   * that fails over rows shown says nothing (the Groups tab's own read toasts
+   * it), so the page never shows the toast twice; with none shown it is still
+   * `failed`.
    */
   quiet?: boolean;
 }
@@ -60,8 +60,7 @@ export interface GroupsTabRead {
 }
 
 /**
- * A fleet's groups, both fleet types' (D17b-2 decisions 10, 23 and 32;
- * Preflight ruling 10; D17d-1 decision 24), for the Groups tab: a server
+ * A fleet's groups, both fleet types', for the Groups tab: a server
  * fleet's `GroupsTab` and a Kubernetes-supervisor fleet's
  * `KubernetesGroupsTab`; `onFleetGone` is the route's `useFleet().reload`.
  *
@@ -146,7 +145,7 @@ export function useGroupsTab(fleetId: string, { onFleetGone, quiet = false }: Gr
         void revalidate();
         return;
       }
-      // The session is over: the session-ended handler, or Logout, has the page (D12 Ruling 39).
+      // The session is over: the session-ended handler, or Logout, has the page.
       if (!persons || isSessionEnded(error)) return;
       if (shownFor(organization) !== null) {
         if (!quiet) toast.error(GROUPS_LOAD_FAILED_MESSAGE);

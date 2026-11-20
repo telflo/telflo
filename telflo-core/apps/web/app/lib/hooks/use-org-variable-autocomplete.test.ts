@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import { computeTriggerState, useOrgVariableAutocomplete } from "./use-org-variable-autocomplete.js";
 import type { OrgVariableName } from "~/lib/org-variables.js";
 
-/* The picker's cases (D9b Parity Notes). */
+/* The picker's cases. */
 
 describe("computeTriggerState", () => {
   const open = (value: string) => computeTriggerState(value, value.length);
@@ -45,7 +45,7 @@ describe("computeTriggerState", () => {
   });
 });
 
-// D20 (Q81): a row is a name and a description, never a value.
+// A row is a name and a description, never a value.
 const PROD: OrgVariableName = { id: "v1", name: "PROD", description: "Prod OTLP endpoint" };
 const STAGING: OrgVariableName = { id: "v2", name: "STAGING", description: "Staging endpoint" };
 const REGION: OrgVariableName = { id: "v3", name: "REGION", description: null };

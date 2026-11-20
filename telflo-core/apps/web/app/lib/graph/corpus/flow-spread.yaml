@@ -1,4 +1,4 @@
-# Flow sequences spread over lines (D9d Ruling 38), with CRLF line
+# Flow sequences spread over lines, with CRLF line
 # endings: pipeline lists and component lists, comments on items, trailing
 # commas, and a comma on its own line.
 receivers:

@@ -19,9 +19,8 @@ import {
 
 /*
  * The web's port of the opamp-server's reference scan, held to it by the
- * shared corpus (D20 decision 36), read by a path relative to this file
- * (the Global constraints); and the picker's one shared read of the names
- * per organization (Preflight ruling 34).
+ * shared corpus, read by a path relative to this file; and the picker's one
+ * shared read of the names per organization.
  */
 
 const CORPUS = resolve(
@@ -34,7 +33,7 @@ const corpus = JSON.parse(readFileSync(CORPUS, "utf8")) as {
   extract: { name: string; text: string; expected: string[] }[];
 };
 
-describe("orgVariableReferences, against the corpus (decision 36)", () => {
+describe("orgVariableReferences, against the corpus", () => {
   it("reads the corpus' rows", () => {
     expect(corpus.render.length).toBeGreaterThan(20);
     expect(corpus.extract.length).toBeGreaterThan(5);
@@ -49,7 +48,7 @@ describe("orgVariableReferences, against the corpus (decision 36)", () => {
   });
 });
 
-describe("orgVariableReferences (decisions 16 and 36)", () => {
+describe("orgVariableReferences", () => {
   it("finds each live ${org:NAME} once, in first-seen order", () => {
     expect(orgVariableReferences("a: ${org:B}\nb: ${org:A}\nc: ${org:B}\nd: x${org:C}y\n")).toEqual(["B", "A", "C"]);
   });
@@ -59,7 +58,7 @@ describe("orgVariableReferences (decisions 16 and 36)", () => {
     expect(orgVariableReferences("$$${org:LIVE}")).toEqual(["LIVE"]);
   });
 
-  it("leaves the legacy $orgvar:NAME as plain text (Q95; Preflight ruling 31), and a default's form too", () => {
+  it("leaves the legacy $orgvar:NAME as plain text, and a default's form too", () => {
     expect(orgVariableReferences("a: $orgvar:LEGACY\nb: ${org:X:-y}\n")).toEqual([]);
   });
 
@@ -67,7 +66,7 @@ describe("orgVariableReferences (decisions 16 and 36)", () => {
     expect(orgVariableReferences("${org:1ABC} ${org:} ${env:X} ${org:A-B}")).toEqual([]);
   });
 
-  it("lists a name over 128 characters, which no variable can have (Ruling 51)", () => {
+  it("lists a name over 128 characters, which no variable can have", () => {
     const long = "N".repeat(129);
     expect(orgVariableReferences(`a: \${org:${long}}`)).toEqual([long]);
   });
@@ -104,7 +103,7 @@ function signInTo(organizationId: string) {
   });
 }
 
-describe("useOrgVariables: one shared read per organization (Preflight ruling 34)", () => {
+describe("useOrgVariables: one shared read per organization", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
     forgetOrgVariableNames();

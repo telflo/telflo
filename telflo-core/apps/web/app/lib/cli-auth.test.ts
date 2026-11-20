@@ -11,9 +11,8 @@ import {
 } from "./cli-auth.js";
 
 /*
- * `/cli-auth`'s parts (D27 decisions 20-22; Preflight rulings 13, 14 and
- * 16): the fragment's checks, the token's name, the handoff's request, and
- * which addresses name the page.
+ * `/cli-auth`'s parts: the fragment's checks, the token's name, the
+ * handoff's request, and which addresses name the page.
  */
 
 const STATE = `${"A".repeat(20)}-_${"b".repeat(21)}`;
@@ -55,7 +54,7 @@ describe("parseCliAuthFragment", () => {
   });
 });
 
-describe("the token's name (decision 21, Preflight ruling 16)", () => {
+describe("the token's name", () => {
   it("is CLI — <host> · <UTC time>, and its prefix is exactly the part before the time", () => {
     const at = new Date("2026-10-26T07:08:09.123Z");
     expect(cliTokenName("ada-laptop", at)).toBe("CLI — ada-laptop · 2026-10-26 07:08:09");
@@ -92,7 +91,7 @@ describe("postToListener", () => {
   });
 });
 
-describe("the addresses that name the page (Preflight rulings 13 and 14)", () => {
+describe("the addresses that name the page", () => {
   it.each(["/cli-auth", "/cli-auth/", "/CLI-Auth", "/cli%2Dauth", "/cli-auth//"])("%s is the page's path", (path) => {
     expect(isCliAuthPath(path)).toBe(true);
   });

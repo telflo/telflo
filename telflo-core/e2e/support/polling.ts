@@ -1,9 +1,8 @@
 import { expect, type Page, type Request } from "@playwright/test";
 
-// A polled screen's next poll, driven by the page's clock (D17a decision 30;
-// D17b-1 Preflight ruling 16): the fleet list's and a fleet's Collectors
-// tab's. The test installs `page.clock` before the page loads, at the real
-// now (the fake opamp-server runs on real time).
+// A polled screen's next poll, driven by the page's clock: the fleet list's
+// and a fleet's Collectors tab's. The test installs `page.clock` before the
+// page loads, at the real now (the fake opamp-server runs on real time).
 
 /** Whether a request is (one of) the poll's reads. */
 export type PolledRequest = (request: Request) => boolean;
