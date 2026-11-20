@@ -374,7 +374,7 @@ describe("useCollectorsPage", () => {
     expect(result.current).toMatchObject({ collectors: manyCollectors(49, 52), hasNext: false, pageIndex: 1, groups: renamedGroups });
   });
 
-  // The review of 32f39ff: the tab's focus return tells rows from a read begun after a write by the read's number.
+  // The tab's focus return tells rows from a read begun after a write by the read's number.
   it("numbers its rows by the read they came from, a person's or a poll's, and gives the latest read begun", async () => {
     const { result, served } = await loaded();
     const first = result.current.rowsRead;

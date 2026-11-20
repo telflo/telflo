@@ -662,7 +662,7 @@ describe("useFleetsList", () => {
     expect(served.last().query).toEqual({ status: undefined, cursor: "poll-120" });
   });
 
-  // The review of 32f39ff: the list's focus return tells rows from a read begun after a write by the read's number.
+  // The list's focus return tells rows from a read begun after a write by the read's number.
   it("numbers its rows by the read they came from (the first pages', a poll's, \"Load more\"'s, a reload's) and gives the latest read begun", async () => {
     const { result, served } = await loaded(manyFleets(50), "cursor-50");
     const first = result.current.rowsRead;

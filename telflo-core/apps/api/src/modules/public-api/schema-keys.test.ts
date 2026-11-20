@@ -29,7 +29,7 @@ import { UNCALLED_OTELCOL_VALIDATOR } from "../../testing/otelcol-validator.js";
 const opamp = useFakeOpampServer();
 
 const ADVICE =
-  "a public schema takes keys from the caller: mask such keys in errors.ts' publicValidationDetails before adding it (Ruling 176)";
+  "a public schema takes keys from the caller: mask such keys in errors.ts' publicValidationDetails before adding it";
 
 /** The places in `schema` (a dotted trail) that take keys from the caller. */
 function callerKeyedPlaces(schema: z.ZodTypeAny, trail = "", seen = new Set<z.ZodTypeAny>()): string[] {

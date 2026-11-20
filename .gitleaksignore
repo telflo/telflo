@@ -9,9 +9,9 @@
 # development secret, to refuse them in a real install; .env.example's line is
 # the development default; check-gateway-logs.sh passes a made-up user to curl.
 deploy/compose/setup.sh:generic-api-key:71
-docker-compose.yml:generic-api-key:217
-scripts/check-gateway-logs.sh:curl-auth-user:547
-telflo-core/.env.example:generic-api-key:327
+docker-compose.yml:generic-api-key:204
+scripts/check-gateway-logs.sh:curl-auth-user:534
+telflo-core/.env.example:generic-api-key:324
 
 # Test fixtures: values made up for the tests, accepted by nothing but them.
 services/otelcol-testing/tests/conftest.py:generic-api-key:32
@@ -23,22 +23,22 @@ telflo-core/apps/api/src/modules/flows/lint.integration.test.ts:generic-api-key:
 telflo-core/apps/api/src/modules/flows/lint.test.ts:generic-api-key:117
 telflo-core/apps/api/src/modules/oidc/flow-cookie.test.ts:generic-api-key:9
 telflo-core/apps/api/src/modules/sessions/access-tokens.test.ts:generic-api-key:6
-telflo-core/apps/api/src/otelcol-testing/client.test.ts:generic-api-key:543
-telflo-core/apps/api/src/otelcol-validator/client.test.ts:generic-api-key:352
-telflo-core/apps/api/src/ottl-evaluator/client.test.ts:generic-api-key:702
+telflo-core/apps/api/src/otelcol-testing/client.test.ts:generic-api-key:542
+telflo-core/apps/api/src/otelcol-validator/client.test.ts:generic-api-key:351
+telflo-core/apps/api/src/ottl-evaluator/client.test.ts:generic-api-key:701
 telflo-core/apps/api/src/settings.test.ts:generic-api-key:35
-telflo-core/apps/web/app/components/admin/FlowAdminDialog.test.tsx:stripe-access-token:23
-telflo-core/apps/web/app/components/editor/builder/config-forms/redaction-form.test.tsx:generic-api-key:514
-telflo-core/apps/web/app/components/fleets/CollectorDetailsDialog.test.tsx:generic-api-key:805
+telflo-core/apps/web/app/components/admin/FlowAdminDialog.test.tsx:stripe-access-token:22
+telflo-core/apps/web/app/components/editor/builder/config-forms/redaction-form.test.tsx:generic-api-key:512
+telflo-core/apps/web/app/components/fleets/CollectorDetailsDialog.test.tsx:generic-api-key:804
 telflo-core/apps/web/app/components/settings/LinkProviderDialog.test.tsx:generic-api-key:15
 telflo-core/apps/web/app/test/fleets.ts:generic-api-key:34
 telflo-core/apps/web/app/test/fleets.ts:generic-api-key:35
 telflo-core/apps/web/app/test/fleets.ts:generic-api-key:299
 telflo-core/apps/web/app/test/fleets.ts:generic-api-key:300
 telflo-core/apps/web/app/test/fleets.ts:generic-api-key:301
-telflo-core/apps/web/app/test/fleets.ts:generic-api-key:302
-telflo-core/e2e/support/environment.ts:generic-api-key:198
-telflo-core/packages/contracts/src/quick-deploy.test.ts:generic-api-key:33
+telflo-core/apps/web/app/test/fleets.ts:generic-api-key:298
+telflo-core/e2e/support/environment.ts:generic-api-key:192
+telflo-core/packages/contracts/src/quick-deploy.test.ts:generic-api-key:31
 telflo-core/packages/db/src/personal-api-tokens.integration.test.ts:generic-api-key:288
-telflo-core/packages/db/src/service-accounts.integration.test.ts:generic-api-key:360
-telflo-core/vitest.setup.ts:generic-api-key:215
+telflo-core/packages/db/src/service-accounts.integration.test.ts:generic-api-key:359
+telflo-core/vitest.setup.ts:generic-api-key:213

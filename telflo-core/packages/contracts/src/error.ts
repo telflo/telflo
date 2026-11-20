@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 /**
- * The one error envelope, used by every endpoint (Global Constraints).
+ * The one error envelope, used by every endpoint.
  * `code` is machine-readable and stable; `message` is for humans and may change.
  */
 export const ErrorResponseSchema = z
