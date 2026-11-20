@@ -11,10 +11,9 @@ import { CreateOrganizationDialog } from "./CreateOrganizationDialog.js";
 import { DeleteOrganizationDialog } from "./DeleteOrganizationDialog.js";
 
 /*
- * The organization section (ADR 0018; the D5 Parity Notes): "Edit" only on
- * the current organization, since renaming acts on the active one (decision
- * 7). A group organization's Edit dialog also offers "Delete Organization"
- * (decision 9). The logo (D23-2 decision 51) is an `<img alt="">` inside
+ * The organization section: "Edit" only on the current organization, since
+ * renaming acts on the active one. A group organization's Edit dialog also
+ * offers "Delete Organization". The logo is an `<img alt="">` inside
  * `ph-no-capture`, so no alt holds the organization's name.
  */
 
@@ -22,8 +21,7 @@ import { DeleteOrganizationDialog } from "./DeleteOrganizationDialog.js";
 // belongs to, each in its own card. The standalone "+ Create Organization"
 // button creates a new group organization and switches the user into it;
 // it is disabled, with the reason beside it, while the site lets only
-// product admins create organizations and the user isn't one (D36-1
-// decision 51).
+// product admins create organizations and the user isn't one.
 export function EditOrganization() {
   const current = useCurrentUser();
   const [editTarget, setEditTarget] = useState<ActiveOrganization | null>(null);
@@ -32,8 +30,8 @@ export function EditOrganization() {
 
   const organizations = current?.organizations ?? [];
   const currentOrganizationId = current?.organization.id ?? null;
-  // The product admins' switch (D36-1 decision 51), as `/me` read it: the
-  // button stays, disabled, with the reason in fixed words. The API checks again.
+  // The product admins' switch, as `/me` read it: the button stays, disabled,
+  // with the reason in fixed words. The API checks again.
   const mayCreate = current?.mayCreateOrganizations !== false;
   const restrictedId = useId();
 

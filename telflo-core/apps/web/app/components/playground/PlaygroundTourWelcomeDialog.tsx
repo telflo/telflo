@@ -21,12 +21,11 @@ export function shouldOfferPlaygroundTour(): boolean {
 }
 
 /*
- * `PlaygroundTourWelcomeDialog` (ADR 0018; D31-1 decision 15):
- * the first desktop visit's greeter on `/playground`, offering the tour
- * before the visitor starts clicking around. Any way of closing it (the
- * skip button, ✕, Esc, a click outside) counts as "I'll explore on my
- * own": the list marks the tour completed, so it never asks again. Fixed
- * words only.
+ * `PlaygroundTourWelcomeDialog`: the first desktop visit's greeter on
+ * `/playground`, offering the tour before the visitor starts clicking around.
+ * Any way of closing it (the skip button, ✕, Esc, a click outside) counts as
+ * "I'll explore on my own": the list marks the tour completed, so it never
+ * asks again. Fixed words only.
  */
 export function PlaygroundTourWelcomeDialog({
   open,

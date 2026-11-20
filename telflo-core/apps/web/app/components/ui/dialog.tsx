@@ -4,7 +4,7 @@ import { X } from "lucide-react"
 import { cn } from "~/lib/utils.js"
 
 /*
- * The shadcn dialog (ADR 0018). The close button's icon is lucide's X rather
+ * The shadcn dialog. The close button's icon is lucide's X rather
  * than @radix-ui/react-icons' Cross2Icon: telflo's other ui components use
  * lucide, and react-icons isn't a dependency.
  */

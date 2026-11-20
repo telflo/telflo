@@ -12,10 +12,9 @@ import { refusalMessage } from "~/lib/organizations.js";
 import { useCurrentUser } from "~/lib/use-current-user.js";
 
 /*
- * Settings → Organization's "Public install links" (D17d-2 decisions 2 and
- * 20; the owner's Q52; Preflight ruling 33): the current organization's
- * switch for both public link kinds (Linux Quick Deploy and Helm values
- * links), on by default.
+ * Settings → Organization's "Public install links": the current
+ * organization's switch for both public link kinds (Linux Quick Deploy and
+ * Helm values links), on by default.
  *
  * - Read at mount (`GET …/organizations/{o}/settings`, any member, under the
  *   10 s hang guard): "Loading…"; a failed read "Failed to load the
@@ -23,13 +22,13 @@ import { useCurrentUser } from "~/lib/use-current-user.js";
  *   the current organization, and an answer for an earlier one is dropped.
  * - A `Switch` named by the card's title and described by its words;
  *   disabled for a member who isn't an admin, with "Only an admin can change
- *   this." (D5 decision 7). An admin's change sends the `PATCH` (CSRF, the
- *   write hang guard), not optimistically: the switch disabled meanwhile,
- *   then the server's value and "Public install links turned off" / "…turned
- *   on"; a failure toasts the API's words (`refusalMessage`) or "Failed to
- *   change public install links", the value kept. An admin's role gone
- *   meanwhile (`organization_admin_required`), the organization's or the
- *   terms' refusal revalidate the layout; a session ended is silent.
+ *   this." An admin's change sends the `PATCH` (CSRF, the write hang guard),
+ *   not optimistically: the switch disabled meanwhile, then the server's
+ *   value and "Public install links turned off" / "…turned on"; a failure
+ *   toasts the API's words (`refusalMessage`) or "Failed to change public
+ *   install links", the value kept. An admin's role gone meanwhile
+ *   (`organization_admin_required`), the organization's or the terms'
+ *   refusal revalidate the layout; a session ended is silent.
  * - Privacy: fixed words only; the organization's name is never in it.
  */
 

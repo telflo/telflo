@@ -7,12 +7,11 @@ import { choosePlaygroundTheme } from "~/lib/playground/theme.js";
 const THEME_LABELS: Record<Theme, string> = { light: "Light", dark: "Dark", navy: "Navy" };
 
 /*
- * The playground's theme toggle (D31-1 decision 14, Ruling 277), in the
- * sidebar (Settings is locked here): Light, Dark and Navy, Navy shown as Navy
- * (D21's handoff). A choice shows at once and is kept as one word in the
- * playground's own key (`choosePlaygroundTheme`); it never writes the
- * `telflo_theme` cookie. The pressed button is the theme on screen (the
- * visitor's).
+ * The playground's theme toggle, in the sidebar (Settings is locked here):
+ * Light, Dark and Navy, Navy shown as Navy. A choice shows at once and is kept
+ * as one word in the playground's own key (`choosePlaygroundTheme`); it never
+ * writes the `telflo_theme` cookie. The pressed button is the theme on screen
+ * (the visitor's).
  */
 export function PlaygroundThemeToggle({ className }: { className?: string }) {
   const theme = usePlaygroundVisitor()?.preferences.theme ?? "dark";

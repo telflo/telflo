@@ -12,11 +12,10 @@ import {
 } from "./PublicEditorWelcomeDialog.js";
 
 /*
- * The blank public editor's Welcome dialog (D31-1 decisions 15 and 18): it
- * shows until a choice is made, its one flag read after mount and written
- * once the visitor chooses; a choice says which start and whether to take the
- * tour; it can't be dismissed without one; storage that refuses shows it
- * again.
+ * The blank public editor's Welcome dialog: it shows until a choice is made,
+ * its one flag read after mount and written once the visitor chooses; a
+ * choice says which start and whether to take the tour; it can't be dismissed
+ * without one; storage that refuses shows it again.
  */
 
 function renderDialog() {
@@ -63,7 +62,7 @@ describe("PublicEditorWelcomeDialog", () => {
     expect(window.localStorage.getItem(PUBLIC_EDITOR_WELCOME_DONE_KEY)).toBe("true");
   });
 
-  it("waits while the cookie banner asks, then shows once it is answered (Ruling 301)", async () => {
+  it("waits while the cookie banner asks, then shows once it is answered", async () => {
     const onStart = vi.fn();
     const { rerender } = render(<PublicEditorWelcomeDialog onStart={onStart} consentPending />);
     // Effects have run: still nothing over the banner.

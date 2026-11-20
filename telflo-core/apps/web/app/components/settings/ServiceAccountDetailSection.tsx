@@ -28,32 +28,32 @@ import {
 } from "~/lib/service-accounts.js";
 
 /*
- * A service account's page (D22 decisions 9, 41, 43 and 49; ADR 0018):
+ * A service account's page:
  *
  * - The back link "Service Accounts"; "Loading…"; "Service account not
  *   found." for `404 service_account_not_found`; a failed first read toasts
  *   "Failed to load service account" and says "The service account could
- *   not be loaded." (Preflight ruling 30).
+ *   not be loaded."
  * - The header: the name, the address in mono, "Rename"; Created, Created
  *   by, Tokens (the listed tokens' count).
  * - Rename: the field inside `ph-no-capture`, uncontrolled, prefilled by
- *   setting its `value` property from a ref as it opens (Preflight ruling
- *   25: React writes a controlled input's value, or a `defaultValue`, into
- *   the `value` attribute). Save is enabled while a name is there. Success
- *   toasts "Service account renamed" and reads the page again.
+ *   setting its `value` property from a ref as it opens (React writes a
+ *   controlled input's value, or a `defaultValue`, into the `value`
+ *   attribute). Save is enabled while a name is there. Success toasts "Service
+ *   account renamed" and reads the page again.
  * - API Tokens: the account's tokens not revoked, newest first, with Name,
  *   Prefix (`tf_AbC12xYz…`), Access ("Read & Write" or "Read"), Expires (a
- *   date or "Never", and "Expired" by the API's clock: Q131), Last used (a
- *   date or "Never"), Created, and a Revoke per row named through
+ *   date or "Never", and "Expired" by the API's clock), Last used (a date
+ *   or "Never"), Created, and a Revoke per row named through
  *   `aria-labelledby` by "Revoke token" and the row's name cell (no
- *   `aria-label` holds the name). A plain `<table>` (Preflight ruling 30),
- *   ApiTokensTable, shared with the Account page's own tokens (D25).
+ *   `aria-label` holds the name). A plain `<table>`, ApiTokensTable,
+ *   shared with the Account page's own tokens.
  * - "Create token" opens CreateApiTokenDialog; its reply's token is held in
  *   this page's state for ApiTokenRevealDialog alone, dropped however the
  *   reveal closes, and the list is read again then, not while the token is
- *   shown (Preflight ruling 26: a read that lost management while the reveal
- *   was open would navigate away with it). That read failing toasts "Token
- *   created, but the list could not refresh".
+ *   shown (a read that lost management while the reveal was open would
+ *   navigate away with it). That read failing toasts "Token created, but
+ *   the list could not refresh".
  * - The page is keyed by the organization and the account (the route's),
  *   so an answer for an account no longer shown lands nowhere.
  */
@@ -92,7 +92,7 @@ export function ServiceAccountDetailSection({ organizationId, serviceAccountId }
 
   const [renameFrom, setRenameFrom] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
-  // The created token, from the create's reply, for the reveal alone (decision 48).
+  // The created token, from the create's reply, for the reveal alone.
   const [revealed, setRevealed] = useState<string | null>(null);
   const [toRevoke, setToRevoke] = useState<ApiToken | null>(null);
 
@@ -228,7 +228,7 @@ function RenameSession({ renameFrom, onClose, organizationId, serviceAccountId, 
   const [hasName, setHasName] = useState(true);
   const [saving, setSaving] = useState(false);
   const savingRef = useRef(false);
-  // The baseline, read once as the field mounts: the property, never an attribute (Preflight ruling 25).
+  // The baseline, read once as the field mounts: the property, never an attribute.
   const baseline = useRef(renameFrom);
   const prefill = useCallback((input: HTMLInputElement | null) => {
     if (input !== null && baseline.current !== null) input.value = baseline.current;

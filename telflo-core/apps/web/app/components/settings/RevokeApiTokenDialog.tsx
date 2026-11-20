@@ -22,10 +22,9 @@ import {
 } from "~/lib/service-accounts.js";
 
 /*
- * Revoking a token (D22 decisions 9, 31, 43 and 49; Q137): the confirmation
- * "Revoke token {name}?" (the token's name as visible text in the masked
- * shell) and "Any client using it loses access immediately.", "Cancel",
- * "Revoke" ("Revoking…").
+ * Revoking a token: the confirmation "Revoke token {name}?" (the token's name
+ * as visible text in the masked shell) and "Any client using it loses access
+ * immediately.", "Cancel", "Revoke" ("Revoking…").
  *
  * - Success toasts "Token revoked" and the page reads the list again: the
  *   token leaves it and its name is free.
@@ -35,9 +34,8 @@ import {
  *   management is lost leaves through `useLeaveManagement`. Unclosable
  *   while it revokes.
  * - The token is the one the row held when the dialog opened.
- * - Whose token (D25 Preflight ruling 22): a service account's (its
- *   organization and id, D22's callers unchanged), or anyone's given as
- *   `calls` (the Account page's own tokens).
+ * - Whose token: a service account's (its organization and id), or anyone's
+ *   given as `calls` (the Account page's own tokens).
  */
 
 interface RevokeApiTokenDialogBaseProps {
@@ -48,7 +46,7 @@ interface RevokeApiTokenDialogBaseProps {
   onRevoked: () => void;
 }
 
-/** A service account's (D22), or the tokens' owner's calls (D25). */
+/** A service account's, or the tokens' owner's calls. */
 export type RevokeApiTokenDialogProps = RevokeApiTokenDialogBaseProps &
   (
     | { organizationId: string; serviceAccountId: string; calls?: never }

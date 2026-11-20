@@ -6,26 +6,25 @@ import { isGroup } from "~/lib/graph/canvas-operations.js";
 import { useEditorStore } from "~/lib/stores/editor-store.js";
 
 /*
- * The playground tour (ADR 0018; D31-1 decision 15, Preflight
- * ruling 16): three driver.js runs chained across the playground's pages,
- * the configurations list, then the sample's editor, then fleet
- * management. driver.js lives within one page, so each stage is its own
- * run and the hand-over travels through sessionStorage: a stage's last
- * step stores the next stage's name and navigates, and the page it lands
- * on takes the name in an effect and starts its own run. Closing the tour
- * at any point (✕, Esc, the overlay, Finish) marks it completed, so the
- * welcome dialog never offers it again; the banner's "Take the tour"
- * restarts it from the list (`restartPlaygroundTour`).
+ * The playground tour: three driver.js runs chained across the playground's
+ * pages, the configurations list, then the sample's editor, then fleet
+ * management. driver.js lives within one page, so each stage is its own run
+ * and the hand-over travels through sessionStorage: a stage's last step stores
+ * the next stage's name and navigates, and the page it lands on takes the name
+ * in an effect and starts its own run. Closing the tour at any point (✕, Esc,
+ * the overlay, Finish) marks it completed, so the welcome dialog never offers
+ * it again; the banner's "Take the tour" restarts it from the list
+ * (`restartPlaygroundTour`).
  *
- * Its rules, in the spec's words:
+ * Its rules:
  * - the keys are `telflo-playground-tour-completed` (localStorage) and
  *   `telflo-playground-tour-stage` (sessionStorage). Storage that refuses
  *   is survived (in memory, for the page's life), as the editor's own tour
  *   does;
- * - no AI step (ADR 0007) and no `fleet-usage` step (the platform's fleet
- *   list has no usage strip); the fleet table's step names what the
- *   platform's table shows (its status and its configuration's sync; it
- *   has no collector version column);
+ * - no AI step and no `fleet-usage` step (the platform's fleet list has no
+ *   usage strip); the fleet table's step names what the platform's table
+ *   shows (its status and its configuration's sync; it has no collector
+ *   version column);
  * - the playground editor runs only this tour's editor stage, never the
  *   editor's own tour (`start-editor-tour.ts`);
  * - a stage waits for its page's anchor (bounded) before it starts, so a
@@ -433,8 +432,8 @@ export function startPlaygroundEditorTour(navigate: NavigateFn): void {
 const FLEET_TABLE = '[data-tour-step="fleet-table"]';
 
 /**
- * The fleet stage's steps; the wrap-up's link goes to `signUp` (useSignUpPath:
- * D36-1 decision 23), a fixed path, its words following it (Ruling 352).
+ * The fleet stage's steps; the wrap-up's link goes to `signUp` (useSignUpPath),
+ * a fixed path, its words following it.
  */
 export function playgroundFleetSteps(signUp: "/register" | "/login"): DriveStep[] {
   return [
@@ -478,7 +477,7 @@ export function startPlaygroundFleetTour(signUp: "/register" | "/login"): void {
  * when the visitor is on it, through its mount effect otherwise. Any run
  * still waiting or showing is cancelled first without giving its stage
  * back, so a page leaving afterwards (its cleanup stops the tour) can't
- * put its own stage over the list's (Ruling 294).
+ * put its own stage over the list's.
  */
 export function restartPlaygroundTour(pathname: string, navigate: NavigateFn): void {
   cancelActiveTour(false);

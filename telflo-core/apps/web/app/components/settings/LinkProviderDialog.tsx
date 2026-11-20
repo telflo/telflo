@@ -8,18 +8,17 @@ import { isAccountRefusal, linkStartFailureMessage } from "~/lib/account.js";
 import { createIdentityLinkRequest, isSessionEnded } from "~/lib/api-client.js";
 
 /*
- * The password prompt before linking a provider (D21 decision 38), for an
- * account with a password: the current password goes in the link start's
- * POST body (never the URL), then the browser goes to the provider's
- * authorization URL. A wrong password shows the API's fixed message under
- * the field, announced (`role="alert"`), and the field takes the focus again
- * once it is enabled; a provider that can't be reached toasts "Linking Google didn't
- * work. Try again."; another refusal its fixed message. The title is fixed
- * words with the provider's configured name. The password lives only in the
- * dialog's uncontrolled field (no `value` attribute), is emptied after every
- * answer, and goes with the dialog when it closes (decision 45). Busy from
- * the start until the browser leaves; a page restored from the back/forward
- * cache is usable again (Ruling 89).
+ * The password prompt before linking a provider, for an account with a
+ * password: the current password goes in the link start's POST body (never the
+ * URL), then the browser goes to the provider's authorization URL. A wrong
+ * password shows the API's fixed message under the field, announced
+ * (`role="alert"`), and the field takes the focus again once it is enabled; a
+ * provider that can't be reached toasts "Linking Google didn't work. Try
+ * again."; another refusal its fixed message. The title is fixed words with
+ * the provider's configured name. The password lives only in the dialog's
+ * uncontrolled field (no `value` attribute), is emptied after every answer,
+ * and goes with the dialog when it closes. Busy from the start until the
+ * browser leaves; a page restored from the back/forward cache is usable again.
  */
 
 /** The hosts a provider may be reached on over plain http: the API's loopback issuer rule (`isLoopbackHttpIssuer`). */
@@ -28,7 +27,7 @@ const LOOPBACK_HOSTNAMES: ReadonlySet<string> = new Set(["localhost", "127.0.0.1
 /**
  * Whether the browser may go to `authorizationUrl`: an https URL, or http on
  * a loopback host (the fake provider in the browser tests, 127.0.0.1). The
- * contract's `url()` takes `javascript:` and `data:` too (Ruling 89).
+ * contract's `url()` takes `javascript:` and `data:` too.
  */
 export function isProviderAddress(authorizationUrl: string): boolean {
   let url: URL;
@@ -53,8 +52,8 @@ export function goToProvider(authorizationUrl: string): void {
 /**
  * Calls `restored` when the browser restores the page from its back/forward
  * cache (a `pageshow` with `persisted`): pressing Back from the provider
- * brings the page back exactly as it left, still busy. D2c Ruling 16's
- * `useRedirectingProvider` (FederatedSignIn.tsx) is the precedent; Ruling 89.
+ * brings the page back exactly as it left, still busy;
+ * `useRedirectingProvider` (FederatedSignIn.tsx) handles the same case.
  * `restored` must keep its identity (a state setter's call).
  */
 export function useBackForwardRestore(restored: () => void): void {
@@ -83,7 +82,7 @@ export function LinkProviderDialog({ open, onOpenChange, provider, onCloseAutoFo
   const [problem, setProblem] = useState<string | null>(null);
   const [isStarting, setIsStarting] = useState(false);
   // Counts wrong passwords: after each, once the field is enabled again, it takes the focus (RenameVersionDialog's way),
-  // in a layout effect: in the very commit that shows the alert and enables the field, not in a later task (Ruling 93).
+  // in a layout effect: in the very commit that shows the alert and enables the field, not in a later task.
   const [wrongPasswords, setWrongPasswords] = useState(0);
   useLayoutEffect(() => {
     if (wrongPasswords > 0) field.current?.focus();

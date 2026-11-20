@@ -27,7 +27,7 @@ describe("DeleteOrganizationDialog", () => {
     vi.restoreAllMocks();
   });
 
-  it("has the Parity Notes' copy", async () => {
+  it("has its copy", async () => {
     renderDialog();
     const dialog = await screen.findByRole("dialog", { name: "Delete Organization" });
 

@@ -12,8 +12,7 @@ import { ACCOUNT_ID, ORGANIZATION_ID, TOKEN_ID, apiToken, holdsText, renderInRou
 import { RevokeApiTokenDialog } from "./RevokeApiTokenDialog.js";
 
 /*
- * Revoking a token (D22 decisions 9, 31 and 43; Q137): it asks for
- * confirmation first, in Q137's words.
+ * Revoking a token: it asks for confirmation first, in fixed words.
  */
 
 function renderDialog(token = apiToken()) {
@@ -43,7 +42,7 @@ describe("RevokeApiTokenDialog", () => {
     vi.restoreAllMocks();
   });
 
-  it("asks with Q137's words, the token's name as text in the title and in no attribute", async () => {
+  it("asks with its fixed words, the token's name as text in the title and in no attribute", async () => {
     renderDialog(apiToken({ name: "canary-token-7a1" }));
     const dialog = await screen.findByRole("alertdialog", { name: "Revoke token canary-token-7a1?" });
     expect(within(dialog).getByText("Any client using it loses access immediately.")).toBeInTheDocument();
@@ -69,7 +68,7 @@ describe("RevokeApiTokenDialog", () => {
 
     answer.resolve(undefined);
     await waitFor(() => expect(onRevoked).toHaveBeenCalledTimes(1));
-    // Booleans first (Ruling 99): no toast holds the token's name or prefix, then the words.
+    // Booleans first: no toast holds the token's name or prefix, then the words.
     const listed = apiToken();
     for (const text of [listed.name, listed.prefix]) expect(holdsText(success.mock.calls, text), "a toast holding the token's name or prefix").toBe(false);
     expect(success).toHaveBeenCalledWith(API_TOKEN_REVOKED_MESSAGE);
@@ -110,7 +109,7 @@ describe("RevokeApiTokenDialog", () => {
     expect(onRevoked).not.toHaveBeenCalled();
   });
 
-  it("takes any owner's calls (D25 Preflight ruling 22): their revoke and words, never the service account's", async () => {
+  it("takes any owner's calls: their revoke and words, never the service account's", async () => {
     const calls = {
       create: vi.fn(),
       revoke: vi.fn(async () => undefined),

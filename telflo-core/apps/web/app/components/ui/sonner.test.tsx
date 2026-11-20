@@ -5,7 +5,7 @@ import { Toaster } from "./sonner.js";
 
 // Its own file: sonner keeps toasts in a module singleton.
 
-describe("Toaster (D21 decision 26)", () => {
+describe("Toaster", () => {
   it("takes sonner's light for Light and dark for Dark and Navy, switching a toast already showing", async () => {
     const { container, rerender } = render(<Toaster theme="light" />);
     // sonner renders its list only once there is a toast.
@@ -27,7 +27,7 @@ describe("Toaster (D21 decision 26)", () => {
     expect(toaster()).toHaveAttribute("data-sonner-theme", "light");
   });
 
-  it("gives the toasts the app's popover tokens through sonner's --normal-* variables (Preflight ruling 22, B3)", async () => {
+  it("gives the toasts the app's popover tokens through sonner's --normal-* variables", async () => {
     const { container } = render(<Toaster theme="dark" />);
     act(() => {
       toast("Copied");

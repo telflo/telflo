@@ -5,13 +5,12 @@ import { Button } from "~/components/ui/button.js";
 import { changedLines } from "~/lib/variables.js";
 
 /*
- * The Variables page's table (D20 default 20; ADR 0018), with D20's
- * columns: Name (the description beneath), Value, Changed (the time and
- * who, decision 15) and the row's actions, Edit and Delete. In detail:
- * - the value is shown in full (unmasked: nothing in it is secret, Q88), and
- *   inside `ph-no-capture` (replay records nothing of it), as
- *   configuration text; the name and the description are text in the
- *   masked shell;
+ * The Variables page's table, with its columns: Name (the description
+ * beneath), Value, Changed (the time and who) and the row's actions, Edit and
+ * Delete. In detail:
+ * - the value is shown in full (unmasked: nothing in it is secret), and
+ *   inside `ph-no-capture` (replay records nothing of it), as configuration
+ *   text; the name and the description are text in the masked shell;
  * - the actions are icon buttons named by `aria-labelledby` pointing at
  *   hidden text ("Edit {name}", "Delete {name}"), as the fleet rows'
  *   (`FleetRowActions.tsx`): no attribute holds a name.

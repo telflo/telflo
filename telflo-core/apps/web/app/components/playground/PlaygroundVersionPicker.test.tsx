@@ -15,9 +15,8 @@ import { OTHER_VERSION_LOCKED_ACTION, PlaygroundVersionPicker } from "./Playgrou
 import { SIGNUP_PROMPT_TITLE, signupPromptText } from "./SignupPromptDialog.js";
 
 /*
- * The fixed picker and the catalogue the web was built with (D31-1
- * decision 11, Q210, Ruling 277, Preflight ruling 20): the pin shows; the
- * build-time catalogue's offered versions are listed, the same ones the
+ * The fixed picker and the catalogue the web was built with: the pin shows;
+ * the build-time catalogue's offered versions are listed, the same ones the
  * schemas cover; a pick of another opens the sign-up prompt and changes
  * nothing. Inside the playground no catalogue request is made.
  */
@@ -119,7 +118,7 @@ describe("the fixed picker", () => {
     expect(useEditorStore.getState().collectorVersion).toBe("0.161.0");
   });
 
-  it("opens the prompt once the list has closed, and its close gives the focus back to the picker (Ruling 299)", async () => {
+  it("opens the prompt once the list has closed, and its close gives the focus back to the picker", async () => {
     const user = userEvent.setup();
     renderPicker();
     const picker = screen.getByRole("combobox", { name: "Collector version v0.161.0" });

@@ -14,10 +14,10 @@ import { useSavePreference } from "~/lib/preferences.js";
 import { useCurrentUser } from "~/lib/use-current-user.js";
 
 /*
- * Settings › Editor (ADR 0018; D21 decision 31). Each control saves its
- * own key (decision 33): the user store takes it at once, so every open
- * Monaco follows (`use-editor-preferences.ts`), and a failure restores that
- * key alone and toasts "Failed to update preferences".
+ * Settings › Editor. Each control saves its own key: the user store takes
+ * it at once, so every open Monaco follows (`use-editor-preferences.ts`),
+ * and a failure restores that key alone and toasts "Failed to update
+ * preferences".
  *
  * The Selects' item values are the numbers, fixed sentinels: no text the
  * person typed is ever a value (`security.md`'s rule for Select values).

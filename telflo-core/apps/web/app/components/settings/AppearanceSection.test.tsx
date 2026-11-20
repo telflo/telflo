@@ -15,8 +15,7 @@ import type { AppLayoutData } from "~/routes/app-layout.js";
 import { signedInMember } from "~/test/configurations.js";
 
 /*
- * Settings › Appearance (D21 decisions 24, 30 and 33; Preflight rulings 35,
- * 36 and 48): its words and swatches; a choice shows at once, is
+ * Settings › Appearance: its words and swatches; a choice shows at once, is
  * saved on its own, and revalidates the signed-in layout; a failure restores
  * the previous theme.
  */
@@ -134,7 +133,7 @@ describe("AppearanceSection", () => {
 
     layoutLoader.mockImplementation(() => ({ status: "signed_in", currentUser: member("light") }));
     save.resolve(answer("light"));
-    // The answer taken, the signed-in layout is revalidated (Preflight ruling 36).
+    // The answer taken, the signed-in layout is revalidated.
     await waitFor(() => expect(layoutLoader.mock.calls.length).toBeGreaterThan(loadsBefore));
     expect(useUserStore.getState().confirmedPreferences?.theme).toBe("light");
     expect(document.documentElement.className).toBe("");

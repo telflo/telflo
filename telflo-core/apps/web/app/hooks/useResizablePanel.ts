@@ -2,15 +2,13 @@ import { useCallback, useEffect, useLayoutEffect, useState } from "react";
 import type { RefObject } from "react";
 
 /**
- * Hook for mouse-drag panel resizing, without an AI panel's sibling logic
- * (ADR 0007), and with the width held by the caller.
- * Returns the width to render, resizing state, and a handler to start
- * resizing.
+ * Hook for mouse-drag panel resizing, without an AI panel's sibling logic,
+ * and with the width held by the caller. Returns the width to render,
+ * resizing state, and a handler to start resizing.
  *
- * `width` is the width the person chose, from the editor's store (D8
- * decision 8); a drag writes the new width through `onWidthChange`. A drag
- * measures from the window's right edge, so the panel must sit flush
- * against it.
+ * `width` is the width the person chose, from the editor's store; a drag
+ * writes the new width through `onWidthChange`. A drag measures from the
+ * window's right edge, so the panel must sit flush against it.
  *
  * Pass `minCanvasWidth` + `boundaryRef` (a ref to the element directly to the
  * LEFT of the panel, e.g. the canvas column) to cap how wide the panel can be

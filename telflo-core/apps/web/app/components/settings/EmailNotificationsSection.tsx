@@ -7,12 +7,11 @@ import { useSavePreference } from "~/lib/preferences.js";
 import { useCurrentUser } from "~/lib/use-current-user.js";
 
 /*
- * Settings › Notifications (ADR 0018; D21 decisions 13 and 32): the two
- * switches are `preferences.email` (`productUpdates`, `productTips`), read
- * from `/me` through the user store, so there is no load of their own.
- * Nothing reads them yet: they wait for a future sender (D35). Each switch
- * saves its own key, optimistically (decision 33); a failure restores it and
- * toasts "Failed to update email preferences".
+ * Settings › Notifications: the two switches are `preferences.email`
+ * (`productUpdates`, `productTips`), read from `/me` through the user
+ * store, so there is no load of their own. Nothing reads them yet: they
+ * wait for a future sender. Each switch saves its own key, optimistically;
+ * a failure restores it and toasts "Failed to update email preferences".
  */
 
 export function EmailNotificationsSection() {

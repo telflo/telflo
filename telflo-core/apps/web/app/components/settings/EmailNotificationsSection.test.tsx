@@ -13,9 +13,8 @@ import type { AppLayoutData } from "~/routes/app-layout.js";
 import { signedInMember } from "~/test/configurations.js";
 
 /*
- * Settings › Notifications (D21 decisions 13, 32 and 33): its words; each
- * switch saves its own key under `email`, optimistically; a failure
- * restores it and toasts.
+ * Settings › Notifications: its words; each switch saves its own key under
+ * `email`, optimistically; a failure restores it and toasts.
  */
 
 function withEmail(email: Partial<EmailPreferences>): UserPreferences {

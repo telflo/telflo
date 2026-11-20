@@ -21,10 +21,8 @@ export function maskSecret(secret: string): string {
 }
 
 /**
- * A secret shown once to copy: a fleet token's bearer (D17a decision 24,
- * Preflight ruling 13; ADR 0024), an install, Quick Deploy or Helm command
- * holding one (D17c-1, D17c-2, D17d-2), and a service account's API token
- * (D22 decision 45).
+ * A secret shown once to copy: a fleet token's bearer, an install, Quick
+ * Deploy or Helm command holding one, and a service account's API token.
  *
  * - The box is `ph-no-capture`, so session replay records nothing inside it,
  *   and the Copy button is inside the box, so autocapture skips its click
@@ -39,9 +37,9 @@ export function maskSecret(secret: string): string {
  *   "Failed to copy to clipboard", never the error or the secret; the text
  *   stays there to select by hand.
  *
- * - `multiline` (D17c-1 Preflight ruling 25): an install command, one flag
- *   a line, or the Linux token screen's lines, its line breaks kept
- *   (`whitespace-pre-wrap`) and copied as shown.
+ * - `multiline`: an install command, one flag a line, or the Linux token
+ *   screen's lines, its line breaks kept (`whitespace-pre-wrap`) and copied
+ *   as shown.
  *
  * - `masked`: a token on its own line shows only its prefix, its first 4
  *   characters and its last 4 (`maskSecret`), so a glance at the screen

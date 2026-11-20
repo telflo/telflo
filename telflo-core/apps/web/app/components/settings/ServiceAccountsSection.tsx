@@ -26,26 +26,26 @@ import {
 } from "~/lib/service-accounts.js";
 
 /*
- * Settings › Service Accounts (D22 decisions 41, 42 and 49; ADR 0018):
+ * Settings › Service Accounts:
  *
- * - The intro card "About service accounts", "deleting the old" now
- *   "revoking the old" (Q131), and D25's "API reference" link (default 14;
- *   decision 49): a plain `<a>` to the API's own page (ApiReferenceNote).
+ * - The intro card "About service accounts" (its words say "revoking the
+ *   old"), and the "API reference" link: a plain `<a>` to the API's own page
+ *   (ApiReferenceNote).
  * - The card "Service Accounts" with "Create service account"; the columns
  *   Name (a link to the account's page, by id), Created, Created by (the
  *   creator's address, or "—"), Tokens, and a Delete per row, named through
  *   `aria-labelledby` by "Delete service account" and the row's name cell
  *   (no `aria-label` holds the name). A plain `<table>`, as the
- *   fleet tables (Preflight ruling 30).
+ *   fleet tables.
  * - "Loading…"; "No service accounts yet."; a failed first read toasts
  *   "Failed to load service accounts" and says "Service accounts could not
- *   be loaded." rather than the empty state (Preflight ruling 30).
- * - Create: the name typed inside `ph-no-capture`, uncontrolled (React
- *   writes a controlled input's value into its `value` attribute: Preflight
- *   ruling 25), read from the form on submit; Create is enabled once a name
- *   is typed. Success toasts "Service account created" and reads the list
- *   again; a refusal toasts its fixed message and keeps the dialog; an
- *   answer that never came reads the list again (the account may exist).
+ *   be loaded." rather than the empty state.
+ * - Create: the name typed inside `ph-no-capture`, uncontrolled (React writes
+ *   a controlled input's value into its `value` attribute), read from the form
+ *   on submit; Create is enabled once a name is typed. Success toasts "Service
+ *   account created" and reads the list again; a refusal toasts its fixed
+ *   message and keeps the dialog; an answer that never came reads the list
+ *   again (the account may exist).
  * - A refusal saying management is lost leaves through `useLeaveManagement`.
  */
 
@@ -215,9 +215,9 @@ interface CreateServiceAccountDialogProps {
 }
 
 /**
- * "Create service account" (decision 42): the name typed inside
- * ph-no-capture, never in an attribute. Each opening is a new session
- * (`useOpeningKey`): an empty field, Create disabled.
+ * "Create service account": the name typed inside ph-no-capture, never in an
+ * attribute. Each opening is a new session (`useOpeningKey`): an empty field,
+ * Create disabled.
  */
 function CreateServiceAccountDialog(props: CreateServiceAccountDialogProps) {
   const opening = useOpeningKey(props.open);

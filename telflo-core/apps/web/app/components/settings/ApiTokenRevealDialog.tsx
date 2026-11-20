@@ -4,9 +4,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { API_TOKEN_REVEAL_WORDS } from "~/lib/service-accounts.js";
 
 /*
- * "Copy your token" (D22 decisions 9, 43, 45 and 48; Q137; Preflight ruling
- * 26), the one-time reveal: the token in the shared copy box, inside
- * `ph-no-capture`, as text only, its button "Copy token" (the box's
+ * "Copy your token", the one-time reveal: the token in the shared copy box,
+ * inside `ph-no-capture`, as text only, its button "Copy token" (the box's
  * "Copied"; no toast), and "Done".
  *
  * The token is the page's, from the create's reply, held in its state for

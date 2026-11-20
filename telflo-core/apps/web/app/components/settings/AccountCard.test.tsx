@@ -8,8 +8,8 @@ import { signedInMember } from "~/test/configurations.js";
 import { expectNoAttributeHolds } from "~/test/fleets.js";
 
 /*
- * Settings › Account's first card (D21 decisions 34 and 45, Q119): its
- * words; the email is visible text, never an attribute.
+ * Settings › Account's first card: its words; the email is visible text,
+ * never an attribute.
  */
 
 const EMAIL = "canary-person-5f1e@example.com";

@@ -17,9 +17,9 @@ import { held } from "~/test/account.js";
 import { ACCOUNT_ID, ADMIN_EMAIL, ORGANIZATION_ID, SECOND_ACCOUNT_ID, renderServiceAccountPages, serviceAccount } from "~/test/service-accounts.js";
 
 /*
- * Settings › Service Accounts' list (D22 decisions 42 and 49): a session
- * always has an organization, and the page is keyed by it; the failed read,
- * the refusals and the row actions' names.
+ * Settings › Service Accounts' list: a session always has an organization,
+ * and the page is keyed by it; the failed read, the refusals and the row
+ * actions' names.
  */
 
 const ACCOUNT = serviceAccount();
@@ -84,7 +84,7 @@ describe("ServiceAccountsSection", () => {
     expect(screen.queryByText("No service accounts yet.")).not.toBeInTheDocument();
   });
 
-  it("the intro card has decision 42's words and the API reference, a plain link to the API's page with its slash (D25 decision 49)", async () => {
+  it("the intro card has its words and the API reference, a plain link to the API's page with its slash", async () => {
     serveAccounts([]);
     renderList();
     const intro = (await screen.findByText("About service accounts")).parentElement!;
@@ -102,7 +102,7 @@ describe("ServiceAccountsSection", () => {
     expect(screen.getByRole("link", { name: "API reference" })).toBe(links[0]);
     expect(screen.getByRole("heading", { name: "Service Accounts" })).toBeInTheDocument();
     expect(screen.getByText("Machine identities for the Telflo public API, scoped to this organization.")).toBeInTheDocument();
-    // The icons (Preflight ruling 30).
+    // The icons.
     expect(intro.parentElement!.querySelector("svg")?.getAttribute("class")).toContain("lucide-bot");
     expect(intro.querySelector("svg")?.getAttribute("class")).toContain("lucide-shield-alert");
     expect(screen.getByRole("button", { name: "Create service account" }).querySelector("svg")?.getAttribute("class")).toContain("lucide-plus");

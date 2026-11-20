@@ -8,13 +8,12 @@ import { deleteAllSessions } from "~/lib/api-client.js";
 import { signOutWith } from "~/lib/use-logout.js";
 
 /*
- * "Sign out everywhere" (D21 decision 40, Preflight ruling 38): decision
- * 40's confirm, then the existing `DELETE /api/v1/auth/sessions` (every
- * session, this one included; the API clears this browser's cookies), then
- * Logout's clean-up (`signOutWith`: the session-ended handler suspended
- * meanwhile, the stores cleared, PostHog reset; the remembered theme kept),
- * "Signed out everywhere" and `/login`. A failure leaves everything as it
- * was and toasts fixed words.
+ * "Sign out everywhere": its confirm, then the existing
+ * `DELETE /api/v1/auth/sessions` (every session, this one included; the API
+ * clears this browser's cookies), then Logout's clean-up (`signOutWith`: the
+ * session-ended handler suspended meanwhile, the stores cleared, PostHog
+ * reset; the remembered theme kept), "Signed out everywhere" and `/login`. A
+ * failure leaves everything as it was and toasts fixed words.
  */
 
 export function SignOutEverywhereDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {

@@ -11,9 +11,9 @@ import { useUserStore } from "~/lib/stores/user-store.js";
 import { OTHER_SESSION_ID, held, renderUnderLayout, sessions } from "~/test/account.js";
 
 /*
- * Sessions (D21 decisions 40 and 45): the rows, "This browser" with no Sign
- * out, a row's Sign out with no confirm and the list read again, each named
- * by fixed words and its sign-in time.
+ * Sessions: the rows, "This browser" with no Sign out, a row's Sign out
+ * with no confirm and the list read again, each named by fixed words and
+ * its sign-in time.
  */
 
 function page(items = sessions()): AccountSessionsResponse {

@@ -42,7 +42,7 @@ function Controlled({
 
 const input = () => screen.getByRole("textbox", { name: "Endpoint" }) as HTMLInputElement;
 
-describe("VaultAwareInput's $ picker (decision 5)", () => {
+describe("VaultAwareInput's $ picker", () => {
   it('opens on $ with "No matching variables" and the env row, which inserts ${env:} with the cursor inside', async () => {
     const user = userEvent.setup();
     render(<Controlled />);
@@ -177,7 +177,7 @@ describe("VaultAwareInput's $ picker (decision 5)", () => {
   });
 });
 
-describe("VaultAwareInput's $ picker fed by the organization's variables (D20 default 26; Preflight ruling 34)", () => {
+describe("VaultAwareInput's $ picker fed by the organization's variables", () => {
   const ORGANIZATION_ID = "00000000-0000-4000-8000-0000000000a1";
   const VALUE_CANARY = "value-canary-91d2";
 
@@ -222,7 +222,7 @@ describe("VaultAwareInput's $ picker fed by the organization's variables (D20 de
     expect(document.body.innerHTML).not.toContain(VALUE_CANARY);
     expectNoAttributeHolds("OTLP_EP");
     expectNoAttributeHolds("Collector gateway");
-    // The rows are configuration text: replay records nothing of the picker (D20's privacy review).
+    // The rows are configuration text: replay records nothing of the picker.
     expect(screen.getByText("${org:OTLP_EP}").closest(".ph-no-capture")).not.toBeNull();
     expect(screen.getByText("Collector gateway").closest(".ph-no-capture")).not.toBeNull();
 
@@ -260,7 +260,7 @@ describe("VaultAwareInput's $ picker fed by the organization's variables (D20 de
     await user.type(input(), "$");
     expect(await screen.findByText("Loading organization variables...")).toBeInTheDocument();
     await act(async () => refuse(new ApiError("variables_unavailable", "unavailable", { status: 503 })));
-    // The family's words (D20 Ruling 78), as the variables routes and Validate say them.
+    // The family's words, as the variables routes and Validate say them.
     expect(ORG_VARIABLES_UNREAD_MESSAGE).toBe("The organization's variables couldn't be reached. Try again.");
     expect(await screen.findByText(ORG_VARIABLES_UNREAD_MESSAGE)).toBeInTheDocument();
     expect(screen.getByText("Environment variable")).toBeInTheDocument();

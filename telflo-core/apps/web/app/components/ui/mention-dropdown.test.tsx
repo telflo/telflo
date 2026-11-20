@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import { MentionDropdown } from "./mention-dropdown.js";
 
-/* D20's rows: a variable's name over its description (Q81), each row text only. */
+/* The rows: a variable's name over its description, each row text only. */
 
 const ITEMS = [
   { id: "v1", name: "PROD", description: "Prod OTLP endpoint" },

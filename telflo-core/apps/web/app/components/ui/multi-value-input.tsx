@@ -10,49 +10,47 @@ import { flushHeldEdits } from "~/lib/editor/held-edits.js";
 import { useHeldText } from "~/lib/editor/held-text.js";
 
 /*
- * A list of values (ADR 0018): plain inputs, one per value, each with a
- * "Remove" button (a fixed label, never the value; D9b decision 10), and
- * the add button below.
+ * A list of values: plain inputs, one per value, each with a "Remove" button
+ * (a fixed label, never the value), and the add button below.
  *
- * A form writes by item (D9b decision 2), so the list says which item
- * changed: a row's typing is held and handed back once (`onValueChange`,
- * after the pause, on blur or Enter), and adding or removing says which
- * (`onAdd` appends an empty value; `onRemove`). What any row still holds is
- * written before a row is added or removed, so it lands on its own item.
+ * A form writes by item, so the list says which item changed: a row's
+ * typing is held and handed back once (`onValueChange`, after the pause, on
+ * blur or Enter), and adding or removing says which (`onAdd` appends an
+ * empty value; `onRemove`). What any row still holds is written before a
+ * row is added or removed, so it lands on its own item.
  *
- * For a list whose empty rows are held rather than written (D9c decision 9,
- * Preflight ruling 8; `holdEmpty`): a row emptied isn't handed back after
- * the pause, only when it is left (blur, Enter, a flush), so the form can
- * remove its item then rather than under the cursor; `onRowBlur` says a
- * row was left, after what it held was handed back.
+ * For a list whose empty rows are held rather than written (`holdEmpty`):
+ * a row emptied isn't handed back after the pause, only when it is left
+ * (blur, Enter, a flush), so the form can remove its item then rather
+ * than under the cursor; `onRowBlur` says a row was left, after what it
+ * held was handed back.
  *
- * The Kubernetes forms' rows (D9c Task 2): each a `VaultAwareInput`
- * (`vaultAware`), a remove button whose fixed label the form names
- * (`removeLabel`, "Remove namespace"), and, for k8sobjects' per- object
- * namespaces, a drag handle before each row (`sortable`: the rows below
- * `count` are dnd-kit items `<list>-<index>`, and a drop says which row moved
- * where; a held row past `count` has a disabled handle and is never a drop
- * target).
+ * The Kubernetes forms' rows: each a `VaultAwareInput` (`vaultAware`), a
+ * remove button whose fixed label the form names (`removeLabel`, "Remove
+ * namespace"), and, for k8sobjects' per-object namespaces, a drag handle
+ * before each row (`sortable`: the rows below `count` are dnd-kit items
+ * `<list>-<index>`, and a drop says which row moved where; a held row past
+ * `count` has a disabled handle and is never a drop target).
  *
- * Every row is keyed by its item (`rowKeys`, the form's `useCardKeys`; D9c
- * Ruling 68), never by its index: a row emptied and left removes its item
- * as the pointer goes down on a Remove button, and with index keys the
- * next item's row took the removed row's place, button and all, so the
- * click removed that item too. Keyed by item, the removed row's button goes
- * with it and the click lands nowhere. A held row takes the key its item
- * will get, so once written it keeps its input, focus and caret.
+ * Every row is keyed by its item (`rowKeys`, the form's `useCardKeys`), never
+ * by its index: a row emptied and left removes its item as the pointer goes
+ * down on a Remove button, and with index keys the next item's row would take
+ * the removed row's place, button and all, so the click would remove that item
+ * too. Keyed by item, the removed row's button goes with it and the click
+ * lands nowhere. A held row takes the key its item will get, so once written
+ * it keeps its input, focus and caret.
  *
- * The logs forms' rows (D9c Task 8): filelog's path rows and
- * journald's lists are `font-mono text-xs` inputs (`inputClassName`), and
- * journald's Add button is a small one, not full width, with a smaller
- * icon (`addButtonClassName`, `addIconClassName`).
+ * The logs forms' rows: filelog's path rows and journald's lists are
+ * `font-mono text-xs` inputs (`inputClassName`), and journald's Add
+ * button is a small one, not full width, with a smaller icon
+ * (`addButtonClassName`, `addIconClassName`).
  *
- * D9d's numeric rows (load balancing's ports): `numeric` gives each row
+ * Numeric rows (load balancing's ports): `numeric` gives each row
  * `inputMode="decimal"`; the form writes what is typed. `canRemove` says
  * which rows' Remove is enabled (load balancing's last endpoint and last
- * routing attribute, D9d Task 4).
+ * routing attribute).
  *
- * D9d Task 9's rows: `multiline` makes each row a Textarea of that many
+ * Multiline rows: `multiline` makes each row a Textarea of that many
  * rows, where Enter is a new line (transform's group statements);
  * `emptyText` shows under no rows (transform's "No conditions (statements
  * always run)"); `locked` disables typing and Add while another setting

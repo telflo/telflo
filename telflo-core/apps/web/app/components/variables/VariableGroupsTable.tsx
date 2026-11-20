@@ -6,13 +6,12 @@ import { Button } from "~/components/ui/button.js";
 import { changedLines, usageText } from "~/lib/variables.js";
 
 /*
- * The Variable groups page's table (D20 default 22; ADR 0018), with D20's
- * columns: Name (the description beneath; a link to the group's page,
- * `/variables/groups/{id}`), Overrides (a count, the API's, a Parity Note),
- * Used by (the collector groups bound to it and the collectors it is pinned
- * on, counted), Changed (the time and who), and Edit and Delete, named by
- * hidden text as the fleet rows' (no attribute holds a name). A name and a
- * description are text in the masked shell.
+ * The Variable groups page's table, with its columns: Name (the description
+ * beneath; a link to the group's page, `/variables/groups/{id}`), Overrides
+ * (a count, the API's), Used by (the collector groups bound to it and the
+ * collectors it is pinned on, counted), Changed (the time and who), and
+ * Edit and Delete, named by hidden text as the fleet rows' (no attribute
+ * holds a name). A name and a description are text in the masked shell.
  */
 
 const HEAD_CLASS = "h-9 px-3 text-left align-middle text-[11px] font-medium uppercase tracking-wider text-muted-foreground";

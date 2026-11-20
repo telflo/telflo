@@ -13,9 +13,9 @@ import {
 export const NOTHING_TO_DUPLICATE_MESSAGE = "No node selected to duplicate";
 
 /**
- * Keys typed into a field are the field's own (D9a decision 11): inputs,
- * textareas, anything editable, and Monaco (whose own undo works as always;
- * Cmd/Ctrl+Z, Y and D typed in Monaco never reach the canvas).
+ * Keys typed into a field are the field's own: inputs, textareas, anything
+ * editable, and Monaco (whose own undo works as always; Cmd/Ctrl+Z, Y and D
+ * typed in Monaco never reach the canvas).
  */
 function isTypingTarget(target: EventTarget | null): boolean {
   if (!(target instanceof Element)) return false;
@@ -29,13 +29,11 @@ function isTypingTarget(target: EventTarget | null): boolean {
 
 /**
  * Marks a container whose Delete, Backspace and Cmd/Ctrl+D belong to its
- * controls, never to the canvas (D9b decision 6; Preflight ruling 23): the
- * Configuration tab (`ConfigurationPanel`), and the Self-monitoring
- * dialog's content, which spreads them on its `DialogContent` with
- * `OWN_HISTORY_PROPS`. A
- * checkbox, a select, a drag handle or a button focused there keeps the
- * selected node from being deleted or duplicated. A fixed attribute with
- * no value (decision 10).
+ * controls, never to the canvas: the Configuration tab
+ * (`ConfigurationPanel`), and the Self-monitoring dialog's content, which
+ * spreads them on its `DialogContent` with `OWN_HISTORY_PROPS`. A checkbox, a
+ * select, a drag handle or a button focused there keeps the selected node
+ * from being deleted or duplicated. A fixed attribute with no value.
  */
 export const OWN_KEYS_PROPS = { "data-own-keys": "" } as const;
 
@@ -51,13 +49,12 @@ function isOwnKeysTarget(target: EventTarget | null): boolean {
 }
 
 /**
- * Marks a modal whose undo and redo are its own as well (Ruling 65): the
+ * Marks a modal whose undo and redo are its own as well: the
  * Self-monitoring dialog's content, whose draft is written against the text
  * it was taken from. Cmd/Ctrl+Z, Cmd/Ctrl+Shift+Z and Cmd/Ctrl+Y pressed
  * there, or in Radix popper content while one is open (its select menus
  * render in `<body>`), never reach the editor's undo and redo; inside a
- * field they are still the field's own. Attributes with no value (decision
- * 10).
+ * field they are still the field's own. Attributes with no value.
  */
 export const OWN_HISTORY_PROPS = { ...OWN_KEYS_PROPS, "data-own-history": "" } as const;
 
@@ -73,15 +70,14 @@ function isMac(): boolean {
 }
 
 /**
- * Undo and redo, duplicate, and their shortcuts on `window` (D9a decisions
- * 8 and 11):
+ * Undo and redo, duplicate, and their shortcuts on `window`:
  * - Cmd/Ctrl+Z undoes; Cmd/Ctrl+Shift+Z and Cmd/Ctrl+Y redo (the store
  *   toasts "Undo: <description>" and "Redo: <description>");
  * - Cmd/Ctrl+D duplicates the selection in place; a pipeline's group is
  *   never duplicated (its copy would be an orphan group);
  * - Delete and Backspace open the delete dialog for the selection
  *   (`requestDelete`), never deleting directly, and never navigate back
- *   (WebKit did without `preventDefault`; Preflight ruling 15).
+ *   (WebKit would without `preventDefault`).
  * Inside a field or Monaco the keys are the field's own. Delete, Backspace
  * and Cmd/Ctrl+D inside the Configuration tab, the Self-monitoring dialog or
  * Radix popper content do nothing to the canvas (their default is still

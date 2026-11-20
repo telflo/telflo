@@ -19,9 +19,8 @@ import {
 } from "./PublicInstallLinksCard.js";
 
 /*
- * Settings → Organization's "Public install links" (D17d-2 decisions 2 and
- * 20; the owner's Q52; Preflight ruling 33): read for any member, changed by
- * an admin only, not optimistically.
+ * Settings → Organization's "Public install links": read for any member,
+ * changed by an admin only, not optimistically.
  */
 
 const ADMIN: ActiveOrganization = { id: "00000000-0000-4000-8000-000000000003", name: "Beta Team", type: "group", logoId: null, role: "admin" };

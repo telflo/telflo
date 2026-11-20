@@ -5,7 +5,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover
 import { cn } from "~/lib/utils.js";
 
 /*
- * A help popover (ADR 0018), its icon lucide's `CircleHelp`.
+ * A help popover, its icon lucide's `CircleHelp`.
  * `label` becomes the trigger's `aria-label` and `title`, so it is always
  * fixed text (the palette's "About <entry>"), never a person's content.
  */

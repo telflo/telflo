@@ -17,11 +17,11 @@ import { deleteSession, isSessionEnded, listSessions } from "~/lib/api-client.js
 import { formatDateTime, formatDateTimeToTheSecond } from "~/lib/format.js";
 
 /*
- * Settings › Account's "Sessions" (D21 decisions 40 and 45): the account's
- * live sessions, the current one first, each row "{browser} on {system}"
- * ("Unknown browser", "unknown system" for others), "This browser" on the
- * current one, "Signed in …", "Last active …" and "IP address …", all as
- * visible text in the masked shell.
+ * Settings › Account's "Sessions": the account's live sessions, the
+ * current one first, each row "{browser} on {system}" ("Unknown browser",
+ * "unknown system" for others), "This browser" on the current one,
+ * "Signed in …", "Last active …" and "IP address …", all as visible text
+ * in the masked shell.
  *
  * - "Sign out" on every other row, no confirm: `DELETE …/sessions/{id}`,
  *   then "Session signed out." and the list read again. A refusal toasts its

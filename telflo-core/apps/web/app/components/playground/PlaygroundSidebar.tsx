@@ -7,15 +7,14 @@ import { cn } from "~/lib/utils.js";
 import { PlaygroundThemeToggle } from "./PlaygroundThemeToggle.js";
 
 /*
- * The playground's sidebar (D31-1 decision 9): the platform's signed-in
- * Sidebar's items, in its order, in the playground's own frame.
- * Configurations, Flows and Fleet go to the playground's pages; Variables,
- * Permissions, Settings and Learning are locked, each opening the sign-up
- * prompt with its own words. Below them the theme toggle (Settings is locked
- * here) and Docs; the footer is the sample workspace, "Acme Observability –
- * Sample workspace". No organization switcher, user menu or "Contact us"
- * (decision 26). Hidden below `md`: the shell's strip takes its place. The
- * `data-tour-step` anchors are the tour's (Preflight ruling 16).
+ * The playground's sidebar: the platform's signed-in Sidebar's items, in its
+ * order, in the playground's own frame. Configurations, Flows and Fleet go to
+ * the playground's pages; Variables, Permissions, Settings and Learning are
+ * locked, each opening the sign-up prompt with its own words. Below them the
+ * theme toggle (Settings is locked here) and Docs; the footer is the sample
+ * workspace, "Acme Observability – Sample workspace". No organization
+ * switcher, user menu or "Contact us". Hidden below `md`: the shell's strip
+ * takes its place. The `data-tour-step` anchors are the tour's.
  */
 
 type NavItem = {
@@ -107,7 +106,7 @@ export function PlaygroundSidebar() {
       {/* Secondary: the theme, and the docs */}
       <div className="space-y-1 border-t border-border px-2 py-2 dark:border-gray-800">
         <PlaygroundThemeToggle className="mx-0.5" />
-        {/* The site's docs (D36-1 decision 34): none when TELFLO_DOCS_URL is empty. */}
+        {/* The site's docs: none when TELFLO_DOCS_URL is empty. */}
         {docsHref !== null && (
           <a href={docsHref} target="_blank" rel="noopener noreferrer" className={cn(railItemBase, railItemInactive)}>
             <BookOpen className="h-4 w-4 shrink-0" strokeWidth={1.75} />

@@ -3,7 +3,7 @@ import { GripVertical } from "lucide-react";
 import type { SortableHandleProps } from "./types.js";
 import { cn } from "~/lib/utils.js";
 
-/* A drag handle (ADR 0018), its `gray-*`/`blue-*` classes kept (D9b Parity Notes). */
+/* A drag handle, its `gray-*`/`blue-*` classes kept. */
 export function SortableHandle({ attributes, listeners, className, disabled = false }: SortableHandleProps) {
   return (
     <button

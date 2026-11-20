@@ -32,19 +32,18 @@ import { isManagementLost, refusalMessage, useLeaveManagement, useSwitchOrganiza
 import { useUserStore } from "~/lib/stores/user-store.js";
 
 /*
- * Creating or editing an organization (ADR 0018; the D5 and D23-2 Parity
- * Notes): no duplicate-name pre-check, since the API's unique index is the
- * check and its refusal carries the words; a group organization's Edit
- * dialog has "Delete Organization".
+ * Creating or editing an organization: no duplicate-name pre-check, since the
+ * API's unique index is the check and its refusal carries the words; a group
+ * organization's Edit dialog has "Delete Organization".
  *
- * The logo (D23-2 decisions 8, 9, 17, 52 and 57): PNG, JPEG or WebP, typed
- * from its first bytes here (`imageTypeOf`, as the API does again), at most 2
- * MB; SVG is refused. Save sends ONE request, all or nothing: JSON with no
- * picked file (`removeLogo: true` when "Remove logo" was used), multipart
- * with one. "Remove logo" changes only the preview until Save. The preview is
- * an object URL, revoked when replaced, removed, on close and on unmount. The
- * picked file's name and the file input are inside `ph-no-capture`, and the
- * image is an `<img alt="">` inside it too, never named in an attribute.
+ * The logo: PNG, JPEG or WebP, typed from its first bytes here
+ * (`imageTypeOf`, as the API does again), at most 2 MB; SVG is refused. Save
+ * sends ONE request, all or nothing: JSON with no picked file
+ * (`removeLogo: true` when "Remove logo" was used), multipart with one.
+ * "Remove logo" changes only the preview until Save. The preview is an object
+ * URL, revoked when replaced, removed, on close and on unmount. The picked
+ * file's name and the file input are inside `ph-no-capture`, and the image is
+ * an `<img alt="">` inside it too, never named in an attribute.
  */
 
 const MAX_NAME_LENGTH = ORGANIZATION_NAME_MAXIMUM_LENGTH;
@@ -53,13 +52,13 @@ const MAX_NAME_LENGTH = ORGANIZATION_NAME_MAXIMUM_LENGTH;
 export const LOGO_TOO_LARGE_MESSAGE = "Logo must be less than 2 MB";
 export const LOGO_TYPE_UNSUPPORTED_MESSAGE = "Logo must be a PNG, JPG or WebP image.";
 
-/** What the picker offers; the bytes decide (decision 32). */
+/** What the picker offers; the bytes decide. */
 const LOGO_ACCEPT = "image/png,image/jpeg,image/webp";
 
 /** Enough of a file's head for every signature `imageTypeOf` knows. */
 const LOGO_HEAD_BYTES = 12;
 
-/** The organization as it was when the dialog opened (D17c-1 Ruling 66). */
+/** The organization as it was when the dialog opened. */
 interface Baseline {
   id: string;
   name: string;
@@ -121,8 +120,8 @@ export function CreateOrganizationDialog({
   };
 
   // The baseline is taken when the dialog opens, never re-read from a prop a
-  // parent's reload may change meanwhile (D17c-1 Ruling 66). Closing, however
-  // it closes, drops the pick and its object URL.
+  // parent's reload may change meanwhile. Closing, however it closes, drops
+  // the pick and its object URL.
   useEffect(() => {
     if (open && !wasOpenRef.current) {
       setBaseline(organization ? { id: organization.id, name: organization.name, logoId: organization.logoId } : null);
@@ -305,7 +304,7 @@ export function CreateOrganizationDialog({
                   {logoFile ? "Change Image" : "Choose Image"}
                 </Button>
                 {logoFile && (
-                  // The name as text, blocked from replay (decision 57).
+                  // The name as text, blocked from replay.
                   <p className="ph-no-capture text-xs text-muted-foreground">{logoFile.name}</p>
                 )}
                 {showsLogo && (
@@ -315,7 +314,7 @@ export function CreateOrganizationDialog({
                 )}
                 {/* Blocked from replay (`ph-no-capture`): rrweb records a file
                     input's value, "C:\fakepath\<the file's name>", as it
-                    changes, whatever maskAllInputs says (D14a's finding). */}
+                    changes, whatever maskAllInputs says. */}
                 <input
                   ref={fileInputRef}
                   type="file"

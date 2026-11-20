@@ -2,12 +2,11 @@ import type { DraggableAttributes, DraggableSyntheticListeners } from "@dnd-kit/
 import type { ReactNode } from "react";
 
 /*
- * The sortable list's types (ADR 0018; D9b decision 9; Preflight rulings 2
- * and 15): an item's id is a string built from its list's fixed name and its
- * index (`attr-0`), never a value, since dnd-kit writes ids into attributes
- * and its live region; the listeners' type comes from dnd-kit's root export,
- * not a deep import; and a reorder says which item moved where
- * (`onReorder(from, to)`), so a form moves the item's own lines.
+ * The sortable list's types: an item's id is a string built from its list's
+ * fixed name and its index (`attr-0`), never a value, since dnd-kit writes ids
+ * into attributes and its live region; the listeners' type comes from
+ * dnd-kit's root export, not a deep import; and a reorder says which item
+ * moved where (`onReorder(from, to)`), so a form moves the item's own lines.
  */
 
 export interface DragHandleProps {

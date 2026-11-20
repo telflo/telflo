@@ -6,13 +6,12 @@ import { Button } from "~/components/ui/button.js";
 import { formatServiceAccountDate, listedPrefix } from "~/lib/service-accounts.js";
 
 /*
- * A list of `tf_` tokens not revoked (D22 decision 43; D25 decision 50,
- * Preflight ruling 22): a service account's, on its page, and a person's
- * own, on the Account page. Name, Prefix (`tf_AbC12xYz…`), Access ("Read &
- * Write" or "Read"), Expires (a date or "Never", and "Expired" by the API's
- * clock), Last used (a date or "Never"), Created, and a Revoke per row named
- * through `aria-labelledby` by "Revoke token" and the row's name cell: the
- * name and the prefix are visible text in the masked shell only, never an
+ * A list of `tf_` tokens not revoked: a service account's, on its page, and a
+ * person's own, on the Account page. Name, Prefix (`tf_AbC12xYz…`), Access
+ * ("Read & Write" or "Read"), Expires (a date or "Never", and "Expired" by the
+ * API's clock), Last used (a date or "Never"), Created, and a Revoke per row
+ * named through `aria-labelledby` by "Revoke token" and the row's name cell:
+ * the name and the prefix are visible text in the masked shell only, never an
  * attribute. A plain `<table>`.
  */
 

@@ -6,12 +6,12 @@ import { SET_PASSWORD_DESCRIPTION, SET_PASSWORD_FAILED_MESSAGE, accountFailureMe
 import { isSessionEnded, requestPasswordReset } from "~/lib/api-client.js";
 
 /*
- * Settings › Account's "Set a Password", for an account with no password
- * (D21 decision 36): D3's reset link, asked for the account's own email
- * through the existing `POST /api/v1/auth/password-reset-requests` (always
- * 202; its own limits). Then fixed words with the email as visible text
- * (decision 45: never a toast). Sign-in methods' "Set a password first"
- * runs the same request, so the page holds one `useSetPassword` for both.
+ * Settings › Account's "Set a Password", for an account with no password:
+ * the password reset link, asked for the account's own email through the
+ * existing `POST /api/v1/auth/password-reset-requests` (always 202; its
+ * own limits). Then fixed words with the email as visible text (never a
+ * toast). Sign-in methods' "Set a password first" runs the same request,
+ * so the page holds one `useSetPassword` for both.
  */
 
 export type SetPassword = {

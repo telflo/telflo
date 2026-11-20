@@ -13,11 +13,10 @@ import {
 import { ApiTokenRevealDialog } from "./ApiTokenRevealDialog.js";
 
 /*
- * "Copy your token" (D22 decisions 9, 43 and 48; Preflight ruling 26): the
- * token shown once inside ph-no-capture, copied by its button, gone from the
- * DOM and from every component's state however the dialog closes. The
- * token is built at run time and never printed (Rulings 99 and 102):
- * booleans with fixed labels only, never an element handed to a matcher.
+ * "Copy your token": the token shown once inside ph-no-capture, copied by
+ * its button, gone from the DOM and from every component's state however the
+ * dialog closes. The token is built at run time and never printed: booleans
+ * with fixed labels only, never an element handed to a matcher.
  */
 
 function renderReveal(token: string) {
@@ -47,7 +46,7 @@ describe("ApiTokenRevealDialog", () => {
   });
   afterEach(() => unquiet());
 
-  it("shows the token once, inside ph-no-capture, with Q137's words, Copy token and Done", async () => {
+  it("shows the token once, inside ph-no-capture, with its words, Copy token and Done", async () => {
     const token = buildApiToken();
     renderReveal(token);
     const dialog = await screen.findByRole("dialog", { name: "Copy your token" });

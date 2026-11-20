@@ -4,7 +4,7 @@ import * as TooltipPrimitive from "@radix-ui/react-tooltip"
 import { cn } from "~/lib/utils.js"
 
 /*
- * The shadcn tooltip (ADR 0018), its transform origin written in Tailwind 4's
+ * The shadcn tooltip, its transform origin written in Tailwind 4's
  * `origin-(--var)` form. The content renders into `<body>` (a portal), which
  * the signed-in layout marks `ph-mask`; it is text, never an attribute.
  */
