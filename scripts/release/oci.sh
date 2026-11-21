@@ -6,6 +6,25 @@
 #   telflo_registry_ok <registry>        exit 0 for ghcr.io or a loopback
 #                                        127.0.0.1:<port> / localhost:<port>
 #   telflo_registry_loopback <registry>  exit 0 for a loopback one
+#   telflo_namespace_path <namespace>    prints a namespace's repository path
+#                                        under the registry: telflo is
+#                                        telflo/telflo (the public one, what
+#                                        users install), telflo-staging is
+#                                        telflo/telflo-staging (a release's
+#                                        stage, before it is finalized); exit 1,
+#                                        nothing printed, for any other value.
+#                                        The release scripts name a repository
+#                                        only through it
+#   telflo_digests_ok <file>             exit 0 when <file> is a stage's
+#                                        digests.txt: exactly one line
+#                                        `<name> sha256:<64 hex>` for each name
+#                                        of TELFLO_DIGESTS_NAMES, in that order
+#                                        (the five images sorted, then the
+#                                        chart's OCI manifest digest,
+#                                        charts/telflo, and its package's
+#                                        sha256, charts/telflo.tgz), each line
+#                                        ending in a newline, nothing else
+#   telflo_digests_get <file> <name>     prints <name>'s digest from such a file
 #   telflo_crane_find <repository root>  sets TELFLO_CRANE: the caller's
 #                                        TELFLO_CRANE when set (an executable),
 #                                        else tools.sh's checked crane, else
@@ -87,6 +106,36 @@ telflo_registry_ok() {
 
 telflo_registry_loopback() {
   case "$1" in 127.0.0.1:* | localhost:*) telflo_registry_ok "$1" ;; *) return 1 ;; esac
+}
+
+# The two namespaces, and nothing else: the public one and a release's stage.
+TELFLO_NAMESPACES="telflo telflo-staging"
+telflo_namespace_path() {
+  case "$1" in
+    telflo) echo telflo/telflo ;;
+    telflo-staging) echo telflo/telflo-staging ;;
+    *) return 1 ;;
+  esac
+}
+
+# A stage's record: each name once, in this order.
+TELFLO_DIGESTS_NAMES="api otelcol-testing otelcol-validator ottl-evaluator web charts/telflo charts/telflo.tgz"
+telflo_digests_ok() {
+  local file="$1" line n=0 want
+  [ -f "$file" ] && [ ! -L "$file" ] || return 1
+  [ "$(wc -l <"$file" | tr -d ' ')" -eq 7 ] && [ "$(grep -c '' "$file")" -eq 7 ] || return 1
+  # shellcheck disable=SC2086 # the names, one argument each
+  set -- $TELFLO_DIGESTS_NAMES
+  while IFS= read -r line; do
+    n=$((n + 1))
+    want="$1"
+    shift
+    [ "${line%% *}" = "$want" ] && [[ "${line#* }" =~ $TELFLO_OCI_DIGEST_RE ]] || return 1
+  done <"$file"
+  [ "$n" -eq 7 ]
+}
+telflo_digests_get() { # <file> <name>
+  awk -v n="$2" '$1 == n { print $2; exit }' "$1"
 }
 
 telflo_resolved() { # <path>: its real path (symlinks resolved)

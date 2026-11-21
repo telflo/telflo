@@ -176,5 +176,46 @@ for r in $bad_list; do ! "$shell" -c '. "$1"; telflo_registry_ok "$2"' _ "$root/
 check "registries: ghcr.io and loopback 127.0.0.1/localhost ports only" "$reg_ok"
 check "loopback: not ghcr.io" "! \"\$shell\" -c '. \"\$1\"; telflo_registry_loopback ghcr.io' _ '$root/scripts/release/oci.sh' && \"\$shell\" -c '. \"\$1\"; telflo_registry_loopback 127.0.0.1:5000' _ '$root/scripts/release/oci.sh'"
 
+# --- 6. the two namespaces, and a stage's record ------------------------------------------------
+ns() { out="$("$shell" -c '. "$1"; telflo_namespace_path "$2"' _ "$root/scripts/release/oci.sh" "$1" 2>&1)"; rc=$?; }
+ns telflo
+check "the namespace telflo is the public telflo/telflo" "[ $rc -eq 0 ] && [ \"\$out\" = telflo/telflo ]"
+ns telflo-staging
+check "the namespace telflo-staging is a stage's telflo/telflo-staging" "[ $rc -eq 0 ] && [ \"\$out\" = telflo/telflo-staging ]"
+ns_ok=true
+for bad in "" platform telflo/telflo telflo-platform Telflo telflo-staging/x ../telflo "telflo " telflo-stage; do
+  ns "$bad"
+  [ "$rc" -eq 1 ] && [ -z "$out" ] || { ns_ok=false; echo "     (namespace '$bad': exit $rc, '$out')"; }
+done
+check "any third value refused (exit 1, nothing printed): telflo/telflo, telflo-platform, an empty one, a path …" "$ns_ok"
+check "the release scripts name a repository only through oci.sh's namespaces: no other telflo/telflo-* path in them" \
+  "! grep -nE 'telflo/telflo-[a-z]' '$root/scripts/release/'*.sh '$root/scripts/publish-platform-images.sh' '$root/scripts/publish-chart.sh' | grep -vE '^[^:]+:[0-9]+:[[:space:]]*#' | grep -vF 'oci.sh:' | grep -v '\\.test\\.sh:'"
+D1=sha256:1111111111111111111111111111111111111111111111111111111111111111
+D2=sha256:2222222222222222222222222222222222222222222222222222222222222222
+record() { printf 'api %s\notelcol-testing %s\notelcol-validator %s\nottl-evaluator %s\nweb %s\ncharts/telflo %s\ncharts/telflo.tgz %s\n' "$D1" "$D1" "$D1" "$D1" "$D1" "$D1" "$D2"; }
+digests_ok() { "$shell" -c '. "$1"; telflo_digests_ok "$2"' _ "$root/scripts/release/oci.sh" "$1"; }
+record >"$tmp/digests.txt"
+check "a stage's record passes (the five images, the chart's two lines last)" "digests_ok '$tmp/digests.txt'"
+check "telflo_digests_get reads a line's digest" \
+  "[ \"\$(\"\$shell\" -c '. \"\$1\"; telflo_digests_get \"\$2\" charts/telflo.tgz' _ '$root/scripts/release/oci.sh' '$tmp/digests.txt')\" = '$D2' ]"
+rec_ok=true
+for how in reorder drop extra spaces crlf nonl short collector lowercase; do
+  case "$how" in
+    reorder) record | sed '1{h;d;};2{G;}' ;;
+    drop) record | sed '$d' ;;
+    extra) record; echo "collector $D1" ;;
+    spaces) record | sed 's/ /  /' ;;
+    crlf) record | sed 's/$/\r/' ;;
+    nonl) record | perl -pe 'chomp if eof' ;;
+    short) record | sed 's/^web .*/web sha256:abc/' ;;
+    collector) record | sed 's/^api /collector /' ;;
+    lowercase) record | sed 's/^charts\/telflo\.tgz .*/charts\/telflo.tgz SHA256:ABC/' ;;
+  esac >"$tmp/bad-digests.txt"
+  if digests_ok "$tmp/bad-digests.txt"; then rec_ok=false; echo "     (a record with $how passed)"; fi
+done
+ln -s "$tmp/digests.txt" "$tmp/link-digests.txt"
+digests_ok "$tmp/link-digests.txt" && rec_ok=false
+check "a record otherwise refused: reordered, a line dropped or added, extra spaces, CRLF, no newline, a bad digest, another name, a link" "$rec_ok"
+
 echo
 if [ "$failures" -eq 0 ]; then echo "ALL PASS"; else echo "$failures FAILURE(S)"; exit 1; fi
