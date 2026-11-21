@@ -206,6 +206,17 @@ async function expectBearerGone(page: Page, bearer: string): Promise<void> {
   expect(await page.content()).not.toContain(bearer);
 }
 
+/**
+ * A reveal's bearer, masked at first (its whole text nowhere in the
+ * dialog), then shown whole inside `ph-no-capture` after its box's Show
+ * (named "Show " plus the token's noun).
+ */
+async function showMaskedBearer(dialog: Locator, bearer: string, noun: string): Promise<void> {
+  await expect(dialog).not.toContainText(bearer);
+  await dialog.getByRole("button", { name: `Show ${noun}`, exact: true }).click();
+  await expect(dialog.locator(".ph-no-capture", { hasText: bearer })).toBeVisible();
+}
+
 test("the table's statuses: Valid, Current, Being replaced until its date, Revoked and Expired, with each token's active collectors", async ({
   page,
 }) => {
@@ -282,7 +293,7 @@ test("reveals the default token and a rotate token: each bearer only inside ph-n
     const { token } = (await response.json()) as EnrollmentTokenRevealedResponse;
     expect(token.kind).toBe(kind);
     await expect(dialog).toContainText(REVEAL_WORDS);
-    await expect(dialog.locator(".ph-no-capture", { hasText: token.bearer })).toBeVisible();
+    await showMaskedBearer(dialog, token.bearer, `${kind} token`);
     await expect(dialog.getByRole("button", { name: kind === "default" ? "Copy default token" : "Copy rotate token" })).toBeVisible();
     await expectBearersOnlyInNoCapture(page, [token.bearer]);
     // The tab reloads behind the dialog: the history gains the reveal.
@@ -678,7 +689,7 @@ test("a contributor reveals the group's fleet's default token, the reveal record
   expect(new URL(response.url()).pathname).toMatch(new RegExp(`^/api/v1/organizations/${group.organizationId}/fleets/${fleet.id}/tokens/`));
   const { token } = (await response.json()) as EnrollmentTokenRevealedResponse;
   const dialog = page.getByRole("dialog", { name: "Default token" });
-  await expect(dialog.locator(".ph-no-capture", { hasText: token.bearer })).toBeVisible();
+  await showMaskedBearer(dialog, token.bearer, "default token");
   await expectBearersOnlyInNoCapture(page, [token.bearer]);
   await dialog.getByRole("button", { name: "Done" }).click();
   await expect(dialog).toBeHidden();
