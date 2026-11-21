@@ -449,6 +449,17 @@ jobs:
         with:
           persist-credentials: false
       - run: bash scripts/release/steps.sh free-disk 13
+      # The smoke runs the CLI from this checkout
+      # (telflo-core/apps/cli/dist/index.js).
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: telflo-core/package-lock.json
+      - run: npm ci
+        working-directory: telflo-core
+      - run: npm run build -w @telflo/cli
+        working-directory: telflo-core
       - name: Build and start the full stack
         run: docker compose up --build --wait --wait-timeout 300
       - name: Smoke-test through the gateway
