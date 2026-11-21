@@ -190,20 +190,20 @@ done
 check "any third value refused (exit 1, nothing printed): telflo/telflo, telflo-platform, an empty one, a path …" "$ns_ok"
 check "the release scripts name a repository only through oci.sh's namespaces: no other telflo/telflo-* path in them" \
   "! grep -nE 'telflo/telflo-[a-z]' '$root/scripts/release/'*.sh '$root/scripts/publish-platform-images.sh' '$root/scripts/publish-chart.sh' | grep -vE '^[^:]+:[0-9]+:[[:space:]]*#' | grep -vF 'oci.sh:' | grep -v '\\.test\\.sh:'"
-D1=sha256:1111111111111111111111111111111111111111111111111111111111111111
-D2=sha256:2222222222222222222222222222222222222222222222222222222222222222
-record() { printf 'api %s\notelcol-testing %s\notelcol-validator %s\nottl-evaluator %s\nweb %s\ncharts/telflo %s\ncharts/telflo.tgz %s\n' "$D1" "$D1" "$D1" "$D1" "$D1" "$D1" "$D2"; }
+ONES=sha256:1111111111111111111111111111111111111111111111111111111111111111
+TWOS=sha256:2222222222222222222222222222222222222222222222222222222222222222
+record() { printf 'api %s\notelcol-testing %s\notelcol-validator %s\nottl-evaluator %s\nweb %s\ncharts/telflo %s\ncharts/telflo.tgz %s\n' "$ONES" "$ONES" "$ONES" "$ONES" "$ONES" "$ONES" "$TWOS"; }
 digests_ok() { "$shell" -c '. "$1"; telflo_digests_ok "$2"' _ "$root/scripts/release/oci.sh" "$1"; }
 record >"$tmp/digests.txt"
 check "a stage's record passes (the five images, the chart's two lines last)" "digests_ok '$tmp/digests.txt'"
 check "telflo_digests_get reads a line's digest" \
-  "[ \"\$(\"\$shell\" -c '. \"\$1\"; telflo_digests_get \"\$2\" charts/telflo.tgz' _ '$root/scripts/release/oci.sh' '$tmp/digests.txt')\" = '$D2' ]"
+  "[ \"\$(\"\$shell\" -c '. \"\$1\"; telflo_digests_get \"\$2\" charts/telflo.tgz' _ '$root/scripts/release/oci.sh' '$tmp/digests.txt')\" = '$TWOS' ]"
 rec_ok=true
 for how in reorder drop extra spaces crlf nonl short collector lowercase; do
   case "$how" in
     reorder) record | sed '1{h;d;};2{G;}' ;;
     drop) record | sed '$d' ;;
-    extra) record; echo "collector $D1" ;;
+    extra) record; echo "collector $ONES" ;;
     spaces) record | sed 's/ /  /' ;;
     crlf) record | sed 's/$/\r/' ;;
     nonl) record | perl -pe 'chomp if eof' ;;

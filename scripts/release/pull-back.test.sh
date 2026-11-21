@@ -97,8 +97,8 @@ for bad in telflo/telflo telflo-platform "" platform; do
 done
 run "$tmp/stub" --oci "$oci" --version "$V" --no-chart --image collector --namespace telflo-staging
 check "the collector image with --namespace telflo-staging refused (exit 2): it is public only" "[ $rc -eq 2 ] && has 'the collector image is published to the public namespace alone'"
-D1=sha256:1111111111111111111111111111111111111111111111111111111111111111
-printf 'api %s\notelcol-testing %s\notelcol-validator %s\nottl-evaluator %s\nweb %s\ncharts/telflo %s\ncharts/telflo.tgz %s\n' "$D1" "$D1" "$D1" "$D1" "$D1" "$D1" "$D1" >"$tmp/d1.txt"
+ONES=sha256:1111111111111111111111111111111111111111111111111111111111111111
+printf 'api %s\notelcol-testing %s\notelcol-validator %s\nottl-evaluator %s\nweb %s\ncharts/telflo %s\ncharts/telflo.tgz %s\n' "$ONES" "$ONES" "$ONES" "$ONES" "$ONES" "$ONES" "$ONES" >"$tmp/d1.txt"
 run "$tmp/stub" --digests "$tmp/d1.txt" --oci "$oci" --version "$V"
 check "--digests with --oci refused (exit 2)" "[ $rc -eq 2 ] && has '--oci or --digests, not both'"
 run "$tmp/stub" --digests "$tmp/d1.txt" --version "$V" --chart "$tmp/chart.tgz"

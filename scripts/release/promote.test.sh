@@ -63,11 +63,11 @@ digests_file() {
   local file="$1"; shift
   printf 'api %s\notelcol-testing %s\notelcol-validator %s\nottl-evaluator %s\nweb %s\ncharts/telflo %s\ncharts/telflo.tgz %s\n' "$@" >"$file"
 }
-D1=sha256:1111111111111111111111111111111111111111111111111111111111111111
-D2=sha256:2222222222222222222222222222222222222222222222222222222222222222
+ONES=sha256:1111111111111111111111111111111111111111111111111111111111111111
+TWOS=sha256:2222222222222222222222222222222222222222222222222222222222222222
 
 # --- 1. usage and refusals, offline ------------------------------------------------------
-digests_file "$tmp/good.txt" "$D1" "$D1" "$D1" "$D1" "$D1" "$D1" "$D2"
+digests_file "$tmp/good.txt" "$ONES" "$ONES" "$ONES" "$ONES" "$ONES" "$ONES" "$TWOS"
 run "$tmp/stub" --digests "$tmp/good.txt"
 check "no --version refused (exit 2), nothing asked" "[ $rc -eq 2 ] && has '--version must be x.y.z' && no_crane"
 for bad in v9.9.9 9.9 09.9.9 9.9.9-rc.1 "\$(echo EXPANDED)"; do
@@ -90,11 +90,11 @@ bad_file() { # <name> <the file's content (printf format)>
   run "$tmp/stub" --version 9.9.9 --digests "$tmp/bad.txt"
   check "a digests file with $1: refused (exit 1), nothing asked or copied" "[ $rc -eq 1 ] && has \"isn't a stage's digests.txt\" && no_crane"
 }
-good_lines="api $D1\notelcol-testing $D1\notelcol-validator $D1\nottl-evaluator $D1\nweb $D1\ncharts/telflo $D1\ncharts/telflo.tgz $D2\n"
-bad_file "its lines in another order" "otelcol-testing $D1\napi $D1\notelcol-validator $D1\nottl-evaluator $D1\nweb $D1\ncharts/telflo $D1\ncharts/telflo.tgz $D2\n"
-bad_file "a line missing (the package's)" "api $D1\notelcol-testing $D1\notelcol-validator $D1\nottl-evaluator $D1\nweb $D1\ncharts/telflo $D1\n"
-bad_file "an extra line" "${good_lines}collector $D1\n"
-bad_file "a digest that isn't sha256:<64 hex>" "$(printf '%s' "$good_lines" | sed "s/^api $D1/api sha256:abc/")"
+good_lines="api $ONES\notelcol-testing $ONES\notelcol-validator $ONES\nottl-evaluator $ONES\nweb $ONES\ncharts/telflo $ONES\ncharts/telflo.tgz $TWOS\n"
+bad_file "its lines in another order" "otelcol-testing $ONES\napi $ONES\notelcol-validator $ONES\nottl-evaluator $ONES\nweb $ONES\ncharts/telflo $ONES\ncharts/telflo.tgz $TWOS\n"
+bad_file "a line missing (the package's)" "api $ONES\notelcol-testing $ONES\notelcol-validator $ONES\nottl-evaluator $ONES\nweb $ONES\ncharts/telflo $ONES\n"
+bad_file "an extra line" "${good_lines}collector $ONES\n"
+bad_file "a digest that isn't sha256:<64 hex>" "$(printf '%s' "$good_lines" | sed "s/^api $ONES/api sha256:abc/")"
 bad_file "a carriage return" "$(printf '%s' "$good_lines" | sed 's/\\n/\\r\\n/')"
 bad_file "no final newline" "$(printf '%s' "$good_lines" | sed 's/\\n$//')"
 bad_file "a name of its own (a path outside the stage)" "$(printf '%s' "$good_lines" | sed 's#\\nweb #\\n../web #')"
@@ -175,10 +175,10 @@ if $reg_ok; then
   run "$TR_CONFIG" --version "$V" --digests "$tmp/wrong.txt" --registry "$REG"
   check "a wrong digest (web's staged tag is another): refused (exit 1), named, nothing copied or public" \
     "[ $rc -eq 1 ] && has \"$STAGED/web:$V is \$(cat '$tmp/stage-$V/web.digest'), not the stage's record $other\" && has 'nothing copied' && [ \$(copies) -eq 0 ] && [ -z \"\$(remote '$PUBLIC/api:$V')\" ]"
-  sed "s#^charts/telflo.tgz .*#charts/telflo.tgz $D2#" "$tmp/stage-$V/digests.txt" >"$tmp/wrong-package.txt"
+  sed "s#^charts/telflo.tgz .*#charts/telflo.tgz $TWOS#" "$tmp/stage-$V/digests.txt" >"$tmp/wrong-package.txt"
   run "$TR_CONFIG" --version "$V" --digests "$tmp/wrong-package.txt" --registry "$REG"
   check "a package line that isn't the staged chart's layer: refused (exit 1), nothing copied" \
-    "[ $rc -eq 1 ] && has \"chart layer is sha256:\" && has \"not the stage's package $D2\" && [ \$(copies) -eq 0 ]"
+    "[ $rc -eq 1 ] && has \"chart layer is sha256:\" && has \"not the stage's package $TWOS\" && [ \$(copies) -eq 0 ]"
 
   # A staged image missing (otelcol-validator never pushed).
   V=9.9.94

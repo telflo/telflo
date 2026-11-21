@@ -427,20 +427,20 @@ record_of() { # <oci dir> <chart digest> <package sha256>: a stage's digests.txt
     "$(cat "$1/ottl-evaluator.digest")" "$(cat "$1/web.digest")" "$2" "$3"
 }
 chart_sum="sha256:$(sha "$rel/telflo-0.1.0.tgz")"
-D7=sha256:7777777777777777777777777777777777777777777777777777777777777777
+SEVENS=sha256:7777777777777777777777777777777777777777777777777777777777777777
 : >"$logs/gh.log"
 run "${GR[@]}" -- github-release --draft --tag v0.1.0 --commit "$gr_commit" --oci "$gh_oci" --release "$rel"
 check "github-release --draft without <release>/digests.txt: refused (exit 1), no Release" \
   "[ $rc -eq 1 ] && has \"digests.txt is missing or isn't a stage's record\" && ! grep -q '^release ' '$logs/gh.log'"
-record_of "$gh_oci" "$D7" "$chart_sum" | sed 's/^web .*/web sha256:9999999999999999999999999999999999999999999999999999999999999999/' >"$rel/digests.txt"
+record_of "$gh_oci" "$SEVENS" "$chart_sum" | sed 's/^web .*/web sha256:9999999999999999999999999999999999999999999999999999999999999999/' >"$rel/digests.txt"
 run "${GR[@]}" -- github-release --draft --tag v0.1.0 --commit "$gr_commit" --oci "$gh_oci" --release "$rel"
 check "github-release --draft with a record whose image digest isn't this run's: refused (exit 1), no Release" \
   "[ $rc -eq 1 ] && has \"digests.txt's web isn't\" && ! grep -q '^release ' '$logs/gh.log'"
-record_of "$gh_oci" "$D7" "$D7" >"$rel/digests.txt"
+record_of "$gh_oci" "$SEVENS" "$SEVENS" >"$rel/digests.txt"
 run "${GR[@]}" -- github-release --draft --tag v0.1.0 --commit "$gr_commit" --oci "$gh_oci" --release "$rel"
 check "github-release --draft with a record whose package isn't this chart's: refused (exit 1), no Release" \
   "[ $rc -eq 1 ] && has \"digests.txt's charts/telflo.tgz isn't\" && ! grep -q '^release ' '$logs/gh.log'"
-record_of "$gh_oci" "$D7" "$chart_sum" >"$rel/digests.txt"
+record_of "$gh_oci" "$SEVENS" "$chart_sum" >"$rel/digests.txt"
 : >"$logs/gh.log"
 run "${GR[@]}" -- github-release --draft --tag v0.1.0 --commit "$gr_commit" --oci "$gh_oci" --release "$rel"
 # shellcheck disable=SC2034 # read by check's eval
@@ -524,7 +524,7 @@ frun() { # <env assignments...> -- <args...>: the clone's steps.sh; sets rc, out
   : >"$FZ/gh.log"
   out="$(env TMPDIR="$tmp/t" DOCKER_CONFIG="$tmp/stub" ${envs[@]+"${envs[@]}"} "$shell" "$fin/scripts/release/steps.sh" "$@" 2>&1 </dev/null)"; rc=$?
 }
-fz_reset() { rm -f "$FZ/latest" "$FZ/digests.txt"; echo draft >"$FZ/state"; record_of "$gh_oci" "$D7" "$chart_sum" >"$FZ/digests.txt"; rm -rf "$tmp/fout"; mkdir -p "$tmp/fout"; }
+fz_reset() { rm -f "$FZ/latest" "$FZ/digests.txt"; echo draft >"$FZ/state"; record_of "$gh_oci" "$SEVENS" "$chart_sum" >"$FZ/digests.txt"; rm -rf "$tmp/fout"; mkdir -p "$tmp/fout"; }
 fz_reset
 frun -- finalize-check --version 0.1.0 --out "$tmp/fout"
 check "finalize-check outside Actions: refused (exit 2)" "[ $rc -eq 2 ] && has 'GitHub Actions job only'"
